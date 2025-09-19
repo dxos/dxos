@@ -11,9 +11,8 @@ import {
   SuggestionWidget,
   SummaryWidget,
   ToggleContainer,
-  type XmlWidgetProps,
-  type XmlWidgetRegistry,
 } from '@dxos/react-ui-components';
+import { type XmlWidgetProps, type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 

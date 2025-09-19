@@ -13025,21 +13025,6 @@ importers:
 
   packages/ui/react-ui-components:
     dependencies:
-      '@codemirror/lang-markdown':
-        specifier: ^6.3.4
-        version: 6.3.4
-      '@codemirror/lang-xml':
-        specifier: ^6.1.0
-        version: 6.1.0
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
-      '@codemirror/language-data':
-        specifier: ^6.5.1
-        version: 6.5.1
-      '@codemirror/state':
-        specifier: ^6.5.2
-        version: 6.5.2
       '@codemirror/view':
         specifier: ^6.38.2
         version: 6.38.2
@@ -13201,6 +13186,9 @@ importers:
       '@codemirror/lang-markdown':
         specifier: ^6.3.4
         version: 6.3.4
+      '@codemirror/lang-xml':
+        specifier: ^6.1.0
+        version: 6.1.0
       '@codemirror/language':
         specifier: ^6.11.3
         version: 6.11.3

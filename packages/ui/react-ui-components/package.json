@@ -23,11 +23,6 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/lang-markdown": "^6.3.4",
-    "@codemirror/lang-xml": "^6.1.0",
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/language-data": "^6.5.1",
-    "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.2",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",

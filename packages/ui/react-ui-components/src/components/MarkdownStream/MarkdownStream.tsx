@@ -10,26 +10,24 @@ import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   EditorView,
+  type StreamerOptions,
+  type XmlTagsOptions,
+  type XmlWidgetStateManager,
   autoScroll,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  preview,
-  useTextEditor,
-} from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
-
-import {
-  type StreamerOptions,
-  type XmlTagsOptions,
-  type XmlWidgetStateManager,
   extendedMarkdown,
+  preview,
   streamer,
+  useTextEditor,
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-} from './extensions';
+} from '@dxos/react-ui-editor';
+import { mx } from '@dxos/react-ui-theme';
+
 import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {

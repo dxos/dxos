@@ -4,6 +4,11 @@
 
 import { Stream } from 'effect';
 
+import { Obj } from '@dxos/echo';
+
+export const renderObjectLink = (obj: Obj.Any, block?: boolean) =>
+  `${block ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
+
 /**
  * Streams text character by character with a delay, but keeps XML/HTML tags intact.
  */

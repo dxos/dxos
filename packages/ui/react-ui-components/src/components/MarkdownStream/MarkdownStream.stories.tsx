@@ -12,12 +12,12 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { editorWidth } from '@dxos/react-ui-editor';
+import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
-import { type XmlWidgetRegistry } from './extensions';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
 import { type TextStreamOptions, textStream } from './testing';
 import doc from './testing/doc.md?raw';

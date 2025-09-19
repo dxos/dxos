@@ -6,8 +6,7 @@ import { xmlLanguage } from '@codemirror/lang-xml';
 import { type Extension } from '@codemirror/state';
 import { type ParseWrapper, parseMixed } from '@lezer/common';
 
-import { Obj } from '@dxos/echo';
-import { createMarkdownExtensions } from '@dxos/react-ui-editor';
+import { createMarkdownExtensions } from '../markdown';
 
 import { type XmlWidgetRegistry } from './xml-tags';
 
@@ -77,6 +76,3 @@ const mixedParser = (registry?: XmlWidgetRegistry): ParseWrapper => {
     return null;
   });
 };
-
-export const renderObjectLink = (obj: Obj.Any, block?: boolean) =>
-  `${block ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;

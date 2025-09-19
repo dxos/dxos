@@ -3,7 +3,8 @@
 //
 
 import { log } from '@dxos/log';
-import { type MarkdownStreamController, type XmlWidgetStateManager } from '@dxos/react-ui-components';
+import { type MarkdownStreamController } from '@dxos/react-ui-components';
+import { type XmlWidgetStateManager } from '@dxos/react-ui-editor';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 
 /**
@@ -16,8 +17,6 @@ export type TextModel = Pick<MarkdownStreamController, 'reset' | 'append' | 'upd
  */
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
   constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
-
-  reset() {}
 
   updateWidget<T>(id: string, value: T) {
     this._widgetState?.updateWidget(id, value);
@@ -61,7 +60,6 @@ export class MessageSyncer {
     this._currentMessageIndex = 0;
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
-    this._context.reset();
     void this._model.reset('');
   }
 

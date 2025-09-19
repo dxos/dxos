@@ -13,6 +13,8 @@ import { ReactWidget } from './ReactWidget';
 import { decoSetToArray } from './util';
 import { nodeToJson } from './xml-util';
 
+// TODO(burdon): Create tests.
+
 export type StateDispatch<T> = T | ((state: T) => T);
 
 /**
