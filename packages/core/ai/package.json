@@ -79,6 +79,7 @@
     "parsimmon": "^1.18.1"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
     "@types/parsimmon": "^1.10.9",
     "effect": "3.17.7"
   },
