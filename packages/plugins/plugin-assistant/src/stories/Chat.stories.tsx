@@ -242,20 +242,23 @@ export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote, // TODO(burdon): Issue making persistent.
-    onInit: async ({ space, binder }) => {
-      const doc = space.db.add(
+    onInit: async ({ space }) => {
+      space.db.add(
         Markdown.makeDocument({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
-      const styleGuide = space.db.add(
+      space.db.add(
         Markdown.makeDocument({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
       );
-      await binder.bind({ objects: [Ref.make(doc), Ref.make(styleGuide)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -268,9 +271,12 @@ export const WithBlueprints: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -283,9 +289,9 @@ export const WithChess: Story = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
-      const object = space.db.add(
+      space.db.add(
         Chess.makeGame({
           name: 'Challenge',
           pgn: [
@@ -306,7 +312,10 @@ export const WithChess: Story = {
           ].join(' '),
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -321,12 +330,15 @@ export const WithMail: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestMailbox();
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
-      await binder.bind({ objects: [Ref.make(mailbox)] });
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -340,10 +352,13 @@ export const WithGmail: Story = {
     plugins: [InboxPlugin(), TokenManagerPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
-      await binder.bind({ objects: [Ref.make(mailbox)] });
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -358,7 +373,7 @@ export const WithMap: Story = {
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
     types: [DataType.View, Map.Map, Table.Table],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
       const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
       const { view: mapView } = await Map.makeView({
@@ -369,7 +384,10 @@ export const WithMap: Story = {
       });
       space.db.add(tableView);
       space.db.add(mapView);
-      await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -383,17 +401,13 @@ export const WithTrip: Story = {
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      {
-        const object = space.db.add(Map.make({ name: 'Trip' }));
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Itinerary',
-            content: trim`
+      space.db.add(Map.make({ name: 'Trip' }));
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Itinerary',
+          content: trim`
               # Itinerary
 
               ## Day 1
@@ -406,25 +420,24 @@ export const WithTrip: Story = {
               - Visit the Louvre
               - Visit the Musée d'Orsay
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Barcelona',
-            content: trim`
+        }),
+      );
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Barcelona',
+          content: trim`
               # Barcelona
 
               Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
               It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
               The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
+        }),
+      );
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -437,9 +450,12 @@ export const WithBoard: Story = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Board.makeBoard());
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Board.makeBoard());
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -479,12 +495,15 @@ export const WithTranscription: Story = {
     plugins: [TranscriptionPlugin(), PreviewPlugin()],
     config: config.remote,
     types: [Transcript.Transcript],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
-      await binder.bind({ objects: [Ref.make(transcript)] });
+      space.db.add(Transcript.makeTranscript(queue.dxn));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
