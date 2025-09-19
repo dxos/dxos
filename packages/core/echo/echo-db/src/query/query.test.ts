@@ -851,7 +851,7 @@ describe('Query', () => {
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 
-      // NOTE: There might be multiple updates dependending on how database compoen
+      // NOTE: There might be multiple updates dependending on how database components execute updates.
       // All objects loaded.
       expect(updates.at(0)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       // All objects deleted.
