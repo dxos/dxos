@@ -7,7 +7,6 @@ import { type Layer, type ManagedRuntime } from 'effect';
 import { type AiService, type AiServiceRouter, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
 import type {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
@@ -15,7 +14,6 @@ import type {
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
-  TracingService,
   TriggerDispatcher,
 } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
@@ -58,9 +56,7 @@ export namespace AssistantCapabilities {
     | InvocationTracer
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
-    | ToolExecutionService
-    | ComputeEventLogger
-    | TracingService;
+    | ToolExecutionService;
 
   export interface ComputeRuntimeProvider {
     getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
