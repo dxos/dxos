@@ -62,7 +62,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
                 iconOnly
                 variant='ghost'
                 value='editing'
-                label={t('edit tab label')}
+                label={t('editing tab label')}
                 icon='ph--pencil-simple-line--regular'
               />
             </ToggleGroup>
