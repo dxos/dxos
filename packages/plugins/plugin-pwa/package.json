@@ -28,7 +28,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "3.17.11"
+    "effect": "3.17.13"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",

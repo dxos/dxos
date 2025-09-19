@@ -45,17 +45,17 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.26.1",
-    "@effect/platform": "^0.90.2",
+    "@effect/ai": "0.27.1",
+    "@effect/platform": "^0.90.10",
     "dfx": "^0.124.1",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "@effect/ai-anthropic": "0.16.0",
-    "@effect/ai-openai": "0.29.1",
+    "@effect/ai-anthropic": "0.17.1",
+    "@effect/ai-openai": "0.30.1",
     "@effect/sql": "0.44.2",
-    "@effect/workflow": "0.9.2",
-    "effect": "3.17.11",
+    "@effect/workflow": "0.9.5",
+    "effect": "3.17.13",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
