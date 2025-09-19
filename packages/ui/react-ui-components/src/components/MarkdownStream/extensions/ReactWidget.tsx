@@ -59,7 +59,6 @@ export class ReactWidget<Props extends {} = {}> extends WidgetType {
 
     const element = createElement(this.component, { ...this.props, ...state });
     this.root.render(<ThemeProvider tx={defaultTx}>{element}</ThemeProvider>);
-    console.log('!');
     // createPortal(<ThemeProvider tx={defaultTx}>{element}</ThemeProvider>, this.container);
   }
 }

@@ -142,9 +142,16 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
     }
 
     case 'suggestion': {
+      if (block.pending) {
+        return;
+      }
       return `<suggestion>${block.text}</suggestion>`;
     }
     case 'select': {
+      if (block.pending || block.options.length === 0) {
+        return;
+      }
+
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
     case 'toolkit': {
@@ -165,7 +172,7 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
     }
 
     case 'summary': {
-      return `<summary>${ContentBlock.createSummaryMessage(block, true)}</summary>`;
+      return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
     }
 
     default: {

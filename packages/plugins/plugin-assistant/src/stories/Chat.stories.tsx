@@ -60,15 +60,13 @@ import { accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
-const DefaultStory = ({
-  debug = true,
-  deckComponents,
-  blueprints = [],
-}: {
+type StoryProps = {
   debug?: boolean;
   deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
-}) => {
+};
+
+const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
   const client = useClient();
   const space = useSpace();
 
@@ -230,7 +228,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    deckComponents: [[ChatContainer]],
   },
 };
 

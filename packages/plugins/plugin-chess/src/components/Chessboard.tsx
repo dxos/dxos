@@ -61,6 +61,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   // External change.
   useEffect(() => {
     model.update(game.pgn);
+    // TODO(burdon): Warning if user has not interacted with the board.
     void click.play();
   }, [game.pgn]);
 

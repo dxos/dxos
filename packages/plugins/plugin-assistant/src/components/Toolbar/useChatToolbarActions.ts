@@ -47,6 +47,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                 type: 'new',
               },
               () =>
+                // TODO(burdon): This doesn't seem to work; either has no effect, or crashes story (Document story).
                 Effect.gen(function* () {
                   invariant(space);
                   const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
@@ -60,6 +61,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                         target: companionTo,
                       }),
                     );
+
                     yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: object }));
                   }
                 }).pipe(Effect.runPromise),

@@ -70,7 +70,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   const handleReset = useCallback(() => {
     setStreaming(false);
-    void controller?.update('');
+    void controller?.reset('');
   }, [controller]);
 
   const handleAppend = useCallback(() => {

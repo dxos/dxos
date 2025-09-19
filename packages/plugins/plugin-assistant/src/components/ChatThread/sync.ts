@@ -9,7 +9,7 @@ import { type ContentBlock, type DataType } from '@dxos/schema';
 /**
  * Update document.
  */
-export type TextModel = Pick<MarkdownStreamController, 'update' | 'append' | 'updateWidget'>;
+export type TextModel = Pick<MarkdownStreamController, 'reset' | 'append' | 'updateWidget'>;
 
 /**
  * Thread context passed to renderer.
@@ -62,7 +62,7 @@ export class MessageSyncer {
     this._currentBlockIndex = 0;
     this._currentBlockContent = undefined;
     this._context.reset();
-    void this._model.update('');
+    void this._model.reset('');
   }
 
   sync(messages: DataType.Message[]) {

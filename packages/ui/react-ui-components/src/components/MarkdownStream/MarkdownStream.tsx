@@ -5,6 +5,7 @@
 import { Effect, Fiber, Queue, Stream } from 'effect';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -25,15 +26,16 @@ import {
   extendedMarkdown,
   streamer,
   xmlTagContextEffect,
+  xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
 } from './extensions';
 import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
-  setContext: (context: any) => void;
   scrollToBottom: () => void;
-  update: (text: string) => Promise<void>;
+  setContext: (context: any) => void;
+  reset: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 } & Pick<XmlWidgetStateManager, 'updateWidget'>;
 
@@ -101,23 +103,25 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       }
 
       return {
-        // Set the context for XML tags.
-        setContext: (context: any) => {
-          view.dispatch({
-            effects: xmlTagContextEffect.of(context),
-          });
-        },
         // Immediately scroll to bottom (and pin).
         scrollToBottom: () => {
           view.dispatch({
             effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
           });
         },
-        // Update entire document.
-        update: async (text: string) => {
+        // Set the context for XML tags.
+        setContext: (context: any) => {
+          view.dispatch({
+            effects: xmlTagContextEffect.of(context),
+          });
+        },
+        // Reset document.
+        reset: async (text: string) => {
           const queue = Effect.runSync(Queue.unbounded<string>());
           setQueue(queue);
+          log.info('update', { from: 0, to: view.state.doc.length, text });
           view.dispatch({
+            effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
             changes: [{ from: 0, to: view.state.doc.length, insert: text }],
           });
         },

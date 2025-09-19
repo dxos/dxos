@@ -61,6 +61,11 @@ export const xmlTagContextEffect = StateEffect.define<any>();
  */
 export const xmlTagUpdateEffect = StateEffect.define<{ id: string; value: any }>();
 
+/**
+ * Reset all state.
+ */
+export const xmlTagResetEffect = StateEffect.define();
+
 type WidgetDecorationSet = {
   from: number;
   decorations: DecorationSet;
@@ -100,6 +105,12 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
       return buildDecorations(state, 0, state.doc.length, options, state.field(contextState), state.field(widgetState));
     },
     update: ({ from, decorations }, tr) => {
+      for (const effect of tr.effects) {
+        if (effect.is(xmlTagResetEffect)) {
+          return { from: 0, decorations: Decoration.none };
+        }
+      }
+
       if (tr.docChanged) {
         // Flag if the transaction has modified the head of the document.
         // (i.e., any changes that touch before the current `from` position).
@@ -130,10 +141,14 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
   const widgetState = StateField.define<WidgetStateMap>({
     create: () => ({}),
     update: (map, tr) => {
-      for (const e of tr.effects) {
-        if (e.is(xmlTagUpdateEffect)) {
+      for (const effect of tr.effects) {
+        if (effect.is(xmlTagResetEffect)) {
+          return {};
+        }
+
+        if (effect.is(xmlTagUpdateEffect)) {
           // Update accumulated widget props by id.
-          const { id, value } = e.value;
+          const { id, value } = effect.value;
           const newValue = typeof value === 'function' ? value(map[id]) : value;
           const nextMap = { ...map, [id]: newValue } as WidgetStateMap;
 
@@ -142,7 +157,7 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
           for (const range of decoSetToArray(decorations)) {
             const deco = range.value;
             const widget = deco?.spec?.widget;
-            if (widget && widget instanceof ReactWidget && widget.id === e.value.id) {
+            if (widget && widget instanceof ReactWidget && widget.id === effect.value.id) {
               widget.render(newValue);
             }
           }
@@ -196,6 +211,7 @@ const buildDecorations = (
 
               if (widget) {
                 from = node.node.to;
+                // TODO(burdon): Atomic range.
                 builder.add(node.node.from, node.node.to, Decoration.replace({ widget, block }));
               }
             }
