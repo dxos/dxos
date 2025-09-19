@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect-rx/rx-react';
-import { type Layer } from 'effect';
+import { type Runtime } from 'effect';
 import { useContext, useMemo } from 'react';
 
 import { AiConversation } from '@dxos/assistant';
@@ -17,7 +17,7 @@ import { type Assistant } from '../types';
 export type UseChatProcessorProps = {
   chat?: Assistant.Chat;
   preset?: AiServicePreset;
-  services?: Layer.Layer<AiChatServices>;
+  services?: () => Promise<Runtime.Runtime<AiChatServices>>;
   blueprintRegistry?: Blueprint.Registry;
   settings?: Assistant.Settings;
 };

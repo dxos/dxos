@@ -62,6 +62,11 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
     subspaceTag?: QueueSubspaceTag;
   }): Effect.Effect<Queue<T>, never, QueueService> =>
     QueueService.pipe(Effect.map(({ queues }) => queues.create<T>(options)));
+
+  static append = <T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(
+    queue: Queue<T>,
+    objects: T[],
+  ): Effect.Effect<void> => Effect.promise(() => queue.append(objects));
 }
 
 /**

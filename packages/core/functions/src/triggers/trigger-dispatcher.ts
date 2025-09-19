@@ -2,17 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
+import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
 
-import { Filter, Obj } from '@dxos/echo';
+import { DXN, Filter, Obj } from '@dxos/echo';
+import { causeToError } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
-import { DatabaseService, type Services } from '../services';
+import { ComputeEventLogger, DatabaseService, QueueService, type Services, TracingService } from '../services';
 import { LocalFunctionExecutionService } from '../services/local-function-execution';
-import { FunctionTrigger, type TimerTrigger, type TimerTriggerOutput } from '../types';
+import {
+  type EventType,
+  FunctionTrigger,
+  type QueueTriggerOutput,
+  type TimerTrigger,
+  type TimerTriggerOutput,
+  type TriggerKind,
+} from '../types';
+
+import { createInvocationPayload } from './input-builder';
+import { InvocationTracer } from './invocation-tracer';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -39,7 +51,7 @@ export interface TriggerDispatcherOptions {
 
 export interface InvokeTriggerOptions {
   trigger: FunctionTrigger;
-  data?: unknown;
+  event: EventType;
 }
 export interface TriggerExecutionResult {
   triggerId: string;
@@ -52,15 +64,24 @@ interface ScheduledTrigger {
   nextExecution: Date;
 }
 
+// TODO(dmaretskyi): Refactor service management.
+type TriggerDispatcherServices =
+  | Exclude<Services, ComputeEventLogger | TracingService>
+  | LocalFunctionExecutionService
+  | InvocationTracer;
+
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
 
+    get running(): boolean;
+
     /**
      * Start the trigger dispatcher.
+     * Will automatically invoke triggers.
      */
-    start(): Effect.Effect<void, never, Services | LocalFunctionExecutionService>;
+    start(): Effect.Effect<void, never, TriggerDispatcherServices>;
 
     /**
      * Stop the trigger dispatcher.
@@ -77,12 +98,14 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     invokeTrigger(
       options: InvokeTriggerOptions,
-    ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService>;
+    ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices>;
 
     /**
-     * Invoke all scheduled triggers whose time is up.
+     * Invoke all scheduled triggers who are due.
      */
-    invokeScheduledTriggers(): Effect.Effect<TriggerExecutionResult[], never, Services | LocalFunctionExecutionService>;
+    invokeScheduledTriggers(opts?: {
+      kinds?: TriggerKind[];
+    }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
 
     /**
      * Advance the internal clock (manual time control only).
@@ -120,7 +143,11 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
   }
 
-  start = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+  get running(): boolean {
+    return this._running;
+  }
+
+  start = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       if (this._running) {
         return;
@@ -130,12 +157,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
-        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(Effect.fork);
+        this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
+          Effect.tapErrorCause((cause) => {
+            const error = causeToError(cause);
+            log.error('trigger dispatcher error', { error });
+            this._running = false;
+            return Effect.void;
+          }),
+          Effect.forkDaemon,
+        );
       } else {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');
       }
 
-      log('TriggerDispatcher started', { timeControl: this.timeControl });
+      log.info('TriggerDispatcher started', { timeControl: this.timeControl });
     });
 
   stop = (): Effect.Effect<void> =>
@@ -155,77 +190,163 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Clear scheduled triggers
       this._scheduledTriggers.clear();
 
-      log('TriggerDispatcher stopped');
+      log.info('TriggerDispatcher stopped');
     });
 
   invokeTrigger = (
     options: InvokeTriggerOptions,
-  ): Effect.Effect<TriggerExecutionResult, never, Services | LocalFunctionExecutionService> =>
+  ): Effect.Effect<TriggerExecutionResult, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
-      const { trigger, data } = options;
+      const { trigger, event } = options;
+      log.info('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      if (!trigger.enabled) {
-        return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
-      }
-
-      if (!trigger.function) {
-        return yield* Effect.dieMessage('Trigger has no function reference');
-      }
+      const tracer = yield* InvocationTracer;
+      const trace = yield* tracer.traceInvocationStart({
+        target: trigger.function?.dxn,
+        payload: {
+          trigger: {
+            id: trigger.id,
+            // TODO(dmaretskyi): Is `spec` always there>
+            kind: trigger.spec!.kind,
+          },
+          data: event,
+        },
+      });
 
       // Sandboxed section.
       const result = yield* Effect.gen(this, function* () {
+        if (!trigger.enabled) {
+          return yield* Effect.dieMessage('Attempting to invoke disabled trigger');
+        }
+
+        if (!trigger.function) {
+          return yield* Effect.dieMessage('Trigger has no function reference');
+        }
+
         // Resolve the function
         const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
         invariant(Obj.instanceOf(FunctionType, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
 
         // Prepare input data
-        const inputData = data ?? this._prepareInputData(trigger);
+        const inputData = this._prepareInputData(trigger, event);
 
         // Invoke the function
-        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData);
+        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData).pipe(
+          Effect.provide(
+            ComputeEventLogger.layerFromTracing.pipe(
+              Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
+            ),
+          ),
+        );
       }).pipe(Effect.exit);
 
       const triggerExecutionResult: TriggerExecutionResult = {
         triggerId: trigger.id,
         result,
       };
-      log('Trigger function executed', { triggerId: trigger.id, success: Exit.isSuccess(result) });
+      if (Exit.isSuccess(result)) {
+        log.info('trigger execution success', {
+          triggerId: trigger.id,
+        });
+      } else {
+        log.error('trigger execution failure', {
+          error: causeToError(result.cause),
+        });
+      }
+      yield* tracer.traceInvocationEnd({
+        trace,
+        // TODO(dmaretskyi): Might miss errors.
+        exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
+      });
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = (): Effect.Effect<
+  invokeScheduledTriggers = ({ kinds = ['timer', 'queue'] } = {}): Effect.Effect<
     TriggerExecutionResult[],
     never,
-    Services | LocalFunctionExecutionService
+    TriggerDispatcherServices
   > =>
     Effect.gen(this, function* () {
-      yield* this.refreshTriggers();
+      const invocations: TriggerExecutionResult[] = [];
+      for (const kind of kinds) {
+        switch (kind) {
+          case 'timer':
+            {
+              yield* this.refreshTriggers();
+              const now = this.getCurrentTime();
+              const triggersToInvoke: FunctionTrigger[] = [];
 
-      const now = this.getCurrentTime();
-      const triggersToInvoke: FunctionTrigger[] = [];
+              for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
+                if (scheduledTrigger.nextExecution <= now) {
+                  triggersToInvoke.push(scheduledTrigger.trigger);
 
-      for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
-        if (scheduledTrigger.nextExecution <= now) {
-          triggersToInvoke.push(scheduledTrigger.trigger);
+                  // Update next execution time using Effect's Cron
+                  scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+                }
+              }
 
-          // Update next execution time using Effect's Cron
-          scheduledTrigger.nextExecution = Cron.next(scheduledTrigger.cron, now);
+              // Invoke all due triggers
+              invocations.push(
+                ...(yield* Effect.forEach(
+                  triggersToInvoke,
+                  (trigger) =>
+                    this.invokeTrigger({
+                      trigger,
+                      event: { tick: now.getTime() } satisfies TimerTriggerOutput,
+                    }),
+                  { concurrency: 1 },
+                )),
+              );
+            }
+            break;
+          case 'queue': {
+            const triggers = yield* this._fetchTriggers();
+            for (const trigger of triggers) {
+              const spec = trigger.spec;
+              if (spec?.kind !== 'queue') {
+                continue;
+              }
+              const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+              const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+
+              // TODO(dmaretskyi): Include cursor & limit in the query.
+              const objects = yield* Effect.promise(() => queue.queryObjects());
+              for (const object of objects) {
+                const objectPos = Obj.getKeys(object, KEY_QUEUE_POSITION).at(0)?.id;
+                // TODO(dmaretskyi): Extract methods for managing queue position.
+                if (!objectPos || (cursor && parseInt(cursor) >= parseInt(objectPos))) {
+                  continue;
+                }
+
+                invocations.push(
+                  yield* this.invokeTrigger({
+                    trigger,
+                    event: {
+                      queue: spec.queue,
+                      item: object,
+                      cursor: objectPos,
+                    } satisfies QueueTriggerOutput,
+                  }),
+                );
+
+                // Update trigger cursor.
+                Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+                Obj.getMeta(trigger).keys.push({ source: KEY_QUEUE_CURSOR, id: objectPos });
+                yield* DatabaseService.flush();
+
+                // We only invoke one trigger for each queue at a time.
+                break;
+              }
+            }
+            break;
+          }
+          default: {
+            return yield* Effect.dieMessage(`Unknown trigger kind: ${kind}`);
+          }
         }
       }
-
-      log('Invoking scheduled triggers', { triggersToInvoke, scheduledTriggers: this._scheduledTriggers, now });
-
-      // Invoke all due triggers
-      return yield* Effect.all(
-        triggersToInvoke.map((trigger) =>
-          this.invokeTrigger({
-            trigger,
-            data: { tick: now.getTime() } as TimerTriggerOutput,
-          }),
-        ),
-        { concurrency: 'unbounded' },
-      );
+      return invocations;
     });
 
   advanceTime = (duration: Duration.Duration): Effect.Effect<void> =>
@@ -307,20 +428,20 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
-  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, Services | LocalFunctionExecutionService> =>
+  private _startNaturalTimeProcessing = (): Effect.Effect<void, never, TriggerDispatcherServices> =>
     Effect.gen(this, function* () {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
-  private _prepareInputData = (trigger: FunctionTrigger): any => {
-    if (!trigger.input) {
-      return {};
-    }
-
-    // TODO: Process input template with trigger context
-    return trigger.input;
+  private _prepareInputData = (trigger: FunctionTrigger, event: EventType): any => {
+    return createInvocationPayload(trigger, event);
   };
 }
 
 // Re-exports
 export { FunctionTrigger, type TimerTrigger } from '../types';
+
+/**
+ * Key for the current queue cursor for queue triggers.
+ */
+const KEY_QUEUE_CURSOR = 'dxos.org/key/local-trigger-dispatcher/queue-cursor';
