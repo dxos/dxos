@@ -14,7 +14,7 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
-import { DataType, createDefaultSchema } from '@dxos/schema';
+import { DataType, createDefaultSchema, typenameFromQuery } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTableModel } from '../../hooks';
@@ -39,7 +39,7 @@ const DefaultStory = ({ editing }: StoryProps) => {
     if (space && views.length && !view) {
       const view = views[0];
       setView(view);
-      setSchema(space.db.schemaRegistry.getSchema(view.query.typename!));
+      setSchema(space.db.schemaRegistry.getSchema(typenameFromQuery(view.query)!));
     }
   }, [space, views, view]);
 

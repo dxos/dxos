@@ -5,11 +5,20 @@
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { type FieldSortType, FormatEnum, type SortDirectionType, TypeEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum, getValue } from '@dxos/echo-schema';
 import { formatForDisplay } from '@dxos/react-ui-form';
-import type { DataType, FieldType, ProjectionModel, PropertyType } from '@dxos/schema';
+import type {
+  DataType,
+  FieldSortType,
+  FieldType,
+  ProjectionModel,
+  PropertyType,
+  SortDirectionType,
+} from '@dxos/schema';
 
 import { type TableRow } from './table-model';
+
+// TODO(wittjosiah): Remove. Use ordering in queries instead.
 
 /**
  * Represents the local sort state.
@@ -55,7 +64,7 @@ export class TableSorting<T extends TableRow> {
     this._rows = rows;
     this._isDirty = computed(() => {
       const local = this._localSort.value;
-      const viewSort = this._view.query.sort?.[0];
+      const viewSort = this._view.sort?.[0];
       if (local?.type === 'cleared') {
         return viewSort !== undefined;
       }
@@ -83,7 +92,7 @@ export class TableSorting<T extends TableRow> {
       return local.sort;
     }
 
-    return this._view.query.sort?.[0];
+    return this._view.sort?.[0];
   }
 
   /**
@@ -129,9 +138,9 @@ export class TableSorting<T extends TableRow> {
   public save(): void {
     if (this._localSort.value !== undefined) {
       if (this._localSort.value.type === 'active') {
-        this._view.query.sort = [this._localSort.value.sort];
+        this._view.sort = [this._localSort.value.sort];
       } else {
-        this._view.query.sort = [];
+        this._view.sort = [];
       }
       this._localSort.value = undefined;
     }

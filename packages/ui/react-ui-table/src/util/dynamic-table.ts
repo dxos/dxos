@@ -6,11 +6,12 @@ import { type Schema } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
-import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
+import type { JsonSchemaType } from '@dxos/echo-schema';
 import {
   type DataType,
   ProjectionModel,
   type SchemaPropertyDefinition,
+  type SortDirectionType,
   createView,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
@@ -101,7 +102,7 @@ const setProperties = (
 
       if (property.sort) {
         const fieldId = field.id;
-        view.query.sort = [{ fieldId, direction: property.sort }];
+        view.sort = [{ fieldId, direction: property.sort }];
       }
     }
   }

@@ -18,7 +18,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
@@ -64,8 +64,9 @@ export default (context: PluginContext) =>
       resolve: async ({ view, data }) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        const typename = view.query ? typenameFromQuery(view.query) : undefined;
+        invariant(typename);
+        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const object = Obj.make(schema, data);
         return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };

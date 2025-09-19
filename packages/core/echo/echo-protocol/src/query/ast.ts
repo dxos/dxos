@@ -208,7 +208,7 @@ export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> =
 export const OrderDirection = Schema.Literal('asc', 'desc');
 export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
 
-export const Order = Schema.Union(
+const Order_ = Schema.Union(
   Schema.Struct({
     // How database wants to order them (in practice - by id).
     kind: Schema.Literal('natural'),
@@ -219,7 +219,8 @@ export const Order = Schema.Union(
     direction: OrderDirection,
   }),
 );
-export type Order = Schema.Schema.Type<typeof Order>;
+export type Order = Schema.Schema.Type<typeof Order_>;
+export const Order: Schema.Schema<Order> = Order_;
 
 /**
  * Order the query results.

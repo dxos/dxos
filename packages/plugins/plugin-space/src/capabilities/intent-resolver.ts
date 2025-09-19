@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -88,7 +88,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create records smart collection.
         const records = Obj.make(DataType.QueryCollection, {
-          query: { typename: DataType.StoredSchema.typename },
+          query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
         });
         collection.objects.push(Ref.make(records));
 
@@ -406,8 +406,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        const typename = typenameFromQuery(view.query);
+        invariant(typename);
+        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
         if (!undo) {
@@ -696,7 +697,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.CreateQueryCollection,
       resolve: async ({ name, typename }) => ({
-        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
+        data: {
+          object: Obj.make(DataType.QueryCollection, { name, query: Query.select(Filter.typename(typename)).ast }),
+        },
       }),
     }),
   ]);

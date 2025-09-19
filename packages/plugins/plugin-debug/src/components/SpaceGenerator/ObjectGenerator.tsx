@@ -15,7 +15,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -24,7 +24,7 @@ const generator: ValueGenerator = faker as any;
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
 const findViewByTypename = async (views: DataType.View[], typename: string) => {
-  return views.find((view) => view.query.typename === typename);
+  return views.find((view) => typenameFromQuery(view.query) === typename);
 };
 
 export const createGenerator = <T extends Obj.Any>(

@@ -11,11 +11,12 @@ import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
+import { useMatcherExtension } from '@dxos/react-ui-components';
+import { type Expression, QueryParser, createFilter } from '@dxos/react-ui-components';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useFlush, useMatcherExtension } from '../../hooks';
-import { type Expression, QueryParser, createFilter } from '../../parser';
+import { useFlush } from '../../hooks';
 
 import { type ComponentProps } from './types';
 

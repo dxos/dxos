@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { ObjectId, Ref } from '@dxos/echo-schema';
 import {
   type EmailTrigger,
@@ -128,7 +128,7 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
     case 'webhook':
       return { kind: 'webhook', method: 'POST' } satisfies WebhookTrigger;
     case 'subscription':
-      return { kind: 'subscription', filter: {} } satisfies SubscriptionTrigger;
+      return { kind: 'subscription', query: Query.select(Filter.nothing()).ast } satisfies SubscriptionTrigger;
     case 'email':
       return { kind: 'email' } satisfies EmailTrigger;
     case 'queue': {

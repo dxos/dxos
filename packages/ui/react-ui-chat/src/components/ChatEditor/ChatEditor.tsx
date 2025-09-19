@@ -7,8 +7,10 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type AutocompleteOptions,
   type BasicExtensionsOptions,
   type UseTextEditorProps,
+  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   useTextEditor,
@@ -16,7 +18,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type AutocompleteOptions, autocomplete } from './autocomplete';
 import { type ReferencesOptions, references as referencesExtension } from './references';
 
 export interface ChatEditorController {

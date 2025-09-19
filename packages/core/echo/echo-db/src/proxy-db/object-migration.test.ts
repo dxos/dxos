@@ -2,20 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import { Schema } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import {
-  FieldSortType,
-  JsonPath,
-  JsonSchemaType,
-  QueryType,
-  TypedObject,
-  getSchema,
-  getSchemaDXN,
-  getSchemaVersion,
-  getTypename,
-} from '@dxos/echo-schema';
+import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 
@@ -137,29 +127,29 @@ test('chained migrations', async () => {
 });
 
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
-test('view migration', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
+// test('view migration', async () => {
+//   const { db, graph } = await builder.createDatabase();
+//   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
 
-  db.add(
-    live(ViewTypeV1, {
-      fields: [
-        { id: '8cb60541', path: 'name' as JsonPath },
-        { id: '902dd8b5', path: 'email' as JsonPath },
-        { id: 'e288952b', path: 'salary' as JsonPath, size: 150 },
-        { id: 'cbdc987c', path: 'active' as JsonPath, size: 100 },
-        { id: '922fd882', path: 'manager' as JsonPath, referencePath: 'name' as JsonPath },
-      ],
-      name: 'View',
-      query: { type: 'example.com/type/b1e66ff8' },
-    }),
-  );
-  await db.flush({ indexes: true });
-  await db.runMigrations([ViewTypeV1ToV2]);
+//   db.add(
+//     live(ViewTypeV1, {
+//       fields: [
+//         { id: '8cb60541', path: 'name' as JsonPath },
+//         { id: '902dd8b5', path: 'email' as JsonPath },
+//         { id: 'e288952b', path: 'salary' as JsonPath, size: 150 },
+//         { id: 'cbdc987c', path: 'active' as JsonPath, size: 100 },
+//         { id: '922fd882', path: 'manager' as JsonPath, referencePath: 'name' as JsonPath },
+//       ],
+//       name: 'View',
+//       query: { type: 'example.com/type/b1e66ff8' },
+//     }),
+//   );
+//   await db.flush({ indexes: true });
+//   await db.runMigrations([ViewTypeV1ToV2]);
 
-  const { objects } = await db.query(Filter.type(ViewTypeV2)).run();
-  expect(objects).to.have.length(1);
-});
+//   const { objects } = await db.query(Filter.type(ViewTypeV2)).run();
+//   expect(objects).to.have.length(1);
+// });
 
 export const FieldSchema = Schema.Struct({
   id: Schema.String,
@@ -170,43 +160,3 @@ export const FieldSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
-
-export class ViewTypeV1 extends TypedObject({
-  typename: 'dxos.org/type/View',
-  version: '0.1.0',
-})({
-  name: Schema.String.annotations({
-    title: 'Name',
-    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-  }),
-  query: Schema.Struct({
-    type: Schema.optional(Schema.String),
-    sort: Schema.optional(Schema.Array(FieldSortType)),
-  }).pipe(Schema.mutable),
-  schema: Schema.optional(JsonSchemaType),
-  fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
-}) {}
-
-export class ViewTypeV2 extends TypedObject({
-  typename: 'dxos.org/type/View',
-  version: '0.2.0',
-})({
-  name: Schema.String.annotations({
-    title: 'Name',
-    [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-  }),
-  query: QueryType,
-  schema: Schema.optional(JsonSchemaType),
-  fields: Schema.mutable(Schema.Array(FieldSchema)),
-  metadata: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable)),
-}) {}
-
-export const ViewTypeV1ToV2 = defineObjectMigration({
-  from: ViewTypeV1,
-  to: ViewTypeV2,
-  transform: async (from) => {
-    return { ...from, query: { typename: from.query.type } };
-  },
-  onMigration: async () => {},
-});

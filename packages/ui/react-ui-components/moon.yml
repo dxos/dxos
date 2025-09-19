@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - pack
+  - ts-test
 tasks:
   compile:
     args:

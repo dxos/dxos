@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import {
   EchoObject,
   FormatAnnotation,
@@ -76,13 +76,13 @@ const StoryViewEditor = ({
   space?: Space;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
-  const handleTypenameChanged = useCallback(
+  const handleQueryChanged = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       schema.updateTypename(typename);
       invariant(view);
-      view.query.typename = typename;
+      view.query = Query.select(Filter.typename(typename)).ast;
     },
     [schema, view],
   );
@@ -96,7 +96,7 @@ const StoryViewEditor = ({
       registry={space?.db.schemaRegistry}
       schema={schema}
       view={view}
-      onTypenameChanged={handleTypenameChanged}
+      onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
     />
   );

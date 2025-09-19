@@ -34,3 +34,5 @@ export interface Literal {
   type: 'literal';
   value: string;
 }
+
+export type RelationalSymbol = '=' | '<' | '>';

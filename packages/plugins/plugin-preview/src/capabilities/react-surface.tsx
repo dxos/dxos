@@ -25,7 +25,7 @@ import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel } from '@dxos/schema';
+import { DataType, type ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { PREVIEW_PLUGIN } from '../meta';
@@ -49,12 +49,12 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Organization.typename &&
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Organization.typename &&
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 

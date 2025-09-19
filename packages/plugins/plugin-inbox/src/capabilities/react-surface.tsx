@@ -19,7 +19,7 @@ import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 
 import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
@@ -134,11 +134,13 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Person.typename && Obj.instanceOf(Table.Table, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Person.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceContactTable = defaultSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Person.typename && Obj.instanceOf(Table.Table, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Person.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.

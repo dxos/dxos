@@ -23,7 +23,7 @@ import {
 import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType } from '@dxos/schema';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 
 import { SPACE_PLUGIN } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -145,16 +145,15 @@ const getQueryCollectionNodePartials = ({
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
+  const typename = typenameFromQuery(collection.query);
   return {
-    icon: collection.query.typename && resolve(collection.query.typename)?.icon,
+    icon: typename && resolve(typename)?.icon,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
     canDrop: (source: TreeData) => {
       return (
-        isGraphNode(source.item) &&
-        Obj.isObject(source.item.data) &&
-        Obj.getTypename(source.item.data) === collection.query.typename
+        isGraphNode(source.item) && Obj.isObject(source.item.data) && Obj.getTypename(source.item.data) === typename
       );
     },
     onTransferStart: (child: Node<Obj.Any>, index?: number) => {
@@ -524,7 +523,7 @@ export const constructObjectActions = ({
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === queryCollection.query.typename)
+    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === typenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
@@ -578,7 +577,7 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection?.query.typename,
+                    typename: queryCollection ? typenameFromQuery(queryCollection.query) : undefined,
                   }),
                 );
               } else {

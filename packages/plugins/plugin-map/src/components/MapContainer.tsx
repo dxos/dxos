@@ -11,7 +11,7 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
@@ -36,7 +36,8 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
   const space = getSpace(view);
   const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 
   const markers = objects
@@ -65,7 +66,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
     .filter(isNotNullable);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selected = useSelected(view?.query.typename, 'multi');
+  const selected = useSelected(typename, 'multi');
 
   return (
     <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>

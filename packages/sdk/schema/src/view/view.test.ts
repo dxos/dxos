@@ -3,9 +3,9 @@
 //
 
 import { Schema, String, pipe } from 'effect';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -34,7 +34,9 @@ describe('Projection', () => {
       jsonSchema: Type.toJsonSchema(schema),
       presentation,
     });
-    expect(view.query.typename).to.eq(schema.typename);
+    assert(view.query.type === 'select');
+    assert(view.query.filter.type === 'object');
+    expect(view.query.filter.typename).to.eq(DXN.fromTypename(schema.typename).toString());
     expect(view.projection.fields.map((f) => f.path)).to.deep.eq([
       'name',
       'image',

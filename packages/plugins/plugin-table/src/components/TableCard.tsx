@@ -17,7 +17,7 @@ import {
   TablePresentation,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 
 export type TableCardProps = {
   role: string;
@@ -29,7 +29,8 @@ export const TableCard = ({ role, view }: TableCardProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.query.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 

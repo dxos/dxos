@@ -13,7 +13,6 @@ export * from './formats';
 export * from './json';
 export * from './json-schema';
 export * from './object';
-export * from './query';
 export * from './types';
 export * from './utils';
 export * from './ref';
