@@ -5,14 +5,16 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -50,10 +52,23 @@ import {
   GraphContainer,
   LoggingContainer,
   MessageContainer,
+  ResearchInputStack,
+  ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
 } from './components';
-import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
+import { PromptContainer } from './components';
+import { InvocationsContainer } from './components/InvocationsContainer';
+import { TriggersContainer } from './components/TriggersContainer';
+import {
+  ResearchInputQueue,
+  accessTokensFromEnv,
+  addTestData,
+  config,
+  getDecorators,
+  organizations,
+  testTypes,
+} from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -498,5 +513,81 @@ export const WithLinearSync: Story = {
   args: {
     deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [LINEAR_BLUEPRINT.key],
+  },
+};
+
+export const WithTriggers: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    onInit: async ({ space }) => {
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          enabled: true,
+          spec: {
+            kind: 'timer',
+            cron: '*/5 * * * * *', // Every 5 seconds
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
+  },
+};
+
+export const WithResearchQueue: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.local,
+    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      const researchInputQueue = space.db.add(
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+      );
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      await researchInputQueue.queue.target!.append(orgs);
+
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions: 'Research the organization provided as input.',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(agent)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: researchInputQueue.queue.dxn.toString(),
+          },
+          input: {
+            prompt: Ref.make(researchPrompt),
+            input: '{{event.item}}',
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [
+      [ResearchInputStack],
+      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
+      [ResearchOutputStack],
+    ],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };

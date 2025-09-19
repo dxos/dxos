@@ -73,7 +73,7 @@ export const createCards = (image = true): CardProps<any>[] => {
     ],
   });
 
-  const project = Obj.make(DataType.Project, {
+  const project = DataType.makeProject({
     name: faker.person.fullName(),
     image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),

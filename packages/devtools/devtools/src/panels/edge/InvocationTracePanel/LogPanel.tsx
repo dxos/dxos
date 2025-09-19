@@ -55,8 +55,8 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
 
     return eventQueue.objects.flatMap((event) => {
       return event.logs.map((log) => ({
-        id: `${event.id}-${log.timestampMs}`,
-        time: new Date(log.timestampMs).toLocaleString(),
+        id: `${event.id}-${log.timestamp}`,
+        timestamp: new Date(log.timestamp).toLocaleString(),
         level: log.level,
         message: log.message,
         context: JSON.stringify(log.context) ?? {},
