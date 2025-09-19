@@ -2,12 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Effect, Schema } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FunctionTrigger, type TriggerKind, type TriggerType } from '@dxos/functions';
+import {
+  FunctionTrigger,
+  type TriggerKind,
+  type TriggerType,
+  defineFunction,
+  serializeFunction,
+} from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -31,11 +39,13 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
+import { DataType, createView } from '@dxos/schema';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
 export enum PresetName {
+  ORG_RESEARCH_PROJECT = 'org-research-project',
   // EMAIL_TABLE = 'email-table',
   GPT_QUEUE = 'webhook-gpt-queue',
   CHAT_GPT = 'chat-gpt-text',
@@ -51,6 +61,75 @@ export const generator = () => ({
   schemas: [CanvasBoardType, FunctionTrigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
+    [
+      PresetName.ORG_RESEARCH_PROJECT,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const mailboxQueue = space.queues.create();
+          const _contactsQueue = space.queues.create();
+          const organizationsQueue = space.queues.create();
+          const _notesQueue = space.queues.create();
+
+          const mailbox = Mailbox.make({ name: 'Mailbox', queue: mailboxQueue.dxn });
+          space.db.add(mailbox);
+
+          const stub = defineFunction({
+            name: 'example.org/function/reply',
+            description: 'Function that echoes the input',
+            inputSchema: Schema.Any,
+            outputSchema: Schema.Any,
+            handler: Effect.fn(function* ({ data }) {
+              return data;
+            }),
+          });
+
+          const researchTrigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(serializeFunction(stub)),
+            spec: {
+              kind: 'queue',
+              queue: organizationsQueue.dxn.toString(),
+            },
+            enabled: true,
+          });
+          space.db.add(researchTrigger);
+
+          // TODO(wittjosiah): Update queries to be against above queues.
+          const mailboxView = createView({
+            name: 'Mailbox',
+            query: Query.select(Filter.type(DataType.Message)),
+            jsonSchema: Type.toJsonSchema(DataType.Message),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const contactsView = createView({
+            name: 'Contacts',
+            query: Query.select(Filter.type(DataType.Person)),
+            jsonSchema: Type.toJsonSchema(DataType.Person),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const organizationsView = createView({
+            name: 'Organizations',
+            query: Query.select(Filter.type(DataType.Organization)),
+            jsonSchema: Type.toJsonSchema(DataType.Organization),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const notesView = createView({
+            name: 'Notes',
+            query: Query.select(Filter.type(Markdown.Document)),
+            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+
+          return space.db.add(
+            DataType.makeProject({
+              name: 'Organization Research',
+              collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+            }),
+          );
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
     [
       PresetName.GPT_QUEUE,
       async (space, n, cb) => {
