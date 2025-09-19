@@ -216,7 +216,6 @@
     },
     "patchedDependencies": {
       "@automerge/automerge-repo": "patches/@automerge__automerge-repo.patch",
-      "@effect/ai-anthropic": "patches/@effect__ai-anthropic.patch",
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch"
