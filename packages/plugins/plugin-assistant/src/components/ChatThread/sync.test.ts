@@ -20,13 +20,15 @@ class TestDocument implements TextModel {
     return this._view.state.doc.toString();
   }
 
-  async update(text: string) {
+  async reset(text: string) {
     this._view.dispatch({ changes: { from: 0, to: this._view.state.doc.length, insert: text } });
   }
 
   async append(text: string) {
     this._view.dispatch({ changes: { from: this._view.state.doc.length, insert: text } });
   }
+
+  updateWidget(_id: string, _value: any) {}
 }
 
 describe('reducers', () => {

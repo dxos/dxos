@@ -75,7 +75,7 @@ export const ChatMessage = ({
   if (!debug && toolProvider && isToolMessage(message)) {
     return (
       <MessageItem classNames={[styles.margin, 'animate-[fadeIn_0.5s]']}>
-        <ToolBlock message={message} toolProvider={toolProvider} />
+        <ToolBlock blocks={message.blocks} />
       </MessageItem>
     );
   }
