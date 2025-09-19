@@ -13,8 +13,6 @@ import { ReactWidget } from './ReactWidget';
 import { decoSetToArray } from './util';
 import { nodeToJson } from './xml-util';
 
-// TODO(burdon): Create tests.
-
 export type StateDispatch<T> = T | ((state: T) => T);
 
 /**
@@ -132,7 +130,10 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
         return { from: result.from, decorations: decorations.update({ add: decoSetToArray(result.decorations) }) };
       }
 
-      return { from, decorations: decorations.map(tr.changes) };
+      // No document changes: avoid mapping decorations through an empty ChangeSet,
+      // which can throw when the decoration set was created for a different base length.
+      // Simply return the existing decorations unchanged.
+      return { from, decorations };
     },
     provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
   });

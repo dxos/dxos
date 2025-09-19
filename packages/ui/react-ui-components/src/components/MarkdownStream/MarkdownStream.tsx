@@ -5,7 +5,6 @@
 import { Effect, Fiber, Queue, Stream } from 'effect';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
-import { log } from '@dxos/log';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -115,13 +114,14 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         },
         // Reset document.
         reset: async (text: string) => {
-          const queue = Effect.runSync(Queue.unbounded<string>());
-          setQueue(queue);
-          log.info('update', { from: 0, to: view.state.doc.length, text });
           view.dispatch({
             effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
             changes: [{ from: 0, to: view.state.doc.length, insert: text }],
           });
+
+          // New queue.
+          const queue = Effect.runSync(Queue.unbounded<string>());
+          setQueue(queue);
         },
         // Append to queue (and stream).
         append: async (text: string) => {

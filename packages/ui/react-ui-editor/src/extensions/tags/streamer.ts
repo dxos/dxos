@@ -41,6 +41,7 @@ const cursor = (): Extension => {
       if (tr.docChanged) {
         return true;
       }
+
       return value;
     },
   });
@@ -118,6 +119,19 @@ const fadeIn = (): Extension => {
           return decorations;
         }
 
+        // Detect a document reset (e.g., fully replaced or cleared), and clear all decorations.
+        let isReset = tr.state.doc.length === 0;
+        if (!isReset) {
+          tr.changes.iterChanges((fromA, toA) => {
+            if (fromA === 0 && toA === tr.startState.doc.length) {
+              isReset = true;
+            }
+          });
+        }
+        if (isReset) {
+          return Decoration.none;
+        }
+
         // Check if content was appended at the end.
         const newDecorations: any[] = [];
         tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
@@ -132,18 +146,14 @@ const fadeIn = (): Extension => {
           }
         });
 
-        if (newDecorations.length > 0) {
-          // Combine existing decorations with new ones.
-          return decorations.update({
-            add: newDecorations,
-            filter: (_from, _to) => {
-              // Remove old decorations after a certain time or keep them.
-              return true;
-            },
-          });
-        }
-
-        return decorations;
+        // Combine existing decorations with new ones.
+        return decorations.update({
+          add: newDecorations,
+          filter: (_from, _to) => {
+            // Remove old decorations after a certain time or keep them.
+            return true;
+          },
+        });
       },
       provide: (f) => EditorView.decorations.from(f),
     }),
