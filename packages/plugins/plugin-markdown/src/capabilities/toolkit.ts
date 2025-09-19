@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -13,8 +13,8 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { MarkdownAction } from '../types';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends AiToolkit.make(
-  AiTool.make('create-document', {
+class Toolkit extends Toolkit.make(
+  Tool.make('create-document', {
     description: 'Creates a new markdown document.',
     parameters: {
       name: Schema.optional(Schema.String),

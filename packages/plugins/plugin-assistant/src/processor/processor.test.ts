@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
@@ -23,8 +23,8 @@ import { type DataType } from '@dxos/schema';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
 
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('random', {
+class TestToolkit extends Toolkit.make(
+  Tool.make('random', {
     description: 'Random number generator',
     parameters: {},
     success: Schema.Number,
@@ -32,7 +32,7 @@ class TestToolkit extends AiToolkit.make(
 ) {}
 
 // TODO(burdon): Create minimal toolkit.
-const toolkit = AiToolkit.merge(TestToolkit) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Any as Toolkit.Toolkit<Tool.Any>;
 
 // TODO(burdon): Explain structure.
 const TestServicesLayer = Layer.mergeAll(

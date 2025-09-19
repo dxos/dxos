@@ -2,17 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiError, type Tool, type Toolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(burdon): Not called?
-export const callTools: <Tools extends AiTool.Any>(
-  toolkit: AiToolkit.ToHandler<Tools>,
+export const callTools: <Tools extends Tool.Any>(
+  toolkit: Toolkit.ToHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
-) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTools')(
+) => Effect.Effect<ContentBlock.ToolResult[], AiError.AiError, Tool.Context<Tools>> = Effect.fn('callTools')(
   function* (toolkit, toolCalls) {
     log.info('callTools', { count: toolCalls.length });
     return yield* Effect.forEach(toolCalls, (toolCall) => callTool(toolkit, toolCall));
@@ -22,10 +22,10 @@ export const callTools: <Tools extends AiTool.Any>(
 /**
  * Call individual tool.
  */
-export const callTool: <Tools extends AiTool.Any>(
-  toolkit: AiToolkit.ToHandler<Tools>,
+export const callTool: <Tools extends Tool.Any>(
+  toolkit: Toolkit.ToHandler<Tools>,
   toolCall: ContentBlock.ToolCall,
-) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
+) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, Tool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
     const input = JSON.parse(toolCall.input);
 

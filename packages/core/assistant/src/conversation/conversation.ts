@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit } from '@effect/ai';
+import { type Tool, type Toolkit } from '@effect/ai';
 import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -21,9 +21,7 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export type AiConversationRunRequirements<Tools extends AiTool.Any> =
-  | AiSessionRunRequirements
-  | AiTool.ToHandler<Tools>;
+export type AiConversationRunRequirements<Tools extends Tool.Any> = AiSessionRunRequirements | Tool.ToHandler<Tools>;
 
 export interface AiConversationRunParams {
   prompt: string;
@@ -53,7 +51,7 @@ export class AiConversation {
   /**
    * Toolkit from the current session request.
    */
-  private _toolkit: AiToolkit.ToHandler<AiTool.Any> | undefined;
+  private _toolkit: Toolkit.ToHandler<Tool.Any> | undefined;
 
   public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
@@ -76,7 +74,7 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest<Tools extends AiTool.Any>(
+  createRequest<Tools extends Tool.Any>(
     params: AiConversationRunParams,
   ): Effect.Effect<DataType.Message[], AiSessionRunError, AiConversationRunRequirements<Tools>> {
     return Effect.gen(this, function* () {

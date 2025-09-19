@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiChat, AiLanguageModel } from '@effect/ai';
+import { type Chat, LanguageModel } from '@effect/ai';
 import { Chunk, Effect, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -15,7 +15,7 @@ import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
 // TODO(dmaretskyi): What is the right stopping condition?
-export const hasToolCall = Effect.fn(function* (chat: AiChat.AiChat.Service) {
+export const hasToolCall = Effect.fn(function* (chat: Chat.Chat.Service) {
   const history = yield* chat.history;
   return (
     history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
@@ -38,7 +38,7 @@ export const processMessages = Effect.fn(function* ({
 
   do {
     const prompt = yield* preprocessAiInput(history);
-    const blocks = yield* AiLanguageModel.streamText({
+    const blocks = yield* LanguageModel.streamText({
       disableToolCallResolution: true,
       toolkit,
       system,

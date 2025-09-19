@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiResponse } from '@effect/ai';
+import { Response } from '@effect/ai';
 import { describe, it, vi } from '@effect/vitest';
 import { Chunk, Effect, Function, Stream } from 'effect';
 
@@ -68,8 +68,8 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           text('Hello, world!'),
-          new AiResponse.ToolCallPart({
-            id: AiResponse.ToolCallId.make('123'),
+          new Response.ToolCallPart({
+            id: Response.ToolCallId.make('123'),
             name: 'foo',
             params: { bar: 'baz' },
           }),
@@ -98,8 +98,8 @@ describe('parser', () => {
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
           text('<status>I am thinking...'),
-          new AiResponse.ToolCallPart({
-            id: AiResponse.ToolCallId.make('123'),
+          new Response.ToolCallPart({
+            id: Response.ToolCallId.make('123'),
             name: 'foo',
             params: { bar: 'baz' },
           }),
@@ -127,7 +127,7 @@ describe('parser', () => {
       'reasoning gets passed through',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          new AiResponse.ReasoningPart({
+          new Response.ReasoningPart({
             reasoningText: 'My thoughts are...',
           }),
           text('Hello, world!'),
@@ -263,11 +263,11 @@ describe('parser', () => {
 
   describe('streaming', () => {
     const PARTS = [
-      new AiResponse.ReasoningPart({ reasoningText: 'My thoughts are...' }),
+      new Response.ReasoningPart({ reasoningText: 'My thoughts are...' }),
       text('Hello, '),
       text('world!'),
-      new AiResponse.ToolCallPart({
-        id: AiResponse.ToolCallId.make('123'),
+      new Response.ToolCallPart({
+        id: Response.ToolCallId.make('123'),
         name: 'foo',
         params: { bar: 'baz' },
       }),
@@ -322,10 +322,10 @@ describe('parser', () => {
   });
 });
 
-const makeInputStream = (parts: readonly AiResponse.Part[]): Stream.Stream<AiResponse.AiResponse, never, never> =>
-  Stream.fromIterable(parts).pipe(Stream.map((part) => new AiResponse.AiResponse({ parts: [part] })));
+const makeInputStream = (parts: readonly Response.Part[]): Stream.Stream<Response.Response, never, never> =>
+  Stream.fromIterable(parts).pipe(Stream.map((part) => new Response.Response({ parts: [part] })));
 
 const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
 const splitByCharacter = (text: string): string[] => text.split('');
 
-const text = (text: string) => new AiResponse.TextPart({ text });
+const text = (text: string) => new Response.TextPart({ text });

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, type AiToolkit } from '@effect/ai';
+import { Tool, type Toolkit } from '@effect/ai';
 import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: AiToolkit.Any,
+  toolkit: Toolkit.Any,
 ): Layer.Layer<ToolResolverService> => {
   return Layer.succeed(ToolResolverService, {
     resolve: Effect.fn('resolveTool')(function* (id) {
@@ -33,8 +33,8 @@ export const makeToolResolverFromFunctions = (
 
 export const makeToolExecutionServiceFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: AiToolkit.AiToolkit<AiTool.Any>,
-  handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>,
+  toolkit: Toolkit.Toolkit<Tool.Any>,
+  handlersLayer: Layer.Layer<Tool.ToHandler<Tool.Tool<any>>, never, never>,
 ): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   return Layer.effect(
     ToolExecutionService,
@@ -44,9 +44,9 @@ export const makeToolExecutionServiceFromFunctions = (
 
       return {
         handlersFor: (toolkit) => {
-          const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
+          const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
             return Effect.fn('toolFunctionHandler')(function* (input: any) {
-              if (toolkitHandler.tools.find((t: AiTool.Any) => t.name === tool.name)) {
+              if (toolkitHandler.tools.find((t: Tool.Any) => t.name === tool.name)) {
                 // TODO(wittjosiah): Everything is `never` here.
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
@@ -80,14 +80,14 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assisatnt/FunctionToolAn
   }
 >() {}
 
-const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
+const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
 
-const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => {
+const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
 
-  const tool = AiTool.make(makeToolName(fn.name), {
+  const tool = Tool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),
     // TODO(dmaretskyi): Include output schema.

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -17,8 +17,8 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends AiToolkit.make(
-  AiTool.make('add-to-context', {
+class Toolkit extends Toolkit.make(
+  Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
     `,
@@ -31,7 +31,7 @@ class Toolkit extends AiToolkit.make(
     failure: Schema.Never,
   }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
 
-  AiTool.make('get-schemas', {
+  Tool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
     `,
@@ -44,7 +44,7 @@ class Toolkit extends AiToolkit.make(
     failure: Schema.Never,
   }),
 
-  AiTool.make('add-schema', {
+  Tool.make('add-schema', {
     description: trim`
       Adds a schema to the space.
       The name will be used when displayed to the user.
@@ -59,7 +59,7 @@ class Toolkit extends AiToolkit.make(
     failure: Schema.Never,
   }),
 
-  AiTool.make('create-record', {
+  Tool.make('create-record', {
     description: trim`
       Creates a new record and adds it to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.

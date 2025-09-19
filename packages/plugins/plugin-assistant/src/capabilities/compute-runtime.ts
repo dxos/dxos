@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
+import { type Tool, Toolkit } from '@effect/ai';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
@@ -67,7 +67,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
 
         const allFunctions = functions.flat();
         // TODO(wittjosiah): Don't cast.
-        const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+        const toolkit = Toolkit.merge(...toolkits) as Toolkit.Any as Toolkit.Toolkit<Tool.Any>;
         const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
 
         const space = client.spaces.get(spaceId);

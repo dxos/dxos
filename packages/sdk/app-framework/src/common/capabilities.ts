@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit } from '@effect/ai';
+import { type Tool, type Toolkit } from '@effect/ai';
 import { type Registry } from '@effect-rx/rx-react';
 import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
@@ -157,12 +157,12 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const Toolkit = defineCapability<AiToolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
+  export const Toolkit = defineCapability<Toolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
 
   /**
    * @category Capability
    */
-  export const ToolkitHandler = defineCapability<Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>>(
+  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.ToHandler<Tool.Tool<any>>, never, never>>(
     'dxos.org/app-framework/capability/ai-toolkit-handler',
   );
 

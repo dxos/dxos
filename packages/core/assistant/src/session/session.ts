@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
 import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
@@ -31,18 +31,18 @@ import { GenerationObserver } from './observer';
 export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 export type AiSessionRunRequirements =
-  | AiLanguageModel.AiLanguageModel
+  | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends AiTool.Any> = {
+export type AiSessionRunParams<Tools extends Tool.Any> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
-  toolkit?: AiToolkit.ToHandler<Tools>;
+  toolkit?: Toolkit.ToHandler<Tools>;
   observer?: GenerationObserver;
 };
 
@@ -71,7 +71,7 @@ export class AiSession {
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
-  run = <Tools extends AiTool.Any>({
+  run = <Tools extends Tool.Any>({
     prompt,
     system: systemTemplate,
     history = [],
@@ -112,7 +112,7 @@ export class AiSession {
         const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
 
         // Execute the stream request.
-        const blocks = yield* AiLanguageModel.streamText({
+        const blocks = yield* LanguageModel.streamText({
           prompt,
           system,
           toolkit,
@@ -185,7 +185,7 @@ export class AiSession {
   // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
-    _options: AiSessionRunParams<AiTool.Any>,
+    _options: AiSessionRunParams<Tool.Any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);
