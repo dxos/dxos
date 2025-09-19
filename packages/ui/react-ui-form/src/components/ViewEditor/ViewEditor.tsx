@@ -145,10 +145,7 @@ export const ViewEditor = ({
   return (
     <div role='none' className={mx(classNames)}>
       {schemaReadonly && (
-        <Callout.Root
-          valence='info'
-          classNames={['is-full mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}
-        >
+        <Callout.Root valence='info' classNames={['mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}>
           <Callout.Title>{t('system schema description')}</Callout.Title>
         </Callout.Root>
       )}
