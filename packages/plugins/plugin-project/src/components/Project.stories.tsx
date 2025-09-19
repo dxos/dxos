@@ -18,6 +18,8 @@ import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { translations } from '../translations';
+
 import { type ItemProps, Project } from './Project';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
@@ -144,15 +146,7 @@ const MutationsStory = () => {
 
 const meta: Meta<typeof Project> = {
   title: 'plugins/plugin-project/Project',
-  render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
-};
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
+  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
@@ -188,39 +182,14 @@ export const Default: Story = {
   ],
 };
 
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  render: DefaultStory,
+};
+
 export const Mutations: Story = {
   render: MutationsStory,
-  decorators: [
-    withClientProvider({
-      types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
-      createIdentity: true,
-      createSpace: true,
-      onSpaceCreated: async ({ space }) => {
-        // Create a project
-        const project = DataType.makeProject({
-          collections: [],
-        });
-
-        // Create a view for contacts
-        const view = createView({
-          name: 'Contacts',
-          typename: DataType.Person.typename,
-          jsonSchema: Type.toJsonSchema(DataType.Person),
-          presentation: project,
-          fields: ['fullName'],
-        });
-
-        project.collections.push(Ref.make(view));
-
-        space.db.add(view);
-        space.db.add(project);
-
-        // Generate initial contacts
-        const factory = createObjectFactory(space.db, faker as any);
-        await factory([{ type: DataType.Person, count: 3 }]);
-      },
-    }),
-    withLayout({ fullscreen: true }),
-    withTheme,
-  ],
 };
