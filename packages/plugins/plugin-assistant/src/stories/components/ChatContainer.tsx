@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -22,10 +22,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   const { preset, ...chatProps } = usePresets(online);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
-  const [chat, setChat] = useState<Assistant.Chat>();
-  useEffect(() => {
-    setChat((currentChat) => currentChat ?? chats[0]);
-  }, [chat, chats]);
+  const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space, chat });

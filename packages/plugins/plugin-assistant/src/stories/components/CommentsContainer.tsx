@@ -15,7 +15,7 @@ import { type ComponentProps } from './types';
 export const CommentsContainer = ({ space }: ComponentProps) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1));
-  const object = binder?.objects.value[0].target;
+  const object = binder?.objects.value[0]?.target;
   const data = useMemo(() => ({ subject: 'comments', companionTo: object }), [object]);
   if (!object) {
     return null;
