@@ -13,7 +13,7 @@ export type MessageStyleProps = {
 };
 
 export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
-  return mx('p-trimMd rounded-md is-full', messageValence(valence), etc);
+  return mx('p-trimMd rounded-md', messageValence(valence), etc);
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
