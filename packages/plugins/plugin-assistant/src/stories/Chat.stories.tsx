@@ -108,6 +108,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
   }, []);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
+  console.log(chats.length)
   const binder = useContextBinder(chats.at(-1));
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
@@ -123,8 +124,8 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       orientation='horizontal'
       size='split'
       rail={false}
-      classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
