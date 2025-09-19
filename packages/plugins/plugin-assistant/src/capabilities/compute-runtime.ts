@@ -11,7 +11,6 @@ import { PropertiesType } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
 import {
-  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
@@ -19,7 +18,6 @@ import {
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
-  TracingService,
   TriggerDispatcher,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -84,14 +82,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
               CredentialsService.layerFromDatabase(),
-              ComputeEventLogger.layerFromTracing,
             ),
           ),
           Layer.provideMerge(
             Layer.mergeAll(
               space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
               space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-              TracingService.layerNoop,
               LocalFunctionExecutionService.layerLive,
               RemoteFunctionExecutionService.mockLayer,
             ),

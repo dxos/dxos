@@ -21,7 +21,7 @@ export const testTypes: Type.Obj.Any[] = [
   DataType.HasConnection,
 ];
 
-const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
+export const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },

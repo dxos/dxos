@@ -28,6 +28,7 @@ export type FunctionInvocationPayload = {
 
 export type TraceData = {
   invocationId: ObjectId;
+  invocationTraceQueue: Queue;
 };
 
 export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTracer')<
@@ -39,7 +40,7 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
     }: {
       payload: FunctionInvocationPayload;
       target?: DXN;
-    }): Effect.Effect<TraceData>;
+    }): Effect.Effect<TraceData, never, QueueService>;
 
     traceInvocationEnd({ trace, exception }: { trace: TraceData; exception?: any }): Effect.Effect<void>;
   }
@@ -51,20 +52,21 @@ export class InvocationTracer extends Context.Tag('@dxos/functions/InvocationTra
         return {
           traceInvocationStart: Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
             const invocationId = ObjectId.random();
-
+            const invocationTraceQueue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
             const now = Date.now();
             const traceEvent = Obj.make(InvocationTraceStartEvent, {
               type: InvocationTraceEventType.START,
               invocationId,
               timestamp: now,
-              input: payload.data ?? {},
-              // invocationTraceQueue: Ref.fromDXN(invocationQueue),
+              // TODO(dmaretskyi): Not json-stringifying this makes ECHO fail when one ECHO object becomes embedded in another ECHO object.
+              input: JSON.parse(JSON.stringify(payload.data ?? {})),
+              invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
               invocationTarget: target ? Ref.fromDXN(target) : undefined,
               trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
             });
             yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
 
-            return { invocationId };
+            return { invocationId, invocationTraceQueue };
           }),
           traceInvocationEnd: Effect.fn('traceInvocationEnd')(function* ({ trace, exception }) {
             const now = Date.now();

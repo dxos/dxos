@@ -112,7 +112,6 @@ export default defineFunction({
           AiToolkit.make() as any,
           Layer.empty as any,
         ),
-        TracingService.layerNoop,
       ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),
