@@ -2,17 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { Project } from './Project';
+import { type ItemProps, Project } from './Project';
+
+const ProjectItem = ({ item, projectionModel }: ItemProps) => {
+  return <Surface role='card--intrinsic' data={{ subject: item, projection: projectionModel }} limit={1} />;
+};
 
 export const ProjectContainer = ({ project }: { project: DataType.Project; role: string }) => {
+  const handleAddItem = useCallback(() => console.log('[project container]', 'To implement: handle add item'), []);
+  const handleAddColumn = useCallback(() => console.log('[project container]', 'To implement: handle add column'), []);
   return (
     <StackItem.Content>
-      <Project project={project} />
+      <Project.Root Item={ProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
+        <Project.Content project={project} />
+      </Project.Root>
     </StackItem.Content>
   );
 };
