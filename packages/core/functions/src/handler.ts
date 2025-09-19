@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context, type Effect, Schema } from 'effect';
+import { type Context, Effect, Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
@@ -115,6 +115,35 @@ export const defineFunction = <T, O>({
     throw new Error('Handler must be a function');
   }
 
+  // Captures the function definition location.
+  const limit = Error.stackTraceLimit;
+  Error.stackTraceLimit = 2;
+  const traceError = new Error();
+  Error.stackTraceLimit = limit;
+  let cache: false | string = false;
+  const captureStackTrace = () => {
+    if (cache !== false) {
+      return cache;
+    }
+    if (traceError.stack !== undefined) {
+      const stack = traceError.stack.split('\n');
+      if (stack[2] !== undefined) {
+        cache = stack[2].trim();
+        return cache;
+      }
+    }
+  };
+
+  const handlerWithSpan = (...args: any[]) => {
+    const result = (handler as any)(...args);
+    if (Effect.isEffect(result)) {
+      return Effect.withSpan(result, `${key ?? name}`, {
+        captureStackTrace,
+      });
+    }
+    return result;
+  };
+
   return {
     [typeId]: true,
     key: key ?? name,
@@ -122,7 +151,7 @@ export const defineFunction = <T, O>({
     description,
     inputSchema,
     outputSchema,
-    handler,
+    handler: handlerWithSpan,
   };
 };
 

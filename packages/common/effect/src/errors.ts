@@ -106,9 +106,9 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
  */
 export const causeToError = (cause: Cause.Cause<any>): Error => {
   if (Cause.isEmpty(cause)) {
-    throw new Error('Fiber failed without a cause');
+    return new Error('Fiber failed without a cause');
   } else if (Cause.isInterruptedOnly(cause)) {
-    throw new Error('Fiber was interrupted');
+    return new Error('Fiber was interrupted');
   } else {
     const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
 
@@ -122,9 +122,9 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
     const newErrors = errors.map((error) => prettyErrorStack(error, stackFrames));
 
     if (newErrors.length === 1) {
-      throw newErrors[0];
+      return newErrors[0];
     } else {
-      throw new AggregateError(newErrors);
+      return new AggregateError(newErrors);
     }
   }
 };

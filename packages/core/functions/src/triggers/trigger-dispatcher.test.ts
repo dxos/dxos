@@ -8,6 +8,7 @@ import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
 import { default as reply } from '../examples/reply';
@@ -89,10 +90,10 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({
           trigger,
-          data: { custom: 'data' },
+          event: { tick: 0 },
         });
 
-        expect(result).toEqual(Exit.succeed({ custom: 'data' }));
+        expect(result).toEqual(Exit.succeed({ tick: 0 }));
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
   });
@@ -235,7 +236,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(trigger);
 
         // Can invoke the trigger
-        const result = yield* dispatcher.invokeTrigger({ trigger });
+        const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
         expect(Exit.isSuccess(result.result)).toBe(true);
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
@@ -270,7 +271,7 @@ describe('TriggerDispatcher', () => {
           });
           yield* DatabaseService.add(trigger);
 
-          const result = yield* dispatcher.invokeTrigger({ trigger });
+          const result = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
           expect(Exit.isSuccess(result.result)).toBe(true);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
@@ -391,6 +392,48 @@ describe('TriggerDispatcher', () => {
           const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
           expect(results.length).toBe(0);
         }
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'builds input from pattern',
+      Effect.fnUntraced(function* ({ expect }) {
+        const queue = yield* QueueService.createQueue();
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: queue.dxn.toString(),
+          },
+          input: {
+            instructions: 'Please process the queue item.',
+            input: '{{event.item}}',
+            triggerId: '{{trigger.id}}',
+          },
+        });
+        yield* DatabaseService.add(trigger);
+        const person = Obj.make(DataType.Person, {
+          fullName: 'John Doe',
+        });
+        yield* QueueService.append(queue, [person]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        expect(results.length).toBe(1);
+        expect(results[0].triggerId).toBe(trigger.id);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({
+          instructions: 'Please process the queue item.',
+          input: {
+            id: person.id,
+            fullName: 'John Doe',
+          },
+          triggerId: trigger.id,
+        });
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
   });
