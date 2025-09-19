@@ -14,7 +14,7 @@ import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
 /**
- * The `$id` field for an ECHO reference schema.
+ * The `$id` and `$ref` fields for an ECHO reference schema.
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
@@ -254,7 +254,9 @@ export const createEchoReferenceSchema = (
     },
     {
       jsonSchema: {
+        // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
         $id: JSON_SCHEMA_ECHO_REF_ID,
+        $ref: JSON_SCHEMA_ECHO_REF_ID,
         reference: referenceInfo,
       },
       [ReferenceAnnotationId]: {
