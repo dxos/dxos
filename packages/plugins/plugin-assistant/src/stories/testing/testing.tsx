@@ -27,6 +27,8 @@ import {
   LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  agent,
+  localServiceEndpoints,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
@@ -35,10 +37,10 @@ import {
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { exampleFunctions } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -91,6 +93,18 @@ export const config = {
       },
     },
   }),
+  local: new Config({
+    runtime: {
+      services: {
+        ai: {
+          server: localServiceEndpoints.ai,
+        },
+        edge: {
+          url: localServiceEndpoints.edge,
+        },
+      },
+    },
+  }),
 };
 
 class TestingToolkit extends AiToolkit.make(
@@ -130,7 +144,16 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       SettingsPlugin(),
       SpacePlugin(),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
+        types: [
+          Markdown.Document,
+          Assistant.Chat,
+          Blueprint.Blueprint,
+          Prompt.Prompt,
+          DataType.AccessToken,
+          FunctionTrigger,
+          FunctionType,
+          ...types,
+        ],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
@@ -189,6 +212,7 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
             contributes(Capabilities.Functions, [syncLinearIssues]),
+            contributes(Capabilities.Functions, [agent]),
             contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),

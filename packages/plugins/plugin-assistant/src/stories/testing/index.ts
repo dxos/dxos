@@ -4,3 +4,4 @@
 
 export * from './data';
 export * from './testing';
+export * from './schema';
