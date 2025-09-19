@@ -132,6 +132,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-inbox"
+    },
+    {
       "path": "../plugin-markdown"
     },
     {

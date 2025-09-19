@@ -4,7 +4,7 @@
 
 import { type Schema } from 'effect';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
 import type { JsonSchemaType } from '@dxos/echo-schema';
 import {
@@ -65,7 +65,7 @@ export const makeDynamicTable = ({
 }): { projection: ProjectionModel; view: DataType.View } => {
   const table = Obj.make(Table.Table, { sizes: {} });
   const view = createView({
-    typename,
+    query: Query.select(Filter.typename(typename)),
     jsonSchema,
     presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),

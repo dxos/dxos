@@ -103,7 +103,7 @@ export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   name?: string;
-  typename: string;
+  query: Query.Any;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -111,12 +111,14 @@ type CreateViewProps = {
   pivotFieldName?: string;
 };
 
+// TODO(wittjosiah): Export as `DataType.View.make`.
+
 /**
  * Create view from provided schema.
  */
 export const createView = ({
   name,
-  typename,
+  query,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -125,7 +127,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: Query.select(Filter.typename(typename)).ast,
+    query: query.ast,
     projection: {
       schema: overrideSchema,
       fields: [],
@@ -201,7 +203,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
  */
 export const createViewWithReferences = async ({
   name,
-  typename,
+  query,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -212,7 +214,7 @@ export const createViewWithReferences = async ({
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
   const view = await createView({
     name,
-    typename,
+    query,
     jsonSchema,
     overrideSchema,
     presentation,
@@ -279,12 +281,12 @@ export const createViewWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'typename' | 'jsonSchema' | 'registry'> &
-  Partial<Pick<CreateViewWithReferencesProps, 'typename'>> & {
-    client?: Client;
-    space: Space;
-    createInitial?: number;
-  };
+export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'query' | 'jsonSchema' | 'registry'> & {
+  client?: Client;
+  space: Space;
+  typename?: string;
+  createInitial?: number;
+};
 
 /**
  * Create view from a schema in provided space or client.
@@ -318,7 +320,7 @@ export const createViewFromSpace = async ({
     jsonSchema,
     view: await createViewWithReferences({
       ...props,
-      typename,
+      query: Query.select(Filter.typename(typename)),
       jsonSchema,
       registry: client?.graph.schemaRegistry,
       echoRegistry: space.db.schemaRegistry,
