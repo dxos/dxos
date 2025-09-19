@@ -168,7 +168,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "20.12.1"
+    "node": "24.4.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -190,10 +190,14 @@
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",
+      "oxc-resolver",
       "protobufjs",
       "sharp",
       "sodium-native",
-      "workerd"
+      "styled-components",
+      "unrs-resolver",
+      "workerd",
+      "yarn"
     ],
     "overrides": {
       "@automerge/automerge": "3.1.1",
