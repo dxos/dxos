@@ -13,7 +13,7 @@ import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
 
-import { Filter, Query } from './dsl';
+import { Filter, Order, Query } from './dsl';
 
 //
 // Example schema
@@ -72,6 +72,14 @@ describe('query api', () => {
     log('query', { ast: getAllPeople.ast });
     Schema.validateSync(QueryAST.Query)(getAllPeople.ast);
     console.log('getAllPeople', JSON.stringify(getAllPeople.ast, null, 2));
+  });
+
+  test('get all people ordered by name', () => {
+    const getAllPeopleOrderedByName = Query.type(Person).orderBy(Order.property('name', 'asc'));
+
+    log('query', { ast: getAllPeopleOrderedByName.ast });
+    Schema.validateSync(QueryAST.Query)(getAllPeopleOrderedByName.ast);
+    console.log('getAllPeopleOrderedByName', JSON.stringify(getAllPeopleOrderedByName.ast, null, 2));
   });
 
   test('get all people named Fred', () => {
