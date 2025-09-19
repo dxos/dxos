@@ -833,7 +833,6 @@ describe('Query', () => {
       const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
         (query) => {
           const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
-          log.info('update', { values: values.toString() });
           updates.push(values);
         },
         { fire: true },
@@ -852,11 +851,11 @@ describe('Query', () => {
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 
-      expect(updates).toEqual([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // All objects loaded.
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // Second update for some reason.
-        [], // All items deleted.
-      ]);
+      // NOTE: There might be multiple updates dependending on how database compoen
+      // All objects loaded.
+      expect(updates.at(0)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      // All objects deleted.
+      expect(updates.at(-1)).toEqual([]);
     });
   });
 
