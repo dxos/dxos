@@ -39,6 +39,8 @@ export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
 const QueueTriggerSchema = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
+
+  // TODO(dmaretskyi): Change to a reference.
   queue: DXN.Schema,
 }).pipe(Schema.mutable);
 export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;

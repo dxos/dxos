@@ -114,7 +114,7 @@ export const NetworkPanel = (props: { space?: Space }) => {
   return (
     <PanelContainer
       toolbar={
-        !props.space && (
+        props.space ? undefined : (
           <Toolbar.Root>
             <DataSpaceSelector />
           </Toolbar.Root>

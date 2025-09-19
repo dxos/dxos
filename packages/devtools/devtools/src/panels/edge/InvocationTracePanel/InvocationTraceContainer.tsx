@@ -99,16 +99,17 @@ export const InvocationTraceContainer = ({
   const rows = useMemo(() => {
     return invocationSpans.map((invocation) => {
       const status = invocation.outcome;
-      const targetDxn = invocation.invocationTarget.dxn;
+      const targetDxn = invocation.invocationTarget?.dxn;
 
       // TODO(burdon): Use InvocationTraceStartEvent.
       return {
         id: invocation.id,
         target: resolver(targetDxn),
-        time: new Date(invocation.timestampMs),
+        // TODO(burdon): Change to timestamp?
+        time: new Date(invocation.timestamp),
+        duration: formatDuration(invocation.duration),
         status,
-        duration: formatDuration(invocation.durationMs),
-        queue: invocation.invocationTraceQueue.dxn?.toString() ?? 'unknown',
+        queue: invocation.invocationTraceQueue?.dxn.toString() ?? 'unknown',
         _original: invocation,
       };
     });
@@ -134,16 +135,21 @@ export const InvocationTraceContainer = ({
     return 'grid grid-cols-1';
   }, [selectedInvocation, detailAxis]);
 
-  const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
+  const features: Partial<TableFeatures> = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'single' },
+    }),
+    [],
+  );
 
   return (
     <PanelContainer
       toolbar={
-        showSpaceSelector && (
+        showSpaceSelector ? (
           <Toolbar.Root classNames='border-be border-subduedSeparator'>
             <DataSpaceSelector />
           </Toolbar.Root>
-        )
+        ) : undefined
       }
     >
       <div className={mx('bs-full', gridLayout)}>
@@ -194,7 +200,7 @@ const parseJsonString = (str: string): any => {
     // Handle double-quoted strings by removing outer quotes.
     const cleaned = str.replace(/^"+|"+$/g, '');
     return JSON.parse(cleaned);
-  } catch (err) {
+  } catch {
     return null;
   }
 };
