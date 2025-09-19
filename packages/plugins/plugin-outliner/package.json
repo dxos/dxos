@@ -35,8 +35,8 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -73,7 +73,7 @@
     "effect": "3.17.11",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.1"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

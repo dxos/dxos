@@ -4,6 +4,14 @@
 
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
+import {
+  DISCORD_BLUEPRINT,
+  LINEAR_BLUEPRINT,
+  RESEARCH_BLUEPRINT,
+  fetchDiscordMessages,
+  research,
+  syncLinearIssues,
+} from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
@@ -26,14 +34,24 @@ const tools = [
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
-export const BLUEPRINT = Blueprint.make({
-  key: BLUEPRINT_KEY,
-  name: 'Assistant',
-  tools: Blueprint.toolDefinitions({ functions, tools }),
-  instructions: templates.system,
-});
+export const createBlueprint = (): Blueprint.Blueprint =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Assistant',
+    tools: Blueprint.toolDefinitions({ functions, tools }),
+    instructions: templates.system,
+  });
 
+const blueprint = createBlueprint();
+
+// TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.BlueprintDefinition, BLUEPRINT),
+  contributes(Capabilities.Functions, [syncLinearIssues]),
+  contributes(Capabilities.Functions, [research]),
+  contributes(Capabilities.Functions, [fetchDiscordMessages]),
+  contributes(Capabilities.BlueprintDefinition, blueprint),
+  contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
 ];

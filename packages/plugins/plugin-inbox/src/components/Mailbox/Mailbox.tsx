@@ -101,9 +101,10 @@ export type MailboxProps = {
   ignoreAttention?: boolean;
   currentMessageId?: string;
   onAction?: MailboxActionHandler;
+  role?: string;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
+export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, role }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
 
@@ -194,7 +195,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const rows = useMemo(() => ({ grid: gridRows }), [gridRows]);
 
   return (
-    <div role='none' className='flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0'>
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           limitColumns={1}

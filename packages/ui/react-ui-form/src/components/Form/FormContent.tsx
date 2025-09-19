@@ -26,13 +26,15 @@ import { RefField, type RefFieldProps } from './RefField';
 export type FormFieldProps = {
   property: SchemaProperty<any>;
   path?: (string | number)[];
-  readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
   projection?: ProjectionModel;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
-} & Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>;
+} & Pick<
+  RefFieldProps,
+  'readonly' | 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'
+>;
 
 export const FormField = ({
   property,
@@ -67,7 +69,7 @@ export const FormField = ({
       type,
       format,
       label,
-      disabled: readonly,
+      readonly,
       placeholder,
       ...inputProps,
     },
@@ -87,7 +89,7 @@ export const FormField = ({
         label={label}
         inputOnly={inline}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         {...inputProps}
       />
     );
@@ -107,7 +109,7 @@ export const FormField = ({
         format={format}
         label={label}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         inputOnly={inline}
         onQueryRefOptions={onQueryRefOptions}
         createOptionLabel={createOptionLabel}
@@ -139,7 +141,7 @@ export const FormField = ({
         label={label}
         inputOnly={inline}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         {...inputProps}
       />
     );
@@ -154,7 +156,7 @@ export const FormField = ({
       <SelectInput
         type={type}
         format={format}
-        disabled={readonly}
+        readonly={readonly}
         inputOnly={inline}
         label={label}
         options={options.map((option) => ({ value: option, label: String(option) }))}
@@ -201,7 +203,6 @@ export const FormField = ({
 export type FormFieldsProps = ThemedClassName<
   {
     testId?: string;
-    readonly?: boolean;
     schema: Schema.Schema.All;
     /**
      * Path to the current object from the root. Used with nested forms.
@@ -220,7 +221,8 @@ export type FormFieldsProps = ThemedClassName<
      */
     Custom?: Partial<Record<string, InputComponent>>;
     onQueryRefOptions?: QueryRefOptions;
-  } & Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>
+  } & Pick<FormFieldProps, 'readonly'> &
+    Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>
 >;
 
 export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
@@ -273,16 +275,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
       // Fallback to legacy filter/sort behavior
       const filtered = filter ? filter(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [
-      schema,
-      values,
-      filter,
-      sort,
-      projection
-        ?.getFieldProjections()
-        .map(({ field }) => field.id)
-        .join(' '),
-    ]);
+    }, [schema, values, filter, sort, projection?.fields]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>

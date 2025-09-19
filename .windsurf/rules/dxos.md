@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 description: Working in the DXOS codebase
 ---
 
@@ -40,7 +40,7 @@ Monorepo tools:
 
 - moon for monorepo management.
 - pnpm for package management.
-- vitest
+- vitest (use "pnpm vitest" to run tests)
 - vite
 
 Testing:

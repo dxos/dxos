@@ -199,7 +199,12 @@ export class IndexingEngine extends Resource {
       updated = true;
     }
 
-    log('Indexing finished', { time: Date.now() - startTime });
+    log('Indexing finished', {
+      time: Date.now() - startTime,
+      updated,
+      completed,
+      updatedCount: documentsUpdated.length,
+    });
     return { completed, updated };
   }
 

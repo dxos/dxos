@@ -22,13 +22,12 @@ import { translationKey } from '../../translations';
 import { Form, type FormProps, type InputComponent, SelectInput, SelectOptionInput } from '../Form';
 
 export type FieldEditorProps = {
-  readonly?: boolean;
   projection: ProjectionModel;
   field: FieldType;
   registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormProps<any>, 'outerSpacing'>;
+} & Pick<FormProps<any>, 'outerSpacing' | 'readonly'>;
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.

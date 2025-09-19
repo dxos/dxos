@@ -156,7 +156,8 @@ export const useApp = ({
   );
 };
 
-const DELAY_PLACEHOLDER = 2_000;
+// TODO(dmaretskyi): This was 2 seconds before and stories were loading significantly slower.
+const DELAY_PLACEHOLDER = 100;
 
 enum LoadingState {
   Loading = 0,

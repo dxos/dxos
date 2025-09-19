@@ -8,6 +8,7 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import type { Queue } from '@dxos/echo-db';
 import type { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 /**
@@ -43,6 +44,16 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
 
   static layerConsole = Layer.succeed(TracingService, TracingService.console);
 
+  static layerLogInfo = () =>
+    Layer.succeed(TracingService, {
+      write: (event) => {
+        if (Obj.instanceOf(AgentStatus, event)) {
+          log.info('status', { message: event.message });
+        }
+      },
+      getTraceContext: () => ({}),
+    });
+
   /**
    * Creates a TracingService layer that emits events to the parent tracing service.
    */
@@ -66,7 +77,11 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         // TODO(dmaretskyi): Batching.
         return {
           write: (event) => queue.append([event]),
-          getTraceContext: () => ({}),
+          getTraceContext: () => ({
+            debugInfo: {
+              queue: queue.dxn.toString(),
+            },
+          }),
         };
       }),
     );
@@ -114,6 +129,8 @@ export namespace TracingService {
      * If the current thread is a byproduct of a tool call, this is the ID of the tool call.
      */
     toolCallId?: string;
+
+    debugInfo?: unknown;
   }
 }
 

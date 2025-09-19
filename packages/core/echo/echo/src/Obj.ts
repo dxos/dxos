@@ -3,6 +3,7 @@
 //
 
 import { Schema } from 'effect';
+import { dual } from 'effect/Function';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -32,12 +33,19 @@ export interface Any extends BaseObj {}
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
-export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>>;
+export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type<T>>> & {
+  [Meta]?: Partial<EchoSchema.ObjectMeta>;
+};
+
+export const Meta: unique symbol = EchoSchema.MetaId as any;
 
 // TODO(dmaretskyi): Expose Meta = EchoSchema.MetaId.
 
 /**
  * Creates new object.
+ * @param schema - Object schema.
+ * @param props - Object properties.
+ * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  *
  * Meta can be passed as a symbol in `props`.
  *
@@ -131,6 +139,33 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
   const meta = EchoSchema.getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta;
+};
+
+/**
+ * @returns Foreign keys for the object from the specified source.
+ */
+export const getKeys: {
+  (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
+  (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
+} = dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
+  const meta = EchoSchema.getMeta(obj);
+  invariant(meta != null, 'Invalid object.');
+  return meta.keys.filter((key) => key.source === source);
+});
+
+/**
+ * Delete all keys from the object for the specified source.
+ * @param obj
+ * @param source
+ */
+export const deleteKeys = (obj: Any | Relation.Any, source: string) => {
+  const meta = EchoSchema.getMeta(obj);
+  for (let i = 0; i < meta.keys.length; i++) {
+    if (meta.keys[i].source === source) {
+      meta.keys.splice(i, 1);
+      i--;
+    }
+  }
 };
 
 // TODO(dmaretskyi): Default to `false`.

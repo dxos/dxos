@@ -3,7 +3,7 @@
 //
 
 import React from 'react';
-import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
+import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
@@ -13,7 +13,7 @@ import { mx } from '@dxos/react-ui-theme';
 const zeroWidthSpace = '\u200b';
 
 export type SyntaxHighlighterProps = ThemedClassName<
-  NativeSyntaxHighlighterProps & {
+  NaturalSyntaxHighlighterProps & {
     fallback?: string;
   }
 >;
@@ -36,7 +36,7 @@ export const SyntaxHighlighter = ({
 
   return (
     <NativeSyntaxHighlighter
-      className={mx('w-full p-0 font-thin overflow-auto scrollbar-thin !text-baseText', classNames)}
+      className={mx('is-full p-0 font-thin overflow-auto scrollbar-thin !text-baseText', classNames)}
       language={languages[language as keyof typeof languages] || language}
       style={themeMode === 'dark' ? dark : light}
       // TODO(burdon): To override with classNames must prefix with "!".

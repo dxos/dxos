@@ -6,7 +6,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import React, { type PropsWithChildren, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Grid, Canvas as NativeCanvas, type Rect, testId, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
+import { Grid, Canvas as NaturalCanvas, type Rect, testId, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
@@ -31,9 +31,9 @@ import { Shapes } from './Shapes';
  */
 export const Canvas = ({ children }: PropsWithChildren) => {
   return (
-    <NativeCanvas {...testId<TestId>('dx-canvas')}>
+    <NaturalCanvas {...testId<TestId>('dx-canvas')}>
       <CanvasContent>{children}</CanvasContent>
-    </NativeCanvas>
+    </NaturalCanvas>
   );
 };
 

@@ -11,7 +11,7 @@ import { safeParseFloat } from '@dxos/util';
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
-export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
+export const GeoPointInput = ({ type, label, readonly, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
@@ -55,7 +55,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
             step='0.00001'
             min='-90'
             max='90'
-            disabled={disabled}
+            disabled={!!readonly}
             value={latitudeText}
             onChange={handleCoordinateChange('latitude', setLatitudeText)}
             onBlur={onBlur}
@@ -68,7 +68,7 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
             step='0.00001'
             min='-180'
             max='180'
-            disabled={disabled}
+            disabled={!!readonly}
             value={longitudeText}
             onChange={handleCoordinateChange('longitude', setLongitudeText)}
             onBlur={onBlur}

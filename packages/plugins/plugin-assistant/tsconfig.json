@@ -178,6 +178,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-automation"
+    },
+    {
       "path": "../plugin-board"
     },
     {
@@ -227,6 +230,9 @@
     },
     {
       "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-token-manager"
     },
     {
       "path": "../plugin-transcription"

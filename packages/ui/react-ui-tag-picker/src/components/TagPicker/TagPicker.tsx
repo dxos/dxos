@@ -20,7 +20,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-import { type TagPickerItemData, type TagPickerMode, type TagPickerOptions, createLinks, tagPicker } from './extension';
+import {
+  type TagPickerItemData,
+  type TagPickerMode,
+  type TagPickerOptions,
+  createLinks,
+  tagPicker,
+} from './tag-picker-extension';
 import { TagPickerItem } from './TagPickerItem';
 
 export type TagPickerProps = ThemedClassName<
@@ -95,7 +101,10 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
           createMarkdownExtensions({ themeMode }),
           createThemeExtensions({
             themeMode,
-            slots: { editor: { className: 'is-full' }, content: { className: '!text-sm' } },
+            slots: {
+              editor: { className: 'is-full' },
+              content: { className: '!text-sm' },
+            },
           }),
           tagPicker({
             debug: true,

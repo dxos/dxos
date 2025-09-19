@@ -26,6 +26,9 @@
     "plugin.js",
     "plugin.d.ts"
   ],
+  "scripts": {
+    "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
+  },
   "dependencies": {
     "@ch-ui/tailwind-tokens": "2.7.0",
     "@ch-ui/tokens": "2.4.0",
@@ -54,7 +57,7 @@
     "@types/lodash.merge": "^4.6.6",
     "@types/postcss-import": "^14.0.3",
     "esbuild": "0.25.6",
-    "vite": "5.4.7"
+    "vite": "7.1.1"
   },
   "publishConfig": {
     "access": "public"

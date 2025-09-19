@@ -36,6 +36,8 @@
     "@effect/typeclass": "0.36.0",
     "@effect/workflow": "0.9.2",
     "effect": "3.17.11",
+    "@dxos/util": "workspace:*",
+    "esbuild": "0.25.6",
     "wtfnode": "^0.10.0",
     "yaml": "^2.5.0"
   },
@@ -43,7 +45,6 @@
     "@types/node": "^22.5.2",
     "@types/wtfnode": "^0.10.0",
     "typescript": "^5.9.2",
-    "vite-node": "^3.2.4",
     "vitest": "^3.2.0"
   },
   "publishConfig": {

@@ -205,13 +205,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>
-            <HuePicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+            <HuePicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
       },
@@ -224,13 +224,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
         const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>
-            <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+            <IconPicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
       },

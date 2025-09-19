@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { PersistentLifecycle } from '@dxos/async';
+import { PersistentLifecycle, Trigger, scheduleTask } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -33,12 +33,14 @@ export type CallsServiceConfig = {
 
 export type HistoryRecord =
   | {
+      endpoint: string;
       type: 'request';
       time: string;
       method: string;
       body: any;
     }
   | {
+      endpoint: string;
       type: 'response';
       time: string;
       status: number;
@@ -116,7 +118,7 @@ export class CallsServicePeer extends Resource {
     });
     peerConnection.addEventListener('connectionstatechange', () => {
       if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'closed') {
-        log.warn('calls connection failed', { state: peerConnection.connectionState });
+        log.info('calls connection failed', { state: peerConnection.connectionState });
         void this._persistentLifecycle.scheduleRestart();
       }
     });
@@ -125,7 +127,7 @@ export class CallsServicePeer extends Resource {
     peerConnection.addEventListener('iceconnectionstatechange', () => {
       clearTimeout(iceTimeout);
       if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'closed') {
-        log.warn('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
+        log.info('calls connection to ICEs failed', { state: peerConnection.iceConnectionState });
         void this._persistentLifecycle.scheduleRestart();
       } else if (peerConnection.iceConnectionState === 'disconnected') {
         // TODO(mykola): we should start to inspect the connection stats from here on for
@@ -138,7 +140,7 @@ export class CallsServicePeer extends Resource {
             return;
           }
 
-          log.warn('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
+          log.info('calls iceConnectionState timed out', { state: peerConnection.iceConnectionState, timeoutSeconds });
           void this._persistentLifecycle.scheduleRestart();
         }, timeoutSeconds * 1_000);
       }
@@ -155,6 +157,7 @@ export class CallsServicePeer extends Resource {
 
   private async _fetch<T extends ErrorResponse>(relativePath: string, requestInit?: RequestInit): Promise<T> {
     this.history.push({
+      endpoint: relativePath,
       type: 'request',
       time: new Date().toISOString(),
       method: requestInit?.method ?? 'GET',
@@ -170,6 +173,7 @@ export class CallsServicePeer extends Resource {
     try {
       const data = (await response.clone().json()) as T;
       this.history.push({
+        endpoint: relativePath,
         type: 'response',
         time: new Date().toISOString(),
         status: response.status,
@@ -183,6 +187,7 @@ export class CallsServicePeer extends Resource {
     } catch (error) {
       const text = await response.text();
       this.history.push({
+        endpoint: relativePath,
         type: 'response',
         time: new Date().toISOString(),
         status: response.status,
@@ -204,11 +209,11 @@ export class CallsServicePeer extends Resource {
     sessionId,
     trackName,
   }: {
+    ctx: Context;
     peerConnection: RTCPeerConnection;
     transceiver: RTCRtpTransceiver;
     sessionId: string;
     trackName: string;
-    ctx?: Context;
   }): Promise<TrackObject | void> {
     log.verbose('pushing track ', trackName);
     const pushedTrackPromise = this.pushTrackDispatcher
@@ -246,9 +251,13 @@ export class CallsServicePeer extends Resource {
           };
         }),
       )
-      .then(({ tracks }) => {
+      .then(async ({ tracks }) => {
         const trackData = tracks.find((t) => t.mid === transceiver.mid);
         if (trackData) {
+          // we wait for the transceiver to start sending data before we emit
+          // the track metadata to ensure that the track will be able to be
+          // pulled before making the metadata available to anyone else.
+          // await waitForTransceiverToSendData(ctx, transceiver);
           return {
             ...trackData,
             sessionId,
@@ -257,9 +266,6 @@ export class CallsServicePeer extends Resource {
         } else {
           log.error('missing track data');
         }
-      })
-      .catch((err) => {
-        log.catch(err);
       });
 
     const onDispose = async () => {
@@ -281,8 +287,8 @@ export class CallsServicePeer extends Resource {
     previousTrack,
   }: {
     track: MediaStreamTrack | null;
+    ctx: Context;
     encodings?: RTCRtpEncodingParameters[];
-    ctx?: Context;
     previousTrack?: TrackObject;
   }): Promise<TrackObject | undefined> {
     await this.waitUntilOpen();
@@ -405,7 +411,7 @@ export class CallsServicePeer extends Resource {
             })
             .catch((err) => log.catch(err));
         } else {
-          log.warn('missing track info', { trackData, availableTracks: Array.from(trackMap.keys()) });
+          log.info('missing track info', { trackData, availableTracks: Array.from(trackMap.keys()) });
         }
       });
 
@@ -528,4 +534,48 @@ const peerConnectionIsConnected = async (peerConnection: RTCPeerConnection) => {
 
     await connected;
   }
+};
+
+const INITIAL_DELAY = 50;
+const MAX_DELAY = 500;
+const MAX_RETRIES = 20;
+const WAIT_FOR_DATA_TIMEOUT = 10_000;
+
+const waitForTransceiverToSendData = async (ctx: Context, transceiver: RTCRtpTransceiver): Promise<void> => {
+  let delay = INITIAL_DELAY;
+  let checks = 0;
+  const waitForData = new Trigger();
+  ctx.onDispose(() => waitForData.throw(new Error('Transceiver was closed')));
+
+  const checkStats = async () => {
+    if (ctx.disposed) return;
+
+    try {
+      const stats = await transceiver.sender.getStats();
+      let dataFound = false;
+      stats.forEach((stat) => {
+        if (stat.type === 'outbound-rtp' && stat.bytesSent > 0) {
+          dataFound = true;
+        }
+      });
+
+      if (dataFound) {
+        waitForData.wake();
+        return;
+      }
+    } catch {
+      // Stats might not be available yet, continue checking
+    }
+    checks++;
+    if (checks > MAX_RETRIES) {
+      waitForData.throw(new Error('Transceiver did not send data'));
+      return;
+    }
+
+    delay = Math.min(delay * 2, MAX_DELAY); // Exponential backoff with max cap
+    scheduleTask(ctx, checkStats, delay);
+  };
+
+  void checkStats();
+  return waitForData.wait({ timeout: WAIT_FOR_DATA_TIMEOUT });
 };

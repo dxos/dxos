@@ -60,9 +60,7 @@ const DefaultStory = (props: ChaosProps) => {
       <div className='z-[10] absolute right-2 bottom-2'>
         <Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button>
       </div>
-      <div className='w-[256px] h-[256px]'>
-        <Chaos {...props} options={options} getValue={getAverage} />
-      </div>
+      <Chaos {...props} options={options} getValue={getAverage} />
     </div>
   );
 };
@@ -82,5 +80,13 @@ export const Default: Story = {
   args: {
     active: true,
     debug: true,
+    classNames: 'is-[256px] bs-[256px]',
+  },
+};
+
+export const Large: Story = {
+  args: {
+    active: true,
+    classNames: 'is-[512px] bs-[512px]',
   },
 };

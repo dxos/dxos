@@ -61,13 +61,13 @@ describe('Chat processor', () => {
     'basic',
     Effect.fn(
       function* ({ expect }) {
-        const services = TestLayer;
+        const services = yield* Effect.runtime<AiChatServices>();
         const queue = yield* QueueService.createQueue<DataType.Message>();
         const conversation = new AiConversation({ queue });
-        const processor = new AiChatProcessor(conversation, services);
+        const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();
-        expect(processor.isRunning).to.be.false;
+        expect(processor.active).to.be.false;
         expect(result).to.exist;
       },
       Effect.provide(TestLayer),

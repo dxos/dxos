@@ -195,7 +195,7 @@ export type TreeOptions = {};
  * This adds overhead relative to the markdown AST, but allows for efficient traversal of the list items.
  * NOTE: Requires markdown parser to be enabled.
  */
-export const outlinerTree = (options: TreeOptions = {}): Extension => {
+export const outlinerTree = (_options: TreeOptions = {}): Extension => {
   const buildTree = (state: EditorState): Tree => {
     let tree: Tree | undefined;
     let parent: Item | undefined;

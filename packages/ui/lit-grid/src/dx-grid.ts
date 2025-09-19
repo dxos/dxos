@@ -213,6 +213,16 @@ export class DxGrid extends LitElement {
   private templatefrozenRowsEnd = '';
 
   //
+  // `frozen…Size` is used to measure space available for the non-fixed planes
+  //
+
+  @state()
+  private frozenColsSize = 0;
+
+  @state()
+  private frozenRowsSize = 0;
+
+  //
   // Focus, selection, and resize states
   //
 
@@ -590,19 +600,18 @@ export class DxGrid extends LitElement {
       blockSize: 0,
     };
     if (
-      Math.abs(inlineSize - this.sizeInline) > resizeTolerance ||
-      Math.abs(blockSize - this.sizeBlock) > resizeTolerance
+      Math.abs(inlineSize - this.frozenColsSize - this.sizeInline) > resizeTolerance ||
+      Math.abs(blockSize - this.frozenRowsSize - this.sizeBlock) > resizeTolerance
     ) {
       // console.info('[updating bounds]', 'resize', [inlineSize - this.sizeInline, blockSize - this.sizeBlock]);
-      this.sizeInline = inlineSize;
-      this.sizeBlock = blockSize;
+      this.sizeInline = inlineSize - this.frozenColsSize;
+      this.sizeBlock = blockSize - this.frozenRowsSize;
       this.updateVis();
       queueMicrotask(() => this.updatePos());
     }
   });
 
   private gridRef: Ref<HTMLDivElement> = createRef();
-  private viewportRef: Ref<HTMLDivElement> = createRef();
 
   private maybeUpdateVisInline = () => {
     if (this.posInline < this.binInlineMin || this.posInline >= this.binInlineMax) {
@@ -727,6 +736,15 @@ export class DxGrid extends LitElement {
     this.templatefrozenColsEnd = [...Array(this.frozen.frozenColsEnd ?? 0)]
       .map((_, c0) => `${this.colSize(c0, 'frozenColsEnd')}px`)
       .join(' ');
+
+    this.frozenColsSize =
+      [...Array(this.frozen.frozenColsStart ?? 0)].reduce(
+        (sum, _, c0) => sum + this.colSize(c0, 'frozenColsStart'),
+        0,
+      ) +
+      gap * Math.max(0, this.frozen.frozenColsStart ?? 0 - 1) +
+      [...Array(this.frozen.frozenColsEnd ?? 0)].reduce((sum, _, c0) => sum + this.colSize(c0, 'frozenColsEnd'), 0) +
+      gap * Math.max(0, this.frozen.frozenColsEnd ?? 0 - 1);
   }
 
   private updateVisBlock(): void {
@@ -776,6 +794,15 @@ export class DxGrid extends LitElement {
     this.templatefrozenRowsEnd = [...Array(this.frozen.frozenRowsEnd ?? 0)]
       .map((_, r0) => `${this.rowSize(r0, 'frozenRowsEnd')}px`)
       .join(' ');
+
+    this.frozenRowsSize =
+      [...Array(this.frozen.frozenRowsStart ?? 0)].reduce(
+        (sum, _, r0) => sum + this.rowSize(r0, 'frozenRowsStart'),
+        0,
+      ) +
+      gap * Math.max(0, this.frozen.frozenRowsStart ?? 0 - 1) +
+      [...Array(this.frozen.frozenRowsEnd ?? 0)].reduce((sum, _, r0) => sum + this.rowSize(r0, 'frozenRowsEnd'), 0) +
+      gap * Math.max(0, this.frozen.frozenRowsEnd ?? 0 - 1);
   }
 
   private updateVis(): void {
@@ -1208,7 +1235,7 @@ export class DxGrid extends LitElement {
   ) {
     const rowPlane = resolveRowPlane(plane) as DxGridFrozenPlane;
     const rows = this.frozen[rowPlane];
-    return (rows ?? 0) > 0
+    return (rows ?? 0) > 0 && this.limitColumns > 0
       ? html`<div
           role="none"
           class="dx-grid__plane--frozen-row"
@@ -1242,7 +1269,7 @@ export class DxGrid extends LitElement {
   ) {
     const colPlane = resolveColPlane(plane) as DxGridFrozenPlane;
     const cols = this.frozen[colPlane];
-    return (cols ?? 0) > 0
+    return (cols ?? 0) > 0 && this.limitRows > 0
       ? html`<div
           role="none"
           class="dx-grid__plane--frozen-col"
@@ -1261,6 +1288,40 @@ export class DxGrid extends LitElement {
               return [...Array(cols)].map((_, c) => {
                 const r = this.visRowMin + r0;
                 return this.renderCell(c, r, plane, cellSelected(c, r, plane, selection), c, r0);
+              });
+            })}
+          </div>
+        </div>`
+      : null;
+  }
+
+  private renderMainGrid(
+    visibleCols: number,
+    visibleRows: number,
+    offsetInline: number,
+    offsetBlock: number,
+    selection: DxGridSelectionProps,
+  ) {
+    return this.limitRows > 0 && this.limitColumns > 0
+      ? html`<div
+          role="grid"
+          class="dx-grid__plane--grid"
+          tabindex="0"
+          data-dx-grid-plane="grid"
+          data-dx-grid-plane-row="1"
+          data-dx-grid-plane-col="1"
+        >
+          <div
+            role="none"
+            class="dx-grid__plane--grid__content"
+            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
+              .templateGridColumns};grid-template-rows:${this.templateGridRows};"
+          >
+            ${[...Array(visibleRows)].map((_, r0) => {
+              return [...Array(visibleCols)].map((_, c0) => {
+                const c = c0 + this.visColMin;
+                const r = r0 + this.visRowMin;
+                return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
               });
             })}
           </div>
@@ -1419,13 +1480,24 @@ export class DxGrid extends LitElement {
       <div
         role="none"
         class="dx-grid"
+        data-arrow-keys="all"
         style=${styleMap({
-          'grid-template-columns': `${this.templatefrozenColsStart ? 'min-content ' : ''}minmax(0, ${
-            Number.isFinite(this.limitColumns) ? `${Math.max(0, this.intrinsicInlineSize)}px` : '1fr'
-          })${this.templatefrozenColsEnd ? ' min-content' : ''}`,
-          'grid-template-rows': `${this.templatefrozenRowsStart ? 'min-content ' : ''}minmax(0, ${
-            Number.isFinite(this.limitRows) ? `${Math.max(0, this.intrinsicBlockSize)}px` : '1fr'
-          })${this.templatefrozenRowsEnd ? ' min-content' : ''}`,
+          'grid-template-columns': [
+            this.templatefrozenColsStart ? 'min-content' : false,
+            this.limitColumns > 0 &&
+              `minmax(0, ${Number.isFinite(this.limitColumns) ? `${Math.max(0, this.intrinsicInlineSize)}px` : '1fr'})`,
+            this.templatefrozenColsEnd ? 'min-content' : false,
+          ]
+            .filter(Boolean)
+            .join(' '),
+          'grid-template-rows': [
+            this.templatefrozenRowsStart ? 'min-content' : false,
+            this.limitRows > 0 &&
+              `minmax(0, ${Number.isFinite(this.limitRows) ? `${Math.max(0, this.intrinsicBlockSize)}px` : '1fr'})`,
+            this.templatefrozenRowsEnd ? ' min-content' : false,
+          ]
+            .filter(Boolean)
+            .join(' '),
           '--dx-grid-content-inline-size': Number.isFinite(this.limitColumns)
             ? `${Math.max(0, this.totalIntrinsicInlineSize)}px`
             : 'max-content',
@@ -1449,30 +1521,7 @@ export class DxGrid extends LitElement {
           offsetBlock,
           selection,
         )}
-        <div
-          role="grid"
-          class="dx-grid__plane--grid"
-          tabindex="0"
-          data-dx-grid-plane="grid"
-          data-dx-grid-plane-row="1"
-          data-dx-grid-plane-col="1"
-          ${ref(this.viewportRef)}
-        >
-          <div
-            role="none"
-            class="dx-grid__plane--grid__content"
-            style="transform:translate3d(${offsetInline}px,${offsetBlock}px,0);grid-template-columns:${this
-              .templateGridColumns};grid-template-rows:${this.templateGridRows};"
-          >
-            ${[...Array(visibleRows)].map((_, r0) => {
-              return [...Array(visibleCols)].map((_, c0) => {
-                const c = c0 + this.visColMin;
-                const r = r0 + this.visRowMin;
-                return this.renderCell(c, r, 'grid', cellSelected(c, r, 'grid', selection), c0, r0);
-              });
-            })}
-          </div>
-        </div>
+        ${this.renderMainGrid(visibleCols, visibleRows, offsetInline, offsetBlock, selection)}
         ${this.renderFrozenColumns('frozenColsEnd', visibleRows, offsetBlock, selection)}${this.renderFixed(
           'fixedEndStart',
           selection,
@@ -1489,16 +1538,7 @@ export class DxGrid extends LitElement {
         gap * Math.max(0, this.limitColumns - 1)
       : Infinity;
     this.totalIntrinsicInlineSize =
-      this.intrinsicInlineSize +
-      (Number.isFinite(this.frozen.frozenColsStart)
-        ? [...Array(this.frozen.frozenColsStart)].reduce(
-            (acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsStart'),
-            0,
-          )
-        : 0) +
-      (Number.isFinite(this.frozen.frozenColsEnd)
-        ? [...Array(this.frozen.frozenColsEnd)].reduce((acc, _, c0) => acc + gap + this.colSize(c0, 'frozenColsEnd'), 0)
-        : 0);
+      this.limitColumns > 0 ? this.intrinsicInlineSize + this.frozenColsSize : this.frozenColsSize - gap;
   }
 
   private updateIntrinsicBlockSize(): void {
@@ -1507,16 +1547,7 @@ export class DxGrid extends LitElement {
         gap * Math.max(0, this.limitRows - 1)
       : Infinity;
     this.totalIntrinsicBlockSize =
-      this.intrinsicBlockSize +
-      (Number.isFinite(this.frozen.frozenRowsStart)
-        ? [...Array(this.frozen.frozenRowsStart)].reduce(
-            (acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsStart'),
-            0,
-          )
-        : 0) +
-      (Number.isFinite(this.frozen.frozenRowsEnd)
-        ? [...Array(this.frozen.frozenRowsEnd)].reduce((acc, _, r0) => acc + gap + this.rowSize(r0, 'frozenRowsEnd'), 0)
-        : 0);
+      this.limitRows > 0 ? this.intrinsicBlockSize + this.frozenRowsSize : this.frozenRowsSize - gap;
   }
 
   private updateIntrinsicSizes(): void {
@@ -1564,7 +1595,7 @@ export class DxGrid extends LitElement {
     if (this.getCells) {
       this.updateCells(true);
     }
-    this.observer.observe(this.viewportRef.value!);
+    this.observer.observe(this.gridRef.value!);
     this.computeColSizes();
     this.computeRowSizes();
     this.updateIntrinsicSizes();
@@ -1638,8 +1669,8 @@ export class DxGrid extends LitElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    if (this.viewportRef.value) {
-      this.observer.unobserve(this.viewportRef.value);
+    if (this.gridRef.value) {
+      this.observer.unobserve(this.gridRef.value);
     }
     document.defaultView?.removeEventListener('wheel', this.handleTopLevelWheel);
   }

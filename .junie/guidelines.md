@@ -67,12 +67,15 @@ moon docs:serve           # Documentation site
 ```
 
 ### Development Commands
+
+When building, linting, or testing, do not use `npm`, `npx`, or `pnpm`. Only use `moon`.
+
+When referring to a package, run the command from the root of the repository and refer to the package only by name, e.g. to build the package located at `packages/ui/react-ui-table`, simply `cd` to the root of this repository and run `moon react-ui-table:build`.
+
 ```bash
 moon <package>:lint -- --fix # Lint and fix code
-moon <package>:build         # Build a package
+moon <package>:build         # Compile and build a package
 ```
-
-## Testing
 
 ### Unit Tests
 ```bash

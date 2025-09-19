@@ -3,6 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import { ResearchGraph } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -15,8 +16,10 @@ import {
   AppGraphBuilder,
   AssistantState,
   BlueprintDefinition,
+  ComputeRuntime,
   EdgeModelResolver,
   IntentResolver,
+  LocalModelResolver,
   ReactSurface,
   Settings,
   Toolkit,
@@ -101,7 +104,7 @@ export const AssistantPlugin = () =>
     defineModule({
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo]),
+      activate: () => contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo, ResearchGraph]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,
@@ -129,9 +132,14 @@ export const AssistantPlugin = () =>
       activate: ReactSurface,
     }),
     defineModule({
-      id: `${meta.id}/module/ai-model-resolver`,
+      id: `${meta.id}/module/edge-model-resolver`,
       activatesOn: AssistantEvents.SetupAiServiceProviders,
       activate: EdgeModelResolver,
+    }),
+    defineModule({
+      id: `${meta.id}/module/local-model-resolver`,
+      activatesOn: AssistantEvents.SetupAiServiceProviders,
+      activate: LocalModelResolver,
     }),
     defineModule({
       id: `${meta.id}/module/ai-service`,
@@ -150,5 +158,11 @@ export const AssistantPlugin = () =>
       // TODO(wittjosiah): Use a different event.
       activatesOn: Events.Startup,
       activate: Toolkit,
+    }),
+    defineModule({
+      id: `${meta.id}/module/compute-runtime`,
+      // TODO(wittjosiah): Use a different event.
+      activatesOn: Events.Startup,
+      activate: ComputeRuntime,
     }),
   ]);

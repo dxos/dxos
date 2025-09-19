@@ -124,7 +124,7 @@ const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService
           {
             _tag: 'text',
             text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
-          },
+          } satisfies ContentBlock.Text,
           // Inline cards.
           ...[obj2, obj3, obj4].map(
             (obj) =>
@@ -272,4 +272,12 @@ export const Delayed: Story = {
   args: {
     delay: 2_000,
   },
+};
+
+export const Sanity = () => {
+  return (
+    <div className='grid grow place-items-center'>
+      <div className='p-8 border border-separator rounded'>DXOS</div>
+    </div>
+  );
 };

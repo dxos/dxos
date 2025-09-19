@@ -28,7 +28,6 @@ export const formatSystemPrompt = ({
   objects = [],
 }: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
-    // TOOD(burdon): Should process templates.
     const blueprintDefs = yield* pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
@@ -88,7 +87,7 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
         catch: AiAssistantError.wrap('Artifact diff resolution error'),
       });
 
-      log.info('version', { artifactDiff, versions });
+      log('version', { artifactDiff, versions });
       for (const [id, { version }] of [...artifactDiff.entries()]) {
         if (ObjectVersion.equals(version, versions.get(id)!)) {
           artifactDiff.delete(id);

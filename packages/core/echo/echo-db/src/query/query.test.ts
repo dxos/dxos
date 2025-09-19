@@ -110,6 +110,15 @@ describe('Query', () => {
       expect(objects).toEqual([obj]);
     });
 
+    test('filter by foreign keys without flushing index', async () => {
+      const obj = live(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
+
+      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
+    });
+
     test('filter nothing', async () => {
       const { objects } = await db.query(Filter.nothing()).run();
       expect(objects).toHaveLength(0);
