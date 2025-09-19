@@ -9,5 +9,5 @@ export * as Relation from './Relation';
 export * as Type from './Type';
 
 export { DXN } from '@dxos/keys';
-export { Filter, Query } from './query';
+export { Filter, Order, Query } from './query';
 export { type Live } from '@dxos/live-object';
