@@ -181,14 +181,19 @@ describe('effect-to-json', () => {
           type: 'string',
         },
         organization: {
-          $id: '/schemas/echo/ref',
-          description: 'Contact organization',
-          reference: {
-            schema: {
-              $ref: 'dxn:type:example.com/type/Organization',
+          allOf: [
+            {
+              $id: '/schemas/echo/ref',
+              $ref: '/schemas/echo/ref',
+              reference: {
+                schema: {
+                  $ref: 'dxn:type:example.com/type/Organization',
+                },
+                schemaVersion: '0.1.0',
+              },
             },
-            schemaVersion: '0.1.0',
-          },
+          ],
+          description: 'Contact organization',
         },
       },
       required: ['name', 'organization', 'id'],
@@ -609,6 +614,7 @@ describe('reference', () => {
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
@@ -623,14 +629,19 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       title: 'My custom title',
     });
   });
@@ -639,14 +650,19 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       description: 'My custom description',
     });
   });

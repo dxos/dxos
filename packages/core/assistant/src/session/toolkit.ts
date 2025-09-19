@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
+import { type Tool, Toolkit } from '@effect/ai';
 import { type Context, Effect } from 'effect';
 
 import { ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { isNotFalsy } from '@dxos/util';
 
-export type ToolkitParams<Tools extends AiTool.Any> = {
-  toolkit?: AiToolkit.AiToolkit<Tools>;
+export type ToolkitParams<Tools extends Tool.Any> = {
+  toolkit?: Toolkit.Toolkit<Tools>;
   toolIds?: ToolId[];
   blueprints?: Blueprint.Blueprint[];
 };
@@ -18,7 +18,7 @@ export type ToolkitParams<Tools extends AiTool.Any> = {
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
-export const createToolkit = <Tools extends AiTool.Any>({
+export const createToolkit = <Tools extends Tool.Any>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
@@ -29,14 +29,14 @@ export const createToolkit = <Tools extends AiTool.Any>({
       ...toolIds,
     ]);
 
-    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+    const blueprintToolkitHandler: Context.Context<Tool.ToHandler<Tool.Any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
-    const toolkit = AiToolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
+    const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
     return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
-      AiToolkit.ToHandler<any>,
+      Toolkit.ToHandler<any>,
       never,
-      AiTool.ToHandler<Tools>
+      Tool.ToHandler<Tools>
     >;
   });

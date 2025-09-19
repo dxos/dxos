@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
+import { Chat, AiInput, LanguageModel, Tool, Toolkit } from '@effect/ai';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
@@ -31,7 +31,7 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {
-  const chat = yield* AiChat.empty;
+  const chat = yield* Chat.empty;
   const toolkit = yield* TestToolkit;
 
   // Initial request.
@@ -50,8 +50,8 @@ const createChat = Effect.fn(function* (prompt: string) {
 });
 
 // Tool definitions.
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('Calculator', {
+class TestToolkit extends Toolkit.make(
+  Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
       input: Schema.String.annotations({
@@ -93,14 +93,14 @@ const toolkitLayer = TestToolkit.toLayer({
  * - Simple API for plugins/artifacts.
  * - Ecosystem and design partner.
  */
-describe('AiLanguageModel', () => {
+describe('LanguageModel', () => {
   // Sanity test.
   it.effect(
     'Debug: Verify API configuration',
     Effect.fn(
       function* ({ expect }) {
         yield* Console.log('Testing API connectivity...');
-        const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
+        const { text } = yield* LanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
         yield* Console.log('API Response received:', text);
         expect(text).to.contain('API is working');
       },
@@ -118,7 +118,7 @@ describe('AiLanguageModel', () => {
     Effect.fn(
       function* ({ expect }) {
         const createProgram = (prompt: string) =>
-          AiLanguageModel.generateText({
+          LanguageModel.generateText({
             toolkit: TestToolkit,
             prompt,
           }).pipe(
@@ -181,7 +181,7 @@ describe('AiLanguageModel', () => {
     'streaming',
     Effect.fn(
       function* ({ expect: _ }) {
-        const chat = yield* AiChat.empty;
+        const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
         let prompt: AiInput.Raw = 'What is six times seven?';
@@ -219,7 +219,7 @@ describe('AiLanguageModel', () => {
           After your answer emit your suggestions for follow-up user prompts inside <suggestion></suggestion> XML tags.
         `;
 
-        const chat = yield* AiChat.empty;
+        const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
         let prompt: AiInput.Raw = trim`

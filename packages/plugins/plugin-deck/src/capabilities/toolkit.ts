@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -12,8 +12,8 @@ import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-class Toolkit extends AiToolkit.make(
-  AiTool.make('open-item', {
+class Toolkit extends Toolkit.make(
+  Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
     `,

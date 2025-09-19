@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiResponse } from '@effect/ai';
+import { type Response } from '@effect/ai';
 import { Effect, Function, Predicate, Stream } from 'effect';
 
 import { Ref } from '@dxos/echo';
@@ -51,7 +51,7 @@ export interface ParseResponseCallbacks {
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: AiResponse.Part) => Effect.Effect<void>;
+  onPart: (part: Response.Part) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -79,7 +79,7 @@ export interface ParseResponseOptions extends ParseResponseCallbacks {
 }
 
 /**
- * Transforms the AiResponse stream into a stream of complete ContentBlock messages.
+ * Transforms the Response stream into a stream of complete ContentBlock messages.
  * Partial blocks are emitted to support streaming to the UI.
  */
 export const parseResponse =
@@ -90,7 +90,7 @@ export const parseResponse =
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
   }: Partial<ParseResponseOptions> = {}) =>
-  <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  <E, R>(input: Stream.Stream<Response.Response, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
