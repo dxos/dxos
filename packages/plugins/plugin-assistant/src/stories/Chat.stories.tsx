@@ -5,15 +5,16 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -39,7 +40,7 @@ import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
-import { addTestData, createTestMailbox, createTestTranscription, testTypes } from '../testing';
+import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -52,11 +53,14 @@ import {
   InvocationsContainer,
   LoggingContainer,
   MessageContainer,
+  PromptContainer,
+  ResearchInputStack,
+  ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
   TriggersContainer,
 } from './components';
-import { accessTokensFromEnv, config, getDecorators } from './testing';
+import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -108,7 +112,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
   }, []);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
-  console.log(chats.length)
+  console.log(chats.length);
   const binder = useContextBinder(chats.at(-1));
   const objects = useSignalsMemo(
     () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
@@ -508,13 +512,10 @@ export const WithTriggers: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
-    types: [FunctionType, FunctionTrigger],
-    onInit: async ({ space, binder }) => {
-      const functionObj = serializeFunction(exampleFunctions.reply);
-      space.db.add(functionObj);
-      const object = space.db.add(
+    onInit: async ({ space }) => {
+      space.db.add(
         Obj.make(FunctionTrigger, {
-          function: Ref.make(functionObj),
+          function: Ref.make(serializeFunction(exampleFunctions.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -522,11 +523,63 @@ export const WithTriggers: Story = {
           },
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
     },
   }),
   args: {
     deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
+  },
+};
+
+export const WithResearchQueue: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.local,
+    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      const researchInputQueue = space.db.add(
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+      );
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      await researchInputQueue.queue.target!.append(orgs);
+
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions: 'Research the organization provided as input.',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(agent)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: researchInputQueue.queue.dxn.toString(),
+          },
+          input: {
+            prompt: Ref.make(researchPrompt),
+            input: '{{event.item}}',
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [
+      [ResearchInputStack],
+      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
+      [ResearchOutputStack],
+    ],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };

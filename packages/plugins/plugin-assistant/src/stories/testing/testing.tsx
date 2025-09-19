@@ -5,6 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
+import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   Capabilities,
   Events,
@@ -27,15 +28,14 @@ import {
   PLANNING_BLUEPRINT,
   readDocument,
   readTasks,
-  remoteServiceEndpoints,
   research,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { exampleFunctions } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -60,15 +60,7 @@ import { Assistant } from '../../types';
 export const config = {
   remote: new Config({
     runtime: {
-      services: {
-        ai: {
-          // TODO(burdon): Normalize props ('url'?)
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   persistent: new Config({
@@ -78,14 +70,12 @@ export const config = {
           persistent: true,
         },
       },
-      services: {
-        ai: {
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
+    },
+  }),
+  local: new Config({
+    runtime: {
+      services: SERVICES_CONFIG.LOCAL,
     },
   }),
 };
@@ -127,7 +117,16 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       SettingsPlugin(),
       SpacePlugin(),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
+        types: [
+          Markdown.Document,
+          Assistant.Chat,
+          Blueprint.Blueprint,
+          Prompt.Prompt,
+          DataType.AccessToken,
+          FunctionTrigger,
+          FunctionType,
+          ...types,
+        ],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.

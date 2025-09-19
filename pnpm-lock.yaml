@@ -2213,6 +2213,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
@@ -2252,6 +2255,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
