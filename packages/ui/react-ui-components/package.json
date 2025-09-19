@@ -39,6 +39,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.27.1",
+    "@effect/experimental": "0.54.6",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@lezer/markdown": "^1.3.1",
