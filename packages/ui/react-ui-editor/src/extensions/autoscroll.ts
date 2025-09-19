@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { Domino } from '../util';
 
 const lineHeight = 24;
+
+export const scrollToBottomEffect = StateEffect.define<any>();
 
 export type AutoScrollOptions = {
   overscroll?: number;
@@ -67,6 +70,14 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 1_000 }: Au
 
     // Update listener for logging when scrolling is needed.
     EditorView.updateListener.of((update) => {
+      update.transactions.forEach((transaction) => {
+        for (const effect of transaction.effects) {
+          if (effect.is(scrollToBottomEffect)) {
+            scrollToBottom(update.view.scrollDOM);
+          }
+        }
+      });
+
       if (update.docChanged && isPinned && !isThrottled) {
         const scroller = update.view.scrollDOM;
         const distanceFromBottom = calcDistance(scroller);
@@ -112,9 +123,6 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 1_000 }: Au
         paddingBottom: `${overscroll}px`,
         scrollbarWidth: 'thin',
       },
-      // '.cm-scroller::-webkit-scrollbar-thumb': {
-      //   borderRadius: '0px',
-      // },
       '.cm-scroller.cm-hide-scrollbar': {
         scrollbarWidth: 'none',
       },

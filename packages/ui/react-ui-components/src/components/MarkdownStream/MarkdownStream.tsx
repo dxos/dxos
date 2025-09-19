@@ -18,6 +18,7 @@ import {
   decorateMarkdown,
   extendedMarkdown,
   preview,
+  scrollToBottomEffect,
   streamer,
   useTextEditor,
   xmlTagContextEffect,
@@ -103,7 +104,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Immediately scroll to bottom (and pin).
         scrollToBottom: () => {
           view.dispatch({
-            effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }),
+            effects: scrollToBottomEffect.of(null),
           });
         },
         // Set the context for XML tags.

@@ -13,14 +13,18 @@ const BLINK_RATE = 2_000;
 
 export type StreamerOptions = {
   cursor?: boolean;
-  fadeIn?: boolean;
+  // When true, uses defaults. When object, allows configuring removal delay.
+  fadeIn?: boolean | { removalDelay?: number };
 };
 
 /**
  * Extension that adds a blinking cursor widget at the end of the document.
  */
 export const streamer = (options: StreamerOptions = {}): Extension => {
-  return [options.cursor && cursor(), options.fadeIn && fadeIn()].filter(isNotFalsy);
+  return [
+    options.cursor && cursor(),
+    options.fadeIn && fadeIn(typeof options.fadeIn === 'object' ? options.fadeIn : {}),
+  ].filter(isNotFalsy);
 };
 
 /**
@@ -108,66 +112,131 @@ class CursorWidget extends WidgetType {
 }
 
 /**
- * State field to detect and decorate appended text.
+ * State field to detect and decorate appended text with a fade-in effect.
+ * Also schedules removal of the last appended decoration after a delay.
  */
-const fadeIn = (): Extension => {
-  return [
-    StateField.define<DecorationSet>({
-      create: () => Decoration.none,
-      update: (decorations, tr) => {
-        if (!tr.docChanged) {
-          return decorations;
-        }
+const fadeIn = (options: { removalDelay?: number } = {}): Extension => {
+  const FADE_IN_DURATION = 1_000; // ms.
+  const DEFAULT_REMOVAL_DELAY = 5_000; // ms.
+  const removalDelay = options.removalDelay ?? DEFAULT_REMOVAL_DELAY;
 
-        // Detect a document reset (e.g., fully replaced or cleared), and clear all decorations.
-        let isReset = tr.state.doc.length === 0;
-        if (!isReset) {
-          tr.changes.iterChanges((fromA, toA) => {
-            if (fromA === 0 && toA === tr.startState.doc.length) {
-              isReset = true;
-            }
+  // Effect to remove a specific decoration by range.
+  const removeDecoration = StateEffect.define<{ from: number; to: number }>();
+
+  // Decoration field that adds fade-in marks for appended content and responds to removal effects.
+  const fadeField = StateField.define<DecorationSet>({
+    create: () => Decoration.none,
+    update: (decorations, tr) => {
+      let next = decorations;
+
+      // Apply removals first, if any.
+      for (const effect of tr.effects) {
+        if (effect.is(removeDecoration)) {
+          const target = effect.value;
+          next = next.update({
+            filter: (from, to) => !(from === target.from && to === target.to),
           });
         }
-        if (isReset) {
-          return Decoration.none;
+      }
+
+      if (!tr.docChanged) {
+        return next;
+      }
+
+      // Reset decorations if the entire content was replaced.
+      let isReset = tr.state.doc.length === 0;
+      if (!isReset) {
+        tr.changes.iterChanges((fromA, toA) => {
+          if (fromA === 0 && toA === tr.startState.doc.length) {
+            isReset = true;
+          }
+        });
+      }
+      if (isReset) {
+        return Decoration.none;
+      }
+
+      // Add fade-in decorations for appended content at the end only.
+      const add: any[] = [];
+      tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+        // Don't fade in initial content.
+        if (fromB === 0 && toB === inserted.length) {
+          return;
+        }
+        // At-the-end append.
+        if (toA === tr.startState.doc.length && inserted.length > 0) {
+          add.push(Decoration.mark({ class: 'cm-fade-in' }).range(fromB, toB));
+        }
+      });
+
+      return next.update({ add });
+    },
+    provide: (f) => EditorView.decorations.from(f),
+  });
+
+  // View plugin that tracks appended ranges and schedules their removal.
+  const timerPlugin = ViewPlugin.fromClass(
+    class {
+      // Map a simple key "from-to" to timer id.
+      _timers = new Map<string, any>();
+
+      constructor(private view: EditorView) {}
+
+      update(update: ViewUpdate) {
+        if (!update.docChanged) {
+          return;
         }
 
-        // Check if content was appended at the end.
-        const newDecorations: any[] = [];
-        tr.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-          // Don't fade in initial content.
-          if (fromB === 0 && toB === inserted.length) {
+        update.changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+          // Only consider appends at the end.
+          if (toA !== update.startState.doc.length || inserted.length === 0) {
             return;
           }
 
-          // Check if the change is at the end of the document.
-          if (toA === tr.startState.doc.length && inserted.length > 0) {
-            newDecorations.push(Decoration.mark({ class: 'cm-fade-in' }).range(fromB, toB));
+          const key = `${fromB}-${toB}`;
+          // Clear any prior timer for this exact range.
+          if (this._timers.has(key)) {
+            clearTimeout(this._timers.get(key));
           }
-        });
 
-        // Combine existing decorations with new ones.
-        return decorations.update({
-          add: newDecorations,
-          filter: (_from, _to) => {
-            // Remove old decorations after a certain time or keep them.
-            return true;
-          },
-        });
-      },
-      provide: (f) => EditorView.decorations.from(f),
-    }),
+          const totalDelay = FADE_IN_DURATION + removalDelay;
+          const id = setTimeout(() => {
+            this.view.dispatch({ effects: removeDecoration.of({ from: fromB, to: toB }) });
+            this._timers.delete(key);
+          }, totalDelay);
 
+          this._timers.set(key, id);
+        });
+      }
+
+      destroy() {
+        for (const id of this._timers.values()) {
+          clearTimeout(id);
+        }
+        this._timers.clear();
+      }
+    },
+  );
+
+  return [
+    fadeField,
+    timerPlugin,
     EditorView.theme({
+      '.cm-line > span': {
+        opacity: '0.8',
+      },
       '.cm-fade-in': {
-        animation: 'fade-in 1s ease-out forwards',
+        animation: 'fade-in 3s ease-out forwards',
       },
       '@keyframes fade-in': {
         '0%': {
           opacity: '0',
         },
-        '100%': {
+        '80%': {
           opacity: '1',
+        },
+        '100%': {
+          opacity: '0.8',
         },
       },
     }),
