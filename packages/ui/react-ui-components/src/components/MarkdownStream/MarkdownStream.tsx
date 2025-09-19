@@ -5,10 +5,10 @@
 import { Effect, Fiber, Queue, Stream } from 'effect';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
+import { addEventListener } from '@dxos/async';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
-  EditorView,
   type StreamerOptions,
   type XmlTagsOptions,
   type XmlWidgetStateManager,
@@ -37,10 +37,20 @@ export type MarkdownStreamController = {
   append: (text: string) => Promise<void>;
 } & Pick<XmlWidgetStateManager, 'updateWidget'>;
 
-export type MarkdownStreamProps = ThemedClassName<{ content?: string }> & XmlTagsOptions & StreamerOptions;
+export type MarkdownStreamEvent = {
+  type: 'submit';
+  value: string | null;
+};
+
+export type MarkdownStreamProps = ThemedClassName<{
+  content?: string;
+  onEvent?: (event: MarkdownStreamEvent) => void;
+}> &
+  XmlTagsOptions &
+  StreamerOptions;
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, registry, content, ...streamerOptions }, forwardedRef) => {
+  ({ classNames, registry, content, onEvent, ...streamerOptions }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor(() => {
       return {
@@ -139,6 +149,24 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       } satisfies MarkdownStreamController;
     }, [view]);
 
+    // Widget events.
+    useEffect(() => {
+      if (!parentRef.current) {
+        return;
+      }
+
+      return addEventListener(parentRef.current, 'click', (ev) => {
+        const target = ev.target as HTMLElement;
+        if (target.getAttribute('data-action') === 'submit') {
+          onEvent?.({
+            type: 'submit',
+            value: target.getAttribute('data-value'),
+          });
+        }
+      });
+    }, [view, onEvent]);
+
+    // Cleanup.
     useEffect(() => {
       return () => {
         view?.destroy();

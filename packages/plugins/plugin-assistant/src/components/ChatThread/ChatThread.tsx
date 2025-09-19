@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, {
+  type CSSProperties,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
@@ -12,7 +20,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { type ChatMessageProps } from './ChatMessage';
+import { type ChatEvent } from '../Chat';
+
 import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer } from './sync';
 
@@ -23,12 +32,12 @@ export type ChatThreadProps = ThemedClassName<
     identity?: Identity;
     messages?: DataType.Message[];
     error?: Error;
-  } & Pick<ChatMessageProps, 'debug' | 'toolProvider'> &
-    Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
+    onEvent?: (event: ChatEvent) => void;
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
 >;
 
 export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true }, forwardedRef) => {
+  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true, onEvent }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
@@ -48,6 +57,23 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
       syncer?.sync(messages);
     }, [syncer, messages]);
 
+    // Event handler.
+    const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
+      (ev) => {
+        switch (ev.type) {
+          case 'submit': {
+            ev.value &&
+              onEvent?.({
+                type: 'submit',
+                text: ev.value,
+              });
+            break;
+          }
+        }
+      },
+      [onEvent],
+    );
+
     return (
       <div
         className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
@@ -59,6 +85,7 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}
+          onEvent={handleEvent}
         />
       </div>
     );

@@ -95,9 +95,10 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
         }
 
         case 'submit': {
-          if (!streaming) {
+          const text = ev.text.trim();
+          if (!streaming && text.length) {
             lastPrompt.current = ev.text;
-            void processor.request({ message: ev.text });
+            void processor.request({ message: text });
           }
           break;
         }
@@ -331,17 +332,12 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Thread
 //
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools' | 'onEvent'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, messages, processor } = useChatContext(ChatThread.displayName);
+  const { event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
-
-  const toolProvider = useCallback<NonNullable<ChatThreadProps['toolProvider']>>(
-    () => processor.conversation.toolkit?.tools ?? [],
-    [processor],
-  );
 
   const scrollerRef = useRef<ChatThreadController | null>(null);
   useEffect(() => {
@@ -355,6 +351,13 @@ const ChatThread = (props: ChatThreadProps) => {
     });
   }, [event]);
 
+  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
+
   if (!identity) {
     return null;
   }
@@ -363,11 +366,10 @@ const ChatThread = (props: ChatThreadProps) => {
     <NaturalChatThread
       {...props}
       ref={scrollerRef}
-      debug={debug}
       identity={identity}
       messages={messages}
       error={error}
-      toolProvider={toolProvider}
+      onEvent={handleEvent}
     />
   );
 };

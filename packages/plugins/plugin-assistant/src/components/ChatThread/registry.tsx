@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { log } from '@dxos/log';
 import {
   PromptWidget,
   ReferenceWidget,
@@ -127,6 +128,7 @@ export const blockToMarkdown: BlockRenderer = (
 };
 
 const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+  log.info('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -153,9 +155,10 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
 
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
-    case 'toolkit': {
-      return `<toolkit />`;
-    }
+
+    // case 'toolkit': {
+    //   return `<toolkit />`;
+    // }
 
     case 'toolCall': {
       context.updateWidget(block.toolCallId, {
