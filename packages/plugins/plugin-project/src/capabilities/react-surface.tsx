@@ -18,6 +18,6 @@ export default () =>
       id: meta.id,
       role: 'article',
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => <ProjectContainer role={role} object={data.subject} />,
+      component: ({ data, role }) => <ProjectContainer role={role} project={data.subject} />,
     }),
   );
