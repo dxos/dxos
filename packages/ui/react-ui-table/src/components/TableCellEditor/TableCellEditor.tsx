@@ -12,7 +12,6 @@ import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
-import { useThemeContext } from '@dxos/react-ui';
 import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
   type EditorBlurHandler,
@@ -107,7 +106,6 @@ export const TableCellEditor = ({
 }: GridScopedProps<TableCellEditorProps>) => {
   const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
-  const { themeMode } = useThemeContext();
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validationVariant, setValidationVariant] = useState<'error' | 'warning'>('error');
 
@@ -257,7 +255,7 @@ export const TableCellEditor = ({
       );
     }
 
-    // Add validation extension to handle content changes
+    // Add validation extension to handle content changes.
     if (model && editing) {
       extensions.push(
         EditorView.updateListener.of(
@@ -265,7 +263,7 @@ export const TableCellEditor = ({
             const content = update.state.doc.toString();
             const cell = parseCellIndex(editing.index);
 
-            // Perform validation on content change
+            // Perform validation on content change.
             void model.validateCellData(cell, content).then((result) => {
               if (result.valid) {
                 setValidationError(null);
@@ -280,7 +278,7 @@ export const TableCellEditor = ({
     }
 
     return extensions;
-  }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
+  }, [model, modals, editing, fieldProjection, handleClose]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
