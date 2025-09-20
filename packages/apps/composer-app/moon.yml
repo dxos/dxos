@@ -6,3 +6,19 @@ tags:
   - typecheck
   - vite
   - ts-test
+tasks:
+  compile:
+    deps:
+      - prebuild
+  prebuild:
+    script: pnpm run copy:assets
+    deps:
+      - ^:prebuild
+    inputs:
+      - package.json
+      - moon.yml
+    outputs:
+      - public/assets/plugin-sketch
+  serve:
+    deps:
+      - prebuild

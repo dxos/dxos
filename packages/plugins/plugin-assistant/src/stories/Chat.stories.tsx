@@ -351,10 +351,11 @@ export const WithMail: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
+// Test with prompt: Sync my email.
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
