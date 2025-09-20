@@ -34,14 +34,8 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
-export const isPgnEqual = (pgn1?: string, pgn2?: string) => {
-  if (!pgn1 || !pgn2) {
-    return false;
-  }
-
-  const r1 = pgn1.replace(/\[.*?\]/g, '').trim();
-  const r2 = pgn2.replace(/\[.*?\]/g, '').trim();
-  return r1 === r2;
+export const getRawPgn = (pgn: string) => {
+  return pgn.replace(/\[.*?\]/g, '').trim();
 };
 
 const styles = {
@@ -135,7 +129,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
    */
   // TODO(burdon): Update headers.
   get pgn(): string {
-    return this._chess.pgn();
+    return getRawPgn(this._chess.pgn());
   }
 
   setMoveIndex(index: number) {

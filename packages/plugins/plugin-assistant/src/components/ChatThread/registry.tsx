@@ -56,7 +56,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     block: false,
     factory: (props) => {
       const text = getTextChild(props.children);
-      return text && props.reference ? new ReferenceWidget(text, props.reference) : null;
+      return text && props.ref ? new ReferenceWidget(text, props.ref) : null;
     },
   },
   ['select' as const]: {
@@ -153,6 +153,11 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       }
 
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
+    }
+
+    // TODO(burdon): Need label.
+    case 'reference': {
+      return `<reference ref="${block.reference.dxn.toString()}">Ref</reference>`;
     }
 
     // case 'toolkit': {
