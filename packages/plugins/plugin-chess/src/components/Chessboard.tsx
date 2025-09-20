@@ -20,6 +20,7 @@ import {
   type GameboardRootProps,
   Chessboard as NaturalChessboard,
   type ChessboardProps as NaturalChessboardProps,
+  isPgnEqual,
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -59,10 +60,12 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   }, [model]);
 
   // External change.
+  // NOTE: Warning if user has not interacted with the board.
   useEffect(() => {
-    model.update(game.pgn);
-    // TODO(burdon): Warning if user has not interacted with the board.
-    void click.play();
+    if (!isPgnEqual(model.pgn, game.pgn)) {
+      model.update(game.pgn);
+      void click.play();
+    }
   }, [game.pgn]);
 
   // Move.

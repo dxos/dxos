@@ -43,8 +43,8 @@ You can reply with a block reference for objects if you have the DXN. For exampl
 
 ### Suggestions
 
-Each suggestion must in the form of a proposed action enclosed in a <suggest> tag.
-Example: <suggest>Show on a map</suggest>
+Each suggestion must in the form of a proposed action enclosed in a <suggesion> tag.
+Example: <suggesion>Show on a map</suggesion>
 
 ### Multiple choice questions
 

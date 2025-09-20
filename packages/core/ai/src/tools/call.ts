@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
-// TODO(burdon): Not called?
+// TODO(burdon): Not Used?
 export const callTools: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.ToHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
@@ -28,7 +28,7 @@ export const callTool: <Tools extends AiTool.Any>(
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
-    const input = JSON.parse(toolCall.input);
+    const input = safeParseJson<AiTool.Parameters<any>>(toolCall.input, {});
 
     // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
     log('toolCall', { toolCall: toolCall.name, input });
