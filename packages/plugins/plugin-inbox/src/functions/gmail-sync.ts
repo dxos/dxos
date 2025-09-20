@@ -30,7 +30,7 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd'), pageSize = 100 },
+    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 7), 'yyyy-MM-dd'), pageSize = 100 },
   }) =>
     Effect.gen(function* () {
       yield* Console.log('running gmail sync', { mailboxId, userId, after, pageSize });
