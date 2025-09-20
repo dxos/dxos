@@ -12,7 +12,7 @@ import { type DataType } from '@dxos/schema';
 import { useQueueModelAdapter } from '../hooks';
 import { type Transcript } from '../types';
 
-import { TranscriptView, renderMarkdown } from './Transcript';
+import { TranscriptView, renderByline } from './Transcript';
 
 export type TranscriptionContainerProps = {
   role: string;
@@ -24,7 +24,7 @@ export const TranscriptionContainer = ({ transcript }: TranscriptionContainerPro
   const space = getSpace(transcript);
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useQueue<DataType.Message>(transcript.queue.dxn, { pollInterval: 1_000 });
-  const model = useQueueModelAdapter(renderMarkdown(members), queue);
+  const model = useQueueModelAdapter(renderByline(members), queue);
 
   return (
     <StackItem.Content>

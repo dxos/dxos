@@ -167,7 +167,10 @@ export class AppManager {
   }
 
   async waitForSpaceReady(timeout = 30_000): Promise<void> {
-    await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
+    await Promise.all([
+      this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
+      this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout }),
+    ]);
   }
 
   getSpacePresenceMembers(): Locator {

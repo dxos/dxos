@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Order, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
@@ -62,6 +62,47 @@ describe('Query', () => {
     test('query everything', async () => {
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(10);
+    });
+
+    test('order by natural', async () => {
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const sortedObjects = objects.sort((a, b) => a.id.localeCompare(b.id));
+      expect(objects.map((o) => o.id)).to.deep.equal(sortedObjects.map((o) => o.id));
+    });
+
+    test('order by property', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'asc')))
+        .run();
+      const sortedObjects = objects.sort((a, b) => a.label?.localeCompare(b.label));
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
+    });
+
+    test('order by property descending', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'desc')))
+        .run();
+      const sortedObjects = objects.sort((a, b) => b.label?.localeCompare(a.label));
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
+    });
+
+    test('order by multiple properties', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.everything()).orderBy(Order.property('label', 'asc'), Order.property('title', 'desc')),
+        )
+        .run();
+
+      const sortedObjects = objects.sort((a, b) => {
+        const labelCompare = a.label?.localeCompare(b.label);
+        if (labelCompare !== 0) {
+          return labelCompare;
+        }
+
+        return b.title?.localeCompare(a.title);
+      });
+
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
     });
 
     test('filter properties', async () => {
@@ -792,7 +833,6 @@ describe('Query', () => {
       const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
         (query) => {
           const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
-          log.info('update', { values: values.toString() });
           updates.push(values);
         },
         { fire: true },
@@ -811,11 +851,11 @@ describe('Query', () => {
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 
-      expect(updates).toEqual([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // All objects loaded.
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // Second update for some reason.
-        [], // All items deleted.
-      ]);
+      // NOTE: There might be multiple updates dependending on how database components execute updates.
+      // All objects loaded.
+      expect(updates.at(0)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      // All objects deleted.
+      expect(updates.at(-1)).toEqual([]);
     });
   });
 

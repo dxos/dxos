@@ -9,18 +9,12 @@ import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
+  createToolkit,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
-import { createToolkit } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import {
-  ContextQueueService,
-  DatabaseService,
-  LocalFunctionExecutionService,
-  TracingService,
-  defineFunction,
-} from '@dxos/functions';
+import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 
 import { exaFunction, exaMockFunction } from '../exa';
@@ -28,7 +22,7 @@ import { exaFunction, exaMockFunction } from '../exa';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
-import { createResearchGraph, queryResearchGraph } from './research-graph';
+import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -36,10 +30,16 @@ import { ResearchDataTypes } from './types';
  */
 export default defineFunction({
   name: 'dxos.org/function/research',
-  description: 'Research the web for information',
+  description:
+    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: 'The query to search for.',
+    }),
+
+    researchInstructions: Schema.optional(Schema.String).annotations({
+      description:
+        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
     }),
 
     // TOOD(burdon): Move to context.
@@ -57,10 +57,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch } }) {
-      const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
-      const researchQueue = yield* DatabaseService.load(researchGraph.queue);
-
+    function* ({ data: { query, mockSearch, researchInstructions } }) {
       yield* DatabaseService.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
@@ -79,19 +76,21 @@ export default defineFunction({
             //
             GraphWriterHandler,
             LocalSearchHandler,
-            ContextQueueService.layer(researchQueue),
-          ),
+          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
         ),
       );
 
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system: PROMPT,
+        system:
+          PROMPT +
+          (researchInstructions
+            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
+            : ''),
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-
       const lastBlock = result.at(-1)?.blocks.at(-1);
       const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
@@ -113,7 +112,6 @@ export default defineFunction({
           AiToolkit.make() as any,
           Layer.empty as any,
         ),
-        TracingService.layerNoop,
       ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
     ),
   ),

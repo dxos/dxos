@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Order } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN, SpaceId } from '@dxos/keys';
@@ -35,6 +36,7 @@ export class QueryPlanner {
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
+    plan = this._ensureOrderStep(plan);
     return plan;
   }
 
@@ -58,6 +60,8 @@ export class QueryPlanner {
         return this._generateUnionClause(query, context);
       case 'set-difference':
         return this._generateSetDifferenceClause(query, context);
+      case 'order':
+        return this._generateOrderClause(query, context);
       default:
         throw new QueryError(`Unsupported query type: ${(query as any).type}`, {
           context: { query: context.originalQuery },
@@ -424,6 +428,41 @@ export class QueryPlanner {
   private _optimizeSoloUnions(plan: QueryPlan.Plan): QueryPlan.Plan {
     // TODO(dmaretskyi): Implement this.
     return plan;
+  }
+
+  private _generateOrderClause(query: QueryAST.QueryOrderClause, context: GenerationContext): QueryPlan.Plan {
+    return QueryPlan.Plan.make([
+      ...this._generate(query.query, context).steps,
+      {
+        _tag: 'OrderStep',
+        order: query.order,
+      },
+    ]);
+  }
+
+  // After complete plan is built, inspect it from the end:
+  //   - Walk backwards until hitting an object set changer.
+  //   - If an order step is found, skip.
+  //   - Otherwise append natural order to the end.
+  private _ensureOrderStep(plan: QueryPlan.Plan): QueryPlan.Plan {
+    const OBJECT_SET_CHANGERS = new Set(['SelectStep', 'TraverseStep', 'UnionStep', 'SetDifferenceStep']);
+    for (let i = plan.steps.length - 1; i >= 0; i--) {
+      const step = plan.steps[i];
+      if (step._tag === 'OrderStep') {
+        return plan;
+      }
+      if (OBJECT_SET_CHANGERS.has(step._tag)) {
+        break;
+      }
+    }
+
+    return QueryPlan.Plan.make([
+      ...plan.steps,
+      {
+        _tag: 'OrderStep',
+        order: [Order.natural.ast],
+      },
+    ]);
   }
 }
 

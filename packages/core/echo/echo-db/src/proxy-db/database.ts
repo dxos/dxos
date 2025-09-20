@@ -7,7 +7,8 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { type BaseObject, type HasId, assertObjectModelShape } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo';
+import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -68,7 +69,22 @@ export interface EchoDatabase {
 
   toJSON(): object;
 
+  /**
+   * @deprecated Use `ref` instead.
+   */
   getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
+
+  /**
+   * Creates a reference to an existing object in the database.
+   *
+   * NOTE: The reference may be dangling if the object is not present in the database.
+   *
+   * ## Difference from `Ref.fromDXN`
+   *
+   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `db.ref(dxn)` is preferable in cases with access to the database.
+   */
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -265,6 +281,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
     invariant(isLiveObject(object));
     return object;
+  }
+
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+    const ref = Ref.fromDXN(dxn);
+    setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
+    return ref;
   }
 
   // Odd way to define methods types from a typedef.

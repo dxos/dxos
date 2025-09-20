@@ -2,21 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
-import { useStreamingText } from '../../hooks';
+import { type MarkdownStreamProps } from './types';
+import { useMarkdownStream } from './useMarkdownStream';
 
-import { MarkdownContent, type MarkdownContentProps } from './MarkdownContent';
-
-export type MarkdownStreamProps = ThemedClassName<
-  MarkdownContentProps & {
-    cps?: number;
-  }
->;
-
-export const MarkdownStream = ({ classNames, content, cps, ...props }: MarkdownStreamProps) => {
-  const [str] = useStreamingText(content, cps);
-  return <MarkdownContent classNames={classNames} content={str} {...props} />;
+export const MarkdownStream = ({ classNames, ...props }: MarkdownStreamProps) => {
+  const { parentRef } = useMarkdownStream(props);
+  useEffect(() => () => console.log('[markdown stream unmount]'), []);
+  return <div ref={parentRef} className={mx('is-full overflow-hidden', classNames)} />;
 };

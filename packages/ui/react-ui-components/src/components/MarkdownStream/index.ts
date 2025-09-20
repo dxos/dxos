@@ -3,4 +3,7 @@
 //
 
 export * from './MarkdownStream';
-export * from './MarkdownContent';
+export * from './widgets';
+export * from './extensions';
+export * from './testing';
+export * from './types';

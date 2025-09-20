@@ -9,12 +9,13 @@ import { type FC } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ReactWidget } from './widgets';
+import { ReactWidget } from './ReactWidget';
 import { nodeToJson } from './xml-util';
 
-export type XmlComponentProps<TProps = any> = { tag: string } & TProps;
+export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 
-export type XmlWidgetFactory = (props: XmlComponentProps) => WidgetType | null;
+export type XmlWidgetFactory = (props: XmlComponentProps, onEvent?: XmlEventHandler) => WidgetType | null;
+export type XmlComponentProps<TProps = any> = { tag: string; onEvent?: XmlEventHandler } & TProps;
 
 export type XmlComponentDef = {
   block?: boolean;
@@ -31,15 +32,15 @@ export type XmlTagOptions = {
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
-export const xmlTags = ({ registry }: XmlTagOptions = {}): Extension => {
+export const xmlTags = (options: XmlTagOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        return createXmlTagDecorations(state, registry);
+        return createXmlTagDecorations(state, options);
       },
       update: (decorations, tr) => {
         if (tr.docChanged) {
-          return createXmlTagDecorations(tr.state, registry);
+          return createXmlTagDecorations(tr.state, options);
         }
 
         return decorations.map(tr.changes);
@@ -52,7 +53,7 @@ export const xmlTags = ({ registry }: XmlTagOptions = {}): Extension => {
 /**
  * Creates decorations for XML tags in the document using the syntax tree.
  */
-function createXmlTagDecorations(state: EditorState, registry?: XmlComponentRegistry): DecorationSet {
+function createXmlTagDecorations(state: EditorState, options: XmlTagOptions): DecorationSet {
   const decorations: Range<Decoration>[] = [];
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
@@ -66,9 +67,13 @@ function createXmlTagDecorations(state: EditorState, registry?: XmlComponentRegi
           try {
             // TODO(burdon): Check tag is closed before creating widget.
             const props = nodeToJson(state, node.node);
-            if (registry && props.tag) {
-              const { block, factory, Component } = registry?.[props.tag] ?? {};
-              const widget = factory ? factory(props) : Component ? new ReactWidget(Component, props) : undefined;
+            if (options.registry && props?.tag) {
+              const { block, factory, Component } = options.registry[props.tag] ?? {};
+              const widget = factory
+                ? factory(props)
+                : Component
+                  ? new ReactWidget(Component, { ...props })
+                  : undefined;
               if (widget) {
                 decorations.push(Decoration.replace({ widget, block }).range(node.node.from, node.node.to));
               }

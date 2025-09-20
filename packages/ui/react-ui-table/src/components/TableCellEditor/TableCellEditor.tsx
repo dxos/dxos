@@ -96,7 +96,7 @@ export const TableValueEditor = ({
   return <TableCellEditor model={model} modals={modals} onFocus={onFocus} onSave={onSave} __gridScope={__gridScope} />;
 };
 
-const editorSlots = { scroller: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
+const editorSlots = { scroll: { className: '!plb-[--dx-grid-cell-editor-padding-block]' } };
 
 export const TableCellEditor = ({
   model,
@@ -105,7 +105,7 @@ export const TableCellEditor = ({
   onSave,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
-  const { id: gridId, editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
+  const { editing, setEditing } = useGridContext('TableCellEditor', __gridScope);
   const suppressNextBlur = useRef(false);
   const { themeMode } = useThemeContext();
   const [validationError, setValidationError] = useState<string | null>(null);

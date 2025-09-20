@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { ObjectId } from '@dxos/echo-schema';
+import { ATTR_META } from '@dxos/echo-schema';
+import type { ObjectId, ObjectJSON } from '@dxos/echo-schema';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
-import type { QueryResult, QueueQuery } from '@dxos/protocols';
+import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery } from '@dxos/protocols';
 import { ComplexMap } from '@dxos/util';
 
 /**
@@ -75,8 +76,12 @@ export class MockQueueService implements QueueService {
 
   async insertIntoQueue(subspaceTag: string, spaceId: SpaceId, queueId: ObjectId, objects: unknown[]): Promise<void> {
     const key: [string, SpaceId, ObjectId] = [subspaceTag, spaceId, queueId];
-    const existing = this._queues.get(key) ?? [];
-    this._queues.set(key, [...existing, ...objects]);
+    const array = this._queues.get(key) ?? [];
+    this._queues.set(key, array);
+    for (const obj of objects) {
+      setQueuePosition(obj as ObjectJSON, array.length);
+      array.push(obj);
+    }
   }
 
   async deleteFromQueue(
@@ -93,3 +98,19 @@ export class MockQueueService implements QueueService {
     );
   }
 }
+
+const setQueuePosition = (obj: ObjectJSON, position: number) => {
+  obj[ATTR_META] ??= { keys: [] };
+  obj[ATTR_META].keys ??= [];
+  for (let i = 0; i < obj[ATTR_META].keys.length; i++) {
+    const key = obj[ATTR_META].keys[i];
+    if (key.source === KEY_QUEUE_POSITION) {
+      obj[ATTR_META].keys.splice(i, 1);
+      i--;
+    }
+  }
+  obj[ATTR_META].keys.push({
+    source: KEY_QUEUE_POSITION,
+    id: position.toString(),
+  });
+};

@@ -27,6 +27,8 @@ import {
   LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  agent,
+  localServiceEndpoints,
   readDocument,
   readTasks,
   remoteServiceEndpoints,
@@ -35,9 +37,10 @@ import {
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -56,7 +59,7 @@ import { withLayout } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { Assistant } from '../../types';
+import { Assistant, AssistantAction } from '../../types';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -90,6 +93,18 @@ export const config = {
       },
     },
   }),
+  local: new Config({
+    runtime: {
+      services: {
+        ai: {
+          server: localServiceEndpoints.ai,
+        },
+        edge: {
+          url: localServiceEndpoints.edge,
+        },
+      },
+    },
+  }),
 };
 
 class TestingToolkit extends AiToolkit.make(
@@ -113,13 +128,21 @@ class TestingToolkit extends AiToolkit.make(
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+  onInit?: (props: { space: Space }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onInit, ...props }: DecoratorsProps) => [
+export const getDecorators = ({
+  types = [],
+  plugins = [],
+  accessTokens = [],
+  onInit,
+  onChatCreated,
+  ...props
+}: DecoratorsProps) => [
   withPluginManager({
     plugins: [
       // System plugins.
@@ -129,7 +152,16 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
       SettingsPlugin(),
       SpacePlugin(),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
+        types: [
+          Markdown.Document,
+          Assistant.Chat,
+          Blueprint.Blueprint,
+          Prompt.Prompt,
+          DataType.AccessToken,
+          FunctionTrigger,
+          FunctionType,
+          ...types,
+        ],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
@@ -151,16 +183,8 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             space.db.add(Obj.clone(accessToken));
           }
 
-          // Create chat and queue.
-          const chat = space.db.add(
-            Obj.make(Assistant.Chat, {
-              queue: Ref.fromDXN(space.queues.create().dxn),
-              traceQueue: Ref.fromDXN(space.queues.create().dxn),
-            }),
-          );
-
           await space.db.flush({ indexes: true });
-          await onInit?.({ space, chat, binder: new AiContextBinder(await chat.queue.load()) });
+          await onInit?.({ space });
           await space.db.flush({ indexes: true });
         },
         ...props,
@@ -188,6 +212,8 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
             contributes(Capabilities.Functions, [syncLinearIssues]),
+            contributes(Capabilities.Functions, [agent]),
+            contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),
         defineModule({
@@ -199,13 +225,19 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           ],
         }),
         defineModule({
-          id: 'example.com/plugin/testing/module/set-workspace',
+          id: 'example.com/plugin/testing/module/setup',
           activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
           activate: async (context) => {
             const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.default;
             const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
+            // Ensure workspace is set.
             await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+
+            // Create initial chat.
+            await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+
             return [];
           },
         }),
@@ -217,6 +249,29 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
               createResolver({
                 intent: DeckAction.ChangeCompanion,
                 resolve: () => ({}),
+              }),
+              createResolver({
+                intent: AssistantAction.CreateChat,
+                position: 'hoist',
+                resolve: async ({ space, name }) => {
+                  const queue = space.queues.create();
+                  const traceQueue = space.queues.create();
+                  const chat = Obj.make(Assistant.Chat, {
+                    name,
+                    queue: Ref.fromDXN(queue.dxn),
+                    traceQueue: Ref.fromDXN(traceQueue.dxn),
+                  });
+                  const binder = new AiContextBinder(queue);
+
+                  // Story-specific behaviour to allow chat creation to be extended.
+                  space.db.add(chat);
+                  await space.db.flush({ indexes: true });
+                  await onChatCreated?.({ space, chat, binder });
+
+                  return {
+                    data: { object: chat },
+                  };
+                },
               }),
             ]),
           ],

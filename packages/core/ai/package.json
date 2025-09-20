@@ -50,7 +50,7 @@
     "src"
   ],
   "scripts": {
-    "run:chat": "tsx src/bin/chat.ts"
+    "run:chat": "vite-node src/bin/chat.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

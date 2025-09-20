@@ -13,6 +13,7 @@ process.env.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT ?? 'development';
 process.env.NODE_ENV = 'development';
 
 // In dev mode, use ts-node and dev plugins.
+// TODO(dmaretskyi): Switch to vite-node
 require('ts-node').register({ project });
 
 // In dev mode, always show stack traces.

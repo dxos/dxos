@@ -31,7 +31,7 @@ import { MessageNormalizer, getActorId } from '../../segments-normalization';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
 import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { renderMarkdown } from '../Transcript';
+import { renderByline } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
@@ -83,7 +83,7 @@ const AudioFile = ({
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
       void queue?.append([
@@ -241,15 +241,16 @@ export const Default: StoryObj<typeof AudioFile> = {
   },
 };
 
-export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
-  args: {
-    detectSpeaking: true,
-    normalizeSentences: true,
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
-    // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-  },
-};
+// TODO(mykola): Fix sentence normalization.
+// export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
+//   render: AudioFile,
+//   args: {
+//     detectSpeaking: true,
+//     normalizeSentences: true,
+//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+//     audioUrl: 'https://dxos.network/audio-london.m4a',
+//     // textUrl: 'https://dxos.network/audio-london.txt',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//   },
+// };

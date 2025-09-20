@@ -34,7 +34,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
             eventId: event.id,
           })),
       )
-      .sort((a, b) => a.timestampMs - b.timestampMs);
+      .sort((a, b) => a.timestamp - b.timestamp);
   }, [eventQueue?.objects]);
 
   if (traceQueueDxn && eventQueue?.isLoading) {
@@ -60,7 +60,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
     <div className={mx('p-1 overflow-auto')}>
       {errorLogs.map((log, index) => {
         const context = log.context as any;
-        const time = new Date(log.timestampMs).toLocaleString();
+        const time = new Date(log.timestamp).toLocaleString();
         const errorInfo = context?.err || {};
         const errorName = errorInfo._id || 'Error';
         const errorMessage = errorInfo.message || log.message;

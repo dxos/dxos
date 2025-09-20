@@ -13,6 +13,14 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Button, IconButton, Link, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { MarkdownViewer, ToggleContainer } from '@dxos/react-ui-components';
+import {
+  chatMessageJson,
+  chatMessageMargin,
+  chatMessagePadding,
+  chatMessagePanel,
+  chatMessagePanelContent,
+  chatMessagePanelHeader,
+} from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 import { ContentBlock, type DataType } from '@dxos/schema';
@@ -20,18 +28,18 @@ import { safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { type ChatEvent } from '../Chat';
+import { type AiToolProvider, ToolBlock, isToolMessage } from '../ToolBlock';
 import { Toolbox } from '../Toolbox';
 
 import { ObjectLink } from './Link';
-import { type AiToolProvider, ToolBlock, isToolMessage } from './ToolBlock';
 
 export const styles = {
-  margin: 'pie-4 pis-4',
-  padding: 'pis-2 pie-2 pbs-0.5 pbe-0.5',
-  panel: 'is-full rounded-sm',
-  panelHeader: 'bg-groupSurface',
-  panelContent: 'bg-modalSurface',
-  json: '!p-1 text-xs bg-transparent',
+  margin: chatMessageMargin,
+  padding: chatMessagePadding,
+  panel: chatMessagePanel,
+  panelHeader: chatMessagePanelHeader,
+  panelContent: chatMessagePanelContent,
+  json: chatMessageJson,
 };
 
 export type ChatMessageProps = ThemedClassName<{
@@ -160,6 +168,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
     );
   },
 
+  ['reference' as const]: ({ block, space }) => {
+    invariant(block._tag === 'reference');
+
+    return <RefBlock block={block} space={space!} />;
+  },
+
   //
   // Suggest
   //
@@ -278,6 +292,12 @@ const components: Partial<Record<ContentBlock.Any['_tag'] | 'default', ContentBl
       </ToggleContainer.Root>
     );
   },
+};
+
+const RefBlock = ({ block, space }: { block: ContentBlock.Reference; space: Space }) => {
+  const ref = useMemo(() => space.db.ref(block.reference.dxn), [space, block.reference.dxn.toString()]);
+
+  return <Surface role='card' data={{ subject: ref.target }} limit={1} />;
 };
 
 export type ChatErrorProps = Pick<ChatMessageProps, 'onEvent'> & {

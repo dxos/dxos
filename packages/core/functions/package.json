@@ -50,13 +50,12 @@
     "schema",
     "src"
   ],
-  "scripts": {
-    "gen-schema": "ts-node ./tools/schema.ts"
-  },
+  "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",

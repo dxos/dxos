@@ -35,6 +35,7 @@ import { OBSERVABILITY_PLUGIN, ObservabilityPlugin } from '@dxos/plugin-observab
 import { OUTLINER_PLUGIN, OutlinerPlugin } from '@dxos/plugin-outliner';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
 import { PREVIEW_PLUGIN, PreviewPlugin } from '@dxos/plugin-preview';
+import { meta as ProjectMeta, ProjectPlugin } from '@dxos/plugin-project';
 import { PWA_PLUGIN, PwaPlugin } from '@dxos/plugin-pwa';
 import { REGISTRY_PLUGIN, RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
@@ -115,6 +116,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       // prettier-ignore
       ASSISTANT_PLUGIN,
+      ProjectMeta.id,
       MeetingMeta.id,
       OUTLINER_PLUGIN,
       TranscriptionMeta.id,
@@ -166,6 +168,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     PresenterPlugin(),
     PreviewPlugin(),
     !isTauri && isPwa && PwaPlugin(),
+    ProjectPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
     isLabs && SearchPlugin(),
