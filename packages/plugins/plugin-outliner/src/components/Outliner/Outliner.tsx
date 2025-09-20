@@ -8,7 +8,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  RefDropdownMenu,
+  RefDropdownMenuProvider,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -50,7 +50,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
           createBasicExtensions({ readOnly: false, search: true }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),
           hashtag(),
@@ -78,8 +78,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     };
 
     return (
-      // TODO(burdon): Use global modal provider?
-      <RefDropdownMenu.Provider>
+      <RefDropdownMenuProvider>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
         <DropdownMenu.Portal>
           <DropdownMenu.Content>
@@ -89,7 +88,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
             <DropdownMenu.Arrow />
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
-      </RefDropdownMenu.Provider>
+      </RefDropdownMenuProvider>
     );
   },
 );

@@ -11,19 +11,24 @@ import { DropdownMenu } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
 
-// TODO(burdon): Reconcile this file with RefPopover?
+// TODO(burdon): Move to @dxos/lit-ui
 
-const customEventOptions = { capture: true, passive: false };
+//
+// Context
+//
 
-// Create a context for the dxn value.
 type RefDropdownMenuValue = Partial<{
   link: PreviewLinkRef;
   target: PreviewLinkTarget;
   pending: boolean;
 }>;
 
-const REF_DROPDOWN_MENU = 'RefDropdownMenu';
-const [RefDropdownMenuContextProvider, useRefDropdownMenu] = createContext<RefDropdownMenuValue>(REF_DROPDOWN_MENU, {});
+const [RefDropdownMenuContextProvider, useRefDropdownMenu] = createContext<RefDropdownMenuValue>('RefDropdownMenu', {});
+
+//
+// Context Provider
+// NOTE: This is handled by the preview-plugin.
+//
 
 type RefDropdownMenuProviderProps = PropsWithChildren<{
   onLookup?: PreviewLookup;
@@ -61,7 +66,10 @@ const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProvider
       return;
     }
 
-    return addEventListener(rootRef, 'dx-ref-tag-activate' as any, handleDxRefTagActivate, customEventOptions);
+    return addEventListener(rootRef, 'dx-ref-tag-activate' as any, handleDxRefTagActivate, {
+      capture: true,
+      passive: false,
+    });
   }, [rootRef]);
 
   return (
@@ -76,10 +84,6 @@ const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProvider
   );
 };
 
-export const RefDropdownMenu = {
-  Provider: RefDropdownMenuProvider,
-};
-
-export { useRefDropdownMenu };
+export { RefDropdownMenuProvider };
 
 export type { RefDropdownMenuProviderProps, RefDropdownMenuValue };
