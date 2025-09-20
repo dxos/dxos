@@ -5,8 +5,7 @@
 import { type Range } from '@codemirror/state';
 import { type Decoration, type DecorationSet } from '@codemirror/view';
 
-// TODO(burdon): Util.
-export const decoSetToArray = (deco: DecorationSet): readonly Range<Decoration>[] => {
+export const decorationSetToArray = (deco: DecorationSet): readonly Range<Decoration>[] => {
   const ranges: Range<Decoration>[] = [];
   const iter = deco.iter();
   while (iter.value) {

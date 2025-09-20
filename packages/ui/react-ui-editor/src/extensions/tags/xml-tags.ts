@@ -5,12 +5,13 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, type WidgetType } from '@codemirror/view';
-import { type FC } from 'react';
+import { type ComponentType, type FC } from 'react';
 
 import { log } from '@dxos/log';
 
+import { decorationSetToArray } from '../../util';
+
 import { ReactWidget } from './ReactWidget';
-import { decoSetToArray } from './util';
 import { nodeToJson } from './xml-util';
 
 export type StateDispatch<T> = T | ((state: T) => T);
@@ -71,10 +72,26 @@ type WidgetDecorationSet = {
   decorations: DecorationSet;
 };
 
-type WidgetStateMap = Record<string, any>;
+type XmlWidgetStateMap = Record<string, any>;
+
+export type XmlWidgetState = {
+  id: string;
+  props: any;
+  root: HTMLElement;
+  Component: ComponentType<any>;
+};
+
+export interface XmlWidgetNotifier {
+  mounted(widget: XmlWidgetState): void;
+  unmounted(id: string): void;
+}
 
 export type XmlTagsOptions = {
   registry?: XmlWidgetRegistry;
+  /**
+   * Called when a widget is mounted or unmounted.
+   */
+  setWidgets?: (widgets: XmlWidgetState[]) => void;
 };
 
 /**
@@ -98,11 +115,34 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
   });
 
   //
+  // Active widgets.
+  //
+  const widgets = new Map<string, XmlWidgetState>();
+  const notifier = {
+    mounted: (widget: XmlWidgetState) => {
+      widgets.set(widget.id, widget);
+      options.setWidgets?.([...widgets.values()]);
+    },
+    unmounted: (id: string) => {
+      widgets.delete(id);
+      options.setWidgets?.([...widgets.values()]);
+    },
+  } satisfies XmlWidgetNotifier;
+
+  //
   // Widget decorations.
   //
   const decorationsState = StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(state, 0, state.doc.length, options, state.field(contextState), state.field(widgetState));
+      return buildDecorations(
+        state,
+        0,
+        state.doc.length,
+        state.field(contextState),
+        state.field(widgetState),
+        options,
+        notifier,
+      );
     },
     update: ({ from, decorations }, tr) => {
       for (const effect of tr.effects) {
@@ -112,22 +152,28 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
       }
 
       if (tr.docChanged) {
+        const { state } = tr;
+
         // Flag if the transaction has modified the head of the document.
         // (i.e., any changes that touch before the current `from` position).
         const reset = tr.changes.touchesRange(0, from);
 
         // Since append-only, rebuild decorations from after the last widget.
         const result = buildDecorations(
-          tr.state,
+          state,
           reset ? 0 : from,
-          tr.state.doc.length,
-          tr.state.field(contextState),
-          tr.state.field(widgetState),
+          state.doc.length,
+          state.field(contextState),
+          state.field(widgetState),
           options,
+          notifier,
         );
 
         // Merge with existing decorations.
-        return { from: result.from, decorations: decorations.update({ add: decoSetToArray(result.decorations) }) };
+        return {
+          from: result.from,
+          decorations: decorations.update({ add: decorationSetToArray(result.decorations) }),
+        };
       }
 
       // No document changes: avoid mapping decorations through an empty ChangeSet,
@@ -141,7 +187,7 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
   //
   // Widget state management.
   //
-  const widgetState = StateField.define<WidgetStateMap>({
+  const widgetState = StateField.define<XmlWidgetStateMap>({
     create: () => ({}),
     update: (map, tr) => {
       for (const effect of tr.effects) {
@@ -153,15 +199,16 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
           // Update accumulated widget props by id.
           const { id, value } = effect.value;
           const newValue = typeof value === 'function' ? value(map[id]) : value;
-          const nextMap = { ...map, [id]: newValue } as WidgetStateMap;
+          const nextMap = { ...map, [id]: newValue } as XmlWidgetStateMap;
 
           // Find and render widget.
           const { decorations } = tr.state.field(decorationsState);
-          for (const range of decoSetToArray(decorations)) {
+          for (const range of decorationSetToArray(decorations)) {
             const deco = range.value;
             const widget = deco?.spec?.widget;
-            if (widget && widget instanceof ReactWidget && widget.id === effect.value.id) {
-              widget.render(newValue);
+            if (widget && widget instanceof ReactWidget && widget.id === effect.value.id && widget.root) {
+              const props = { ...widget.props, ...newValue };
+              notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
             }
           }
 
@@ -184,8 +231,9 @@ const buildDecorations = (
   from: number,
   to: number,
   context: any,
-  widgetState: WidgetStateMap,
+  widgetState: XmlWidgetStateMap,
   options: XmlTagsOptions,
+  notifier: XmlWidgetNotifier,
 ): WidgetDecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(state);
@@ -209,7 +257,7 @@ const buildDecorations = (
               const widget = factory
                 ? factory({ context, ...props })
                 : Component
-                  ? props.id && new ReactWidget(props.id, Component, { context, ...props, ...state })
+                  ? props.id && new ReactWidget(props.id, Component, { context, ...props, ...state }, notifier)
                   : undefined;
 
               if (widget) {

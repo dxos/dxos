@@ -46,10 +46,10 @@ const mixedParser = (registry?: XmlWidgetRegistry): ParseWrapper => {
   return parseMixed((node, input) => {
     switch (node.name) {
       // Ignore XML inside of fenced and inline code.
-      // case 'FencedCode':
-      // case 'InlineCode': {
-      //   return null;
-      // }
+      case 'FencedCode':
+      case 'InlineCode': {
+        return null;
+      }
 
       // Parse multi-line HTML blocks.
       // case 'XMLBlock':

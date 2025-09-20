@@ -113,7 +113,6 @@ export const componentRegistry: XmlWidgetRegistry = {
 /**
  * Convert block to markdown.
  */
-// TODO(burdon): Move into registry.
 export const blockToMarkdown: BlockRenderer = (
   context: MessageThreadContext,
   message: DataType.Message,
@@ -128,7 +127,7 @@ export const blockToMarkdown: BlockRenderer = (
 };
 
 const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
-  log.info('blockToMarkdown', { block: JSON.stringify(block) });
+  log('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -177,8 +176,9 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
     }
 
+    // TODO(burdon): Need stable ID.
     default: {
-      return `<json>\n${JSON.stringify(block)}\n</json>`;
+      return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;
     }
   }
 };

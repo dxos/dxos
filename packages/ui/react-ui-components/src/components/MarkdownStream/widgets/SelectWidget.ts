@@ -18,7 +18,6 @@ export class SelectWidget extends WidgetType {
    * NOTE: Container must set var based on user's identity.
    */
   override toDOM(): HTMLElement {
-    console.log(this.options);
     return Domino.of('div')
       .attr('role', 'group')
       .classNames('flex flex-wrap mbs-2 mbe-2 gap-1')

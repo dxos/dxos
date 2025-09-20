@@ -31,7 +31,7 @@ export type ToolBlockProps = {
   blocks: ContentBlock.Any[];
 };
 
-export const ToolBlock = ({ blocks }: ToolBlockProps) => {
+export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
   const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
@@ -101,6 +101,10 @@ export const ToolBlock = ({ blocks }: ToolBlockProps) => {
       .filter(isNonNullable);
   }, [blocks]);
 
+  if (!items.length) {
+    return null;
+  }
+
   return <ToolContainer items={items} />;
 };
 
@@ -124,7 +128,7 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
     setSelected(index);
   };
 
-  const data = items[selected].content;
+  const data = items[selected]?.content;
 
   return (
     <ToggleContainer.Root classNames={chatMessagePanel} open={open} onChangeOpen={setOpen}>
