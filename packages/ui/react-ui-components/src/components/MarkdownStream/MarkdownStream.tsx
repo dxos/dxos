@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorSelection } from '@codemirror/state';
 import { Effect, Fiber, Queue, Stream } from 'effect';
 import React, {
   Component,
@@ -66,6 +67,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     const { parentRef, view } = useTextEditor(() => {
       return {
         initialValue: content,
+        selection: EditorSelection.cursor(content?.length ?? 0),
         extensions: [
           createThemeExtensions({
             themeMode,

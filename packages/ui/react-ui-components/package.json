@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.2",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
