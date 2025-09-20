@@ -12,7 +12,7 @@ import { DropdownMenu } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { RefDropdownMenu } from '../components';
+import { RefDropdownMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
 import { str } from '../testing';
 
@@ -32,13 +32,12 @@ const DefaultStory = ({ text }: StoryProps) => {
   };
 
   return (
-    <RefDropdownMenu.Provider>
+    <RefDropdownMenuProvider>
       <EditorStory
         ref={viewRef}
         text={text}
         extensions={[outliner(), hashtag()]}
         placeholder=''
-        slots={{}}
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
@@ -56,7 +55,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
-    </RefDropdownMenu.Provider>
+    </RefDropdownMenuProvider>
   );
 };
 

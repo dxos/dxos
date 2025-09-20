@@ -51,7 +51,7 @@ const DefaultStory = ({ content = '' }: StoryProps) => {
       extensions: [
         formattingObserver,
         createBasicExtensions({ readOnly: toolbarState.viewMode === 'readonly' }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({

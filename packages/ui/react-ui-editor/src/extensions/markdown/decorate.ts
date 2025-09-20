@@ -3,7 +3,7 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, RangeSetBuilder, StateEffect } from '@codemirror/state';
+import { type EditorState, Prec, RangeSetBuilder, StateEffect } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
@@ -234,7 +234,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const mark = node.node.firstChild!;
         if (mark?.name === 'HeaderMark') {
           const { from, to = 6 } = options.numberedHeadings ?? {};
-          const text = view.state.sliceDoc(node.from, node.to);
+          const text = state.sliceDoc(node.from, node.to);
           const len = text.match(/[#\s]+/)![0].length;
           if (!from || level < from || level > to) {
             atomicDeco.add(mark.from, mark.from + len, hide);
@@ -427,6 +427,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const editing = editingRange(state, node, focus);
         if (urlNode && marks.length >= 2) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
+          if (options.skip?.({ name: 'Link', url })) {
+            break;
+          }
           if (!editing) {
             atomicDeco.add(node.from, marks[0].to, hide);
           }
@@ -514,15 +517,20 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
 const forceUpdate = StateEffect.define<null>();
 
+export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
+
 export interface DecorateOptions {
   /**
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
   numberedHeadings?: { from: number; to?: number };
-  renderLinkButton?: RenderCallback<{ url: string }>;
   // TODO(burdon): Additional padding for each line.
   listPaddingLeft?: number;
+  // TODO(burdon): Use consistently.
+  skip?: (node: NodeData) => boolean;
+  // TODO(burdon): Remove.
+  renderLinkButton?: RenderCallback<{ url: string }>;
 }
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {
@@ -578,9 +586,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
       {
         provide: (plugin) => [
-          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          Prec.low(EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)),
           EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
+          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
         ],
       },
     ),

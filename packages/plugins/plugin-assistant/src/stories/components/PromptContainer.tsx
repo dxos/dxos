@@ -43,9 +43,7 @@ const PromptEditor = ({ prompt, classNames }: ThemedClassName<{ prompt: Prompt.P
           lineWrapping: true,
         }),
         createThemeExtensions({ themeMode }),
-
-        // Extend markdown with handlebars support.
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
       ].filter(Predicate.isTruthy),
     };
   }, [themeMode, prompt]);
