@@ -8,7 +8,6 @@ import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
 import { useQueue } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
 
 type RawDataPanelProps = {
   span: InvocationSpan;
@@ -55,11 +54,7 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
   };
 
   return (
-    <SyntaxHighlighter
-      className={mx('p-1 [&_pre]:!overflow-visible', classNames)}
-      language='json'
-      renderer={rowRenderer}
-    >
+    <SyntaxHighlighter language='json' className={classNames} renderer={rowRenderer}>
       {JSON.stringify(combinedData, null, 2)}
     </SyntaxHighlighter>
   );

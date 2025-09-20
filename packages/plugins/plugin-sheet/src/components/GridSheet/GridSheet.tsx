@@ -279,7 +279,7 @@ export const GridSheet = () => {
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
-  const extension = useMemo(
+  const extensions = useMemo(
     () => [
       editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
       sheetExtension({ functions: model.graph.getFunctions() }),
@@ -309,7 +309,7 @@ export const GridSheet = () => {
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
     <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
+      <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLS}

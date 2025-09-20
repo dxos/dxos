@@ -49,10 +49,10 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
     decorations: DecorationSet;
 
     constructor(view: EditorView) {
-      this.decorations = this.buildDeco(view);
+      this.decorations = this.buildDecorations(view);
     }
 
-    buildDeco(view: EditorView) {
+    buildDecorations(view: EditorView) {
       const widgets: any[] = [];
 
       for (const { from, to } of view.visibleRanges) {
@@ -113,7 +113,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
-        this.decorations = this.buildDeco(update.view);
+        this.decorations = this.buildDecorations(update.view);
       }
     }
   },

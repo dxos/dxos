@@ -15,7 +15,7 @@ export class SummaryWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    return Domino.of('div').classNames('text-sm text-subdued').text(this.text).build();
+    return Domino.of('div').classNames('mbs-2 mbe-2 pis-2 pie-2 text-sm text-placeholder').text(this.text).build();
   }
 
   override eq(other: WidgetType): boolean {
