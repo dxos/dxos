@@ -60,6 +60,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                         target: companionTo,
                       }),
                     );
+
                     yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: object }));
                   }
                 }).pipe(Effect.runPromise),

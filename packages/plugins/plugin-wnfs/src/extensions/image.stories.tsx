@@ -56,7 +56,7 @@ const DefaultStory = () => {
       initialValue,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         blockstore && space ? [image({ blockstore, instances, space })] : [],
         decorateMarkdown(),

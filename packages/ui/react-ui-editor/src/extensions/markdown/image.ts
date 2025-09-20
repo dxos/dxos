@@ -17,8 +17,7 @@ export const image = (_options: ImageOptions = {}): Extension => {
   return [
     StateField.define<DecorationSet>({
       create: (state) => {
-        // Process all images.
-        return Decoration.set(buildDecorations(0, state.doc.length, state));
+        return Decoration.set(buildDecorations(state, 0, state.doc.length));
       },
       update: (value: DecorationSet, tr: Transaction) => {
         if (!tr.docChanged && !tr.selection) {
@@ -43,7 +42,7 @@ export const image = (_options: ImageOptions = {}): Extension => {
           filterFrom: from,
           filterTo: to,
           filter: () => false,
-          add: buildDecorations(from, to, tr.state),
+          add: buildDecorations(tr.state, from, to),
         });
       },
       provide: (field) => EditorView.decorations.from(field),
@@ -51,7 +50,7 @@ export const image = (_options: ImageOptions = {}): Extension => {
   ];
 };
 
-const buildDecorations = (from: number, to: number, state: EditorState) => {
+const buildDecorations = (state: EditorState, from: number, to: number) => {
   const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
   syntaxTree(state).iterate({

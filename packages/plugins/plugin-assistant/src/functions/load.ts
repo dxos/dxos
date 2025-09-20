@@ -7,7 +7,6 @@ import { Effect, Option, Schema, pipe } from 'effect';
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
-import { log } from '@dxos/log';
 
 // TODO(burdon): Common error handling.
 // TODO(burdon): Factor out to space plugin.
@@ -34,7 +33,7 @@ export default defineFunction({
       Option.match({
         onNone: () => Effect.fail('Object not found.'),
         onSome: (object) => {
-          log.info('object', { object });
+          // log.info('object', { object });
           return Effect.succeed({ object });
         },
       }),

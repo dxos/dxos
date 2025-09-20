@@ -32,7 +32,7 @@ const DefaultStory = ({ text }: StoryProps) => {
       initialValue: text,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         mermaid(),
         decorateMarkdown(),

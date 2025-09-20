@@ -2,79 +2,92 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, Fragment, forwardRef, useEffect, useMemo } from 'react';
+import React, {
+  type CSSProperties,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { ChatError, ChatMessage, type ChatMessageProps, styles } from './ChatMessage';
-import { reduceMessages } from './reducers';
+import { type ChatEvent } from '../Chat';
+
+import { blockToMarkdown, componentRegistry } from './registry';
+import { MessageSyncer } from './sync';
+
+export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
 
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
     messages?: DataType.Message[];
     error?: Error;
-  } & Pick<ChatMessageProps, 'debug' | 'space' | 'toolProvider' | 'onEvent'>
+    onEvent?: (event: ChatEvent) => void;
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
 >;
 
-export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages = [], error, debug, onEvent, ...props }, forwardedRef) => {
+export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
+  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true, onEvent }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
 
+    // Expose controller.
+    const [controller, setController] = useState<MarkdownStreamController | null>(null);
+    useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
+
     // Show error.
     useEffect(() => {
-      onEvent?.({ type: 'scroll-to-bottom' });
-    }, [error]);
+      controller?.scrollToBottom();
+    }, [controller, error]);
 
-    // Reduce messages to collapse related blocks.
-    const reducedMessages = useMemo(() => {
-      if (debug) {
-        // Raw.
-        return messages; // TODO(burdon): Need TS.
-      } else {
-        return messages.reduce(reduceMessages, { messages: [] }).messages;
-      }
-    }, [messages, debug]);
+    // Update document.
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    useEffect(() => {
+      syncer?.sync(messages);
+    }, [syncer, messages]);
 
-    const getDelta = (idx: number) => {
-      invariant(idx > 0);
-      const prev = new Date(reducedMessages[idx - 1].created).getTime();
-      const current = new Date(reducedMessages[idx].created).getTime();
-      return current - prev;
-    };
+    // Event handler.
+    const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
+      (ev) => {
+        switch (ev.type) {
+          case 'submit': {
+            ev.value &&
+              onEvent?.({
+                type: 'submit',
+                text: ev.value,
+              });
+            break;
+          }
+        }
+      },
+      [onEvent],
+    );
 
     return (
-      <ScrollContainer.Root pin fade ref={forwardedRef} classNames={classNames}>
-        <ScrollContainer.Content
-          classNames='relative flex flex-col gap-2 pbs-2 pbe-2'
-          style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
-        >
-          {reducedMessages.map((message, idx) => (
-            <Fragment key={message.id}>
-              {debug && (
-                <div className={mx('flex justify-end text-subdued', styles.margin)}>
-                  <pre className='text-xs'>
-                    {JSON.stringify({ created: message.created, delta: idx > 0 ? getDelta(idx) : undefined })}
-                  </pre>
-                </div>
-              )}
-              <ChatMessage message={message} debug={debug} onEvent={onEvent} {...props} />
-            </Fragment>
-          ))}
-
-          {error && <ChatError error={error} onEvent={onEvent} />}
-        </ScrollContainer.Content>
-        <ScrollContainer.ScrollDownButton />
-      </ScrollContainer.Root>
+      <div
+        className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
+        style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+      >
+        <MarkdownStream
+          ref={setController}
+          classNames='bs-full max-is-prose overflow-hidden'
+          registry={componentRegistry}
+          cursor={cursor}
+          fadeIn={fadeIn}
+          onEvent={handleEvent}
+        />
+      </div>
     );
   },
 );

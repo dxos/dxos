@@ -54,7 +54,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
             <SyntaxHighlighter
               language='javascript'
               classNames={mx(
-                'w-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs p-2 opacity-70',
+                'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
               )}
             >
               {JSON.stringify(info, null, 2)}

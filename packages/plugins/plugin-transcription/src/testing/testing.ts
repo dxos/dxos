@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { useEffect, useMemo, useState } from 'react';
 
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
+import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
 import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -130,7 +130,7 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
     const { message: enhancedMessage } = await processTranscriptMessage({
       input: { message },
       executor: this.executor,
-      function: extractionAnthropicFn,
+      function: extractionAnthropicFunction,
     });
 
     return enhancedMessage;

@@ -9,12 +9,12 @@ import { type DxGridCellIndex, type GridScopedProps, useGridContext } from '../G
 import { CellEditor, type CellEditorProps } from './CellEditor';
 
 export type GridCellEditorProps = GridScopedProps<
-  Pick<CellEditorProps, 'extension' | 'onBlur' | 'slots'> & {
+  Pick<CellEditorProps, 'extensions' | 'onBlur' | 'slots'> & {
     getCellContent: (index: DxGridCellIndex) => string | undefined;
   }
 >;
 
-export const GridCellEditor = ({ extension, getCellContent, onBlur, slots, __gridScope }: GridCellEditorProps) => {
+export const GridCellEditor = ({ extensions, getCellContent, onBlur, slots, __gridScope }: GridCellEditorProps) => {
   const { id, editing, setEditing, editBox } = useGridContext('GridCellEditor', __gridScope);
 
   const handleBlur = useCallback(
@@ -31,7 +31,7 @@ export const GridCellEditor = ({ extension, getCellContent, onBlur, slots, __gri
       autoFocus
       box={editBox}
       onBlur={handleBlur}
-      extension={extension}
+      extensions={extensions}
       gridId={id}
       slots={slots}
     />

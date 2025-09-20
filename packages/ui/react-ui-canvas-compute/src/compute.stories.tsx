@@ -290,7 +290,7 @@ export const Plugins: Story = {
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
       new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
       }),
     ),
   },
@@ -306,7 +306,7 @@ export const Artifact: Story = {
     ...createComputeGraphController(
       createArtifactCircuit(),
       new ServiceContainer().setServices({
-        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
       }),
     ),
   },

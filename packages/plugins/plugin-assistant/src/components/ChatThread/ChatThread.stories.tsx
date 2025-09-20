@@ -5,259 +5,107 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Effect, Layer } from 'effect';
-import React, { useEffect, useMemo } from 'react';
+import { Effect, Fiber, Layer } from 'effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { IntentPlugin } from '@dxos/app-framework';
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
-import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
-import { defaultTx } from '@dxos/react-ui-theme';
-import { type ContentBlock, DataType } from '@dxos/schema';
-import { ColumnContainer, render, withLayout } from '@dxos/storybook-utils';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { Popover } from '@dxos/react-ui';
+import { PreviewProvider, useRefPopover } from '@dxos/react-ui-editor';
+import { Card } from '@dxos/react-ui-stack';
+import { DataType } from '@dxos/schema';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
-import { renderObjectLink } from './ChatMessage';
-import { ChatThread, type ChatThreadProps } from './ChatThread';
+import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
 
 faker.seed(1);
 
-const StoryContainer = ({ delay = 0, ...props }: ChatThreadProps & { delay?: number }) => {
+type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+
+type StoryProps = ChatThreadProps & { generator?: MessageGenerator[]; delay?: number };
+
+const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<DataType.Message>(queueDxn);
+
+  // Generate messages.
   useEffect(() => {
     if (!space || !queue) {
       return;
     }
 
-    void Effect.runPromise(
+    const fiber = Effect.runFork(
       Effect.gen(function* () {
-        for (const step of MESSAGES) {
+        for (const step of generator) {
           yield* step;
-          yield* Effect.sleep(delay);
+          if (delay) {
+            yield* Effect.sleep(delay);
+          }
         }
-
-        return queue;
       }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
     );
-  }, [space, queue]);
 
-  if (!space) {
-    return null;
-  }
+    return () => {
+      void Effect.runPromise(Fiber.interrupt(fiber));
+    };
+  }, [space, queue, generator]);
 
+  // Set context.
+  const [controller, setController] = useState<ChatThreadController | null>(null);
+  useEffect(() => {
+    // controller?.setContext({ timestamp: Date.now() });
+  }, [controller]);
+
+  // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
   return (
-    <ChatThread {...props} space={space} messages={queue?.objects ?? []} onEvent={(event) => console.log(event)} />
+    <PreviewProvider
+      onLookup={async ({ label, ref }) => {
+        return { label, text: ref };
+      }}
+    >
+      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
+      <PreviewCard />
+    </PreviewProvider>
   );
 };
 
-const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
-  return Obj.make(DataType.Message, {
-    created: new Date().toISOString(),
-    sender: { role },
-    blocks,
-  });
+// TODO(burdon): Factor out.
+// TODO(burdon): Provide renderer for preview extension.
+const PreviewCard = () => {
+  const { target } = useRefPopover('PreviewCard');
+
+  return (
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Card.SurfaceRoot role='card--popover'>
+            <Card.Heading>{target?.label}</Card.Heading>
+            {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
+          </Card.SurfaceRoot>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
 };
-
-const MESSAGES: Effect.Effect<void, never, DatabaseService | ContextQueueService>[] = [
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('user', [
-          {
-            _tag: 'text',
-            text: faker.lorem.sentence(5),
-          },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          {
-            _tag: 'suggestion',
-            text: 'Search...',
-          },
-          {
-            _tag: 'suggestion',
-            text: faker.lorem.paragraphs(1),
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: 'Select an option:',
-          },
-          {
-            _tag: 'select',
-            options: ['Option 1', 'Option 2', 'Option 3'],
-          },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    const { db } = yield* DatabaseService;
-    const obj1 = db.add(Obj.make(DataType.Organization, { name: 'DXOS' }));
-    const obj2 = db.add(Obj.make(DataType.Person, { fullName: 'Alice' }));
-    const obj3 = db.add(Obj.make(DataType.Person, { fullName: 'Bob' }));
-    const obj4 = db.add(Obj.make(DataType.Person, { fullName: 'Charlie' }));
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          // Inline tag.
-          {
-            _tag: 'text',
-            text: [faker.lorem.paragraph(), renderObjectLink(obj1), faker.lorem.paragraph()].join(' '),
-          } satisfies ContentBlock.Text,
-          // Inline cards.
-          ...[obj2, obj3, obj4].map(
-            (obj) =>
-              ({
-                _tag: 'text',
-                text: renderObjectLink(obj, true),
-              }) satisfies ContentBlock.Text,
-          ),
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: faker.lorem.paragraphs(1),
-          },
-          {
-            _tag: 'toolkit',
-          },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            disposition: 'cot',
-            text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-              .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-              .join('\n'),
-          },
-          {
-            _tag: 'toolCall',
-            toolCallId: '1234',
-            name: 'search',
-            input: JSON.stringify({}),
-          },
-        ]),
-        createMessage('user', [
-          {
-            _tag: 'toolResult',
-            toolCallId: '1234',
-            name: 'search',
-            result: 'This is a tool result.',
-          },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          {
-            _tag: 'toolCall',
-            toolCallId: '4567',
-            name: 'create',
-            input: JSON.stringify({}),
-          },
-        ]),
-        createMessage('user', [
-          {
-            _tag: 'toolResult',
-            toolCallId: '4567',
-            name: 'create',
-            result: 'This is a tool result.',
-          },
-        ]),
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: Array.from({ length: faker.number.int({ min: 2, max: 3 }) })
-              .map(() => faker.lorem.paragraphs())
-              .join('\n\n'),
-          },
-        ]),
-      ]),
-    );
-  }),
-
-  Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
-        createMessage('assistant', [
-          {
-            _tag: 'text',
-            text: faker.lorem.paragraphs(2),
-          },
-        ]),
-      ]),
-    );
-  }),
-];
 
 const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
-  render: render(StoryContainer),
+  render: DefaultStory,
   decorators: [
-    withPluginManager({
-      plugins: [
-        ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
-          types: [DataType.Organization, DataType.Person],
-        }),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
-        IntentPlugin(),
-        PreviewPlugin(),
-      ],
-    }),
-    withLayout({
-      Container: ColumnContainer,
-      classNames: 'is-[40rem]',
-    }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
+    withLayout({ fullscreen: true }),
+    withTheme,
   ],
   parameters: {
+    layout: 'fullscreen', // TODO(burdon): Replace withLayout.
     translations,
   },
 } satisfies Meta<typeof ChatThread>;
@@ -266,18 +114,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
-
-export const Delayed: Story = {
+export const Default: Story = {
   args: {
-    delay: 2_000,
+    generator: createMessageGenerator(),
   },
 };
 
-export const Sanity = () => {
-  return (
-    <div className='grid grow place-items-center'>
-      <div className='p-8 border border-separator rounded'>DXOS</div>
-    </div>
-  );
+export const Delayed: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    delay: 3_000,
+    fadeIn: true,
+    cursor: false,
+  },
 };

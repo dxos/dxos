@@ -94,7 +94,13 @@ const update = (state: EditorState, _options: TableOptions) => {
     } else {
       // Add class for styling.
       // TODO(burdon): Apply to each line?
-      builder.add(table.from, table.to, Decoration.mark({ class: 'cm-table' }));
+      builder.add(
+        table.from,
+        table.to,
+        Decoration.mark({
+          class: 'cm-table',
+        }),
+      );
     }
   });
 

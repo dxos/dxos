@@ -181,7 +181,6 @@ export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
     const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
-
     const extensions = useMemo(() => {
       return [
         image(),

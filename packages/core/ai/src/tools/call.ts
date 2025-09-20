@@ -7,6 +7,7 @@ import { Effect } from 'effect';
 
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
+import { safeParseJson } from '@dxos/util';
 
 // TODO(burdon): Not called?
 export const callTools: <Tools extends AiTool.Any>(
@@ -61,7 +62,7 @@ export const callTool: <Tools extends AiTool.Any>(
       toolCall: toolCall.name,
       ...{
         error: 'error' in toolResult ? toolResult.error : undefined,
-        result: 'result' in toolResult ? JSON.parse(toolResult.result) : undefined,
+        result: 'result' in toolResult ? safeParseJson(toolResult.result) : undefined,
       },
     });
 

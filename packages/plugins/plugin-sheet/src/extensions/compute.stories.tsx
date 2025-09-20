@@ -52,7 +52,7 @@ const EditorStory = ({ text }: EditorProps) => {
       initialValue: text,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         documentId.of(id.toHex()),
         computeGraph && computeGraphFacet.of(computeGraph),

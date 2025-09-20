@@ -38,7 +38,7 @@ export type OutlinerProps = {};
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = (options: OutlinerProps = {}): Extension => [
+export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 

@@ -5,6 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
+import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   Capabilities,
   Events,
@@ -24,16 +25,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
-  agent,
-  localServiceEndpoints,
   readDocument,
   readTasks,
-  remoteServiceEndpoints,
   research,
-  syncLinearIssues,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
@@ -65,15 +60,7 @@ import { Assistant, AssistantAction } from '../../types';
 export const config = {
   remote: new Config({
     runtime: {
-      services: {
-        ai: {
-          // TODO(burdon): Normalize props ('url'?)
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   persistent: new Config({
@@ -83,26 +70,12 @@ export const config = {
           persistent: true,
         },
       },
-      services: {
-        ai: {
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
-      services: {
-        ai: {
-          server: localServiceEndpoints.ai,
-        },
-        edge: {
-          url: localServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.LOCAL,
     },
   }),
 };
@@ -204,15 +177,12 @@ export const getDecorators = ({
           id: 'example.com/plugin/testing/module/testing',
           activatesOn: Events.SetupArtifactDefinition,
           activate: () => [
+            // TODO(burdon): Move into assistnat?
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
             contributes(Capabilities.Functions, [research]),
-            contributes(Capabilities.Functions, [syncLinearIssues]),
-            contributes(Capabilities.Functions, [agent]),
             contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),

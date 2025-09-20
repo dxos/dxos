@@ -32,7 +32,7 @@ const DefaultStory = (props: CellEditorProps) => {
   };
 
   // Create an extension with editor keys
-  const extension = props.extension || [
+  const extensions = props.extensions || [
     editorKeys({
       onClose: handleKeyEvent,
       onNav: (value, event) => {
@@ -52,7 +52,7 @@ const DefaultStory = (props: CellEditorProps) => {
       <div className='relative border border-separator h-[100px] w-[300px]'>
         <CellEditor
           value={value}
-          extension={extension}
+          extensions={extensions}
           autoFocus={props.autoFocus}
           onBlur={handleBlur}
           box={{

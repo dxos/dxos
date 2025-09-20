@@ -35,22 +35,24 @@ export const SyntaxHighlighter = ({
   const { themeMode } = useThemeContext();
 
   return (
-    <NativeSyntaxHighlighter
-      className={mx('is-full p-0 font-thin overflow-auto scrollbar-thin !text-baseText', classNames)}
-      language={languages[language as keyof typeof languages] || language}
-      style={themeMode === 'dark' ? dark : light}
-      // TODO(burdon): To override with classNames must prefix with "!".
-      customStyle={{
-        background: 'unset',
-        border: 'none',
-        boxShadow: 'none',
-        padding: 0,
-      }}
-      {...props}
-    >
-      {/* Non-empty fallback prevents collapse. */}
-      {children || fallback}
-    </NativeSyntaxHighlighter>
+    <div className={mx('is-full p-1 overflow-hidden font-thin text-baseText', classNames)}>
+      <NativeSyntaxHighlighter
+        className='is-full overflow-auto scrollbar-thin'
+        language={languages[language as keyof typeof languages] || language}
+        style={themeMode === 'dark' ? dark : light}
+        customStyle={{
+          background: 'unset',
+          border: 'none',
+          boxShadow: 'none',
+          padding: 0,
+          margin: 0,
+        }}
+        {...props}
+      >
+        {/* Non-empty fallback prevents collapse. */}
+        {children || fallback}
+      </NativeSyntaxHighlighter>
+    </div>
   );
 };
 

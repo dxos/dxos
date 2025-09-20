@@ -19,45 +19,27 @@ import { Popover } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
 
-const customEventOptions = { capture: true, passive: false };
+// TODO(burdon): Move to @dxos/lit-ui
 
-export type RefPopoverProps = PropsWithChildren<{
-  modal?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onActivate?: (event: DxRefTagActivate) => void;
+//
+// Context
+//
+
+type RefPopoverValue = Partial<{
+  link: PreviewLinkRef;
+  target: PreviewLinkTarget;
+  pending: boolean;
 }>;
 
-export const RefPopover = forwardRef<DxRefTag | null, RefPopoverProps>(
-  ({ children, open, onOpenChange, modal, onActivate }, ref) => {
-    const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
+const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue>('RefPopover', {});
 
-    useEffect(() => {
-      if (!rootRef || !onActivate) {
-        return;
-      }
+//
+// ContextProvider
+//
 
-      return addEventListener(rootRef, 'dx-ref-tag-activate' as any, onActivate, customEventOptions);
-    }, [rootRef, onActivate]);
-
-    return (
-      <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
-        <Popover.VirtualTrigger virtualRef={ref as unknown as RefObject<HTMLButtonElement>} />
-        <div role='none' className='contents' ref={setRootRef}>
-          {children}
-        </div>
-      </Popover.Root>
-    );
-  },
-);
-
-// Create a context for the dxn value.
-type RefPopoverValue = Partial<{ link: PreviewLinkRef; target: PreviewLinkTarget; pending: boolean }>;
-
-const REF_POPOVER = 'RefPopover';
-const [RefPopoverContextProvider, useRefPopover] = createContext<RefPopoverValue>(REF_POPOVER, {});
-
-type PreviewProviderProps = PropsWithChildren<{ onLookup?: PreviewLookup }>;
+type PreviewProviderProps = PropsWithChildren<{
+  onLookup?: PreviewLookup;
+}>;
 
 const PreviewProvider = ({ children, onLookup }: PreviewProviderProps) => {
   const trigger = useRef<DxRefTag | null>(null);
@@ -94,6 +76,42 @@ const PreviewProvider = ({ children, onLookup }: PreviewProviderProps) => {
   );
 };
 
-export { PreviewProvider, useRefPopover };
+//
+// Popover
+//
 
-export type { PreviewProviderProps, RefPopoverValue };
+type RefPopoverProps = PropsWithChildren<{
+  modal?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onActivate?: (event: DxRefTagActivate) => void;
+}>;
+
+/**
+ * Wraps components that contain <dx-ref-tag> elements?
+ */
+const RefPopover = forwardRef<DxRefTag | null, RefPopoverProps>(
+  ({ children, open, onOpenChange, modal, onActivate }, ref) => {
+    const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
+    useEffect(() => {
+      if (!rootRef || !onActivate) {
+        return;
+      }
+
+      return addEventListener(rootRef, 'dx-ref-tag-activate' as any, onActivate, { capture: true, passive: false });
+    }, [rootRef, onActivate]);
+
+    return (
+      <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+        <Popover.VirtualTrigger virtualRef={ref as unknown as RefObject<HTMLButtonElement>} />
+        <div role='none' className='contents' ref={setRootRef}>
+          {children}
+        </div>
+      </Popover.Root>
+    );
+  },
+);
+
+export { RefPopover, PreviewProvider, useRefPopover };
+
+export type { RefPopoverProps, PreviewProviderProps, RefPopoverValue };

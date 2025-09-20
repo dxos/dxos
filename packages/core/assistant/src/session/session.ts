@@ -101,7 +101,7 @@ export class AiSession {
 
       // Tool call loop.
       do {
-        log.info('request', {
+        log('request', {
           prompt: promptMessage,
           system: { snippet: createSnippet(system), length: system.length },
           pending: this._pending.length,

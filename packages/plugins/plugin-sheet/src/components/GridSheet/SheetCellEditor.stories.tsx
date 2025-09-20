@@ -19,19 +19,17 @@ import { withTheme } from '@dxos/storybook-utils';
 import { sheetExtension } from '../../extensions';
 import { SheetType, createSheet } from '../../types';
 
-type StoryProps = CellEditorProps;
-
-const DefaultStory = ({ value, ...props }: StoryProps) => {
-  const extension = useMemo(() => {
+const DefaultStory = ({ value, ...props }: CellEditorProps) => {
+  const extensions = useMemo(() => {
     const functionNames = getRegisteredFunctionNames();
     const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     return [sheetExtension({ functions })];
   }, []);
 
-  return <CellEditor {...props} value={value} extension={extension} />;
+  return <CellEditor {...props} value={value} extensions={extensions} />;
 };
 
-const AutomergeStory = ({ value, ...props }: StoryProps) => {
+const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
   const cell = 'A1';
   const [object, setObject] = useState<SheetType>();
   useAsyncEffect(async () => {
@@ -47,7 +45,7 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
     setObject(sheet);
   }, [value]);
 
-  const extension = useMemo(() => {
+  const extensions = useMemo(() => {
     if (!object) {
       return [];
     }
@@ -58,7 +56,7 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
     return [automerge(accessor), sheetExtension({ functions })];
   }, [object]);
 
-  return <CellEditor {...props} value={value} extension={extension} />;
+  return <CellEditor {...props} value={value} extensions={extensions} />;
 };
 
 const meta = {
@@ -87,7 +85,7 @@ export const Formatting: Story = {
 };
 
 export const Automerge: Story = {
-  render: (args: StoryProps) => <AutomergeStory {...args} />,
+  render: AutomergeStory,
   args: {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },

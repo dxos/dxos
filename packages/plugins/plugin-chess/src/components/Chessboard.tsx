@@ -61,6 +61,7 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   // External change.
   useEffect(() => {
     model.update(game.pgn);
+    // TODO(burdon): Warning if user has not interacted with the board.
     void click.play();
   }, [game.pgn]);
 
@@ -120,6 +121,9 @@ const Board = (props: BoardProps) => {
     if (!ref.current) {
       return;
     }
+
+    // Participate in keyboard navigation (set tabIndex={0})
+    ref.current.setAttribute('data-arrow-keys', 'all');
 
     return addEventListener(ref.current, 'keydown', (ev) => {
       switch (ev.key) {

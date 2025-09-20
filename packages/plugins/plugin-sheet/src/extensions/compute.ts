@@ -34,7 +34,7 @@ export const computeGraphFacet = singleValueFacet<ComputeGraph>();
 
 export type ComputeOptions = {};
 
-export const compute = (options: ComputeOptions = {}): Extension => {
+export const compute = (_options: ComputeOptions = {}): Extension => {
   let computeNode: ComputeNode | undefined;
 
   const update = (state: EditorState, current?: RangeSet<Decoration>) => {
@@ -53,7 +53,6 @@ export const compute = (options: ComputeOptions = {}): Extension => {
                   const text = node.node.getChild('CodeText');
                   if (type === LANGUAGE_TAG && text) {
                     const formula = state.sliceDoc(text.from, text.to);
-
                     const iter = current?.iter(node.node.from);
                     if (iter?.value && iter?.value.spec.formula === formula) {
                       // Add existing widget.

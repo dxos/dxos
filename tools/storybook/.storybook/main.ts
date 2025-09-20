@@ -62,7 +62,9 @@ export const createConfig = ({
   stories: baseStories ?? stories,
   addons: [
     '@dxos/storybook-addon-logger',
-    '@storybook/addon-docs',
+    // NOTE: Enabling this causes ALL stories to be mounted twice (which sometimes confounds debugging).
+    // TODO(burdon): Configure only when running inside manager?
+    // '@storybook/addon-docs',
     '@storybook/addon-links',
     '@storybook/addon-themes',
     '@storybook/addon-vitest',

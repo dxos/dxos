@@ -35,7 +35,7 @@ export const Default: Story = {
     return (
       <div className='flex flex-col w-[30rem] p-4 bg-attention'>
         <ToggleContainer.Root classNames='grid grid-cols-[32px_1fr]' open>
-          <ToggleContainer.Header title={content[selected].title} />
+          <ToggleContainer.Header>{content[selected].title}</ToggleContainer.Header>
           <ToggleContainer.Content>
             <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
             <div className='flex-1 pis-2 pie-2 overflow-y-auto'>{content[selected].content}</div>
