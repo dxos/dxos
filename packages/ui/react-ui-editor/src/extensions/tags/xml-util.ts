@@ -7,30 +7,36 @@ import { type SyntaxNode } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 
+export type Tag = Record<string, any> & {
+  _tag: string;
+};
+
 /**
  * Parse XML Element.
  */
-export const nodeToJson = (state: EditorState, node: SyntaxNode): any => {
+export const nodeToJson = (state: EditorState, node: SyntaxNode): Tag | undefined => {
   invariant(node.type.name === 'Element', 'Node is not an Element');
-  let result = undefined;
 
   // Find the opening tag.
   const openTag = node.node.getChild('OpenTag') || node.node.getChild('SelfClosingTag');
   if (openTag) {
     // Extract tag name.
     const tagName = openTag.getChild('TagName');
-    if (tagName) {
-      (result ??= {}).tag = state.doc.sliceString(tagName.from, tagName.to);
+    if (!tagName) {
+      return;
     }
+
+    const tag: Tag = {
+      _tag: state.doc.sliceString(tagName.from, tagName.to),
+    };
 
     // Extract attributes.
     let attributeNode = openTag.getChild('Attribute');
     while (attributeNode) {
       const attrName = attributeNode.getChild('AttributeName');
       const attrValue = attributeNode.getChild('AttributeValue');
-
       if (attrName) {
-        const name = state.doc.sliceString(attrName.from, attrName.to);
+        const attr = state.doc.sliceString(attrName.from, attrName.to);
 
         // Default for attributes without values.
         let value: string | boolean = true;
@@ -48,7 +54,7 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): any => {
           }
         }
 
-        (result ??= {})[name] = value;
+        tag[attr] = value;
       }
 
       // Get next sibling attribute.
@@ -79,10 +85,10 @@ export const nodeToJson = (state: EditorState, node: SyntaxNode): any => {
       }
 
       if (children.length > 0) {
-        (result ??= {}).children = children;
+        tag.children = children;
       }
     }
-  }
 
-  return result;
+    return tag;
+  }
 };

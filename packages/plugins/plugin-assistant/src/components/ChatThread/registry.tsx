@@ -21,10 +21,10 @@ import { ToolBlock } from '../ToolBlock';
 
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 
-const Fallback = ({ tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
+const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   return (
     <ToggleContainer.Root classNames='rounded-sm'>
-      <ToggleContainer.Header classNames='bg-groupSurface'>{tag}</ToggleContainer.Header>
+      <ToggleContainer.Header classNames='bg-groupSurface'>{_tag}</ToggleContainer.Header>
       <ToggleContainer.Content classNames='bg-modalSurface'>
         <Json classNames='!p-2 text-sm' data={props} />
       </ToggleContainer.Content>
@@ -63,7 +63,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     block: true,
     factory: (props) => {
       const options = props.children
-        ?.map((option: any) => option.tag === 'option' && getTextChild(option.children))
+        ?.map((option: any) => option._tag === 'option' && getTextChild(option.children))
         .filter(Boolean);
       return options?.length ? new SelectWidget(options) : null;
     },

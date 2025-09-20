@@ -4,14 +4,14 @@
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, type WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type ComponentType, type FC } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { decorationSetToArray } from '../../util';
 
-import { ReactWidget } from './ReactWidget';
 import { nodeToJson } from './xml-util';
 
 export type StateDispatch<T> = T | ((state: T) => T);
@@ -29,8 +29,8 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
  * Widget component.
  */
 export type XmlWidgetProps<TContext = any, TProps = any> = TProps & {
+  _tag: string;
   context: TContext;
-  tag: string;
   onEvent?: XmlEventHandler;
 };
 
@@ -181,7 +181,10 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
       // Simply return the existing decorations unchanged.
       return { from, decorations };
     },
-    provide: (field) => EditorView.decorations.from(field, (v) => v.decorations),
+    provide: (field) => [
+      EditorView.decorations.from(field, (v) => v.decorations),
+      EditorView.atomicRanges.of((view) => view.state.field(field).decorations || Decoration.none),
+    ],
   });
 
   //
@@ -198,21 +201,20 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
         if (effect.is(xmlTagUpdateEffect)) {
           // Update accumulated widget props by id.
           const { id, value } = effect.value;
-          const newValue = typeof value === 'function' ? value(map[id]) : value;
-          const nextMap = { ...map, [id]: newValue } as XmlWidgetStateMap;
+          const state = typeof value === 'function' ? value(map[id]) : value;
 
           // Find and render widget.
           const { decorations } = tr.state.field(decorationsState);
           for (const range of decorationSetToArray(decorations)) {
             const deco = range.value;
             const widget = deco?.spec?.widget;
-            if (widget && widget instanceof ReactWidget && widget.id === effect.value.id && widget.root) {
-              const props = { ...widget.props, ...newValue };
+            if (widget && widget instanceof PlaceholderWidget && widget.id === effect.value.id && widget.root) {
+              const props = { ...widget.props, ...state };
               notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
             }
           }
 
-          return nextMap;
+          return { ...map, [id]: state };
         }
       }
 
@@ -249,21 +251,34 @@ const buildDecorations = (
         // XML Element.
         case 'Element': {
           try {
-            // Check tag is closed before creating widget.
-            const props = nodeToJson(state, node.node);
-            if (options.registry && props?.tag) {
-              const { block, factory, Component } = options.registry[props.tag] ?? {};
-              const state = widgetState[props.id];
-              const widget = factory
-                ? factory({ context, ...props })
-                : Component
-                  ? props.id && new ReactWidget(props.id, Component, { context, ...props, ...state }, notifier)
-                  : undefined;
+            if (options.registry) {
+              const props = nodeToJson(state, node.node);
+              if (props) {
+                const def = options.registry[props._tag];
+                if (def) {
+                  const { block, factory, Component } = def;
+                  const state = props.id ? widgetState[props.id] : undefined;
+                  const args = { context, ...props, ...state };
+                  const widget: WidgetType | undefined = factory
+                    ? factory(args)
+                    : Component
+                      ? props.id && new PlaceholderWidget(props.id, Component, args, notifier)
+                      : undefined;
 
-              if (widget) {
-                from = node.node.to;
-                // TODO(burdon): Atomic range.
-                builder.add(node.node.from, node.node.to, Decoration.replace({ widget, block }));
+                  if (widget) {
+                    from = node.node.to;
+                    builder.add(
+                      node.node.from,
+                      node.node.to,
+                      Decoration.replace({
+                        widget,
+                        block,
+                        atomic: true,
+                        inclusive: true,
+                      }),
+                    );
+                  }
+                }
               }
             }
           } catch (err) {
@@ -278,3 +293,43 @@ const buildDecorations = (
 
   return { from, decorations: builder.finish() };
 };
+
+/**
+ * Placeholder for React widgets.
+ */
+class PlaceholderWidget<TProps = {}> extends WidgetType {
+  private _root: HTMLElement | null = null;
+
+  constructor(
+    public readonly id: string,
+    public readonly Component: FC<TProps>,
+    public readonly props: TProps,
+    private readonly notifier: XmlWidgetNotifier,
+  ) {
+    super();
+    invariant(id);
+  }
+
+  get root() {
+    return this._root;
+  }
+
+  override eq(other: WidgetType): boolean {
+    return other instanceof PlaceholderWidget && this.id === other.id;
+  }
+
+  override ignoreEvent() {
+    return true;
+  }
+
+  override toDOM(_view: EditorView): HTMLElement {
+    this._root = document.createElement('span');
+    this.notifier.mounted({ id: this.id, props: this.props, root: this._root, Component: this.Component });
+    return this._root;
+  }
+
+  override destroy(_dom: HTMLElement): void {
+    this.notifier.unmounted(this.id);
+    this._root = null;
+  }
+}
