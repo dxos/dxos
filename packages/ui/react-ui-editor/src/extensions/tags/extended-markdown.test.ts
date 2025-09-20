@@ -12,9 +12,6 @@ import { trim } from '@dxos/util';
 import { extendedMarkdown } from './extended-markdown';
 import { nodeToJson } from './xml-util';
 
-// TODO(burdon): Remove lit dependencies.
-//   ReferenceError: HTMLElement is not defined
-
 describe('extended-markdown', () => {
   const createEditorState = (doc: string) => {
     return EditorState.create({
@@ -23,7 +20,7 @@ describe('extended-markdown', () => {
     });
   };
 
-  test.only('tree', async ({ expect }) => {
+  test('tree', async ({ expect }) => {
     const doc = trim`
       <prompt>
         Hello
