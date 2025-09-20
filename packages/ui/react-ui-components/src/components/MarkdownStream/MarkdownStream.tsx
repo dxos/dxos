@@ -169,11 +169,11 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
       }
 
       return addEventListener(parentRef.current, 'click', (ev) => {
-        const target = ev.target as HTMLElement;
-        if (target.getAttribute('data-action') === 'submit') {
+        const button = (ev.target as HTMLElement).closest('[data-action="submit"]');
+        if (button?.getAttribute('data-action') === 'submit') {
           onEvent?.({
             type: 'submit',
-            value: target.getAttribute('data-value'),
+            value: button.getAttribute('data-value'),
           });
         }
       });
