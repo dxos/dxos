@@ -174,7 +174,6 @@ export const TableCellEditor = ({
       }
 
       const cell = parseCellIndex(editing.index);
-
       if (value !== undefined) {
         // Pre-commit validation check.
         const result = await model.validateCellData(cell, value);
@@ -205,12 +204,12 @@ export const TableCellEditor = ({
     [model, editing, onFocus, fieldProjection, setEditing, onSave],
   );
 
-  const extension = useMemo(() => {
+  const extensions = useMemo(() => {
     if (!fieldProjection) {
       return [];
     }
 
-    const extension = [
+    const extensions = [
       editorKeys({
         onClose: handleClose,
         ...(editing?.initialContent && { onNav: handleClose }),
@@ -218,16 +217,14 @@ export const TableCellEditor = ({
     ];
 
     const format = fieldProjection.props.format;
-
     if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
       // TODO(ZaymonFC): Reconcile this with the TagPicker component?
-      // Add markdown extensions needed by tag picker.
-      extension.push(createMarkdownExtensions());
-
       const options = fieldProjection.props.options || [];
       const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
 
-      extension.push(
+      // Add markdown extensions needed by tag picker.
+      extensions.push(createMarkdownExtensions());
+      extensions.push(
         tagPicker({
           mode,
           keymap: false,
@@ -262,7 +259,7 @@ export const TableCellEditor = ({
 
     // Add validation extension to handle content changes
     if (model && editing) {
-      extension.push(
+      extensions.push(
         EditorView.updateListener.of(
           debounce((update) => {
             const content = update.state.doc.toString();
@@ -282,7 +279,7 @@ export const TableCellEditor = ({
       );
     }
 
-    return extension;
+    return extensions;
   }, [model, modals, editing, fieldProjection, handleClose, themeMode]);
 
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
@@ -297,10 +294,8 @@ export const TableCellEditor = ({
         fieldProjection?.props.format === FormatEnum.MultiSelect
       ) {
         const value = model.getCellData(cell);
-
         if (value !== undefined) {
           const options = fieldProjection.props.options || [];
-
           if (fieldProjection.props.format === FormatEnum.MultiSelect) {
             const tagItems = value
               .split(',')
@@ -344,7 +339,7 @@ export const TableCellEditor = ({
   return (
     <>
       <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
-      <GridCellEditor extension={extension} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
+      <GridCellEditor extensions={extensions} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
     </>
   );
 };
