@@ -17,6 +17,8 @@ import {
   replayIntegration,
   setTag,
   startInactiveSpan,
+  browserProfilingIntegration,
+  extraErrorDataIntegration,
 } from '@sentry/browser';
 
 import { log } from '@dxos/log';
@@ -42,6 +44,7 @@ export const init = (options: InitOptions) => {
       release: options.release,
       environment: options.environment,
       integrations: [
+        extraErrorDataIntegration({ captureErrorCause: true, depth: 10 }),
         breadcrumbsIntegration({ console: false, fetch: false }),
         httpClientIntegration({
           failedRequestStatusCodes: [
@@ -51,12 +54,16 @@ export const init = (options: InitOptions) => {
           ],
         }),
         feedbackIntegration({ autoInject: false }),
+        // TODO(wittjosiah): Connect to OTEL instrumentation.
         ...(options.tracing ? [browserTracingIntegration()] : []),
+        ...(options.profiling ? [browserProfilingIntegration()] : []),
         ...(options.replay ? [replayIntegration({ blockAllMedia: true, maskAllText: true })] : []),
       ],
+      sampleRate: options.sampleRate,
       replaysSessionSampleRate: options.replaySampleRate,
       replaysOnErrorSampleRate: options.replaySampleRateOnError,
-      tracesSampleRate: options.sampleRate,
+      tracesSampler: options.tracesSampler,
+      profilesSampleRate: options.profilesSampleRate,
       transport: options.transport,
       beforeSend: (event) => {
         options.onError?.(event);
