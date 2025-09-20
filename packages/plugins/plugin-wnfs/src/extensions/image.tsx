@@ -80,16 +80,16 @@ export const image = (options: ImageOptions): Extension[] => {
 };
 
 const buildDecorations = ({
+  state,
   from,
   to,
-  state,
   blobUrlCache,
   preload,
   options: { blockstore, instances, space },
 }: {
+  state: EditorState;
   from: number;
   to: number;
-  state: EditorState;
   blobUrlCache: Record<string, string>;
   preload: (url: string) => void;
   options: ImageOptions;

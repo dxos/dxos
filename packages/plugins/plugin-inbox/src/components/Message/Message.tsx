@@ -50,7 +50,7 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
     if (space) {
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),

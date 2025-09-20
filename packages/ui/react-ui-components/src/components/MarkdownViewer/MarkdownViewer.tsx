@@ -86,9 +86,9 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     const [, language] = /language-(\w+)/.exec(className || '') || [];
     return (
       <SyntaxHighlighter
-        PreTag='pre'
         language={language}
-        classNames='mbs-2 mbe-2 !p-2 border border-separator rounded-sm text-sm !bg-groupSurface'
+        classNames='mbs-2 mbe-2 border border-separator rounded-sm text-sm bg-groupSurface'
+        PreTag='pre'
       >
         {children}
       </SyntaxHighlighter>

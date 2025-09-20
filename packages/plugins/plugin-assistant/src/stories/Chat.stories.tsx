@@ -40,7 +40,7 @@ import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
-import { createTestMailbox, createTestTranscription } from '../testing';
+import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
@@ -50,37 +50,27 @@ import {
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  InvocationsContainer,
   LoggingContainer,
   MessageContainer,
+  PromptContainer,
   ResearchInputStack,
   ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
+  TriggersContainer,
 } from './components';
-import { PromptContainer } from './components';
-import { InvocationsContainer } from './components/InvocationsContainer';
-import { TriggersContainer } from './components/TriggersContainer';
-import {
-  ResearchInputQueue,
-  accessTokensFromEnv,
-  addTestData,
-  config,
-  getDecorators,
-  organizations,
-  testTypes,
-} from './testing';
+import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
-const DefaultStory = ({
-  debug = true,
-  deckComponents,
-  blueprints = [],
-}: {
+type StoryProps = {
   debug?: boolean;
   deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
-}) => {
+};
+
+const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
   const client = useClient();
   const space = useSpace();
 
@@ -137,8 +127,8 @@ const DefaultStory = ({
       orientation='horizontal'
       size='split'
       rail={false}
-      classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
@@ -161,6 +151,7 @@ const DefaultStory = ({
                 j += 1;
                 return item;
               })}
+
               {renderSurfaces &&
                 objects.map((object, index) => {
                   const k = index + j;
@@ -241,7 +232,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    deckComponents: [[ChatContainer]],
   },
 };
 
@@ -351,10 +342,11 @@ export const WithMail: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
+// Test with prompt: Sync my email.
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],

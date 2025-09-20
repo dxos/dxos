@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
+import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -100,7 +100,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
         message,
         objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
       },
-      function: extractionAnthropicFn,
+      function: extractionAnthropicFunction,
       executor,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });

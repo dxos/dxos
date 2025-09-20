@@ -48,7 +48,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
         createThemeExtensions({ themeMode }),
 
         // Extend markdown with handlebars support.
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         handlebars(),
       ].filter(isNotFalsy),
     };
