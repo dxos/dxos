@@ -207,7 +207,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
       )}
 
       {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'px-8 py-2 text-xs')}>
+        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
           {JSON.stringify(data, null, 2)}
         </SyntaxHighlighter>
       )}
