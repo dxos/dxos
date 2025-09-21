@@ -14,7 +14,6 @@ tasks:
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
       - $VITEST_COVERAGE
       - $VITEST_DEBUG
-      - $VITEST_ENV
       - $VITEST_XML_REPORT
     outputs:
       - /coverage/$project/**

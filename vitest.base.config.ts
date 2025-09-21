@@ -15,7 +15,7 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 import react from '@vitejs/plugin-react-swc';
 
 const isDebug = !!process.env.VITEST_DEBUG;
-const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
+// const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 type BrowserOptions = {
@@ -28,19 +28,16 @@ type BrowserOptions = {
 export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
-  switch (environment) {
-    case 'chromium': {
-      return createBrowserConfig({ browserName: environment, ...options });
-    }
-    case 'node':
-    default: {
-      if (environment.length > 0 && environment !== 'node') {
-        console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
-      }
-
-      return createNodeConfig(options.cwd);
-    }
-  }
+  return defineConfig({
+    test: {
+      projects: [
+        //
+        createNodeConfig(options.cwd),
+        createBrowserConfig({ browserName: 'chromium', ...options }),
+        createBrowserConfig({ browserName: 'webkit', ...options }),
+      ],
+    },
+  });
 };
 
 const createNodeConfig = (cwd: string) =>
@@ -54,6 +51,7 @@ const createNodeConfig = (cwd: string) =>
       },
     },
     test: {
+      name: 'nodejs',
       ...resolveReporterConfig({ browserMode: false, cwd }),
       environment: 'node',
       include: [
@@ -134,6 +132,8 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       target: 'es2020',
     },
     test: {
+      name: browserName,
+
       ...resolveReporterConfig({ browserMode: true, cwd }),
 
       env: {
