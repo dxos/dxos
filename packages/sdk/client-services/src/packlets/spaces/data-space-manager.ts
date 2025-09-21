@@ -245,7 +245,7 @@ export class DataSpaceManager extends Resource {
    */
   @synchronized
   async createSpace(options: CreateSpaceOptions = {}): Promise<DataSpace> {
-    assertArgument(!!options.rootUrl === !!options.documents, 'root url must be required when providing documents');
+    assertArgument(!!options.rootUrl === !!options.documents, 'options', 'root url must be required when providing documents');
 
     assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     const spaceKey = await this._keyring.createKey();

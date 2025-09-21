@@ -64,7 +64,7 @@ export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
 export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
-  assertArgument(schema != null && schema.ast != null, 'invalid schema');
+  assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
   return flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
@@ -180,7 +180,7 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
  * @deprecated Use `Type.getDXN`.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
-  assertArgument(Schema.isSchema(schema), 'invalid schema');
+  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
 
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {

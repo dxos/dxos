@@ -979,7 +979,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  */
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => {
-  assertArgument(!isEchoObject(obj), 'Object is already an ECHO object');
+  assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);

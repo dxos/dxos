@@ -13,12 +13,13 @@
  * ```
  */
 // TODO(dmaretskyi): Rename assertParameter.
-export const assertArgument: (condition: unknown, message: string) => asserts condition = (
+export const assertArgument: (condition: unknown, argumentName: string, message?: string) => asserts condition = (
   condition: unknown,
-  message: string,
+  argumentName: string,
+  message?: string,
 ): asserts condition => {
   if (!condition) {
-    const error = new TypeError(message);
+    const error = new TypeError(`Invalid argument \`${argumentName}\`` + (message ? `: ${message}` : ''));
     Error.captureStackTrace(error, assertArgument);
     throw error;
   }

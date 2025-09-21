@@ -110,7 +110,7 @@ export const gptNode = defineComputeNode({
   output: GptOutput,
   exec: Effect.fnUntraced(function* (input) {
     const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
-    assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
+    assertArgument(history === undefined || conversation === undefined, 'history|conversation', 'Cannot use both history and conversation');
 
     const { queues } = yield* QueueService;
     const historyMessages = conversation

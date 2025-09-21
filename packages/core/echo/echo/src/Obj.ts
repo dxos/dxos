@@ -61,6 +61,7 @@ export const make = <S extends Type.Obj.Any>(
 ): LiveObject.Live<Schema.Schema.Type<S>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
+    'schema',
     'Expected an object schema',
   );
 
@@ -107,7 +108,7 @@ export const getSchema = EchoSchema.getSchema;
 
 // TODO(dmaretskyi): Allow returning undefined.
 export const getDXN = (obj: Any | Relation.Any): DXN => {
-  assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
+  assertArgument(!Schema.isSchema(obj), 'obj', 'Object should not be a schema.');
   const dxn = EchoSchema.getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
@@ -300,7 +301,7 @@ export const version = (obj: Any | Relation.Any): Version => {
  * Checks that `version` is a valid version object.
  */
 export const versionValid = (version: Version): boolean => {
-  assertArgument(isVersion(version), 'Invalid version object');
+  assertArgument(isVersion(version), 'version', 'Invalid version object');
   return !!version.versioned;
 };
 
@@ -313,8 +314,8 @@ export type VersionCompareResult = 'unversioned' | 'equal' | 'different';
  * @returns 'unversioned' if either object is unversioned, 'equal' if the versions are equal, 'different' if the versions are different.
  */
 export const compareVersions = (version1: Version, version2: Version): VersionCompareResult => {
-  assertArgument(isVersion(version1), 'Invalid version object');
-  assertArgument(isVersion(version2), 'Invalid version object');
+  assertArgument(isVersion(version1), 'version1', 'Invalid version object');
+  assertArgument(isVersion(version2), 'version2', 'Invalid version object');
 
   if (!versionValid(version1) || !versionValid(version2)) {
     return 'unversioned';
