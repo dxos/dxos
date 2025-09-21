@@ -16,6 +16,10 @@ const dirname =
 export default mergeConfig(
   baseConfig({ cwd: dirname }),
   defineConfig({
+    optimizeDeps: {
+      noDiscovery: true,
+      include: [],
+    },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
