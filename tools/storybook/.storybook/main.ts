@@ -21,7 +21,7 @@ const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 
-export const packages = resolve(rootDir, 'packages');
+export const packages = '../../../packages';
 export const storyFiles = '*.{mdx,stories.tsx}';
 export const contentFiles = '*.{ts,tsx,js,jsx,css}';
 export const modules = [

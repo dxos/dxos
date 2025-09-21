@@ -2,22 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { join } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 // TODO(burdon): Factor out common components.
 import { baseConfig } from '../../vitest.storybook.config';
 
+const dirname =
+  typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
 export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
+  baseConfig({ cwd: dirname }),
   defineConfig({
     plugins: [
-      // https://storybook.js.org/docs/writing-tests/in-ci
-      // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
       storybookTest({
-        configDir: join(__dirname, '.storybook'),
-        storybookScript: 'moon run storybook:serve',
+        configDir: path.join(dirname, '.storybook'),
+        // The --ci flag will skip prompts and not open a browser.
+        storybookScript: 'storybook dev --ci',
         tags: {
           include: ['test'],
           exclude: ['experimental'],
@@ -25,27 +28,13 @@ export default mergeConfig(
       }),
     ],
     test: {
+      browser: {
+        enabled: true,
+        provider: 'playwright',
+        headless: true,
+        instances: [{ browser: 'chromium' }],
+      },
       setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // moon run storybook:test-ci
-          test: {
-            name: 'ci',
-            environment: 'node',
-          },
-        },
-        {
-          test: {
-            // moon run storybook:test-ci -- --project=browser
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
-              instances: [{ browser: 'chromium' }],
-            },
-          },
-        },
-      ],
     },
   }),
 );
