@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Schedule } from 'effect';
+import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Option, Record, Schedule } from 'effect';
 
 import { DXN, Filter, Obj } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
@@ -18,6 +18,7 @@ import {
   type EventType,
   FunctionTrigger,
   type QueueTriggerOutput,
+  type SubscriptionTriggerOutput,
   type TimerTrigger,
   type TimerTriggerOutput,
   type TriggerKind,
@@ -25,6 +26,7 @@ import {
 
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';
+import { TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
 
@@ -58,6 +60,9 @@ export interface TriggerExecutionResult {
   result: Exit.Exit<unknown>;
 }
 
+/**
+ * Cront trigger runtime state.
+ */
 interface ScheduledTrigger {
   trigger: FunctionTrigger;
   cron: Cron.Cron;
@@ -68,6 +73,8 @@ interface ScheduledTrigger {
 type TriggerDispatcherServices =
   | Exclude<Services, ComputeEventLogger | TracingService>
   | LocalFunctionExecutionService
+  // TODO(dmaretskyi): Move those into layer deps.
+  | TriggerStateStore
   | InvocationTracer;
 
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
@@ -262,7 +269,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     });
 
-  invokeScheduledTriggers = ({ kinds = ['timer', 'queue'] } = {}): Effect.Effect<
+  invokeScheduledTriggers = ({ kinds = ['timer', 'queue', 'subscription'] } = {}): Effect.Effect<
     TriggerExecutionResult[],
     never,
     TriggerDispatcherServices
@@ -337,6 +344,68 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
                 // We only invoke one trigger for each queue at a time.
                 break;
+              }
+            }
+            break;
+          }
+          case 'subscription': {
+            const triggers = yield* this._fetchTriggers();
+            for (const trigger of triggers) {
+              const spec = trigger.spec;
+              if (spec?.kind !== 'subscription') {
+                continue;
+              }
+              if (!spec.filter.type) {
+                log.warn('subscription trigger has no filter type', { triggerId: trigger.id });
+                continue;
+              }
+
+              const { objects } = yield* DatabaseService.runQuery(Filter.typename(spec.filter.type));
+
+              const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
+                Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
+                  Effect.succeed({
+                    version: '1',
+                    triggerId: trigger.id,
+                    state: {
+                      _tag: 'subscription',
+                      processedVersions: {} as Record<string, string>,
+                    },
+                  } satisfies TriggerState),
+                ),
+              );
+              invariant(state.state?._tag === 'subscription');
+
+              let updated = false;
+              for (const object of objects) {
+                const existingVersion = Record.get(state.state.processedVersions, object.id).pipe(
+                  Option.map(Obj.decodeVersion),
+                );
+                const currentVersion = Obj.version(object);
+                const run =
+                  Option.isNone(existingVersion) ||
+                  Obj.compareVersions(currentVersion, existingVersion.value) === 'different';
+
+                if (!run) {
+                  continue;
+                }
+
+                invocations.push(
+                  yield* this.invokeTrigger({
+                    trigger,
+                    event: {
+                      // TODO(dmaretskyi): Change type not supported.
+                      type: 'unknown',
+                      changedObjectId: object.id,
+                    } satisfies SubscriptionTriggerOutput,
+                  }),
+                );
+                (state.state.processedVersions as any)[object.id] = Obj.encodeVersion(currentVersion);
+                updated = true;
+              }
+
+              if (updated) {
+                yield* TriggerStateStore.saveState(state);
               }
             }
             break;
