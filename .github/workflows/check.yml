@@ -120,6 +120,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :test --affected --remote -- --no-file-parallelism
