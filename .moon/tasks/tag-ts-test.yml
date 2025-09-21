@@ -1,7 +1,27 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   test:
-    command: dx-killorphans vitest run --passWithNoTests
+    command: dx-killorphans vitest run --passWithNoTests --project nodejs
+    deps:
+      - esbuild-plugins:compile
+      - node-std:compile
+      - vite-plugin-import-source:compile
+      - ^:compile
+    inputs:
+      - /vitest.base.config.ts
+      - vitest.config.ts
+      - '@group(sources)'
+      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_XML_REPORT
+    outputs:
+      - /coverage/$project/**
+      - /test-results/$project/**
+    options:
+      timeout: 600
+  test-browser:
+    command: dx-killorphans vitest run --passWithNoTests --project browser
     deps:
       - esbuild-plugins:compile
       - node-std:compile
