@@ -73,7 +73,7 @@ for (const schema of [undefined, Testing.TestType, Testing.TestSchemaType]) {
       expect(obj.id).not.to.be.undefined;
     });
 
-    test('inspect', () => {
+    test.runIf(import.meta.env.VITEST_ENV === 'nodejs')('inspect', () => {
       const obj = createTestObject({ string: 'bar' });
       const str = inspect(obj, { colors: false });
       expect(str.startsWith(`${schema == null ? '' : 'Typed'}EchoObject`)).to.be.true;

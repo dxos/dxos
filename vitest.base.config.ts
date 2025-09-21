@@ -20,7 +20,6 @@ const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 type BrowserOptions = {
   cwd: string;
-  browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
 };
@@ -33,8 +32,7 @@ export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
       projects: [
         //
         createNodeConfig(options.cwd),
-        createBrowserConfig({ browserName: 'chromium', ...options }),
-        createBrowserConfig({ browserName: 'webkit', ...options }),
+        createBrowserConfig({ ...options }),
       ],
     },
   });
@@ -61,6 +59,9 @@ const createNodeConfig = (cwd: string) =>
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
       setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+      env: {
+        VITEST_ENV: 'nodejs',
+      },
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
@@ -110,7 +111,7 @@ const createNodeConfig = (cwd: string) =>
     ],
   });
 
-const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserConfig = ({ cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),
@@ -132,7 +133,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       target: 'es2020',
     },
     test: {
-      name: browserName,
+      name: 'browser',
 
       ...resolveReporterConfig({ browserMode: true, cwd }),
 
@@ -161,8 +162,20 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
         screenshotFailures: false,
         headless: !isDebug,
         provider: 'playwright',
-        name: browserName,
-        isolate: false,
+        instances: [
+          {
+            browser: 'chromium',
+            env: {
+              VITEST_ENV: 'chromium',
+            },
+          },
+          {
+            browser: 'webkit',
+            env: {
+              VITEST_ENV: 'webkit',
+            },
+          },
+        ],
       },
     },
   });
