@@ -18,27 +18,26 @@ const isDebug = !!process.env.VITEST_DEBUG;
 // const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
-type BrowserOptions = {
+export type ConfigOptions = {
   cwd: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  jsdom?: boolean;
 };
-
-export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
   return defineConfig({
     test: {
       projects: [
         //
-        createNodeConfig(options.cwd),
+        createNodeConfig(options),
         createBrowserConfig({ ...options }),
       ],
     },
   });
 };
 
-const createNodeConfig = (cwd: string) =>
+const createNodeConfig = (options: ConfigOptions) =>
   defineConfig({
     esbuild: {
       target: 'es2020',
@@ -50,8 +49,8 @@ const createNodeConfig = (cwd: string) =>
     },
     test: {
       name: 'nodejs',
-      ...resolveReporterConfig({ browserMode: false, cwd }),
-      environment: 'node',
+      ...resolveReporterConfig({ browserMode: false, cwd: options.cwd }),
+      environment: options.jsdom ? 'jsdom' : 'node',
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
@@ -111,7 +110,7 @@ const createNodeConfig = (cwd: string) =>
     ],
   });
 
-const createBrowserConfig = ({ cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserConfig = ({ cwd, nodeExternal = false, injectGlobals = true }: ConfigOptions) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),

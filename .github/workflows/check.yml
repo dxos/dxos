@@ -97,7 +97,6 @@ jobs:
     timeout-minutes: 30
     env:
       NODE_VERSION: ${{ matrix.node-version }}
-      VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
       MOON_CONCURRENCY: 6
     steps:
@@ -119,7 +118,7 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-Ō
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :test --affected --remote -- --no-file-parallelism
