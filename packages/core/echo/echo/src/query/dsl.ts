@@ -545,7 +545,11 @@ type RefPropKey<T> = keyof T & string;
 const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
-    assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'predicates.id', 'invalid id filter');
+    assertArgument(
+      typeof predicates.id === 'string' || Array.isArray(predicates.id),
+      'predicates.id',
+      'invalid id filter',
+    );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
     Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
   }

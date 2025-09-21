@@ -29,7 +29,6 @@ import { FunctionTrigger } from '../types';
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
-import { log } from '@dxos/log';
 
 const TestLayer = pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),

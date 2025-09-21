@@ -79,7 +79,11 @@ export const getLabelForObject = (obj: unknown | undefined): string | undefined 
 export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
-    assertArgument(typeof accessor === 'string', 'accessor', 'Label annotation must be a string or an array of strings');
+    assertArgument(
+      typeof accessor === 'string',
+      'accessor',
+      'Label annotation must be a string or an array of strings',
+    );
     const value = getField(object, accessor as JsonPath);
     switch (typeof value) {
       case 'string':

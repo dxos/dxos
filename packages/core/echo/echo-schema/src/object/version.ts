@@ -5,6 +5,10 @@
 /**
  * Getter to get object version.
  */
+//
+// Copyright 2025 DXOS.org
+//
+
 export const VersionTypeId: unique symbol = Symbol('@dxos/echo/Version');
 
 /**

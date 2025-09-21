@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Typename, SchemaVersion } from '../ast';
+import { SchemaVersion, Typename } from '../ast';
 import { JsonSchemaType } from '../json-schema';
 import { EchoObject } from '../object';
 

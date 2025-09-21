@@ -1,10 +1,16 @@
-import { ObjectId } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { KeyValueStore } from '@effect/platform';
 import { Context } from 'effect';
 import { Schema } from 'effect';
 import { Effect, Layer } from 'effect';
-import { TriggerStateNotFoundError } from '../errors';
-import { KeyValueStore } from '@effect/platform';
 import { Option } from 'effect';
+
+import { ObjectId } from '@dxos/keys';
+
+import { TriggerStateNotFoundError } from '../errors';
 
 export const TriggerState = Schema.Struct({
   version: Schema.Literal('1'),

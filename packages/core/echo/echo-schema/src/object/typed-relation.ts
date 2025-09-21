@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { EntityKind, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename, SchemaVersion } from '../ast';
+import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
 import { type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';

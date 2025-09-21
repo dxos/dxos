@@ -26,7 +26,7 @@ import {
 
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';
-import { TriggerState, TriggerStateStore } from './trigger-state-store';
+import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
 

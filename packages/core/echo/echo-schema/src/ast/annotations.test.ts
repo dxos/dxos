@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { EchoObject, getLabel } from '../object';
 
-import { LabelAnnotation, Typename, SchemaVersion } from './annotations';
+import { LabelAnnotation, SchemaVersion, Typename } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({

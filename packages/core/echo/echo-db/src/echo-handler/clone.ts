@@ -38,7 +38,11 @@ export const clone = <T extends BaseObject>(
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
   assertArgument(isEchoObject(obj), 'obj', 'expect obj to be an EchoObject');
-  assertArgument(retainId === true || additional.length === 0, 'retainId', 'retainId must be true when additional is not empty');
+  assertArgument(
+    retainId === true || additional.length === 0,
+    'retainId',
+    'retainId must be true when additional is not empty',
+  );
 
   const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: AnyLiveObject<any>[] = [clone];

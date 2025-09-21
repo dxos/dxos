@@ -8,6 +8,7 @@ import * as A from '@automerge/automerge';
 import { Schema } from 'effect';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
@@ -78,7 +79,6 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { Obj } from '@dxos/echo';
 
 /**
  * Shared for all targets within one ECHO object.
