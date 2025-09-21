@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { EntityKind, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename, Version } from '../ast';
+import { EntityKind, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename, SchemaVersion } from '../ast';
 import { type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
@@ -45,7 +45,7 @@ export const TypedObject = ({
   disableValidation,
 }: TypedObjectProps) => {
   const typename = Typename.make(typenameParam, { disableValidation });
-  const version = Version.make(versionParam, { disableValidation });
+  const version = SchemaVersion.make(versionParam, { disableValidation });
 
   /**
    * Return class definition factory.

@@ -31,7 +31,7 @@ export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 // TODO(burdon): Create echo-schema Format types.
 // TODO(burdon): Reconcile with "short" DXN.
 export const Typename = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
-export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
+export const SchemaVersion = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 
 /**
  * Payload stored under {@link TypeAnnotationId}.
@@ -40,7 +40,7 @@ export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 export const TypeAnnotation = Schema.Struct({
   kind: Schema.Enums(EntityKind),
   typename: Typename,
-  version: Version,
+  version: SchemaVersion,
 
   /**
    * If this is a relation, the schema of the source object.

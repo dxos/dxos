@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Typename, Version } from '../ast';
+import { Typename, SchemaVersion } from '../ast';
 import { JsonSchemaType } from '../json-schema';
 import { EchoObject } from '../object';
 
@@ -14,7 +14,7 @@ import { EchoObject } from '../object';
 export const StoredSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Typename,
-  version: Version,
+  version: SchemaVersion,
   jsonSchema: JsonSchemaType,
 }).pipe(
   EchoObject({
