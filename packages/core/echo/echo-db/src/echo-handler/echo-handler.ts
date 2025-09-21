@@ -4,7 +4,7 @@
 
 import { type InspectOptionsStylized } from 'node:util';
 
-import type * as A from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { Schema } from 'effect';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
@@ -25,6 +25,7 @@ import {
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
+  ObjectVersionId,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -77,6 +78,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
+import { Obj } from '@dxos/echo';
 
 /**
  * Shared for all targets within one ECHO object.
@@ -188,6 +190,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.getMeta(target);
         case DeletedId:
           return this.isDeleted(target);
+        case ObjectVersionId:
+          return this._getVersion(target);
       }
     } else {
       switch (prop) {
@@ -776,6 +780,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       },
     )}`;
   };
+
+  private _getVersion(target: ProxyTarget): Obj.Version {
+    const accessor = target[symbolInternals].core.getDocAccessor();
+    const doc = accessor.handle.doc();
+    invariant(doc);
+    const heads = A.getHeads(doc);
+    return {
+      [Obj.VersionTypeId]: Obj.VersionTypeId,
+      versioned: true,
+      automergeHeads: heads,
+    };
+  }
 
   // TODO(dmaretskyi): Re-use existing json serializer
   private _toJSON(target: ProxyTarget): ObjectJSON {
