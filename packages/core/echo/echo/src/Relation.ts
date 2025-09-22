@@ -60,6 +60,7 @@ export const make = <S extends Type.Relation.Any>(
 ): Live<Schema.Schema.Type<S> & Type.OfKind<EchoSchema.EntityKind.Relation>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Relation,
+    'schema',
     'Expected a relation schema',
   );
 
