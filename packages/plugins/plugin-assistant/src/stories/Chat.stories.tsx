@@ -13,11 +13,12 @@ import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
+import * as chessFunctions from '@dxos/plugin-chess/functions';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
@@ -40,47 +41,38 @@ import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
-import { createTestMailbox, createTestTranscription } from '../testing';
+import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
   ChatContainer,
+  ChessContainer,
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  InvocationsContainer,
   LoggingContainer,
   MessageContainer,
+  PromptContainer,
   ResearchInputStack,
   ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
+  TriggersContainer,
 } from './components';
-import { PromptContainer } from './components';
-import { InvocationsContainer } from './components/InvocationsContainer';
-import { TriggersContainer } from './components/TriggersContainer';
-import {
-  ResearchInputQueue,
-  accessTokensFromEnv,
-  addTestData,
-  config,
-  getDecorators,
-  organizations,
-  testTypes,
-} from './testing';
+import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
-const DefaultStory = ({
-  debug = true,
-  deckComponents,
-  blueprints = [],
-}: {
+type StoryProps = {
   debug?: boolean;
   deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
-}) => {
+};
+
+const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
   const client = useClient();
   const space = useSpace();
 
@@ -137,8 +129,8 @@ const DefaultStory = ({
       orientation='horizontal'
       size='split'
       rail={false}
-      classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
@@ -161,6 +153,7 @@ const DefaultStory = ({
                 j += 1;
                 return item;
               })}
+
               {renderSurfaces &&
                 objects.map((object, index) => {
                   const k = index + j;
@@ -241,7 +234,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    deckComponents: [[ChatContainer]],
   },
 };
 
@@ -351,10 +344,11 @@ export const WithMail: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
+// Test with prompt: Sync my email.
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
@@ -554,6 +548,59 @@ export const WithTriggers: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
+  },
+};
+
+export const WithChessTrigger: Story = {
+  decorators: getDecorators({
+    plugins: [ChessPlugin()],
+    config: config.remote,
+    types: [Chess.Game],
+    onInit: async ({ space }) => {
+      // TODO(burdon): Add player DID (for user and assistant).
+      space.db.add(
+        Chess.makeGame({
+          name: 'Challenge',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(chessFunctions.play)),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: Type.getTypename(Chess.Game),
+            },
+          },
+          input: {
+            id: '{{event.changedObjectId}}',
+            side: 'black', // NOTE: Removing it makes the bot play itself.
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
   },
 };

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context, Effect, Schema } from 'effect';
+import { type Context, Effect, Schema, type Types } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
@@ -99,15 +99,17 @@ export type FunctionDefinition<T = any, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
-// TODO(dmaretskyi): Fix key.
-export const defineFunction = <T, O>({
-  key,
-  name,
-  description,
-  inputSchema,
-  outputSchema = Schema.Any,
-  handler,
-}: Omit<FunctionDefinition<T, O>, 'key' | typeof typeId> & { key?: string }): FunctionDefinition<T, O> => {
+export const defineFunction: {
+  <I, O>(params: {
+    // TODO(dmaretskyi): Make `key` required.
+    key?: string;
+    name: string;
+    description?: string;
+    inputSchema: Schema.Schema<I, any>;
+    outputSchema?: Schema.Schema<O, any>;
+    handler: Types.NoInfer<FunctionHandler<I, O>>;
+  }): FunctionDefinition<I, O>;
+} = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
   }

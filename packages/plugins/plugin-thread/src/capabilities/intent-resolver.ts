@@ -98,7 +98,6 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.AddProposal,
       resolve: ({ text, anchor, sender, subject }) => {
-        console.log('add-proposal', text, anchor, sender, subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 
