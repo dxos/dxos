@@ -76,9 +76,9 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       <StackItem.Root
                         item={card}
                         focusIndicatorVariant='group'
-                        onClick={() => multiSelect([card.id])}
                         prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
+                        onClick={() => multiSelect([card.id])}
                       >
                         <Card.StaticRoot>
                           <Card.Toolbar>
@@ -131,8 +131,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <IconButton
                       icon='ph--plus--regular'
                       label={t('add card label')}
-                      onClick={() => handleAddCard(columnValue)}
                       classNames='is-full'
+                      onClick={() => handleAddCard(columnValue)}
                     />
                   </CardStack.Footer>
                 )}
@@ -152,7 +152,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               </CardStack.Content>
               <StackItem.DragPreview>
                 {({ item }) => {
-                  // Find the column data for this item
+                  // Find the column data for this item.
                   const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
                   if (!columnData) {
                     return null;
@@ -161,7 +161,6 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   const { cards, columnValue } = columnData;
                   const { color, title } = model.getPivotAttributes(columnValue);
                   const uncategorized = columnValue === UNCATEGORIZED_VALUE;
-
                   return (
                     <CardStackDragPreview.Root>
                       {/* Column Header */}

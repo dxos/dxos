@@ -30,7 +30,7 @@ describe('extended-markdown', () => {
 
       What can I do for you?
 
-      <suggest>Summarize tools</suggest>
+      <suggesion>Summarize tools</suggesion>
 
       <choice>
         <option>Summarize tools</option>
@@ -62,28 +62,28 @@ describe('extended-markdown', () => {
       {
         content: '<prompt>\n  Hello\n</prompt>',
         data: {
-          tag: 'prompt',
+          _tag: 'prompt',
           children: ['Hello'],
         },
       },
       {
-        content: '<suggest>Summarize tools</suggest>',
+        content: '<suggesion>Summarize tools</suggesion>',
         data: {
-          tag: 'suggest',
+          _tag: 'suggesion',
           children: ['Summarize tools'],
         },
       },
       {
         content: '<choice>\n  <option>Summarize tools</option>\n  <option>Retry</option>\n</choice>',
         data: {
-          tag: 'choice',
+          _tag: 'choice',
           children: [
             {
-              tag: 'option',
+              _tag: 'option',
               children: ['Summarize tools'],
             },
             {
-              tag: 'option',
+              _tag: 'option',
               children: ['Retry'],
             },
           ],
@@ -92,7 +92,7 @@ describe('extended-markdown', () => {
       {
         content: '<toolkit />',
         data: {
-          tag: 'toolkit',
+          _tag: 'toolkit',
         },
       },
     ]);

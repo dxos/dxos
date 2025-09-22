@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
-
 /**
  * Options for the streaming text generator.
  */
@@ -55,44 +53,4 @@ export async function* textStream(
     const delay = chunkDelay * varianceMultiplier;
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
-}
-
-/**
- * React hook to consume a streaming generator.
- */
-// TODO(burdon): Reconcile with useStreamngText.
-export function useTextStream(generator: AsyncGenerator<string, void, unknown> | null): [string, boolean] {
-  const [text, setText] = useState('');
-  const [isStreaming, setIsStreaming] = useState(false);
-
-  useEffect(() => {
-    if (!generator) {
-      setText('');
-      return;
-    }
-
-    let cancelled = false;
-    setIsStreaming(true);
-    setText('');
-
-    void (async () => {
-      try {
-        for await (const chunk of generator) {
-          if (cancelled) break;
-          setText((prev) => prev + chunk);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsStreaming(false);
-        }
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      setIsStreaming(false);
-    };
-  }, [generator]);
-
-  return [text, isStreaming];
 }
