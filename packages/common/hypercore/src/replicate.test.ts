@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger, latch, sleep } from '@dxos/async';
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from './crypto';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';

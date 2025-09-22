@@ -8,7 +8,7 @@ import { Writable } from 'streamx';
 import { describe, test } from 'vitest';
 
 import { latch } from '@dxos/async';
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from './crypto';
 import { log } from '@dxos/log';
 
 import { HypercoreFactory } from './hypercore-factory';

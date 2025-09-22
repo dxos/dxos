@@ -8,7 +8,7 @@ import { type AbstractValueEncoding } from 'hypercore';
 import { describe, expect, test } from 'vitest';
 
 import { type Codec } from '@dxos/codec-protobuf';
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from './crypto';
 
 import { createCodecEncoding } from './crypto';
 import { HypercoreFactory } from './hypercore-factory';

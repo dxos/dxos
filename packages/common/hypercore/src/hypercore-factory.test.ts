@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createKeyPair } from '@dxos/crypto';
+import { createKeyPair } from './crypto';
 import { faker } from '@dxos/random';
 
 import { HypercoreFactory } from './hypercore-factory';

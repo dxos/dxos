@@ -8,6 +8,8 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/hypercore-crypto/re-export.ts'
+      - '--entryPoint=src/hypercore-crypto/stub.ts'
       - '--injectGlobals'
       - >-
         --alias='{"events":"node:events","hypercore-default-storage":"./src/empty","os":"node:os","timers":"node:timers","tty":"node:tty","util":"node:util"}'

@@ -1276,6 +1276,9 @@ importers:
 
   packages/common/crypto:
     dependencies:
+      '@dxos/hypercore':
+        specifier: workspace:*
+        version: link:../hypercore
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../invariant
@@ -1285,9 +1288,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      hypercore-crypto:
-        specifier: ^2.3.0
-        version: 2.3.2
 
   packages/common/debug:
     dependencies:
@@ -1511,6 +1511,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      hypercore-crypto:
+        specifier: 2.3.2
+        version: 2.3.2
       readable-stream:
         specifier: ^3.6.0
         version: 3.6.2

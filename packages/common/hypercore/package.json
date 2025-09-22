@@ -8,12 +8,25 @@
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
+  "imports": {
+    "#hypercore-crypto": {
+      "types": "./dist/types/src/hypercore-crypto/types.d.ts",
+      "browser": "./dist/lib/browser/hypercore-crypto/re-export.mjs",
+      "node": "./dist/lib/node-esm/hypercore-crypto/re-export.mjs",
+      "workerd": "./dist/lib/browser/hypercore-crypto/stub.mjs"
+    }
+  },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./crypto": {
+      "types": "./dist/types/src/hypercore-crypto/types.d.ts",
+      "browser": "./dist/lib/browser/hypercore-crypto/re-export.mjs",
+      "node": "./dist/lib/node-esm/hypercore-crypto/re-export.mjs",
+      "workerd": "./dist/lib/browser/hypercore-crypto/stub.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -35,6 +48,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
+    "hypercore-crypto": "2.3.2",
     "readable-stream": "^3.6.0",
     "sodium-native": "^3.2.0",
     "sodium-universal": "^3.0.2",
