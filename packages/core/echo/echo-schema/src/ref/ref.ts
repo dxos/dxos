@@ -83,7 +83,7 @@ export interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>> => {
-  assertArgument(Schema.isSchema(schema), 'Must call with an instance of effect-schema');
+  assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
 
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {

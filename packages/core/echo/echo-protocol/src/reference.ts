@@ -170,7 +170,7 @@ export const isEncodedReference = (value: any): value is EncodedReference =>
 export const EncodedReference = Object.freeze({
   isEncodedReference,
   getReferenceString: (value: EncodedReference): string => {
-    assertArgument(isEncodedReference(value), 'invalid reference');
+    assertArgument(isEncodedReference(value), 'value', 'invalid reference');
     return value['/'];
   },
   toDXN: (value: EncodedReference): DXN => {

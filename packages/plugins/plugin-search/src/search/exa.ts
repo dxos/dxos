@@ -33,7 +33,7 @@ export const search = async <Schema extends Schema.Schema.AnyNoContext>(
   options: SearchOptions<Schema>,
 ): Promise<SearchResult<Schema.Schema.Type<Schema>>> => {
   throw new Error('Not implemented');
-  // assertArgument(options.query || options.context, 'query or context is required');
+  // assertArgument(options.query || options.context, "query or context", "query or context is required");
   // let contextSearchTerms: readonly string[] = [];
   // if (options.context) {
   //   contextSearchTerms = await getSearchTerms(options.AiService, options.context);
