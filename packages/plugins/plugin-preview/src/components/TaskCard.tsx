@@ -16,6 +16,7 @@ import { CardSubjectMenu } from './CardSubjectMenu';
 
 export const TaskCard = ({ subject, role }: PreviewProps<DataType.Task>) => {
   const { title, status } = subject;
+  // TODO(thure): `getPropertyMetaAnnotation` isn’t working when trying to get option titles from `DataType.Task.ast`.
   const { t } = useTranslation(meta.id);
   return (
     <Card.SurfaceRoot role={role}>
