@@ -48,7 +48,6 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",

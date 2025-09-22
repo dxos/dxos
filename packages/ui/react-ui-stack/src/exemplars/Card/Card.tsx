@@ -16,7 +16,7 @@ import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps,
 // import { ImageWithBackground } from '@dxos/react-ui-components';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { StackItem } from '../../components';
+import { ImageWithBackground, StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
@@ -128,12 +128,12 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      // <ImageWithBackground
-      //   classNames={[`dx-card__poster is-full bs-auto object-contain`, aspect]}
-      //   src={props.image}
-      //   alt={props.alt}
-      // />
-      <img className={mx(`dx-card__poster is-full bs-auto object-contain`, aspect)} src={props.image} alt={props.alt} />
+      <ImageWithBackground
+        classNames={[`dx-card__poster is-full bs-auto object-contain`, aspect]}
+        src={props.image}
+        alt={props.alt}
+      />
+      // <img className={mx(`dx-card__poster is-full bs-auto object-contain`, aspect)} src={props.image} alt={props.alt} />
     );
   }
   if (props.icon) {
