@@ -65,10 +65,8 @@ export const generator = () => ({
           space.db.add(mailbox);
 
           const contactsQuery = Query.select(
-            // TODO(wittjosiah): This probably won't work as is.
             Filter.type(DataType.Person, { fields: [{ label: 'label', value: 'Research' }] }),
           );
-          // TODO(wittjosiah): Type Query<never>.
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 

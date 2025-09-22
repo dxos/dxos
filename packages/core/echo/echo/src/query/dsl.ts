@@ -63,10 +63,18 @@ export interface Query<T> {
 
   /**
    * Traverse an outgoing reference.
-   * @param key - Property path inside T that is a reference.
+   * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  reference<K extends RefPropKey<T>>(key: K): Query<T[K] extends Ref.Any ? Ref.Target<T[K]> : never>;
+  reference<K extends RefPropKey<T>>(
+    key: K,
+  ): Query<
+    T[K] extends Ref.Any
+      ? Ref.Target<T[K]>
+      : T[K] extends Ref.Any | undefined
+        ? Ref.Target<Exclude<T[K], undefined>>
+        : never
+  >;
 
   /**
    * Find objects referencing this object.
