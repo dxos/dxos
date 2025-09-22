@@ -7,6 +7,7 @@ import { Schema } from 'effect';
 import { type Obj, type Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
+
 import type { QueryFn } from '../query';
 
 // TODO(dmaretskyi): Move the interface into @dxos/echo package.

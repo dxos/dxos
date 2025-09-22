@@ -3,26 +3,27 @@
 //
 
 import { DeferredTask } from '@dxos/async';
+import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj, type Ref, type Relation } from '@dxos/echo';
 import {
   type HasId,
+  type ObjectJSON,
   SelfDXNId,
   assertObjectModelShape,
   defineHiddenProperty,
   setRefResolverOnData,
-  ObjectJSON,
 } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
-import { failedInvariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { Filter, Query, type QueryFn, type QueryOptions, QueryResult } from '../query';
+
+import { QueueQueryContext } from './queue-query-context';
 import type { QueueService } from './queue-service';
 import type { Queue } from './types';
-import { Filter, Query, QueryFn, QueryOptions, QueryResult } from '../query';
-import { QueueQueryContext } from './queue-query-context';
-import { Event } from '@dxos/async';
 
 const TRACE_QUEUE_LOAD = false;
 

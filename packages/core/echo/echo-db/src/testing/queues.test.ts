@@ -4,6 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Event } from '@dxos/async';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
 import { Ref, getSchema } from '@dxos/echo-schema';
@@ -14,7 +15,6 @@ import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 import type { Queue } from '../queue';
 
 import { EchoTestBuilder } from './echo-test-builder';
-import { Event } from '@dxos/async';
 
 describe('queues', (ctx) => {
   let builder: EchoTestBuilder;

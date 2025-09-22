@@ -1,13 +1,20 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Array, pipe } from 'effect';
+
 import { Event } from '@dxos/async';
-import type { BaseObject } from '@dxos/echo-schema';
-import { type QueryContext, type QueryResultEntry, type Query, isSimpleSelectionQuery } from '../query';
-import type { QueryAST } from '@dxos/echo-protocol';
-import { QueueImpl } from './queue';
-import { filterMatchObjectJSON } from '@dxos/echo-pipeline';
-import { pipe, Array } from 'effect';
-import { Obj } from '@dxos/echo';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
+import { filterMatchObjectJSON } from '@dxos/echo-pipeline';
+import type { QueryAST } from '@dxos/echo-protocol';
+import type { BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+
+import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';
+
+import { type QueueImpl } from './queue';
 
 export class QueueQueryContext implements QueryContext {
   readonly #queue: QueueImpl;
