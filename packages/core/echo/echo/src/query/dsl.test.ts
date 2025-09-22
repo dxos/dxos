@@ -24,6 +24,10 @@ const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
   age: Schema.optional(Schema.Number),
+  fields: Schema.Struct({
+    label: Schema.String,
+    value: Schema.String,
+  }).pipe(Schema.Array, Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Person',
@@ -34,6 +38,12 @@ interface Person extends Schema.Schema.Type<typeof Person> {}
 
 const Organization = Schema.Struct({
   name: Schema.String,
+  properties: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.String,
+    }),
+  ),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Organization',
@@ -88,6 +98,26 @@ describe('query api', () => {
     log('query', { ast: PeopleNamedFred.ast });
     Schema.validateSync(QueryAST.Query)(PeopleNamedFred.ast);
     console.log('PeopleNamedFred', JSON.stringify(PeopleNamedFred.ast, null, 2));
+  });
+
+  test('get all people with field of "label" set to "Research"', () => {
+    const PeopleWithFieldLabelSetToResearch = Query.select(
+      Filter.type(Person, { fields: [{ label: 'label', value: 'Research' }] }),
+    );
+
+    log('query', { ast: PeopleWithFieldLabelSetToResearch.ast });
+    Schema.validateSync(QueryAST.Query)(PeopleWithFieldLabelSetToResearch.ast);
+    console.log('PeopleWithFieldLabelSetToResearch', JSON.stringify(PeopleWithFieldLabelSetToResearch.ast, null, 2));
+  });
+
+  test('get all orgs with property "label" set to "Research"', () => {
+    const OrgsWithPropertyLabelSetToResearch = Query.select(
+      Filter.type(Organization, { properties: { label: 'Research' } }),
+    );
+
+    log('query', { ast: OrgsWithPropertyLabelSetToResearch.ast });
+    Schema.validateSync(QueryAST.Query)(OrgsWithPropertyLabelSetToResearch.ast);
+    console.log('OrgsWithPropertyLabelSetToResearch', JSON.stringify(OrgsWithPropertyLabelSetToResearch.ast, null, 2));
   });
 
   test('get all orgs Fred worked for since 2020', () => {

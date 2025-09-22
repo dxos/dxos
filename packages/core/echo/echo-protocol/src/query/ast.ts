@@ -61,6 +61,13 @@ const FilterIn_ = Schema.Struct({
 export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
+const FilterContains_ = Schema.Struct({
+  type: Schema.Literal('contains'),
+  value: Schema.Any,
+});
+export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
+
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
@@ -103,6 +110,7 @@ export const Filter = Schema.Union(
   FilterTextSearch,
   FilterCompare,
   FilterIn,
+  FilterContains,
   FilterRange,
   FilterNot,
   FilterAnd,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
@@ -291,6 +291,12 @@ interface FilterAPI {
   in<T>(...values: T[]): Filter<T>;
 
   /**
+   * Predicate for an array property to contain the provided value.
+   * @param value - Value to check against.
+   */
+  contains<T>(value: T): Filter<T>;
+
+  /**
    * Predicate for property to be in the provided range.
    * @param from - Start of the range (inclusive).
    * @param to - End of the range (exclusive).
@@ -499,6 +505,13 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static contains<T>(value: T): Filter<T> {
+    return new FilterClass({
+      type: 'contains',
+      value,
+    });
+  }
+
   static between<T>(from: T, to: T): Filter<T> {
     return new FilterClass({
       type: 'range',
@@ -554,9 +567,36 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterOb
     props: Object.fromEntries(
       Object.entries(predicates)
         .filter(([prop, _value]) => prop !== 'id')
-        .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
+        .map(([prop, predicate]) => [prop, processPredicate(predicate)]),
     ) as Record<string, QueryAST.Filter>,
   };
+};
+
+const processPredicate = (predicate: any): QueryAST.Filter => {
+  return Match.value(predicate).pipe(
+    Match.withReturnType<QueryAST.Filter>(),
+    Match.when(Filter.is, (predicate) => predicate.ast),
+    Match.when(Array.isArray, (predicate) =>
+      predicate.length === 1
+        ? Filter.contains(predicate[0]).ast
+        : Filter.or(...predicate.map((p) => Filter.contains(p))).ast,
+    ),
+    Match.when(
+      (predicate: any) => !Ref.isRef(predicate) && typeof predicate === 'object' && predicate !== null,
+      (predicate) => {
+        const nestedProps = Object.fromEntries(
+          Object.entries(predicate).map(([key, value]) => [key, processPredicate(value)]),
+        );
+
+        return {
+          type: 'object',
+          typename: null,
+          props: nestedProps,
+        };
+      },
+    ),
+    Match.orElse((value) => Filter.eq(value).ast),
+  );
 };
 
 class QueryClass implements Query<any> {
