@@ -29,7 +29,6 @@ const getActiveStatusOption = (status?: string) => {
 
 export const TaskCard = ({ subject, role }: PreviewProps<DataType.Task>) => {
   const { title, status } = subject;
-  // TODO(thure): `getPropertyMetaAnnotation` isn’t working when trying to get option titles from `DataType.Task.ast`.
   const statusOption = getActiveStatusOption(status);
   return (
     <Card.SurfaceRoot role={role}>
