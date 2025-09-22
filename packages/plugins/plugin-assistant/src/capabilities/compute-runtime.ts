@@ -23,8 +23,10 @@ import {
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { BrowserKeyValueStore } from '@effect/platform-browser';
 
 import { AssistantCapabilities } from './capabilities';
+import { TriggerStateStore } from '@dxos/functions';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
@@ -78,6 +80,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
           Layer.provideMerge(
             Layer.mergeAll(
               IvocationTracerLive,
+              TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
