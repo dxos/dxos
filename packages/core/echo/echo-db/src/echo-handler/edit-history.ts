@@ -34,8 +34,8 @@ export const getEditHistory = (object: Obj.Any): State<any>[] => {
 // TODO(burdon): Also Relation?
 // TODO(dmaretskyi): Hydrate the object
 export const checkoutVersion = (object: Obj.Any, version: Heads): unknown => {
-  assertArgument(isEchoObject(object), 'expected ECHO object stored in the database');
-  assertArgument(Array.isArray(version), 'expected automerge heads array');
+  assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
+  assertArgument(Array.isArray(version), 'version', 'expected automerge heads array');
 
   const objectCore = getObjectCore(object);
   const doc = objectCore.getDoc();

@@ -28,14 +28,15 @@ import { FunctionTrigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
+import { TriggerStateStore } from './trigger-state-store';
 
 const TestLayer = pipe(
-  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest),
+  Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
       TestDatabaseLayer({
-        types: [FunctionType, FunctionTrigger],
+        types: [FunctionType, FunctionTrigger, DataType.Person, DataType.Task],
       }),
       CredentialsService.layerConfig([]),
       LocalFunctionExecutionService.layerLive,
@@ -432,6 +433,227 @@ describe('TriggerDispatcher', () => {
             id: person.id,
             fullName: 'John Doe',
           },
+          triggerId: trigger.id,
+        });
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+  });
+
+  describe('Database Triggers (Subscription)', () => {
+    it.effect(
+      'should invoke triggers on object creation',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+
+        // Create a subscription trigger that watches for DataType.Person objects
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: DataType.Person.typename,
+            },
+          },
+        });
+        yield* DatabaseService.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        // Create a new Person object - this should trigger the subscription
+        const person = Obj.make(DataType.Person, {
+          fullName: 'Alice Smith',
+        });
+        yield* DatabaseService.add(person);
+
+        // Invoke scheduled triggers to check if subscription fires
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        // Should have triggered for the new person
+        expect(results.length).toBe(1);
+        expect(results[0].triggerId).toBe(trigger.id);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should invoke triggers on object updates',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+
+        // Create a person object first
+        const person = Obj.make(DataType.Person, {
+          fullName: 'Bob Jones',
+        });
+        yield* DatabaseService.add(person);
+
+        // Create a subscription trigger
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: DataType.Person.typename,
+            },
+          },
+        });
+        yield* DatabaseService.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        // Initial check - should trigger for existing object
+        let results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+
+        // Update the person object
+        person.fullName = 'Robert Jones';
+        yield* DatabaseService.flush();
+
+        // Should trigger again for the update
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        expect(results[0].triggerId).toBe(trigger.id);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should not invoke triggers for unchanged objects',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+
+        // Create a subscription trigger first
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: DataType.Person.typename,
+            },
+          },
+        });
+        yield* DatabaseService.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        // Create a person object
+        const person = Obj.make(DataType.Person, {
+          fullName: 'Charlie Brown',
+        });
+        yield* DatabaseService.add(person);
+
+        // First invocation - should trigger for new object
+        let results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+
+        // Second invocation without any changes - should not trigger
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(0);
+
+        // Update the object
+        person.fullName = 'Charles Brown';
+        yield* DatabaseService.flush();
+
+        // Third invocation - should trigger for the update
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+
+        // Fourth invocation without changes - should not trigger
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(0);
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should handle multiple object types with filters',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+
+        // Create a subscription trigger that only watches for DataType.Task objects
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: DataType.Task.typename,
+            },
+          },
+        });
+        yield* DatabaseService.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        yield* dispatcher.refreshTriggers();
+
+        // Create a Person object - should NOT trigger
+        const person = Obj.make(DataType.Person, {
+          fullName: 'David Wilson',
+        });
+        yield* DatabaseService.add(person);
+
+        let results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(0);
+
+        // Create a Task object - should trigger
+        const task = Obj.make(DataType.Task, {
+          title: 'Important task',
+        });
+        yield* DatabaseService.add(task);
+
+        results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+        expect(results.length).toBe(1);
+        expect(results[0].triggerId).toBe(trigger.id);
+        expect(Exit.isSuccess(results[0].result)).toBe(true);
+      }, Effect.provide(TestTriggerDispatcherLayer)),
+    );
+
+    it.effect(
+      'should pass correct event data to function',
+      Effect.fnUntraced(function* ({ expect }) {
+        const functionObj = serializeFunction(reply);
+        yield* DatabaseService.add(functionObj);
+
+        const person = Obj.make(DataType.Person, {
+          fullName: 'Eva Martinez',
+        });
+        yield* DatabaseService.add(person);
+
+        // Create a subscription trigger with input pattern
+        const trigger = Obj.make(FunctionTrigger, {
+          function: Ref.make(functionObj),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: DataType.Person.typename,
+            },
+          },
+          input: {
+            objectId: '{{event.changedObjectId}}',
+            changeType: '{{event.type}}',
+            triggerId: '{{trigger.id}}',
+          },
+        });
+        yield* DatabaseService.add(trigger);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
+
+        expect(results.length).toBe(1);
+        const exit = results[0].result;
+        invariant(Exit.isSuccess(exit));
+        expect(exit.value).to.deep.include({
+          objectId: person.id,
+          changeType: 'unknown', // TODO: This should be 'create' or 'update'
           triggerId: trigger.id,
         });
       }, Effect.provide(TestTriggerDispatcherLayer)),

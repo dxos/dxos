@@ -151,6 +151,13 @@ describe('Experimental API review', () => {
     expect(Relation.getTarget(worksFor)).to.eq(organization);
   });
 
+  test('version', ({ expect }) => {
+    const person = Obj.make(Testing.Person, { name: 'Test' });
+    const version = Obj.version(person);
+    expect(Obj.isVersion(version)).to.be.true;
+    expect(Obj.versionValid(version)).to.be.false;
+  });
+
   test.skip('type narrowing', () => {
     const a: Obj.Any | Relation.Any = null as any;
 
