@@ -261,7 +261,23 @@ export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
+  /**
+   * The nested select statemets will select from the given spaces.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * The nested select statemets will select from the given queues.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
+  queues: Schema.optional(Schema.Array(DXN.Schema)),
+
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
