@@ -2,17 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import { Schema } from 'effect';
 
+import { ResearchOn, research } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
-import {
-  FunctionTrigger,
-  type TriggerKind,
-  type TriggerType,
-  defineFunction,
-  serializeFunction,
-} from '@dxos/functions';
+import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -66,55 +61,49 @@ export const generator = () => ({
       async (space, n, cb) => {
         const objects = range(n, () => {
           const mailboxQueue = space.queues.create();
-          const _contactsQueue = space.queues.create();
-          const organizationsQueue = space.queues.create();
-          const _notesQueue = space.queues.create();
-
           const mailbox = Mailbox.make({ name: 'Mailbox', queue: mailboxQueue.dxn });
           space.db.add(mailbox);
 
-          const stub = defineFunction({
-            name: 'example.org/function/reply',
-            description: 'Function that echoes the input',
-            inputSchema: Schema.Any,
-            outputSchema: Schema.Any,
-            handler: Effect.fn(function* ({ data }) {
-              return data;
-            }),
-          });
+          const contactsQuery = Query.select(
+            // TODO(wittjosiah): This probably won't work as is.
+            Filter.type(DataType.Person, { fields: [{ label: 'label', value: 'Research' }] }),
+          );
+          // TODO(wittjosiah): Type Query<never>.
+          const organizationsQuery = contactsQuery.reference('organization');
+          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
           const researchTrigger = Obj.make(FunctionTrigger, {
-            function: Ref.make(serializeFunction(stub)),
+            function: Ref.make(serializeFunction(research)),
             spec: {
-              kind: 'queue',
-              queue: organizationsQueue.dxn.toString(),
+              kind: 'subscription',
+              query: organizationsQuery.ast,
             },
             enabled: true,
           });
           space.db.add(researchTrigger);
 
-          // TODO(wittjosiah): Update queries to be against above queues.
           const mailboxView = createView({
             name: 'Mailbox',
-            query: Query.select(Filter.type(DataType.Message)),
+            // TODO(wittjosiah): Update with queue options.
+            query: Query.select(Filter.type(DataType.Message, { properties: { label: 'Research' } })),
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const contactsView = createView({
             name: 'Contacts',
-            query: Query.select(Filter.type(DataType.Person)),
+            query: contactsQuery,
             jsonSchema: Type.toJsonSchema(DataType.Person),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
-            query: Query.select(Filter.type(DataType.Organization)),
+            query: organizationsQuery,
             jsonSchema: Type.toJsonSchema(DataType.Organization),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
-            query: Query.select(Filter.type(Markdown.Document)),
+            query: notesQuery,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });

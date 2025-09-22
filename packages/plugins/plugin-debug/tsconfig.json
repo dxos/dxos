@@ -45,6 +45,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/assistant-testing"
+    },
+    {
       "path": "../../core/compute"
     },
     {
