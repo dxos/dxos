@@ -7,12 +7,12 @@ import { type EditorView } from '@codemirror/view';
 
 import { log } from '@dxos/log';
 
-export const wrapWithCatch = (fn: (...args: any[]) => any) => {
+export const wrapWithCatch = (fn: (...args: any[]) => any, label?: string) => {
   return (...args: any[]) => {
     try {
       return fn(...args);
     } catch (err) {
-      log.catch(err);
+      log.catch(err, { label });
     }
   };
 };

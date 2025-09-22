@@ -3,6 +3,7 @@
 //
 
 export * from './Flex';
+export * from './Image';
 export * from './MarkdownStream';
 export * from './MarkdownViewer';
 export * from './NumericTabs';

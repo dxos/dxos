@@ -14369,6 +14369,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../react-ui-components
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../react-ui-dnd

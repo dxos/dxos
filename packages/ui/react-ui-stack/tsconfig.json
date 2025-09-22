@@ -45,6 +45,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
       "path": "../react-ui-dnd"
     },
     {
