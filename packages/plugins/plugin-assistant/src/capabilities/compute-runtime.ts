@@ -3,6 +3,7 @@
 //
 
 import { type AiTool, AiToolkit } from '@effect/ai';
+import { BrowserKeyValueStore } from '@effect/platform-browser';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
@@ -20,6 +21,7 @@ import {
   RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions';
+import { TriggerStateStore } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -78,6 +80,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
           Layer.provideMerge(
             Layer.mergeAll(
               IvocationTracerLive,
+              TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
               makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),

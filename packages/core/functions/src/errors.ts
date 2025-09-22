@@ -17,3 +17,5 @@ export class FunctionNotFoundError extends BaseError.extend('FUNCTION_NOT_FOUND'
 }
 
 export class FunctionError extends BaseError.extend('FUNCTION_ERROR') {}
+
+export class TriggerStateNotFoundError extends BaseError.extend('TRIGGER_STATE_NOT_FOUND') {}
