@@ -127,14 +127,14 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <img className={`dx-card__poster ${aspect} object-cover is-full bs-auto`} src={props.image} alt={props.alt} />
+      <img className={mx(`dx-card__poster is-full bs-auto object-contain`, aspect)} src={props.image} alt={props.alt} />
     );
   }
   if (props.icon) {
     return (
       <div
         role='image'
-        className={`dx-card__poster grid ${aspect} place-items-center bg-inputSurface text-subdued`}
+        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

@@ -24,6 +24,7 @@ import {
 import { useTextEditor } from '../hooks';
 
 const registry = {
+  // <test/>
   ['test' as const]: {
     block: true,
     Component: () => <div className='p-2 border border-separator rounded'>Test</div>,

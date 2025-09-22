@@ -4,11 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { BaseError, type BaseErrorOptions } from './base';
 import { SystemError } from './errors';
 
 describe('errors', () => {
   test('error code and message, cause', () => {
-    const error = new SystemError('Test message', { cause: new Error('Test cause'), context: { a: 1, b: 2 } });
+    const error = new SystemError({ message: 'Test message', cause: new Error('Test cause'), context: { a: 1, b: 2 } });
     expect(error).toBeInstanceOf(SystemError);
     expect(error).toBeInstanceOf(SystemError);
     expect(error.code).toBe(SystemError.code);
@@ -32,8 +33,21 @@ describe('errors', () => {
     }
   });
 
+  test('custom message', () => {
+    class CustomError extends BaseError.extend('CUSTOM_ERROR', 'Custom message') {
+      constructor(value: number, options?: Omit<BaseErrorOptions, 'context'>) {
+        super({ context: { value }, ...options });
+      }
+    }
+
+    const error = new CustomError(1);
+    expect(error).toBeInstanceOf(CustomError);
+    expect(error.message).toBe('Custom message');
+    expect(error.context).toBe({ value: 1 });
+  });
+
   test('is', () => {
-    const error = new SystemError('Test message');
+    const error = new SystemError({ message: 'Test message' });
     expect(SystemError.is(error)).toBe(true);
   });
 });
@@ -41,7 +55,7 @@ describe('errors', () => {
 const throwError = () => {
   const one = () => {
     const two = () => {
-      throw new SystemError('Test message');
+      throw new SystemError({ message: 'Test message' });
     };
     two();
   };

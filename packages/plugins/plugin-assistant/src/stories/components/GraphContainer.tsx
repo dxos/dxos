@@ -53,7 +53,7 @@ export const GraphContainer = ({ space }: ComponentProps) => {
   return (
     <div className={mx('relative grid h-full', open && 'grid-rows-[min-content_1fr]')}>
       <SearchBar space={space} onSubmit={handleSubmit} />
-      <D3ForceGraph model={model} />
+      <D3ForceGraph classNames='min-h-[50vh]' model={model} />
 
       {/* TODO(burdon): Create component with context state for story. */}
       {(open && (
