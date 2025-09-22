@@ -4,7 +4,7 @@
 
 import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Option, Record, Schedule } from 'effect';
 
-import { DXN, Filter, Obj } from '@dxos/echo';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -355,12 +355,8 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
               if (spec?.kind !== 'subscription') {
                 continue;
               }
-              if (!spec.filter.type) {
-                log.warn('subscription trigger has no filter type', { triggerId: trigger.id });
-                continue;
-              }
 
-              const { objects } = yield* DatabaseService.runQuery(Filter.typename(spec.filter.type));
+              const { objects } = yield* DatabaseService.runQuery(new Query(Obj.getSnapshot(spec.query)));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
