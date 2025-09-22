@@ -311,3 +311,28 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       break;
   }
 };
+
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
+  switch (query.type) {
+    case 'filter':
+      return fold(query.selection, reducer);
+    case 'reference-traversal':
+      return fold(query.anchor, reducer);
+    case 'incoming-references':
+      return fold(query.anchor, reducer);
+    case 'relation':
+      return fold(query.anchor, reducer);
+    case 'options':
+      return fold(query.query, reducer);
+    case 'relation-traversal':
+      return fold(query.anchor, reducer);
+    case 'union':
+      return query.queries.flatMap((q: Query) => fold(q, reducer));
+    case 'set-difference':
+      return fold(query.source, reducer);
+    case 'order':
+      return fold(query.query, reducer);
+    case 'select':
+      return [];
+  }
+};
