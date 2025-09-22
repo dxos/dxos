@@ -100,15 +100,15 @@ export type FunctionDefinition<T = any, O = any> = {
 };
 
 export const defineFunction: {
-  <SI extends Schema.Schema.AnyNoContext, SO extends Schema.Schema.AnyNoContext>(params: {
+  <I, O>(params: {
     // TODO(dmaretskyi): Make `key` required.
     key?: string;
     name: string;
     description?: string;
-    inputSchema: SI;
-    outputSchema?: SO;
-    handler: Types.NoInfer<FunctionHandler<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>>;
-  }): FunctionDefinition<Schema.Schema.Type<SI>, Schema.Schema.Type<SO>>;
+    inputSchema: Schema.Schema<I, any>;
+    outputSchema?: Schema.Schema<O, any>;
+    handler: Types.NoInfer<FunctionHandler<I, O>>;
+  }): FunctionDefinition<I, O>;
 } = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
