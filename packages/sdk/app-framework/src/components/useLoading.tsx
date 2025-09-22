@@ -26,6 +26,10 @@ export enum LoadingState {
 export const useLoading = (state: AppProps['state'], debounce = 0) => {
   const [stage, setStage] = useState<LoadingState>(LoadingState.Loading);
   useEffect(() => {
+    if (!debounce) {
+      return;
+    }
+
     const i = setInterval(() => {
       setStage((stage) => {
         switch (stage) {
