@@ -66,6 +66,10 @@ const FilterContains_ = Schema.Struct({
   value: Schema.Any,
 });
 export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+/**
+ * Predicate for an array property to contain the provided value.
+ * Nested objects are matched using structural matching.
+ */
 export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
 
 const FilterRange_ = Schema.Struct({
