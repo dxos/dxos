@@ -3,6 +3,7 @@
 //
 
 import { type AiTool, AiToolkit } from '@effect/ai';
+import { BrowserKeyValueStore } from '@effect/platform-browser';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
@@ -20,13 +21,12 @@ import {
   RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions';
+import { TriggerStateStore } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { BrowserKeyValueStore } from '@effect/platform-browser';
 
 import { AssistantCapabilities } from './capabilities';
-import { TriggerStateStore } from '@dxos/functions';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();

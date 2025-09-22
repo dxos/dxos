@@ -1,8 +1,14 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import React, { type FC } from 'react';
+
 import { Surface } from '@dxos/app-framework';
 import { Filter } from '@dxos/echo';
 import { Chess } from '@dxos/plugin-chess';
 import { useQuery } from '@dxos/react-client/echo';
-import React, { FC } from 'react';
+
 import type { ComponentProps } from './types';
 
 export const ChessContainer: FC<ComponentProps> = ({ space }) => {

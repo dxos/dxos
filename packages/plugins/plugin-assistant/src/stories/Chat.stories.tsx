@@ -18,6 +18,7 @@ import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/func
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
+import * as chessFunctions from '@dxos/plugin-chess/functions';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
@@ -47,6 +48,7 @@ import { Assistant } from '../types';
 import {
   BlueprintContainer,
   ChatContainer,
+  ChessContainer,
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
@@ -59,10 +61,8 @@ import {
   TasksContainer,
   TokenManagerContainer,
   TriggersContainer,
-  ChessContainer,
 } from './components';
 import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
-import * as chessFunctions from '@dxos/plugin-chess/functions';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
