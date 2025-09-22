@@ -17,3 +17,4 @@ export * from './PromptContainer';
 export * from './TasksContainer';
 export * from './TokenManagerContainer';
 export * from './TriggersContainer';
+export * from './ChessContainer';
