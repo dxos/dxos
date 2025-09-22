@@ -7,10 +7,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
-// TODO(burdon): Factor out common components.
-
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+// NOTE: This config is merged with the storybook vite final config.
 export default defineConfig({
   plugins: [
     storybookTest({
