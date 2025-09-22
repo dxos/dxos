@@ -1289,37 +1289,6 @@ importers:
         specifier: ^2.3.0
         version: 2.3.2
 
-  packages/common/crypto-names:
-    dependencies:
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../node-std
-      binary-parser:
-        specifier: ^2.0.2
-        version: 2.2.1
-      hypercore-crypto:
-        specifier: ^2.3.0
-        version: 2.3.2
-    devDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../random
-      '@types/binary-parser':
-        specifier: ^1.5.1
-        version: 1.5.1
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.9
-      '@types/uniq':
-        specifier: ^0.0.27
-        version: 0.0.27
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      uniq:
-        specifier: ^1.0.1
-        version: 1.0.1
-
   packages/common/debug:
     dependencies:
       '@dxos/node-std':
@@ -21993,9 +21962,6 @@ packages:
   '@types/base16@1.0.2':
     resolution: {integrity: sha512-oYO/U4VD1DavwrKuCSQWdLG+5K22SLPem2OQaHmFcQuwHoVeGC+JGVRji2MUqZUAIQZHEonOeVfAX09hYiLsdg==}
 
-  '@types/binary-parser@1.5.1':
-    resolution: {integrity: sha512-wxSg5YQFVYsyGwuCSTdBu+cUIYCD9eX0pq3CsJbP4DLeLExbwEPqci9JgjCNHv1ZfLO/QzVtGlasec5xSUcCVA==}
-
   '@types/body-parser@1.19.2':
     resolution: {integrity: sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==}
 
@@ -22542,9 +22508,6 @@ packages:
 
   '@types/ua-parser-js@0.7.39':
     resolution: {integrity: sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==}
-
-  '@types/uniq@0.0.27':
-    resolution: {integrity: sha512-frhneF50xyiZj11bWVtjf1F+UpxkRjw4aFgp0VNxsZ6jIIVcVXRNTOab/yw/yy5wERfKFbmNFrwQVztQUG98Gg==}
 
   '@types/unist@2.0.6':
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
@@ -23588,10 +23551,6 @@ packages:
   binary-extensions@2.2.0:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
-
-  binary-parser@2.2.1:
-    resolution: {integrity: sha512-5ATpz/uPDgq5GgEDxTB4ouXCde7q2lqAQlSdBRQVl/AJnxmQmhIfyxJx+0MGu//D5rHQifkfGbWWlaysG0o9NA==}
-    engines: {node: '>=12'}
 
   binary-search-bounds@2.0.5:
     resolution: {integrity: sha512-H0ea4Fd3lS1+sTEB2TgcLoK21lLhwEJzlQv3IN47pJS976Gx4zoWe0ak3q+uYh60ppQxg9F16Ri4tS1sfD4+jA==}
@@ -32555,9 +32514,6 @@ packages:
 
   unifont@0.5.0:
     resolution: {integrity: sha512-4DueXMP5Hy4n607sh+vJ+rajoLu778aU3GzqeTCqsD/EaUcvqZT9wPC8kgK6Vjh22ZskrxyRCR71FwNOaYn6jA==}
-
-  uniq@1.0.1:
-    resolution: {integrity: sha512-Gw+zz50YNKPDKXs+9d+aKAjVwpjNwqzvNpLigIruT4HA9lMZNdMqs9x07kKHB/L9WRzqp4+DlTU5s4wG2esdoA==}
 
   unique-string@2.0.0:
     resolution: {integrity: sha512-uNaeirEPvpZWSgzwsPGtU2zVSTrn/8L5q/IexZmH0eH6SA73CmAA5U4GwORTxQAZs95TAXLNqeLoPPNO5gZfWg==}
@@ -41813,10 +41769,6 @@ snapshots:
 
   '@types/base16@1.0.2': {}
 
-  '@types/binary-parser@1.5.1':
-    dependencies:
-      '@types/node': 22.10.2
-
   '@types/body-parser@1.19.2':
     dependencies:
       '@types/connect': 3.4.36
@@ -42454,8 +42406,6 @@ snapshots:
   '@types/trusted-types@2.0.2': {}
 
   '@types/ua-parser-js@0.7.39': {}
-
-  '@types/uniq@0.0.27': {}
 
   '@types/unist@2.0.6': {}
 
@@ -43712,8 +43662,6 @@ snapshots:
   bignumber.js@9.1.2: {}
 
   binary-extensions@2.2.0: {}
-
-  binary-parser@2.2.1: {}
 
   binary-search-bounds@2.0.5: {}
 
@@ -54918,8 +54866,6 @@ snapshots:
     dependencies:
       css-tree: 3.1.0
       ohash: 2.0.11
-
-  uniq@1.0.1: {}
 
   unique-string@2.0.0:
     dependencies:
