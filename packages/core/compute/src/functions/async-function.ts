@@ -7,7 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { type CleanupFn, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { type SimpleCellAddress } from '@dxos/vendor-hyperformula';
+import { type RawInterpreterValue, type SimpleCellAddress } from '@dxos/vendor-hyperformula';
 import { type InterpreterState } from '@dxos/vendor-hyperformula';
 import { type InterpreterValue } from '@dxos/vendor-hyperformula';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';
@@ -168,7 +168,12 @@ export class AsyncFunctionPlugin extends FunctionPlugin {
   /**
    * Immediately returns cached value then runs the async function.
    */
-  protected runAsyncFunction(ast: ProcedureAst, state: InterpreterState, cb: AsyncFunction, options?: FunctionOptions) {
+  protected runAsyncFunction(
+    ast: ProcedureAst,
+    state: InterpreterState,
+    cb: AsyncFunction,
+    options?: FunctionOptions,
+  ): RawInterpreterValue {
     const { procedureName } = ast;
     const metadata = this.metadata(procedureName);
     return this.runFunction(ast.args, state, metadata, (...args: any) => {

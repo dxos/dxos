@@ -12,3 +12,4 @@ export type { SimpleCellAddress } from 'hyperformula/typings/Cell';
 export type { SimpleDate, SimpleDateTime } from 'hyperformula/typings/DateTimeHelper';
 export type { InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
 export type { ProcedureAst } from 'hyperformula/typings/parser';
+export type { RawInterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
