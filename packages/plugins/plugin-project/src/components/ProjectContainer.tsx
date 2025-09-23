@@ -25,3 +25,5 @@ export const ProjectContainer = ({ project }: { project: DataType.Project; role:
     </StackItem.Content>
   );
 };
+
+export default ProjectContainer;
