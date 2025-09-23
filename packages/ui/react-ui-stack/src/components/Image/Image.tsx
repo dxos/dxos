@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { type SyntheticEvent, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -88,15 +88,15 @@ export const Image = ({
     }
   };
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>): void => {
-    const img = e.target as HTMLImageElement;
-    extractDominantColor(img);
-    setImageLoaded(true);
-  };
-
   // CORS not supported by server.
   const handleImageError = (): void => {
     setCrossOriginState(undefined);
+  };
+
+  const handleImageLoad = (ev: SyntheticEvent<HTMLImageElement>): void => {
+    const img = ev.target as HTMLImageElement;
+    extractDominantColor(img);
+    setImageLoaded(true);
   };
 
   return (
@@ -125,8 +125,8 @@ export const Image = ({
         src={src}
         alt={alt}
         crossOrigin={crossOriginState}
-        onLoad={handleImageLoad}
         onError={handleImageError}
+        onLoad={handleImageLoad}
         className={mx('z-10 object-contain transition-opacity duration-500', classNames)}
         style={{
           opacity: imageLoaded ? 1 : 0,
