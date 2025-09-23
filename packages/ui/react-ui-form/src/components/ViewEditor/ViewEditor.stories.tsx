@@ -9,7 +9,7 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoSchema, Format, TypedObject, toJsonSchema } from '@dxos/echo-schema';
+import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -38,16 +38,21 @@ const DefaultStory = (props: StoryProps) => {
   const [projection, setProjection] = useState<ProjectionModel>();
   useAsyncEffect(async () => {
     if (space) {
-      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      const TestSchema = Schema.Struct({
         name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
-      }) {}
+      }).pipe(
+        Type.Obj({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        }),
+      );
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({
         name: 'Test',
-        typename: schema.typename,
+        query: Query.select(Filter.type(TestSchema)),
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
