@@ -36,7 +36,7 @@ export type CommandMenuItem = {
 export type CommandMenuProps = PropsWithChildren<{
   groups: CommandMenuGroup[];
   onSelect: (item: CommandMenuItem) => void;
-  onActivate?: (event: DxAnchorActivate) => boolean;
+  onActivate?: (event: DxAnchorActivate) => void;
   currentItem?: string;
   open?: boolean;
   onOpenChange?: (nextOpen: boolean) => void;
