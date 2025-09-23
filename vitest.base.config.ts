@@ -15,35 +15,29 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 import react from '@vitejs/plugin-react-swc';
 
 const isDebug = !!process.env.VITEST_DEBUG;
-const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
+// const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
-type BrowserOptions = {
+export type ConfigOptions = {
   cwd: string;
-  browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
+  jsdom?: boolean;
 };
-
-export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
 
 export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
-  switch (environment) {
-    case 'chromium': {
-      return createBrowserConfig({ browserName: environment, ...options });
-    }
-    case 'node':
-    default: {
-      if (environment.length > 0 && environment !== 'node') {
-        console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
-      }
-
-      return createNodeConfig(options.cwd);
-    }
-  }
+  return defineConfig({
+    test: {
+      projects: [
+        //
+        createNodeConfig(options),
+        createBrowserConfig({ ...options }),
+      ],
+    },
+  });
 };
 
-const createNodeConfig = (cwd: string) =>
+const createNodeConfig = (options: ConfigOptions) =>
   defineConfig({
     esbuild: {
       target: 'es2020',
@@ -54,8 +48,9 @@ const createNodeConfig = (cwd: string) =>
       },
     },
     test: {
-      ...resolveReporterConfig({ browserMode: false, cwd }),
-      environment: 'node',
+      name: 'nodejs',
+      ...resolveReporterConfig({ browserMode: false, cwd: options.cwd }),
+      environment: options.jsdom ? 'jsdom' : 'node',
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
@@ -63,6 +58,9 @@ const createNodeConfig = (cwd: string) =>
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
       setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+      env: {
+        VITEST_ENV: 'nodejs',
+      },
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
@@ -112,7 +110,7 @@ const createNodeConfig = (cwd: string) =>
     ],
   });
 
-const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+const createBrowserConfig = ({ cwd, nodeExternal = false, injectGlobals = true }: ConfigOptions) =>
   defineConfig({
     plugins: [
       nodeStdPlugin(),
@@ -134,6 +132,8 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       target: 'es2020',
     },
     test: {
+      name: 'browser',
+
       ...resolveReporterConfig({ browserMode: true, cwd }),
 
       env: {
@@ -161,8 +161,20 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
         screenshotFailures: false,
         headless: !isDebug,
         provider: 'playwright',
-        name: browserName,
-        isolate: false,
+        instances: [
+          {
+            browser: 'chromium',
+            env: {
+              VITEST_ENV: 'chromium',
+            },
+          },
+          {
+            browser: 'webkit',
+            env: {
+              VITEST_ENV: 'webkit',
+            },
+          },
+        ],
       },
     },
   });
