@@ -28,7 +28,10 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
 
   // Resolve the view.query to its items
   const schema = undefined;
-  const items = useQuery(space, view?.query ? Query.fromAst(view.query) : Query.select(Filter.nothing()));
+  const items = useQuery(
+    space,
+    view?.query ? Query.fromAst(Obj.getSnapshot(view).query) : Query.select(Filter.nothing()),
+  );
   const projectionModel = useMemo(
     () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
     [schema, view.projection],

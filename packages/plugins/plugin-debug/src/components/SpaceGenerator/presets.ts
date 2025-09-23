@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { ResearchOn, research } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Mailbox } from '@dxos/plugin-inbox/types';
@@ -108,6 +108,28 @@ export const generator = () => ({
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
+
+          const dxos = space.db.add(
+            Obj.make(DataType.Organization, {
+              name: 'DXOS',
+              website: 'https://dxos.org',
+            }),
+          );
+
+          const note = space.db.add(
+            Markdown.makeDocument({
+              name: 'DXOS Research',
+              content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+            }),
+          );
+
+          space.db.add(
+            Relation.make(ResearchOn, {
+              [Relation.Source]: note,
+              [Relation.Target]: dxos,
+              completedAt: new Date().toISOString(),
+            }),
+          );
 
           return space.db.add(
             DataType.makeProject({
