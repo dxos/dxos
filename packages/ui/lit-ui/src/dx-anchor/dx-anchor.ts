@@ -9,18 +9,7 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import { makeId } from '@dxos/react-hooks';
-
-export class DxAnchorActivate extends Event {
-  public readonly refId: string;
-  public readonly label: string;
-  public readonly trigger: DxAnchor;
-  constructor(props: { refId: string; label: string; trigger: DxAnchor }) {
-    super('dx-anchor-activate');
-    this.refId = props.refId;
-    this.label = props.label;
-    this.trigger = props.trigger;
-  }
-}
+import { DxAnchorActivate } from '@dxos/react-ui-types';
 
 @customElement('dx-anchor')
 export class DxAnchor extends LitElement {

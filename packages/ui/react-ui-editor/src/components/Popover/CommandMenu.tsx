@@ -3,9 +3,18 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { Fragment, useCallback, useEffect, useRef } from 'react';
+import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Icon, type Label, Popover, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { addEventListener } from '@dxos/async';
+import {
+  type DxAnchorActivate,
+  Icon,
+  type Label,
+  Popover,
+  toLocalizedString,
+  useThemeContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { commandRangeEffect } from '../../extensions';
@@ -23,37 +32,66 @@ export type CommandMenuItem = {
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
-export type CommandMenuProps = {
+export type CommandMenuProps = PropsWithChildren<{
   groups: CommandMenuGroup[];
   currentItem?: string;
   onSelect: (item: CommandMenuItem) => void;
-};
+}>;
 
 // NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
-export const CommandMenu = ({ groups, currentItem, onSelect }: CommandMenuProps) => {
+export const CommandMenuProvider = ({ groups, currentItem, onSelect, children }: CommandMenuProps) => {
   const { tx } = useThemeContext();
   const groupsWithItems = groups.filter((group) => group.items.length > 0);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const handleDxAnchorActivate = useCallback((event: DxAnchorActivate) => {
+    const { trigger: dxTrigger } = event;
+    trigger.current = dxTrigger as HTMLButtonElement;
+    queueMicrotask(() => setOpen(true));
+  }, []);
+
+  const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!rootRef || !handleDxAnchorActivate) {
+      return;
+    }
+
+    return addEventListener(rootRef, 'dx-anchor-activate' as any, handleDxAnchorActivate, {
+      capture: true,
+      passive: false,
+    });
+  }, [rootRef, handleDxAnchorActivate]);
+
   return (
-    <Popover.Portal>
-      <Popover.Content
-        align='start'
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
-          'max-h-[300px] overflow-y-auto',
-        ])}
-      >
-        <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
-          <ul>
-            {groupsWithItems.map((group, index) => (
-              <Fragment key={group.id}>
-                <CommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-                {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
-              </Fragment>
-            ))}
-          </ul>
-        </Popover.Viewport>
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
+      <Popover.Portal>
+        <Popover.Content
+          align='start'
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+            'max-bs-80 overflow-y-auto',
+          ])}
+        >
+          <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
+            <ul>
+              {groupsWithItems.map((group, index) => (
+                <Fragment key={group.id}>
+                  <CommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
+                  {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
+                </Fragment>
+              ))}
+            </ul>
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+      <Popover.VirtualTrigger virtualRef={trigger} />
+      <div role='none' className='contents' ref={setRootRef}>
+        {children}
+      </div>
+    </Popover.Root>
   );
 };
 

@@ -8,13 +8,12 @@ import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
-import { DropdownMenu } from '@dxos/react-ui';
+import { Button, Popover } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { RefDropdownMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { str } from '../testing';
+import { PreviewPopoverProvider, str } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -32,7 +31,7 @@ const DefaultStory = ({ text }: StoryProps) => {
   };
 
   return (
-    <RefDropdownMenuProvider>
+    <PreviewPopoverProvider>
       <EditorStory
         ref={viewRef}
         text={text}
@@ -46,16 +45,15 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content>
-          <DropdownMenu.Viewport>
-            <DropdownMenu.Item onClick={handleDelete}>Delete</DropdownMenu.Item>
-          </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </RefDropdownMenuProvider>
+      <Popover.Portal>
+        <Popover.Content>
+          <Popover.Viewport>
+            <Button onClick={handleDelete}>Delete</Button>
+          </Popover.Viewport>
+          <Popover.Arrow />
+        </Popover.Content>
+      </Popover.Portal>
+    </PreviewPopoverProvider>
   );
 };
 

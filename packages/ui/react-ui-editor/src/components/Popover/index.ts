@@ -3,5 +3,3 @@
 //
 
 export * from './CommandMenu';
-export * from './RefPopover';
-export * from './RefDropdownMenu';

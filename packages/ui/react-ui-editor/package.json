@@ -61,7 +61,6 @@
     "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",

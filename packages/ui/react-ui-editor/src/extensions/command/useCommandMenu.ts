@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
-import { type DxAnchor, type DxAnchorActivate } from '@dxos/lit-ui';
+import { type DxAnchorActivate } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from '../../components';
@@ -21,7 +21,7 @@ export type UseCommandMenuOptions = {
 };
 
 export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions) => {
-  const triggerRef = useRef<DxAnchor | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const currentRef = useRef<CommandMenuItem | null>(null);
   const groupsRef = useRef<CommandMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();

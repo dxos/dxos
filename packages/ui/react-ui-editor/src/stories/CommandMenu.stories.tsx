@@ -15,10 +15,9 @@ import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import {
-  CommandMenu,
   type CommandMenuGroup,
   type CommandMenuItem,
-  RefPopover,
+  CommandMenuProvider,
   coreSlashCommands,
   filterItems,
   insertAtCursor,
@@ -37,13 +36,12 @@ type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>();
-  const { commandMenu, groupsRef, currentItem, onSelect, ...props } = useCommandMenu({ viewRef, ...options });
+  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
-    <RefPopover modal={false} {...props}>
+    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <EditorStory ref={viewRef} text={text} placeholder={''} extensions={commandMenu} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    </CommandMenuProvider>
   );
 };
 

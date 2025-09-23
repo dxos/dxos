@@ -12056,6 +12056,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13230,9 +13233,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object

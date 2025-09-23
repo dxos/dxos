@@ -18,8 +18,8 @@ import { hoverableControlItem, hoverableControlItemTransition, hoverableControls
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { PreviewProvider, useRefPopover } from '../components';
 import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
+import { PreviewPopoverProvider, usePreviewPopover } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -45,7 +45,7 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 };
 
 const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
+  const { target } = usePreviewPopover('PreviewCard');
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -200,7 +200,7 @@ export const Default: Story = {
     }, []);
 
     return (
-      <PreviewProvider onLookup={handlePreviewLookup}>
+      <PreviewPopoverProvider onLookup={handlePreviewLookup}>
         <EditorStory
           ref={handleViewRef}
           text={trim`
@@ -223,7 +223,7 @@ export const Default: Story = {
         {previewBlocks.map(({ link, el }) => (
           <PreviewBlock key={link.ref} link={link} el={el} view={view} />
         ))}
-      </PreviewProvider>
+      </PreviewPopoverProvider>
     );
   },
 };
