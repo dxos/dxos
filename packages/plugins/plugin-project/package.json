@@ -34,6 +34,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

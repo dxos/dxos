@@ -164,6 +164,42 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
   }
 };
 
+/**
+ * Performs structural matching between a filter object and a target object.
+ * This handles nested object comparison for array matching scenarios.
+ */
+// TODO(wittjosiah): Add ast support for non-strict matching.
+const structuralMatch = (filterObj: any, targetObj: any, strict = true): boolean => {
+  if (typeof filterObj !== 'object' || filterObj === null) {
+    return filterObj === targetObj;
+  }
+
+  if (typeof targetObj !== 'object' || targetObj === null) {
+    return false;
+  }
+
+  // Prohibit extra keys in targetObj.
+  const filterKeys = Object.keys(filterObj);
+  const targetKeys = Object.keys(targetObj);
+  if (strict && filterKeys.length !== targetKeys.length) {
+    return false;
+  }
+
+  return filterKeys.every((key) => {
+    if (!(key in targetObj)) {
+      return false;
+    }
+    const filterValue = filterObj[key];
+    const targetValue = targetObj[key];
+
+    if (typeof filterValue === 'object' && filterValue !== null) {
+      return structuralMatch(filterValue, targetValue);
+    }
+
+    return filterValue === targetValue;
+  });
+};
+
 export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boolean => {
   switch (filter.type) {
     case 'compare': {
@@ -187,11 +223,43 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
           return (value as any) < compareValue;
         case 'lte':
           return (value as any) <= compareValue;
+        default:
+          return false;
       }
-      break;
+    }
+    case 'object': {
+      // Handle nested object filters for property matching
+      if (typeof value !== 'object' || value === null) {
+        return false;
+      }
+
+      // Check properties
+      if (filter.props) {
+        for (const [key, valueFilter] of Object.entries(filter.props)) {
+          const nestedValue = (value as any)[key];
+          if (!filterMatchValue(valueFilter, nestedValue)) {
+            return false;
+          }
+        }
+      }
+
+      return true;
     }
     case 'in': {
       return filter.values.includes(value);
+    }
+    case 'contains': {
+      if (!Array.isArray(value)) {
+        return false;
+      }
+
+      return value.some((element) => {
+        if (typeof filter.value === 'object' && filter.value !== null && !Array.isArray(filter.value)) {
+          return structuralMatch(filter.value, element);
+        }
+
+        return element === filter.value;
+      });
     }
     case 'range': {
       return (value as any) >= filter.from && (value as any) <= filter.to;

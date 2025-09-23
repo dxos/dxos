@@ -5,7 +5,7 @@
 import { Schema, String, pipe } from 'effect';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -30,13 +30,13 @@ describe('Projection', () => {
     const schema = Testing.Contact;
     const presentation = Obj.make(Type.Expando, {});
     const view = await createViewWithReferences({
-      typename: schema.typename,
+      query: Query.select(Filter.type(schema)),
       jsonSchema: Type.toJsonSchema(schema),
       presentation,
     });
     assert(view.query.type === 'select');
     assert(view.query.filter.type === 'object');
-    expect(view.query.filter.typename).to.eq(DXN.fromTypename(schema.typename).toString());
+    expect(view.query.filter.typename).to.eq(Type.getDXN(schema)?.toString());
     expect(view.projection.fields.map((f) => f.path)).to.deep.eq([
       'name',
       'image',
@@ -87,7 +87,7 @@ describe('Projection', () => {
 
     const presentation = Obj.make(Type.Expando, {});
     const view = createView({
-      typename: schema.typename,
+      query: Query.select(Filter.typename(schema.typename)),
       jsonSchema: schema.jsonSchema,
       presentation,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
