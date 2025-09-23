@@ -13,7 +13,6 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { editorWidth } from '@dxos/react-ui-editor';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
-import { railGridHorizontal } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
@@ -83,7 +82,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   return (
     <div
-      className={mx('grid is-full', railGridHorizontal)}
+      className={mx('grid is-full')}
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
       <Toolbar.Root classNames='border-be border-separator'>
