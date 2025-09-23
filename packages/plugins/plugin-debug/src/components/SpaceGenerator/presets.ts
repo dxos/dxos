@@ -40,6 +40,7 @@ import { range } from '@dxos/util';
 import { type ObjectGenerator } from './ObjectGenerator';
 
 export enum PresetName {
+  DXOS_TEAM = 'dxos-team',
   ORG_RESEARCH_PROJECT = 'org-research-project',
   // EMAIL_TABLE = 'email-table',
   GPT_QUEUE = 'webhook-gpt-queue',
@@ -56,6 +57,38 @@ export const generator = () => ({
   schemas: [CanvasBoardType, FunctionTrigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
+    [
+      PresetName.DXOS_TEAM,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+
+          const doc = space.db.add(
+            Markdown.makeDocument({
+              name: 'DXOS Research',
+              content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+            }),
+          );
+          space.db.add(
+            Relation.make(ResearchOn, {
+              [Relation.Source]: doc,
+              [Relation.Target]: org,
+              completedAt: new Date().toISOString(),
+            }),
+          );
+
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Rich', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Will', organization: Ref.make(org) }));
+
+          return doc;
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
@@ -108,28 +141,6 @@ export const generator = () => ({
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
-
-          const dxos = space.db.add(
-            Obj.make(DataType.Organization, {
-              name: 'DXOS',
-              website: 'https://dxos.org',
-            }),
-          );
-
-          const note = space.db.add(
-            Markdown.makeDocument({
-              name: 'DXOS Research',
-              content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
-            }),
-          );
-
-          space.db.add(
-            Relation.make(ResearchOn, {
-              [Relation.Source]: note,
-              [Relation.Target]: dxos,
-              completedAt: new Date().toISOString(),
-            }),
-          );
 
           return space.db.add(
             DataType.makeProject({
