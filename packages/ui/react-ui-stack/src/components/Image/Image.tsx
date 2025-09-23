@@ -12,9 +12,17 @@ export type ImageProps = ThemedClassName<{
   alt?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   sampleSize?: number;
+  contrast?: number;
 }>;
 
-export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sampleSize = 64 }: ImageProps) => {
+export const Image = ({
+  classNames,
+  src,
+  alt = '',
+  crossOrigin = 'anonymous',
+  sampleSize = 64,
+  contrast = 0.95,
+}: ImageProps) => {
   const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
   const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
@@ -69,15 +77,14 @@ export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sa
         b = Math.round(b / totalWeight);
 
         // Slightly darken the color for better contrast.
-        const q = 0.85;
-        r = Math.round(r * q);
-        g = Math.round(g * q);
-        b = Math.round(b * q);
+        r = Math.round(r * contrast);
+        g = Math.round(g * contrast);
+        b = Math.round(b * contrast);
         setDominantColor(`rgb(${r}, ${g}, ${b})`);
       }
     } catch {
       // CORS not supported by server.
-      setCrossOriginState('');
+      setCrossOriginState(undefined);
     }
   };
 
