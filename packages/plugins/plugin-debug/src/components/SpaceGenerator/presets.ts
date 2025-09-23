@@ -142,15 +142,17 @@ export const generator = () => ({
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
 
-          return space.db.add(
+          const project = space.db.add(
             DataType.makeProject({
               name: 'Organization Research',
               collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
             }),
           );
+
+          return [mailbox, project];
         });
-        cb?.(objects);
-        return objects;
+        cb?.(objects.flat());
+        return objects.flat();
       },
     ],
     [
