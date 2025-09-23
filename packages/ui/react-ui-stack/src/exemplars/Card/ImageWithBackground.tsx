@@ -19,6 +19,7 @@ export type ImageWithDominantBackgroundProps = ThemedClassName<{
 export const ImageWithBackground = ({
   classNames,
   src,
+  // TODO(thure): Images must be captioned, there is a reason `alt` is required and doesn’t default to an empty string elsewhere.
   alt = '',
   // TODO(thure): This component should export subcomponents if consumers in a React runtime need to configure multiple elements within the component.
   containerClassName = '',
