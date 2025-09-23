@@ -3,6 +3,7 @@
 - They might use obsolete standards, e.g. CJS.
 - They might not work out-of-the box with existing tools.
 - We might want to patch or stub out some of their functionality.
+- Reduces the amount of tooling workarounds and cognitive load in upstream dependencies.
 
 ## How does vendoring work
 
