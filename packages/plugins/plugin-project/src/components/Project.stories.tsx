@@ -9,7 +9,7 @@ import type { Schema } from 'effect';
 import React, { useCallback, useEffect } from 'react';
 
 import { Filter, Ref, type Space } from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -57,7 +57,7 @@ const DefaultStory = () => {
     // Create a new view for contacts similar to the initialization
     const view = createView({
       name: 'New Contacts',
-      typename: DataType.Person.typename,
+      query: Query.select(Filter.type(DataType.Person)),
       jsonSchema: Type.toJsonSchema(DataType.Person),
       presentation: project,
       fields: ['fullName'],
@@ -96,7 +96,7 @@ const MutationsStory = () => {
     // Create a new view for contacts similar to the initialization
     const view = createView({
       name: 'New Contacts',
-      typename: DataType.Person.typename,
+      query: Query.select(Filter.type(DataType.Person)),
       jsonSchema: Type.toJsonSchema(DataType.Person),
       presentation: project,
       fields: ['fullName'],
@@ -161,7 +161,7 @@ const meta: Meta<typeof Project> = {
         // Create a view for contacts
         const view = createView({
           name: 'Contacts',
-          typename: DataType.Person.typename,
+          query: Query.select(Filter.type(DataType.Person)),
           jsonSchema: Type.toJsonSchema(DataType.Person),
           presentation: project,
           fields: ['fullName'],

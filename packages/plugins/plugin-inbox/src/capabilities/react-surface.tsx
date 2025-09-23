@@ -36,17 +36,13 @@ export default () =>
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
-      role: ['article', 'section', 'card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      role: ['article', 'section'],
       filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
       component: ({ data: { companionTo, subject: message }, role }) => {
         const space = getSpace(companionTo);
-        return role.startsWith('card') ? (
-          message === 'message' ? null : (
-            <MessageCard message={message} role={role} />
-          )
-        ) : (
+        return (
           <MessageContainer
             message={typeof message === 'string' ? undefined : message}
             space={space}
@@ -61,6 +57,12 @@ export default () =>
       role: 'article',
       filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
       component: ({ data }) => <EventsContainer calendar={data.subject} />,
+    }),
+    createSurface({
+      id: `${INBOX_PLUGIN}/message-card`,
+      role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      filter: (data): data is { subject: DataType.Message } => Obj.instanceOf(DataType.Message, data?.subject),
+      component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/mailbox/companion/settings`,

@@ -29,7 +29,7 @@ export default async (context: PluginContext) => {
   defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   const records = Obj.make(DataType.QueryCollection, {
-    query: Query.select(Filter.type(DataType.StoredSchema)).ast,
+    query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
   });
   defaultSpaceCollection?.objects.push(Ref.make(records));
 

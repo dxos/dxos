@@ -4,10 +4,13 @@
 
 import { Schema } from 'effect';
 
+import { ResearchOn, research } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
-import { FunctionTrigger, type TriggerKind, type TriggerType } from '@dxos/functions';
+import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -31,11 +34,14 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
+import { DataType, createView } from '@dxos/schema';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
 export enum PresetName {
+  DXOS_TEAM = 'dxos-team',
+  ORG_RESEARCH_PROJECT = 'org-research-project',
   // EMAIL_TABLE = 'email-table',
   GPT_QUEUE = 'webhook-gpt-queue',
   CHAT_GPT = 'chat-gpt-text',
@@ -51,6 +57,101 @@ export const generator = () => ({
   schemas: [CanvasBoardType, FunctionTrigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
+    [
+      PresetName.DXOS_TEAM,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+
+          const doc = space.db.add(
+            Markdown.makeDocument({
+              name: 'DXOS Research',
+              content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+            }),
+          );
+          space.db.add(
+            Relation.make(ResearchOn, {
+              [Relation.Source]: doc,
+              [Relation.Target]: org,
+              completedAt: new Date().toISOString(),
+            }),
+          );
+
+          space.db.add(
+            Obj.make(DataType.Person, { fullName: 'Rich', jobTitle: 'investor', organization: Ref.make(org) }),
+          );
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Will', organization: Ref.make(org) }));
+
+          return doc;
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+    [
+      PresetName.ORG_RESEARCH_PROJECT,
+      async (space, n, cb) => {
+        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+
+        const objects = range(n, () => {
+          // TODO(wittjosiah): Move filter to another property.
+          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
+          const organizationsQuery = contactsQuery.reference('organization');
+          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+          const researchTrigger = Obj.make(FunctionTrigger, {
+            function: Ref.make(serializeFunction(research)),
+            spec: {
+              kind: 'subscription',
+              query: organizationsQuery.ast,
+            },
+            enabled: true,
+          });
+          space.db.add(researchTrigger);
+
+          const mailboxView = createView({
+            name: 'Mailbox',
+            query: Query.select(
+              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+            ).options({
+              queues: [mailbox.queue.dxn.toString()],
+            }),
+            jsonSchema: Type.toJsonSchema(DataType.Message),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const contactsView = createView({
+            name: 'Contacts',
+            query: contactsQuery,
+            jsonSchema: Type.toJsonSchema(DataType.Person),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const organizationsView = createView({
+            name: 'Organizations',
+            query: organizationsQuery,
+            jsonSchema: Type.toJsonSchema(DataType.Organization),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const notesView = createView({
+            name: 'Notes',
+            query: notesQuery,
+            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+
+          return space.db.add(
+            DataType.makeProject({
+              name: 'Investor Research',
+              collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+            }),
+          );
+        });
+        cb?.(objects.flat());
+        return objects.flat();
+      },
+    ],
     [
       PresetName.GPT_QUEUE,
       async (space, n, cb) => {
