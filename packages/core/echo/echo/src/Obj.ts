@@ -8,7 +8,7 @@ import { dual } from 'effect/Function';
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
-import type * as LiveObject from '@dxos/live-object';
+import * as LiveObject from '@dxos/live-object';
 import { live } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
@@ -215,6 +215,11 @@ export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON
  */
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   EchoSchema.objectFromJSON as any;
+
+/**
+ * Returns an immutable snapshot of an object.
+ */
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = LiveObject.getSnapshot;
 
 export type CloneOptions = {
   /**

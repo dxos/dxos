@@ -6,7 +6,7 @@ import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
@@ -14,7 +14,6 @@ import {
   JsonSchemaType,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-  QueryType,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
@@ -30,6 +29,7 @@ import { getSchemaProperties } from '../properties';
 
 import { FieldSchema } from './field';
 import { ProjectionModel } from './projection-model';
+import { FieldSortType } from './sort';
 
 export const Projection = Schema.Struct({
   /**
@@ -55,7 +55,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const View = Schema.Struct({
+const View_ = Schema.Struct({
   /**
    * Name of the view.
    */
@@ -71,7 +71,12 @@ export const View = Schema.Struct({
    * This includes the base type that the view schema (above) references.
    * It may include predicates that represent a persistent "drill-down" query.
    */
-  query: QueryType,
+  query: QueryAST.Query,
+
+  /**
+   * @deprecated Prefer ordering in query.
+   */
+  sort: Schema.optional(Schema.Array(FieldSortType)),
 
   /**
    * Projection of the data returned from the query.
@@ -84,8 +89,15 @@ export const View = Schema.Struct({
   presentation: Type.Ref(Type.Expando),
 })
   .pipe(LabelAnnotation.set(['name']))
-  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
-export type View = Schema.Schema.Type<typeof View>;
+  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
+export interface View extends Schema.Schema.Type<typeof View_> {}
+export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
+export const View: Schema.Schema<View, ViewEncoded> = View_;
+
+/** @deprecated */
+// TODO(wittjosiah): Try to remove. Use full query instead.
+export const typenameFromQuery = (query: QueryAST.Query) =>
+  query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
 
 export const createFieldId = () => PublicKey.random().truncate();
 
@@ -113,9 +125,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: {
-      typename,
-    },
+    query: Query.select(Filter.typename(typename)).ast,
     projection: {
       schema: overrideSchema,
       fields: [],
