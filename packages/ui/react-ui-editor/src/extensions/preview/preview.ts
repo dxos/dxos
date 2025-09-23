@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-ref-tag.pcss';
-
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
