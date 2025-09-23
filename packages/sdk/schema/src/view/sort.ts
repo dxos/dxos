@@ -4,28 +4,20 @@
 
 import { Schema } from 'effect';
 
-// TODO(ZaymonFC): Where should this live?
+// TODO(wittjosiah): Remove. Use ordering in queries instead.
+
+/** @deprecated */
 const SortDirection = Schema.Union(Schema.Literal('asc'), Schema.Literal('desc'));
+/** @deprecated */
 export type SortDirectionType = Schema.Schema.Type<typeof SortDirection>;
 
-// TODO(ZaymonFC): Struct vs pair?
+/** @deprecated */
 const FieldSort = Schema.Struct({
   fieldId: Schema.String,
   direction: SortDirection,
 }).pipe(Schema.mutable);
 
+/** @deprecated */
 export interface FieldSortType extends Schema.Schema.Type<typeof FieldSort> {}
-
+/** @deprecated */
 export const FieldSortType: Schema.Schema<FieldSortType> = FieldSort;
-
-/**
- * ECHO query object.
- */
-const QuerySchema = Schema.Struct({
-  typename: Schema.optional(Schema.String),
-  sort: Schema.optional(Schema.Array(FieldSort)),
-}).pipe(Schema.mutable);
-
-export interface QueryType extends Schema.Schema.Type<typeof QuerySchema> {}
-
-export const QueryType: Schema.Schema<QueryType> = QuerySchema;

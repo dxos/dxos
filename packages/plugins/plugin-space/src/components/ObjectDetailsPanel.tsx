@@ -12,6 +12,7 @@ import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
+import { typenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -22,7 +23,8 @@ const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.query?.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
 
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');

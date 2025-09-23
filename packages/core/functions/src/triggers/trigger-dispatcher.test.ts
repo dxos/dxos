@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import { Duration, Effect, Exit, Layer, pipe } from 'effect';
 
 import { AiService } from '@dxos/ai';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -452,9 +452,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: DataType.Person.typename,
-            },
+            query: Query.select(Filter.type(DataType.Person)).ast,
           },
         });
         yield* DatabaseService.add(trigger);
@@ -496,9 +494,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: DataType.Person.typename,
-            },
+            query: Query.select(Filter.type(DataType.Person)).ast,
           },
         });
         yield* DatabaseService.add(trigger);
@@ -534,9 +530,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: DataType.Person.typename,
-            },
+            query: Query.select(Filter.type(DataType.Person)).ast,
           },
         });
         yield* DatabaseService.add(trigger);
@@ -584,9 +578,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: DataType.Task.typename,
-            },
+            query: Query.select(Filter.type(DataType.Task)).ast,
           },
         });
         yield* DatabaseService.add(trigger);
@@ -633,9 +625,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: DataType.Person.typename,
-            },
+            query: Query.select(Filter.type(DataType.Person)).ast,
           },
           input: {
             objectId: '{{event.changedObjectId}}',

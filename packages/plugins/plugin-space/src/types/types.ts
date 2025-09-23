@@ -367,11 +367,9 @@ export namespace CollectionAction {
 
   export const QueryCollectionForm = Schema.Struct({
     name: Schema.optional(Schema.String),
-    typename: Schema.optional(
-      Schema.String.annotations({
-        [TypenameAnnotationId]: ['object-form'],
-      }),
-    ),
+    typename: Schema.String.annotations({
+      [TypenameAnnotationId]: ['object-form'],
+    }),
   });
 
   export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
@@ -379,7 +377,8 @@ export namespace CollectionAction {
     {
       input: QueryCollectionForm,
       output: Schema.Struct({
-        object: DataType.QueryCollection,
+        // TODO(wittjosiah): Remove cast.
+        object: EchoObjectSchema, // DataType.QueryCollection,
       }),
     },
   ) {}

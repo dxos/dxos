@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type Space } from '@dxos/react-client/echo';
@@ -97,7 +97,7 @@ export const generator = () => ({
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
             'subscription',
-            (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
+            (triggerSpec) => (triggerSpec.query = Query.select(Filter.typename('dxos.org/type/Chess')).ast),
             'type',
           );
           return addToSpace(PresetName.OBJECT_CHANGE_QUEUE, space, canvasModel, computeModel);
