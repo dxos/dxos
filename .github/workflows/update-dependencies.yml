@@ -30,14 +30,14 @@ jobs:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
         username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.CREATE_PR_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.CREATE_PR_TOKEN }}
 
       - name: Extract branch
         id: extract_branch
