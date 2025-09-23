@@ -61,3 +61,4 @@ jobs:
           delete-brnach: true
           title: 'chore: Update ${{ matrix.packages.name }} dependencies'
           draft: false
+          token: ${{ secrets.CREATE_PR_TOKEN }}
