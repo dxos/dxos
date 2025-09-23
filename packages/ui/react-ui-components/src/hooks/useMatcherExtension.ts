@@ -4,12 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client-protocol';
 import { Type } from '@dxos/echo';
 import { type TypeaheadContext, matchCompletion, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 
-// TODO(burdon): Move def to @dxos/echo.
-export const useMatcherExtension = (space: Space) => {
+export const useMatcherExtension = (space?: Space) => {
   return useMemo(() => {
     const handleComplete = ({ line }: TypeaheadContext) => {
       const words = line.split(/\s+/).filter(Boolean);

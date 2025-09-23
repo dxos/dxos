@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel } from '@dxos/schema';
+import { ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { KANBAN_PLUGIN } from '../meta';
 import { KanbanAction } from '../types';
@@ -31,7 +31,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const schema = getSpace(view)?.db.schemaRegistry.getSchema(view.query.typename!);
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(typenameFromQuery(view.query)!);
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 

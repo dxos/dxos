@@ -9,7 +9,7 @@ import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { IconButton, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
-import { ProjectionModel, type View } from '@dxos/schema';
+import { ProjectionModel, type View, typenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -29,7 +29,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const [tab, setTab] = useState<'enumerating' | 'editing'>('enumerating');
 
   // Resolve the view.query to its items
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view?.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const items = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const projectionModel = useMemo(
     () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),

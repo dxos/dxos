@@ -13,7 +13,7 @@ import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
@@ -587,9 +587,7 @@ export const WithChessTrigger: Story = {
           enabled: true,
           spec: {
             kind: 'subscription',
-            filter: {
-              type: Type.getTypename(Chess.Game),
-            },
+            query: Query.select(Filter.type(Chess.Game)).ast,
           },
           input: {
             id: '{{event.changedObjectId}}',
