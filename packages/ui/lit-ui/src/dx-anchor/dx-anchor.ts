@@ -10,27 +10,27 @@ import { customElement, property } from 'lit/decorators.js';
 
 import { makeId } from '@dxos/react-hooks';
 
-export class DxRefTagActivate extends Event {
+export class DxAnchorActivate extends Event {
   public readonly refId: string;
   public readonly label: string;
-  public readonly trigger: DxRefTag;
-  constructor(props: { refId: string; label: string; trigger: DxRefTag }) {
-    super('dx-ref-tag-activate');
+  public readonly trigger: DxAnchor;
+  constructor(props: { refId: string; label: string; trigger: DxAnchor }) {
+    super('dx-anchor-activate');
     this.refId = props.refId;
     this.label = props.label;
     this.trigger = props.trigger;
   }
 }
 
-@customElement('dx-ref-tag')
-export class DxRefTag extends LitElement {
+@customElement('dx-anchor')
+export class DxAnchor extends LitElement {
 
   // TODO(thure): There is a case (in)sensitivity issue here which is pernicious:
   //   Only refactoring the properties here to all-lowercase fixes the binding in `RefField.tsx`, but that
   //   should be unnecessary, and it isn’t an issue for `DxAvatar` or `DxGrid`. What’s going on?
 
   @property({ type: String })
-  refid: string = makeId('dx-ref-tag');
+  refid: string = makeId('dx-anchor');
 
   @property({ type: String })
   rootclassname: string | undefined = undefined;
@@ -53,7 +53,7 @@ export class DxRefTag extends LitElement {
 
   private handleActivate(event: { type: string }): void {
     this.dispatchEvent(
-      new DxRefTagActivate({ refId: this.refid, label: this.textContent ?? '', trigger: this }),
+      new DxAnchorActivate({ refId: this.refid, label: this.textContent ?? '', trigger: this }),
     );
   }
 
