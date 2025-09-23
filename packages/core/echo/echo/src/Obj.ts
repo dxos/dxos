@@ -216,7 +216,10 @@ export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   EchoSchema.objectFromJSON as any;
 
-export const getSnapshot: <T extends BaseObject>(obj: Live<T>) => T = LiveObject.getSnapshot;
+/**
+ * Returns an immutable snapshot of an object.
+ */
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = LiveObject.getSnapshot;
 
 export type CloneOptions = {
   /**

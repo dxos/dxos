@@ -351,12 +351,12 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           case 'subscription': {
             const triggers = yield* this._fetchTriggers();
             for (const trigger of triggers) {
-              const spec = trigger.spec;
+              const spec = Obj.getSnapshot(trigger).spec;
               if (spec?.kind !== 'subscription') {
                 continue;
               }
 
-              const { objects } = yield* DatabaseService.runQuery(new Query(Obj.getSnapshot(spec.query)));
+              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>
