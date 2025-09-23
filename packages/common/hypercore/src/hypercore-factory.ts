@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import hypercore from 'hypercore';
-import type { Hypercore, HypercoreOptions } from 'hypercore';
+import hypercore from '@dxos/vendor-hypercore/hypercore';
+import type { Hypercore, HypercoreOptions } from '@dxos/vendor-hypercore/hypercore';
 
 import { invariant } from '@dxos/invariant';
 import { type Directory, StorageType, createStorage } from '@dxos/random-access-storage';

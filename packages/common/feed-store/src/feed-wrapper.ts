@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import type { Proof } from 'hypercore';
+import type { Proof } from '@dxos/vendor-hypercore/hypercore';
 import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { AbstractValueEncoding } from 'hypercore';
+import type { AbstractValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
 import { sleep } from '@dxos/async';
 import { type Codec } from '@dxos/codec-protobuf';
