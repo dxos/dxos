@@ -44,6 +44,9 @@ const meta = {
   title: 'ui/react-ui-stack/Card',
   render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
   argTypes: {
     title: {
       control: 'text',

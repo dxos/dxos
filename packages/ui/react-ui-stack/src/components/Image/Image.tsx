@@ -7,39 +7,29 @@ import React, { useRef, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type ImageWithDominantBackgroundProps = ThemedClassName<{
+export type ImageProps = ThemedClassName<{
   src: string;
   alt?: string;
-  containerClassName?: string;
-  fallbackColor?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
+  sampleSize?: number;
 }>;
 
-export const ImageWithBackground = ({
-  classNames,
-  src,
-  alt = '',
-  containerClassName = '',
-  fallbackColor = '#f0f0f0',
-  crossOrigin = 'anonymous',
-}: ImageWithDominantBackgroundProps) => {
-  const [dominantColor, setDominantColor] = useState<string>(fallbackColor);
+export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sampleSize = 64 }: ImageProps) => {
+  const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
+  const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const extractDominantColor = (img: HTMLImageElement): void => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size to a small dimension for performance.
-    const sampleSize = 64;
-    canvas.width = sampleSize;
-    canvas.height = sampleSize;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) {
+      return;
+    }
 
     // Draw the image scaled down.
+    canvas.width = sampleSize;
+    canvas.height = sampleSize;
     ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
 
     try {
@@ -48,11 +38,10 @@ export const ImageWithBackground = ({
       const pixels = imageData.data;
 
       // Calculate average color with more weight to vibrant colors.
-      let r = 0,
-        g = 0,
-        b = 0;
+      let r = 0;
+      let g = 0;
+      let b = 0;
       let totalWeight = 0;
-
       for (let i = 0; i < pixels.length; i += 4) {
         const red = pixels[i];
         const green = pixels[i + 1];
@@ -80,15 +69,15 @@ export const ImageWithBackground = ({
         b = Math.round(b / totalWeight);
 
         // Slightly darken the color for better contrast.
-        r = Math.round(r * 0.85);
-        g = Math.round(g * 0.85);
-        b = Math.round(b * 0.85);
-
+        const q = 0.85;
+        r = Math.round(r * q);
+        g = Math.round(g * q);
+        b = Math.round(b * q);
         setDominantColor(`rgb(${r}, ${g}, ${b})`);
       }
-    } catch (error) {
-      console.error('Error extracting color:', error);
-      setDominantColor(fallbackColor);
+    } catch {
+      // CORS not supported by server.
+      setCrossOriginState('');
     }
   };
 
@@ -99,13 +88,12 @@ export const ImageWithBackground = ({
   };
 
   const handleImageError = (): void => {
-    setDominantColor(fallbackColor);
-    setImageLoaded(true);
+    // TODO(burdon): Error indicator.
   };
 
   return (
     <div
-      className={`relative flex is-full overflow-hidden transition-all duration-700 ${containerClassName}`}
+      className={mx(`relative flex is-full justify-center overflow-hidden transition-all duration-700`, classNames)}
       style={{
         backgroundColor: dominantColor,
       }}
@@ -117,19 +105,19 @@ export const ImageWithBackground = ({
       <div
         className='absolute inset-0 pointer-events-none'
         style={{
-          background: `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`,
-          opacity: 0.5,
+          background: `radial-gradient(circle at center, transparent 30%, ${dominantColor ?? ''} 100%)`,
           transition: 'opacity 0.7s ease-in-out',
+          opacity: 0.5,
         }}
       />
 
       <img
         src={src}
         alt={alt}
-        crossOrigin={crossOrigin}
+        crossOrigin={crossOriginState}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        className={mx('relative z-10 object-contain transition-opacity duration-500`', classNames)}
+        className={mx('z-10 object-contain transition-opacity duration-500', classNames)}
         style={{
           opacity: imageLoaded ? 1 : 0,
         }}
