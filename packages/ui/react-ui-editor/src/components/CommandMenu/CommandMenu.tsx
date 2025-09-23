@@ -35,8 +35,9 @@ export type CommandMenuItem = {
 
 export type CommandMenuProps = PropsWithChildren<{
   groups: CommandMenuGroup[];
-  currentItem?: string;
   onSelect: (item: CommandMenuItem) => void;
+  onActivate?: (event: DxAnchorActivate) => boolean;
+  currentItem?: string;
   open?: boolean;
   onOpenChange?: (nextOpen: boolean) => void;
   defaultOpen?: boolean;
@@ -45,8 +46,9 @@ export type CommandMenuProps = PropsWithChildren<{
 // NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
 export const CommandMenuProvider = ({
   groups,
-  currentItem,
   onSelect,
+  onActivate,
+  currentItem,
   children,
   open: propsOpen,
   onOpenChange,
@@ -62,11 +64,21 @@ export const CommandMenuProvider = ({
     defaultProp: defaultOpen,
   });
 
-  const handleDxAnchorActivate = useCallback((event: DxAnchorActivate) => {
-    const { trigger: dxTrigger } = event;
-    trigger.current = dxTrigger as HTMLButtonElement;
-    queueMicrotask(() => setOpen(true));
-  }, []);
+  const handleDxAnchorActivate = useCallback(
+    (event: DxAnchorActivate) => {
+      const { trigger: dxTrigger, refId } = event;
+      // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
+      if (!refId) {
+        trigger.current = dxTrigger as HTMLButtonElement;
+        if (onActivate) {
+          onActivate(event);
+        } else {
+          queueMicrotask(() => setOpen(true));
+        }
+      }
+    },
+    [onActivate],
+  );
 
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
 

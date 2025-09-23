@@ -44,7 +44,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
             activeRange.to,
             Decoration.mark({
               tagName: 'dx-anchor',
-              class: 'cm-floating-menu-anchor',
+              class: 'cm-floating-menu-trigger',
               attributes: {
                 'data-auto-trigger': 'true',
                 'data-trigger': trigger!,

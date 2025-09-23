@@ -5,10 +5,9 @@
 // TODO(thure): Find a way to instruct ESLint & Prettier to treat any whitespace between tags rendered in the `html` template function as significant.
 /* eslint-disable */
 
-import { html, LitElement } from 'lit';
+import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { makeId } from '@dxos/react-hooks';
 import { DxAnchorActivate } from '@dxos/react-ui-types';
 
 @customElement('dx-anchor')
@@ -19,7 +18,7 @@ export class DxAnchor extends LitElement {
   //   should be unnecessary, and it isn’t an issue for `DxAvatar` or `DxGrid`. What’s going on?
 
   @property({ type: String })
-  refid: string = makeId('dx-anchor');
+  refid: string = '';
 
   @property({ type: String })
   rootclassname: string | undefined = undefined;
