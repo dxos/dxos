@@ -35,6 +35,7 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-hypercore": "workspace:*",
     "readable-stream": "^3.6.0",
     "sodium-native": "^3.2.0",
     "sodium-universal": "^3.0.2",
@@ -47,7 +48,6 @@
     "@dxos/util": "workspace:*",
     "@types/randombytes": "^2.0.0",
     "@types/readable-stream": "^2.3.9",
-    "hypercore": "^9.12.0",
     "hypercore-protocol": "^8.0.7",
     "noise-protocol": "3.0.1",
     "random-access-memory": "^4.1.0"
