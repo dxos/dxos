@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { type SyntheticEvent, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -12,14 +12,23 @@ export type ImageProps = ThemedClassName<{
   alt?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   sampleSize?: number;
+  contrast?: number;
 }>;
 
-export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sampleSize = 64 }: ImageProps) => {
+export const Image = ({
+  classNames,
+  src,
+  alt = '',
+  crossOrigin = 'anonymous',
+  sampleSize = 64,
+  contrast = 0.95,
+}: ImageProps) => {
   const [crossOriginState, setCrossOriginState] = useState<ImageProps['crossOrigin']>(crossOrigin);
   const [dominantColor, setDominantColor] = useState<string | undefined>(undefined);
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // TODO(burdon): Cache?
   const extractDominantColor = (img: HTMLImageElement): void => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -69,26 +78,25 @@ export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sa
         b = Math.round(b / totalWeight);
 
         // Slightly darken the color for better contrast.
-        const q = 0.85;
-        r = Math.round(r * q);
-        g = Math.round(g * q);
-        b = Math.round(b * q);
+        r = Math.round(r * contrast);
+        g = Math.round(g * contrast);
+        b = Math.round(b * contrast);
         setDominantColor(`rgb(${r}, ${g}, ${b})`);
       }
     } catch {
-      // CORS not supported by server.
-      setCrossOriginState('');
+      setCrossOriginState(undefined);
     }
   };
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>): void => {
-    const img = e.target as HTMLImageElement;
-    extractDominantColor(img);
-    setImageLoaded(true);
+  // CORS not supported by server.
+  const handleImageError = (): void => {
+    setCrossOriginState(undefined);
   };
 
-  const handleImageError = (): void => {
-    // TODO(burdon): Error indicator.
+  const handleImageLoad = (ev: SyntheticEvent<HTMLImageElement>): void => {
+    const img = ev.target as HTMLImageElement;
+    extractDominantColor(img);
+    setImageLoaded(true);
   };
 
   return (
@@ -105,7 +113,9 @@ export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sa
       <div
         className='absolute inset-0 pointer-events-none'
         style={{
-          background: `radial-gradient(circle at center, transparent 30%, ${dominantColor ?? ''} 100%)`,
+          background: dominantColor
+            ? `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`
+            : undefined,
           transition: 'opacity 0.7s ease-in-out',
           opacity: 0.5,
         }}
@@ -115,8 +125,8 @@ export const Image = ({ classNames, src, alt = '', crossOrigin = 'anonymous', sa
         src={src}
         alt={alt}
         crossOrigin={crossOriginState}
-        onLoad={handleImageLoad}
         onError={handleImageError}
+        onLoad={handleImageLoad}
         className={mx('z-10 object-contain transition-opacity duration-500', classNames)}
         style={{
           opacity: imageLoaded ? 1 : 0,
