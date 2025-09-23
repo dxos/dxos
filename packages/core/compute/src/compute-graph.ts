@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Listeners } from 'hyperformula/typings/Emitter';
+import { type Listeners } from '@dxos/vendor-hyperformula';
 
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { ExportedCellChange, type HyperFormula } from '#hyperformula';
+import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
 import { ComputeNode } from './compute-node';
 import {

@@ -593,6 +593,9 @@
     },
     {
       "path": "vendor/hypercore/tsconfig.json"
+    },
+    {
+      "path": "vendor/hyperformula/tsconfig.json"
     }
   ],
   "include": [],

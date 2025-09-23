@@ -2573,15 +2573,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/vendor-hyperformula':
+        specifier: workspace:*
+        version: link:../../../vendor/hyperformula
       '@preact/signals-core':
         specifier: ^1.9.0
         version: 1.11.0
       effect:
         specifier: 3.17.7
         version: 3.17.7
-      hyperformula:
-        specifier: ^2.7.1
-        version: 2.7.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -15363,6 +15363,16 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../packages/common/node-std
+      sodium-native:
+        specifier: ^3.2.0
+        version: 3.4.1
+      sodium-universal:
+        specifier: ^3.0.2
+        version: 3.1.0
+      streamx:
+        specifier: ^2.12.5
+        version: 2.15.6
+    devDependencies:
       hypercore:
         specifier: ^9.12.0
         version: 9.12.0
@@ -15375,15 +15385,12 @@ importers:
       noise-protocol:
         specifier: 3.0.1
         version: 3.0.1
-      sodium-native:
-        specifier: ^3.2.0
-        version: 3.4.1
-      sodium-universal:
-        specifier: ^3.0.2
-        version: 3.1.0
-      streamx:
-        specifier: ^2.12.5
-        version: 2.15.6
+
+  vendor/hyperformula:
+    devDependencies:
+      hyperformula:
+        specifier: ^2.7.1
+        version: 2.7.1
 
 packages:
 

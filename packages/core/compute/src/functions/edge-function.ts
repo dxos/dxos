@@ -4,8 +4,8 @@
 
 import { effect } from '@preact/signals-core';
 import { SchemaAST } from 'effect';
-import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
-import { type ProcedureAst } from 'hyperformula/typings/parser';
+import { type InterpreterState } from '@dxos/vendor-hyperformula';
+import { type ProcedureAst } from '@dxos/vendor-hyperformula';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo-schema';
@@ -13,7 +13,7 @@ import { FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
-import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
+import { CellError, ErrorType, FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
 
