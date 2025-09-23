@@ -6,14 +6,14 @@ import '@dxos-theme';
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 
-import { Button, Popover } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
-import { PreviewPopoverProvider, str } from '../testing';
+import { str } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -24,14 +24,33 @@ type StoryProps = {
 const DefaultStory = ({ text }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
 
-  const handleDelete = () => {
-    if (viewRef.current) {
-      deleteItem(viewRef.current);
-    }
-  };
+  const commandGroups: CommandMenuGroup[] = useMemo(
+    () => [
+      {
+        id: 'outliner-actions',
+        items: [
+          {
+            id: 'delete-row',
+            label: 'Delete',
+            onSelect: (view: EditorView) => {
+              deleteItem(view);
+            },
+          },
+        ],
+      },
+    ],
+    [],
+  );
 
   return (
-    <PreviewPopoverProvider>
+    <CommandMenuProvider
+      groups={commandGroups}
+      onSelect={(item: CommandMenuItem) => {
+        if (viewRef.current && item.onSelect) {
+          return item.onSelect(viewRef.current, viewRef.current.state.selection.main.head);
+        }
+      }}
+    >
       <EditorStory
         ref={viewRef}
         text={text}
@@ -45,15 +64,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-      <Popover.Portal>
-        <Popover.Content>
-          <Popover.Viewport>
-            <Button onClick={handleDelete}>Delete</Button>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
-    </PreviewPopoverProvider>
+    </CommandMenuProvider>
   );
 };
 
