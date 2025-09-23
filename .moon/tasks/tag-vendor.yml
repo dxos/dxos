@@ -1,3 +1,6 @@
+# For vendored deps.
+# I.e. external deps that we pre-build in our monorepo to eliminate tooling inconsistencies.
+
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   compile:
