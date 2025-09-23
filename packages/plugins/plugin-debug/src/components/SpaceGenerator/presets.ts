@@ -65,7 +65,7 @@ export const generator = () => ({
           space.db.add(mailbox);
 
           const contactsQuery = Query.select(
-            Filter.type(DataType.Person, { fields: [{ label: 'label', value: 'Research' }] }),
+            Filter.type(DataType.Person, { fields: Filter.contains({ label: 'label', value: 'Research' }) }),
           );
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
