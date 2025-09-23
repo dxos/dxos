@@ -42,7 +42,7 @@ export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'ar
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 
-// TODO(ZaymonFC): Magic 2px to stop overflow (tabster dummies... ask @thure).
+// TODO(ZaymonFC): Magic 2px to stop overflow.
 export const railGridHorizontalContainFitContent =
   'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_fit-content(calc(100%-var(--rail-size)*2+2px))_[content-end]]';
 export const railGridVerticalContainFitContent =

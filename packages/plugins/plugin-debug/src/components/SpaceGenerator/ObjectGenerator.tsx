@@ -21,18 +21,18 @@ import { range } from '@dxos/util';
 
 const generator: ValueGenerator = faker as any;
 
-export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
-
 const findViewByTypename = async (views: DataType.View[], typename: string) => {
   return views.find((view) => view.query.typename === typename);
 };
+
+export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
 export const createGenerator = <T extends Obj.Any>(
   client: Client,
   dispatch: PromiseIntentDispatcher,
   schema: TypedObject<T>,
 ): ObjectGenerator<T> => {
-  return async (space: Space, n: number, cb?: (objects: T[]) => void): Promise<T[]> => {
+  return async (space: Space, n: number): Promise<T[]> => {
     const typename = schema.typename;
 
     // Find or create table and view.

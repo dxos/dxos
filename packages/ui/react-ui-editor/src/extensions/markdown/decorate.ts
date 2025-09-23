@@ -497,15 +497,15 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       tree.iterate({
         from,
         to,
-        enter: wrapWithCatch(enterNode),
-        leave: wrapWithCatch(leaveNode),
+        enter: wrapWithCatch(enterNode, 'decorate.enter'),
+        leave: wrapWithCatch(leaveNode, 'decorate.leave'),
       });
     }
   } else {
     // NOTE: If line numbering then we must iterate from the start of document.
     tree.iterate({
-      enter: wrapWithCatch(enterNode),
-      leave: wrapWithCatch(leaveNode),
+      enter: wrapWithCatch(enterNode, 'decorate.enter'),
+      leave: wrapWithCatch(leaveNode, 'decorate.leave'),
     });
   }
 
