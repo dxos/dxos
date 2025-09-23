@@ -6,24 +6,24 @@ import { type EventName, createComponent } from '@lit/react';
 import React, { type ComponentPropsWithRef } from 'react';
 
 import {
-  type DxRefTagActivate,
+  type DxAnchorActivate,
   type DxTagPickerItemClick,
+  DxAnchor as NaturalDxAnchor,
   DxAvatar as NaturalDxAvatar,
-  DxRefTag as NaturalDxRefTag,
   DxTagPickerItem as NaturalDxTagPickerItem,
   DxIcon as NaturalIcon,
 } from './index';
 
-export const DxRefTag = createComponent({
-  tagName: 'dx-ref-tag',
-  elementClass: NaturalDxRefTag,
+export const DxAnchor = createComponent({
+  tagName: 'dx-anchor',
+  elementClass: NaturalDxAnchor,
   react: React,
   events: {
-    onActivate: 'dx-ref-tag-activate' as EventName<DxRefTagActivate>,
+    onActivate: 'dx-anchor-activate' as EventName<DxAnchorActivate>,
   },
 });
 
-export type DxRefTagProps = ComponentPropsWithRef<typeof DxRefTag>;
+export type DxAnchorProps = ComponentPropsWithRef<typeof DxAnchor>;
 
 export const DxAvatar = createComponent({
   tagName: 'dx-avatar',
