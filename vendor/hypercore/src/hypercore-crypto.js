@@ -1,2 +1,1 @@
-export * from 'hypercore-crypto';
-export { default } from 'hypercore-crypto';
+export { keyPair, validateKeyPair, sign, verify, randomBytes, discoveryKey, default } from 'hypercore-crypto';
