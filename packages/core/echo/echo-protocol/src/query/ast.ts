@@ -262,7 +262,23 @@ export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
+  /**
+   * The nested select statemets will select from the given spaces.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * The nested select statemets will select from the given queues.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
+  queues: Schema.optional(Schema.Array(DXN.Schema)),
+
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
@@ -294,5 +310,30 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       visit(query.source, visitor);
       visit(query.exclude, visitor);
       break;
+  }
+};
+
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
+  switch (query.type) {
+    case 'filter':
+      return fold(query.selection, reducer);
+    case 'reference-traversal':
+      return fold(query.anchor, reducer);
+    case 'incoming-references':
+      return fold(query.anchor, reducer);
+    case 'relation':
+      return fold(query.anchor, reducer);
+    case 'options':
+      return fold(query.query, reducer);
+    case 'relation-traversal':
+      return fold(query.anchor, reducer);
+    case 'union':
+      return query.queries.flatMap((q: Query) => fold(q, reducer));
+    case 'set-difference':
+      return fold(query.source, reducer);
+    case 'order':
+      return fold(query.query, reducer);
+    case 'select':
+      return [];
   }
 };

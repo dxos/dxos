@@ -9,10 +9,6 @@
   "sideEffects": true,
   "type": "module",
   "imports": {
-    "#hypercore-crypto": {
-      "workerd": "./vendor/hypercore-crypto-stub.mjs",
-      "default": "hypercore-crypto"
-    },
     "#subtle": {
       "types": "./vendor/subtle.d.ts",
       "node": "./vendor/subtle-node.mjs",
@@ -40,7 +36,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "hypercore-crypto": "^2.3.0"
+    "@dxos/vendor-hypercore": "workspace:*"
   },
   "devDependencies": {},
   "publishConfig": {
