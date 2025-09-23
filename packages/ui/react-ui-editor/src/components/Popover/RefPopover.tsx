@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
+import { type DxAnchor, type DxAnchorActivate } from '@dxos/lit-ui';
 import { Popover } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
@@ -42,12 +42,12 @@ type PreviewProviderProps = PropsWithChildren<{
 }>;
 
 const PreviewProvider = ({ children, onLookup }: PreviewProviderProps) => {
-  const trigger = useRef<DxRefTag | null>(null);
+  const trigger = useRef<DxAnchor | null>(null);
   const [value, setValue] = useState<RefPopoverValue>({});
   const [open, setOpen] = useState(false);
 
-  const handleDxRefTagActivate = useCallback(
-    (event: DxRefTagActivate) => {
+  const handleDxAnchorActivate = useCallback(
+    (event: DxAnchorActivate) => {
       const { refId, label, trigger: dxTrigger } = event;
       setValue((value) => ({
         ...value,
@@ -69,7 +69,7 @@ const PreviewProvider = ({ children, onLookup }: PreviewProviderProps) => {
 
   return (
     <RefPopoverContextProvider pending={value.pending} link={value.link} target={value.target}>
-      <RefPopover ref={trigger} open={open} onOpenChange={setOpen} onActivate={handleDxRefTagActivate}>
+      <RefPopover ref={trigger} open={open} onOpenChange={setOpen} onActivate={handleDxAnchorActivate}>
         {children}
       </RefPopover>
     </RefPopoverContextProvider>
@@ -84,13 +84,13 @@ type RefPopoverProps = PropsWithChildren<{
   modal?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  onActivate?: (event: DxRefTagActivate) => void;
+  onActivate?: (event: DxAnchorActivate) => void;
 }>;
 
 /**
- * Wraps components that contain <dx-ref-tag> elements?
+ * Wraps components that contain <dx-anchor> elements?
  */
-const RefPopover = forwardRef<DxRefTag | null, RefPopoverProps>(
+const RefPopover = forwardRef<DxAnchor | null, RefPopoverProps>(
   ({ children, open, onOpenChange, modal, onActivate }, ref) => {
     const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
     useEffect(() => {
@@ -98,7 +98,7 @@ const RefPopover = forwardRef<DxRefTag | null, RefPopoverProps>(
         return;
       }
 
-      return addEventListener(rootRef, 'dx-ref-tag-activate' as any, onActivate, { capture: true, passive: false });
+      return addEventListener(rootRef, 'dx-anchor-activate' as any, onActivate, { capture: true, passive: false });
     }, [rootRef, onActivate]);
 
     return (
