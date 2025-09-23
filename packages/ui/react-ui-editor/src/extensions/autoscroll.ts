@@ -23,9 +23,10 @@ export type AutoScrollOptions = {
 export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Partial<AutoScrollOptions> = {}) => {
   let isThrottled = false;
   let isPinned = true;
-  let lastScrollTop = 0;
   let timeout: NodeJS.Timeout | undefined;
   let buttonContainer: HTMLDivElement;
+  let lastScrollTop = 0;
+  let scrollCounter = 0;
 
   const hideScrollbar = (view: EditorView) => {
     view.scrollDOM.classList.add('cm-hide-scrollbar');
@@ -37,6 +38,7 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
 
   const scrollToBottom = (view: EditorView) => {
     isPinned = true;
+    scrollCounter = 0;
     buttonContainer?.classList.add('opacity-0');
     requestAnimationFrame(() => {
       hideScrollbar(view);
@@ -84,11 +86,8 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
       if (update.docChanged && isPinned && !isThrottled) {
         const distanceFromBottom = calcDistance(update.view.scrollDOM);
 
-        // Hide scrollbar even if not scrolling to bottom.
-        // hideScrollbar(update.view);
-
         // Keep pinned.
-        if (distanceFromBottom > overscroll) {
+        if (distanceFromBottom >= overscroll) {
           isThrottled = true;
           requestAnimationFrame(() => {
             scrollToBottom(update.view);
@@ -102,21 +101,28 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
       }
     }),
 
+    // Detect user scroll.
+    // NOTE: Multiple scroll events are triggered during programmatic smooth scrolling.
     EditorView.domEventHandlers({
       scroll: (event, view) => {
         const scroller = view.scrollDOM;
+        // Suspect delta goes positive when rendering widgets, so count positive deltas.
+        // TODO(burdon): Detect user scroll directly (wheel, touch, keys, etc.)
+        if (lastScrollTop > scroller.scrollTop) {
+          scrollCounter++;
+        }
+        lastScrollTop = scroller.scrollTop;
         const distanceFromBottom = calcDistance(scroller);
         if (distanceFromBottom === 0) {
           // Pin to bottom.
           isPinned = true;
           buttonContainer?.classList.add('opacity-0');
-        } else if (scroller.scrollTop < lastScrollTop) {
+          scrollCounter = 0;
+        } else if (scrollCounter > 3) {
           // Break pin if user scrolls up.
           isPinned = false;
           buttonContainer?.classList.remove('opacity-0');
         }
-
-        lastScrollTop = scroller.scrollTop;
       },
     }),
 

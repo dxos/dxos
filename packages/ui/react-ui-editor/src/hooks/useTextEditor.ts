@@ -96,18 +96,6 @@ export const useTextEditor = (
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          // TODO(burdon): Factor out debug inspector.
-          // ViewPlugin.fromClass(
-          //   class {
-          //     constructor(_view: EditorView) {
-          //       log('construct', { id });
-          //     }
-          //
-          //     destroy() {
-          //       log('destroy', { id });
-          //     }
-          //   },
-          // ),
         ].filter(isNotFalsy),
       });
 
