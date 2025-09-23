@@ -37,7 +37,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
           const button = document.createElement('button');
           button.appendChild(icon);
 
-          this.tag = document.createElement('dx-ref-tag');
+          this.tag = document.createElement('dx-anchor');
           this.tag.classList.add('cm-ref-tag');
           this.tag.appendChild(button);
         }

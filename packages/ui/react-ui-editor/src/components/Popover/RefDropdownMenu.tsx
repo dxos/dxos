@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { type DxRefTag, type DxRefTagActivate } from '@dxos/lit-ui';
+import { type DxAnchor, type DxAnchorActivate } from '@dxos/lit-ui';
 import { DropdownMenu } from '@dxos/react-ui';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, type PreviewLookup } from '../../extensions';
@@ -35,13 +35,13 @@ type RefDropdownMenuProviderProps = PropsWithChildren<{
 }>;
 
 const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProviderProps) => {
-  const trigger = useRef<DxRefTag | null>(null);
+  const trigger = useRef<DxAnchor | null>(null);
   const [value, setValue] = useState<RefDropdownMenuValue>({});
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
 
-  const handleDxRefTagActivate = useCallback(
-    (event: DxRefTagActivate) => {
+  const handleDxAnchorActivate = useCallback(
+    (event: DxAnchorActivate) => {
       const { refId, label, trigger: dxTrigger } = event;
       setValue((value) => ({
         ...value,
@@ -66,7 +66,7 @@ const RefDropdownMenuProvider = ({ children, onLookup }: RefDropdownMenuProvider
       return;
     }
 
-    return addEventListener(rootRef, 'dx-ref-tag-activate' as any, handleDxRefTagActivate, {
+    return addEventListener(rootRef, 'dx-anchor-activate' as any, handleDxAnchorActivate, {
       capture: true,
       passive: false,
     });

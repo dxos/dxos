@@ -38,12 +38,12 @@ export const commandMenu = (options: CommandMenuOptions) => {
         // Check if we should show the widget - only if cursor is within the active command range.
         const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
         if (shouldShowWidget) {
-          // Create mark decoration that wraps the entire line content in a dx-ref-tag.
+          // Create mark decoration that wraps the entire line content in a dx-anchor.
           builder.add(
             activeRange.from,
             activeRange.to,
             Decoration.mark({
-              tagName: 'dx-ref-tag',
+              tagName: 'dx-anchor',
               class: 'cm-ref-tag',
               attributes: {
                 'data-auto-trigger': 'true',
