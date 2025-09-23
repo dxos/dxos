@@ -49,7 +49,7 @@ export class BaseError<Code extends string = string> extends Error {
   #context: Record<string, unknown>;
 
   constructor(code: Code, options?: BaseErrorOptions) {
-    super(options?.message, options);
+    super(options?.message, { cause: options?.cause });
 
     this.#code = code;
     this.#context = options?.context ?? {};
