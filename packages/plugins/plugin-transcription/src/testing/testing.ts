@@ -74,7 +74,7 @@ export class MessageBuilder extends AbstractMessageBuilder {
       const obj = this._space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
       const dxn = Ref.make(obj).dxn.toString();
       const words = text.split(' ');
-      words.splice(Math.floor(Math.random() * words.length), 0, `[${label}][${dxn}]`);
+      words.splice(Math.floor(Math.random() * words.length), 0, `[${label}](${dxn})`);
       text = words.join(' ');
     }
 

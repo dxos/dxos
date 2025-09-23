@@ -122,7 +122,7 @@ export const MarkdownContainer = ({
               label,
               icon: metadata.icon,
               onSelect: (view, head) => {
-                const link = `[${label}][${Obj.getDXN(object)}]`;
+                const link = `[${label}](${Obj.getDXN(object)})`;
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
                 } else {

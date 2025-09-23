@@ -121,7 +121,7 @@ export const Link: Story = {
               label: object.name,
               icon: 'ph--user--regular',
               onSelect: (view, head) => {
-                const link = `[${object.name}][${Obj.getDXN(object)}]`;
+                const link = `[${object.name}](${Obj.getDXN(object)})`;
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
                 } else {
