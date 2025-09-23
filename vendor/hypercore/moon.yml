@@ -4,6 +4,11 @@ language: typescript
 tags:
   - vendor
   - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
+
 tasks:
   compile:
     args:

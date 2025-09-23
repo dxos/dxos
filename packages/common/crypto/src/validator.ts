@@ -3,7 +3,6 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-
 import { verify } from '@dxos/vendor-hypercore/hypercore-crypto';
 
 /**

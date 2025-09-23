@@ -4,7 +4,6 @@
 
 import { invariant } from '@dxos/invariant';
 import { type KeyPair, PUBLIC_KEY_LENGTH, PublicKey, type PublicKeyLike, SECRET_KEY_LENGTH } from '@dxos/keys';
-
 import crypto from '@dxos/vendor-hypercore/hypercore-crypto';
 
 export const SIGNATURE_LENGTH = 64;

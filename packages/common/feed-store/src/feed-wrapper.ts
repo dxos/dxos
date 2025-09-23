@@ -3,8 +3,8 @@
 //
 
 import { inspect } from 'node:util';
+import { promisify } from 'node:util';
 
-import type { GetOptions, Proof } from '@dxos/vendor-hypercore/hypercore';
 import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';
@@ -14,8 +14,8 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
-import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
-import { promisify } from 'node:util';
+import { arrayToBuffer, rangeFromTo } from '@dxos/util';
+import type { GetOptions, Proof } from '@dxos/vendor-hypercore/hypercore';
 
 import { type FeedWriter, type WriteReceipt } from './feed-writer';
 
