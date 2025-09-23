@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type CellValue } from '@dxos/vendor-hyperformula';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
-
+import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
 import { TestBuilder } from './testing';

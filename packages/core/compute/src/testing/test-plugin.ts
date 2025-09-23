@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type InterpreterState, type ProcedureAst } from '@dxos/vendor-hyperformula';
-
 import { getDeep } from '@dxos/util';
-
+import { type InterpreterState, type ProcedureAst } from '@dxos/vendor-hyperformula';
 import { FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
 import { type ComputeGraphPlugin } from '../compute-graph-registry';

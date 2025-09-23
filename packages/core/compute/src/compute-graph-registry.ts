@@ -2,14 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { FunctionPluginDefinition, ConfigParams, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-
+import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
 import { ComputeGraph } from './compute-graph';
