@@ -71,7 +71,6 @@ export const createProps = <S extends Schema.Schema.AnyNoContext>(
     data: Type.Properties<Schema.Schema.Type<S>> = {} as Type.Properties<Schema.Schema.Type<S>>,
   ): Type.Properties<Schema.Schema.Type<S>> => {
     return getSchemaProperties<S>(schema.ast).reduce<Type.Properties<Schema.Schema.Type<S>>>((obj, property) => {
-      console.log('createProps', property.name, (obj as any)[property.name]);
       if ((obj as any)[property.name] === undefined) {
         (obj as any)[property.name] = createValue(generator, schema, property, force);
       }

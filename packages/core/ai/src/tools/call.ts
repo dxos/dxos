@@ -7,8 +7,9 @@ import { Effect } from 'effect';
 
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';
+import { safeParseJson } from '@dxos/util';
 
-// TODO(burdon): Not called?
+// TODO(burdon): Not Used?
 export const callTools: <Tools extends AiTool.Any>(
   toolkit: AiToolkit.ToHandler<Tools>,
   toolCalls: ContentBlock.ToolCall[],
@@ -27,10 +28,11 @@ export const callTool: <Tools extends AiTool.Any>(
   toolCall: ContentBlock.ToolCall,
 ) => Effect.Effect<ContentBlock.ToolResult, AiError.AiError, AiTool.Context<Tools>> = Effect.fn('callTool')(
   function* (toolkit, toolCall) {
-    const input = JSON.parse(toolCall.input);
-    // TODO(burdon): Auto stringify proxy objects.
-    log.info('callTool', { toolCall: JSON.stringify(toolCall), input });
-    return yield* toolkit.handle(toolCall.name as any, input).pipe(
+    const input = safeParseJson<AiTool.Parameters<any>>(toolCall.input, {});
+
+    // TODO(burdon): Replace with spans? (CORE: Auto stringify proxy objects?)
+    log('toolCall', { toolCall: toolCall.name, input });
+    const toolResult = yield* toolkit.handle(toolCall.name as any, input).pipe(
       Effect.map(
         // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>
@@ -55,6 +57,16 @@ export const callTool: <Tools extends AiTool.Any>(
         ),
       ),
     );
+
+    log('toolResult', {
+      toolCall: toolCall.name,
+      ...{
+        error: 'error' in toolResult ? toolResult.error : undefined,
+        result: 'result' in toolResult ? safeParseJson(toolResult.result) : undefined,
+      },
+    });
+
+    return toolResult;
   },
 );
 

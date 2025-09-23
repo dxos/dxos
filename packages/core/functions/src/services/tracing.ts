@@ -77,7 +77,11 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
         // TODO(dmaretskyi): Batching.
         return {
           write: (event) => queue.append([event]),
-          getTraceContext: () => ({}),
+          getTraceContext: () => ({
+            debugInfo: {
+              queue: queue.dxn.toString(),
+            },
+          }),
         };
       }),
     );
@@ -125,6 +129,8 @@ export namespace TracingService {
      * If the current thread is a byproduct of a tool call, this is the ID of the tool call.
      */
     toolCallId?: string;
+
+    debugInfo?: unknown;
   }
 }
 

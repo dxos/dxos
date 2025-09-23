@@ -4,6 +4,7 @@
 
 export * from './annotations';
 export * from './autocomplete';
+export * from './autoscroll';
 export * from './automerge';
 export * from './awareness';
 export * from './blast';
@@ -23,4 +24,5 @@ export * from './modes';
 export * from './outliner';
 export * from './preview';
 export * from './selection';
+export * from './tags';
 export * from './typewriter';

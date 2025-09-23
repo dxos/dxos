@@ -5,12 +5,12 @@
 import { useMemo } from 'react';
 
 import { type Queue } from '@dxos/client/echo';
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useQueue } from '@dxos/react-client/echo';
 
 import { ExecutionGraph } from '../execution-graph';
 
-export const useExecutionGraph = (queueRef?: Ref.Ref<Queue>, lastRequest = false) => {
+export const useExecutionGraph = (queueRef?: Queue, lastRequest = false) => {
   const queue = useQueue(queueRef?.dxn);
   return useMemo(() => {
     const graph = new ExecutionGraph();

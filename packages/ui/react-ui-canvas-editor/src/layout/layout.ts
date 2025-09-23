@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Graph as NativeGraph, type PlainObject } from '@antv/graphlib';
+import { Graph as NaturalGraph, type PlainObject } from '@antv/graphlib';
 import {
   CircularLayout,
   type CircularLayoutOptions,
@@ -131,8 +131,8 @@ const createLayout = (type: LayoutKind, options: CommonLayoutOptions) => {
 };
 
 // TODO(burdon): Preserve existing position with Shape adapter.
-const toLayoutGraph = ({ nodes, edges }: Graph): NativeGraph<PlainObject, PlainObject> => {
-  return new NativeGraph<PlainObject, PlainObject>({
+const toLayoutGraph = ({ nodes, edges }: Graph): NaturalGraph<PlainObject, PlainObject> => {
+  return new NaturalGraph<PlainObject, PlainObject>({
     nodes: nodes.map((node) => ({
       id: node.id,
       data: {

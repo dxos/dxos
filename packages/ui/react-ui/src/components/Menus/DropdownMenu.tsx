@@ -124,6 +124,7 @@ const DropdownMenuTrigger = forwardRef<DropdownMenuTriggerElement, DropdownMenuT
           disabled={disabled}
           {...triggerProps}
           ref={composeRefs(forwardedRef, context.triggerRef)}
+          data-arrow-keys='down'
           onPointerDown={composeEventHandlers(props.onPointerDown, (event) => {
             // only call handler if it's the left button (mousedown gets triggered by all mouse buttons)
             // but not when the control key is pressed (avoiding MacOS right click)
@@ -264,6 +265,7 @@ const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuC
             hasInteractedOutsideRef.current = true;
           }
         })}
+        data-arrow-keys='up down'
         className={tx('menu.content', 'menu', { elevation }, classNames)}
         style={{
           ...props.style,
@@ -415,13 +417,21 @@ const RADIO_ITEM_NAME = 'DropdownMenuRadioItem';
 
 type DropdownMenuRadioItemElement = ElementRef<typeof MenuPrimitive.RadioItem>;
 type MenuRadioItemProps = ComponentPropsWithoutRef<typeof MenuPrimitive.RadioItem>;
-interface DropdownMenuRadioItemProps extends MenuRadioItemProps {}
+type DropdownMenuRadioItemProps = ThemedClassName<MenuRadioItemProps>;
 
 const DropdownMenuRadioItem = forwardRef<DropdownMenuRadioItemElement, DropdownMenuRadioItemProps>(
   (props: ScopedProps<DropdownMenuRadioItemProps>, forwardedRef) => {
-    const { __scopeDropdownMenu, ...radioItemProps } = props;
+    const { __scopeDropdownMenu, classNames, ...itemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
-    return <MenuPrimitive.RadioItem {...menuScope} {...radioItemProps} ref={forwardedRef} />;
+    const { tx } = useThemeContext();
+    return (
+      <MenuPrimitive.Item
+        {...menuScope}
+        {...itemProps}
+        className={tx('menu.item', 'menu__item', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 

@@ -72,6 +72,10 @@ export class MemoryQueue<T extends Obj.Any | Relation.Any> implements Queue<T> {
     return [...this._objects];
   }
 
+  query(): never {
+    throw new Error('Method not implemented.');
+  }
+
   /**
    * Insert into queue with optimistic update.
    */

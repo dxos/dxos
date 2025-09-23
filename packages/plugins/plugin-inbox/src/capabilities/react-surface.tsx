@@ -21,7 +21,7 @@ import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 
-import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
+import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageCard, MessageContainer } from '../components';
 import { RelatedContacts, RelatedMessages } from '../components/Related';
 import { INBOX_PLUGIN } from '../meta';
 import { Calendar, InboxAction, Mailbox } from '../types';
@@ -32,21 +32,26 @@ export default () =>
       id: `${INBOX_PLUGIN}/mailbox`,
       role: ['article', 'section'],
       filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
+      component: ({ data, role }) => <MailboxContainer mailbox={data.subject} role={role} />,
     }),
     createSurface({
       id: `${INBOX_PLUGIN}/message`,
-      role: 'article',
+      role: ['article', 'section', 'card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
         Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
-      component: ({ data: { companionTo, subject: message } }) => {
+      component: ({ data: { companionTo, subject: message }, role }) => {
         const space = getSpace(companionTo);
-        return (
+        return role.startsWith('card') ? (
+          message === 'message' ? null : (
+            <MessageCard message={message} role={role} />
+          )
+        ) : (
           <MessageContainer
             message={typeof message === 'string' ? undefined : message}
             space={space}
             inMailbox={companionTo}
+            role={role}
           />
         );
       },

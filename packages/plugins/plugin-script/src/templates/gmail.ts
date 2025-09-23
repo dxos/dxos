@@ -10,11 +10,11 @@ import {
   HttpClient,
   HttpClientRequest,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
+} from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.17.0?bundle=false';
 
 export default defineFunction({
   inputSchema: S.Struct({

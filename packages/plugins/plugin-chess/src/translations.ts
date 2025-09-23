@@ -18,8 +18,10 @@ export const translations = [
         'object name placeholder': 'New game',
         'rename object label': 'Rename game',
         'delete object label': 'Delete game',
-        'button toggle info': 'Toggle info',
-        'button flip': 'Flip board',
+        'toggle info button': 'Toggle info',
+        'close info button': 'Close info',
+        'flip board button': 'Flip board',
+        'select player button': 'Select player',
       },
       [meta.id]: {
         'plugin name': 'Chess',

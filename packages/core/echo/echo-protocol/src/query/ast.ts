@@ -205,6 +205,34 @@ const QuerySetDifferenceClause_ = Schema.Struct({
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
 
+export const OrderDirection = Schema.Literal('asc', 'desc');
+export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
+
+export const Order = Schema.Union(
+  Schema.Struct({
+    // How database wants to order them (in practice - by id).
+    kind: Schema.Literal('natural'),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('property'),
+    property: Schema.String,
+    direction: OrderDirection,
+  }),
+);
+export type Order = Schema.Schema.Type<typeof Order>;
+
+/**
+ * Order the query results.
+ * Left-to-right the orders dominate.
+ */
+const QueryOrderClause_ = Schema.Struct({
+  type: Schema.Literal('order'),
+  query: Schema.suspend(() => Query),
+  order: Schema.Array(Order),
+});
+export interface QueryOrderClause extends Schema.Schema.Type<typeof QueryOrderClause_> {}
+export const QueryOrderClause: Schema.Schema<QueryOrderClause> = QueryOrderClause_;
+
 /**
  * Add options to a query.
  */
@@ -225,6 +253,7 @@ const Query_ = Schema.Union(
   QueryRelationTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
+  QueryOrderClause,
   QueryOptionsClause,
 );
 
@@ -232,7 +261,23 @@ export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
+  /**
+   * The nested select statemets will select from the given spaces.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * The nested select statemets will select from the given queues.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
+  queues: Schema.optional(Schema.Array(DXN.Schema)),
+
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
@@ -264,5 +309,30 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
       visit(query.source, visitor);
       visit(query.exclude, visitor);
       break;
+  }
+};
+
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
+  switch (query.type) {
+    case 'filter':
+      return fold(query.selection, reducer);
+    case 'reference-traversal':
+      return fold(query.anchor, reducer);
+    case 'incoming-references':
+      return fold(query.anchor, reducer);
+    case 'relation':
+      return fold(query.anchor, reducer);
+    case 'options':
+      return fold(query.query, reducer);
+    case 'relation-traversal':
+      return fold(query.anchor, reducer);
+    case 'union':
+      return query.queries.flatMap((q: Query) => fold(q, reducer));
+    case 'set-difference':
+      return fold(query.source, reducer);
+    case 'order':
+      return fold(query.query, reducer);
+    case 'select':
+      return [];
   }
 };

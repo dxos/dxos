@@ -6,12 +6,12 @@ import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { Array, Effect, Schema, pipe } from 'effect';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
-import { DatabaseService, defineFunction } from '@dxos/functions';
+import { DatabaseService, defineFunction, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { syncObjects } from '../../sync';
-import { apiKeyAuth, graphqlRequestBody } from '../../util';
+import { graphqlRequestBody } from '../../util';
 
 const queryIssues = `
 query Issues($teamId: String!, $after: DateTimeOrDuration!) {
@@ -79,7 +79,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(function* ({ data }) {
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(apiKeyAuth({ service: 'linear.app' })));
+    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization({ service: 'linear.app' })));
 
     // Get the timestamp that was previosly synced.
     const after = yield* getLatestUpdateTimestamp(data.team, DataType.Task);
@@ -165,7 +165,7 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Dat
     project: !issue.project
       ? undefined
       : Ref.make(
-          Obj.make(DataType.Project, {
+          DataType.makeProject({
             [Obj.Meta]: {
               keys: [
                 {

@@ -17,9 +17,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, toHue, trim } from '@dxos/util';
+import { getFirstTwoRenderableChars, trim } from '@dxos/util';
 
-import { formatDate, hashString } from '../util';
+import { getMessageProps } from '../util';
 
 import { type Tag } from './model';
 
@@ -37,14 +37,7 @@ const messageColumnDefault = {
 };
 
 const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
-  const id = message.id;
-  // Always use the first text block for display in the mailbox list.
-  const textBlocks = message.blocks.filter((block) => 'text' in block);
-  const text = textBlocks[0]?.text || '';
-  const date = formatDate(now, message.created ? new Date(message.created) : new Date());
-  const from = message.sender?.name ?? message.sender?.email;
-  const subject = message.properties?.subject ?? text;
-  const hue = toHue(hashString(from));
+  const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   return trim`
     <button
@@ -101,9 +94,10 @@ export type MailboxProps = {
   ignoreAttention?: boolean;
   currentMessageId?: string;
   onAction?: MailboxActionHandler;
+  role?: string;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
+export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, role }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
 
@@ -194,7 +188,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const rows = useMemo(() => ({ grid: gridRows }), [gridRows]);
 
   return (
-    <div role='none' className='flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0'>
+    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           limitColumns={1}

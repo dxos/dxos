@@ -98,10 +98,13 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           // TODO(burdon): Limit to tags.
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({
             themeMode,
-            slots: { editor: { className: 'is-full' }, content: { className: '!text-sm' } },
+            slots: {
+              editor: { className: 'is-full' },
+              content: { className: '!text-sm' },
+            },
           }),
           tagPicker({
             debug: true,

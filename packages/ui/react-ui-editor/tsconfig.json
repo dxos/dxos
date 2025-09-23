@@ -94,6 +94,9 @@
     },
     {
       "path": "../react-ui-theme"
+    },
+    {
+      "path": "../react-ui-types"
     }
   ]
 }

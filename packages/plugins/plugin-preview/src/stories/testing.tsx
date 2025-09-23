@@ -10,6 +10,7 @@ import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
+import { TaskCard } from '../components/TaskCard';
 import { type PreviewProps } from '../types';
 
 faker.seed(1234);
@@ -28,7 +29,7 @@ export type DefaultstoryProps = {
 
 export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
-    <div className='grid grid-cols-3'>
+    <div className='grid grid-cols-4'>
       {cards.map(({ Component, icon, image, subject }, i) => (
         <div key={i} className='flex justify-center'>
           <CardContainer icon={icon} role={role}>
@@ -73,10 +74,15 @@ export const createCards = (image = true): CardProps<any>[] => {
     ],
   });
 
-  const project = Obj.make(DataType.Project, {
+  const project = DataType.makeProject({
     name: faker.person.fullName(),
     image: 'https://dxos.network/dxos-logotype-blue.png',
     description: faker.lorem.paragraph(),
+  });
+
+  const task = Obj.make(DataType.Task, {
+    title: faker.lorem.sentence(),
+    status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']),
   });
 
   return [
@@ -96,6 +102,12 @@ export const createCards = (image = true): CardProps<any>[] => {
       Component: ProjectCard,
       subject: project,
       icon: 'ph--building--regular',
+      image,
+    },
+    {
+      Component: TaskCard,
+      subject: task,
+      icon: 'ph--list-checks--regular',
       image,
     },
   ];

@@ -5,63 +5,74 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
+import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
+import * as chessFunctions from '@dxos/plugin-chess/functions';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
+import { PreviewPlugin } from '@dxos/plugin-preview';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
-import { useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
-import { createTestMailbox, createTestTranscription } from '../testing';
+import { useContextBinder } from '../hooks';
+import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
   ChatContainer,
+  ChessContainer,
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  InvocationsContainer,
   LoggingContainer,
   MessageContainer,
-  SurfaceContainer,
+  PromptContainer,
+  ResearchInputStack,
+  ResearchOutputStack,
   TasksContainer,
+  TokenManagerContainer,
+  TriggersContainer,
 } from './components';
-import { accessTokensFromEnv, addTestData, config, getDecorators, testTypes } from './testing';
+import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
 
-const panelClassNames = 'flex flex-col overflow-hidden bg-baseSurface rounded border border-separator';
+const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
-const DefaultStory = ({
-  debug = true,
-  components,
-  blueprints = [],
-}: {
+type StoryProps = {
   debug?: boolean;
-  components: (FC<ComponentProps> | FC<ComponentProps>[])[];
+  deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
-}) => {
+};
+
+const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
   const client = useClient();
   const space = useSpace();
 
@@ -102,35 +113,67 @@ const DefaultStory = ({
     }
   }, []);
 
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const binder = useContextBinder(chats.at(-1));
+  const objects = useSignalsMemo(
+    () => binder?.objects.value.map((ref) => ref.target).filter(isNonNullable) ?? [],
+    [binder],
+  );
+
   if (!space) {
     return null;
   }
 
   return (
-    <div
-      className='grid grid-cols gap-2 m-2'
-      style={{ gridTemplateColumns: `repeat(${components.length}, minmax(0, 40rem))` }}
+    <Stack
+      orientation='horizontal'
+      size='split'
+      rail={false}
+      itemsCount={deckComponents.length}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
-      {components.map((Component, index) =>
-        Array.isArray(Component) ? (
-          <div
-            key={index}
-            className='grid grid-rows gap-2 overflow-hidden'
-            style={{ gridTemplateRows: `repeat(${Component.length}, 1fr)` }}
-          >
-            {Component.map((Component, index) => (
-              <div key={index} className={panelClassNames}>
-                <Component space={space} debug={debug} onEvent={handleEvent} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div key={index} className={panelClassNames}>
-            <Component space={space} debug={debug} onEvent={handleEvent} />
-          </div>
-        ),
-      )}
-    </div>
+      {deckComponents.map((plankComponents, i) => {
+        const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
+        const renderSurfaces = plankComponents.includes('surfaces');
+        let j = 0;
+        return (
+          <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+            <Stack
+              orientation='vertical'
+              size={i > 0 ? 'contain' : 'split'}
+              rail={false}
+              itemsCount={plankComponents.length + (i > 0 ? objects.length : 0)}
+            >
+              {Components.map((Component) => {
+                const item = (
+                  <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
+                    <Component space={space} debug={debug} onEvent={handleEvent} />
+                  </StackItem.Root>
+                );
+                j += 1;
+                return item;
+              })}
+
+              {renderSurfaces &&
+                objects.map((object, index) => {
+                  const k = index + j;
+                  return (
+                    <StackItem.Root key={k} order={k + 1} item={{ id: `${k}` }} classNames={panelClassNames}>
+                      {debug && (
+                        <div role='heading' className='flex gap-2 items-center text-xs justify-center text-subdued'>
+                          <span>{Obj.getTypename(object)}</span>
+                          <span>{object.id}</span>
+                        </div>
+                      )}
+                      <Surface role='section' limit={1} data={{ subject: object }} />
+                    </StackItem.Root>
+                  );
+                })}
+            </Stack>
+          </StackItem.Root>
+        );
+      })}
+    </Stack>
   );
 };
 
@@ -191,7 +234,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer]],
   },
 };
 
@@ -200,24 +243,27 @@ export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote, // TODO(burdon): Issue making persistent.
-    onInit: async ({ space, binder }) => {
-      const doc = space.db.add(
+    onInit: async ({ space }) => {
+      space.db.add(
         Markdown.makeDocument({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
-      const styleGuide = space.db.add(
+      space.db.add(
         Markdown.makeDocument({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
       );
-      await binder.bind({ objects: [Ref.make(doc), Ref.make(styleGuide)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, CommentsContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], ['surfaces', CommentsContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
@@ -226,13 +272,16 @@ export const WithBlueprints: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, [TasksContainer, BlueprintContainer]],
+    deckComponents: [[ChatContainer], [TasksContainer, BlueprintContainer]],
   },
 };
 
@@ -241,9 +290,9 @@ export const WithChess: Story = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
-      const object = space.db.add(
+      space.db.add(
         Chess.makeGame({
           name: 'Challenge',
           pgn: [
@@ -264,11 +313,14 @@ export const WithChess: Story = {
           ].join(' '),
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
@@ -279,16 +331,40 @@ export const WithMail: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestMailbox();
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
-      await binder.bind({ objects: [Ref.make(mailbox)] });
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, MessageContainer]],
+    deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+  },
+};
+
+// Test with prompt: Sync my email.
+export const WithGmail: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    config: config.remote,
+    types: [Mailbox.Mailbox],
+    onInit: async ({ space }) => {
+      const queue = space.queues.create();
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], ['surfaces', MessageContainer, TokenManagerContainer]],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -299,7 +375,7 @@ export const WithMap: Story = {
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
     types: [DataType.View, Map.Map, Table.Table],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
       const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
       const { view: mapView } = await Map.makeView({
@@ -310,11 +386,14 @@ export const WithMap: Story = {
       });
       space.db.add(tableView);
       space.db.add(mapView);
-      await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
@@ -324,17 +403,13 @@ export const WithTrip: Story = {
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      {
-        const object = space.db.add(Map.make({ name: 'Trip' }));
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Itinerary',
-            content: trim`
+      space.db.add(Map.make({ name: 'Trip' }));
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Itinerary',
+          content: trim`
               # Itinerary
 
               ## Day 1
@@ -347,29 +422,28 @@ export const WithTrip: Story = {
               - Visit the Louvre
               - Visit the Musée d'Orsay
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Barcelona',
-            content: trim`
+        }),
+      );
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Barcelona',
+          content: trim`
               # Barcelona
 
               Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
               It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
               The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
+        }),
+      );
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], ['surfaces']],
   },
 };
 
@@ -378,14 +452,17 @@ export const WithBoard: Story = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Board.makeBoard());
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Board.makeBoard());
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     debug: true,
-    components: [ChatContainer, SurfaceContainer],
+    deckComponents: [[ChatContainer], ['surfaces']],
   },
 };
 
@@ -397,7 +474,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    components: [ChatContainer, [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -411,25 +488,28 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    components: [ChatContainer, [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer]],
   },
 };
 
 export const WithTranscription: Story = {
   decorators: getDecorators({
-    plugins: [TranscriptionPlugin()],
+    plugins: [TranscriptionPlugin(), PreviewPlugin()],
     config: config.remote,
     types: [Transcript.Transcript],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
-      await binder.bind({ objects: [Ref.make(transcript)] });
+      space.db.add(Transcript.makeTranscript(queue.dxn));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    components: [ChatContainer, [SurfaceContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], ['surfaces']],
     blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
@@ -444,7 +524,136 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    components: [ChatContainer, [GraphContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer]],
     blueprints: [LINEAR_BLUEPRINT.key],
+  },
+};
+
+export const WithTriggers: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.remote,
+    onInit: async ({ space }) => {
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          enabled: true,
+          spec: {
+            kind: 'timer',
+            cron: '*/5 * * * * *', // Every 5 seconds
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
+  },
+};
+
+export const WithChessTrigger: Story = {
+  decorators: getDecorators({
+    plugins: [ChessPlugin()],
+    config: config.remote,
+    types: [Chess.Game],
+    onInit: async ({ space }) => {
+      // TODO(burdon): Add player DID (for user and assistant).
+      space.db.add(
+        Chess.makeGame({
+          name: 'Challenge',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(chessFunctions.play)),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            filter: {
+              type: Type.getTypename(Chess.Game),
+            },
+          },
+          input: {
+            id: '{{event.changedObjectId}}',
+            side: 'black', // NOTE: Removing it makes the bot play itself.
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
+  },
+};
+
+export const WithResearchQueue: Story = {
+  decorators: getDecorators({
+    plugins: [],
+    config: config.local,
+    types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      const researchInputQueue = space.db.add(
+        Obj.make(ResearchInputQueue, { queue: Ref.fromDXN(space.queues.create().dxn) }),
+      );
+      const orgs = organizations.map(({ id: _, ...org }) => Obj.make(DataType.Organization, org));
+      await researchInputQueue.queue.target!.append(orgs);
+
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions: 'Research the organization provided as input.',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(agent)),
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: researchInputQueue.queue.dxn.toString(),
+          },
+          input: {
+            prompt: Ref.make(researchPrompt),
+            input: '{{event.item}}',
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [
+      [ResearchInputStack],
+      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
+      [ResearchOutputStack],
+    ],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
