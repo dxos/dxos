@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { type DXN } from '@dxos/keys';
-import { DxRefTag } from '@dxos/lit-ui/react';
+import { DxAnchor } from '@dxos/lit-ui/react';
 
 export type ObjectLinkProps = {
   space: Space;
@@ -18,5 +18,5 @@ export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {
   const ref = useMemo(() => space.db.ref(dxn), [space, dxn.toString()]);
 
   const title = Obj.getLabel(ref.target) ?? ref.target?.id ?? ref.dxn.toString();
-  return <DxRefTag refid={dxn.toString()}>{title}</DxRefTag>;
+  return <DxAnchor refid={dxn.toString()}>{title}</DxAnchor>;
 };
