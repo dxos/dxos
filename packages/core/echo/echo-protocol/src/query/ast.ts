@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
@@ -61,6 +61,17 @@ const FilterIn_ = Schema.Struct({
 export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
+const FilterContains_ = Schema.Struct({
+  type: Schema.Literal('contains'),
+  value: Schema.Any,
+});
+export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+/**
+ * Predicate for an array property to contain the provided value.
+ * Nested objects are matched using strict structural matching.
+ */
+export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
+
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
@@ -103,6 +114,7 @@ export const Filter = Schema.Union(
   FilterTextSearch,
   FilterCompare,
   FilterIn,
+  FilterContains,
   FilterRange,
   FilterNot,
   FilterAnd,
@@ -284,56 +296,41 @@ export const QueryOptions = Schema.Struct({
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
-  switch (query.type) {
-    case 'filter':
-      visit(query.selection, visitor);
-      break;
-    case 'reference-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'incoming-references':
-      visit(query.anchor, visitor);
-      break;
-    case 'relation':
-      visit(query.anchor, visitor);
-      break;
-    case 'options':
-      visit(query.query, visitor);
-      break;
-    case 'relation-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'union':
-      query.queries.forEach((q) => visit(q, visitor));
-      break;
-    case 'set-difference':
-      visit(query.source, visitor);
-      visit(query.exclude, visitor);
-      break;
-  }
+  visitor(query);
+
+  Match.value(query).pipe(
+    Match.when({ type: 'filter' }, ({ selection }) => visit(selection, visitor)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
+      visit(source, visitor);
+      visit(exclude, visitor);
+    }),
+    Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'select' }, () => {}),
+    Match.exhaustive,
+  );
 };
 
 export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
-  switch (query.type) {
-    case 'filter':
-      return fold(query.selection, reducer);
-    case 'reference-traversal':
-      return fold(query.anchor, reducer);
-    case 'incoming-references':
-      return fold(query.anchor, reducer);
-    case 'relation':
-      return fold(query.anchor, reducer);
-    case 'options':
-      return fold(query.query, reducer);
-    case 'relation-traversal':
-      return fold(query.anchor, reducer);
-    case 'union':
-      return query.queries.flatMap((q: Query) => fold(q, reducer));
-    case 'set-difference':
-      return fold(query.source, reducer);
-    case 'order':
-      return fold(query.query, reducer);
-    case 'select':
-      return [];
-  }
+  return Match.value(query).pipe(
+    Match.withReturnType<T[]>(),
+    Match.when({ type: 'filter' }, ({ selection }) => fold(selection, reducer)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'relation' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
+      fold(source, reducer).concat(fold(exclude, reducer)),
+    ),
+    Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'select' }, () => []),
+    Match.exhaustive,
+  );
 };

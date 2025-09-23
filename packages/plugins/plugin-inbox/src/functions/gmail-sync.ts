@@ -40,6 +40,10 @@ export default defineFunction({
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
+      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
+      const labelsResponse = yield* getLabels(userId);
+      const labelMap = new Map(labelsResponse.labels.map((label) => [label.id, label.name]));
+
       do {
         const objects = yield* Effect.tryPromise(() => queue.queryObjects());
         const last = objects.at(-1);
@@ -54,7 +58,7 @@ export default defineFunction({
 
         const messageObjects = yield* pipe(
           messages,
-          Array.map(messageToObject(userId, last)),
+          Array.map(messageToObject(userId, last, labelMap)),
           Effect.all,
           Effect.map((objects) => Array.filter(objects, isNotNullable)),
           Effect.map((objects) => Array.reverse(objects)),
@@ -128,6 +132,14 @@ const getMessage = Effect.fn(function* (userId: string, messageId: string) {
 });
 
 /**
+ * Fetches all labels for a Gmail user.
+ */
+const getLabels = Effect.fn(function* (userId: string) {
+  const url = `https://gmail.googleapis.com/gmail/v1/users/${userId}/labels`;
+  return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
+});
+
+/**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
 const parseEmailString = (emailString: string): { name?: string; email: string } | undefined => {
@@ -146,7 +158,7 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 /**
  * Transforms a Gmail message to a ECHO message object.
  */
-const messageToObject = (userId: string, last?: DataType.Message) =>
+const messageToObject = (userId: string, last?: DataType.Message, labelMap?: Map<string, string>) =>
   Effect.fn(function* (message: Message) {
     const messageDetails = yield* getMessage(userId, message.id);
     const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
@@ -163,6 +175,10 @@ const messageToObject = (userId: string, last?: DataType.Message) =>
       return undefined;
     }
     const subject = messageDetails.payload.headers.find((h) => h.name === 'Subject')?.value;
+    const labels = labelMap
+      ? messageDetails.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
+      : messageDetails.labelIds;
+
     return Obj.make(DataType.Message, {
       id: Type.ObjectId.random(),
       created,
@@ -176,6 +192,7 @@ const messageToObject = (userId: string, last?: DataType.Message) =>
       properties: {
         subject,
         threadId: message.threadId,
+        labels,
       },
     });
   });
@@ -195,6 +212,7 @@ const MessageDetails = Schema.Struct({
   id: Schema.String,
   threadId: Schema.String,
   internalDate: Schema.String,
+  labelIds: Schema.Array(Schema.String),
   payload: Schema.Struct({
     headers: Schema.Array(Schema.Struct({ name: Schema.String, value: Schema.String })),
     body: Schema.optional(Schema.Struct({ size: Schema.Number, data: Schema.optional(Schema.String) })),
@@ -209,3 +227,15 @@ const MessageDetails = Schema.Struct({
   }),
 });
 type MessageDetails = Schema.Schema.Type<typeof MessageDetails>;
+
+const Label = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  type: Schema.String,
+});
+type Label = Schema.Schema.Type<typeof Label>;
+
+const LabelsResponse = Schema.Struct({
+  labels: Schema.Array(Label),
+});
+type LabelsResponse = Schema.Schema.Type<typeof LabelsResponse>;

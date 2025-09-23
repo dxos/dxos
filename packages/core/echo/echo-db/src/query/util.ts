@@ -19,9 +19,8 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
         }
       }
     }
-    QueryAST.visit(node, visitor);
   };
-  visitor(query);
+  QueryAST.visit(query, visitor);
   return [...spaces];
 };
 

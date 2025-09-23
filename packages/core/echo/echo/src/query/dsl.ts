@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
@@ -17,6 +17,7 @@ import type * as Type from '../Type';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
+// TODO(wittjosiah): Make Filter & Query pipeable.
 
 export interface Order<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -63,10 +64,18 @@ export interface Query<T> {
 
   /**
    * Traverse an outgoing reference.
-   * @param key - Property path inside T that is a reference.
+   * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  reference<K extends RefPropKey<T>>(key: K): Query<T[K] extends Ref.Any ? Ref.Target<T[K]> : never>;
+  reference<K extends RefPropKey<T>>(
+    key: K,
+  ): Query<
+    T[K] extends Ref.Any
+      ? Ref.Target<T[K]>
+      : T[K] extends Ref.Any | undefined
+        ? Ref.Target<Exclude<T[K], undefined>>
+        : never
+  >;
 
   /**
    * Find objects referencing this object.
@@ -294,6 +303,12 @@ interface FilterAPI {
   in<T>(...values: T[]): Filter<T>;
 
   /**
+   * Predicate for an array property to contain the provided value.
+   * @param value - Value to check against.
+   */
+  contains<T>(value: T): Filter<T[]>;
+
+  /**
    * Predicate for property to be in the provided range.
    * @param from - Start of the range (inclusive).
    * @param to - End of the range (exclusive).
@@ -503,6 +518,13 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static contains<T>(value: T): Filter<T[]> {
+    return new FilterClass({
+      type: 'contains',
+      value,
+    });
+  }
+
   static between<T>(from: T, to: T): Filter<T> {
     return new FilterClass({
       type: 'range',
@@ -562,9 +584,35 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterOb
     props: Object.fromEntries(
       Object.entries(predicates)
         .filter(([prop, _value]) => prop !== 'id')
-        .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
+        .map(([prop, predicate]) => [prop, processPredicate(predicate)]),
     ) as Record<string, QueryAST.Filter>,
   };
+};
+
+const processPredicate = (predicate: any): QueryAST.Filter => {
+  return Match.value(predicate).pipe(
+    Match.withReturnType<QueryAST.Filter>(),
+    Match.when(Filter.is, (predicate) => predicate.ast),
+    // TODO(wittjosiah): Add support for array predicates.
+    Match.when(Array.isArray, (_predicate) => {
+      throw new Error('Array predicates are not yet supported.');
+    }),
+    Match.when(
+      (predicate: any) => !Ref.isRef(predicate) && typeof predicate === 'object' && predicate !== null,
+      (predicate) => {
+        const nestedProps = Object.fromEntries(
+          Object.entries(predicate).map(([key, value]) => [key, processPredicate(value)]),
+        );
+
+        return {
+          type: 'object',
+          typename: null,
+          props: nestedProps,
+        };
+      },
+    ),
+    Match.orElse((value) => Filter.eq(value).ast),
+  );
 };
 
 class QueryClass implements Query<any> {
