@@ -7,9 +7,9 @@ import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
-import { type DxAnchorActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 
 const customEventOptions = { capture: true, passive: false };
@@ -57,7 +57,7 @@ export default (context: PluginContext) => {
   if (document.defaultView) {
     cleanup = addEventListener(
       document.defaultView,
-      'dx-anchor-activate' as any,
+      DX_ANCHOR_ACTIVATE as any,
       handleDxAnchorActivate,
       customEventOptions,
     );
