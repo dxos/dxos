@@ -17,11 +17,13 @@ describe('filterMatch', () => {
     expect(filterMatchObject(Filter.type(Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
     expect(filterMatchObject(Filter.type(Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(Filter.type(Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be.true;
     expect(filterMatchObject(Filter.type(Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
   });
 
-  test('nested properties', () => {
-    expect(filterMatchObject(Filter.type(Expando, { properties: { label: 'test' } }).ast, OBJECT_1)).to.be.true;
+  test('contains', () => {
+    expect(filterMatchObject(Filter.type(Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1)).to
+      .be.true;
     expect(
       filterMatchObject(
         Filter.type(Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,
@@ -94,7 +96,7 @@ const OBJECT_1: MatchedObject = {
       value: 100,
       complete: true,
       array: ['one', 'two', 'three'],
-      properties: { label: 'test' },
+      properties: { label: ['test'], subject: 'test' },
       fields: [{ label: 'label', value: 'test' }],
     },
   }),

@@ -77,7 +77,9 @@ export const generator = () => ({
             }),
           );
 
-          space.db.add(Obj.make(DataType.Person, { fullName: 'Rich', organization: Ref.make(org) }));
+          space.db.add(
+            Obj.make(DataType.Person, { fullName: 'Rich', jobTitle: 'investor', organization: Ref.make(org) }),
+          );
           space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
           space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
           space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
@@ -92,15 +94,11 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const objects = range(n, () => {
-          const mailboxQueue = space.queues.create();
-          const mailbox = Mailbox.make({ name: 'Mailbox', queue: mailboxQueue.dxn });
-          space.db.add(mailbox);
+        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
 
-          // TODO(wittjosiah): Filter.
-          const contactsQuery = Query.select(
-            Filter.type(DataType.Person /*, { fields: Filter.contains({ label: 'label', value: 'Research' }) }*/),
-          );
+        const objects = range(n, () => {
+          // TODO(wittjosiah): Move filter to another property.
+          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
@@ -116,9 +114,10 @@ export const generator = () => ({
 
           const mailboxView = createView({
             name: 'Mailbox',
-            // TODO(wittjosiah): Filter.
-            query: Query.select(Filter.type(DataType.Message /*, { properties: { label: 'Research' } }*/)).options({
-              queues: [mailboxQueue.dxn.toString()],
+            query: Query.select(
+              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+            ).options({
+              queues: [mailbox.queue.dxn.toString()],
             }),
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
@@ -142,14 +141,12 @@ export const generator = () => ({
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
 
-          const project = space.db.add(
+          return space.db.add(
             DataType.makeProject({
-              name: 'Organization Research',
+              name: 'Investor Research',
               collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
             }),
           );
-
-          return [mailbox, project];
         });
         cb?.(objects.flat());
         return objects.flat();

@@ -4,7 +4,6 @@
 
 import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -250,7 +249,10 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
       return filter.values.includes(value);
     }
     case 'contains': {
-      invariant(Array.isArray(value), 'Value must be an array');
+      if (!Array.isArray(value)) {
+        return false;
+      }
+
       return value.some((element) => {
         if (typeof filter.value === 'object' && filter.value !== null && !Array.isArray(filter.value)) {
           return structuralMatch(filter.value, element);
