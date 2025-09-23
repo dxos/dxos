@@ -102,7 +102,7 @@ describe('query api', () => {
 
   test('get all people with field of "label" set to "Research"', () => {
     const PeopleWithFieldLabelSetToResearch = Query.select(
-      Filter.type(Person, { fields: [{ label: 'label', value: 'Research' }] }),
+      Filter.type(Person, { fields: Filter.contains({ label: 'label', value: 'Research' }) }),
     );
 
     log('query', { ast: PeopleWithFieldLabelSetToResearch.ast });

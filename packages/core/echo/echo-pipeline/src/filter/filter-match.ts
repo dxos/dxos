@@ -169,7 +169,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
  * Performs structural matching between a filter object and a target object.
  * This handles nested object comparison for array matching scenarios.
  */
-const structuralMatch = (filterObj: any, targetObj: any): boolean => {
+// TODO(wittjosiah): Add ast support for non-strict matching.
+const structuralMatch = (filterObj: any, targetObj: any, strict = true): boolean => {
   if (typeof filterObj !== 'object' || filterObj === null) {
     return filterObj === targetObj;
   }
@@ -178,7 +179,17 @@ const structuralMatch = (filterObj: any, targetObj: any): boolean => {
     return false;
   }
 
-  return Object.keys(filterObj).every((key) => {
+  // Prohibit extra keys in targetObj.
+  const filterKeys = Object.keys(filterObj);
+  const targetKeys = Object.keys(targetObj);
+  if (strict && filterKeys.length !== targetKeys.length) {
+    return false;
+  }
+
+  return filterKeys.every((key) => {
+    if (!(key in targetObj)) {
+      return false;
+    }
     const filterValue = filterObj[key];
     const targetValue = targetObj[key];
 

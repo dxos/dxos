@@ -305,7 +305,7 @@ interface FilterAPI {
    * Predicate for an array property to contain the provided value.
    * @param value - Value to check against.
    */
-  contains<T>(value: T): Filter<T>;
+  contains<T>(value: T): Filter<T[]>;
 
   /**
    * Predicate for property to be in the provided range.
@@ -517,7 +517,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static contains<T>(value: T): Filter<T> {
+  static contains<T>(value: T): Filter<T[]> {
     return new FilterClass({
       type: 'contains',
       value,
@@ -592,11 +592,10 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
   return Match.value(predicate).pipe(
     Match.withReturnType<QueryAST.Filter>(),
     Match.when(Filter.is, (predicate) => predicate.ast),
-    Match.when(Array.isArray, (predicate) =>
-      predicate.length === 1
-        ? Filter.contains(predicate[0]).ast
-        : Filter.or(...predicate.map((p) => Filter.contains(p))).ast,
-    ),
+    // TODO(wittjosiah): Add support for array predicates.
+    Match.when(Array.isArray, (_predicate) => {
+      throw new Error('Array predicates are not yet supported.');
+    }),
     Match.when(
       (predicate: any) => !Ref.isRef(predicate) && typeof predicate === 'object' && predicate !== null,
       (predicate) => {
