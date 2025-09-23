@@ -28,6 +28,7 @@ export const Image = ({
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // TODO(burdon): Cache?
   const extractDominantColor = (img: HTMLImageElement): void => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
@@ -83,7 +84,6 @@ export const Image = ({
         setDominantColor(`rgb(${r}, ${g}, ${b})`);
       }
     } catch {
-      // CORS not supported by server.
       setCrossOriginState(undefined);
     }
   };
@@ -94,8 +94,9 @@ export const Image = ({
     setImageLoaded(true);
   };
 
+  // CORS not supported by server.
   const handleImageError = (): void => {
-    // TODO(burdon): Error indicator.
+    setCrossOriginState(undefined);
   };
 
   return (
@@ -112,7 +113,9 @@ export const Image = ({
       <div
         className='absolute inset-0 pointer-events-none'
         style={{
-          background: `radial-gradient(circle at center, transparent 30%, ${dominantColor ?? ''} 100%)`,
+          background: dominantColor
+            ? `radial-gradient(circle at center, transparent 30%, ${dominantColor} 100%)`
+            : undefined,
           transition: 'opacity 0.7s ease-in-out',
           opacity: 0.5,
         }}

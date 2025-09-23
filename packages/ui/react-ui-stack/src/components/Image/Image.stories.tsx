@@ -38,6 +38,18 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Access to image at 'https://dxos.network/dxos-logotype-blue.png'
+ * from origin 'http://localhost:9009' has been blocked by CORS policy:
+ * No 'Access-Control-Allow-Origin' header is present on the requested resource.
+ */
+export const Cors: Story = {
+  args: {
+    src: 'https://dxos.network/dxos-logotype-blue.png',
+    classNames: 'w-[20rem]',
+  },
+};
+
 export const SVG: Story = {
   args: {
     src: 'https://dxos.network/bg-kube.svg',
