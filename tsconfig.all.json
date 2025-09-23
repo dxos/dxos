@@ -593,6 +593,9 @@
     },
     {
       "path": "tools/x/tsconfig.json"
+    },
+    {
+      "path": "vendor/hypercore/tsconfig.json"
     }
   ],
   "include": [],

@@ -15386,6 +15386,33 @@ importers:
         specifier: ~16.0.1
         version: 16.0.4
 
+  vendor/hypercore:
+    dependencies:
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../packages/common/node-std
+      hypercore:
+        specifier: ^9.12.0
+        version: 9.12.0
+      hypercore-crypto:
+        specifier: ^2.3.0
+        version: 2.3.2
+      hypercore-protocol:
+        specifier: ^8.0.7
+        version: 8.0.7
+      noise-protocol:
+        specifier: 3.0.1
+        version: 3.0.1
+      sodium-native:
+        specifier: ^3.2.0
+        version: 3.4.1
+      sodium-universal:
+        specifier: ^3.0.2
+        version: 3.1.0
+      streamx:
+        specifier: ^2.12.5
+        version: 2.15.6
+
 packages:
 
   3d-force-graph@1.78.2:

@@ -1017,6 +1017,11 @@
           "type": "json",
           "path": "tools/x/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/hypercore/package.json",
+          "jsonpath": "$.version"
         }
       ]
     }
