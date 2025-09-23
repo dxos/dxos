@@ -3,13 +3,12 @@
 //
 import React, { useMemo, useState } from 'react';
 
-import { type Obj, Type } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
-import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Obj, Query, Type } from '@dxos/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
-import { ProjectionModel, type View, typenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, type View } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -22,22 +21,20 @@ export type ViewColumnProps = {
 // This duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 export const ViewColumn = ({ view }: ViewColumnProps) => {
   // Resolve the view from the view using useQuery
-  const client = useClient();
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
   const { Item, onAddItem } = useProject('ViewColumn');
   const [tab, setTab] = useState<'enumerating' | 'editing'>('enumerating');
 
   // Resolve the view.query to its items
-  const typename = view?.query ? typenameFromQuery(view?.query) : undefined;
-  const schema = useSchema(client, space, typename);
-  const items = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
+  const schema = undefined;
+  const items = useQuery(space, view?.query ? Query.fromAst(view.query) : Query.select(Filter.nothing()));
   const projectionModel = useMemo(
     () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
     [schema, view.projection],
   );
 
-  if (!schema || !view || !view.query || !items) {
+  if (!view || !view.query || !items) {
     return null;
   }
 

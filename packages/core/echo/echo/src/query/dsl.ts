@@ -17,6 +17,7 @@ import type * as Type from '../Type';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
+// TODO(wittjosiah): Make Filter & Query pipeable.
 
 export interface Order<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.

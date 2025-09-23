@@ -64,8 +64,9 @@ export const generator = () => ({
           const mailbox = Mailbox.make({ name: 'Mailbox', queue: mailboxQueue.dxn });
           space.db.add(mailbox);
 
+          // TODO(wittjosiah): Filter.
           const contactsQuery = Query.select(
-            Filter.type(DataType.Person, { fields: Filter.contains({ label: 'label', value: 'Research' }) }),
+            Filter.type(DataType.Person /*, { fields: Filter.contains({ label: 'label', value: 'Research' }) }*/),
           );
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
@@ -82,8 +83,10 @@ export const generator = () => ({
 
           const mailboxView = createView({
             name: 'Mailbox',
-            // TODO(wittjosiah): Update with queue options.
-            query: Query.select(Filter.type(DataType.Message, { properties: { label: 'Research' } })),
+            // TODO(wittjosiah): Filter.
+            query: Query.select(Filter.type(DataType.Message /*, { properties: { label: 'Research' } }*/)).options({
+              queues: [mailboxQueue.dxn.toString()],
+            }),
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
