@@ -206,15 +206,15 @@ export const Default: Story = {
           text={trim`
             # Preview
 
-            This project is part of the [DXOS][dxn:queue:data:123] SDK.
+            This project is part of the [DXOS](dxn:queue:data:123) SDK.
 
-            ![DXOS][?dxn:queue:data:123]
+            ![DXOS](dxn:queue:data:123)
 
-            It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
+            It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
 
             ## Deep dive
 
-            ![ECHO][dxn:queue:data:echo]
+            ![ECHO](dxn:queue:data:echo)
 
           `}
           extensions={extensions}

@@ -25,9 +25,6 @@ export type QueryResultEntry<T extends BaseObject = BaseObject> = {
 
   spaceId: SpaceId;
 
-  /** @deprecated Use spaceId */
-  spaceKey: PublicKey;
-
   /**
    * May not be present for remote results.
    */
@@ -55,6 +52,9 @@ export type QueryResultEntry<T extends BaseObject = BaseObject> = {
      */
     time: number;
   };
+
+  /** @deprecated Use spaceId */
+  spaceKey?: PublicKey;
 };
 
 export type OneShotQueryResult<T extends BaseObject = BaseObject> = {

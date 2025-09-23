@@ -10,4 +10,5 @@ export * as Type from './Type';
 
 export { DXN } from '@dxos/keys';
 export { Filter, Order, Query } from './query';
+export { QueryAST } from '@dxos/echo-protocol';
 export { type Live } from '@dxos/live-object';

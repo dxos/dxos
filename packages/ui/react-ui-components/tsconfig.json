@@ -39,6 +39,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {

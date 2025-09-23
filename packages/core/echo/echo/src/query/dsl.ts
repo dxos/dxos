@@ -132,6 +132,9 @@ export interface Query<T> {
 interface QueryAPI {
   is(value: unknown): value is Query.Any;
 
+  /** Construct a query from an ast. */
+  fromAst(ast: QueryAST.Query): Query<any>;
+
   /**
    * Select objects based on a filter.
    * @param filter - Filter to select the objects.
@@ -367,6 +370,7 @@ class FilterClass implements Filter<any> {
   static ids(...ids: ObjectId[]): Filter<any> {
     assertArgument(
       ids.every((id) => ObjectId.isValid(id)),
+      'ids',
       'ids must be valid',
     );
 
@@ -395,7 +399,7 @@ class FilterClass implements Filter<any> {
   }
 
   static typename(typename: string): Filter<any> {
-    assertArgument(!typename.startsWith('dxn:'), 'Typename must no be qualified');
+    assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
     return new FilterClass({
       type: 'object',
       typename: DXN.fromTypename(typename).toString(),
@@ -544,7 +548,11 @@ type RefPropKey<T> = keyof T & string;
 const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
-    assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
+    assertArgument(
+      typeof predicates.id === 'string' || Array.isArray(predicates.id),
+      'predicates.id',
+      'invalid id filter',
+    );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
     Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
   }
@@ -564,6 +572,10 @@ class QueryClass implements Query<any> {
 
   static is(value: unknown): value is Query<any> {
     return typeof value === 'object' && value !== null && '~Query' in value;
+  }
+
+  static fromAst(ast: QueryAST.Query): Query<any> {
+    return new QueryClass(ast);
   }
 
   static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {

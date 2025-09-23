@@ -10,7 +10,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
 
@@ -26,7 +26,8 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace();
   const map = view.presentation.target as Map.Map | undefined;
-  const currentSchema = useSchema(client, space, view.query.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const currentSchema = useSchema(client, space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
 
@@ -78,7 +79,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: view.query.typename, coordinateColumn: view.projection.pivotFieldId }),
+    () => ({ coordinateSource: typename, coordinateColumn: view.projection.pivotFieldId }),
     [view],
   );
 

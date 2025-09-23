@@ -31,7 +31,7 @@ export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 // TODO(burdon): Create echo-schema Format types.
 // TODO(burdon): Reconcile with "short" DXN.
 export const Typename = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/));
-export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
+export const SchemaVersion = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 
 /**
  * Payload stored under {@link TypeAnnotationId}.
@@ -40,7 +40,7 @@ export const Version = Schema.String.pipe(Schema.pattern(/^\d+.\d+.\d+$/));
 export const TypeAnnotation = Schema.Struct({
   kind: Schema.Enums(EntityKind),
   typename: Typename,
-  version: Version,
+  version: SchemaVersion,
 
   /**
    * If this is a relation, the schema of the source object.
@@ -64,7 +64,7 @@ export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
 export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
-  assertArgument(schema != null && schema.ast != null, 'invalid schema');
+  assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
   return flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
@@ -180,7 +180,7 @@ export const GeneratorAnnotation = createAnnotationHelper<GeneratorAnnotationVal
  * @deprecated Use `Type.getDXN`.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
-  assertArgument(Schema.isSchema(schema), 'invalid schema');
+  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
 
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {

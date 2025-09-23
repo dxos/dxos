@@ -417,13 +417,21 @@ const RADIO_ITEM_NAME = 'DropdownMenuRadioItem';
 
 type DropdownMenuRadioItemElement = ElementRef<typeof MenuPrimitive.RadioItem>;
 type MenuRadioItemProps = ComponentPropsWithoutRef<typeof MenuPrimitive.RadioItem>;
-interface DropdownMenuRadioItemProps extends MenuRadioItemProps {}
+type DropdownMenuRadioItemProps = ThemedClassName<MenuRadioItemProps>;
 
 const DropdownMenuRadioItem = forwardRef<DropdownMenuRadioItemElement, DropdownMenuRadioItemProps>(
   (props: ScopedProps<DropdownMenuRadioItemProps>, forwardedRef) => {
-    const { __scopeDropdownMenu, ...radioItemProps } = props;
+    const { __scopeDropdownMenu, classNames, ...itemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
-    return <MenuPrimitive.RadioItem {...menuScope} {...radioItemProps} ref={forwardedRef} />;
+    const { tx } = useThemeContext();
+    return (
+      <MenuPrimitive.Item
+        {...menuScope}
+        {...itemProps}
+        className={tx('menu.item', 'menu__item', {}, classNames)}
+        ref={forwardedRef}
+      />
+    );
   },
 );
 
