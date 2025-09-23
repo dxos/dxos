@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dm/dep-updater-3
+      - dm/dep-updater-4
 
 jobs:
   update:
@@ -37,6 +37,7 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract branch
         id: extract_branch
