@@ -58,7 +58,11 @@ const setCommentState = StateEffect.define<CommentsState>();
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 export const commentsState = StateField.define<CommentsState>({
-  create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
+  create: (state) => ({
+    id: state.facet(documentId),
+    comments: [],
+    selection: {},
+  }),
   update: (value, tr) => {
     for (const effect of tr.effects) {
       // Update selection.

@@ -3,7 +3,7 @@
 //
 
 import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
@@ -15,6 +15,7 @@ export type MatchedObject = {
 
 /**
  * Matches an object against a filter AST.
+ * @param obj object structure as stored in automerge.
  */
 export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
   switch (filter.type) {
@@ -81,6 +82,82 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
 
     case 'or': {
       return filter.filters.some((f) => filterMatchObject(f, obj));
+    }
+
+    default:
+      return false;
+  }
+};
+
+export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
+  switch (filter.type) {
+    case 'object': {
+      // Check typename if specified
+      if (filter.typename !== null) {
+        // TODO(dmaretskyi): `system` is missing in some cases.
+        if (!obj['@type']) {
+          // Objects with no type are considered to be expando objects
+          const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
+          if (expectedDXN?.type !== EXPANDO_TYPENAME) {
+            return false;
+          }
+        } else {
+          const actualDXN = DXN.parse(obj['@type']);
+          const expectedDXN = DXN.parse(filter.typename);
+
+          if (!compareTypename(expectedDXN, actualDXN)) {
+            return false;
+          }
+        }
+      }
+
+      // Check IDs if specified
+      if (filter.id && filter.id.length > 0 && !filter.id.includes(obj.id)) {
+        return false;
+      }
+
+      // Check properties
+      if (filter.props) {
+        for (const [key, valueFilter] of Object.entries(filter.props)) {
+          if (key.startsWith('@')) {
+            // ignore meta properties
+            continue;
+          }
+          const value = (obj as any)[key];
+          if (!filterMatchValue(valueFilter, value)) {
+            return false;
+          }
+        }
+      }
+
+      // Check foreign keys if specified
+      if (filter.foreignKeys && filter.foreignKeys.length > 0) {
+        const hasMatchingKey = filter.foreignKeys.some((filterKey) =>
+          obj['@meta']?.keys?.some((objKey) => objKey.source === filterKey.source && objKey.id === filterKey.id),
+        );
+        if (!hasMatchingKey) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    case 'text-search': {
+      // TODO: Implement text search
+      return false;
+    }
+
+    case 'not': {
+      return !filterMatchObjectJSON(filter.filter, obj);
+    }
+
+    case 'and': {
+      return filter.filters.every((f) => filterMatchObjectJSON(f, obj));
+    }
+
+    case 'or': {
+      return filter.filters.some((f) => filterMatchObjectJSON(f, obj));
     }
 
     default:

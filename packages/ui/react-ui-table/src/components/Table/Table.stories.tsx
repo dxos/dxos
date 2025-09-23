@@ -141,7 +141,7 @@ const DefaultStory = () => {
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
         <StoryViewEditor view={view} schema={schema} space={space} handleDeleteColumn={handleDeleteColumn} />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
+        <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>

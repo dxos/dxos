@@ -98,7 +98,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           // TODO(burdon): Limit to tags.
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({
             themeMode,
             slots: {

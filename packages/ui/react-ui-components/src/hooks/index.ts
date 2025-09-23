@@ -3,4 +3,3 @@
 //
 
 export * from './useMatcherExtension';
-export * from './useStreamingText';

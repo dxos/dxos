@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useApp } from '../App';
+import { useApp } from '../components';
 import { IntentPlugin } from '../plugin-intent';
 
 import { DebugPlugin } from './debug';

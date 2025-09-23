@@ -16,8 +16,8 @@ export const createDocAccessor = <T extends BaseObject>(obj: Live<T>, path: KeyP
     path = [path as any];
   }
 
-  assertArgument(isLiveObject(obj), 'expect obj to be a LiveObject');
-  assertArgument(path === undefined || isValidKeyPath(path), 'expect path to be a valid key path');
+  assertArgument(isLiveObject(obj), 'obj', 'expect obj to be a LiveObject');
+  assertArgument(path === undefined || isValidKeyPath(path), 'path', 'expect path to be a valid key path');
 
   const core = getObjectCore(obj);
   const basePath = (obj as any as ProxyTarget)[symbolPath];

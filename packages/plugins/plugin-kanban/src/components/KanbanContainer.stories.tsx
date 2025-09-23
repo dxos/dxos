@@ -127,7 +127,7 @@ const StorybookKanban = () => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
+        <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>

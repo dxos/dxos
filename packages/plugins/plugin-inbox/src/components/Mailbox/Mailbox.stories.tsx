@@ -23,7 +23,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
-import { InboxCapabilities } from '../../capabilities/capabilities';
+import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
 import { createMessages } from '../../testing';
 import { Mailbox } from '../../types';

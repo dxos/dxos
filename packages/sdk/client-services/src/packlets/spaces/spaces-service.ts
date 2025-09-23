@@ -267,7 +267,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
     await using writer = await new SpaceArchiveWriter().open();
-    assertArgument(SpaceId.isValid(request.spaceId), 'Invalid space ID');
+    assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
