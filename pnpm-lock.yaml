@@ -1514,6 +1514,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@dxos/vendor-hypercore':
+        specifier: workspace:*
+        version: link:../../../vendor/hypercore
       readable-stream:
         specifier: ^3.6.0
         version: 3.6.2
@@ -1536,9 +1539,6 @@ importers:
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../tracing
-      '@dxos/vendor-hypercore':
-        specifier: workspace:*
-        version: link:../../../vendor/hypercore
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
@@ -13036,9 +13036,6 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
@@ -13236,9 +13233,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
-      '@dxos/react-ui-stack':
-        specifier: workspace:*
-        version: link:../react-ui-stack
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -13327,6 +13321,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../react-ui-attention
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter

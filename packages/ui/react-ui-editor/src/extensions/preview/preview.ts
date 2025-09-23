@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/lit-ui/dx-ref-tag.pcss';
-
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
@@ -154,7 +152,8 @@ class PreviewInlineWidget extends WidgetType {
   }
 
   override toDOM(_view: EditorView): HTMLElement {
-    const root = document.createElement('dx-ref-tag');
+    const root = document.createElement('dx-anchor');
+    root.classList.add('dx-tag--anchor');
     root.textContent = this._link.label;
     root.setAttribute('refId', this._link.ref);
     return root;

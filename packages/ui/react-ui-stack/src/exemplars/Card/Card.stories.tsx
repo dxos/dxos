@@ -44,6 +44,9 @@ const meta = {
   title: 'ui/react-ui-stack/Card',
   render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
   argTypes: {
     title: {
       control: 'text',
@@ -72,11 +75,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const image = faker.image.url();
+
 export const Default: Story = {
   args: {
     title: faker.commerce.productName(),
     description: faker.lorem.paragraph(),
-    image: faker.image.url(),
+    image,
     showImage: true,
     showIcon: true,
   },

@@ -16,7 +16,7 @@ import {
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { DxRefTag } from '@dxos/lit-ui/react';
+import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { TagPickerItem } from '@dxos/react-ui-tag-picker';
@@ -173,9 +173,9 @@ export const RefField = ({
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             items.map((item) => (
-              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1'>
+              <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
                 {item.label}
-              </DxRefTag>
+              </DxAnchor>
             ))
           )
         ) : (

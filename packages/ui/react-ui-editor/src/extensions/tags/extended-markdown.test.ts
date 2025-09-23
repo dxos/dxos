@@ -30,7 +30,7 @@ describe('extended-markdown', () => {
 
       What can I do for you?
 
-      <suggesion>Summarize tools</suggesion>
+      <suggestion>Summarize tools</suggestion>
 
       <choice>
         <option>Summarize tools</option>
@@ -67,9 +67,9 @@ describe('extended-markdown', () => {
         },
       },
       {
-        content: '<suggesion>Summarize tools</suggesion>',
+        content: '<suggestion>Summarize tools</suggestion>',
         data: {
-          _tag: 'suggesion',
+          _tag: 'suggestion',
           children: ['Summarize tools'],
         },
       },
