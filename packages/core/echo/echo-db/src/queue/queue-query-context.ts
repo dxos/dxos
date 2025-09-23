@@ -7,7 +7,7 @@ import { Array, pipe } from 'effect';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-pipeline';
+import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
