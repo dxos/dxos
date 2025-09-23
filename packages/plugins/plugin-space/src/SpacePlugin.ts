@@ -17,7 +17,7 @@ import {
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, ViewTypeV1, ViewTypeV1ToV2, ViewTypeV2, createDefaultSchema } from '@dxos/schema';
+import { DataType, createDefaultSchema, typenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -103,7 +103,7 @@ export const SpacePlugin = ({
           metadata: {
             label: (object: DataType.QueryCollection) => [
               'typename label',
-              { ns: object.query.typename, count: 2, defaultValue: 'New smart collection' },
+              { ns: typenameFromQuery(object.query), count: 2, defaultValue: 'New smart collection' },
             ],
             icon: 'ph--funnel-simple--regular',
           },
@@ -155,7 +155,8 @@ export const SpacePlugin = ({
         contributes(
           SpaceCapabilities.ObjectForm,
           defineObjectForm({
-            objectSchema: DataType.QueryCollection,
+            // TODO(wittjosiah): Remove cast.
+            objectSchema: DataType.QueryCollection as any,
             formSchema: CollectionAction.QueryCollectionForm,
             getIntent: (props) => createIntent(CollectionAction.CreateQueryCollection, props),
           }),
@@ -189,19 +190,12 @@ export const SpacePlugin = ({
       activate: () =>
         contributes(ClientCapabilities.Schema, [
           DataType.View,
-          ViewTypeV1,
-          ViewTypeV2,
           DataType.Event,
           DataType.Organization,
           DataType.Person,
           DataType.Project,
           DataType.Task,
         ]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/migration`,
-      activatesOn: ClientEvents.SetupMigration,
-      activate: () => contributes(ClientCapabilities.Migration, [ViewTypeV1ToV2]),
     }),
     defineModule({
       id: `${meta.id}/module/whitelist-schema`,

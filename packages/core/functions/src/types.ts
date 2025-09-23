@@ -4,7 +4,7 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { QueryAST, Type } from '@dxos/echo';
 import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
@@ -64,19 +64,12 @@ const WebhookTriggerSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
-// TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
-const QuerySchema = Schema.Struct({
-  type: Schema.optional(Schema.String.annotations({ title: 'Type' })),
-  props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).annotations({ title: 'Query' });
-
 /**
  * Subscription.
  */
 const SubscriptionTriggerSchema = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
-  // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: QuerySchema,
+  query: QueryAST.Query.annotations({ title: 'Query' }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -153,7 +146,7 @@ export type TimerTriggerOutput = Schema.Schema.Type<typeof TimerTriggerOutput>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-export const FunctionTrigger = Schema.Struct({
+const FunctionTrigger_ = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
@@ -189,7 +182,9 @@ export const FunctionTrigger = Schema.Struct({
     version: '0.2.0',
   }),
 );
-export type FunctionTrigger = Schema.Schema.Type<typeof FunctionTrigger>;
+export interface FunctionTrigger extends Schema.Schema.Type<typeof FunctionTrigger_> {}
+export interface FunctionTriggerEncoded extends Schema.Schema.Encoded<typeof FunctionTrigger_> {}
+export const FunctionTrigger: Schema.Schema<FunctionTrigger, FunctionTriggerEncoded> = FunctionTrigger_;
 
 // TODO(wittjosiah): Remove?
 

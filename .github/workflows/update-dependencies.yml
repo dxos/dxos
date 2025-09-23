@@ -11,6 +11,7 @@ on:
 jobs:
   update:
     strategy:
+      fail-fast: false
       matrix:
         packages:
           - name: effect
@@ -50,7 +51,7 @@ jobs:
         run: npx npm-check-updates --deep --upgrade ${{ matrix.packages.spec }}
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --strict-peer-dependencies=false
 
       - name: Create Pull Request
         id: cpr

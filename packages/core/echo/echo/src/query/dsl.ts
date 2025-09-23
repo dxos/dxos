@@ -132,6 +132,9 @@ export interface Query<T> {
 interface QueryAPI {
   is(value: unknown): value is Query.Any;
 
+  /** Construct a query from an ast. */
+  fromAst(ast: QueryAST.Query): Query<any>;
+
   /**
    * Select objects based on a filter.
    * @param filter - Filter to select the objects.
@@ -569,6 +572,10 @@ class QueryClass implements Query<any> {
 
   static is(value: unknown): value is Query<any> {
     return typeof value === 'object' && value !== null && '~Query' in value;
+  }
+
+  static fromAst(ast: QueryAST.Query): Query<any> {
+    return new QueryClass(ast);
   }
 
   static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {

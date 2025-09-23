@@ -97,7 +97,7 @@ describe('FeedWrapper', () => {
       await feed.append({
         id: String(i + 1),
         value: faker.lorem.sentence(),
-      });
+      } as any);
     }
 
     expect(feed.properties.length).to.eq(numBlocks);
@@ -234,7 +234,7 @@ describe('FeedWrapper', () => {
     // Reader.
     {
       const start = 5;
-      feed2.download({ start, linear: true }, (err: Error) => {
+      feed2.download({ start, linear: true }, (err: Error | null) => {
         if (err) {
           throw err;
         }
@@ -261,7 +261,7 @@ describe('FeedWrapper', () => {
     await feed2.open();
 
     for (const i of range(numBlocks)) {
-      await feed1.append(`block-${i}`);
+      await feed1.append(`block-${i}` as any);
     }
 
     for (const i of range(numBlocks)) {
