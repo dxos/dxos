@@ -4,3 +4,4 @@
 
 export * from './invocation-tracer';
 export * from './trigger-dispatcher';
+export * from './trigger-state-store';

@@ -8,8 +8,8 @@ import React, { useEffect, useMemo } from 'react';
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-hooks';
 
-import { type CreateAppOptions, useApp } from '../App';
 import { Capabilities, Events } from '../common';
+import { type UseAppOptions, useApp } from '../components';
 import {
   type ActivationEvent,
   type AnyCapability,
@@ -36,7 +36,7 @@ export const setupPluginManager = ({
   plugins = [],
   core = plugins.map(({ meta }) => meta.id),
   ...options
-}: CreateAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+}: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [storyPlugin(), ...plugins],
@@ -57,7 +57,7 @@ export const setupPluginManager = ({
   return pluginManager;
 };
 
-export type WithPluginManagerOptions = CreateAppOptions & {
+export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
   capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
   /** @deprecated */
