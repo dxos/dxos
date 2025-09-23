@@ -1,16 +1,14 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "es2018",
-    "types": [
-      "@dxos/typings",
-      "node"
-    ]
+    "types": ["@dxos/typings", "node"],
+    "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
+    {
+      "path": "../../../vendor/hypercore"
+    },
     {
       "path": "../../core/halo/keyring"
     },

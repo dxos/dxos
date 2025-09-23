@@ -38,14 +38,14 @@
     "readable-stream": "^3.6.0",
     "sodium-native": "^3.2.0",
     "sodium-universal": "^3.0.2",
-    "streamx": "^2.12.5"
+    "streamx": "^2.12.5",
+    "@dxos/vendor-hypercore": "workspace:*"
   },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/vendor-hypercore": "workspace:*",
     "@types/randombytes": "^2.0.0",
     "@types/readable-stream": "^2.3.9",
     "hypercore-protocol": "^8.0.7",
