@@ -4,7 +4,7 @@
 
 import { PublicKey } from '@dxos/keys';
 
-import { verify } from '#hypercore-crypto';
+import { verify } from '@dxos/vendor-hypercore/hypercore-crypto';
 
 /**
  * Generator for signature validation function.

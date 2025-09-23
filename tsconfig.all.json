@@ -28,9 +28,6 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
-      "path": "packages/common/crypto-names/tsconfig.json"
-    },
-    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {
