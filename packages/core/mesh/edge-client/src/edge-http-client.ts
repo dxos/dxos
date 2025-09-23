@@ -267,7 +267,7 @@ export class EdgeHttpClient {
     for (const [filename, content] of Object.entries(body.assets)) {
       formData.append(
         'assets',
-        new Blob([content as Uint8Array<ArrayBuffer>], { type: 'application/octet-stream' }),
+        new Blob([content as Uint8Array<ArrayBuffer>], { type: getFileMimeType(filename) }),
         filename,
       );
     }
@@ -504,3 +504,10 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
     return true;
   };
 };
+
+const getFileMimeType = (filename: string) =>
+  ['.js', '.mjs'].some((codeExtension) => filename.endsWith(codeExtension))
+    ? 'application/javascript+module'
+    : filename.endsWith('.wasm')
+      ? 'application/wasm'
+      : 'application/octet-stream';
