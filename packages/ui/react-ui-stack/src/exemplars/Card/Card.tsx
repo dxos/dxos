@@ -13,13 +13,13 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-// import { ImageWithBackground } from '@dxos/react-ui-components';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { ImageWithBackground, StackItem } from '../../components';
+import { StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
+import { ImageWithBackground } from './ImageWithBackground';
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 

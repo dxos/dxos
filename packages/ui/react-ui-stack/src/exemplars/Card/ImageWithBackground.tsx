@@ -15,11 +15,14 @@ export type ImageWithDominantBackgroundProps = ThemedClassName<{
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
 }>;
 
+// TODO(thure): This doesn’t feel quite at home in `react-ui-stack`, though it mixes Card’s layout concerns with raster image analysis.
 export const ImageWithBackground = ({
   classNames,
   src,
   alt = '',
+  // TODO(thure): This component should export subcomponents if consumers in a React runtime need to configure multiple elements within the component.
   containerClassName = '',
+  // TODO(thure): Colors should always draw from the theme, literals like this should be avoided.
   fallbackColor = '#f0f0f0',
   crossOrigin = 'anonymous',
 }: ImageWithDominantBackgroundProps) => {

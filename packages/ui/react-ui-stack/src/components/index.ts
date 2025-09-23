@@ -4,6 +4,5 @@
 
 export type * from './defs';
 
-export * from './ImageWithBackground';
 export * from './Stack';
 export * from './StackItem';
