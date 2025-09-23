@@ -12,7 +12,7 @@ import { Tooltip, type TooltipSide } from '../Tooltip';
 import { Button, type ButtonProps } from './Button';
 
 type IconButtonProps = Omit<ButtonProps, 'children'> &
-  Pick<IconProps, 'icon' | 'size'> & {
+  Partial<Pick<IconProps, 'icon' | 'size'>> & {
     label: string;
     iconOnly?: boolean;
     noTooltip?: boolean;
@@ -40,7 +40,7 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', { iconOnly }, classNames)} ref={forwardedRef}>
-        <Icon icon={icon} size={size} classNames={iconClassNames} />
+        {icon && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
         {caretDown && <Icon size={3} icon='ph--caret-down--bold' />}
       </Button>

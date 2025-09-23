@@ -64,12 +64,16 @@ test.skipIf(process.env.CI)(
       // <script src="...">
       for (const script of Array.from(document.querySelectorAll<HTMLScriptElement>('script[src]'))) {
         const src = script.getAttribute('src');
-        if (src) resources.add(new URL(src, baseUrl).toString());
+        if (src) {
+          resources.add(new URL(src, baseUrl).toString());
+        }
       }
       // <link rel="modulepreload" href="...">
       for (const link of Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="modulepreload"][href]'))) {
         const href = link.getAttribute('href');
-        if (href) resources.add(new URL(href, baseUrl).toString());
+        if (href) {
+          resources.add(new URL(href, baseUrl).toString());
+        }
       }
 
       // Recursively fetch resources and their imports.
