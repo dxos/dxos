@@ -2,17 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export type BaseErrorOptions = {
+/**
+ * Options for creating a BaseError.
+ */
+export type BaseErrorOptions = ErrorOptions & {
   /**
    * Override base message.
    */
   message?: string;
-
-  /**
-   * The cause of the error.
-   * An instance of Error.
-   */
-  cause?: unknown;
 
   /**
    * Structured details about the error.
@@ -52,7 +49,7 @@ export class BaseError<Code extends string = string> extends Error {
   #context: Record<string, unknown>;
 
   constructor(code: Code, options?: BaseErrorOptions) {
-    super(options?.message);
+    super(options?.message, options);
 
     this.#code = code;
     this.#context = options?.context ?? {};

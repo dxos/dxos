@@ -25,16 +25,16 @@ describe('errors', () => {
       expect.fail('Expected error to be thrown');
     } catch (error: any) {
       expect(error).toBeInstanceOf(SystemError);
-      expect(String(error)).toEqual('SYSTEM_ERROR: Test message');
+      expect(String(error)).toEqual('SYSTEM: Test message');
       const stackLines = error.stack!.split('\n');
-      expect(stackLines?.[0]).toEqual('SYSTEM_ERROR: Test message');
+      expect(stackLines?.[0]).toEqual('SYSTEM: Test message');
       expect(stackLines?.[1]).toMatch(/^ {4}at two \(.*$/);
       expect(stackLines?.[2]).toMatch(/^ {4}at one \(.*$/);
     }
   });
 
   test('custom message', () => {
-    class CustomError extends BaseError.extend('CUSTOM_ERROR', 'Custom message') {
+    class CustomError extends BaseError.extend('CUSTOM', 'Custom message') {
       constructor(value: number, options?: Omit<BaseErrorOptions, 'context'>) {
         super({ context: { value }, ...options });
       }
@@ -43,7 +43,7 @@ describe('errors', () => {
     const error = new CustomError(1);
     expect(error).toBeInstanceOf(CustomError);
     expect(error.message).toBe('Custom message');
-    expect(error.context).toBe({ value: 1 });
+    expect(error.context).toEqual({ value: 1 });
   });
 
   test('is', () => {
