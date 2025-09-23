@@ -29,7 +29,6 @@ export type ViewColumnProps = {
 
 // This duplicates a lot of the same boilerplate as Kanban columns; is there an opportunity to DRY these out?
 export const ViewColumn = ({ view }: ViewColumnProps) => {
-  // Resolve the view from the view using useQuery
   const client = useClient();
   const space = getSpace(view);
   const { t } = useTranslation(meta.id);
@@ -47,8 +46,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     setSchema(() => schema);
   }, [view.query]);
 
-  // Resolve the view.query to its items
-  const items = useQuery(space, query);
+  const queryTarget = getQueryTarget(query.ast, space);
+  const items = useQuery(queryTarget, query);
   const projectionModel = useMemo(
     () => (schema ? new ProjectionModel(Type.toJsonSchema(schema), view.projection) : undefined),
     [schema, view.projection],
@@ -222,3 +221,17 @@ const typenameFromFilter = (filter: QueryAST.Filter) =>
     Match.when({ type: 'object' }, ({ typename }) => Option.fromNullable(typename)),
     Match.orElse(() => Option.none()),
   );
+
+const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
+  return Match.value(query).pipe(
+    Match.when({ type: 'options' }, ({ options }) => {
+      return Option.fromNullable(options.queues).pipe(
+        Option.flatMap((queues) => Array.head(queues)),
+        Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
+        Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
+        Option.getOrElse(() => space),
+      );
+    }),
+    Match.orElse(() => space),
+  );
+};

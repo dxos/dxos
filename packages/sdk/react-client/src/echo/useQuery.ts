@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
+import { type Echo, Filter, type Live, Query, type Queue, type Space, isSpace } from '@dxos/client/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -21,7 +21,7 @@ interface UseQueryFn {
  * Create subscription.
  */
 export const useQuery: UseQueryFn = (
-  spaceOrEcho: Space | Echo | undefined,
+  spaceOrEcho: Space | Echo | Queue<any> | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
 ): Live<unknown>[] => {
