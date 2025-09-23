@@ -3,6 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
@@ -36,14 +37,30 @@ export type CommandMenuProps = PropsWithChildren<{
   groups: CommandMenuGroup[];
   currentItem?: string;
   onSelect: (item: CommandMenuItem) => void;
+  open?: boolean;
+  onOpenChange?: (nextOpen: boolean) => void;
+  defaultOpen?: boolean;
 }>;
 
 // NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
-export const CommandMenuProvider = ({ groups, currentItem, onSelect, children }: CommandMenuProps) => {
+export const CommandMenuProvider = ({
+  groups,
+  currentItem,
+  onSelect,
+  children,
+  open: propsOpen,
+  onOpenChange,
+  defaultOpen,
+}: CommandMenuProps) => {
   const { tx } = useThemeContext();
   const groupsWithItems = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const [open, setOpen] = useState(false);
+
+  const [open, setOpen] = useControllableState({
+    prop: propsOpen,
+    onChange: onOpenChange,
+    defaultProp: defaultOpen,
+  });
 
   const handleDxAnchorActivate = useCallback((event: DxAnchorActivate) => {
     const { trigger: dxTrigger } = event;
