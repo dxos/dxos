@@ -13,9 +13,10 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+// import { ImageWithBackground } from '@dxos/react-ui-components';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { StackItem } from '../../components';
+import { ImageWithBackground, StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
@@ -127,14 +128,19 @@ const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
     return (
-      <img className={`dx-card__poster ${aspect} object-cover is-full bs-auto`} src={props.image} alt={props.alt} />
+      <ImageWithBackground
+        classNames={[`dx-card__poster is-full bs-auto object-contain`, aspect]}
+        src={props.image}
+        alt={props.alt}
+      />
+      // <img className={mx(`dx-card__poster is-full bs-auto object-contain`, aspect)} src={props.image} alt={props.alt} />
     );
   }
   if (props.icon) {
     return (
       <div
         role='image'
-        className={`dx-card__poster grid ${aspect} place-items-center bg-inputSurface text-subdued`}
+        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />

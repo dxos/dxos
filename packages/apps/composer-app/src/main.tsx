@@ -122,6 +122,7 @@ const main = async () => {
       defaults,
       cacheEnabled: true,
       safeMode,
+      debounce: 1_000,
     });
 
     return <App />;
