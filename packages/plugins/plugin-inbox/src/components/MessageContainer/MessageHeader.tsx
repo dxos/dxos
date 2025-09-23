@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type DxRefTag, DxRefTagActivate } from '@dxos/lit-ui';
+import { type DxAnchor, DxAnchorActivate } from '@dxos/lit-ui';
 import { Avatar, Button, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
@@ -29,8 +29,8 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
       const button = (event.target as HTMLElement).closest('.dx-button');
       if (contactDxn && button) {
         button.dispatchEvent(
-          new DxRefTagActivate({
-            trigger: button as DxRefTag,
+          new DxAnchorActivate({
+            trigger: button as DxAnchor,
             refId: contactDxn,
             label: message.sender.name ?? 'never',
           }),

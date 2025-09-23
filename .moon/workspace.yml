@@ -5,6 +5,7 @@ projects:
   - docs
   - packages/**/moon.yml
   - tools/*/moon.yml
+  - vendor/*/moon.yml
 
 unstable_remote:
   host: 'grpcs://cache.depot.dev'
