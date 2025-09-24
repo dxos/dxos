@@ -33,7 +33,7 @@ export const OrganizationCard = ({ children, subject, role, activeSpace }: Previ
             rel='noreferrer'
           >
             <Icon icon='ph--link--regular' size={5} classNames='text-subdued' />
-            <span className='grow'>{website}</span>
+            <span className='min-is-0 flex-1 truncate'>{website}</span>
             <Icon icon='ph--arrow-square-out--regular' />
           </a>
         </Card.Chrome>
