@@ -117,9 +117,9 @@ export const bundle: (
     return { entryPoint: 'userFunc.js', assets };
   });
 
-class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR') {
+class BundleCreationError extends BaseError.extend('BUNDLE_CREATION_ERROR', 'Bundle creation failed') {
   constructor(errors: Message[]) {
-    super('Bundle creation failed', { context: { errors } });
+    super({ context: { errors } });
   }
 }
 

@@ -18,7 +18,7 @@ import { createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import { ComputeNodeError, ValueValidationError } from '../errors';
+import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
@@ -308,7 +308,7 @@ export class GraphExecutor {
       yield* Schema.decode(input.schema)(value).pipe(
         Effect.mapError(
           (error) =>
-            new ValueValidationError('Invalid input value', {
+            new InvalidValueError({
               context: {
                 nodeId,
                 property: input.name,
@@ -427,9 +427,9 @@ export class GraphExecutor {
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
           Effect.mapError((cause) =>
-            ComputeNodeError.is(cause) || ValueValidationError.is(cause)
+            ComputeNodeError.is(cause) || InvalidValueError.is(cause)
               ? cause
-              : new ComputeNodeError('Compute node failed', { cause, context: { nodeId } }),
+              : new ComputeNodeError({ cause, context: { nodeId } }),
           ),
           Effect.withSpan('call-node'),
           Effect.provideService(ComputeEventLogger, {
@@ -449,7 +449,7 @@ export class GraphExecutor {
             yield* Schema.decode(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>
-                  new ValueValidationError('Invalid output value', {
+                  new InvalidValueError({
                     context: {
                       nodeId,
                       property: key,

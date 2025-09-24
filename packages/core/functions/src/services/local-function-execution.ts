@@ -82,7 +82,7 @@ const invokeFunction = (
     }).pipe(
       Effect.orDie,
       Effect.catchAllDefect((defect) =>
-        Effect.die(new FunctionError('Error running function', { context: { name: functionDef.name }, cause: defect })),
+        Effect.die(new FunctionError({ context: { name: functionDef.name }, cause: defect })),
       ),
     );
 
