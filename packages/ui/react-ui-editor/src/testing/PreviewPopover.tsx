@@ -18,7 +18,7 @@ type PreviewPopoverValue = Partial<{
   pending: boolean;
 }>;
 
-const [PreviewPopoverContextProvider, usePreviewPopover] = createContext<PreviewPopoverValue>('RefPopover', {});
+const [PreviewPopoverContextProvider, usePreviewPopover] = createContext<PreviewPopoverValue>('PreviewPopover', {});
 
 type PopoverLookupProviderProps = PropsWithChildren<{
   onLookup?: PreviewLookup;
