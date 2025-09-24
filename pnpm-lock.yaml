@@ -5687,6 +5687,9 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-project':
+        specifier: workspace:*
+        version: link:../plugin-project
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
