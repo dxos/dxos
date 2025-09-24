@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { ResearchOn, research } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, ResearchOn, agent } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
@@ -38,6 +38,7 @@ import { DataType, createView } from '@dxos/schema';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
+import { Prompt } from '@dxos/blueprints';
 
 export enum PresetName {
   DXOS_TEAM = 'dxos-team',
@@ -102,13 +103,32 @@ export const generator = () => ({
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
+          const researchPrompt = space.db.add(
+            Prompt.make({
+              name: 'Research',
+              description: 'Research organization',
+              input: Schema.Struct({
+                org: Schema.Any,
+              }),
+              output: Schema.Any,
+
+              instructions:
+                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+              blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+            }),
+          );
+
           const researchTrigger = Obj.make(FunctionTrigger, {
-            function: Ref.make(serializeFunction(research)),
+            enabled: true,
             spec: {
               kind: 'subscription',
               query: organizationsQuery.ast,
             },
-            enabled: true,
+            function: Ref.make(serializeFunction(agent)),
+            input: {
+              prompt: Ref.make(researchPrompt),
+              input: '{{event.item}}',
+            },
           });
           space.db.add(researchTrigger);
 
