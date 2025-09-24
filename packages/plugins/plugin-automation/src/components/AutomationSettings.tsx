@@ -11,7 +11,7 @@ import { AUTOMATION_PLUGIN } from '../meta';
 
 import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
 
-export const AutomationContainer = (props: AutomationPanelProps) => {
+export const AutomationSettings = (props: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
   return (
     <ControlPage>
@@ -25,4 +25,4 @@ export const AutomationContainer = (props: AutomationPanelProps) => {
   );
 };
 
-export default AutomationContainer;
+export default AutomationSettings;

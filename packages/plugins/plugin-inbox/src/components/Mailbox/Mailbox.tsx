@@ -49,7 +49,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         hue="${hue}"
         hueVariant="surface"
         variant="square"
-        size="8"
+        size="10"
         fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
       ></dx-avatar>
     </button>
@@ -59,8 +59,8 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-message-id="${id}"
     >
       <p class="message__abstract__heading">
-      <span class="message__abstract__from">${from}</span>
-      <span class="message__abstract__date">${date}</span>
+        <span class="message__abstract__from">${from}</span>
+        <span class="message__abstract__date">${date}</span>
       </p>
       <p class="message__abstract__body">${subject}</p>
     ${
@@ -74,12 +74,6 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
 };
 
 const messageCellClassName = 'message';
-
-// TODO(burdon): Extract contacts/orgs.
-// TODO(burdon): Split message body into parts and allow trim (e.g., remove forwarded part). Message as light stack?
-// TODO(burdon): Highlight message/chunks for action (e.g., follow-up, triggers embedding).
-// TODO(burdon): Create outline/kanban.
-// TODO(burdon): Address book/cards.
 
 export type MailboxAction =
   | { type: 'select'; messageId: string }
