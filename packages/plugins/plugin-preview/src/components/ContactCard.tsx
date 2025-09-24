@@ -61,6 +61,7 @@ export const ContactCard = ({
             emails.map(({ label, value }) => (
               <Fragment key={value}>
                 <dt>
+                  <span className='sr-only'>{label}</span>
                   <Icon icon='ph--at--regular' size={5} />
                 </dt>
                 <dd key={value} className='break-words'>
