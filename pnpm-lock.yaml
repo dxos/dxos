@@ -8504,6 +8504,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client

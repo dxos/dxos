@@ -16,6 +16,7 @@ import { CardSubjectMenu } from './CardSubjectMenu';
 export const ContactCard = ({
   children,
   subject,
+  activeSpace,
   onOrgClick,
   role,
 }: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
@@ -30,7 +31,7 @@ export const ContactCard = ({
             <Avatar.Label asChild>
               <h2 className={mx(cardHeading, 'grow')}>{fullName}</h2>
             </Avatar.Label>
-            <CardSubjectMenu subject={subject} />
+            <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
           </div>
         </Card.Text>
       </Avatar.Root>

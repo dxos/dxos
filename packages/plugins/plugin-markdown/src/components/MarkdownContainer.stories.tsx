@@ -7,22 +7,30 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin, Surface, contributes } from '@dxos/app-framework';
+import {
+  type Capabilities,
+  IntentPlugin,
+  LayoutAction,
+  SettingsPlugin,
+  Surface,
+  createIntent,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { todo } from '@dxos/debug';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpaceCapabilities, SpacePlugin } from '@dxos/plugin-space';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -34,9 +42,16 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useSpace();
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
+
+  useAsyncEffect(async () => {
+    if (space) {
+      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+    }
+  }, [space, dispatch]);
 
   return <Surface role='article' data={data} limit={1} />;
 };
@@ -69,7 +84,7 @@ const meta = {
             });
             space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: Testing.Contact, count: 10 }]);
+            await createObjects([{ type: DataType.Organization, count: 10 }]);
             await space.db.flush({ indexes: true });
           },
         }),
@@ -79,19 +94,6 @@ const meta = {
         MarkdownPlugin(),
         PreviewPlugin(),
         GraphPlugin(),
-      ],
-      capabilities: [
-        // NOTE: Editor only queries for object form schemas when linking.
-        contributes(SpaceCapabilities.ObjectForm, {
-          objectSchema: Testing.Contact,
-          getIntent: () => todo(),
-        }),
-        contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Testing.Contact),
-          metadata: {
-            icon: 'ph--user--regular',
-          },
-        }),
       ],
     }),
     withLayout({ fullscreen: true }),
