@@ -196,6 +196,7 @@ export const deserializeFunction = (functionObj: FunctionType): FunctionDefiniti
     description: functionObj.description,
     inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
     outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
+    // TODO(dmaretskyi): This should throw error.
     handler: () => {},
   };
 };
