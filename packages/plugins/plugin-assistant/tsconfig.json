@@ -211,6 +211,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-project"
+    },
+    {
       "path": "../plugin-script"
     },
     {
