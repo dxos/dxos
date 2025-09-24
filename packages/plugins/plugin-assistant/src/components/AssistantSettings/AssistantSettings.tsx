@@ -10,6 +10,10 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 
 import { meta } from '../../meta';
 import { type Assistant, LLM_PROVIDERS } from '../../types';
+import { useTriggerRuntimeControls } from '../../hooks';
+import { useLayout } from '@dxos/app-framework';
+import { parseId } from '@dxos/client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 
 // TODO(burdon): Factor out default Selector.
 const DEFAULT_VALUE = '__default';
@@ -107,6 +111,27 @@ export const AssistantSettings = ({ settings }: { settings: Assistant.Settings }
           </ControlItemInput>
         </ControlGroup>
       </ControlSection>
+
+      <ControlSection title={'Local triggers'} description={'Manage local trigger execution'}>
+        <ControlGroup>
+          <TriggersSettings />
+        </ControlGroup>
+      </ControlSection>
     </ControlPage>
+  );
+};
+
+const TriggersSettings = () => {
+  const layout = useLayout();
+  const { spaceId } = parseId(layout.workspace);
+  const space = useSpace(spaceId);
+  const { triggers, isRunning, start, stop } = useTriggerRuntimeControls(space);
+  const { t } = useTranslation(meta.id);
+
+  return (
+    <Input.Root>
+      <div>{isRunning ? t('trigger dispatcher running') : t('trigger dispatcher stopped')}</div>
+      <Input.Switch classNames='mis-2 mie-2' checked={isRunning} onCheckedChange={isRunning ? stop : start} />
+    </Input.Root>
   );
 };

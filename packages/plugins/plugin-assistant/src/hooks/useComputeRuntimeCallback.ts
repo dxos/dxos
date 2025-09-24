@@ -14,12 +14,17 @@ import { AssistantCapabilities } from '../capabilities';
  * Create an effectful function that has access to compute services
  */
 export const useComputeRuntimeCallback = <T>(
-  space: Space,
+  space: Space | undefined,
   fn: () => Effect.Effect<T, any, AssistantCapabilities.ComputeServices>,
   deps?: React.DependencyList,
 ): (() => Promise<T>) => {
   const computeRuntime = useCapability(AssistantCapabilities.ComputeRuntime);
-  const runtime = computeRuntime.getRuntime(space.id);
+  const runtime = space !== undefined ? computeRuntime.getRuntime(space.id) : undefined;
 
-  return useCallback(() => runtime.runPromise(fn()), [runtime, ...(deps ?? [])]);
+  return useCallback(() => {
+    if (!runtime) {
+      throw new TypeError('Space not provided to useComputeRuntimeCallback');
+    }
+    return runtime.runPromise(fn());
+  }, [runtime, ...(deps ?? [])]);
 };

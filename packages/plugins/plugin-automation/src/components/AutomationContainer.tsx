@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Input, useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { AUTOMATION_PLUGIN } from '../meta';
