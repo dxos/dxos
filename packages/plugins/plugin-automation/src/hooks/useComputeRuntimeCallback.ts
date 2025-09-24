@@ -6,19 +6,19 @@ import type { Effect } from 'effect';
 import { useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
-import type { Space } from '@dxos/client/echo';
+import type { Space } from '@dxos/react-client/echo';
 
-import { AssistantCapabilities } from '../capabilities';
+import { AutomationCapabilities } from '../capabilities';
 
 /**
  * Create an effectful function that has access to compute services
  */
 export const useComputeRuntimeCallback = <T>(
   space: Space | undefined,
-  fn: () => Effect.Effect<T, any, AssistantCapabilities.ComputeServices>,
+  fn: () => Effect.Effect<T, any, AutomationCapabilities.ComputeServices>,
   deps?: React.DependencyList,
 ): (() => Promise<T>) => {
-  const computeRuntime = useCapability(AssistantCapabilities.ComputeRuntime);
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   const runtime = space !== undefined ? computeRuntime.getRuntime(space.id) : undefined;
 
   return useCallback(() => {

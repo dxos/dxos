@@ -8,9 +8,9 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { TracingService } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useClient } from '@dxos/react-client';
 
-import { AssistantCapabilities } from '../capabilities';
 import { type AiChatServices } from '../processor';
 import { type Assistant } from '../types';
 
@@ -30,7 +30,7 @@ export const useChatServices = ({
   const client = useClient();
   space ??= client.spaces.default;
 
-  const computeRuntimeResolver = useCapability(AssistantCapabilities.ComputeRuntime);
+  const computeRuntimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
 
   return useMemo(() => {
     const runtime = computeRuntimeResolver.getRuntime(space.id);
