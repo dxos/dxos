@@ -133,6 +133,7 @@
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-project": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
