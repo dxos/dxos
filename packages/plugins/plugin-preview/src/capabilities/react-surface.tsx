@@ -28,6 +28,7 @@ import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
+import { TaskCard } from '../components/TaskCard';
 import { PREVIEW_PLUGIN } from '../meta';
 
 export default () =>
@@ -120,6 +121,12 @@ export default () =>
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
+    }),
+    createSurface({
+      id: `${PREVIEW_PLUGIN}/schema-popover--task`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
+      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
     }),
 
     //
