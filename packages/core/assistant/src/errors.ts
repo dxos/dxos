@@ -5,11 +5,11 @@
 import { BaseError } from '@dxos/errors';
 
 /**
- * Generic error for AI agent execution.
+ * Generic error from AI model.
  */
-export class AiAssistantError extends BaseError.extend('AI_ASSISTANT_ERROR') {}
+export class AiModelError extends BaseError.extend('AI_MODEL_ERROR', 'AI model error') {}
 
 /**
- * Parsed error from the anthropic API.
+ * Generic error for AI agent execution.
  */
-export class AnthropicError extends BaseError.extend('ANTHROPIC_ERROR') {}
+export class AiAssistantError extends BaseError.extend('AI_ASSISTANT_ERROR', 'AI assistant error') {}

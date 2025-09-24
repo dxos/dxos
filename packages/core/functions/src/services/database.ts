@@ -4,12 +4,20 @@
 
 import { Context, Effect, Layer, Option, type Schema } from 'effect';
 
-import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
+import {
+  type Filter,
+  type Live,
+  Obj,
+  ObjectNotFoundError,
+  type Query,
+  type Ref,
+  type Relation,
+  type Type,
+} from '@dxos/echo';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
 import type { EchoSchema } from '@dxos/echo-schema';
 import { promiseWithCauseCapture } from '@dxos/effect';
-import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
@@ -65,7 +73,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       );
 
       if (!object) {
-        return yield* Effect.fail(new ObjectNotFoundError({ dxn }));
+        return yield* Effect.fail(new ObjectNotFoundError(dxn));
       }
       invariant(!schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
       return object as any;
@@ -77,7 +85,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, ObjectNotFoundError, never> = Effect.fn(function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new ObjectNotFoundError({ dxn: ref.dxn }));
+      return yield* Effect.fail(new ObjectNotFoundError(ref.dxn));
     }
     return object;
   });
@@ -160,11 +168,4 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.schemaQuery(query).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
-}
-
-// TODO(burdon): Move to echo/errors.
-class ObjectNotFoundError extends BaseError.extend('OBJECT_NOT_FOUND') {
-  constructor(context?: Record<string, unknown>) {
-    super('Object not found', { context });
-  }
 }

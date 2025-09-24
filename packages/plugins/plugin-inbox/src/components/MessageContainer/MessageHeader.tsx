@@ -4,8 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type DxAnchor, DxAnchorActivate } from '@dxos/lit-ui';
-import { Avatar, Button, Icon } from '@dxos/react-ui';
+import { Avatar, Button, DxAnchorActivate, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
@@ -30,7 +29,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
       if (contactDxn && button) {
         button.dispatchEvent(
           new DxAnchorActivate({
-            trigger: button as DxAnchor,
+            trigger: button as HTMLElement,
             refId: contactDxn,
             label: message.sender.name ?? 'never',
           }),

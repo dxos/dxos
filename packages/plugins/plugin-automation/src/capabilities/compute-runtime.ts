@@ -8,7 +8,6 @@ import { Effect, Layer, ManagedRuntime } from 'effect';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { PropertiesType } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Query, Ref } from '@dxos/echo';
 import {
@@ -25,18 +24,19 @@ import { TriggerStateStore } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { PropertiesType } from '@dxos/react-client/echo';
 
-import { AssistantCapabilities } from './capabilities';
+import { AutomationCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
   const provider = await new ComputeRuntimeProviderImpl(context).open();
-  return contributes(AssistantCapabilities.ComputeRuntime, provider, async () => {
+  return contributes(AutomationCapabilities.ComputeRuntime, provider, async () => {
     await provider.close();
   });
 };
 
-class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabilities.ComputeRuntimeProvider {
-  readonly #runtimes = new Map<SpaceId, ManagedRuntime.ManagedRuntime<AssistantCapabilities.ComputeServices, never>>();
+class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
+  readonly #runtimes = new Map<SpaceId, ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>>();
   readonly #context: PluginContext;
 
   constructor(context: PluginContext) {
@@ -51,7 +51,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
     this.#runtimes.clear();
   }
 
-  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<AssistantCapabilities.ComputeServices, never> {
+  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never> {
     if (this.#runtimes.has(spaceId)) {
       return this.#runtimes.get(spaceId)!;
     }
@@ -60,7 +60,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
       Effect.gen(this, function* () {
         const client = this.#context.getCapability(ClientCapabilities.Client);
         const serviceLayer =
-          this.#context.getCapability(AssistantCapabilities.AiServiceLayer) ?? Layer.die('AiService not found');
+          this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make those reactive.
         const functions = this.#context.getCapabilities(Capabilities.Functions);
@@ -79,7 +79,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
         return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
-              IvocationTracerLive,
+              InvocationTracerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
@@ -107,7 +107,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AssistantCapabiliti
   }
 }
 
-const IvocationTracerLive = Layer.unwrapEffect(
+const InvocationTracerLive = Layer.unwrapEffect(
   Effect.gen(function* () {
     const {
       objects: [properties],

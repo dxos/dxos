@@ -14,7 +14,6 @@ export const LocalModelResolver = lazy(() => import('./local-model-resolver'));
 export const ReactSurface = lazy(() => import('./react-surface'));
 export const Settings = lazy(() => import('./settings'));
 export const Toolkit = lazy(() => import('./toolkit'));
-export const ComputeRuntime = lazy(() => import('./compute-runtime'));
 
 export * from './blueprint-definition';
 export * from './capabilities';

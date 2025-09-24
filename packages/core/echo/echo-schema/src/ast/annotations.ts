@@ -12,6 +12,18 @@ import { createAnnotationHelper } from './annotation-helper';
 import { EntityKind } from './entity-kind';
 
 /**
+ * If property is optional returns the nested property, otherwise returns the property.
+ */
+// TODO(wittjosiah): Is there a way to do this as a generic?
+export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
+  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
+    return property;
+  }
+
+  return property.type.types[0];
+};
+
+/**
  * ECHO identifier (for a stored schema).
  * Must be a `dxn:echo:` URI.
  */

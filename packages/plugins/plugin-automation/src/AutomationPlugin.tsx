@@ -6,7 +6,7 @@ import { Capabilities, Events, contributes, defineModule, definePlugin } from '@
 import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, IntentResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ComputeRuntime, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -36,5 +36,10 @@ export const AutomationPlugin = () =>
       id: `${meta.id}/module/react-surface`,
       activatesOn: Events.SetupReactSurface,
       activate: ReactSurface,
+    }),
+    defineModule({
+      id: `${meta.id}/module/compute-runtime`,
+      activatesOn: ClientEvents.ClientReady,
+      activate: ComputeRuntime,
     }),
   ]);

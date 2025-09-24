@@ -44,7 +44,7 @@ export class TriggerStateStore extends Context.Tag('@dxos/functions/TriggerState
         getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: ObjectId) {
           const valueOption = yield* schemaStore.get(triggerId).pipe(Effect.orDie);
           if (Option.isNone(valueOption)) {
-            return yield* Effect.fail(new TriggerStateNotFoundError('Trigger state not found'));
+            return yield* Effect.fail(new TriggerStateNotFoundError());
           }
           return valueOption.value;
         }),
