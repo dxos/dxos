@@ -190,9 +190,15 @@ export const MarkdownContainer = ({
 // TODO(wittjosiah): This shouldn't be "card" but "block".
 //   It's not a preview card but an interactive embedded object.
 const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
-  const echoDXN = useMemo(() => DXN.parse(link.ref).asEchoDXN(), [link.ref]);
-  const space = useSpace(echoDXN?.spaceId);
-  const [subject] = useQuery(space, Query.select(Filter.ids(echoDXN?.echoId ?? '')));
+  const dxn = DXN.parse(link.ref);
+  const echoDXN = dxn.asEchoDXN();
+  const queueDXN = dxn.asQueueDXN();
+  const spaceId = echoDXN?.spaceId ?? queueDXN?.spaceId;
+  const objectId = echoDXN?.echoId ?? queueDXN?.objectId ?? '';
+
+  const space = useSpace(spaceId);
+  const target = queueDXN ? space?.queues.get(dxn) : space;
+  const [subject] = useQuery(target, Query.select(Filter.ids(objectId)));
   const data = useMemo(() => ({ subject }), [subject]);
 
   return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);

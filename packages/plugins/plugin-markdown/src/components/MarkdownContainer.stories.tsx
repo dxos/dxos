@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { Capabilities, IntentPlugin, SettingsPlugin, Surface, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { todo } from '@dxos/debug';
-import { Query, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
@@ -38,7 +38,7 @@ const DefaultStory = () => {
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
 
-  return <Surface role='article' data={data} />;
+  return <Surface role='article' data={data} limit={1} />;
 };
 
 const meta = {
@@ -51,13 +51,22 @@ const meta = {
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Markdown.Document, DataType.Text, Testing.Contact],
+          types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            const doc = Markdown.makeDocument({ name: 'Test', content: '# Test\n\n' });
+
+            const queue = space.queues.create();
+            const alice = Obj.make(DataType.Person, { fullName: 'Alice' });
+            const acme = Obj.make(DataType.Organization, { name: 'ACME' });
+            await queue.append([alice, acme]);
+
+            const doc = Markdown.makeDocument({
+              name: 'Test',
+              content: `# Test\n\n![Alice](${Obj.getDXN(alice)})\n\n![ACME](${Obj.getDXN(acme)})`,
+            });
             space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
             await createObjects([{ type: Testing.Contact, count: 10 }]);
