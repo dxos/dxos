@@ -10,6 +10,7 @@ import React from 'react';
 import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
+import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -43,10 +44,12 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
+        AttentionPlugin(),
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
         IntentPlugin(),
         SettingsPlugin(),
         ClientPlugin({
+          types: [Meeting.Meeting],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },

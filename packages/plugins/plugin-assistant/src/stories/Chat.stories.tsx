@@ -606,7 +606,7 @@ export const WithChessTrigger: Story = {
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
-    config: config.local,
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
