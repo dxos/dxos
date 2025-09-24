@@ -5521,6 +5521,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-board':
         specifier: workspace:*
         version: link:../plugin-board
@@ -5675,9 +5678,6 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@18.2.0)
     devDependencies:
-      '@dxos/plugin-automation':
-        specifier: workspace:*
-        version: link:../plugin-automation
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5784,15 +5784,24 @@ importers:
 
   packages/plugins/plugin-automation:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -5805,6 +5814,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -5841,6 +5853,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.25.2
+        version: 0.25.2(@effect/experimental@0.54.5(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)(ioredis@5.3.2))(@effect/platform@0.90.2(effect@3.17.7))(@effect/rpc@0.68.4(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7))(effect@3.17.7)
+      '@effect/platform-browser':
+        specifier: 0.70.0
+        version: 0.70.0(@effect/platform@0.90.2(effect@3.17.7))(effect@3.17.7)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
