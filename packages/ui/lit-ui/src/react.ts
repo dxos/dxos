@@ -5,8 +5,9 @@
 import { type EventName, createComponent } from '@lit/react';
 import React, { type ComponentPropsWithRef } from 'react';
 
+import { type DxAnchorActivate } from '@dxos/react-ui-types';
+
 import {
-  type DxAnchorActivate,
   type DxTagPickerItemClick,
   DxAnchor as NaturalDxAnchor,
   DxAvatar as NaturalDxAvatar,

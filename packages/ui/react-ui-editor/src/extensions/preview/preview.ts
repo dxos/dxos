@@ -22,9 +22,6 @@ export type PreviewLinkTarget = {
   object?: any;
 };
 
-// TODO(wittjosiah): Remove.
-export type PreviewLookup = (link: PreviewLinkRef) => Promise<PreviewLinkTarget | null | undefined>;
-
 export type PreviewOptions = {
   addBlockContainer?: (link: PreviewLinkRef, el: HTMLElement) => void;
   removeBlockContainer?: (link: PreviewLinkRef) => void;

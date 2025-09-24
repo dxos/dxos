@@ -34,12 +34,10 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         {
           const icon = document.createElement('dx-icon');
           icon.setAttribute('icon', options.icon ?? 'ph--dots-three-vertical--regular');
-          const button = document.createElement('button');
-          button.appendChild(icon);
 
           this.tag = document.createElement('dx-anchor');
-          this.tag.classList.add('cm-ref-tag');
-          this.tag.appendChild(button);
+          this.tag.classList.add('cm-floating-menu-trigger');
+          this.tag.appendChild(icon);
         }
 
         container.appendChild(this.tag);
@@ -69,7 +67,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
           this.tag.style.display = 'none';
           this.tag.classList.add('opacity-10');
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
-          this.tag.style.display = 'block';
+          this.tag.style.display = '';
         } else if (
           update.docChanged ||
           update.focusChanged ||
@@ -99,7 +97,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
 
         this.tag.style.top = `${offsetTop}px`;
         this.tag.style.left = `${offsetLeft}px`;
-        this.tag.style.display = 'block';
+        this.tag.style.display = '';
       }
 
       scheduleUpdate() {
@@ -113,21 +111,18 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   ),
 
   EditorView.theme({
-    '.cm-ref-tag': {
+    '.cm-floating-menu-trigger': {
       position: 'fixed',
       padding: '0',
       border: 'none',
       opacity: '0',
-    },
-    '[data-has-focus] & .cm-ref-tag': {
-      opacity: '1',
-    },
-    '.cm-ref-tag button': {
       display: 'grid',
-      alignItems: 'center',
-      justifyContent: 'center',
+      placeContent: 'center',
       width: '2rem',
       height: '2rem',
+    },
+    '&:focus-within .cm-floating-menu-trigger': {
+      opacity: '1',
     },
   }),
 ];
