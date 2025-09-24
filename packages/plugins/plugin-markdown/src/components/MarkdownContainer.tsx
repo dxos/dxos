@@ -10,7 +10,8 @@ import { Capabilities, Surface, useAppGraph, useCapabilities, usePluginManager }
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { fullyQualifiedId, getSpace, useQuery, useSpace } from '@dxos/react-client/echo';
+import { useClient } from '@dxos/react-client';
+import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
@@ -190,15 +191,9 @@ export const MarkdownContainer = ({
 // TODO(wittjosiah): This shouldn't be "card" but "block".
 //   It's not a preview card but an interactive embedded object.
 const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
+  const client = useClient();
   const dxn = DXN.parse(link.ref);
-  const echoDXN = dxn.asEchoDXN();
-  const queueDXN = dxn.asQueueDXN();
-  const spaceId = echoDXN?.spaceId ?? queueDXN?.spaceId;
-  const objectId = echoDXN?.echoId ?? queueDXN?.objectId ?? '';
-
-  const space = useSpace(spaceId);
-  const target = queueDXN ? space?.queues.get(dxn) : space;
-  const [subject] = useQuery(target, Query.select(Filter.ids(objectId)));
+  const subject = client.graph.ref(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
   return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
