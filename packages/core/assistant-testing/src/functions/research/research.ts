@@ -24,6 +24,7 @@ import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGra
 import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import { DataType, DataTypes } from '@dxos/schema';
 
 /**
  * Exec external service and return the results as a Subgraph.
@@ -58,6 +59,20 @@ export default defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { query, mockSearch, researchInstructions } }) {
+      if (mockSearch) {
+        const mockPerson = yield* DatabaseService.add(
+          Obj.make(DataType.Person, {
+            preferredName: 'John Doe',
+            emails: [{ value: 'john.doe@example.com' }],
+            phoneNumbers: [{ value: '123-456-7890' }],
+          }),
+        );
+        return {
+          note: `The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}`,
+          objects: [Obj.toJSON(mockPerson)],
+        };
+      }
+
       yield* DatabaseService.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Researching...' });
 

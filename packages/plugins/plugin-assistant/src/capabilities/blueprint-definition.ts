@@ -8,9 +8,11 @@ import {
   DISCORD_BLUEPRINT,
   LINEAR_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  createResearchNote,
   fetchDiscordMessages,
   research,
   syncLinearIssues,
+  agent,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -47,7 +49,8 @@ const blueprint = createBlueprint();
 // TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.Functions, [research]),
+  contributes(Capabilities.Functions, [agent]),
+  contributes(Capabilities.Functions, [research, createResearchNote]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
   // TODO(burdon): Move out of assistant.

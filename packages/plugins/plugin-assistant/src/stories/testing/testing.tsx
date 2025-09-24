@@ -24,6 +24,8 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
+  agent,
+  createResearchNote,
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
   readDocument,
@@ -180,9 +182,10 @@ export const getDecorators = ({
             // TODO(burdon): Move into assistnat?
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+            contributes(Capabilities.Functions, [agent]),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
-            contributes(Capabilities.Functions, [research]),
+            contributes(Capabilities.Functions, [research, createResearchNote]),
             contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),

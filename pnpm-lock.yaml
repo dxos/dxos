@@ -13245,6 +13245,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
