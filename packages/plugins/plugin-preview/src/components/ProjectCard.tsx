@@ -13,14 +13,14 @@ import { type PreviewProps } from '../types';
 
 import { CardSubjectMenu } from './CardSubjectMenu';
 
-export const ProjectCard = ({ subject, role }: PreviewProps<DataType.Project>) => {
+export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Project>) => {
   const { name, image, description } = subject;
   return (
     <Card.SurfaceRoot role={role}>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
       <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
         <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
-        <CardSubjectMenu subject={subject} />
+        <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
       </div>
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
     </Card.SurfaceRoot>
