@@ -10,6 +10,7 @@ import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { AUTOMATION_PLUGIN } from '../meta';
 
 import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
+import { TriggersSettings } from './TriggerSettings';
 
 export const AutomationContainer = (props: AutomationPanelProps) => {
   const { t } = useTranslation(AUTOMATION_PLUGIN);
@@ -20,6 +21,7 @@ export const AutomationContainer = (props: AutomationPanelProps) => {
         description={t('automation description', { ns: AUTOMATION_PLUGIN })}
       >
         <AutomationPanel {...props} />
+        <TriggersSettings space={props.space} />
       </ControlSection>
     </ControlPage>
   );
