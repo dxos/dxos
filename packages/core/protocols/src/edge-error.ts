@@ -6,6 +6,7 @@ import { BaseError } from '@dxos/errors';
 
 import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
 
+// TODO(burdon): Reconcile with @dxos/errors.
 export class EdgeCallFailedError extends Error {
   public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
     return new EdgeCallFailedError({
@@ -106,10 +107,12 @@ type SerializedError = {
 const parseSerializedError = (serializedError: SerializedError): Error => {
   let err: Error;
   if (typeof serializedError.code === 'string') {
-    err = new BaseError(serializedError.code, serializedError.message ?? 'Unknown error', {
+    err = new BaseError(serializedError.code, {
+      message: serializedError.message ?? 'Unknown error',
       cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
       context: serializedError.context,
     });
+
     if (serializedError.stack) {
       Object.defineProperty(err, 'stack', {
         value: serializedError.stack,
@@ -119,6 +122,7 @@ const parseSerializedError = (serializedError: SerializedError): Error => {
     err = new Error(serializedError.message ?? 'Unknown error', {
       cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
     });
+
     if (serializedError.stack) {
       Object.defineProperty(err, 'stack', {
         value: serializedError.stack,
