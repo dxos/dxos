@@ -5,7 +5,7 @@
 import { type EditorView } from '@codemirror/view';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
-import { type DxAnchor, type DxAnchorActivate } from '@dxos/lit-ui';
+import { type DxAnchorActivate } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from '../../components';
@@ -21,7 +21,6 @@ export type UseCommandMenuOptions = {
 };
 
 export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions) => {
-  const triggerRef = useRef<DxAnchor | null>(null);
   const currentRef = useRef<CommandMenuItem | null>(null);
   const groupsRef = useRef<CommandMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
@@ -35,7 +34,6 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
       }
       setOpen(open);
       if (!open) {
-        triggerRef.current = null;
         setCurrentItem(undefined);
         viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
       }
@@ -50,7 +48,6 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
         currentRef.current = item;
       }
 
-      triggerRef.current = event.trigger;
       const triggerKey = event.trigger.getAttribute('data-trigger');
       if (!open && triggerKey) {
         await handleOpenChange(true, triggerKey);
@@ -70,7 +67,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const _commandMenu = useMemo(() => {
+  const memoizedCommandMenu = useMemo(() => {
     return commandMenu({
       trigger,
       placeholder,
@@ -107,10 +104,9 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, [handleOpenChange, getMenu, serializedTrigger, placeholder]);
 
   return {
-    commandMenu: _commandMenu,
+    commandMenu: memoizedCommandMenu,
     currentItem,
     groupsRef,
-    ref: triggerRef,
     open,
     onActivate: handleActivate,
     onOpenChange: setOpen,

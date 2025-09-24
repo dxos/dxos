@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
-import { PreviewProvider, useRefPopover } from '@dxos/react-ui-editor';
+import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -64,21 +64,21 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
 
   // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
   return (
-    <PreviewProvider
+    <PreviewPopoverProvider
       onLookup={async ({ label, ref }) => {
         return { label, text: ref };
       }}
     >
       <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
       <PreviewCard />
-    </PreviewProvider>
+    </PreviewPopoverProvider>
   );
 };
 
 // TODO(burdon): Factor out.
 // TODO(burdon): Provide renderer for preview extension.
 const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
+  const { target } = usePreviewPopover('PreviewCard');
 
   return (
     <Popover.Portal>

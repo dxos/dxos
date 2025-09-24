@@ -3,12 +3,14 @@
 //
 
 import { EditorSelection } from '@codemirror/state';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  RefDropdownMenuProvider,
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  CommandMenuProvider,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -67,28 +69,41 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       [view],
     );
 
-    const handleDeleteRow = () => {
-      // TODO(burdon): Timeout hack since menu steals focus.
-      setTimeout(() => {
-        if (view) {
-          deleteItem(view);
-          view.focus();
+    const commandGroups: CommandMenuGroup[] = useMemo(
+      () => [
+        {
+          id: 'outliner-actions',
+          items: [
+            {
+              id: 'delete-row',
+              label: t('delete row'),
+              onSelect: (view) => {
+                // TODO(burdon): Timeout hack since menu steals focus.
+                setTimeout(() => {
+                  deleteItem(view);
+                  view.focus();
+                }, 100);
+              },
+            },
+          ],
+        },
+      ],
+      [t],
+    );
+
+    const handleSelect = useCallback(
+      (item: CommandMenuItem) => {
+        if (view && item.onSelect) {
+          return item.onSelect(view, view.state.selection.main.head);
         }
-      }, 100);
-    };
+      },
+      [view],
+    );
 
     return (
-      <RefDropdownMenuProvider>
+      <CommandMenuProvider groups={commandGroups} onSelect={handleSelect}>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              <DropdownMenu.Item onClick={handleDeleteRow}>{t('delete row')}</DropdownMenu.Item>
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </RefDropdownMenuProvider>
+      </CommandMenuProvider>
     );
   },
 );
