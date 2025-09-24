@@ -1950,7 +1950,7 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui-dnd
       '@radix-ui/react-use-controllable-state':
-        specifier: ^1.0.0
+        specifier: 1.1.0
         version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
@@ -12065,6 +12065,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../primitives/react-hooks
+      '@dxos/react-ui-types':
+        specifier: workspace:*
+        version: link:../react-ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -13239,9 +13242,6 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -13290,6 +13290,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
+      '@radix-ui/react-use-controllable-state':
+        specifier: 1.1.0
+        version: 1.1.0(@types/react@18.2.79)(react@18.2.0)
       '@replit/codemirror-vim':
         specifier: ^6.2.1
         version: 6.2.1(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)
