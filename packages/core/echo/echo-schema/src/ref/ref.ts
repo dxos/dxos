@@ -193,6 +193,7 @@ Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
 };
 
 Ref.fromDXN = (dxn: DXN): Ref<any> => {
+  assertArgument(dxn instanceof DXN, 'dxn', 'Expected DXN');
   return new RefImpl(dxn);
 };
 

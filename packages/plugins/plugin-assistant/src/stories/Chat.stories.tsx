@@ -634,7 +634,8 @@ export const WithResearchQueue: Story = {
           }),
           output: Schema.Any,
 
-          instructions: 'Research the organization provided as input.',
+          instructions:
+            'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
         }),
       );
@@ -739,7 +740,8 @@ export const WithProject: Story = {
           }),
           output: Schema.Any,
 
-          instructions: 'Research the organization provided as input.',
+          instructions:
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
         }),
       );
@@ -753,7 +755,7 @@ export const WithProject: Story = {
         },
         input: {
           prompt: Ref.make(researchPrompt),
-          input: '{{event.item}}',
+          input: '{{event.subject}}',
         },
       });
       space.db.add(researchTrigger);

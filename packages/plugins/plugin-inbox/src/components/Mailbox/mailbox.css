@@ -1,5 +1,4 @@
 .message {
-
   &.message__card {
     @apply pli-cardSpacingChrome plb-cardSpacingChrome;
   }
@@ -8,8 +7,10 @@
     @apply border;
   }
 
-  & > .dx-grid__cell__content, &.message__card {
-    @apply grid grid-cols-[var(--rail-action)_1fr] gap-1 border-0;
+  & > .dx-grid__cell__content,
+  &.message__card {
+    /** TODO(burdon): Reconcile with styles.ts (mailboxGrid) */
+    @apply grid grid-cols-[3rem_1fr] gap-1 border-0;
 
     &::before,
     &::after {
@@ -28,7 +29,6 @@
       inset-inline-end: 0;
       inline-size: 0.25rem;
     }
-
   }
 
   &.message--current > .dx-grid__cell__content {
@@ -52,7 +52,7 @@
   }
 
   .message__thumb {
-    @apply flex text-start pli-1 plb-1.5;
+    @apply flex text-start pli-1 plb-1;
   }
 
   .message__abstract {
@@ -71,7 +71,7 @@
       }
 
       .message__abstract__date {
-        @apply text-sm font-normal;
+        @apply text-sm text-description font-normal;
       }
     }
   }

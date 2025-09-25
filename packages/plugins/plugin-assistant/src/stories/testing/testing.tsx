@@ -26,6 +26,8 @@ import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
+  agent,
+  createResearchNote,
   readDocument,
   readTasks,
   research,
@@ -99,12 +101,12 @@ class TestingToolkit extends AiToolkit.make(
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
-  plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space }) => Promise<void>;
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
-};
+type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+  Pick<StoryPluginOptions, 'onChatCreated'> & {
+    plugins?: Plugin[];
+    accessTokens?: DataType.AccessToken[];
+    onInit?: (props: { space: Space }) => Promise<void>;
+  };
 
 /**
  * Create storybook decorators.
@@ -166,14 +168,12 @@ export const getDecorators = ({
       }),
 
       // Cards
-      StorybookLayoutPlugin({}),
       ThemePlugin({ tx: defaultTx }),
+      StorybookLayoutPlugin({}),
       PreviewPlugin(),
 
       // User plugins.
       AssistantPlugin(),
-
-      // Custom.
       StoryPlugin({ onChatCreated }),
 
       // Test-specific.
@@ -186,7 +186,31 @@ export const getDecorators = ({
   }),
 ];
 
-const StoryPlugin = definePlugin<Pick<DecoratorsProps, 'onChatCreated'>>(
+/**
+ * Creates access tokens from environment variables.
+ * @param tokens - Record of token sources mapped to their VITE_ prefixed environment variable values
+ * @returns Array of AccessToken objects for non-empty token values
+ * @example
+ * ```tsx
+ * const tokens = accessTokensFromEnv({
+ *   'exa.ai': process.env.VITE_EXA_API_KEY,
+ *   'linear.app': process.env.VITE_LINEAR_API_KEY
+ * });
+ * ```
+ * @note All environment variables should use the VITE_ prefix for proper Vite bundling
+ */
+
+export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
+  return Object.entries(tokens)
+    .filter(([, token]) => !!token)
+    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
+};
+
+type StoryPluginOptions = {
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+};
+
+const StoryPlugin = definePlugin<StoryPluginOptions>(
   {
     id: 'example.com/plugin/testing',
     name: 'Testing',
@@ -199,9 +223,10 @@ const StoryPlugin = definePlugin<Pick<DecoratorsProps, 'onChatCreated'>>(
         // TODO(burdon): Move into assistnat?
         contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
         contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+        contributes(Capabilities.Functions, [agent]),
         contributes(Capabilities.Functions, [readDocument, updateDocument]),
         contributes(Capabilities.Functions, [readTasks, updateTasks]),
-        contributes(Capabilities.Functions, [research]),
+        contributes(Capabilities.Functions, [research, createResearchNote]),
         contributes(Capabilities.Functions, [exampleFunctions.reply]),
       ],
     }),
@@ -267,22 +292,3 @@ const StoryPlugin = definePlugin<Pick<DecoratorsProps, 'onChatCreated'>>(
     }),
   ],
 );
-
-/**
- * Creates access tokens from environment variables.
- * @param tokens - Record of token sources mapped to their VITE_ prefixed environment variable values
- * @returns Array of AccessToken objects for non-empty token values
- * @example
- * ```tsx
- * const tokens = accessTokensFromEnv({
- *   'exa.ai': process.env.VITE_EXA_API_KEY,
- *   'linear.app': process.env.VITE_LINEAR_API_KEY
- * });
- * ```
- * @note All environment variables should use the VITE_ prefix for proper Vite bundling
- */
-export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) => {
-  return Object.entries(tokens)
-    .filter(([, token]) => !!token)
-    .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
-};
