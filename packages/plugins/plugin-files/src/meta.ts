@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const FILES_PLUGIN = 'dxos.org/plugin/files';
-
 export const meta: PluginMeta = {
-  id: FILES_PLUGIN,
+  id: 'dxos.org/plugin/files',
   name: 'Files',
   description: 'Open files from the local file system.',
   icon: 'ph--file--regular',

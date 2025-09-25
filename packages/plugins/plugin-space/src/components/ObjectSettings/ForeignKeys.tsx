@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { type ForeignKey } from '@dxos/echo-schema';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type ForeignKeysProps = {
   keys: ForeignKey[];
@@ -31,7 +31,7 @@ type KeyItemProps = {
 };
 
 const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const handleDelete = useCallback(() => {
     onDelete?.(forignKey);

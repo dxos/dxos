@@ -16,7 +16,7 @@ import {
 import { log } from '@dxos/log';
 import { captureException } from '@dxos/observability/sentry';
 
-import { PWA_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import { translations } from './translations';
 
 export const PwaPlugin = definePlugin(meta, () => [
@@ -37,12 +37,12 @@ export const PwaPlugin = definePlugin(meta, () => [
             createIntent(LayoutAction.AddToast, {
               part: 'toast',
               subject: {
-                id: `${PWA_PLUGIN}/need-refresh`,
-                title: ['need refresh label', { ns: PWA_PLUGIN }],
-                description: ['need refresh description', { ns: PWA_PLUGIN }],
+                id: `${meta.id}/need-refresh`,
+                title: ['need refresh label', { ns: meta.id }],
+                description: ['need refresh description', { ns: meta.id }],
                 duration: 4 * 60 * 1000, // 4m
-                actionLabel: ['refresh label', { ns: PWA_PLUGIN }],
-                actionAlt: ['refresh alt', { ns: PWA_PLUGIN }],
+                actionLabel: ['refresh label', { ns: meta.id }],
+                actionAlt: ['refresh alt', { ns: meta.id }],
                 onAction: () => updateSW(true),
               },
             }),
@@ -52,9 +52,9 @@ export const PwaPlugin = definePlugin(meta, () => [
             createIntent(LayoutAction.AddToast, {
               part: 'toast',
               subject: {
-                id: `${PWA_PLUGIN}/offline-ready`,
-                title: ['offline ready label', { ns: PWA_PLUGIN }],
-                closeLabel: ['confirm label', { ns: PWA_PLUGIN }],
+                id: `${meta.id}/offline-ready`,
+                title: ['offline ready label', { ns: meta.id }],
+                closeLabel: ['confirm label', { ns: meta.id }],
               },
             }),
           ),

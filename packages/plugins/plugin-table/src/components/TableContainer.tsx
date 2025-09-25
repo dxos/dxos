@@ -28,7 +28,7 @@ import {
 } from '@dxos/react-ui-table';
 import { type DataType, typenameFromQuery } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
@@ -92,7 +92,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   }, []);
 
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: TABLE_PLUGIN }] }],
+    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
     [],
   );
   const handleRowAction = useCallback(

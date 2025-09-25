@@ -7,12 +7,12 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
-import { WELCOME_PLUGIN, meta } from './meta';
+import { meta } from './meta';
 import { translations } from './translations';
 
 export const WelcomePlugin = definePlugin(meta, () => [
   defineModule({
-    id: `${WELCOME_PLUGIN}/module/onboarding`,
+    id: `${meta.id}/module/onboarding`,
     activatesOn: allOf(
       Events.DispatcherReady,
       Events.AppGraphReady,
@@ -23,17 +23,17 @@ export const WelcomePlugin = definePlugin(meta, () => [
     activate: Onboarding,
   }),
   defineModule({
-    id: `${WELCOME_PLUGIN}/module/translations`,
+    id: `${meta.id}/module/translations`,
     activatesOn: Events.SetupTranslations,
     activate: () => contributes(Capabilities.Translations, translations),
   }),
   defineModule({
-    id: `${WELCOME_PLUGIN}/module/react-surface`,
+    id: `${meta.id}/module/react-surface`,
     activatesOn: Events.SetupReactSurface,
     activate: ReactSurface,
   }),
   defineModule({
-    id: `${WELCOME_PLUGIN}/module/default-content`,
+    id: `${meta.id}/module/default-content`,
     activatesOn: SpaceEvents.DefaultSpaceReady,
     activate: DefaultContent,
   }),

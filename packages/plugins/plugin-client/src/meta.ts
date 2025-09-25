@@ -4,9 +4,7 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const CLIENT_PLUGIN = 'dxos.org/plugin/client';
-
 export const meta: PluginMeta = {
-  id: CLIENT_PLUGIN,
+  id: 'dxos.org/plugin/client',
   name: 'Client',
 };

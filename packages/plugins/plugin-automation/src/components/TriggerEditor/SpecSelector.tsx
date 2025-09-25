@@ -8,12 +8,12 @@ import { type FunctionTrigger, TriggerKinds, type TriggerType } from '@dxos/func
 import { useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput, useInputProps } from '@dxos/react-ui-form';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type SpecSelectorProps = InputProps;
 
 export const SpecSelector = (props: SpecSelectorProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const specProps = useInputProps(['spec' satisfies keyof FunctionTrigger]);
 
   const handleTypeChange = useCallback(
