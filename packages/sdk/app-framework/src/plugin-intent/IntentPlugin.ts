@@ -5,10 +5,7 @@
 import { Events } from '../common';
 import { defineModule, definePlugin2, lazy } from '../core';
 
-import { INTENT_PLUGIN } from './actions';
-
-// TODO(burdon): Move up.
-const meta = { id: INTENT_PLUGIN, name: 'Intent' };
+import { meta } from './meta';
 
 export const IntentPlugin = definePlugin2(meta, () => [
   defineModule({

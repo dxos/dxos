@@ -5,13 +5,12 @@
 // NOTE(ZaymonFC): This is a workaround. See: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
-import { IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { ASSISTANT_PLUGIN, AssistantPlugin } from '@dxos/plugin-assistant';
 import { ATTENTION_PLUGIN, AttentionPlugin } from '@dxos/plugin-attention';
 import { AUTOMATION_PLUGIN, AutomationPlugin } from '@dxos/plugin-automation';
-// TODO(burdon): Could BoardPlugin contain meta (e.g., BoardPlugin.meta.id)
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { CLIENT_PLUGIN, ClientPlugin } from '@dxos/plugin-client';
@@ -88,7 +87,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     PREVIEW_PLUGIN,
     !isTauri && isPwa && PWA_PLUGIN,
     REGISTRY_PLUGIN,
-    SETTINGS_PLUGIN,
+    SettingsPlugin.meta.id,
     SPACE_PLUGIN,
     STATUS_BAR_PLUGIN,
     THEME_PLUGIN,
