@@ -26,6 +26,8 @@ jobs:
             spec: 'react "react-dom"'
           - name: automerge
             spec: '"@automerge/*"'
+          - name: jsdom
+            spec: '"jsdom/*"'
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
