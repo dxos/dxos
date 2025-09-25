@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
 import * as EchoSchema from '@dxos/echo-schema';
@@ -11,8 +11,8 @@ import { DXN } from '@dxos/keys';
 import { type Live, live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
-import type * as Obj from './Obj';
-import type * as Type from './Type';
+import * as Obj from './Obj';
+import * as Type from './Type';
 
 /**
  * NOTE: Don't export: Relation.Relation and Relation.Any form the public API.
@@ -31,6 +31,15 @@ export type Relation<Source extends Obj.Any, Target extends Obj.Any, Props> = Ba
  * Base type for all ECHO relations.
  */
 export interface Any extends BaseRelation<Obj.Any, Obj.Any> {}
+
+export const Any = Schema.Struct({}).pipe(
+  Type.Relation({
+    typename: 'dxos.org/types/Any',
+    version: '0.1.0',
+    source: Obj.Any,
+    target: Obj.Any,
+  }),
+);
 
 // TODO(dmaretskyi): Has to be `unique symbol`.
 export const Source: unique symbol = EchoSchema.RelationSourceId as any;

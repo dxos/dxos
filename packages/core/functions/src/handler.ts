@@ -99,6 +99,7 @@ export type FunctionDefinition<T = any, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
+// TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
   <I, O>(params: {
     // TODO(dmaretskyi): Make `key` required.
@@ -196,6 +197,7 @@ export const deserializeFunction = (functionObj: FunctionType): FunctionDefiniti
     description: functionObj.description,
     inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
     outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
+    // TODO(dmaretskyi): This should throw error.
     handler: () => {},
   };
 };
