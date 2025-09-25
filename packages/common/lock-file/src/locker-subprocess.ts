@@ -1,7 +1,7 @@
-import { open } from 'node:fs/promises';
-import { constants } from 'node:fs';
-import { platform } from 'node:os';
-import koffi from 'koffi';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { LockFile } from './lock-file';
 
 const filename = process.argv[2];
@@ -13,10 +13,10 @@ const handle = await LockFile.acquire(filename);
 console.log('# locked');
 
 // Close file handle on stdin close.
-process.stdin.on('data', (data) => {
+process.stdin.on('data', async (data) => {
   if (data.toString().trim() === 'close') {
     console.log('will unlock');
-    LockFile.release(handle);
+    await LockFile.release(handle);
     console.log('unlocked');
   }
 });
