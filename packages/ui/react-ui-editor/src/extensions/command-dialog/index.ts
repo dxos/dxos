@@ -4,3 +4,4 @@
 
 export * from './command-dialog';
 export { type Action } from './action';
+export * from './typeahead';
