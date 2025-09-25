@@ -10,6 +10,7 @@ import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
 import type { Services } from './service-container';
+import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -64,6 +65,8 @@ const invokeFunction = (
       },
     };
 
+    log.info('Invoking function', { name: functionDef.name, input });
+
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
       const result = functionDef.handler({ context, data: input });
@@ -85,6 +88,8 @@ const invokeFunction = (
         Effect.die(new FunctionError({ context: { name: functionDef.name }, cause: defect })),
       ),
     );
+
+    log.info('Function completed', { name: functionDef.name, input, data });
 
     // Assert output matches schema
     const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);

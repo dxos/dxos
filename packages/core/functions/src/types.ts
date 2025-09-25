@@ -4,7 +4,7 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { QueryAST, Type } from '@dxos/echo';
+import { QueryAST, Type, Obj } from '@dxos/echo';
 import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
@@ -133,9 +133,23 @@ export const QueueTriggerOutput = Schema.mutable(
 );
 export type QueueTriggerOutput = Schema.Schema.Type<typeof QueueTriggerOutput>;
 
-export const SubscriptionTriggerOutput = Schema.mutable(
-  Schema.Struct({ type: Schema.String, changedObjectId: Schema.String }),
-);
+export const SubscriptionTriggerOutput = Schema.Struct({
+  /**
+   * Type of the mutation.
+   */
+  // TODO(dmaretskyi): Specify enum.
+  type: Schema.String,
+
+  /**
+   * Reference to the object that was changed or created.
+   */
+  subject: Type.Ref(Obj.Any),
+
+  /**
+   * @deprecated
+   */
+  changedObjectId: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
 export type SubscriptionTriggerOutput = Schema.Schema.Type<typeof SubscriptionTriggerOutput>;
 
 export const TimerTriggerOutput = Schema.mutable(Schema.Struct({ tick: Schema.Number }));

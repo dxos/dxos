@@ -127,7 +127,7 @@ export const generator = () => ({
             function: Ref.make(serializeFunction(agent)),
             input: {
               prompt: Ref.make(researchPrompt),
-              input: '{{event.item}}',
+              input: '{{event.subject}}',
             },
           });
           space.db.add(researchTrigger);
