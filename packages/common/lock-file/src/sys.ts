@@ -1,5 +1,10 @@
-import type * as koffi from 'koffi';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { platform } from 'node:os';
+
+import type * as koffi from 'koffi';
 
 // flock constants
 const LOCK_SH = 1; // Shared lock
