@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chat, AiInput, LanguageModel, Tool, Toolkit } from '@effect/ai';
+import { Chat, LanguageModel, Prompt, Tool, Toolkit } from '@effect/ai';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
@@ -40,9 +40,9 @@ const createChat = Effect.fn(function* (prompt: string) {
 
   // Agentic loop.
   // TODO(burdon): Explain how this works?
-  while (output.results.size > 0) {
-    log.info('results', { results: output.results.size });
-    output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
+  while (output.toolCalls.length > 0) {
+    log.info('results', { results: output.toolCalls.length });
+    output = yield* chat.generateText({ toolkit, prompt: Prompt.empty });
   }
 
   // Done.
@@ -177,17 +177,38 @@ describe('LanguageModel', () => {
     ),
   );
 
-  it.effect(
+  //
+  it.effect.only(
     'streaming',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const stream = LanguageModel.streamText({ prompt: 'What is six times seven?' });
+        yield* Stream.runForEach(
+          stream,
+          Effect.fnUntraced(function* (item) {
+            log.info('item', { item, time: new Date().toISOString() });
+          }),
+        );
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  );
+
+  it.effect(
+    'streaming with tools',
     Effect.fn(
       function* ({ expect: _ }) {
         const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = 'What is six times seven?';
+        let prompt: Prompt.RawInput = 'What is six times seven?';
         do {
           const stream = chat.streamText({ toolkit, prompt });
-          prompt = AiInput.empty;
+          prompt = Prompt.empty;
 
           yield* Stream.runForEach(
             stream,

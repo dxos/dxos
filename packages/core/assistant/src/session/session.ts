@@ -6,7 +6,7 @@ import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai
 import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
-  type AiInputPreprocessingError,
+  type PromptPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
@@ -28,7 +28,7 @@ import { mapAiError } from './error-handling';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
-export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
+export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
@@ -109,7 +109,7 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending]);
 
         // Execute the stream request.
         const blocks = yield* LanguageModel.streamText({

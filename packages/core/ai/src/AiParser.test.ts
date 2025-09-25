@@ -331,4 +331,4 @@ const makeInputStream = (parts: readonly Response.Part<any>[]): Stream.Stream<Re
 const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
 const splitByCharacter = (text: string): string[] => text.split('');
 
-const text = (text: string) => new Response.TextPart({ text });
+const text = (text: string) => Response.makePart('text', { text });

@@ -51,7 +51,7 @@ export interface ParseResponseCallbacks {
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: Response.Part) => Effect.Effect<void>;
+  onPart: (part: Response.Part<any>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.

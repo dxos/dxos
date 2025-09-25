@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import { preprocessPrompt } from '../AiPreprocessor';
 import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
@@ -37,7 +37,7 @@ export const processMessages = Effect.fn(function* ({
   const history: DataType.Message[] = [...messages];
 
   do {
-    const prompt = yield* preprocessAiInput(history);
+    const prompt = yield* preprocessPrompt(history);
     const blocks = yield* LanguageModel.streamText({
       disableToolCallResolution: true,
       toolkit,
