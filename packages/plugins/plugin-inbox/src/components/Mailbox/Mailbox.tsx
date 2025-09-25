@@ -185,18 +185,18 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
-          limitColumns={1}
-          limitRows={messages.length}
-          rowDefault={messageRowDefault}
-          rows={rows}
-          columnDefault={columnDefault}
-          onWheelCapture={handleWheel}
-          onClick={handleClick}
-          getCells={getCells}
           className={mx(
             '[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto',
             gridSeparatorBlockEnd,
           )}
+          limitColumns={1}
+          limitRows={messages.length}
+          columnDefault={columnDefault}
+          rowDefault={messageRowDefault}
+          rows={rows}
+          getCells={getCells}
+          onClick={handleClick}
+          onWheelCapture={handleWheel}
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>

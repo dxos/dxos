@@ -60,9 +60,9 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   return (
     <CardStack.Root asChild>
       <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
-        <CardStack.Content>
-          <StackItem.Heading classNames={[cardStackHeading, 'pli-cardSpacingChrome']} separateOnScroll>
-            <h3 className='grow'>{view.name ?? t('untitled view title')}</h3>
+        <CardStack.Content classNames='density-fine'>
+          <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
+            <h3 className='grow truncate'>{view.name ?? t('untitled view title')}</h3>
             <ToggleGroup
               type='single'
               value={tab}

@@ -5,24 +5,29 @@
 import { Rx } from '@effect-rx/rx-react';
 import React from 'react';
 
-// import { useIntentDispatcher } from '@dxos/app-framework';
+import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ACTION_TYPE } from '@dxos/app-graph';
-import { type AnyEchoObject } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { type Space } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
 
-const useSubjectMenuGroupItems = (subject: AnyEchoObject) => {
-  // const { dispatchPromise: dispatch } = useIntentDispatcher();
+const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
-  result.nodes.push({
-    type: ACTION_TYPE,
-    id: `${subject.id}/add-to-space`,
-    data: () => console.log('[TO DO]', 'add object to space', subject),
-    properties: {
-      label: ['add object to space label', { ns: 'os' }],
-      icon: 'ph--file-plus--regular',
-    },
-  });
+  if (activeSpace && Obj.getDXN(subject).asQueueDXN()) {
+    result.nodes.push({
+      type: ACTION_TYPE,
+      id: `${subject.id}/add-to-space`,
+      // TODO(wittjosiah): Update reference to point to db object when adding?
+      data: () => dispatch(createIntent(SpaceAction.AddObject, { object: subject, target: activeSpace, hidden: true })),
+      properties: {
+        label: ['add object to space label', { ns: 'os' }],
+        icon: 'ph--file-plus--regular',
+      },
+    });
+  }
   result.nodes.forEach(({ id: target }) => {
     result.edges.push({ source: 'root', target });
   });
@@ -34,10 +39,16 @@ const useSubjectMenuGroupItems = (subject: AnyEchoObject) => {
  */
 export const CardSubjectMenu = ({
   subject,
+  activeSpace,
   ...props
-}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: AnyEchoObject }) => {
+}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
   const { t } = useTranslation('os');
-  const menuProps = useSubjectMenuGroupItems(subject);
+  const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
+
+  if (!activeSpace) {
+    return null;
+  }
+
   return (
     <MenuProvider {...menuProps}>
       <DropdownMenu.Root>

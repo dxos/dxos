@@ -11,9 +11,16 @@ import React, { type FC, useCallback } from 'react';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import {
+  LINEAR_BLUEPRINT,
+  RESEARCH_BLUEPRINT,
+  ResearchDataTypes,
+  ResearchGraph,
+  ResearchOn,
+  agent,
+} from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
@@ -25,6 +32,7 @@ import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { ProjectPlugin } from '@dxos/plugin-project';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
@@ -35,7 +43,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { DataType, createView } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
@@ -55,6 +63,7 @@ import {
   InvocationsContainer,
   LoggingContainer,
   MessageContainer,
+  ProjectContainer,
   PromptContainer,
   ResearchInputStack,
   ResearchOutputStack,
@@ -653,5 +662,141 @@ export const WithResearchQueue: Story = {
       [ResearchOutputStack],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
+  },
+};
+
+export const WithProject: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
+    config: config.remote,
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    types: [
+      DataType.Employer,
+      DataType.HasConnection,
+      DataType.Message,
+      DataType.Organization,
+      DataType.Person,
+      DataType.Project,
+      DataType.View,
+      Mailbox.Mailbox,
+      ResearchOn,
+    ],
+    onInit: async ({ space }) => {
+      await addTestData(space);
+      const { objects: people } = await space.db.query(Filter.type(DataType.Person)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+
+      people.slice(0, 4).forEach((person) => {
+        person.notes = 'Project';
+      });
+
+      const queue = space.queues.create();
+      const messages = createTestMailbox(people);
+      await queue.append(messages);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+
+      const dxosResearch = space.db.add(
+        Markdown.makeDocument({
+          name: 'DXOS Research',
+          content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+        }),
+      );
+      const blueyardResearch = space.db.add(
+        Markdown.makeDocument({
+          name: 'Blue Yard Research',
+          content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
+        }),
+      );
+
+      const dxos = organizations.find((org) => org.name === 'DXOS')!;
+      const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
+      console.log(dxos, blueyard);
+      space.db.add(
+        Relation.make(ResearchOn, {
+          [Relation.Source]: dxosResearch,
+          [Relation.Target]: dxos,
+          completedAt: new Date().toISOString(),
+        }),
+      );
+      space.db.add(
+        Relation.make(ResearchOn, {
+          [Relation.Source]: blueyardResearch,
+          [Relation.Target]: blueyard,
+          completedAt: new Date().toISOString(),
+        }),
+      );
+
+      const contactsQuery = Query.select(Filter.type(DataType.Person, { notes: 'Project' }));
+      const organizationsQuery = contactsQuery.sourceOf(DataType.Employer, { active: true }).target();
+      const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions: 'Research the organization provided as input.',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      const researchTrigger = Obj.make(FunctionTrigger, {
+        function: Ref.make(serializeFunction(agent)),
+        enabled: true,
+        spec: {
+          kind: 'subscription',
+          query: organizationsQuery.ast,
+        },
+        input: {
+          prompt: Ref.make(researchPrompt),
+          input: '{{event.item}}',
+        },
+      });
+      space.db.add(researchTrigger);
+
+      const mailboxView = createView({
+        name: 'Mailbox',
+        query: Query.select(
+          Filter.type(DataType.Message, { properties: { labels: Filter.contains('Project') } }),
+        ).options({
+          queues: [mailbox.queue.dxn.toString()],
+        }),
+        jsonSchema: Type.toJsonSchema(DataType.Message),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const contactsView = createView({
+        name: 'Contacts',
+        query: contactsQuery,
+        jsonSchema: Type.toJsonSchema(DataType.Person),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const organizationsView = createView({
+        name: 'Organizations',
+        query: organizationsQuery,
+        jsonSchema: Type.toJsonSchema(DataType.Organization),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const notesView = createView({
+        name: 'Notes',
+        query: notesQuery,
+        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+
+      space.db.add(
+        DataType.makeProject({
+          name: 'Investor Research',
+          collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
   },
 };
