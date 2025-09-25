@@ -440,6 +440,9 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.80.3(@cloudflare/workers-types@4.20250909.0)
+      yaml:
+        specifier: ^2.7.0
+        version: 2.7.1
       yargs:
         specifier: ~16.2.0
         version: 16.2.0
