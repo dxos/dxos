@@ -19,4 +19,5 @@ export namespace ObservabilityCapabilities {
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
+// TODO(burdon): Figure out how to share defs.
 export const ClientCapability = defineCapability<Client>('dxos.org/plugin/client/capability/client');

@@ -4,8 +4,6 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SEARCH_RESULT = 'dxos.org/plugin/search/result';
-
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/search',
   name: 'Search',
@@ -14,3 +12,5 @@ export const meta: PluginMeta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-search',
   tags: ['labs'],
 };
+
+export const SEARCH_RESULT = `${meta.id}/result`;
