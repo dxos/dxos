@@ -4,12 +4,11 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const THREAD_PLUGIN = 'dxos.org/plugin/thread';
-export const THREAD_ITEM = `${THREAD_PLUGIN}/item`;
+export const THREAD_ITEM = 'dxos.org/plugin/thread/item';
 
 // TODO(wittjosiah): Needs screenshots.
 export const meta: PluginMeta = {
-  id: THREAD_PLUGIN,
+  id: 'dxos.org/plugin/thread',
   name: 'Chat',
   description: 'Chat via text, voice, and video in channels or create comment threads on objects.',
   icon: 'ph--video-conference--regular',
