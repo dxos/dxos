@@ -92,7 +92,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
         }
       },
       onTextChange: async (trigger, text) => {
-        if (/^\W/.test(text)) {
+        if (/\W/.test(text)) {
           return queueMicrotask(() => handleOpenChange(false));
         }
         groupsRef.current = await getMenu(trigger, text);

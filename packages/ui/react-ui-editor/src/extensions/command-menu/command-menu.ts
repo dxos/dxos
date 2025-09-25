@@ -46,6 +46,7 @@ export const commandMenu = (options: CommandMenuOptions) => {
               tagName: 'dx-anchor',
               class: 'cm-floating-menu-trigger',
               attributes: {
+                'data-visible-focus': 'false',
                 'data-auto-trigger': 'true',
                 'data-trigger': trigger!,
               },
