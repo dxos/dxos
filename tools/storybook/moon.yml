@@ -1,5 +1,7 @@
 type: tool
 language: typescript
+tags:
+  - ts-test
 tasks:
   bundle:
     command: storybook build
@@ -35,13 +37,3 @@ tasks:
       - --quiet
       - --config-dir=config/e2e
     preset: server
-  test-ci:
-    command: vitest --project=ci
-    deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - ^:bundle
-    inputs:
-      - /vitest.storybook.config.ts
-      - vitest.config.ts
-      - $NODE_VERSION

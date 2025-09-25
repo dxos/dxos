@@ -16,8 +16,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
+import { type Client } from '@dxos/react-client';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -426,7 +426,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        <CreateRefPanel model={model} modals={modals} />
+        {client && <CreateRefPanel client={client} model={model} modals={modals} />}
       </Grid.Root>
     );
   },

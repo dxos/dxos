@@ -167,7 +167,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
   });
 
-const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
+export const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirName = packageDir.split('/').pop();

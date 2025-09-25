@@ -2,50 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
-import { join } from 'node:path';
-import { defineConfig, mergeConfig } from 'vitest/config';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
 
-// TODO(burdon): Factor out common components.
-import { baseConfig } from '../../vitest.storybook.config';
+import { resolveReporterConfig } from '../../vitest.base.config';
 
-export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
-  defineConfig({
-    plugins: [
-      // https://storybook.js.org/docs/writing-tests/in-ci
-      // https://storybook.js.org/docs/writing-tests/integrations/vitest-addon#storybooktest
-      storybookTest({
-        configDir: join(__dirname, '.storybook'),
-        storybookScript: 'moon run storybook:serve',
-        tags: {
-          include: ['test'],
-          exclude: ['experimental'],
-        },
-      }),
-    ],
-    test: {
-      setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // moon run storybook:test-ci
-          test: {
-            name: 'ci',
-            environment: 'node',
-          },
-        },
-        {
-          test: {
-            // moon run storybook:test-ci -- --project=browser
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
-              instances: [{ browser: 'chromium' }],
-            },
-          },
-        },
-      ],
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+// NOTE: This config is merged with the storybook vite final config.
+// TODO(wittjosiah): Consider moving this into a project if other packages start to run tests in browser as well.
+export default defineConfig({
+  plugins: [
+    storybookTest({
+      configDir: path.join(dirname, '.storybook'),
+      // The --ci flag will skip prompts and not open a browser.
+      storybookScript: 'storybook dev --ci',
+      tags: {
+        include: ['test'],
+        exclude: ['experimental'],
+      },
+    }),
+  ],
+  test: {
+    ...resolveReporterConfig({ browserMode: true, cwd: dirname }),
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      headless: true,
+      instances: [{ browser: 'chromium' }],
     },
-  }),
-);
+    setupFiles: ['./.storybook/vitest.setup.ts'],
+  },
+});

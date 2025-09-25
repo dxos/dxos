@@ -20,6 +20,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -168,6 +169,7 @@ const storybook: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
           },
         }),
+        GraphPlugin(),
         SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),

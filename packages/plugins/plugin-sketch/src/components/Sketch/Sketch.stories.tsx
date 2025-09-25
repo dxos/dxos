@@ -10,6 +10,7 @@ import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
+import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -26,7 +27,7 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
 };
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
+  const [sketch, setSketch] = useState<DiagramType>(createObject(createSketch(data.v2)));
 
   const handleClear = () => {
     const sketch = createSketch();
