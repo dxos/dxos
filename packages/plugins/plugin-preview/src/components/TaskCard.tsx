@@ -27,7 +27,7 @@ const getActiveStatusOption = (status?: string) => {
   return options.find(({ id }) => id === status);
 };
 
-export const TaskCard = ({ subject, role }: PreviewProps<DataType.Task>) => {
+export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
   return (
@@ -39,7 +39,7 @@ export const TaskCard = ({ subject, role }: PreviewProps<DataType.Task>) => {
             {statusOption.title}
           </span>
         )}
-        <CardSubjectMenu subject={subject} />
+        <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
       </div>
     </Card.SurfaceRoot>
   );

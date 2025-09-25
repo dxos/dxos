@@ -3,7 +3,7 @@
 //
 
 import { type Live, type Space } from '@dxos/client/echo';
-import { Obj, Relation, type Type } from '@dxos/echo';
+import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
@@ -41,7 +41,7 @@ export const organizations: (Type.Properties<DataType.Organization> & { id: stri
 export const people: (Type.Properties<DataType.Person> & { id: string })[] = [
   { id: 'rich_burdon', fullName: 'Rich Burdon' },
   { id: 'josiah_witt', fullName: 'Josiah Witt' },
-  { id: 'dima_dmaretskyi', fullName: 'Dima Maretskyi' },
+  { id: 'dima_maretskyi', fullName: 'Dima Maretskyi' },
   { id: 'chad_fowler', fullName: 'Chad Fowler' },
   { id: 'ciaran_oleary', fullName: "Ciarán O'Leary" },
   { id: 'jason_whitmire', fullName: 'Jason Whitmire' },
@@ -68,23 +68,23 @@ const testRelationships: Record<
 > = {
   [DataType.Employer.typename]: [
     // prettier-ignore
-    { source: 'rich_burdon', target: 'dxos' },
+    { source: 'rich_burdon', target: 'dxos', active: true },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
     { source: 'rich_burdon', target: 'deshaw', active: false },
-    { source: 'josiah_witt', target: 'dxos' },
-    { source: 'dima_dmaretskyi', target: 'dxos' },
-    { source: 'chad_fowler', target: 'blueyard' },
+    { source: 'josiah_witt', target: 'dxos', active: true },
+    { source: 'dima_maretskyi', target: 'dxos', active: true },
+    { source: 'chad_fowler', target: 'blueyard', active: true },
     { source: 'chad_fowler', target: 'microsoft', active: false },
-    { source: 'ciaran_oleary', target: 'blueyard' },
-    { source: 'jason_whitmire', target: 'blueyard' },
-    { source: 'juan_benet', target: 'protocol_labs' },
-    { source: 'alex_brunicki', target: 'backed' },
-    { source: 'andre_de_haes', target: 'backed' },
-    { source: 'scott_cohen', target: 'newlab' },
-    { source: 'satya_nadella', target: 'microsoft' },
-    { source: 'kevin_scott', target: 'microsoft' },
+    { source: 'ciaran_oleary', target: 'blueyard', active: true },
+    { source: 'jason_whitmire', target: 'blueyard', active: true },
+    { source: 'juan_benet', target: 'protocol_labs', active: true },
+    { source: 'alex_brunicki', target: 'backed', active: true },
+    { source: 'andre_de_haes', target: 'backed', active: true },
+    { source: 'scott_cohen', target: 'newlab', active: true },
+    { source: 'satya_nadella', target: 'microsoft', active: true },
+    { source: 'kevin_scott', target: 'microsoft', active: true },
     { source: 'kevin_scott', target: 'google', active: false },
-    { source: 'jeff_bezos', target: 'amazon' },
+    { source: 'jeff_bezos', target: 'amazon', active: true },
     { source: 'jeff_bezos', target: 'deshaw', active: false },
   ],
 
@@ -193,51 +193,61 @@ export const createTestTranscription = (): DataType.Message[] => {
 };
 
 // TODO(wittjosiah): Find way to use data generator to generate substantive messages that could be summarized.
-export const createTestMailbox = (): DataType.Message[] => {
+export const createTestMailbox = (contacts?: DataType.Person[]): DataType.Message[] => {
   const timeInterval = 1000;
   const messages: DataType.Message[] = [
     {
       text: 'Subject: Project Kickoff\n\nHi team,\n\nWe are excited to announce the kickoff of the Apollo project. Please review the attached roadmap and be prepared for our first meeting on Monday.\n\nBest,\nAlice',
-      sender: 'alice.johnson@acme-corp.com',
+      sender: contacts?.[0] ?? 'alice.johnson@acme-corp.com',
+      labels: ['Project'],
     },
     {
       text: 'Subject: Sales Update\n\nDear all,\n\nQ2 sales numbers have exceeded expectations. Congratulations to everyone for their hard work!\n\nRegards,\nBob',
-      sender: 'bob.smith@salesforce.biz',
+      sender: contacts?.[1] ?? 'bob.smith@salesforce.biz',
+      labels: ['Project'],
     },
     {
       text: 'Subject: Invoice Reminder\n\nHello,\n\nThis is a friendly reminder that invoice #12345 is due next week. Please let us know if you have any questions.\n\nThank you,\nCarol',
-      sender: 'carol.finance@invoicesolutions.com',
+      sender: contacts?.[2] ?? 'carol.finance@invoicesolutions.com',
+      labels: ['Project'],
     },
     {
       text: 'Subject: Meeting Rescheduled\n\nHi team,\n\nTomorrow’s product design meeting has been moved to Friday at 2pm. Please update your calendars.\n\nThanks,\nDavid',
-      sender: 'david.lee@productdesign.io',
+      sender: contacts?.[3] ?? 'david.lee@productdesign.io',
+      labels: ['Project'],
     },
     {
       text: 'Subject: Welcome Aboard!\n\nWelcome to the company, Emily! We are thrilled to have you join the marketing department.\n\nBest,\nFiona',
-      sender: 'fiona.hr@enterpriseco.com',
+      sender: contacts?.[4] ?? 'fiona.hr@enterpriseco.com',
+      labels: [],
     },
     {
       text: 'Subject: IT Maintenance\n\nDear colleagues,\n\nScheduled IT maintenance will occur this Saturday from 1am to 5am. Please save your work accordingly.\n\nSincerely,\nGreg',
-      sender: 'greg.it@supporthub.net',
+      sender: contacts?.[5] ?? 'greg.it@supporthub.net',
+      labels: [],
     },
     {
       text: 'Subject: Lunch & Learn\n\nJoin us for a Lunch & Learn session on cloud security this Thursday in the main conference room.\n\nSee you there,\nHelen',
-      sender: 'helen.training@acme-corp.com',
+      sender: contacts?.[6] ?? 'helen.training@acme-corp.com',
+      labels: [],
     },
     {
       text: 'Subject: Client Feedback\n\nHi,\n\nOur client, InnovateX, sent positive feedback on the recent deployment. Great job, everyone!\n\nCheers,\nIvan',
-      sender: 'ivan.account@consultingpartners.org',
+      sender: contacts?.[7] ?? 'ivan.account@consultingpartners.org',
+      labels: [],
     },
     {
       text: 'Subject: Policy Update\n\nPlease review the updated remote work policy attached to this email. Let us know if you have any questions.\n\nBest regards,\nJulia',
-      sender: 'julia.admin@acme-corp.com',
+      sender: contacts?.[8] ?? 'julia.admin@acme-corp.com',
+      labels: [],
     },
   ].map((message, index, array) => {
     const created = new Date(Date.now() - (array.length - index) * timeInterval);
     return Obj.make(DataType.Message, {
       created: created.toISOString(),
       blocks: [{ _tag: 'text', text: message.text }],
-      sender: { email: message.sender },
+      sender: typeof message.sender === 'string' ? { email: message.sender } : { contact: Ref.make(message.sender) },
+      properties: { labels: message.labels },
     });
   });
 
