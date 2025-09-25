@@ -4,7 +4,7 @@
 
 import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Option, Record, Schedule } from 'effect';
 
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -27,7 +27,6 @@ import {
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
-import { EncodedReference, Reference } from '@dxos/echo-protocol';
 
 export type TimeControl = 'natural' | 'manual';
 

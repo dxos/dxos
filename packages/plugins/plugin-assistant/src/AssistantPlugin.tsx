@@ -104,7 +104,13 @@ export const AssistantPlugin = () =>
       id: `${meta.id}/module/schema`,
       activatesOn: ClientEvents.SetupSchema,
       activate: () =>
-        contributes(ClientCapabilities.Schema, [ServiceType, Assistant.CompanionTo, ResearchGraph, ResearchOn, Prompt.Prompt]),
+        contributes(ClientCapabilities.Schema, [
+          ServiceType,
+          Assistant.CompanionTo,
+          ResearchGraph,
+          ResearchOn,
+          Prompt.Prompt,
+        ]),
     }),
     defineModule({
       id: `${meta.id}/module/on-space-created`,

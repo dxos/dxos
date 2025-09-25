@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { type Schema } from 'effect';
 import { type Simplify } from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';

@@ -24,10 +24,10 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
-  agent,
-  createResearchNote,
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
+  agent,
+  createResearchNote,
   readDocument,
   readTasks,
   research,

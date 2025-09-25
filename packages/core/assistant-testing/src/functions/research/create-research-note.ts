@@ -8,9 +8,10 @@ import { Relation } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { ResearchOn } from './research-graph';
 import { log } from '@dxos/log';
+import { Markdown } from '@dxos/plugin-markdown/types';
+
+import { ResearchOn } from './research-graph';
 
 export default defineFunction({
   name: 'dxos.org/function/create-research-note',

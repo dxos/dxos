@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { RESEARCH_BLUEPRINT, ResearchOn, agent } from '@dxos/assistant-testing';
+import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
@@ -38,7 +39,6 @@ import { DataType, createView } from '@dxos/schema';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
-import { Prompt } from '@dxos/blueprints';
 
 export enum PresetName {
   DXOS_TEAM = 'dxos-team',

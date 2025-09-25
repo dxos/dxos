@@ -5,12 +5,12 @@
 import { Context, Effect, Layer, Schema } from 'effect';
 
 import { todo } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
 import type { Services } from './service-container';
-import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,

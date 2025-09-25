@@ -16,6 +16,7 @@ import {
 import { Obj } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
+import { DataType } from '@dxos/schema';
 
 import { exaFunction, exaMockFunction } from '../exa';
 
@@ -24,7 +25,6 @@ import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGra
 import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { DataType, DataTypes } from '@dxos/schema';
 
 /**
  * Exec external service and return the results as a Subgraph.

@@ -8,11 +8,11 @@ import {
   DISCORD_BLUEPRINT,
   LINEAR_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  agent,
   createResearchNote,
   fetchDiscordMessages,
   research,
   syncLinearIssues,
-  agent,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
