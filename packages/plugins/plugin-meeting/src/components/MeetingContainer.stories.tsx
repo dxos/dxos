@@ -44,8 +44,6 @@ const meta = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
-        IntentPlugin(),
-        SettingsPlugin(),
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -65,7 +63,9 @@ const meta = {
             );
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+        SettingsPlugin(),
         MarkdownPlugin(),
       ],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],

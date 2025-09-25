@@ -50,7 +50,7 @@ const meta: Meta<typeof ProjectContainer> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
+        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [
@@ -131,8 +131,8 @@ const meta: Meta<typeof ProjectContainer> = {
             Array.from({ length: 8 }).forEach(() => {
               const task = Obj.make(DataType.Task, {
                 title: faker.lorem.sentence(),
-                status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']),
-                priority: faker.helpers.arrayElement(['low', 'medium', 'high']),
+                status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
               });
               space.db.add(task);
             });
@@ -151,9 +151,9 @@ const meta: Meta<typeof ProjectContainer> = {
             });
           },
         }),
-        StorybookLayoutPlugin(),
+        AttentionPlugin(),
         PreviewPlugin(),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
       ],

@@ -3,12 +3,12 @@
 //
 
 import { Capabilities, Events } from '../common';
-import { contributes, defineModule, definePlugin2, lazy } from '../core';
+import { contributes, defineModule, definePlugin, lazy } from '../core';
 
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const SettingsPlugin = definePlugin2(meta, () => [
+export const SettingsPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/store`,
     activatesOn: Events.Startup,

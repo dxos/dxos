@@ -3,11 +3,11 @@
 //
 
 import { Events } from '../common';
-import { defineModule, definePlugin2, lazy } from '../core';
+import { defineModule, definePlugin, lazy } from '../core';
 
 import { meta } from './meta';
 
-export const IntentPlugin = definePlugin2(meta, () => [
+export const IntentPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/dispatcher`,
     // TODO(wittjosiah): This will mean that startup needs to be reset when intents are added or removed.

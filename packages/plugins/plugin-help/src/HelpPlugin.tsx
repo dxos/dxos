@@ -2,17 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin2 } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createResolver, defineModule, definePlugin } from '@dxos/app-framework';
 
-import { AppGraphBuilder, HelpState, ReactRoot, ReactSurface } from './capabilities';
-import { HelpCapabilities } from './capabilities/capabilities';
+import { AppGraphBuilder, HelpCapabilities, HelpState, ReactRoot, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { HelpAction, type Step } from './types';
 
 export type HelpPluginOptions = { steps?: Step[] };
 
-export const HelpPlugin = definePlugin2(meta, ({ steps = [] }: HelpPluginOptions) => [
+export const HelpPlugin = definePlugin<HelpPluginOptions>(meta, ({ steps = [] }) => [
   defineModule({
     id: `${meta.id}/module/state`,
     activatesOn: Events.Startup,

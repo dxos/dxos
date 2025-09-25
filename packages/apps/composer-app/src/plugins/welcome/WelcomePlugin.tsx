@@ -10,32 +10,31 @@ import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
 import { WELCOME_PLUGIN, meta } from './meta';
 import { translations } from './translations';
 
-export const WelcomePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/onboarding`,
-      activatesOn: allOf(
-        Events.DispatcherReady,
-        Events.AppGraphReady,
-        Events.SettingsReady,
-        Events.LayoutReady,
-        ClientEvents.ClientReady,
-      ),
-      activate: Onboarding,
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${WELCOME_PLUGIN}/module/default-content`,
-      activatesOn: SpaceEvents.DefaultSpaceReady,
-      activate: DefaultContent,
-    }),
-  ]);
+export const WelcomePlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${WELCOME_PLUGIN}/module/onboarding`,
+    activatesOn: allOf(
+      Events.DispatcherReady,
+      Events.AppGraphReady,
+      Events.SettingsReady,
+      Events.LayoutReady,
+      ClientEvents.ClientReady,
+    ),
+    activate: Onboarding,
+  }),
+  defineModule({
+    id: `${WELCOME_PLUGIN}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
+  }),
+  defineModule({
+    id: `${WELCOME_PLUGIN}/module/react-surface`,
+    activatesOn: Events.SetupReactSurface,
+    activate: ReactSurface,
+  }),
+  defineModule({
+    id: `${WELCOME_PLUGIN}/module/default-content`,
+    activatesOn: SpaceEvents.DefaultSpaceReady,
+    activate: DefaultContent,
+  }),
+]);

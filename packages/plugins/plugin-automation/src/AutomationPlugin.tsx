@@ -10,36 +10,35 @@ import { AppGraphBuilder, ComputeRuntime, IntentResolver, ReactSurface } from '.
 import { meta } from './meta';
 import { translations } from './translations';
 
-export const AutomationPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [FunctionType, FunctionTrigger]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/app-graph-builder`,
-      activatesOn: Events.SetupAppGraph,
-      activate: AppGraphBuilder,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/compute-runtime`,
-      activatesOn: ClientEvents.ClientReady,
-      activate: ComputeRuntime,
-    }),
-  ]);
+export const AutomationPlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [FunctionType, FunctionTrigger]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/app-graph-builder`,
+    activatesOn: Events.SetupAppGraph,
+    activate: AppGraphBuilder,
+  }),
+  defineModule({
+    id: `${meta.id}/module/intent-resolver`,
+    activatesOn: Events.SetupIntentResolver,
+    activate: IntentResolver,
+  }),
+  defineModule({
+    id: `${meta.id}/module/react-surface`,
+    activatesOn: Events.SetupReactSurface,
+    activate: ReactSurface,
+  }),
+  defineModule({
+    id: `${meta.id}/module/compute-runtime`,
+    activatesOn: ClientEvents.ClientReady,
+    activate: ComputeRuntime,
+  }),
+]);

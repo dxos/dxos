@@ -124,20 +124,12 @@ export class Plugin {
   ) {}
 }
 
-/**
- * Helper to define a plugin.
- * @deprecated
- */
-export const definePlugin = (meta: PluginMeta, modules: PluginModule[]) => {
-  return new Plugin(meta, modules);
-};
-
 export type PluginFactory<T = void> = ((args: T) => Plugin) & { meta: PluginMeta };
 
 /**
  * Helper to define a plugin.
  */
-export const definePlugin2 = <T = void>(meta: PluginMeta, provider: (args: T) => PluginModule[]): PluginFactory<T> => {
+export const definePlugin = <T = void>(meta: PluginMeta, provider: (args: T) => PluginModule[]): PluginFactory<T> => {
   const factory = (args: T) => {
     return new Plugin(meta, provider(args));
   };
