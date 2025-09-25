@@ -112,6 +112,8 @@ export const generator = () => ({
               }),
               output: Schema.Any,
 
+              // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
+              // Remove the mock prompt to do the actual research.
               instructions:
                 'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
               blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
