@@ -1,0 +1,40 @@
+{
+  "name": "@dxos/lit-assistant",
+  "version": "0.8.3",
+  "description": "A set of components designed to be elicited from LLMs.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./dist/src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "browser": "./dist/src/index.js",
+      "node": "./dist/src/index.js"
+    }
+  },
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@lit/context": "^1.1.6",
+    "lit": "^3.2.0"
+  },
+  "devDependencies": {
+    "@dxos/test-utils": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

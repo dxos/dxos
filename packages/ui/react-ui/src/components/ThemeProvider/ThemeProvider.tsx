@@ -5,24 +5,14 @@
 import { createKeyborg } from 'keyborg';
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
-import { type Density, type Elevation, type ThemeFunction } from '@dxos/react-ui-types';
+import { type Density, type Elevation, type ThemeContextValue } from '@dxos/react-ui-types';
 
-import { type SafeAreaPadding, useSafeArea } from '../../hooks';
+import { useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
 
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
-
-export type ThemeMode = 'dark' | 'light';
-
-export type ThemeContextValue = {
-  tx: ThemeFunction<any>;
-  themeMode: ThemeMode;
-  hasIosKeyboard: boolean;
-  safeAreaPadding?: SafeAreaPadding;
-  noCache?: boolean;
-};
 
 /**
  * @internal

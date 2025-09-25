@@ -436,6 +436,9 @@
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
+      "path": "packages/ui/lit-assistant/tsconfig.json"
+    },
+    {
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
