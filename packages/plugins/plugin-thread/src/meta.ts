@@ -4,8 +4,6 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const THREAD_ITEM = 'dxos.org/plugin/thread/item';
-
 // TODO(wittjosiah): Needs screenshots.
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/thread',
@@ -14,3 +12,5 @@ export const meta: PluginMeta = {
   icon: 'ph--video-conference--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
 };
+
+export const THREAD_ITEM = `${meta.id}/item`;

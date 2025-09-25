@@ -12,9 +12,10 @@ import { meta } from '../meta';
 
 // NOTE: Copied from @dxos/plugin-deck to break circular dependency.
 const ATTENDABLE_PATH_SEPARATOR = '~';
+
 const DECK_COMPANION_TYPE = 'dxos.org/plugin/deck/deck-companion';
 
-export default (context: PluginContext) =>
+export default (_context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
       id: `${meta.id}/help`,
