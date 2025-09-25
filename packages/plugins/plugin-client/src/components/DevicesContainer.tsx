@@ -77,10 +77,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
           description={t('danger zone description', { ns: meta.id })}
         >
           <ControlGroup>
-            <ControlItem
-              title={t('reset device label')}
-              description={t('reset device description', { ns: meta.id })}
-            >
+            <ControlItem title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
               <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
                 {t('reset device label')}
               </Button>

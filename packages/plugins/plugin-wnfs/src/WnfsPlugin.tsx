@@ -4,7 +4,15 @@
 
 import { pipe } from 'effect';
 
-import { Capabilities, Events, chain, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import {
+  Capabilities,
+  Events,
+  chain,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+} from '@dxos/app-framework';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';

@@ -4,7 +4,6 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/script',
   name: 'Scripts',

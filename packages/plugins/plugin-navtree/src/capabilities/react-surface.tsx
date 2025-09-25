@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isGraphNode } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
-import { COMMANDS_DIALOG,meta } from '../meta';
+import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

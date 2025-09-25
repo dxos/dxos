@@ -18,7 +18,7 @@ import { LayoutPlugin } from './layout';
 import { LoggerPlugin } from './logger';
 
 const pluginFactories = [IntentPlugin, LayoutPlugin, DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
-const plugins = pluginFactories.map(factory => typeof factory === 'function' ? factory() : factory);
+const plugins = pluginFactories.map((factory) => (typeof factory === 'function' ? factory() : factory));
 
 const Placeholder = () => {
   return <div>Loading...</div>;

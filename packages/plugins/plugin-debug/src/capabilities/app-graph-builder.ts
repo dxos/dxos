@@ -9,7 +9,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
-import { meta as spaceMeta, getActiveSpace } from '@dxos/plugin-space';
+import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 import { Devtools } from '../types';

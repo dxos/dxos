@@ -20,9 +20,7 @@ export default () =>
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
       component: ({ data, role }) => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(
-          meta.id,
-        )!.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
 
         return (
           <SketchContainer

@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, type PluginContext, SettingsAction, contributes, createIntent } from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
 
-import { REGISTRY_ID, REGISTRY_KEY,meta } from '../meta';
+import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [

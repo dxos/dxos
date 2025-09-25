@@ -7,7 +7,7 @@ import React from 'react';
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
-import { COMMANDS_DIALOG,meta } from '../../meta';
+import { COMMANDS_DIALOG, meta } from '../../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {

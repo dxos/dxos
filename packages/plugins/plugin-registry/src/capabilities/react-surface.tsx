@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities, Plugin, contributes, createSurface, usePluginManager } from '@dxos/app-framework';
 
 import { PluginDetail, RegistryContainer } from '../components';
-import { REGISTRY_KEY,meta } from '../meta';
+import { REGISTRY_KEY, meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

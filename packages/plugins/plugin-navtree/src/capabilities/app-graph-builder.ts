@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
-import { COMMANDS_DIALOG,meta } from '../meta';
+import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(

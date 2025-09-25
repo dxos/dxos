@@ -142,9 +142,7 @@ export default (context: PluginContext) =>
       role: ['article', 'section'],
       position: 'hoist',
       filter: (data): data is { subject: Obj.Any } => {
-        const settings = context
-          .getCapability(Capabilities.SettingsStore)
-          .getStore<DebugSettingsProps>(meta.id)!.value;
+        const settings = context.getCapability(Capabilities.SettingsStore).getStore<DebugSettingsProps>(meta.id)!.value;
         return Obj.isObject(data.subject) && !!settings.wireframe;
       },
       component: ({ data, role }) => (

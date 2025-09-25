@@ -29,9 +29,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
-              const settings = get(
-                rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-              );
+              const settings = get(rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value));
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
                 : Obj.instanceOf(Markdown.Document, node.data);
@@ -61,9 +59,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
-              const settings = get(
-                rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value),
-              );
+              const settings = get(rxFromSignal(() => settingsStore?.getStore<PresenterSettingsProps>(meta.id)?.value));
               const isPresentable = settings?.presentCollections
                 ? Obj.instanceOf(DataType.Collection, node.data) || Obj.instanceOf(Markdown.Document, node.data)
                 : Obj.instanceOf(Markdown.Document, node.data);
