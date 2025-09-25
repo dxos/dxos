@@ -99,6 +99,7 @@ export type FunctionDefinition<T = any, O = any> = {
   handler: FunctionHandler<T, O>;
 };
 
+// TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
   <I, O>(params: {
     // TODO(dmaretskyi): Make `key` required.

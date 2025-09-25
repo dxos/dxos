@@ -55,5 +55,7 @@ export default defineFunction({
     yield* DatabaseService.flush({ indexes: true });
 
     log.info('Created research note', { target, name, content });
+
+    return {};
   }),
 });
