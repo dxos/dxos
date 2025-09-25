@@ -5,7 +5,7 @@
 // NOTE(ZaymonFC): This is a workaround. See: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
-import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 import { ASSISTANT_PLUGIN, AssistantPlugin } from '@dxos/plugin-assistant';
@@ -22,7 +22,7 @@ import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { FILES_PLUGIN, FilesPlugin } from '@dxos/plugin-files';
 import { GRAPH_PLUGIN, GraphPlugin } from '@dxos/plugin-graph';
-import { HELP_PLUGIN, HelpPlugin } from '@dxos/plugin-help';
+import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KANBAN_PLUGIN, KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
@@ -80,8 +80,8 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     DECK_PLUGIN,
     FILES_PLUGIN,
     GRAPH_PLUGIN,
-    HELP_PLUGIN,
-    INTENT_PLUGIN,
+    HelpPlugin.meta.id,
+    IntentPlugin.meta.id,
     isTauri && NATIVE_PLUGIN,
     NAVTREE_PLUGIN,
     OBSERVABILITY_PLUGIN,
