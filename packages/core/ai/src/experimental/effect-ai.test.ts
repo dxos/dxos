@@ -243,16 +243,13 @@ describe('LanguageModel', () => {
         const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: Prompt.Raw = trim`
-          <instructions>
-            ${system}
-          </instructions>
-          
-          What is six times seven?
-        `;
+        let prompt: Prompt.RawInput = Prompt.fromMessages([
+          Prompt.makeMessage('system', { content: system }),
+          Prompt.makeMessage('user', { content: [Prompt.makePart('text', { text: 'What is six times seven?' })] }),
+        ]);
 
         do {
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
+          const stream = chat.streamText({ prompt, toolkit }).pipe(AiParser.parseResponse());
           prompt = Prompt.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));

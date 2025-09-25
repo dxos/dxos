@@ -24,7 +24,11 @@ import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
  */
 export const preprocessPrompt: (
   messages: DataType.Message[],
-) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (messages) {
+  opts?: { system?: string },
+) => Effect.Effect<Prompt.Prompt, PromptPreprocesorError, never> = Effect.fn('preprocessPrompt')(function* (
+  messages,
+  { system } = {},
+) {
   return yield* pipe(
     messages,
     Effect.forEach(
@@ -39,20 +43,18 @@ export const preprocessPrompt: (
                   switch (chunk[0]._tag) {
                     case 'toolResult':
                       assumeType<ContentBlock.ToolResult[]>(chunk);
-                      return new Prompt.ToolMessage({
-                        parts: chunk.map(
-                          (block) =>
-                            new Prompt.ToolCallResultPart({
-                              id: Prompt.ToolCallId.make(block.toolCallId),
-                              name: block.name,
-                              result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
-                            }),
+                      return Prompt.makeMessage('tool', {
+                        content: chunk.map((block) =>
+                          Prompt.makePart('tool-result', {
+                            id: block.toolCallId,
+                            name: block.name,
+                            result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+                          }),
                         ),
                       });
                     default:
-                      return new Prompt.UserMessage({
-                        userName: msg.sender.name,
-                        parts: yield* pipe(
+                      return Prompt.makeMessage('user', {
+                        content: yield* pipe(
                           chunk,
                           Effect.forEach(convertUserMessagePart),
                           Effect.map(Array.filter(Predicate.isNotUndefined)),
@@ -65,8 +67,8 @@ export const preprocessPrompt: (
 
           case 'assistant':
             return [
-              new Prompt.AssistantMessage({
-                parts: yield* pipe(
+              Prompt.makeMessage('assistant', {
+                content: yield* pipe(
                   msg.blocks,
                   Effect.forEach(convertAssistantMessagePart),
                   Effect.map(Array.filter(Predicate.isNotUndefined)),
@@ -90,16 +92,16 @@ const convertUserMessagePart: (
   function* (block) {
     switch (block._tag) {
       case 'text':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: block.text,
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<object>${block.reference}</object>`,
         });
       case 'transcript':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: block.text,
         });
       case 'anchor':
@@ -108,21 +110,23 @@ const convertUserMessagePart: (
       case 'image':
         switch (block.source?.type) {
           case 'base64':
-            return new Prompt.ImagePart({
+            return Prompt.makePart('file', {
               mediaType: block.source.mediaType,
               data: bufferToArray(Buffer.from(block.source.data, 'base64')),
             });
           case 'http':
-            return new Prompt.ImageUrlPart({
-              url: new URL(block.source.url),
+            return Prompt.makePart('file', {
+              data: new URL(block.source.url),
+              mediaType: 'application/octet-stream', // Likely doesn't work.
             });
           default:
             return yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid image source' }));
         }
       case 'file':
         // TODO(dmaretskyi): Convert data URIs into Prompt.FilePart
-        return new Prompt.FileUrlPart({
-          url: new URL(block.url),
+        return Prompt.makePart('file', {
+          data: new URL(block.url),
+          mediaType: block.mediaType ?? 'application/octet-stream',
         });
       case 'reasoning':
       case 'toolCall':
@@ -142,64 +146,68 @@ const convertAssistantMessagePart: (
     log('parse', { block });
     switch (block._tag) {
       case 'text':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: block.text,
         });
       case 'reasoning':
-        if (block.reasoningText && block.redactedText) {
-          return yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid reasoning part' }));
-        } else if (block.reasoningText) {
-          return new Prompt.ReasoningPart({
-            reasoningText: block.reasoningText ?? block.redactedText ?? '',
-            signature: block.signature,
-          });
-        } else if (block.redactedText) {
-          return new Prompt.RedactedReasoningPart({
-            redactedText: block.redactedText,
-          });
-        } else {
-          return yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid reasoning part' }));
-        }
+        return Prompt.makePart('reasoning', {
+          text: block.reasoningText ?? '',
+          options: {
+            anthropic: !!block.redactedText
+              ? {
+                  type: 'redacted_thinking',
+                  redactedData: block.redactedText,
+                }
+              : {
+                  type: 'thinking',
+                  signature:
+                    block.signature ??
+                    (yield* Effect.fail(new PromptPreprocesorError({ message: 'Invalid reasoning part' }))),
+                },
+          },
+        });
+
       case 'toolCall':
-        return new Prompt.ToolCallPart({
+        return Prompt.makePart('tool-call', {
           id: block.toolCallId,
           name: block.name,
           params: JSON.parse(block.input),
+          providerExecuted: false,
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<object>${block.reference}</object>`,
         });
       case 'transcript':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: block.text,
         });
       case 'status':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<status>${block.statusText}</status>`,
         });
       case 'suggestion':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<suggestion>${block.text}</suggestion>`,
         });
       case 'select':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`,
         });
       case 'anchor':
         // TODO(dmaretskyi): Notify of artifact changes based on the version progression.
         return undefined;
       case 'proposal':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: `<proposal>${block.text}</proposal>`,
         });
       case 'toolkit':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: '<toolkit/>',
         });
       case 'json':
-        return new Prompt.TextPart({
+        return Prompt.makePart('text', {
           text: block.data,
         });
       case 'toolResult':

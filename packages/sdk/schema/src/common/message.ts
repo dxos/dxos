@@ -186,6 +186,8 @@ export namespace ContentBlock {
 
   export const ImageSource = Schema.Union(Base64ImageSource, HttpImageSource);
 
+  // TODO(dmaretskyi): Combine image and file similar to effect-ai types.
+
   /**
    * Image
    */

@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { parseResponse } from '../AiParser';
-import { preprocessPrompt } from '../AiPreprocessor';
+import * as AiParser from '../AiParser';
+import * as AiPreprocessor from '../AiPreprocessor';
 import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
@@ -38,13 +38,12 @@ export const processMessages = Effect.fn(function* ({
   const history: DataType.Message[] = [...messages];
 
   do {
-    const prompt = yield* preprocessPrompt(history);
+    const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system });
     const blocks = yield* LanguageModel.streamText({
       disableToolCallResolution: true,
       toolkit,
-      system,
       prompt,
-    }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
+    }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
 
     const message = Obj.make(DataType.Message, {
       created: new Date().toISOString(),
