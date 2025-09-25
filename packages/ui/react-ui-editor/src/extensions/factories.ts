@@ -6,7 +6,7 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
 import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
-import { EditorState, type Extension } from '@codemirror/state';
+import { type ChangeSpec, EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   EditorView,
@@ -42,7 +42,29 @@ import { focus } from './focus';
 // Basic
 //
 
-export const preventNewline = EditorState.transactionFilter.of((tr) => (tr.newDoc.lines > 1 ? [] : tr));
+export const filterChars = (chars: RegExp) => {
+  return EditorState.transactionFilter.of((transaction) => {
+    if (!transaction.docChanged) return transaction;
+
+    const changes: ChangeSpec[] = [];
+    transaction.changes.iterChanges((fromA, toA, fromB, toB, text) => {
+      const inserted = text.toString();
+      const filtered = inserted.replace(chars, '');
+      if (inserted !== filtered) {
+        changes.push({
+          from: fromB,
+          to: toB,
+          insert: filtered,
+        });
+      }
+    });
+
+    if (changes.length) {
+      return [transaction, { changes, sequential: true } as TransactionSpec];
+    }
+    return transaction;
+  });
+};
 
 /**
  * https://codemirror.net/docs/extensions
