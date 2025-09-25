@@ -6,10 +6,12 @@ import React, { useCallback } from 'react';
 
 import { Avatar, Button, DxAnchorActivate, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { INBOX_PLUGIN } from '../../meta';
+import { mailboxGrid } from '../styles';
 import { formatDate, hashString } from '../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
@@ -42,33 +44,38 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
   const SenderRoot = contactDxn ? Button : 'div';
   const senderProps = contactDxn
     ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
-    : { className: 'dx-button hover:bg-transparent pli-2 gap-2', 'data-variant': 'ghost' };
+    : { className: 'p-0 hover:bg-transparent', 'data-variant': 'ghost' };
 
   return (
-    <div className='border-be border-separator p-1 flex justify-between'>
+    <div className='flex border-be border-separator'>
       <Avatar.Root>
-        <SenderRoot {...(senderProps as any)}>
-          <Avatar.Content
-            hue={toHue(hashString(message.sender?.name ?? message.sender?.email))}
-            hueVariant='surface'
-            variant='square'
-            size={8}
-            fallback={message.sender.name ? getFirstTwoRenderableChars(message.sender.name).join('') : '?'}
-          />
+        <div className={mx(mailboxGrid, 'p-[1px] is-full')}>
+          <SenderRoot {...(senderProps as any)}>
+            <div role='none' className='p-1'>
+              <Avatar.Content
+                fallback={message.sender.name ? getFirstTwoRenderableChars(message.sender.name).join('') : '?'}
+                hue={toHue(hashString(message.sender?.name ?? message.sender?.email))}
+                hueVariant='surface'
+                variant='square'
+                size={10}
+              />
+            </div>
+          </SenderRoot>
           <div role='none'>
             <Avatar.Label classNames='flex items-center gap-1'>
               <h3 className='truncate'>{message.sender.name || 'Unknown'}</h3>
               {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
             </Avatar.Label>
-            {message.sender.email && <div className='text-xs text-description truncate'>{message.sender.email}</div>}
+            {message.sender.email && <div className='text-sm text-description truncate'>{message.sender.email}</div>}
           </div>
-        </SenderRoot>
+        </div>
       </Avatar.Root>
-      <div className='grid gap-1 justify-items-end p-1'>
-        <div className='text-xs text-description'>
+
+      <div className='grid w-[8rem] _gap-1 justify-items-end'>
+        <div className='text-sm text-description p-1'>
           {message.created && formatDate(new Date(), new Date(message.created))}
         </div>
-        {/* View mode indicator */}
+        {/* View mode indicator. */}
         {viewMode && (
           <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
             {viewMode === 'plain' && t('message header view mode plain')}
