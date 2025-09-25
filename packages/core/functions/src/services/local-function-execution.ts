@@ -54,8 +54,12 @@ const invokeFunction = (
 ): Effect.Effect<unknown, never, Services> =>
   Effect.gen(function* () {
     // Assert input matches schema
-    const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
-    (assertInput as any)(input);
+    try {
+      const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
+      (assertInput as any)(input);
+    } catch (e) {
+      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
+    }
 
     const context: FunctionContext = {
       space: undefined,
@@ -92,8 +96,12 @@ const invokeFunction = (
     log.info('Function completed', { name: functionDef.name, input, data });
 
     // Assert output matches schema
-    const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
-    (assertOutput as any)(data);
+    try {
+      const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
+      (assertOutput as any)(data);
+    } catch (e) {
+      throw new FunctionError({ message: 'Invalid function output', context: { name: functionDef.name }, cause: e });
+    }
 
     return data;
   }).pipe(Effect.withSpan('invokeFunction', { attributes: { name: functionDef.name } }));
