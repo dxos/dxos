@@ -26,7 +26,7 @@ export const createGeneratorIntent = (id: string) => {
 export const createNumberPlugin = (id: string) => {
   const number = Math.floor(Math.random() * 100);
 
-  return definePlugin({ id, name: `Plugin ${id}` }, [
+  return definePlugin({ id, name: `Plugin ${id}` }, () => [
     defineModule({
       id: `${id}/main`,
       activatesOn: CountEvent,

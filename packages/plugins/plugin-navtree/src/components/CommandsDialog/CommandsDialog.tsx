@@ -19,11 +19,11 @@ import {
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
-import { KEY_BINDING, NAVTREE_PLUGIN } from '../../meta';
+import { KEY_BINDING, meta } from '../../meta';
 
 // TODO(wittjosiah): This probably deserves its own plugin but for now it lives here w/ other navigation UI.
 export const CommandsDialogContent = ({ selected: initial }: { selected?: string }) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [selected, setSelected] = useState<string | undefined>(initial);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
@@ -63,7 +63,7 @@ export const CommandsDialogContent = ({ selected: initial }: { selected?: string
 
   return (
     <Dialog.Content classNames={cardDialogContent}>
-      <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
+      <Dialog.Title classNames={cardDialogHeader}>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
       <SearchList.Root label={t('command list input placeholder')} classNames={cardDialogSearchListRoot}>

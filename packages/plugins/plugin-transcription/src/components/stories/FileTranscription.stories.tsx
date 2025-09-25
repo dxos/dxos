@@ -192,7 +192,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
+        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
@@ -202,7 +202,7 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         PreviewPlugin(),
         IntentPlugin(),

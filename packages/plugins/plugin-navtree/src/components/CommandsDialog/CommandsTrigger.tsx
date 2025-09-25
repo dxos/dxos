@@ -7,12 +7,12 @@ import React from 'react';
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
-import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../../meta';
+import { COMMANDS_DIALOG, meta } from '../../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <Button
       classNames='m-1 pli-1 lg:pli-2'

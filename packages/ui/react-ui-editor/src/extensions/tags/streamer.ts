@@ -5,7 +5,7 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { Domino } from '../../util';
 
@@ -24,7 +24,7 @@ export const streamer = (options: StreamerOptions = {}): Extension => {
   return [
     options.cursor && cursor(),
     options.fadeIn && fadeIn(typeof options.fadeIn === 'object' ? options.fadeIn : {}),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 };
 
 /**

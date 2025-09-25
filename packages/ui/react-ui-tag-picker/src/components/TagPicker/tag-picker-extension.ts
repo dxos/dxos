@@ -26,7 +26,7 @@ import {
 } from '@codemirror/view';
 
 import { type ChromaticPalette } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type TagPickerItemProps } from './TagPickerItem';
 
@@ -242,7 +242,7 @@ export const tagPicker = ({
     ),
 
     styles,
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 
   if (onSearch) {
     extensions.push(

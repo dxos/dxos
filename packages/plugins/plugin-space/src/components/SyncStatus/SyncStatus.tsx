@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 import { createClientSaveTracker } from './save-tracker';
 import { getIcon, getStatus } from './status';
@@ -31,7 +31,7 @@ export const SyncStatus = () => {
 };
 
 export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: boolean }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const summary = getSyncSummary(state);
   const offline = Object.values(state).length === 0;
   const needsToUpload = summary.differentDocuments > 0 || summary.missingOnRemote > 0;

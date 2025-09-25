@@ -25,7 +25,7 @@ import {
   createTemplateSelect,
   useDeployDeps,
 } from '../../hooks';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Rx.Rx<ActionGraphProps> =>
   Rx.make((get) =>
@@ -50,7 +50,7 @@ export type ScriptToolbarProps = ThemedClassName<{
 }>;
 
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
   const toolbarCreator = useMemo(
     () => createToolbarActions({ state, script, t, ...options }),

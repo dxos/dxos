@@ -10,7 +10,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
-import { INBOX_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { mailboxGrid } from '../styles';
 import { formatDate, hashString } from '../util';
 
@@ -23,7 +23,7 @@ export type MessageHeaderProps = ThemedClassName<{
 }>;
 
 export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderProps) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const handleSenderClick = useCallback(
     (event: MouseEvent) => {

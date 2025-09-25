@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { THEME_EDITOR_PLUGIN } from './meta';
+import { meta } from './meta';
 
-export const themeEditorId = `${THEME_EDITOR_PLUGIN}/theme-editor`;
+export const themeEditorId = `${meta.id}/theme-editor`;
