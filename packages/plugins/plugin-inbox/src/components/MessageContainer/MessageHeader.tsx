@@ -46,10 +46,11 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
     ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
     : { className: 'p-0 hover:bg-transparent', 'data-variant': 'ghost' };
 
+  // TODO(burdon): Doens't line up with grid.
   return (
-    <div className='flex border-be border-separator'>
+    <div className='flex border-be border-subduedSeparator'>
       <Avatar.Root>
-        <div className={mx(mailboxGrid, 'p-[1px] is-full')}>
+        <div className={mx('is-full', mailboxGrid)}>
           <SenderRoot {...(senderProps as any)}>
             <div role='none' className='p-1'>
               <Avatar.Content
@@ -71,7 +72,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
         </div>
       </Avatar.Root>
 
-      <div className='grid w-[8rem] _gap-1 justify-items-end'>
+      <div className='grid w-[12rem] justify-items-end'>
         <div className='text-sm text-description p-1'>
           {message.created && formatDate(new Date(), new Date(message.created))}
         </div>

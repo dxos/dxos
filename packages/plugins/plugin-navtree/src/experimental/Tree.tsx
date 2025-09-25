@@ -7,23 +7,15 @@ import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Rounded border if first/last.
-const styles = {
-  hover: 'hover:bg-slate-400 dark:hover:bg-slate-800',
-  selected: '!bg-slate-300 dark:!bg-slate-700',
-};
-
 export const IconButton = ({
   iconName,
   classNames,
   size = 4,
   onClick,
-  weight = 'regular',
 }: {
   iconName: string;
   classNames?: ClassNameValue;
   size?: Size;
-  weight?: 'regular' | 'duotone' | 'fill';
 } & Pick<HTMLAttributes<HTMLDivElement>, 'onClick'>) => {
   // TODO(burdon): Density aware.
   return (
@@ -124,7 +116,6 @@ const StateIcon = ({ node, open, selected, active }: TreeNodeProps) => {
     <IconButton
       iconName={isActive ? 'ph--user-circle--regular' : 'ph--circle--regular'}
       size={4}
-      weight={selected?.[id] ? 'fill' : 'duotone'}
       classNames={mx(
         'text-slate-500',
         !isChildActive && 'opacity-0 transition duration-500',
@@ -159,13 +150,9 @@ const ItemIcon = ({
   node: { children, iconName = children?.length ? 'ph--folder--regular' : 'ph--file--regular', color },
 }: Pick<TreeNodeProps, 'node'>) => {
   return (
-    (iconName && (
-      <IconButton
-        iconName={iconName}
-        classNames={color ?? 'text-neutral-700 dark:text-neutral-300'}
-        weight={color ? 'duotone' : 'regular'}
-      />
-    )) || <div />
+    (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-neutral-700 dark:text-neutral-300'} />) || (
+      <div />
+    )
   );
 };
 
@@ -210,9 +197,9 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
     <Grid
       style={{ paddingLeft: `${(depth - 1) * 24}px` }}
       className={mx(
-        'group w-full items-center cursor-pointer',
-        styles.hover,
-        selected?.[id] && styles.selected,
+        'group w-full items-center cursor-pointer bg-hoverSurface',
+        // TODO(burdon): Use data-active.
+        selected?.[id] && 'bg-activeSurface',
         className,
       )}
       onClick={() => selected && onChangeSelected?.(id, !selected[id])}

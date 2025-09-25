@@ -42,6 +42,7 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
     if (viewMode === 'plain-only' || viewMode === 'plain') {
       return textBlocks[0]?.text || '';
     }
+
     // Otherwise show enriched content (second block).
     return textBlocks[1]?.text || '';
   }, [message.blocks, viewMode]);

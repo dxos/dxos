@@ -10,7 +10,7 @@
   & > .dx-grid__cell__content,
   &.message__card {
     /** TODO(burdon): Reconcile with styles.ts (mailboxGrid) */
-    @apply grid grid-cols-[3rem_1fr] gap-1 border-0;
+    @apply grid grid-cols-[3rem_1fr] gap-1 p-1 border-0;
 
     &::before,
     &::after {
