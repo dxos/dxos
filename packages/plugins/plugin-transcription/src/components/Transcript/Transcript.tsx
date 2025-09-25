@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
 import { type Transcript } from '../../types';
@@ -79,7 +79,7 @@ export const TranscriptView = ({ classNames, space, transcript: object, model }:
           started: object?.started ? new Date(object.started) : undefined,
         }),
         autoScroll(),
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     };
   }, [space, model]);
 

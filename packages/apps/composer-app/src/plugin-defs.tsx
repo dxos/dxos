@@ -51,7 +51,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
@@ -94,7 +94,7 @@ export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
     TokenManagerPlugin.meta.id,
     WelcomePlugin.meta.id,
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
@@ -120,7 +120,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       TranscriptionPlugin.meta.id,
     ],
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
 
 export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
@@ -184,7 +184,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     WelcomePlugin(),
     WnfsPlugin(),
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
 
 const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
