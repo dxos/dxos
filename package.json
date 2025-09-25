@@ -186,7 +186,6 @@
       "fs-ext",
       "fsctl",
       "geckodriver",
-      "hnswlib-node",
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",
