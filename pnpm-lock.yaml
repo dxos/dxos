@@ -5687,6 +5687,9 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-project':
+        specifier: workspace:*
+        version: link:../plugin-project
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
@@ -8507,6 +8510,9 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -8614,6 +8620,15 @@ importers:
         specifier: 3.17.7
         version: 3.17.7
     devDependencies:
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
