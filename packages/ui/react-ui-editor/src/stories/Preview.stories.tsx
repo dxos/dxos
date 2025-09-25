@@ -18,8 +18,8 @@ import { hoverableControlItem, hoverableControlItemTransition, hoverableControls
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { PreviewProvider, useRefPopover } from '../components';
 import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
+import { PreviewPopoverProvider, usePreviewPopover } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -45,7 +45,7 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 };
 
 const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
+  const { target } = usePreviewPopover('PreviewCard');
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -181,7 +181,6 @@ export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
     const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
-
     const extensions = useMemo(() => {
       return [
         image(),
@@ -201,21 +200,21 @@ export const Default: Story = {
     }, []);
 
     return (
-      <PreviewProvider onLookup={handlePreviewLookup}>
+      <PreviewPopoverProvider onLookup={handlePreviewLookup}>
         <EditorStory
           ref={handleViewRef}
           text={trim`
             # Preview
 
-            This project is part of the [DXOS][dxn:queue:data:123] SDK.
+            This project is part of the [DXOS](dxn:queue:data:123) SDK.
 
-            ![DXOS][?dxn:queue:data:123]
+            ![DXOS](dxn:queue:data:123)
 
-            It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
+            It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
 
             ## Deep dive
 
-            ![ECHO][dxn:queue:data:echo]
+            ![ECHO](dxn:queue:data:echo)
 
           `}
           extensions={extensions}
@@ -224,7 +223,7 @@ export const Default: Story = {
         {previewBlocks.map(({ link, el }) => (
           <PreviewBlock key={link.ref} link={link} el={el} view={view} />
         ))}
-      </PreviewProvider>
+      </PreviewPopoverProvider>
     );
   },
 };

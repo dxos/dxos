@@ -7,7 +7,7 @@ import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref, SchemaNotFoundError, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -146,7 +146,7 @@ class Toolkit extends Toolkit.make(
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
           const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
           if (!schema) {
-            throw new Error(`Schema not found for ${typename}`);
+            throw new SchemaNotFoundError(typename);
           }
 
           const object = Obj.make(schema, data);

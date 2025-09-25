@@ -133,7 +133,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
         content: document.replaceAll(/\[(\w+)\]/g, (_, label) => {
           const obj = space.db.add(Obj.make(TestItem, { title: label, description: faker.lorem.paragraph() }));
           const dxn = Ref.make(obj).dxn.toString();
-          return `[${label}][${dxn}]`;
+          return `[${label}](${dxn})`;
         }),
       }),
     );

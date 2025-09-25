@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { research } from '../../functions';
+import { createResearchNote, research } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -36,7 +36,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(research.name)],
+  tools: [ToolId.make(research.name), ToolId.make(createResearchNote.name)],
 });
 
 export default blueprint;

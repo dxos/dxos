@@ -97,7 +97,7 @@ export class AiConversation {
       this._toolkit = toolkit;
 
       const start = Date.now();
-      log.info('run', {
+      log('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
@@ -111,7 +111,7 @@ export class AiConversation {
         }),
       );
 
-      log.info('result', { messages: messages.length, duration: Date.now() - start });
+      log('result', { messages: messages.length, duration: Date.now() - start });
 
       // Append to queue.
       yield* Effect.promise(() => this._queue.append(messages));

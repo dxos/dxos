@@ -17,9 +17,9 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, toHue, trim } from '@dxos/util';
+import { getFirstTwoRenderableChars, trim } from '@dxos/util';
 
-import { formatDate, hashString } from '../util';
+import { getMessageProps } from '../util';
 
 import { type Tag } from './model';
 
@@ -37,14 +37,7 @@ const messageColumnDefault = {
 };
 
 const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
-  const id = message.id;
-  // Always use the first text block for display in the mailbox list.
-  const textBlocks = message.blocks.filter((block) => 'text' in block);
-  const text = textBlocks[0]?.text || '';
-  const date = formatDate(now, message.created ? new Date(message.created) : new Date());
-  const from = message.sender?.name ?? message.sender?.email;
-  const subject = message.properties?.subject ?? text;
-  const hue = toHue(hashString(from));
+  const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   return trim`
     <button
@@ -56,7 +49,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         hue="${hue}"
         hueVariant="surface"
         variant="square"
-        size="8"
+        size="10"
         fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
       ></dx-avatar>
     </button>
@@ -66,8 +59,8 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-message-id="${id}"
     >
       <p class="message__abstract__heading">
-      <span class="message__abstract__from">${from}</span>
-      <span class="message__abstract__date">${date}</span>
+        <span class="message__abstract__from">${from}</span>
+        <span class="message__abstract__date">${date}</span>
       </p>
       <p class="message__abstract__body">${subject}</p>
     ${
@@ -81,12 +74,6 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
 };
 
 const messageCellClassName = 'message';
-
-// TODO(burdon): Extract contacts/orgs.
-// TODO(burdon): Split message body into parts and allow trim (e.g., remove forwarded part). Message as light stack?
-// TODO(burdon): Highlight message/chunks for action (e.g., follow-up, triggers embedding).
-// TODO(burdon): Create outline/kanban.
-// TODO(burdon): Address book/cards.
 
 export type MailboxAction =
   | { type: 'select'; messageId: string }
@@ -198,18 +185,18 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
-          limitColumns={1}
-          limitRows={messages.length}
-          rowDefault={messageRowDefault}
-          rows={rows}
-          columnDefault={columnDefault}
-          onWheelCapture={handleWheel}
-          onClick={handleClick}
-          getCells={getCells}
           className={mx(
             '[--dx-grid-base:var(--dx-baseSurface)] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size] [&_.dx-grid]:min-bs-0 [&_.dx-grid]:min-is-0 [&_.dx-grid]:select-auto',
             gridSeparatorBlockEnd,
           )}
+          limitColumns={1}
+          limitRows={messages.length}
+          columnDefault={columnDefault}
+          rowDefault={messageRowDefault}
+          rows={rows}
+          getCells={getCells}
+          onClick={handleClick}
+          onWheelCapture={handleWheel}
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>

@@ -9,7 +9,6 @@ import { AiToolNotFoundError } from '../errors';
 
 import { type ToolId } from './tool';
 
-// TODO(burdon): Ai prefix?
 export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverService')<
   ToolResolverService,
   {
@@ -17,7 +16,7 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
   }
 >() {
   static layerEmpty = Layer.succeed(ToolResolverService, {
-    resolve: (id) => Effect.fail(new AiToolNotFoundError(`Tool not found: ${id}`)),
+    resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
   });
 
   static resolve = Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);

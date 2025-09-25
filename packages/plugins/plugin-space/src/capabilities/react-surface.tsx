@@ -72,7 +72,7 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-const OMIT = [DataType.Collection.typename, DataType.QueryCollection.typename];
+const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [

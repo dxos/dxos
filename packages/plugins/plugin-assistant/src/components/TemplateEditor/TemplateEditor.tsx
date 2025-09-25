@@ -12,6 +12,7 @@ import {
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -46,9 +47,8 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({ themeMode }),
-
-        // Extend markdown with handlebars support.
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
+        decorateMarkdown(),
         handlebars(),
       ].filter(isNotFalsy),
     };

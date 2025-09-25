@@ -13,7 +13,7 @@ describe('insertReferences', () => {
     };
 
     expect(insertReferences('This is a computational irreducibility test.', quotes)).toBe(
-      'This is a [computational irreducibility][dxn:echo:@:01JTG9JW11XGWJZ32AW8ET93D1] test.',
+      'This is a [computational irreducibility](dxn:echo:@:01JTG9JW11XGWJZ32AW8ET93D1) test.',
     );
     expect(
       insertReferences(
@@ -21,7 +21,7 @@ describe('insertReferences', () => {
         quotes,
       ),
     ).toBe(
-      "And what I'd like to talk today about is Steven Wolfram's concept of a [computational irreducibility][dxn:echo:@:01JTG9JW11XGWJZ32AW8ET93D1].",
+      "And what I'd like to talk today about is Steven Wolfram's concept of a [computational irreducibility](dxn:echo:@:01JTG9JW11XGWJZ32AW8ET93D1).",
     );
   });
 });

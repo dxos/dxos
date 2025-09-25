@@ -15,12 +15,11 @@ import {
 } from '@dxos/app-framework';
 import { debounceAndThrottle } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { type QueryResult, createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
-  type AutocompleteResult,
   Cursor,
   type EditorStateStore,
   EditorView,
@@ -29,7 +28,6 @@ import {
   InputModeExtensions,
   type PreviewOptions,
   type RenderCallback,
-  autocomplete,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -54,7 +52,6 @@ type ExtensionsOptions = {
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<Markdown.Document>;
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
@@ -174,7 +171,6 @@ const createBaseExtensions = ({
   dispatch,
   settings,
   selectionManager,
-  query,
   viewMode,
   previewOptions,
 }: ExtensionsOptions): Extension[] => {
@@ -213,30 +209,6 @@ const createBaseExtensions = ({
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
       ],
-    );
-  }
-
-  //
-  // Autocomplete object links.
-  //
-  if (query) {
-    extensions.push(
-      autocomplete({
-        onSearch: (text: string) => {
-          // TODO(burdon): Specify filter (e.g., stack).
-          return query.objects
-            .map<AutocompleteResult | undefined>((object) =>
-              object.name?.length && object.id !== document?.id
-                ? {
-                    label: object.name,
-                    // TODO(burdon): Factor out URL builder.
-                    apply: `[${object.name}](/${fullyQualifiedId(object)})`,
-                  }
-                : undefined,
-            )
-            .filter(isNotFalsy);
-        },
-      }),
     );
   }
 

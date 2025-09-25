@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutAction, createIntent } from '@dxos/app-framework';
-import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Filter, Query } from '@dxos/echo';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
 import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
@@ -29,7 +29,7 @@ export default async (context: PluginContext) => {
   defaultSpaceCollection?.objects.push(Ref.make(readme));
 
   const records = Obj.make(DataType.QueryCollection, {
-    query: { typename: DataType.StoredSchema.typename },
+    query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
   });
   defaultSpaceCollection?.objects.push(Ref.make(records));
 

@@ -20,6 +20,12 @@
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
+    },
+    "./functions": {
+      "source": "./src/functions/index.ts",
+      "types": "./dist/types/src/functions/index.d.ts",
+      "browser": "./dist/lib/browser/functions/index.mjs",
+      "node": "./dist/lib/node-esm/functions/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

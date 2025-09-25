@@ -80,7 +80,6 @@ moon <package>:build         # Compile and build a package
 ### Unit Tests
 ```bash
 moon <package>:test       # Test specific package
-moon <package>:test-watch # Watch mode for package
 ```
 
 ### E2E Tests
@@ -105,22 +104,21 @@ moon storybook:serve     # Launch component documentation
 ## Best Practices
 
 ### Code Organization
-- Follow the existing package structure
-- Keep packages focused and cohesive
-- Use workspace dependencies (`workspace:*`)
-- Maintain clear separation between UI, core, and plugins
+- Follow the existing package structure.
+- Keep packages focused and cohesive.
+- Use workspace dependencies (`workspace:*`).
+- Maintain clear separation between UI, core, and plugins.
 
 ### Development
-- Always run `pnpm i` and `moon :build` when switching branches
-- Use `pnpm watch` during development for hot reloading
-- Run tests before committing changes
-- Check the REPOSITORY_GUIDE.md for detailed workflows
+- Always run `pnpm i` and `moon :build` when switching branches.
+- Run tests before committing changes.
+- When writing comments, use proper punctuation, especially ending full sentences with a full stop, ‘.’, even if the comment doesn’t have another sentence.
 
 ### Dependencies
-- Use `npm-check-updates` for updates, not `pnpm up`
-- Re-run `pnpm i` after dependency changes
+- Use `npm-check-updates` for updates, not `pnpm up`.
+- Re-run `pnpm i` after dependency changes.
 
 ### Testing
-- Write unit tests with Vitest
-- Use Playwright for e2e tests following tools/executors/test/PLAYWRIGHT.md
-- Test components in Storybook
+- Write unit tests with Vitest.
+- Use Playwright for e2e tests following tools/executors/test/PLAYWRIGHT.md.
+- Test components by writing stories for Storybook and testing them with Playwright.

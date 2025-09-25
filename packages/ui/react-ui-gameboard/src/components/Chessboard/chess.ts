@@ -34,6 +34,10 @@ export const locationToPos = ([row, col]: Location): string => {
   return String.fromCharCode(col + 'a'.charCodeAt(0)) + (row + 1);
 };
 
+export const getRawPgn = (pgn: string) => {
+  return pgn.replace(/\[.*?\]/g, '').trim();
+};
+
 const styles = {
   neutral: {
     black: 'bg-neutral-50',
@@ -108,6 +112,10 @@ export class ChessModel implements GameboardModel<ChessPiece> {
     return this._moveIndex;
   }
 
+  get fen() {
+    return this._chess.fen();
+  }
+
   /**
    * PGN with headers.
    *
@@ -121,7 +129,7 @@ export class ChessModel implements GameboardModel<ChessPiece> {
    */
   // TODO(burdon): Update headers.
   get pgn(): string {
-    return this._chess.pgn();
+    return getRawPgn(this._chess.pgn());
   }
 
   setMoveIndex(index: number) {

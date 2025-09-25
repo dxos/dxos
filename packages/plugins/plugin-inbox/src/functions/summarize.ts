@@ -85,9 +85,7 @@ export default defineFunction({
   ),
 });
 
-const systemPrompt = trim`
-  You are a helpful assistant that summarizes mailboxes.
-
+const researchPrompt = trim`
   # Research
   As the first step perform research:
     - Identify people, companies, projects, etc.
@@ -98,6 +96,14 @@ const systemPrompt = trim`
     <example>
       We need to talk about @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
     </example>
+`;
+
+// TODO(wittjosiah): Research is causing summaries to include a bunch of unreadable dxn references.
+const includeResearch = false;
+const systemPrompt = trim`
+  You are a helpful assistant that summarizes mailboxes.
+
+  ${includeResearch ? researchPrompt : ''}
 
   # Goal
   Create a markdown summary of the mailbox with text notes provided.

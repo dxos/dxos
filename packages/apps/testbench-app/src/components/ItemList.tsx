@@ -110,7 +110,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
       initialValue: (object as any)[prop],
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
         automerge(createDocAccessor(object, [prop])),
       ],
