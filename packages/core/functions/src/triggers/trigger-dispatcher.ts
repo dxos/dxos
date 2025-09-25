@@ -386,12 +386,16 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   continue;
                 }
 
+                const { db } = yield* DatabaseService;
                 invocations.push(
                   yield* this.invokeTrigger({
                     trigger,
                     event: {
                       // TODO(dmaretskyi): Change type not supported.
                       type: 'unknown',
+
+                      subject: db.ref(Obj.getDXN(object)),
+
                       changedObjectId: object.id,
                     } satisfies SubscriptionTriggerOutput,
                   }),

@@ -7,14 +7,20 @@ import { Array, Effect, Option, Schema } from 'effect';
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Prompt } from '@dxos/blueprints';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
+import { log } from '@dxos/log';
 
 export default defineFunction({
   name: 'dxos.org/function/agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
     prompt: Type.Ref(Prompt.Prompt),
+
+    /**
+     * Input object or data.
+     * References get auto-resolved.
+     */
     input: Schema.Any,
 
     /**
@@ -24,9 +30,15 @@ export default defineFunction({
   }),
   outputSchema: Schema.Any,
   handler: Effect.fnUntraced(function* ({ data: { prompt, input, model = '@anthropic/claude-opus-4-0' } }) {
+    if (Ref.isRef(input)) {
+      input = yield* DatabaseService.load(input);
+    }
+
     yield* DatabaseService.flush({ indexes: true });
     const promptObj = yield* DatabaseService.load(prompt);
     yield* TracingService.emitStatus({ message: `Running ${promptObj.name}` });
+
+    log.info('starting agent', { prompt: promptObj.name, input });
 
     const blueprints = yield* Effect.forEach(promptObj.blueprints, DatabaseService.loadOption).pipe(
       Effect.map(Array.filter(Option.isSome)),

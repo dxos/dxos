@@ -14,7 +14,7 @@ import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 /**
  * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
@@ -30,6 +30,13 @@ export type Obj<Props> = BaseObj & Props;
  * Base type for all ECHO objects.
  */
 export interface Any extends BaseObj {}
+
+export const Any = Schema.Struct({}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/types/Any',
+    version: '0.1.0',
+  }),
+);
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
