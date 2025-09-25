@@ -14,13 +14,13 @@ import { getActiveSpace, meta as spaceMeta } from '@dxos/plugin-space';
 import { meta } from '../meta';
 import { Devtools } from '../types';
 
-const DEVTOOLS_TYPE = 'dxos.org/plugin/debug/devtools';
+const DEVTOOLS_TYPE = `${meta.id}/devtools`;
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // Devtools node.
     createExtension({
-      id: 'dxos.org/plugin/debug/devtools',
+      id: `${meta.id}/devtools`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -48,8 +48,8 @@ export default (context: PluginContext) =>
                       ? [
                           {
                             id: `debug-${node.id}`,
-                            type: 'dxos.org/plugin/debug/space',
-                            data: { space, type: 'dxos.org/plugin/debug/space' },
+                            type: `${meta.id}/space`,
+                            data: { space, type: `${meta.id}/space` },
                             properties: {
                               label: ['debug label', { ns: meta.id }],
                               icon: 'ph--bug--regular',
@@ -59,7 +59,7 @@ export default (context: PluginContext) =>
                       : []),
                     {
                       id: `app-graph-${node.id}`,
-                      type: 'dxos.org/plugin/debug/app-graph',
+                      type: `${meta.id}/app-graph`,
                       data: { graph: graph?.graph, root: space ? space.id : ROOT_ID },
                       properties: {
                         label: ['debug app graph label', { ns: meta.id }],

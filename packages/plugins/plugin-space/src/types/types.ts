@@ -16,7 +16,8 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
+
 export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {

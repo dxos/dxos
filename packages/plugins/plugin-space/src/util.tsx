@@ -29,7 +29,7 @@ import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
 
 export const SPACES = `${meta.id}-spaces`;
-export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
+export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
 
