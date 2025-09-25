@@ -240,7 +240,7 @@ export class FeedWrapper<T extends {}> {
   }
 
   putBuffer(...args: any[]) {
-    return promisify((this._hypercore as any).putBuffer.bind(this._hypercore) as any)(...args);
+    return promisify((this._hypercore as any)._putBuffer.bind(this._hypercore) as any)(...args);
   }
 
   /**
