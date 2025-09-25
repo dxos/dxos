@@ -163,7 +163,7 @@ export class IndexGraph extends Resource implements Index {
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
     if (filter.inverted || filter.typenames.length > 0 || !filter.graph) {
-      throw new InternalError('Invalid filter for graph query');
+      throw new InternalError({ message: 'Invalid filter for graph query' });
     }
 
     const { kind, anchors, property } = filter.graph;

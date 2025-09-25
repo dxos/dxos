@@ -30,6 +30,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant-testing": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",

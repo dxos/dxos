@@ -26,6 +26,9 @@ export const linkTooltip = (renderTooltip: RenderCallback<{ url: string }>) => {
       }
 
       const urlText = view.state.sliceDoc(url.from, url.to);
+      if (urlText.startsWith('dxn')) {
+        return null;
+      }
       return {
         pos: link.from,
         end: link.to,

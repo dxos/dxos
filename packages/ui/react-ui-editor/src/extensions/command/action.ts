@@ -46,7 +46,6 @@ export const closeCommand: Command = (view: EditorView) => {
 export const commandKeyBindings: readonly KeyBinding[] = [
   {
     key: '/',
-    preventDefault: true,
     run: openCommand,
   },
   {

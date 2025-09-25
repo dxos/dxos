@@ -26,6 +26,8 @@ import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
   PLANNING_BLUEPRINT,
+  agent,
+  createResearchNote,
   readDocument,
   readTasks,
   research,
@@ -38,6 +40,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckAction } from '@dxos/plugin-deck/types';
@@ -120,6 +123,7 @@ export const getDecorators = ({
     plugins: [
       // System plugins.
       AttentionPlugin(),
+      AutomationPlugin(),
       GraphPlugin(),
       IntentPlugin(),
       SettingsPlugin(),
@@ -180,9 +184,10 @@ export const getDecorators = ({
             // TODO(burdon): Move into assistnat?
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+            contributes(Capabilities.Functions, [agent]),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
-            contributes(Capabilities.Functions, [research]),
+            contributes(Capabilities.Functions, [research, createResearchNote]),
             contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),

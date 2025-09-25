@@ -163,6 +163,7 @@
     "wait-on": "^8.0.3",
     "webdriverio": "^8.32.4",
     "wrangler": "^3.51.2",
+    "yaml": "^2.7.0",
     "yargs": "~16.2.0",
     "zx": "^8.4.1"
   },
@@ -186,7 +187,6 @@
       "fs-ext",
       "fsctl",
       "geckodriver",
-      "hnswlib-node",
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",

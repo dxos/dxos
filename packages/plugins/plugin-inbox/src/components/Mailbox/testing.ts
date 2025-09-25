@@ -34,7 +34,7 @@ export const createMessage = (space?: Space) => {
       const dxn = Ref.make(obj).dxn.toString();
 
       const position = Math.floor(Math.random() * words.length);
-      words.splice(position, 0, `[${fullName}][${dxn}]`);
+      words.splice(position, 0, `[${fullName}](${dxn})`);
     }
 
     // First create the enriched text with links

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, Transaction } from '@codemirror/state';
 import { Effect, Fiber, Queue, Stream } from 'effect';
 import React, {
   Component,
@@ -99,13 +99,23 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         return;
       }
 
-      // Consume queue.
+      // Consume queue and update document.
       const fork = Stream.fromQueue(queueRef.current).pipe(
         createStreamer,
         Stream.runForEach((text) =>
           Effect.sync(() => {
+            const scrollTop = view.scrollDOM.scrollTop;
+            // view.scrollDOM.classList.add('cm-hide-scrollbar');
             view.dispatch({
               changes: [{ from: view.state.doc.length, insert: text }],
+              annotations: Transaction.remote.of(true),
+              scrollIntoView: false,
+            });
+
+            // Prevent autoscrolling.
+            requestAnimationFrame(() => {
+              view.scrollDOM.scrollTop = scrollTop;
+              // view.scrollDOM.classList.remove('cm-hide-scrollbar');
             });
           }),
         ),

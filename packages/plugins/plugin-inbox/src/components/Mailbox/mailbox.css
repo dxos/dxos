@@ -1,15 +1,15 @@
 .message {
-
   &.message__card {
     @apply pli-cardSpacingChrome plb-cardSpacingChrome;
   }
 
-  & > .dx-grid__cell__content, &.message__card {
-    @apply grid grid-cols-[var(--rail-action)_1fr] gap-1 border-0;
+  body[data-is-keyboard='true'] article:focus-within & > .dx-grid__cell__content {
+    @apply border;
+  }
 
-    body[data-is-keyboard='true'] article:focus-within & {
-      @apply border;
-    }
+  & > .dx-grid__cell__content,
+  &.message__card {
+    @apply grid grid-cols-[3rem_1fr] gap-1 border-0;
 
     &::before,
     &::after {
@@ -28,7 +28,6 @@
       inset-inline-end: 0;
       inline-size: 0.25rem;
     }
-
   }
 
   &.message--current > .dx-grid__cell__content {

@@ -63,7 +63,8 @@ export class QueryPlanner {
       case 'order':
         return this._generateOrderClause(query, context);
       default:
-        throw new QueryError(`Unsupported query type: ${(query as any).type}`, {
+        throw new QueryError({
+          message: `Unsupported query type: ${(query as any).type}`,
           context: { query: context.originalQuery },
         });
     }
@@ -106,7 +107,10 @@ export class QueryPlanner {
           ]);
         }
         if (context.selectionInverted) {
-          throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+          throw new QueryError({
+            message: 'Query too complex',
+            context: { query: context.originalQuery },
+          });
         }
 
         // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
@@ -176,18 +180,18 @@ export class QueryPlanner {
         ]);
       }
       case 'compare':
-        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'in':
-        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'range':
-        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'not':
         return this._generateSelectionFromFilter(filter.filter, {
           ...context,
           selectionInverted: !context.selectionInverted,
         });
       case 'and':
-        throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'or':
         // Optimized case
         if (filter.filters.every(isTrivialTypenameFilter)) {
@@ -208,11 +212,12 @@ export class QueryPlanner {
             ...this._generateDeletedHandlingSteps(context),
           ]);
         } else {
-          throw new QueryError('Query too complex', { context: { query: context.originalQuery } });
+          throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
         }
 
       default:
-        throw new QueryError(`Unsupported filter type: ${(filter as any).type}`, {
+        throw new QueryError({
+          message: `Unsupported filter type: ${(filter as any).type}`,
           context: { query: context.originalQuery },
         });
     }
