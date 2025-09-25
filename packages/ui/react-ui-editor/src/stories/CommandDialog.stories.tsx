@@ -23,7 +23,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 
   const handleInsert = () => {
     // TODO(burdon): Use queue ref.
-    const link = `[${text}](dxn:queue:data:123)`;
+    const link = `![${text}](dxn:queue:data:123)`;
     onAction(text.length ? { type: 'insert', text: link } : undefined);
   };
 
@@ -74,7 +74,7 @@ const meta = {
       extensions={[
         commandDialog({
           renderDialog: createRenderer(CommandDialog),
-          onHint: () => "Press '/' for commands",
+          onHint: () => "Press '?' to ask a question",
         }),
       ]}
     />
