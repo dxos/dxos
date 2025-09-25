@@ -69,8 +69,8 @@
     "@types/topojson-client": "^3.1.4",
     "@types/topojson-specification": "^1.0.5",
     "postcss": "^8.4.41",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "~19.1.1",
+    "react-dom": "~19.1.1"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

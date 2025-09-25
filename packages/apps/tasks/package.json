@@ -15,8 +15,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.1.1",
+    "react-dom": "~19.1.1",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
