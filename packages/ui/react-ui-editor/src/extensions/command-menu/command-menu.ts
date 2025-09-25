@@ -77,11 +77,9 @@ export const commandMenu = (options: CommandMenuOptions) => {
   const commandKeymap = keymap.of([
     ...triggers.map((trigger) => ({
       key: trigger,
-      preventDefault: true,
       run: (view: EditorView) => {
         const selection = view.state.selection.main;
         const line = view.state.doc.lineAt(selection.head);
-
         // Check if we should trigger the command menu:
         // 1. Empty lines or at the beginning of a line
         // 2. When there's a preceding space
