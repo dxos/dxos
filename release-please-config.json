@@ -750,6 +750,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/lit-assistant/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/lit-grid/package.json",
           "jsonpath": "$.version"
         },

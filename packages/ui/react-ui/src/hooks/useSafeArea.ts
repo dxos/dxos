@@ -5,8 +5,7 @@
 import { useCallback, useState } from 'react';
 
 import { useResize } from '@dxos/react-hooks';
-
-export type SafeAreaPadding = Record<'top' | 'right' | 'bottom' | 'left', number>;
+import { type SafeAreaPadding } from '@dxos/react-ui-types';
 
 export const initialSafeArea = { top: NaN, right: NaN, bottom: NaN, left: NaN };
 
