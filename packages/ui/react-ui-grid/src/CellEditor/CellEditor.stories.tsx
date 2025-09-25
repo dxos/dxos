@@ -84,7 +84,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '\n\nEdit me',
+    value: 'Edit me',
     autoFocus: true,
   },
 };
