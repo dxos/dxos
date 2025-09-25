@@ -32,7 +32,8 @@ export namespace QueryPlan {
     | FilterDeletedStep
     | TraverseStep
     | UnionStep
-    | SetDifferenceStep;
+    | SetDifferenceStep
+    | OrderStep;
 
   /**
    * Clear the current working set.
@@ -192,5 +193,15 @@ export namespace QueryPlan {
 
     source: Plan;
     exclude: Plan;
+  };
+
+  /**
+   * Order the results of the plan.
+   */
+  export type OrderStep = {
+    _tag: 'OrderStep';
+
+    // Defaults to natural order if empty.
+    order: readonly QueryAST.Order[];
   };
 }

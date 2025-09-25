@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback } from 'react';
 
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -22,10 +22,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   const { preset, ...chatProps } = usePresets(online);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
-  const [chat, setChat] = useState<Assistant.Chat>();
-  useEffect(() => {
-    setChat((currentChat) => currentChat ?? chats[0]);
-  }, [chat, chats]);
+  const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space, chat });
@@ -43,7 +40,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
         <Popover.Root>
           <Popover.Trigger asChild>
-            <IconButton icon='ph--log--regular' label='Logs' variant='ghost' />
+            <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content>
@@ -60,8 +57,15 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
           <Chat.Thread />
           {/* <ChatProgress chat={chat} /> */}
-          <div className='p-4'>
-            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          <div className='flex justify-center p-4'>
+            <Chat.Prompt
+              {...chatProps}
+              outline
+              classNames='max-is-prose'
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
           </div>
         </Chat.Root>
       </div>

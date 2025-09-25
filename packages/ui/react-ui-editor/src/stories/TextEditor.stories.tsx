@@ -199,8 +199,10 @@ export const Autocomplete: Story = {
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
-          onSearch: (text) => {
-            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          onSuggest: (text) => {
+            return links
+              .filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()))
+              .map(({ label }) => label);
           },
         }),
       ]}

@@ -5,6 +5,7 @@
 import { AiTool, AiToolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
+import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   Capabilities,
   Events,
@@ -24,16 +25,12 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
   agent,
-  localServiceEndpoints,
+  createResearchNote,
   readDocument,
   readTasks,
-  remoteServiceEndpoints,
   research,
-  syncLinearIssues,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
@@ -43,6 +40,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckAction } from '@dxos/plugin-deck/types';
@@ -59,21 +57,13 @@ import { withLayout } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { Assistant } from '../../types';
+import { Assistant, AssistantAction } from '../../types';
 
 // TODO(burdon): Factor out.
 export const config = {
   remote: new Config({
     runtime: {
-      services: {
-        ai: {
-          // TODO(burdon): Normalize props ('url'?)
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   persistent: new Config({
@@ -83,26 +73,12 @@ export const config = {
           persistent: true,
         },
       },
-      services: {
-        ai: {
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   local: new Config({
     runtime: {
-      services: {
-        ai: {
-          server: localServiceEndpoints.ai,
-        },
-        edge: {
-          url: localServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.LOCAL,
     },
   }),
 };
@@ -128,17 +104,26 @@ class TestingToolkit extends AiToolkit.make(
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+  onInit?: (props: { space: Space }) => Promise<void>;
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onInit, ...props }: DecoratorsProps) => [
+export const getDecorators = ({
+  types = [],
+  plugins = [],
+  accessTokens = [],
+  onInit,
+  onChatCreated,
+  ...props
+}: DecoratorsProps) => [
   withPluginManager({
     plugins: [
       // System plugins.
       AttentionPlugin(),
+      AutomationPlugin(),
       GraphPlugin(),
       IntentPlugin(),
       SettingsPlugin(),
@@ -175,16 +160,8 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             space.db.add(Obj.clone(accessToken));
           }
 
-          // Create chat and queue.
-          const chat = space.db.add(
-            Obj.make(Assistant.Chat, {
-              queue: Ref.fromDXN(space.queues.create().dxn),
-              traceQueue: Ref.fromDXN(space.queues.create().dxn),
-            }),
-          );
-
           await space.db.flush({ indexes: true });
-          await onInit?.({ space, chat, binder: new AiContextBinder(await chat.queue.load()) });
+          await onInit?.({ space });
           await space.db.flush({ indexes: true });
         },
         ...props,
@@ -204,15 +181,13 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           id: 'example.com/plugin/testing/module/testing',
           activatesOn: Events.SetupArtifactDefinition,
           activate: () => [
+            // TODO(burdon): Move into assistnat?
             contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
             contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
+            contributes(Capabilities.Functions, [agent]),
             contributes(Capabilities.Functions, [readDocument, updateDocument]),
             contributes(Capabilities.Functions, [readTasks, updateTasks]),
-            contributes(Capabilities.Functions, [research]),
-            contributes(Capabilities.Functions, [syncLinearIssues]),
-            contributes(Capabilities.Functions, [agent]),
+            contributes(Capabilities.Functions, [research, createResearchNote]),
             contributes(Capabilities.Functions, [exampleFunctions.reply]),
           ],
         }),
@@ -225,13 +200,19 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
           ],
         }),
         defineModule({
-          id: 'example.com/plugin/testing/module/set-workspace',
+          id: 'example.com/plugin/testing/module/setup',
           activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
           activate: async (context) => {
             const client = context.getCapability(ClientCapabilities.Client);
             const space = client.spaces.default;
             const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
+            // Ensure workspace is set.
             await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+
+            // Create initial chat.
+            await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+
             return [];
           },
         }),
@@ -243,6 +224,29 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
               createResolver({
                 intent: DeckAction.ChangeCompanion,
                 resolve: () => ({}),
+              }),
+              createResolver({
+                intent: AssistantAction.CreateChat,
+                position: 'hoist',
+                resolve: async ({ space, name }) => {
+                  const queue = space.queues.create();
+                  const traceQueue = space.queues.create();
+                  const chat = Obj.make(Assistant.Chat, {
+                    name,
+                    queue: Ref.fromDXN(queue.dxn),
+                    traceQueue: Ref.fromDXN(traceQueue.dxn),
+                  });
+                  const binder = new AiContextBinder(queue);
+
+                  // Story-specific behaviour to allow chat creation to be extended.
+                  space.db.add(chat);
+                  await space.db.flush({ indexes: true });
+                  await onChatCreated?.({ space, chat, binder });
+
+                  return {
+                    data: { object: chat },
+                  };
+                },
               }),
             ]),
           ],

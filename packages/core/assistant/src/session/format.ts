@@ -84,7 +84,7 @@ export const formatUserPrompt = ({ prompt, history = [] }: Pick<AiSessionRunPara
           artifactDiffResolver.value.resolve(
             [...versions.entries()].map(([id, version]) => ({ id, lastVersion: version })),
           ),
-        catch: AiAssistantError.wrap('Artifact diff resolution error'),
+        catch: AiAssistantError.wrap({ message: 'Artifact diff resolution error' }),
       });
 
       log('version', { artifactDiff, versions });

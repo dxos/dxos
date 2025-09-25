@@ -11,8 +11,8 @@ import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
   type ExtractionFunction,
-  extractionAnthropicFn,
-  extractionNerFn,
+  extractionAnthropicFunction,
+  extractionNerFunction,
   getNer,
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
@@ -101,9 +101,9 @@ const DefaultStory = ({
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
       void getNer();
-      extractionFunction = extractionNerFn;
+      extractionFunction = extractionNerFunction;
     } else if (entityExtraction === 'llm') {
-      extractionFunction = extractionAnthropicFn;
+      extractionFunction = extractionAnthropicFunction;
       objects = space.db
         .query(
           Filter.or(

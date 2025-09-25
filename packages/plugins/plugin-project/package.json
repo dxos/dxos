@@ -34,6 +34,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/assistant-testing": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -41,13 +42,19 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.9.0",
+    "@radix-ui/react-context": "1.1.1",
     "effect": "3.17.7"
   },
   "devDependencies": {
+    "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

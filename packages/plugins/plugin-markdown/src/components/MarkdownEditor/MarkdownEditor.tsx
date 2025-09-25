@@ -10,8 +10,8 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  CommandMenu,
   type CommandMenuGroup,
+  CommandMenuProvider,
   type DNDOptions,
   Domino,
   type EditorInputMode,
@@ -20,7 +20,6 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  RefPopover,
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
@@ -117,14 +116,13 @@ export const MarkdownEditor = ({
     };
   }, [getMenu]);
 
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
+  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
 
   return (
-    <RefPopover modal={false} {...refPopoverProps}>
+    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    </CommandMenuProvider>
   );
 };
 
@@ -186,7 +184,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
             search: true,
           }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
           editorGutter,
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),

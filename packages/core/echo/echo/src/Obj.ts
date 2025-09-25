@@ -8,13 +8,13 @@ import { dual } from 'effect/Function';
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
-import type * as LiveObject from '@dxos/live-object';
+import * as LiveObject from '@dxos/live-object';
 import { live } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 /**
  * NOTE: Don't export: Obj.Any and Obj.Obj form the public API.
@@ -30,6 +30,13 @@ export type Obj<Props> = BaseObj & Props;
  * Base type for all ECHO objects.
  */
 export interface Any extends BaseObj {}
+
+export const Any = Schema.Struct({}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/types/Any',
+    version: '0.1.0',
+  }),
+);
 
 type Props<T = any> = { id?: EchoSchema.ObjectId } & Type.Properties<T>;
 
@@ -61,6 +68,7 @@ export const make = <S extends Type.Obj.Any>(
 ): LiveObject.Live<Schema.Schema.Type<S>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
+    'schema',
     'Expected an object schema',
   );
 
@@ -107,7 +115,7 @@ export const getSchema = EchoSchema.getSchema;
 
 // TODO(dmaretskyi): Allow returning undefined.
 export const getDXN = (obj: Any | Relation.Any): DXN => {
-  assertArgument(!Schema.isSchema(obj), 'Object should not be a schema.');
+  assertArgument(!Schema.isSchema(obj), 'obj', 'Object should not be a schema.');
   const dxn = EchoSchema.getObjectDXN(obj);
   invariant(dxn != null, 'Invalid object.');
   return dxn;
@@ -215,6 +223,11 @@ export const toJSON = (obj: Any | Relation.Any): JSON => EchoSchema.objectToJSON
 export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Any> =
   EchoSchema.objectFromJSON as any;
 
+/**
+ * Returns an immutable snapshot of an object.
+ */
+export const getSnapshot: <T extends Any>(obj: Obj<T>) => T = LiveObject.getSnapshot;
+
 export type CloneOptions = {
   /**
    * Retain the original object's ID.
@@ -249,4 +262,93 @@ export const clone = <T extends Any | Relation.Any>(obj: T, opts?: CloneOptions)
     return recurse(value);
   });
   return make(schema, props);
+};
+
+export const VersionTypeId = EchoSchema.VersionTypeId;
+export type VersionType = typeof VersionTypeId;
+
+/**
+ * Represent object version.
+ * May be backed by Automerge.
+ * Objects with no history are not versioned.
+ */
+export interface Version {
+  [VersionTypeId]: {};
+
+  /**
+   * Whether the object is versioned.
+   */
+  versioned: boolean;
+
+  /**
+   * Automerge heads.
+   */
+  automergeHeads?: string[];
+}
+
+const unversioned: Version = {
+  [VersionTypeId]: {},
+  versioned: false,
+};
+
+/**
+ * Checks that `obj` is a version object.
+ */
+export const isVersion = (obj: unknown): obj is Version => {
+  return obj != null && typeof obj === 'object' && VersionTypeId in obj;
+};
+
+/**
+ * Returns the version of the object.
+ */
+export const version = (obj: Any | Relation.Any): Version => {
+  const version = (obj as any)[EchoSchema.ObjectVersionId];
+  if (version === undefined) {
+    return unversioned;
+  }
+  return version;
+};
+
+/**
+ * Checks that `version` is a valid version object.
+ */
+export const versionValid = (version: Version): boolean => {
+  assertArgument(isVersion(version), 'version', 'Invalid version object');
+  return !!version.versioned;
+};
+
+export type VersionCompareResult = 'unversioned' | 'equal' | 'different';
+
+/**
+ * Compares two versions.
+ * @param version1
+ * @param version2
+ * @returns 'unversioned' if either object is unversioned, 'equal' if the versions are equal, 'different' if the versions are different.
+ */
+export const compareVersions = (version1: Version, version2: Version): VersionCompareResult => {
+  assertArgument(isVersion(version1), 'version1', 'Invalid version object');
+  assertArgument(isVersion(version2), 'version2', 'Invalid version object');
+
+  if (!versionValid(version1) || !versionValid(version2)) {
+    return 'unversioned';
+  }
+
+  if (version1.automergeHeads?.length !== version2.automergeHeads?.length) {
+    return 'different';
+  }
+  if (version1.automergeHeads?.some((head) => !version2.automergeHeads?.includes(head))) {
+    return 'different';
+  }
+
+  return 'equal';
+};
+
+export const encodeVersion = (version: Version): string => {
+  return JSON.stringify(version);
+};
+
+export const decodeVersion = (version: string): Version => {
+  const parsed = JSON.parse(version);
+  parsed[VersionTypeId] = {};
+  return parsed;
 };

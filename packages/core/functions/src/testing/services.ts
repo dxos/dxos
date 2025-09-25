@@ -90,7 +90,7 @@ export const createTestServices = ({
   space,
   tracing,
 }: TestServiceOptions = {}): ServiceContainer => {
-  assertArgument(!(!!space && (!!db || !!queues)), 'space can be provided only if db and queues are not');
+  assertArgument(!(!!space && (!!db || !!queues)), 'space', 'space can be provided only if db and queues are not');
 
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),

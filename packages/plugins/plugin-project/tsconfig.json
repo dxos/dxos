@@ -21,7 +21,13 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/random"
+    },
+    {
       "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../core/assistant-testing"
     },
     {
       "path": "../../core/echo/echo"
@@ -42,10 +48,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-client"
@@ -54,7 +66,13 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-theme"
     }
   ]
 }

@@ -10,8 +10,6 @@ export * from './useContextObjects';
 export * from './useExecutionGraph';
 export * from './useFlush';
 export * from './useItemTypes';
-export * from './useMatcherExtension';
 export * from './useOnline';
 export * from './usePresets';
 export * from './useReferencesProvider';
-export * from './useComputeRuntimeCallback';

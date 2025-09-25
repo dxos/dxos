@@ -4,14 +4,14 @@
 
 import { BaseError } from './base';
 
-export class TimeoutError extends BaseError.extend('TIMEOUT') {}
+export class ApiError extends BaseError.extend('API', 'API error') {}
 
-export class AbortedError extends BaseError.extend('ABORTED') {}
+export class SystemError extends BaseError.extend('SYSTEM', 'System error') {}
 
-export class UnimplementedError extends BaseError.extend('UNIMPLEMENTED') {}
+export class InternalError extends BaseError.extend('INTERNAL', 'Internal error') {}
 
-export class ApiError extends BaseError.extend('API_ERROR') {}
+export class TimeoutError extends BaseError.extend('TIMEOUT', 'Timeout') {}
 
-export class SystemError extends BaseError.extend('SYSTEM_ERROR') {}
+export class AbortedError extends BaseError.extend('ABORTED', 'Aborted') {}
 
-export class InternalError extends BaseError.extend('INTERNAL_ERROR') {}
+export class NotImplementedError extends BaseError.extend('NOT_IMPLEMENTED', 'Not implemented') {}

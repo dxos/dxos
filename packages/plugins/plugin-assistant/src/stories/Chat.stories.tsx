@@ -11,19 +11,28 @@ import React, { type FC, useCallback } from 'react';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-testing';
+import {
+  LINEAR_BLUEPRINT,
+  RESEARCH_BLUEPRINT,
+  ResearchDataTypes,
+  ResearchGraph,
+  ResearchOn,
+  agent,
+} from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
+import * as chessFunctions from '@dxos/plugin-chess/functions';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Map, MapPlugin } from '@dxos/plugin-map';
 import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview';
+import { ProjectPlugin } from '@dxos/plugin-project';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
@@ -34,53 +43,45 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { DataType, createView } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
 import { BLUEPRINT_KEY } from '../capabilities';
 import { useContextBinder } from '../hooks';
-import { createTestMailbox, createTestTranscription } from '../testing';
+import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
 import { translations } from '../translations';
 import { Assistant } from '../types';
 
 import {
   BlueprintContainer,
   ChatContainer,
+  ChessContainer,
   CommentsContainer,
   type ComponentProps,
   GraphContainer,
+  InvocationsContainer,
   LoggingContainer,
   MessageContainer,
+  ProjectContainer,
+  PromptContainer,
   ResearchInputStack,
   ResearchOutputStack,
   TasksContainer,
   TokenManagerContainer,
+  TriggersContainer,
 } from './components';
-import { PromptContainer } from './components';
-import { InvocationsContainer } from './components/InvocationsContainer';
-import { TriggersContainer } from './components/TriggersContainer';
-import {
-  ResearchInputQueue,
-  accessTokensFromEnv,
-  addTestData,
-  config,
-  getDecorators,
-  organizations,
-  testTypes,
-} from './testing';
+import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
-const DefaultStory = ({
-  debug = true,
-  deckComponents,
-  blueprints = [],
-}: {
+type StoryProps = {
   debug?: boolean;
   deckComponents: (FC<ComponentProps> | 'surfaces')[][];
   blueprints?: string[];
-}) => {
+};
+
+const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
   const client = useClient();
   const space = useSpace();
 
@@ -137,8 +138,8 @@ const DefaultStory = ({
       orientation='horizontal'
       size='split'
       rail={false}
-      classNames='absolute inset-0 gap-[--stack-gap]'
       itemsCount={deckComponents.length}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
@@ -161,6 +162,7 @@ const DefaultStory = ({
                 j += 1;
                 return item;
               })}
+
               {renderSurfaces &&
                 objects.map((object, index) => {
                   const k = index + j;
@@ -241,7 +243,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    deckComponents: [[ChatContainer]],
   },
 };
 
@@ -250,20 +252,23 @@ export const WithDocument: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ThreadPlugin()],
     config: config.remote, // TODO(burdon): Issue making persistent.
-    onInit: async ({ space, binder }) => {
-      const doc = space.db.add(
+    onInit: async ({ space }) => {
+      space.db.add(
         Markdown.makeDocument({
           name: 'My Document',
           content: addSpellingMistakes(MARKDOWN_DOCUMENT, 2),
         }),
       );
-      const styleGuide = space.db.add(
+      space.db.add(
         Markdown.makeDocument({
           name: 'Style Guide',
           content: STYLE_GUIDE,
         }),
       );
-      await binder.bind({ objects: [Ref.make(doc), Ref.make(styleGuide)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -276,9 +281,12 @@ export const WithBlueprints: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
     config: config.remote,
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Markdown.makeDocument({ name: 'Tasks' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -291,9 +299,9 @@ export const WithChess: Story = {
     plugins: [ChessPlugin()],
     config: config.remote,
     types: [Chess.Game],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Add player DID (for user and assistant).
-      const object = space.db.add(
+      space.db.add(
         Chess.makeGame({
           name: 'Challenge',
           pgn: [
@@ -314,7 +322,10 @@ export const WithChess: Story = {
           ].join(' '),
         }),
       );
-      await binder.bind({ objects: [Ref.make(object)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Chess.Game)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -329,29 +340,36 @@ export const WithMail: Story = {
     plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestMailbox();
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
-      await binder.bind({ objects: [Ref.make(mailbox)] });
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
+// Test with prompt: Sync my email.
 export const WithGmail: Story = {
   decorators: getDecorators({
     plugins: [InboxPlugin(), TokenManagerPlugin()],
     config: config.remote,
     types: [Mailbox.Mailbox],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
-      await binder.bind({ objects: [Ref.make(mailbox)] });
+      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -366,7 +384,7 @@ export const WithMap: Story = {
     plugins: [MapPlugin(), TablePlugin()],
     config: config.remote,
     types: [DataType.View, Map.Map, Table.Table],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
       const { view: tableView } = await Table.makeView({ name: 'Table', space, typename: schema.typename });
       const { view: mapView } = await Map.makeView({
@@ -377,7 +395,10 @@ export const WithMap: Story = {
       });
       space.db.add(tableView);
       space.db.add(mapView);
-      await binder.bind({ objects: [Ref.make(tableView), Ref.make(mapView)] });
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(DataType.View)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -391,17 +412,13 @@ export const WithTrip: Story = {
     plugins: [MarkdownPlugin(), MapPlugin()],
     config: config.remote,
     types: [Map.Map],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       // TODO(burdon): Table.
-      {
-        const object = space.db.add(Map.make({ name: 'Trip' }));
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Itinerary',
-            content: trim`
+      space.db.add(Map.make({ name: 'Trip' }));
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Itinerary',
+          content: trim`
               # Itinerary
 
               ## Day 1
@@ -414,25 +431,24 @@ export const WithTrip: Story = {
               - Visit the Louvre
               - Visit the Musée d'Orsay
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
-      {
-        const object = space.db.add(
-          Markdown.makeDocument({
-            name: 'Barcelona',
-            content: trim`
+        }),
+      );
+      space.db.add(
+        Markdown.makeDocument({
+          name: 'Barcelona',
+          content: trim`
               # Barcelona
 
               Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
               It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
               The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
             `,
-          }),
-        );
-        await binder.bind({ objects: [Ref.make(object)] });
-      }
+        }),
+      );
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -445,9 +461,12 @@ export const WithBoard: Story = {
     plugins: [BoardPlugin()],
     config: config.remote,
     types: [Board.Board],
-    onInit: async ({ space, binder }) => {
-      const object = space.db.add(Board.makeBoard());
-      await binder.bind({ objects: [Ref.make(object)] });
+    onInit: async ({ space }) => {
+      space.db.add(Board.makeBoard());
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Board.Board)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -487,12 +506,15 @@ export const WithTranscription: Story = {
     plugins: [TranscriptionPlugin(), PreviewPlugin()],
     config: config.remote,
     types: [Transcript.Transcript],
-    onInit: async ({ space, binder }) => {
+    onInit: async ({ space }) => {
       const queue = space.queues.create();
       const messages = createTestTranscription();
       await queue.append(messages);
-      const transcript = space.db.add(Transcript.makeTranscript(queue.dxn));
-      await binder.bind({ objects: [Ref.make(transcript)] });
+      space.db.add(Transcript.makeTranscript(queue.dxn));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(Transcript.Transcript)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
   }),
   args: {
@@ -539,6 +561,57 @@ export const WithTriggers: Story = {
   },
 };
 
+export const WithChessTrigger: Story = {
+  decorators: getDecorators({
+    plugins: [ChessPlugin()],
+    config: config.remote,
+    types: [Chess.Game],
+    onInit: async ({ space }) => {
+      // TODO(burdon): Add player DID (for user and assistant).
+      space.db.add(
+        Chess.makeGame({
+          name: 'Challenge',
+          pgn: [
+            '1. e4 e5',
+            '2. Nf3 Nc6',
+            '3. Bc4 Bc5',
+            '4. c3 Nf6',
+            '5. d4 exd4',
+            '6. cxd4 Bb4+',
+            '7. Nc3 d5',
+            '8. exd5 Nxd5',
+            '9. O-O Be6',
+            '10. Qb3 Na5',
+            '11. Qa4+ c6',
+            '12. Bxd5 Bxc3',
+            '13. Bxe6 fxe6',
+            '*',
+          ].join(' '),
+        }),
+      );
+
+      space.db.add(
+        Obj.make(FunctionTrigger, {
+          function: Ref.make(serializeFunction(chessFunctions.play)),
+          enabled: true,
+          spec: {
+            kind: 'subscription',
+            query: Query.select(Filter.type(Chess.Game)).ast,
+          },
+          input: {
+            id: '{{event.changedObjectId}}',
+            side: 'black', // NOTE: Removing it makes the bot play itself.
+          },
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
+  },
+};
+
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
@@ -561,7 +634,8 @@ export const WithResearchQueue: Story = {
           }),
           output: Schema.Any,
 
-          instructions: 'Research the organization provided as input.',
+          instructions:
+            'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
           blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
         }),
       );
@@ -589,5 +663,142 @@ export const WithResearchQueue: Story = {
       [ResearchOutputStack],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
+  },
+};
+
+export const WithProject: Story = {
+  decorators: getDecorators({
+    plugins: [InboxPlugin(), MarkdownPlugin(), ProjectPlugin()],
+    config: config.remote,
+    accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    types: [
+      DataType.Employer,
+      DataType.HasConnection,
+      DataType.Message,
+      DataType.Organization,
+      DataType.Person,
+      DataType.Project,
+      DataType.View,
+      Mailbox.Mailbox,
+      ResearchOn,
+    ],
+    onInit: async ({ space }) => {
+      await addTestData(space);
+      const { objects: people } = await space.db.query(Filter.type(DataType.Person)).run();
+      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+
+      people.slice(0, 4).forEach((person) => {
+        person.notes = 'Project';
+      });
+
+      const queue = space.queues.create();
+      const messages = createTestMailbox(people);
+      await queue.append(messages);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+
+      const dxosResearch = space.db.add(
+        Markdown.makeDocument({
+          name: 'DXOS Research',
+          content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+        }),
+      );
+      const blueyardResearch = space.db.add(
+        Markdown.makeDocument({
+          name: 'Blue Yard Research',
+          content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
+        }),
+      );
+
+      const dxos = organizations.find((org) => org.name === 'DXOS')!;
+      const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
+      console.log(dxos, blueyard);
+      space.db.add(
+        Relation.make(ResearchOn, {
+          [Relation.Source]: dxosResearch,
+          [Relation.Target]: dxos,
+          completedAt: new Date().toISOString(),
+        }),
+      );
+      space.db.add(
+        Relation.make(ResearchOn, {
+          [Relation.Source]: blueyardResearch,
+          [Relation.Target]: blueyard,
+          completedAt: new Date().toISOString(),
+        }),
+      );
+
+      const contactsQuery = Query.select(Filter.type(DataType.Person, { notes: 'Project' }));
+      const organizationsQuery = contactsQuery.sourceOf(DataType.Employer, { active: true }).target();
+      const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+      const researchPrompt = space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions:
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      const researchTrigger = Obj.make(FunctionTrigger, {
+        function: Ref.make(serializeFunction(agent)),
+        enabled: true,
+        spec: {
+          kind: 'subscription',
+          query: organizationsQuery.ast,
+        },
+        input: {
+          prompt: Ref.make(researchPrompt),
+          input: '{{event.subject}}',
+        },
+      });
+      space.db.add(researchTrigger);
+
+      const mailboxView = createView({
+        name: 'Mailbox',
+        query: Query.select(
+          Filter.type(DataType.Message, { properties: { labels: Filter.contains('Project') } }),
+        ).options({
+          queues: [mailbox.queue.dxn.toString()],
+        }),
+        jsonSchema: Type.toJsonSchema(DataType.Message),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const contactsView = createView({
+        name: 'Contacts',
+        query: contactsQuery,
+        jsonSchema: Type.toJsonSchema(DataType.Person),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const organizationsView = createView({
+        name: 'Organizations',
+        query: organizationsQuery,
+        jsonSchema: Type.toJsonSchema(DataType.Organization),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+      const notesView = createView({
+        name: 'Notes',
+        query: notesQuery,
+        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        presentation: Obj.make(DataType.Collection, { objects: [] }),
+      });
+
+      space.db.add(
+        DataType.makeProject({
+          name: 'Investor Research',
+          collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+        }),
+      );
+    },
+  }),
+  args: {
+    deckComponents: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
+    blueprints: [],
   },
 };

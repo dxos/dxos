@@ -44,7 +44,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
         createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),
         formattingKeymap(),

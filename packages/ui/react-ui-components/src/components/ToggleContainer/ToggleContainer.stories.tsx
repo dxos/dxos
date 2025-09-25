@@ -69,13 +69,14 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
       <div className='flex p-4'>
         <ToggleContainer.Root classNames='border border-separator rounded-md' {...props}>
           <ToggleContainer.Header
-            title={'Test'}
             icon={
               running ? (
                 <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
               ) : undefined
             }
-          />
+          >
+            Test
+          </ToggleContainer.Header>
           <ToggleContainer.Content classNames='bg-modalSurface'>
             <MarkdownViewer classNames='p-2 text-sm' content={generator.text.value.join('\n\n')} />
           </ToggleContainer.Content>

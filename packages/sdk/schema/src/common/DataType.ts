@@ -27,6 +27,8 @@ export { Employer, HasConnection, HasRelationship } from './relations';
 import { Project as ProjectSchema } from './project';
 import { Text as TextSchema } from './text';
 
+// TODO(wittjosiah): `DataType.Text.make` & `DataType.Project.make`.
+
 export const makeText = (content = '', id?: ObjectId) =>
   id ? Obj.make(TextSchema, { content, id }) : Obj.make(TextSchema, { content });
 

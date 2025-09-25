@@ -2,21 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Layer, type ManagedRuntime } from 'effect';
-
-import { type AiService, type AiServiceRouter, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';
-import type {
-  CredentialsService,
-  DatabaseService,
-  FunctionImplementationResolver,
-  InvocationTracer,
-  LocalFunctionExecutionService,
-  QueueService,
-  RemoteFunctionExecutionService,
-  TriggerDispatcher,
-} from '@dxos/functions';
-import type { SpaceId } from '@dxos/keys';
 import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
@@ -29,41 +15,4 @@ export namespace AssistantCapabilities {
   };
   export const State = defineCapability<DeepReadonly<AssistantState>>(`${meta.id}/capability/state`);
   export const MutableState = defineCapability<AssistantState>(`${meta.id}/capability/state`);
-
-  export type AiServiceLayer = Layer.Layer<AiService.AiService>;
-  export const AiServiceLayer = defineCapability<AiServiceLayer>(`${meta.id}/capability/ai-service-factory`);
-
-  /**
-   * Plugins can contribute them to provide model resolvers.
-   */
-  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
-    `${meta.id}/capability/ai-model-resolver`,
-  );
-
-  /**
-   * Service stack for executing agents, functions, and triggers.
-   */
-  export type ComputeServices =
-    | TriggerDispatcher
-    | AiService.AiService
-    | DatabaseService
-    | QueueService
-    | CredentialsService
-    | LocalFunctionExecutionService
-    | RemoteFunctionExecutionService
-    // TODO(dmaretskyi): This service is private and shouldn't be exposed as a part of public API.
-    | FunctionImplementationResolver
-    | InvocationTracer
-    // TODO(dmaretskyi): Those should be provided at AI-chat call site.
-    | ToolResolverService
-    | ToolExecutionService;
-
-  export interface ComputeRuntimeProvider {
-    getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
-  }
-
-  /**
-   * Runtime for executing agents, functions, and triggers.
-   */
-  export const ComputeRuntime = defineCapability<ComputeRuntimeProvider>(`${meta.id}/capability/compute-runtime`);
 }

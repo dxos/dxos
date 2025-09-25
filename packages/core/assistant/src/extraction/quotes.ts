@@ -51,7 +51,7 @@ export const insertReferences = (text: string, quotes: ReferencedQuotes) => {
 
     // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
+    text = text.replace(regex, `[${quote.quote}](${DXN.fromLocalObjectId(quote.id).toString()})`);
   }
 
   return text;

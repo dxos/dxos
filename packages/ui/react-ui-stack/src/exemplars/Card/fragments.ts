@@ -21,4 +21,4 @@ export const cardText = cardSpacing;
 export const cardHeading = 'text-lg font-medium line-clamp-2 grow';
 
 export const cardChrome =
-  'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full';
+  'pli-[--dx-cardSpacingChrome] mlb-[--dx-cardSpacingChrome] [&_.dx-button]:text-start [&_.dx-button]:is-full [&_.dx-button]:pis-[calc(var(--dx-cardSpacingInline)-var(--dx-cardSpacingChrome))]';
