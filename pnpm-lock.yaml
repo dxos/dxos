@@ -1683,13 +1683,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../node-std
-      fs-ext:
-        specifier: 2.0.0
-        version: 2.0.0
-    devDependencies:
-      '@types/fs-ext':
-        specifier: 2.0.0
-        version: 2.0.0
+      koffi:
+        specifier: ^2.8.0
+        version: 2.14.1
 
   packages/common/log:
     dependencies:
@@ -22285,9 +22281,6 @@ packages:
   '@types/fontkit@2.0.8':
     resolution: {integrity: sha512-wN+8bYxIpJf+5oZdrdtaX04qUuWHcKxcDEgRS9Qm9ZClSHjzEn13SxUC+5eRM+4yXIeTYk8mTzLAWGF64847ew==}
 
-  '@types/fs-ext@2.0.0':
-    resolution: {integrity: sha512-v+rZ57B796XFBS4gbkYnmsmGdh8zDdcyFFtA+GqNdeD75MlS97m+hknE/JixwlxbpvPwUqoYraf3ePC6r+ByXw==}
-
   '@types/fs-extra@9.0.13':
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
 
@@ -26371,10 +26364,6 @@ packages:
     resolution: {integrity: sha512-cR/vflFyPZtrN6b38ZyWxpWdhlXrzZEBawlpBQMq7033xVY7/kg0GDMBK5jg8lDYQckdJ5x/YC88lM3C7VMsLg==}
     engines: {node: '>=0.10.0'}
 
-  fs-ext@2.0.0:
-    resolution: {integrity: sha512-aK8NlpSO5LUdSoWeshpnkgtptbua1rGo58Wc+mHQ2+JnoBlubMTsnV56Swl4bA0msrgAhG8TDu1aGS8deJwzBQ==}
-    engines: {node: '>= 8.0.0'}
-
   fs-extra@10.1.0:
     resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
     engines: {node: '>=12'}
@@ -28031,6 +28020,9 @@ packages:
   klona@2.0.6:
     resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
     engines: {node: '>= 8'}
+
+  koffi@2.14.1:
+    resolution: {integrity: sha512-IMFL3IbRDXacSIjs7pPbPxgNlJ2hUtawQXU2QPdr6iw38jmv5AesAUG8HPX00xl0PPA2BbEa3noTw1YdHY+gHg==}
 
   kubo-rpc-client@4.1.1:
     resolution: {integrity: sha512-vxIkTQLvDqd2DEcBfz7DWegAidYtopmWUR/UhWyuuss9+JNFzV5neBn8BKxSDHoLJPvkxJpqXDaJhsb7ZuPouQ==}
@@ -42144,10 +42136,6 @@ snapshots:
     dependencies:
       '@types/node': 22.10.2
 
-  '@types/fs-ext@2.0.0':
-    dependencies:
-      '@types/node': 22.10.2
-
   '@types/fs-extra@9.0.13':
     dependencies:
       '@types/node': 22.10.2
@@ -47045,10 +47033,6 @@ snapshots:
 
   fs-exists-sync@0.1.0: {}
 
-  fs-ext@2.0.0:
-    dependencies:
-      nan: 2.19.0
-
   fs-extra@10.1.0:
     dependencies:
       graceful-fs: 4.2.10
@@ -49115,6 +49099,8 @@ snapshots:
   kleur@4.1.5: {}
 
   klona@2.0.6: {}
+
+  koffi@2.14.1: {}
 
   kubo-rpc-client@4.1.1(undici@7.10.0):
     dependencies:
