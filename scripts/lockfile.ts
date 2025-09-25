@@ -271,6 +271,7 @@ function printDependantsTree(
   maxDepth: number,
   visited: Set<PackageId> = new Set(),
   indent: string = '',
+  isLast: boolean = true,
 ): void {
   if (depth > maxDepth || visited.has(packageId)) {
     return;
@@ -278,21 +279,30 @@ function printDependantsTree(
 
   visited.add(packageId);
 
+  // Determine the display name.
+  let displayName = packageId;
   const packageInfo = parsePackageId(packageId);
   if (packageInfo) {
-    const prefix = depth === 0 ? '' : indent + '└─ ';
-    console.log(`${prefix}${packageInfo.name}@${packageInfo.version}`);
-  } else if (packageId.startsWith('importer:')) {
-    const prefix = depth === 0 ? '' : indent + '└─ ';
-    console.log(`${prefix}${packageId}`);
+    displayName = `${packageInfo.name}@${packageInfo.version}`;
+  }
+
+  // Print the current item with proper tree characters.
+  if (depth === 0) {
+    console.log(displayName);
+  } else {
+    const connector = isLast ? '└─' : '├─';
+    console.log(`${indent}${connector} ${displayName}`);
   }
 
   const deps = dependants.get(packageId);
   if (deps && depth < maxDepth) {
     const sortedDeps = Array.from(deps).sort();
-    for (const dep of sortedDeps) {
-      printDependantsTree(dep, depth + 1, maxDepth, visited, indent + '   ');
-    }
+    const newIndent = depth === 0 ? '' : indent + (isLast ? '   ' : '│  ');
+    
+    sortedDeps.forEach((dep, index) => {
+      const isLastChild = index === sortedDeps.length - 1;
+      printDependantsTree(dep, depth + 1, maxDepth, visited, newIndent, isLastChild);
+    });
   }
 }
 
