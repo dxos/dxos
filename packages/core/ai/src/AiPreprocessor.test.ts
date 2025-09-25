@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiInput } from '@effect/ai';
+import { Prompt } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Either } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
-import { preprocessAiInput } from './AiPreprocessor';
-import { AiInputPreprocessingError } from './errors';
+import { preprocessPrompt } from './AiPreprocessor';
+import { PromptPreprocessingError } from './errors';
 
 describe('preprocessor', () => {
   it.effect(
@@ -26,11 +26,11 @@ describe('preprocessor', () => {
           },
         ],
       });
-      const input = yield* preprocessAiInput([message]);
+      const input = yield* preprocessPrompt([message]);
       expect(input).toEqual(
-        AiInput.make(
-          new AiInput.UserMessage({
-            parts: [new AiInput.TextPart({ text: 'What is 2 + 2?' })],
+        Prompt.make(
+          new Prompt.UserMessage({
+            parts: [new Prompt.TextPart({ text: 'What is 2 + 2?' })],
           }),
         ),
       );
@@ -63,32 +63,32 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
+      const input = yield* preprocessPrompt([message]);
       expect(input.messages).toHaveLength(2);
 
       // First message should be tool results.
-      expect(input.messages[0]).toBeInstanceOf(AiInput.ToolMessage);
-      const toolMessage = input.messages[0] as AiInput.ToolMessage;
+      expect(input.messages[0]).toBeInstanceOf(Prompt.ToolMessage);
+      const toolMessage = input.messages[0] as Prompt.ToolMessage;
       expect(toolMessage.parts).toHaveLength(2);
       expect(toolMessage.parts[0]).toEqual(
-        new AiInput.ToolCallResultPart({
-          id: AiInput.ToolCallId.make('call_1'),
+        new Prompt.ToolCallResultPart({
+          id: Prompt.ToolCallId.make('call_1'),
           name: 'calculator',
           result: 'Result of tool 1',
         }),
       );
       expect(toolMessage.parts[1]).toEqual(
-        new AiInput.ToolCallResultPart({
-          id: AiInput.ToolCallId.make('call_2'),
+        new Prompt.ToolCallResultPart({
+          id: Prompt.ToolCallId.make('call_2'),
           name: 'calculator',
           result: 'Result of tool 2',
         }),
       );
 
       // Second message should be user text.
-      expect(input.messages[1]).toBeInstanceOf(AiInput.UserMessage);
-      const userMessage = input.messages[1] as AiInput.UserMessage;
-      expect(userMessage.parts).toEqual([new AiInput.TextPart({ text: 'What do you think about these results?' })]);
+      expect(input.messages[1]).toBeInstanceOf(Prompt.UserMessage);
+      const userMessage = input.messages[1] as Prompt.UserMessage;
+      expect(userMessage.parts).toEqual([new Prompt.TextPart({ text: 'What do you think about these results?' })]);
     }),
   );
 
@@ -116,20 +116,20 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
+      const input = yield* preprocessPrompt([message]);
       expect(input.messages).toHaveLength(1);
 
-      const assistantMessage = input.messages[0] as AiInput.AssistantMessage;
+      const assistantMessage = input.messages[0] as Prompt.AssistantMessage;
       expect(assistantMessage.parts).toHaveLength(3);
-      expect(assistantMessage.parts[0]).toEqual(new AiInput.TextPart({ text: 'I need to calculate something.' }));
+      expect(assistantMessage.parts[0]).toEqual(new Prompt.TextPart({ text: 'I need to calculate something.' }));
       expect(assistantMessage.parts[1]).toEqual(
-        new AiInput.ToolCallPart({
+        new Prompt.ToolCallPart({
           id: 'call_1',
           name: 'calculator',
           params: { operation: 'add', a: 2, b: 2 },
         }),
       );
-      expect(assistantMessage.parts[2]).toEqual(new AiInput.TextPart({ text: 'Let me process that for you.' }));
+      expect(assistantMessage.parts[2]).toEqual(new Prompt.TextPart({ text: 'Let me process that for you.' }));
     }),
   );
 
@@ -152,10 +152,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const assistantMessage = input.messages[0] as AiInput.AssistantMessage;
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.messages[0] as Prompt.AssistantMessage;
       expect(assistantMessage.parts[0]).toEqual(
-        new AiInput.ReasoningPart({
+        new Prompt.ReasoningPart({
           reasoningText: 'Let me think about this step by step...',
           signature: 'reasoning_sig_1',
         }),
@@ -177,10 +177,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const assistantMessage = input.messages[0] as AiInput.AssistantMessage;
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.messages[0] as Prompt.AssistantMessage;
       expect(assistantMessage.parts[0]).toEqual(
-        new AiInput.RedactedReasoningPart({
+        new Prompt.RedactedReasoningPart({
           redactedText: '[Reasoning redacted]',
         }),
       );
@@ -205,10 +205,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const userMessage = input.messages[0] as AiInput.UserMessage;
-      expect(userMessage.parts[0]).toBeInstanceOf(AiInput.ImagePart);
-      const imagePart = userMessage.parts[0] as AiInput.ImagePart;
+      const input = yield* preprocessPrompt([message]);
+      const userMessage = input.messages[0] as Prompt.UserMessage;
+      expect(userMessage.parts[0]).toBeInstanceOf(Prompt.ImagePart);
+      const imagePart = userMessage.parts[0] as Prompt.ImagePart;
       expect(imagePart.mediaType).toBe('image/png');
       expect(imagePart.data).toBeInstanceOf(Uint8Array);
     }),
@@ -231,10 +231,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const userMessage = input.messages[0] as AiInput.UserMessage;
+      const input = yield* preprocessPrompt([message]);
+      const userMessage = input.messages[0] as Prompt.UserMessage;
       expect(userMessage.parts[0]).toEqual(
-        new AiInput.ImageUrlPart({
+        new Prompt.ImageUrlPart({
           url: new URL('https://example.com/image.png'),
         }),
       );
@@ -255,10 +255,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const userMessage = input.messages[0] as AiInput.UserMessage;
+      const input = yield* preprocessPrompt([message]);
+      const userMessage = input.messages[0] as Prompt.UserMessage;
       expect(userMessage.parts[0]).toEqual(
-        new AiInput.FileUrlPart({
+        new Prompt.FileUrlPart({
           url: new URL('https://example.com/document.pdf'),
         }),
       );
@@ -280,10 +280,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const userMessage = input.messages[0] as AiInput.UserMessage;
+      const input = yield* preprocessPrompt([message]);
+      const userMessage = input.messages[0] as Prompt.UserMessage;
       expect(userMessage.parts[0]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: 'This is a transcript of the conversation.',
         }),
       );
@@ -320,23 +320,23 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
+      const input = yield* preprocessPrompt([message]);
       expect(input.messages).toHaveLength(3);
 
       // First: user text.
-      expect(input.messages[0]).toBeInstanceOf(AiInput.UserMessage);
-      const firstMessage = input.messages[0] as AiInput.UserMessage;
-      expect(firstMessage.parts).toEqual([new AiInput.TextPart({ text: 'Here are the results:' })]);
+      expect(input.messages[0]).toBeInstanceOf(Prompt.UserMessage);
+      const firstMessage = input.messages[0] as Prompt.UserMessage;
+      expect(firstMessage.parts).toEqual([new Prompt.TextPart({ text: 'Here are the results:' })]);
 
       // Second: tool results.
-      expect(input.messages[1]).toBeInstanceOf(AiInput.ToolMessage);
-      const toolMessage = input.messages[1] as AiInput.ToolMessage;
+      expect(input.messages[1]).toBeInstanceOf(Prompt.ToolMessage);
+      const toolMessage = input.messages[1] as Prompt.ToolMessage;
       expect(toolMessage.parts).toHaveLength(2);
 
       // Third: user text.
-      expect(input.messages[2]).toBeInstanceOf(AiInput.UserMessage);
-      const lastMessage = input.messages[2] as AiInput.UserMessage;
-      expect(lastMessage.parts).toEqual([new AiInput.TextPart({ text: 'What should I do next?' })]);
+      expect(input.messages[2]).toBeInstanceOf(Prompt.UserMessage);
+      const lastMessage = input.messages[2] as Prompt.UserMessage;
+      expect(lastMessage.parts).toEqual([new Prompt.TextPart({ text: 'What should I do next?' })]);
     }),
   );
 
@@ -356,37 +356,37 @@ describe('preprocessor', () => {
         ],
       });
 
-      const input = yield* preprocessAiInput([message]);
-      const assistantMessage = input.messages[0] as AiInput.AssistantMessage;
+      const input = yield* preprocessPrompt([message]);
+      const assistantMessage = input.messages[0] as Prompt.AssistantMessage;
       expect(assistantMessage.parts).toHaveLength(6);
 
       expect(assistantMessage.parts[0]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '<status>Processing...</status>',
         }),
       );
       expect(assistantMessage.parts[1]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '<suggestion>Try this approach</suggestion>',
         }),
       );
       expect(assistantMessage.parts[2]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '<select><option>Option A</option><option>Option B</option></select>',
         }),
       );
       expect(assistantMessage.parts[3]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '<proposal>I propose we do this</proposal>',
         }),
       );
       expect(assistantMessage.parts[4]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '<toolkit/>',
         }),
       );
       expect(assistantMessage.parts[5]).toEqual(
-        new AiInput.TextPart({
+        new Prompt.TextPart({
           text: '{"key": "value"}',
         }),
       );
@@ -409,10 +409,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const result = yield* Effect.either(preprocessAiInput([message]));
+      const result = yield* Effect.either(preprocessPrompt([message]));
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(AiInputPreprocessingError);
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -433,10 +433,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const result = yield* Effect.either(preprocessAiInput([message]));
+      const result = yield* Effect.either(preprocessPrompt([message]));
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(AiInputPreprocessingError);
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -456,10 +456,10 @@ describe('preprocessor', () => {
         ],
       });
 
-      const result = yield* Effect.either(preprocessAiInput([message]));
+      const result = yield* Effect.either(preprocessPrompt([message]));
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(AiInputPreprocessingError);
+        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
   );
@@ -480,10 +480,10 @@ describe('preprocessor', () => {
         }),
       ];
 
-      const input = yield* preprocessAiInput(messages);
+      const input = yield* preprocessPrompt(messages);
       expect(input.messages).toHaveLength(2);
-      expect(input.messages[0]).toBeInstanceOf(AiInput.UserMessage);
-      expect(input.messages[1]).toBeInstanceOf(AiInput.AssistantMessage);
+      expect(input.messages[0]).toBeInstanceOf(Prompt.UserMessage);
+      expect(input.messages[1]).toBeInstanceOf(Prompt.AssistantMessage);
     }),
   );
 });

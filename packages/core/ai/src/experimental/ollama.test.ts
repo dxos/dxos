@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import { preprocessPrompt } from '../AiPreprocessor';
 import { tapHttpErrors } from '../testing';
 
 import { processMessages } from './testing';
@@ -36,7 +36,7 @@ describe('ollama', () => {
           }),
         );
 
-        const prompt = yield* preprocessAiInput(history);
+        const prompt = yield* preprocessPrompt(history);
         const blocks = yield* LanguageModel.streamText({
           prompt,
           system: 'You are a helpful assistant.',

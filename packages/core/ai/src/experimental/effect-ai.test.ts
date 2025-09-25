@@ -243,7 +243,7 @@ describe('LanguageModel', () => {
         const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = trim`
+        let prompt: Prompt.Raw = trim`
           <instructions>
             ${system}
           </instructions>
@@ -253,7 +253,7 @@ describe('LanguageModel', () => {
 
         do {
           const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
-          prompt = AiInput.empty;
+          prompt = Prompt.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));
           log.info('result', { result });

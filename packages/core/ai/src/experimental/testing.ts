@@ -15,11 +15,12 @@ import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
 // TODO(dmaretskyi): What is the right stopping condition?
-export const hasToolCall = Effect.fn(function* (chat: Chat.Chat.Service) {
+export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
   const history = yield* chat.history;
+  const lastMessage = history.content.at(-1);
   return (
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallResultPart'
+    (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') ||
+    lastMessage?.role === 'tool'
   );
 });
 

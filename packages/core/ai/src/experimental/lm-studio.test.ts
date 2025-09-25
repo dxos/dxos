@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import { preprocessPrompt } from '../AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
 
 /**
@@ -42,7 +42,7 @@ describe.skip('lm-studio', () => {
           }),
         ];
 
-        const prompt = yield* preprocessAiInput(history);
+        const prompt = yield* preprocessPrompt(history);
         const blocks = yield* LanguageModel.streamText({
           prompt,
           system: 'You are a helpful assistant. Be extremely brief with your answers.',
