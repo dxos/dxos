@@ -321,7 +321,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               void navigator.clipboard.readText().then((clipboardText) => {
                 try {
                   // Attempt to set the cell's content to clipboard content
-                  model.setCellData(cell, trim(clipboardText));
+                  model.setCellData(cell, trim(clipboardText).replace(/[\n\r]+/, ' '));
                   handleSave();
                 } catch {
                   // If validation fails, emit a DxEditRequest event with initialContent from clipboard
