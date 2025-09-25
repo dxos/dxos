@@ -46,7 +46,7 @@ export default (context: PluginContext) =>
                 },
               },
               {
-                id: 'dxos.org/plugin/help/open-shortcuts',
+                id: `${meta.id}/open-shortcuts`,
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const state = context.getCapability(HelpCapabilities.MutableState);
