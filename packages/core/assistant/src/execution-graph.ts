@@ -51,6 +51,12 @@ export class ExecutionGraph {
   // TODO(dmaretskyi): Evolve the internal state to support chats, functions, circuit workflows, etc.
   private _commits: Commit[] = [];
   private _branchNames = new Set<string>();
+  private _lastBlockId: string | undefined;
+
+  // Tool call tracking.
+  private _toolCallCommitIds = new Map<string, string>(); // toolCallId -> commitId
+  private _lastCommitByBranch = new Map<string, string>(); // branch -> last commitId
+  private _pendingToolResults = new Map<string, string>(); // toolCallId -> toolResultCommitId
 
   /**
    * Adds events to the graph.
@@ -58,23 +64,58 @@ export class ExecutionGraph {
   addEvents(events: Obj.Any[]) {
     for (const event of events) {
       if (Obj.instanceOf(DataType.Message, event)) {
-        const messageCommits = messageToCommit(event);
-        this._commits.push(...messageCommits);
-        messageCommits.map((c) => c.branch).forEach((branch) => this._branchNames.add(branch));
+        this._processMessage(event);
       } else if (Obj.instanceOf(AgentStatus, event)) {
-        const branch = getBranchName({ parentMessage: event.parentMessage, toolCallId: event.toolCallId });
-        this._branchNames.add(branch);
-        this._commits.push({
-          id: event.id,
-          branch,
-          message: event.message,
-          icon: IconType.FLAG,
-          parents:
-            event.parentMessage && event.toolCallId
-              ? [getToolCallId(event.parentMessage, event.toolCallId)]
-              : undefined, // TODO(burdon): Fix.
-        });
+        this._processAgentStatus(event);
       }
+    }
+  }
+
+  /**
+   * Processes a message event and creates commits for its blocks.
+   */
+  private _processMessage(message: DataType.Message) {
+    const messageCommits = messageToCommits(
+      message,
+      this._lastBlockId,
+      this._toolCallCommitIds,
+      this._lastCommitByBranch,
+    );
+    this._commits.push(...messageCommits);
+
+    // Track branches.
+    messageCommits.forEach((commit) => this._branchNames.add(commit.branch));
+
+    // Track tool calls and update pending tool results.
+    this._trackToolCalls(messageCommits);
+
+    // Update last block ID for sequential chaining.
+    if (messageCommits.length > 0) {
+      this._lastBlockId = messageCommits[messageCommits.length - 1].id;
+    }
+  }
+
+  /**
+   * Processes an AgentStatus event.
+   */
+  private _processAgentStatus(event: AgentStatus) {
+    const branch = this._getToolCallBranch(event.parentMessage, event.toolCallId);
+    this._branchNames.add(branch);
+
+    const agentStatusCommit: Commit = {
+      id: event.id,
+      branch,
+      message: event.message,
+      icon: IconType.FLAG,
+      parents: this._getAgentStatusParents(event),
+    };
+
+    this._commits.push(agentStatusCommit);
+
+    // Update pending tool results to point to this AgentStatus.
+    if (event.toolCallId) {
+      this._lastCommitByBranch.set(branch, event.id);
+      this._updatePendingToolResults(event.toolCallId, event.id);
     }
   }
 
@@ -90,99 +131,294 @@ export class ExecutionGraph {
       commits: commits,
     };
   }
+
+  /**
+   * Tracks tool calls and handles pending tool result updates.
+   */
+  private _trackToolCalls(commits: Commit[]) {
+    commits.forEach((commit) => {
+      if (this._isToolCallCommit(commit)) {
+        const toolCallId = this._extractToolCallId(commit.id);
+        if (toolCallId) {
+          this._toolCallCommitIds.set(toolCallId, commit.id);
+        }
+      }
+
+      if (this._isToolResultCommit(commit)) {
+        const toolCallId = this._extractToolCallId(commit.id);
+        if (toolCallId) {
+          this._pendingToolResults.set(toolCallId, commit.id);
+          this._handleLateToolResultUpdate(toolCallId, commit.id);
+        }
+      }
+
+      this._lastCommitByBranch.set(commit.branch, commit.id);
+    });
+  }
+
+  /**
+   * Updates pending tool results to point to an AgentStatus event.
+   */
+  private _updatePendingToolResults(toolCallId: string, agentStatusId: string) {
+    const toolResultId = this._pendingToolResults.get(toolCallId);
+    if (!toolResultId) return;
+
+    const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
+    if (!toolResultCommit?.parents) return;
+
+    const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
+    if (!toolCallCommitId) return;
+
+    // Replace tool call commit with AgentStatus commit.
+    const toolCallIndex = toolResultCommit.parents.indexOf(toolCallCommitId);
+    if (toolCallIndex !== -1) {
+      toolResultCommit.parents[toolCallIndex] = agentStatusId;
+    }
+
+    this._pendingToolResults.delete(toolCallId);
+  }
+
+  /**
+   * Handles late updates when AgentStatus is processed before tool result.
+   */
+  private _handleLateToolResultUpdate(toolCallId: string, toolResultId: string) {
+    const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
+    if (!toolCallCommitId) return;
+
+    const messageId = toolCallCommitId.split('_toolCall_')[0];
+    const toolCallBranch = `${messageId}_${toolCallId}`;
+    const agentStatusCommitId = this._lastCommitByBranch.get(toolCallBranch);
+
+    if (agentStatusCommitId && agentStatusCommitId !== toolCallCommitId) {
+      const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
+      if (toolResultCommit?.parents) {
+        const toolCallIndex = toolResultCommit.parents.indexOf(toolCallCommitId);
+        if (toolCallIndex !== -1) {
+          toolResultCommit.parents[toolCallIndex] = agentStatusCommitId;
+        }
+      }
+      this._pendingToolResults.delete(toolCallId);
+    }
+  }
+
+  /**
+   * Gets the branch name for a tool call.
+   */
+  private _getToolCallBranch(parentMessage?: ObjectId, toolCallId?: string): string {
+    if (parentMessage && toolCallId) {
+      return `${parentMessage}_${toolCallId}`;
+    }
+    return parentMessage || 'main';
+  }
+
+  /**
+   * Gets the parents for an AgentStatus commit.
+   */
+  private _getAgentStatusParents(event: AgentStatus): string[] | undefined {
+    if (event.parentMessage && event.toolCallId) {
+      return [getToolCallId(event.parentMessage, event.toolCallId)];
+    }
+    return undefined;
+  }
+
+  /**
+   * Checks if a commit is a tool call commit.
+   */
+  private _isToolCallCommit(commit: Commit): boolean {
+    return commit.message.includes('Calling tool');
+  }
+
+  /**
+   * Checks if a commit is a tool result commit.
+   */
+  private _isToolResultCommit(commit: Commit): boolean {
+    return commit.message.includes('Tool call succeeded') || commit.message.includes('Tool error:');
+  }
+
+  /**
+   * Extracts tool call ID from a commit ID.
+   */
+  private _extractToolCallId(commitId: string): string | undefined {
+    const toolCallMatch = commitId.match(/_toolCall_(.+)$/);
+    const toolResultMatch = commitId.match(/_toolResult_(.+)$/);
+    return toolCallMatch?.[1] || toolResultMatch?.[1];
+  }
 }
 
 // TODO(burdon): Pass in AiToolProvider.
-const messageToCommit = (message: DataType.Message): Commit[] => {
+/**
+ * Creates commits for all blocks in a message.
+ */
+const messageToCommits = (
+  message: DataType.Message,
+  lastBlockId?: string,
+  toolCallIds?: Map<string, string>,
+  lastCommitByBranch?: Map<string, string>,
+): Commit[] => {
+  let previousBlockId: string | undefined = lastBlockId;
+
   return message.blocks
     .map((block, idx) => {
       const branch = getMessageBranch(message);
-      const parent = getParentId(message);
-      const parents = parent ? [parent] : [];
-      switch (block._tag) {
-        case 'text':
-          if (!block.text.trim().length) {
-            return null;
-          }
-          return {
-            id: getGenericBlockId(message.id, idx),
-            branch,
-            parents,
-            ...(message.sender.role === 'user'
-              ? {
-                  icon: IconType.USER,
-                  tags: ['user'],
-                  message: 'Processing request...',
-                }
-              : {
-                  icon: IconType.AGENT,
-                  message: `Response (${block.text.split(' ').length} words)`,
-                }),
-          } satisfies Commit;
-        case 'toolCall':
-          return {
-            id: getToolCallId(message.id, block.toolCallId),
-            branch,
-            parents,
-            icon: IconType.TOOL,
-            level: LogLevel.INFO,
-            // TODO(burdon): Lookup tool name/description?
-            message: `Calling tool (${block.name})`,
-          } satisfies Commit;
-        case 'toolResult':
-          return {
-            id: getToolResultId(message.id, block.toolCallId),
-            branch,
-            parents,
-            icon: block.error ? IconType.ERROR : IconType.SUCCESS,
-            level: block.error ? LogLevel.ERROR : LogLevel.INFO,
-            message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
-          } satisfies Commit;
-        case 'summary':
-          return {
-            id: getGenericBlockId(message.id, idx),
-            branch,
-            parents,
-            icon: IconType.ROCKET,
-            level: LogLevel.INFO,
-            message: ContentBlock.createSummaryMessage(block),
-          } satisfies Commit;
-        case 'status':
-          return {
-            id: getGenericBlockId(message.id, idx),
-            branch,
-            parents,
-            message: block.statusText,
-            level: LogLevel.INFO,
-            icon: IconType.FLAG,
-          } satisfies Commit;
-        case 'reasoning':
-          return {
-            id: getGenericBlockId(message.id, idx),
-            branch,
-            parents,
-            message: block.reasoningText ?? 'Thinking...',
-            icon: IconType.THINKING,
-          } satisfies Commit;
-        case 'reference':
-          return {
-            id: getGenericBlockId(message.id, idx),
-            branch,
-            parents,
-            icon: IconType.LINK,
-            message: stringifyRef(block.reference),
-          } satisfies Commit;
-        default:
-          return null;
+      const parents = getBlockParents(block, previousBlockId, message, toolCallIds, lastCommitByBranch);
+
+      const commit = createBlockCommit(block, message, branch, parents, idx);
+      if (commit) {
+        previousBlockId = commit.id;
       }
+
+      return commit;
     })
     .filter(isNotFalsy);
 };
 
+/**
+ * Determines the parent commits for a block based on its type and context.
+ */
+const getBlockParents = (
+  block: ContentBlock.Any,
+  previousBlockId: string | undefined,
+  message: DataType.Message,
+  toolCallIds?: Map<string, string>,
+  lastCommitByBranch?: Map<string, string>,
+): string[] => {
+  const parents: string[] = [];
+
+  if (block._tag === 'toolResult') {
+    // Tool results have two parents: previous block and last block from tool call branch
+    if (previousBlockId) {
+      parents.push(previousBlockId);
+    }
+
+    const toolCallCommitId = toolCallIds?.get(block.toolCallId);
+    if (toolCallCommitId) {
+      const toolCallBranch = getToolCallBranchFromCommitId(toolCallCommitId, block.toolCallId);
+      const lastBlockFromToolCallBranch = lastCommitByBranch?.get(toolCallBranch);
+
+      if (lastBlockFromToolCallBranch) {
+        parents.push(lastBlockFromToolCallBranch);
+      } else {
+        // Fallback to tool call commit if no AgentStatus exists yet.
+        parents.push(toolCallCommitId);
+      }
+    }
+  } else {
+    // For other blocks, use previous block as parent (or tool call parent for first block).
+    if (previousBlockId) {
+      parents.push(previousBlockId);
+    } else {
+      const toolCallParent = getParentId(message);
+      if (toolCallParent) {
+        parents.push(toolCallParent);
+      }
+    }
+  }
+
+  return parents;
+};
+
+/**
+ * Creates a commit for a specific block.
+ */
+const createBlockCommit = (
+  block: ContentBlock.Any,
+  message: DataType.Message,
+  branch: string,
+  parents: string[],
+  idx: number,
+): Commit | null => {
+  switch (block._tag) {
+    case 'text':
+      if (!block.text.trim().length) return null;
+      return {
+        id: getGenericBlockId(message.id, idx),
+        branch,
+        parents,
+        ...(message.sender.role === 'user'
+          ? {
+              icon: IconType.USER,
+              tags: ['user'],
+              message: 'Processing request...',
+            }
+          : {
+              icon: IconType.AGENT,
+              message: `Response (${block.text.split(' ').length} words)`,
+            }),
+      } satisfies Commit;
+
+    case 'toolCall':
+      return {
+        id: getToolCallId(message.id, block.toolCallId),
+        branch,
+        parents,
+        icon: IconType.TOOL,
+        level: LogLevel.INFO,
+        message: `Calling tool (${block.name})`,
+      } satisfies Commit;
+
+    case 'toolResult':
+      return {
+        id: getToolResultId(message.id, block.toolCallId),
+        branch,
+        parents,
+        icon: block.error ? IconType.ERROR : IconType.SUCCESS,
+        level: block.error ? LogLevel.ERROR : LogLevel.INFO,
+        message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
+      } satisfies Commit;
+
+    case 'summary':
+      return {
+        id: getGenericBlockId(message.id, idx),
+        branch,
+        parents,
+        icon: IconType.ROCKET,
+        level: LogLevel.INFO,
+        message: ContentBlock.createSummaryMessage(block),
+      } satisfies Commit;
+
+    case 'status':
+      return {
+        id: getGenericBlockId(message.id, idx),
+        branch,
+        parents,
+        message: block.statusText,
+        level: LogLevel.INFO,
+        icon: IconType.FLAG,
+      } satisfies Commit;
+
+    case 'reasoning':
+      return {
+        id: getGenericBlockId(message.id, idx),
+        branch,
+        parents,
+        message: block.reasoningText ?? 'Thinking...',
+        icon: IconType.THINKING,
+      } satisfies Commit;
+
+    case 'reference':
+      return {
+        id: getGenericBlockId(message.id, idx),
+        branch,
+        parents,
+        icon: IconType.LINK,
+        message: stringifyRef(block.reference),
+      } satisfies Commit;
+
+    default:
+      return null;
+  }
+};
+
+/**
+ * Gets the tool call branch name from a tool call commit ID.
+ */
+const getToolCallBranchFromCommitId = (toolCallCommitId: string, toolCallId: string): string => {
+  const messageId = toolCallCommitId.split('_toolCall_')[0];
+  return `${messageId}_${toolCallId}`;
+};
+
 const getToolCallId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolCall_${toolCallId}`;
-
 const getToolResultId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolResult_${toolCallId}`;
-
 const getGenericBlockId = (messageId: ObjectId, idx: number) => `${messageId}_block_${idx}`;
 
 const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string }) => {

@@ -15,14 +15,12 @@ import { Assistant } from '../../types';
 import { type ComponentProps } from './types';
 
 export const ExecutionGraphContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
-  const [chat] = useQuery(space, Filter.type(Assistant.Chat));
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
   const invocations =
     useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??
     [];
-  const { branches, commits } = useExecutionGraph(
-    traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target ?? chat?.traceQueue?.target,
-    true,
-  );
+  const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target ?? chats.at(-1)?.traceQueue?.target;
+  const { branches, commits } = useExecutionGraph(queue, true);
 
   return (
     <div className='flex flex-col h-full'>

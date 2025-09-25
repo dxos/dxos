@@ -477,8 +477,8 @@ export const WithBoard: Story = {
 
 export const WithResearch: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), TablePlugin()],
-    config: config.persistent,
+    plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
@@ -658,9 +658,8 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     deckComponents: [
-      [ResearchInputStack],
-      [TriggersContainer, PromptContainer, InvocationsContainer, GraphContainer],
-      [ResearchOutputStack],
+      [ResearchInputStack, ResearchOutputStack],
+      [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
