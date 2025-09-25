@@ -4607,6 +4607,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -4685,6 +4688,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/primitives/react-hooks
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
@@ -4700,6 +4706,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
@@ -13071,6 +13080,9 @@ importers:
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13089,6 +13101,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
@@ -13147,9 +13162,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

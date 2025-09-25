@@ -7,11 +7,23 @@ import { Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
-import { type Commit } from '@dxos/react-ui-components';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNotFalsy } from '@dxos/util';
 
-// TODO(burdon): Move to assistant.
+/**
+ * Mercurial-style Commit.
+ */
+// TODO(wittjosiah): Reconcile with @dxos/react-ui-components.
+export type Commit = {
+  id: string;
+  parents?: string[];
+  branch: string;
+  icon?: string;
+  level?: LogLevel;
+  message: string;
+  timestamp?: Date;
+  tags?: string[];
+};
 
 // TODO(burdon): Add colors?
 enum IconType {

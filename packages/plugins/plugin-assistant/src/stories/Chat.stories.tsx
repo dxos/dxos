@@ -59,9 +59,9 @@ import {
   ChessContainer,
   CommentsContainer,
   type ComponentProps,
+  ExecutionGraphContainer,
   GraphContainer,
   InvocationsContainer,
-  LoggingContainer,
   MessageContainer,
   ProjectContainer,
   PromptContainer,
@@ -483,7 +483,7 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -615,7 +615,7 @@ export const WithChessTrigger: Story = {
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
-    config: config.local,
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -659,7 +659,7 @@ export const WithResearchQueue: Story = {
   args: {
     deckComponents: [
       [ResearchInputStack],
-      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
+      [TriggersContainer, PromptContainer, InvocationsContainer, GraphContainer],
       [ResearchOutputStack],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],

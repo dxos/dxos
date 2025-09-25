@@ -8,14 +8,13 @@ import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { InvocationTraceStartEvent } from '@dxos/functions';
 import { type Queue, useQuery, useQueue } from '@dxos/react-client/echo';
-import { Timeline } from '@dxos/react-ui-components';
+import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { useExecutionGraph } from '../../hooks';
 import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
 
-export const LoggingContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
+export const ExecutionGraphContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
   const [chat] = useQuery(space, Filter.type(Assistant.Chat));
   const invocations =
     useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??
