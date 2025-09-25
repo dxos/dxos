@@ -39,6 +39,7 @@ const messageColumnDefault = {
 const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
+  // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
   return trim`
     <button
       class="message__thumb dx-focus-ring-inset"
