@@ -4,7 +4,8 @@
 
 import { Schema } from 'effect';
 
-import { ResearchOn, research } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, ResearchOn, agent } from '@dxos/assistant-testing';
+import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
@@ -102,13 +103,34 @@ export const generator = () => ({
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
+          const researchPrompt = space.db.add(
+            Prompt.make({
+              name: 'Research',
+              description: 'Research organization',
+              input: Schema.Struct({
+                org: Schema.Any,
+              }),
+              output: Schema.Any,
+
+              // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
+              // Remove the mock prompt to do the actual research.
+              instructions:
+                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+              blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+            }),
+          );
+
           const researchTrigger = Obj.make(FunctionTrigger, {
-            function: Ref.make(serializeFunction(research)),
+            enabled: true,
             spec: {
               kind: 'subscription',
               query: organizationsQuery.ast,
             },
-            enabled: true,
+            function: Ref.make(serializeFunction(agent)),
+            input: {
+              prompt: Ref.make(researchPrompt),
+              input: '{{event.subject}}',
+            },
           });
           space.db.add(researchTrigger);
 
