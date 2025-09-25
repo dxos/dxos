@@ -13,7 +13,7 @@ import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-u
 
 import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DeckAction, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { soloInlinePadding } from '../fragments';
 
@@ -53,14 +53,14 @@ export const PlankHeading = memo(
     layoutMode,
     actions = [],
   }: PlankHeadingProps) => {
-    const { t } = useTranslation(DECK_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
-      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
+      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: meta.id }], t);
 
     const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
@@ -106,7 +106,7 @@ export const PlankHeading = memo(
 
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
-        typeof action.data === 'function' && void action.data?.({ parent: node, caller: DECK_PLUGIN });
+        typeof action.data === 'function' && void action.data?.({ parent: node, caller: meta.id });
       },
       [node],
     );
@@ -135,7 +135,7 @@ export const PlankHeading = memo(
       [dispatch, id, part],
     );
 
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {

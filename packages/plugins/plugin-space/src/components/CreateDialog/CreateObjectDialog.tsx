@@ -24,12 +24,12 @@ import { DataType, typenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction } from '../../types';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 
-export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.id}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<
   CreateObjectPanelProps,
@@ -49,7 +49,7 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const manager = usePluginManager();
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces();
   const { dispatch } = useIntentDispatcher();

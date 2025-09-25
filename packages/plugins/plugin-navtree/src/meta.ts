@@ -4,14 +4,12 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const NAVTREE_PLUGIN = 'dxos.org/plugin/navtree';
-
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
-export const COMMANDS_DIALOG = `${NAVTREE_PLUGIN}/CommandsDialog`;
+export const COMMANDS_DIALOG = 'dxos.org/plugin/navtree/CommandsDialog';
 
 export const meta: PluginMeta = {
-  id: NAVTREE_PLUGIN,
+  id: 'dxos.org/plugin/navtree',
   name: 'Navtree',
 };

@@ -9,7 +9,7 @@ import { Card, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { INBOX_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const RelatedContacts = ({
   contacts,
@@ -18,7 +18,7 @@ export const RelatedContacts = ({
   contacts: DataType.Person[];
   onContactClick?: (contact: DataType.Person) => void;
 }) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return contacts.length ? (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
@@ -50,7 +50,7 @@ export const RelatedMessages = ({
   messages: DataType.Message[];
   onMessageClick?: (message: DataType.Message) => void;
 }) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return messages.length ? (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related messages title')}</h3>

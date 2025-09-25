@@ -11,7 +11,7 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
-import { WELCOME_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
@@ -32,7 +32,7 @@ export const Welcome = ({
   onSpaceInvitation,
   onGoToLogin,
 }: WelcomeScreenProps) => {
-  const { t } = useTranslation(WELCOME_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);

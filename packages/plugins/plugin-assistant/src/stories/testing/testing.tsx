@@ -101,12 +101,12 @@ class TestingToolkit extends AiToolkit.make(
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
-  plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space }) => Promise<void>;
-  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
-};
+type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+  Pick<StoryPluginOptions, 'onChatCreated'> & {
+    plugins?: Plugin[];
+    accessTokens?: DataType.AccessToken[];
+    onInit?: (props: { space: Space }) => Promise<void>;
+  };
 
 /**
  * Create storybook decorators.
@@ -127,7 +127,7 @@ export const getDecorators = ({
       GraphPlugin(),
       IntentPlugin(),
       SettingsPlugin(),
-      SpacePlugin(),
+      SpacePlugin({}),
       ClientPlugin({
         types: [
           Markdown.Document,
@@ -169,89 +169,12 @@ export const getDecorators = ({
 
       // Cards
       ThemePlugin({ tx: defaultTx }),
-      StorybookLayoutPlugin(),
+      StorybookLayoutPlugin({}),
       PreviewPlugin(),
 
       // User plugins.
       AssistantPlugin(),
-
-      // Custom.
-      definePlugin({ id: 'example.com/plugin/testing', name: 'Testing' }, [
-        defineModule({
-          id: 'example.com/plugin/testing/module/testing',
-          activatesOn: Events.SetupArtifactDefinition,
-          activate: () => [
-            // TODO(burdon): Move into assistnat?
-            contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.Functions, [agent]),
-            contributes(Capabilities.Functions, [readDocument, updateDocument]),
-            contributes(Capabilities.Functions, [readTasks, updateTasks]),
-            contributes(Capabilities.Functions, [research, createResearchNote]),
-            contributes(Capabilities.Functions, [exampleFunctions.reply]),
-          ],
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/toolkit',
-          activatesOn: Events.Startup,
-          activate: (context) => [
-            contributes(Capabilities.Toolkit, TestingToolkit),
-            contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
-          ],
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/setup',
-          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-          activate: async (context) => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const space = client.spaces.default;
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-
-            // Ensure workspace is set.
-            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-
-            // Create initial chat.
-            await dispatch(createIntent(AssistantAction.CreateChat, { space }));
-
-            return [];
-          },
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/intent-resolver',
-          activatesOn: Events.SetupIntentResolver,
-          activate: () => [
-            contributes(Capabilities.IntentResolver, [
-              createResolver({
-                intent: DeckAction.ChangeCompanion,
-                resolve: () => ({}),
-              }),
-              createResolver({
-                intent: AssistantAction.CreateChat,
-                position: 'hoist',
-                resolve: async ({ space, name }) => {
-                  const queue = space.queues.create();
-                  const traceQueue = space.queues.create();
-                  const chat = Obj.make(Assistant.Chat, {
-                    name,
-                    queue: Ref.fromDXN(queue.dxn),
-                    traceQueue: Ref.fromDXN(traceQueue.dxn),
-                  });
-                  const binder = new AiContextBinder(queue);
-
-                  // Story-specific behaviour to allow chat creation to be extended.
-                  space.db.add(chat);
-                  await space.db.flush({ indexes: true });
-                  await onChatCreated?.({ space, chat, binder });
-
-                  return {
-                    data: { object: chat },
-                  };
-                },
-              }),
-            ]),
-          ],
-        }),
-      ]),
+      StoryPlugin({ onChatCreated }),
 
       // Test-specific.
       ...plugins,
@@ -282,3 +205,90 @@ export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) 
     .filter(([, token]) => !!token)
     .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
 };
+
+type StoryPluginOptions = {
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+};
+
+const StoryPlugin = definePlugin<StoryPluginOptions>(
+  {
+    id: 'example.com/plugin/testing',
+    name: 'Testing',
+  },
+  ({ onChatCreated }) => [
+    defineModule({
+      id: 'example.com/plugin/testing/module/testing',
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: () => [
+        // TODO(burdon): Move into assistnat?
+        contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+        contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+        contributes(Capabilities.Functions, [agent]),
+        contributes(Capabilities.Functions, [readDocument, updateDocument]),
+        contributes(Capabilities.Functions, [readTasks, updateTasks]),
+        contributes(Capabilities.Functions, [research, createResearchNote]),
+        contributes(Capabilities.Functions, [exampleFunctions.reply]),
+      ],
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/toolkit',
+      activatesOn: Events.Startup,
+      activate: (context) => [
+        contributes(Capabilities.Toolkit, TestingToolkit),
+        contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+      ],
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/setup',
+      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+      activate: async (context) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.default;
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
+        // Ensure workspace is set.
+        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+
+        // Create initial chat.
+        await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+
+        return [];
+      },
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/intent-resolver',
+      activatesOn: Events.SetupIntentResolver,
+      activate: () => [
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: DeckAction.ChangeCompanion,
+            resolve: () => ({}),
+          }),
+          createResolver({
+            intent: AssistantAction.CreateChat,
+            position: 'hoist',
+            resolve: async ({ space, name }) => {
+              const queue = space.queues.create();
+              const traceQueue = space.queues.create();
+              const chat = Obj.make(Assistant.Chat, {
+                name,
+                queue: Ref.fromDXN(queue.dxn),
+                traceQueue: Ref.fromDXN(traceQueue.dxn),
+              });
+              const binder = new AiContextBinder(queue);
+
+              // Story-specific behaviour to allow chat creation to be extended.
+              space.db.add(chat);
+              await space.db.flush({ indexes: true });
+              await onChatCreated?.({ space, chat, binder });
+
+              return {
+                data: { object: chat },
+              };
+            },
+          }),
+        ]),
+      ],
+    }),
+  ],
+);

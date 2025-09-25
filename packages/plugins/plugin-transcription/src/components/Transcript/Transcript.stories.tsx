@@ -184,16 +184,16 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
+        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
+        SpacePlugin({}),
         PreviewPlugin(),
-        SpacePlugin(),
         SettingsPlugin(),
         IntentPlugin(),
       ],

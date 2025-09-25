@@ -14,7 +14,7 @@ import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { AttentionGlyph, useAttended, useAttention } from '@dxos/react-ui-attention';
 
 import { usePath } from '../../hooks';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 const useEdgeStatus = (): EdgeStatus => {
   const [status, setStatus] = useState(EdgeStatus.NOT_CONNECTED);
@@ -29,7 +29,7 @@ const useEdgeStatus = (): EdgeStatus => {
 };
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const id = space.id;
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
   const isAttended = hasAttention || isAncestor || isRelated;

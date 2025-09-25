@@ -9,14 +9,14 @@ import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation 
 
 import { DeckCapabilities } from '../../capabilities';
 import { getCompanionId, useDeckCompanions } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <IconButton
       variant={variant}
@@ -34,7 +34,7 @@ export const ToggleSidebarButton = ({
 
 export const CloseSidebarButton = () => {
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <IconButton
       variant='ghost'
@@ -55,7 +55,7 @@ export const ToggleComplementarySidebarButton = ({
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layoutContext = useCapability(DeckCapabilities.MutableDeckState);
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(async () => {

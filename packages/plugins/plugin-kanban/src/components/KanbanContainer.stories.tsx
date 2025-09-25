@@ -173,9 +173,9 @@ const meta = {
             });
           },
         }),
-        StorybookLayoutPlugin(),
+        StorybookLayoutPlugin({}),
         PreviewPlugin(),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
       ],

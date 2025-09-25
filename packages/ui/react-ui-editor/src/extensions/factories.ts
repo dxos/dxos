@@ -29,7 +29,7 @@ import { type DocAccessor, type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/react-ui-theme';
-import { hexToHue, isNotFalsy } from '@dxos/util';
+import { hexToHue, isTruthy } from '@dxos/util';
 
 import { editorGutter, editorMonospace } from '../defaults';
 import { type ThemeStyles, defaultTheme } from '../styles';
@@ -139,9 +139,9 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
           preventDefault: true,
           run: () => true,
         },
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     ),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 };
 
 //
@@ -203,7 +203,7 @@ export const createThemeExtensions = ({
           }
         },
       ),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 };
 
 //

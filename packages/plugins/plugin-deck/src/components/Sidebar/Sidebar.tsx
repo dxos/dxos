@@ -9,11 +9,11 @@ import { type Label, Main } from '@dxos/react-ui';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 
-const label = ['sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
+const label = ['sidebar title', { ns: meta.id }] satisfies Label;
 
 export const Sidebar = () => {
   const { popoverAnchorId, activeDeck: current, deck } = useCapability(DeckCapabilities.DeckState);

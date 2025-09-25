@@ -81,6 +81,7 @@ const meta = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
+        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],
@@ -105,9 +106,8 @@ const meta = {
             });
           },
         }),
-        StorybookLayoutPlugin(),
+        SpacePlugin({}),
         PreviewPlugin(),
-        SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
       ],

@@ -8,25 +8,25 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { SettingsStore } from '@dxos/local-storage';
 
 import { SketchContainer, SketchSettings } from '../components';
-import { SKETCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DiagramType, type SketchSettingsProps, TLDRAW_SCHEMA, isDiagramType } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${SKETCH_PLUGIN}/sketch`,
+      id: `${meta.id}/sketch`,
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, TLDRAW_SCHEMA),
       component: ({ data, role }) => {
-        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(SKETCH_PLUGIN)!.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
         return <SketchContainer sketch={data.subject} role={role} settings={settings} />;
       },
     }),
     createSurface({
-      id: `${SKETCH_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SketchSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === SKETCH_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SketchSettings settings={subject.value} />,
     }),
   ]);
