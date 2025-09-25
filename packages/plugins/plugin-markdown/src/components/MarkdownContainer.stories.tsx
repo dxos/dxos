@@ -62,9 +62,8 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
+        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -88,7 +87,8 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        AttentionPlugin(),
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),

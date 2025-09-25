@@ -14,7 +14,7 @@ import { ControlItem, controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
 
 const grid = 'grid grid-cols-[40px_1fr_32px] min-bs-[2.5rem]';
@@ -28,7 +28,7 @@ export type AutomationPanelProps = ThemedClassName<{
 
 // TODO(burdon): Factor out common layout with ViewEditor.
 export const AutomationPanel = ({ classNames, space, object, initialTrigger, onDone }: AutomationPanelProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const triggers = useQuery(space, Filter.type(FunctionTrigger));
   const functions = useQuery(space, Filter.type(FunctionType));

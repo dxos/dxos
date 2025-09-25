@@ -8,13 +8,13 @@ import { getSnapshot } from '@dxos/echo-schema';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { FormProvider, useFormContext, useInputProps } from '@dxos/react-ui-form';
 
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { UserFeedback } from '../types';
 
 const defaultValues: UserFeedback = { message: '' };
 
 const FormContent = () => {
-  const { t } = useTranslation(OBSERVABILITY_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { handleSave, canSave } = useFormContext<UserFeedback>();
 
   const messageProps = useInputProps(['message']);

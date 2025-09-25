@@ -123,8 +123,8 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+        ThemePlugin({ tx: defaultTx }),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
@@ -176,7 +176,7 @@ export const WithClient: Story = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         // Needs to be last so that the dialog and popovers have access to all contexts.
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],

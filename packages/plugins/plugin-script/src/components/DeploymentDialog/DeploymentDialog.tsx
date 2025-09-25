@@ -10,10 +10,10 @@ import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
 import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type Template } from '../../templates';
 
-export const DEPLOYMENT_DIALOG = `${SCRIPT_PLUGIN}/deployment/dialog`;
+export const DEPLOYMENT_DIALOG = `${meta.id}/deployment/dialog`;
 
 // TODO(ZaymonFC):
 //  - Show activity and feedback to the user.
@@ -26,7 +26,7 @@ export type DeploymentDialogProps = {
 };
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const space = useMemo(() => getSpace(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
@@ -41,12 +41,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
-            id: `${SCRIPT_PLUGIN}/deployment-success`,
+            id: `${meta.id}/deployment-success`,
             icon: 'ph--check--regular',
             duration: Infinity,
-            title: ['script deployment toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
-            description: ['script deployment toast description', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
-            closeLabel: ['script deployment toast close label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
+            title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
+            description: ['script deployment toast description', { ns: meta.id, count: scriptTemplates.length }],
+            closeLabel: ['script deployment toast close label', { ns: meta.id, count: scriptTemplates.length }],
           },
         }),
       );
@@ -58,18 +58,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
-            id: `${SCRIPT_PLUGIN}/deployment-error`,
+            id: `${meta.id}/deployment-error`,
             icon: 'ph--warning--regular',
             duration: Infinity,
-            title: ['script deployment error toast label', { ns: SCRIPT_PLUGIN, count: scriptTemplates.length }],
-            description: [
-              'script deployment error toast description',
-              { ns: SCRIPT_PLUGIN, count: scriptTemplates.length },
-            ],
-            closeLabel: [
-              'script deployment error toast close label',
-              { ns: SCRIPT_PLUGIN, count: scriptTemplates.length },
-            ],
+            title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],
+            description: ['script deployment error toast description', { ns: meta.id, count: scriptTemplates.length }],
+            closeLabel: ['script deployment error toast close label', { ns: meta.id, count: scriptTemplates.length }],
           },
         }),
       );
