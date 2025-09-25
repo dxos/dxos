@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 import { type Simplify } from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
@@ -74,7 +74,7 @@ export const Obj: {
 /**
  * Object schema type definitions.
  */
-export namespace Obj {
+export declare namespace Obj {
   /**
    * Type that represents an arbitrary schema type of an object.
    * NOTE: This is not an instance type.
