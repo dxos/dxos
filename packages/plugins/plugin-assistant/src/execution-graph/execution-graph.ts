@@ -9,7 +9,7 @@ import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 import { ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 // TODO(burdon): Move to assistant.
 
@@ -164,7 +164,7 @@ const messageToCommit = (message: DataType.Message): Commit[] => {
           return null;
       }
     })
-    .filter(isNotFalsy);
+    .filter(isTruthy);
 };
 
 const getToolCallId = (messageId: ObjectId, toolCallId: string) => `${messageId}_toolCall_${toolCallId}`;

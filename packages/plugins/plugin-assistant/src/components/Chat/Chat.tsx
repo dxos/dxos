@@ -18,7 +18,7 @@ import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxo
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
@@ -247,10 +247,10 @@ const ChatPrompt = ({
                 return true;
               },
             },
-          ].filter(isNotFalsy),
+          ].filter(isTruthy),
         ),
       ),
-    ].filter(isNotFalsy);
+    ].filter(isTruthy);
   }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(

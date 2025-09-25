@@ -161,14 +161,14 @@ const storybook: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
+        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
