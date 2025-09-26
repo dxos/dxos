@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 
-import { Avatar, DxAnchorActivate, Icon } from '@dxos/react-ui';
+import { Avatar, DxAnchorActivate, IconButton } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
@@ -22,40 +22,18 @@ export type MessageHeaderProps = ThemedClassName<{
 export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderProps) => {
   const { t } = useTranslation(meta.id);
 
-  const handleSenderClick = useCallback(
-    (event: MouseEvent) => {
-      const button = (event.target as HTMLElement).closest('.dx-button');
-      if (contactDxn && button) {
-        button.dispatchEvent(
-          new DxAnchorActivate({
-            trigger: button as HTMLElement,
-            refId: contactDxn,
-            label: message.sender.name ?? 'never',
-          }),
-        );
-      }
-    },
-    [contactDxn, message.sender.name],
-  );
-
-  /* 
-  const SenderRoot = contactDxn ? Button : 'div';
-  const senderProps = contactDxn
-    ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
-    : { className: 'p-0 hover:bg-transparent', 'data-variant': 'ghost' };
-
-    <SenderRoot {...(senderProps as any)}>
-      <div role='none' className='p-1'>
-        <Avatar.Content
-          fallback={message.sender.name ? getFirstTwoRenderableChars(message.sender.name).join('') : '?'}
-          hue={toHue(hashString(message.sender?.name ?? message.sender?.email))}
-          hueVariant='surface'
-          variant='square'
-          size={10}
-        />
-      </div>
-    </SenderRoot> 
-  */
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const handleSenderClick = useCallback(() => {
+    if (contactDxn) {
+      buttonRef.current?.dispatchEvent(
+        new DxAnchorActivate({
+          trigger: buttonRef.current,
+          refId: contactDxn,
+          label: message.sender.name ?? 'never',
+        }),
+      );
+    }
+  }, [contactDxn, message.sender.name]);
 
   return (
     <Avatar.Root>
@@ -63,15 +41,28 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
         <div className='flex is-full'>
           <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
             <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
-            {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
+            {contactDxn && (
+              <IconButton
+                ref={buttonRef}
+                variant='ghost'
+                icon='ph--caret-down--regular'
+                iconOnly
+                label={t('show user')}
+                size={4}
+                classNames='!p-0.5'
+                onClick={handleSenderClick}
+              />
+            )}
           </Avatar.Label>
-          <div className='whitespace-nowrap text-sm text-description p-1 pie-2'>
+          <span className='whitespace-nowrap text-sm text-description p-1 pie-2'>
             {message.created && formatDate(new Date(), new Date(message.created))}
-          </div>
+          </span>
         </div>
 
         <div className='flex is-full items-center'>
-          <div className='is-full pis-2 text-sm text-description truncate'>{message.sender.email}</div>
+          <div className='flex is-full pis-2 items-center'>
+            <span className='text-sm text-description truncate'>{message.sender.email}</span>
+          </div>
           {viewMode && (
             <div className='pie-1'>
               <span className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
