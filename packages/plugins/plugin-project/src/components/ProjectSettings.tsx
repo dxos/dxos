@@ -3,135 +3,164 @@
 //
 
 import { Schema } from 'effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { ResearchOn } from '@dxos/assistant-testing';
-import { DXN, Filter, Obj, Query, QueryAST } from '@dxos/echo';
-import { Form } from '@dxos/react-ui-form';
-import { DataType } from '@dxos/schema';
+import { Obj, Query, Type } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { useClient } from '@dxos/react-client';
+import { getSpace } from '@dxos/react-client/echo';
+import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { QueryParser, createFilter } from '@dxos/react-ui-components';
+import { ViewEditor } from '@dxos/react-ui-form';
+import { List } from '@dxos/react-ui-list';
+import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
+import { DataType, type ProjectionModel, createView } from '@dxos/schema';
+import { arrayMove } from '@dxos/util';
 
-const ProjectSettingsSchema = Schema.Struct({
-  label: Schema.String.annotations({ title: 'Label' }),
-});
+import { resolveSchemaWithClientAndSpace } from '../helpers';
+import { meta } from '../meta';
+
+const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
+const listItemGrid = 'grid grid-cols-subgrid col-span-5';
+
+export type ProjectSettingsProps = {
+  project: DataType.Project;
+};
 
 /**
- * ProjectSettings currently is hardcoded to handle only the label which the preset project is based on.
+ * ProjectSettings allows for editing the views of a project.
  */
-const ProjectSettings = ({ project }: { project: DataType.Project }) => {
-  const label = getLabel(project);
-  const values = useMemo(() => ({ label }), [label]);
+export const ProjectSettings = ({ project }: ProjectSettingsProps) => {
+  const { t } = useTranslation(meta.id);
+  const client = useClient();
+  const space = getSpace(project);
+  const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
+  const [expandedId, setExpandedId] = useState<DataType.View['id']>();
+  const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
+  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
+  const projectionRef = useRef<ProjectionModel>(null);
 
-  const handleSave = useCallback(
-    (values: { label: string }) => {
-      setLabel(project, values.label);
-    },
-    [project],
+  useAsyncEffect(async () => {
+    if (!view?.query || !space) {
+      return;
+    }
+
+    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query);
+    if (foundSchema !== schema) {
+      setSchema(() => foundSchema);
+    }
+  }, [client, space, view, schema]);
+
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => arrayMove(project.collections, fromIndex, toIndex),
+    [project.collections],
   );
 
-  if (!parseProjectPreset(project)) {
-    return null;
-  }
+  const updateViewQuery = useCallback(
+    async (newQueryString: string) => {
+      if (!view || !space) {
+        return;
+      }
 
-  return <Form autoSave schema={ProjectSettingsSchema} values={values} outerSpacing={false} onSave={handleSave} />;
+      try {
+        const parser = new QueryParser(newQueryString);
+        // TODO(wittjosiah): When this fails it should show validation errors in the UI.
+        const newQuery = Query.select(createFilter(parser.parse()));
+        view.query = newQuery.ast;
+
+        const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
+        if (!newSchema) {
+          return;
+        }
+
+        const newView = createView({
+          query: newQuery,
+          jsonSchema: Type.toJsonSchema(newSchema),
+          presentation: Obj.make(Type.Expando, {}),
+        });
+        view.projection = Obj.getSnapshot(newView).projection;
+        setSchema(() => newSchema);
+      } catch (err) {
+        log('Failed to parse query', { err });
+      }
+    },
+    [view, schema],
+  );
+
+  const handleToggleField = useCallback((view: DataType.View) => {
+    setExpandedId((prevExpandedId) => (prevExpandedId === view.id ? undefined : view.id));
+  }, []);
+
+  const handleDelete = useCallback(
+    (view: DataType.View) => {
+      if (view.id === expandedId) {
+        setExpandedId(undefined);
+      }
+
+      const index = project.collections.findIndex((ref) => ref.target === view);
+      project.collections.splice(index, 1);
+      space?.db.remove(view);
+    },
+    [expandedId, project.collections, space],
+  );
+
+  return (
+    <div role='none'>
+      <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
+
+      <List.Root<DataType.View>
+        items={views}
+        isItem={Schema.is(DataType.View)}
+        getId={(view) => view.id}
+        onMove={handleMove}
+      >
+        {({ items: views }) => (
+          <>
+            <div role='list' className={listGrid}>
+              {views.map((view) => (
+                <List.Item<DataType.View>
+                  key={view.id}
+                  item={view}
+                  classNames={listItemGrid}
+                  aria-expanded={expandedId === view.id}
+                >
+                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-sm cursor-pointer min-bs-10')}>
+                    <List.ItemDragHandle />
+                    <List.ItemTitle onClick={() => handleToggleField(view)}>{view.name}</List.ItemTitle>
+                    <List.ItemDeleteButton
+                      label={t('delete view label')}
+                      autoHide={false}
+                      onClick={() => handleDelete(view)}
+                      data-testid='view.delete'
+                    />
+                    <IconButton
+                      iconOnly
+                      variant='ghost'
+                      label={t('toggle expand label', { ns: 'os' })}
+                      icon={expandedId === view.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                      onClick={() => handleToggleField(view)}
+                    />
+                  </div>
+                  {expandedId === view.id && view && schema && (
+                    <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
+                      <ViewEditor
+                        ref={projectionRef}
+                        mode='query'
+                        schema={schema}
+                        view={view}
+                        registry={space?.db.schemaRegistry}
+                        onQueryChanged={updateViewQuery}
+                      />
+                    </div>
+                  )}
+                </List.Item>
+              ))}
+            </div>
+          </>
+        )}
+      </List.Root>
+    </div>
+  );
 };
 
 export default ProjectSettings;
-
-// NOTE: The below project parsing must be kept in sync with the project preset in order to work correctly.
-
-const parseProjectPreset = (project: DataType.Project) => {
-  const view1 = project.collections[0]?.target;
-  const view2 = project.collections[1]?.target;
-  const view3 = project.collections[2]?.target;
-  const view4 = project.collections[3]?.target;
-  if (
-    !Obj.instanceOf(DataType.View, view1) ||
-    !Obj.instanceOf(DataType.View, view2) ||
-    !Obj.instanceOf(DataType.View, view3) ||
-    !Obj.instanceOf(DataType.View, view4)
-  ) {
-    return;
-  }
-
-  const query1 = Obj.getSnapshot(view1).query;
-  const query2 = Obj.getSnapshot(view2).query;
-  const query3 = Obj.getSnapshot(view3).query;
-  const query4 = Obj.getSnapshot(view4).query;
-  if (
-    query1.type !== 'options' ||
-    query2.type !== 'select' ||
-    query2.filter.type !== 'object' ||
-    query2.filter.typename !==
-      DXN.fromTypenameAndVersion(DataType.Person.typename, DataType.Person.version).toString() ||
-    query3.type !== 'reference-traversal' ||
-    query3.anchor.type !== 'select' ||
-    query3.anchor.filter.type !== 'object' ||
-    query3.anchor.filter.typename !==
-      DXN.fromTypenameAndVersion(DataType.Person.typename, DataType.Person.version).toString() ||
-    query4.type !== 'relation-traversal' ||
-    query4.anchor.type !== 'relation' ||
-    query4.anchor.anchor.type !== 'reference-traversal' ||
-    query4.anchor.anchor.anchor.type !== 'select' ||
-    query4.anchor.anchor.anchor.filter.type !== 'object' ||
-    query4.anchor.anchor.anchor.filter.typename !==
-      DXN.fromTypenameAndVersion(DataType.Person.typename, DataType.Person.version).toString()
-  ) {
-    return;
-  }
-
-  return {
-    mailboxView: view1,
-    mailboxQuery: query1,
-    contactsView: view2,
-    contactsQuery: query2,
-    organizationsView: view3,
-    organizationsQuery: query3,
-    notesView: view4,
-    notesQuery: query4,
-  };
-};
-
-const getLabel = (project: DataType.Project) => {
-  const { mailboxQuery } = parseProjectPreset(project) ?? {};
-  if (!mailboxQuery) {
-    return '';
-  }
-
-  let label = '';
-  QueryAST.visit(mailboxQuery, (node) => {
-    if (node.type !== 'select') {
-      return;
-    }
-    if (node.filter.type !== 'object') {
-      return;
-    }
-    if (node.filter.props.properties.type !== 'object') {
-      return;
-    }
-    if (node.filter.props.properties.props.labels.type !== 'contains') {
-      return;
-    }
-
-    label = node.filter.props.properties.props.labels.value;
-  });
-
-  return label;
-};
-
-const setLabel = (project: DataType.Project, label: string) => {
-  const { mailboxView, mailboxQuery, contactsView, organizationsView, notesView } = parseProjectPreset(project) ?? {};
-  if (!mailboxView || !mailboxQuery || !contactsView || !organizationsView || !notesView) {
-    return;
-  }
-
-  mailboxView.query = Query.select(
-    Filter.type(DataType.Message, { properties: { labels: Filter.contains(label) } }),
-  ).options(mailboxQuery.options).ast;
-
-  const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: label }));
-  const organizationsQuery = contactsQuery.reference('organization');
-  const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
-  contactsView.query = contactsQuery.ast;
-  organizationsView.query = organizationsQuery.ast;
-  notesView.query = notesQuery.ast;
-};

@@ -87,16 +87,25 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
 
     const viewSchema = useMemo(() => {
-      return Schema.Struct({
+      const base = Schema.Struct({
         query:
           mode === 'schema'
             ? Format.URL.annotations({ title: 'Record type' })
             : Schema.String.annotations({ title: 'Query' }),
-      }).pipe(Schema.mutable);
+      });
+
+      if (mode === 'query') {
+        return Schema.Struct({
+          name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+          ...base.fields,
+        }).pipe(Schema.mutable);
+      }
+
+      return base.pipe(Schema.mutable);
     }, [mode]);
     // TODO(burdon): Need to warn user of possible consequences of editing.
     // TODO(burdon): Settings should have domain name owned by user.
-    const viewValues = useMemo(() => ({ query: serializedQuery }), [serializedQuery]);
+    const viewValues = useMemo(() => ({ name: view.name, query: serializedQuery }), [view.name, serializedQuery]);
 
     const handleToggleField = useCallback(
       (field: FieldType) => {
@@ -114,15 +123,19 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     }, [schema, projectionModel, readonly]);
 
     const handleUpdate = useCallback(
-      ({ query }: Schema.Schema.Type<typeof viewSchema>) => {
+      (values: Schema.Schema.Type<typeof viewSchema>) => {
         invariant(!readonly);
         requestAnimationFrame(() => {
-          if (serializedQuery !== query && !readonly) {
-            onQueryChanged?.(query);
+          if ('name' in values && view.name !== values.name) {
+            view.name = values.name;
+          }
+
+          if (serializedQuery !== values.query && !readonly) {
+            onQueryChanged?.(values.query);
           }
         });
       },
-      [serializedQuery, onQueryChanged, readonly],
+      [serializedQuery, onQueryChanged, readonly, view],
     );
 
     const handleDelete = useCallback(
@@ -187,7 +200,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
     return (
       <div role='none' className={mx(classNames)}>
-        {schemaReadonly && (
+        {schemaReadonly && mode === 'schema' && (
           <Callout.Root valence='info' classNames={['mlb-cardSpacingBlock', outerSpacing && 'mli-cardSpacingInline']}>
             <Callout.Title>{t('system schema description')}</Callout.Title>
           </Callout.Root>

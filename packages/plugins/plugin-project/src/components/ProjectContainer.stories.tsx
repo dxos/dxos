@@ -19,6 +19,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -27,6 +28,7 @@ import { withLayout } from '@dxos/storybook-utils';
 import { translations } from '../translations';
 
 import { ProjectContainer } from './ProjectContainer';
+import { ProjectSettings } from './ProjectSettings';
 
 faker.seed(0);
 
@@ -39,7 +41,12 @@ const DefaultStory = () => {
     return <p>Loading…</p>;
   }
 
-  return <ProjectContainer role='project' project={project} />;
+  return (
+    <Stack orientation='horizontal' size='split' rail={false}>
+      <ProjectContainer role='article' project={project} />
+      <ProjectSettings project={project} />
+    </Stack>
+  );
 };
 
 const meta: Meta<typeof ProjectContainer> = {
@@ -50,8 +57,8 @@ const meta: Meta<typeof ProjectContainer> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [
             DataType.Project,
@@ -66,10 +73,9 @@ const meta: Meta<typeof ProjectContainer> = {
             await client.spaces.waitUntilReady();
             const space = client.spaces.default;
             await space.waitUntilReady();
+
             // Create a project
-            const project = DataType.makeProject({
-              collections: [],
-            });
+            const project = DataType.makeProject({ collections: [] });
 
             // Create a view for Contacts
             const personView = createView({
