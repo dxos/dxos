@@ -30,7 +30,7 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@radix-ui/react-use-controllable-state": "1.1.0",
+    "@radix-ui/react-use-controllable-state": "1.2.2",
     "lodash.defaultsdeep": "^4.6.1",
     "storybook": "^9.1.6"
   },

@@ -27,7 +27,7 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
     "@preact-signals/safe-react": "^0.9.0",
-    "@radix-ui/react-use-controllable-state": "1.1.0"
+    "@radix-ui/react-use-controllable-state": "1.2.2"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
