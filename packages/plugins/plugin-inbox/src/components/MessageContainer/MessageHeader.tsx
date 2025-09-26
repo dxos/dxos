@@ -6,7 +6,6 @@ import React, { useCallback } from 'react';
 
 import { Avatar, Button, DxAnchorActivate, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -61,51 +60,21 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
 
   return (
     <Avatar.Root>
-      <div className='border-be border-subduedSeparator'>
-        <div className='grid grid-rows-2'>
-          <div className='flex is-full'>
-            <Avatar.Label classNames='flex is-full items-center gap-1'>
-              <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
-              {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
-            </Avatar.Label>
-            <div className='whitespace-nowrap text-sm text-description p-1'>
-              {message.created && formatDate(new Date(), new Date(message.created))}
-            </div>
-          </div>
-
-          <div className='flex is-full'>
-            <div className='is-full text-sm text-description truncate'>{message.sender.email}</div>
-            {/* View mode indicator. */}
-            {viewMode && (
-              <div className='p-1'>
-                <span className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
-                  {viewMode === 'plain' && t('message header view mode plain')}
-                  {viewMode === 'enriched' && t('message header view mode enriched')}
-                  {viewMode === 'plain-only' && t('message header view mode plain only')}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className={mx('is-full p-2')}>
-          <div role='none'>
-            <Avatar.Label classNames='flex items-center gap-1'>
-              <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
-              {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
-            </Avatar.Label>
-            {message.sender.email && <div className='text-sm text-description truncate'>{message.sender.email}</div>}
-          </div>
-        </div>
-
-        <div className='grid justify-items-end'>
-          <div className='whitespace-nowrap text-sm text-description p-1'>
+      <div className='grid grid-rows-2 border-be border-subduedSeparator'>
+        <div className='flex is-full'>
+          <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
+            <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
+            {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
+          </Avatar.Label>
+          <div className='whitespace-nowrap text-sm text-description p-1 pie-2'>
             {message.created && formatDate(new Date(), new Date(message.created))}
           </div>
+        </div>
 
-          {/* View mode indicator. */}
+        <div className='flex is-full items-center'>
+          <div className='is-full pis-2 text-sm text-description truncate'>{message.sender.email}</div>
           {viewMode && (
-            <div className='p-1'>
+            <div className='pie-1'>
               <span className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
                 {viewMode === 'plain' && t('message header view mode plain')}
                 {viewMode === 'enriched' && t('message header view mode enriched')}

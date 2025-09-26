@@ -73,7 +73,7 @@
       @apply flex items-center overflow-hidden;
 
       .message__snippet {
-        @apply is-full pis-1 pie-2 truncate text-sm text-description;
+        @apply text-left grow pis-1 pie-2 truncate text-sm text-description;
       }
 
       .message__tags {
