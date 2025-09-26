@@ -14,6 +14,8 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TracingService,
@@ -25,7 +27,7 @@ import { default as fetchDiscordMessages } from './fetch-messages';
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolExecutionServiceFromFunctions(AiToolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -34,7 +36,9 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
+      RemoteFunctionExecutionService.layerMock,
+      FunctionInvocationService.layerTest,
+      FunctionImplementationResolver.layerTest({ functions: [] }),
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
     ),

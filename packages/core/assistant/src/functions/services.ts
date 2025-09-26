@@ -7,7 +7,7 @@ import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { type FunctionDefinition, LocalFunctionExecutionService } from '@dxos/functions';
+import { type FunctionDefinition, FunctionImplementationResolver, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
@@ -32,15 +32,15 @@ export const makeToolResolverFromFunctions = (
 };
 
 export const makeToolExecutionServiceFromFunctions = (
-  functions: FunctionDefinition<any, any>[],
   toolkit: AiToolkit.AiToolkit<AiTool.Any>,
   handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>,
-): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
+): Layer.Layer<ToolExecutionService, never, FunctionInvocationService | FunctionImplementationResolver> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
+      const functionsResolver = yield* FunctionImplementationResolver;
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
-      const localFunctionExecutionService = yield* LocalFunctionExecutionService;
+      const functionInvocationService = yield* FunctionInvocationService;
 
       return {
         handlersFor: (toolkit) => {
@@ -52,12 +52,14 @@ export const makeToolExecutionServiceFromFunctions = (
               }
 
               const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
-              const functionDef = functions.find((fn) => fn.name === functionName);
+              const functionDef = yield* functionsResolver.resolveFunctionImplementation({
+                name: functionName,
+              } as FunctionDefinition<any, any>);
               if (!functionDef) {
                 return yield* Effect.fail(new AiToolNotFoundError(tool.name));
               }
 
-              return yield* localFunctionExecutionService
+              return yield* functionInvocationService
                 .invokeFunction(functionDef, input)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });

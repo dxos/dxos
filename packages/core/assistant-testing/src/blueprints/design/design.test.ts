@@ -17,7 +17,13 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
+import {
+  DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -84,16 +90,17 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
-          makeToolExecutionServiceFromFunctions(
-            [readDocument, updateDocument],
-            testToolkit,
-            testToolkit.toLayer({}) as any,
-          ),
+          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
-          Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(LocalFunctionExecutionService.layer),
-          Layer.provideMerge(TracingService.layerNoop),
+          Layer.provideMerge(
+            Layer.mergeAll(
+              AiServiceTestingPreset('direct'),
+              FunctionInvocationService.layerTest,
+              FunctionImplementationResolver.layerTest({ functions: [readDocument, updateDocument] }),
+              TracingService.layerNoop,
+            ),
+          ),
         ),
       ),
       TestHelpers.taggedTest('llm'),
