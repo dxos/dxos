@@ -88,11 +88,11 @@ const meta = {
         SpacePlugin({}),
         GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
 
         // UI
         ThemePlugin({ tx: defaultTx }),
         AttentionPlugin(),
-        SettingsPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
         StorybookLayoutPlugin({}),

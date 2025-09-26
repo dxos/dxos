@@ -163,10 +163,10 @@ const storybook: Meta<typeof DefaultStory> = {
         SpacePlugin({}),
         GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
 
         // UI
         ThemePlugin({ tx: defaultTx }),
-        SettingsPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
         StorybookLayoutPlugin({}),

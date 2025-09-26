@@ -174,9 +174,11 @@ const meta = {
         }),
         SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
         ThemePlugin({ tx: defaultTx }),
         PreviewPlugin(),
-        SettingsPlugin(),
         StorybookLayoutPlugin({}),
       ],
     }),

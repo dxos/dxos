@@ -79,8 +79,6 @@ export const WithCompanion: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person],
           onClientInitialized: async ({ client }) => {
@@ -91,11 +89,15 @@ export const WithCompanion: Story = {
             await initializeMailbox(client.spaces.default);
           },
         }),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
         InboxPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

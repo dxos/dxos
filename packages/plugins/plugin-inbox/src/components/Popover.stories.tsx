@@ -112,10 +112,12 @@ const meta = {
         }),
         SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
         ThemePlugin({ tx: defaultTx }),
         StorybookLayoutPlugin({}),
         PreviewPlugin(),
-        SettingsPlugin(),
         InboxPlugin(),
       ],
     }),

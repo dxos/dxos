@@ -151,13 +151,13 @@ const meta: Meta<typeof ProjectContainer> = {
         }),
         SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
 
         // UI
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
         AttentionPlugin(),
         PreviewPlugin(),
-        SettingsPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

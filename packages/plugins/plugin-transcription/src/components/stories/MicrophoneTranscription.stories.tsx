@@ -223,10 +223,10 @@ const meta = {
         }),
         SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
 
         // UI
         ThemePlugin({ tx: defaultTx }),
-        SettingsPlugin(),
         PreviewPlugin(),
         TranscriptionPlugin(),
         StorybookLayoutPlugin({}),
