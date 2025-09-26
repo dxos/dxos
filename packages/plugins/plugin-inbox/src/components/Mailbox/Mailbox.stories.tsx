@@ -26,10 +26,10 @@ import { render, withLayout } from '@dxos/storybook-utils';
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
 import { createMessages } from '../../testing';
+import { initializeMailbox } from '../../testing';
 import { Mailbox } from '../../types';
 
 import { Mailbox as MailboxComponent } from './Mailbox';
-import { initializeMailbox } from './testing';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
@@ -54,10 +54,7 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div
-      {...attentionAttrs}
-      className='is-full grid grid-cols-2 grid-rows-2 overflow-hidden divide-x divide-y divide-separator'
-    >
+    <div {...attentionAttrs} className='is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
       <Surface role='article' data={mailboxData} />
       <Surface role='article' data={companionData} />
     </div>
@@ -82,7 +79,6 @@ export const WithCompanion: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person],
           onClientInitialized: async ({ client }) => {
@@ -93,12 +89,15 @@ export const WithCompanion: Story = {
             await initializeMailbox(client.spaces.default);
           },
         }),
-        StorybookLayoutPlugin({}),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
         InboxPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

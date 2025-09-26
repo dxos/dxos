@@ -50,8 +50,6 @@ const meta: Meta<typeof ProjectContainer> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [
             DataType.Project,
@@ -151,11 +149,15 @@ const meta: Meta<typeof ProjectContainer> = {
             });
           },
         }),
-        AttentionPlugin(),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        AttentionPlugin(),
+        PreviewPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

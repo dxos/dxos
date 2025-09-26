@@ -21,8 +21,15 @@ import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, typenameFromQuery } from '@dxos/schema';
 
-import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageCard, MessageContainer } from '../components';
-import { RelatedContacts, RelatedMessages } from '../components/Related';
+import {
+  EventsContainer,
+  MailboxContainer,
+  MailboxObjectSettings,
+  MessageCard,
+  MessageContainer,
+  RelatedContacts,
+  RelatedMessages,
+} from '../components';
 import { meta } from '../meta';
 import { Calendar, InboxAction, Mailbox } from '../types';
 
