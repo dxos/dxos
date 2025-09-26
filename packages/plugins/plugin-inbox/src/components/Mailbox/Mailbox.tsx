@@ -216,6 +216,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
           onClick={handleClick}
           onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
+          focusIndicatorVariant='stack'
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>
