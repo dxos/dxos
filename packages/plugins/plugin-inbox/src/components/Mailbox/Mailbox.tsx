@@ -66,7 +66,13 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       <div class="message__abstract__body">
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
-          ${message.properties?.tags.map((tag: Tag) => `<div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+          ${message.properties?.tags
+            .map(
+              (tag: Tag) => trim`
+                <div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>
+              `,
+            )
+            .join('')}
         </div>
       </div>
     </button>
@@ -76,9 +82,9 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
 const messageCellClassName = 'message';
 
 export type MailboxAction =
-  | { type: 'select'; messageId: string }
   | { type: 'current'; messageId: string }
-  | { type: 'tag-select'; label: string };
+  | { type: 'select'; messageId: string }
+  | { type: 'select-tag'; label: string };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
@@ -110,7 +116,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
       const target = event.target as HTMLElement;
       const label = target.getAttribute('data-label');
       if (label) {
-        onAction?.({ type: 'tag-select', label });
+        onAction?.({ type: 'select-tag', label });
         return;
       }
 

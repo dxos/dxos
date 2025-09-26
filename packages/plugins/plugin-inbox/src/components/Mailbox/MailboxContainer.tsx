@@ -52,10 +52,6 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
-        case 'select': {
-          log.debug(`[select message] ${action.messageId}`);
-          break;
-        }
         case 'current': {
           const message = model.messages.find((message) => message.id === action.messageId);
           void dispatch(
@@ -72,7 +68,12 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           );
           break;
         }
-        case 'tag-select': {
+        case 'select': {
+          log.info('select', { messageId: action.messageId });
+          break;
+        }
+        case 'select-tag': {
+          log.info('select-tag', { label: action.label });
           filterDispatch('tag_selected_from_message');
           model.selectTag(action.label);
           break;
