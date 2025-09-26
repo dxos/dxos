@@ -42,10 +42,11 @@ describe.skip('lm-studio', () => {
           }),
         ];
 
-        const prompt = yield* preprocessPrompt(history);
+        const prompt = yield* preprocessPrompt(history, {
+          system: 'You are a helpful assistant. Be extremely brief with your answers.',
+        });
         const blocks = yield* LanguageModel.streamText({
           prompt,
-          system: 'You are a helpful assistant. Be extremely brief with your answers.',
           disableToolCallResolution: true,
         }).pipe(
           parseResponse({

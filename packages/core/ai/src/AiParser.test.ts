@@ -15,7 +15,7 @@ describe('parser', () => {
     it.effect(
       'single text block',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('Hello, world!')])
+        const result = yield* makeInputStream([...text('Hello, world!')])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -32,7 +32,7 @@ describe('parser', () => {
     it.effect(
       'consecutive text blocks get combined',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('Hello,'), text(' world!')])
+        const result = yield* makeInputStream([...text('Hello,'), ...text(' world!')])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -49,7 +49,7 @@ describe('parser', () => {
     it.effect(
       'status parsed',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('<status>I am thinking...</status>')])
+        const result = yield* makeInputStream([...text('<status>I am thinking...</status>')])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -67,7 +67,7 @@ describe('parser', () => {
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          text('Hello, world!'),
+          ...text('Hello, world!'),
           Response.makePart('tool-call', {
             id: '123',
             name: 'foo',
@@ -98,7 +98,7 @@ describe('parser', () => {
       'unterminated status tag followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
-          text('<status>I am thinking...'),
+          ...text('<status>I am thinking...'),
           Response.makePart('tool-call', {
             id: '123',
             name: 'foo',
@@ -128,12 +128,7 @@ describe('parser', () => {
     it.effect(
       'reasoning gets passed through',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([
-          Response.makePart('reasoning', {
-            text: 'My thoughts are...',
-          }),
-          text('Hello, world!'),
-        ])
+        const result = yield* makeInputStream([...reasoning('My thoughts are...'), ...text('Hello, world!')])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -154,7 +149,7 @@ describe('parser', () => {
     it.effect(
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('<cot>My thoughts are...</cot>')])
+        const result = yield* makeInputStream([...text('<cot>My thoughts are...</cot>')])
           .pipe(parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -171,7 +166,7 @@ describe('parser', () => {
     it.effect(
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream([text('<think>My thoughts are...</think>')])
+        const result = yield* makeInputStream([...text('<think>My thoughts are...</think>')])
           .pipe(parseResponse({ parseReasoningTags: true }))
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -188,7 +183,7 @@ describe('parser', () => {
     it.effect(
       'toolkit',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream(['<toolkit/>'].flatMap(splitByWord).map(text))
+        const result = yield* makeInputStream([...text('<toolkit/>', splitByWord)])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -204,9 +199,9 @@ describe('parser', () => {
     it.effect(
       'multi choice select',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream(
-          ['<select><option>Yes</option><option>No</option></select>'].flatMap(splitByWord).map(text),
-        )
+        const result = yield* makeInputStream([
+          ...text('<select><option>Yes</option><option>No</option></select>', splitByWord),
+        ])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -223,17 +218,13 @@ describe('parser', () => {
     it.effect(
       'works when every character is streamed individually',
       Effect.fn(function* ({ expect }) {
-        const result = yield* makeInputStream(
-          [
-            '<status>I am thinking...</status>',
-            'Hello, world!',
-            '<toolkit/>',
-            '<suggestion>Yes</suggestion>',
-            '<select><option>Yes</option><option>No</option></select>',
-          ]
-            .flatMap(splitByCharacter)
-            .map(text),
-        )
+        const result = yield* makeInputStream([
+          ...text('<status>I am thinking...</status>', splitByCharacter),
+          ...text('Hello, world!', splitByCharacter),
+          ...text('<toolkit/>', splitByCharacter),
+          ...text('<suggestion>Yes</suggestion>', splitByCharacter),
+          ...text('<select><option>Yes</option><option>No</option></select>', splitByCharacter),
+        ])
           .pipe(parseResponse())
           .pipe(Stream.runCollect)
           .pipe(Effect.map(Chunk.toArray));
@@ -264,10 +255,10 @@ describe('parser', () => {
   });
 
   describe('streaming', () => {
-    const PARTS = [
-      Response.makePart('reasoning', { text: 'My thoughts are...' }),
-      text('Hello, '),
-      text('world!'),
+    const PARTS: Response.StreamPart<any>[] = [
+      ...reasoning('My thoughts are...'),
+      ...text('Hello, '),
+      ...text('world!'),
       Response.makePart('tool-call', {
         id: '123',
         name: 'foo',
@@ -316,6 +307,7 @@ describe('parser', () => {
                 toolCallId: '123',
                 name: 'foo',
                 input: '{"bar":"baz"}',
+                providerExecuted: false,
               },
             ] satisfies ContentBlock.Any[]
           ).map((block) => [block]),
@@ -325,10 +317,28 @@ describe('parser', () => {
   });
 });
 
-const makeInputStream = (parts: readonly Response.Part<any>[]): Stream.Stream<Response.Response, never, never> =>
-  Stream.fromIterable(parts).pipe(Stream.map((part) => new Response.Response({ parts: [part] })));
+const makeInputStream = (
+  parts: readonly Response.StreamPart<any>[],
+): Stream.Stream<Response.StreamPart<any>, never, never> => Stream.fromIterable(parts);
 
 const splitByWord = (text: string): string[] => text.split(/([ \t\n]+)/);
 const splitByCharacter = (text: string): string[] => text.split('');
 
-const text = (text: string) => Response.makePart('text', { text });
+let idGenerator = 0;
+const text = (text: string, splitter: (s: string) => string[] = (s) => [s]): Iterable<Response.StreamPart<any>> => {
+  const id = String(idGenerator++);
+  return [
+    Response.makePart('text-start', { id }),
+    ...splitter(text).map((delta) => Response.makePart('text-delta', { id, delta: text })),
+    Response.makePart('text-end', { id }),
+  ];
+};
+
+const reasoning = (text: string): Iterable<Response.StreamPart<any>> => {
+  const id = String(idGenerator++);
+  return [
+    Response.makePart('reasoning-start', { id }),
+    Response.makePart('reasoning-delta', { id, delta: text }),
+    Response.makePart('reasoning-end', { id }),
+  ];
+};

@@ -31,7 +31,7 @@ const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
 }));
 
 const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
-  handlersFor: <Tools extends Tool.Any>(toolkit: Toolkit.Toolkit<Tools>) =>
+  handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
     toolkit.of({
       Calculator: Effect.fn(function* ({ input }) {
         const result = (() => {
@@ -75,7 +75,7 @@ describe('ToolResolverService', () => {
         const toolkit = Toolkit.merge(dynamicToolkit, UserToolkit);
         const results = Effect.gen(function* () {
           return {
-            sum: yield* callTool(toolkit, 'Calculator' as any, { input: '1 + 1' }),
+            sum: yield* callTool(toolkit, 'Calculator', { input: '1 + 1' }),
             age: yield* callTool(toolkit, 'test/age', {}),
           };
         });
@@ -88,9 +88,9 @@ describe('ToolResolverService', () => {
   );
 });
 
-const callTool = <Tools extends Tool.Any>(
+const callTool = <Tools extends Record<string, Tool.Any>, Name extends keyof Tools>(
   toolkit: Toolkit.Toolkit<Tools>,
-  toolName: Tool.Name<Tools>,
-  toolParams: Tool.Parameters<Tools>,
-): Effect.Effect<Tool.Success<Tools>, Tool.Failure<Tools>, Tool.Context<Tools>> =>
+  toolName: Name,
+  toolParams: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
+): Effect.Effect<Tool.Success<Tools[Name]>, Tool.Failure<Tools[Name]>, Tool.Requirements<Tools[Name]>> =>
   toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolParams) as Effect.Effect<any, any, any>));

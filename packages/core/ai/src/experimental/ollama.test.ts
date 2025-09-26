@@ -36,10 +36,11 @@ describe('ollama', () => {
           }),
         );
 
-        const prompt = yield* preprocessPrompt(history);
+        const prompt = yield* preprocessPrompt(history, {
+          system: 'You are a helpful assistant.',
+        });
         const blocks = yield* LanguageModel.streamText({
           prompt,
-          system: 'You are a helpful assistant.',
           disableToolCallResolution: true,
         }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
         const message = Obj.make(DataType.Message, {

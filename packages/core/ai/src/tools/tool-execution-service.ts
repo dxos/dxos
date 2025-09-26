@@ -14,7 +14,9 @@ import { AiToolNotFoundError } from '../errors';
 export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
   ToolExecutionService,
   {
-    readonly handlersFor: <Tools extends Tool.Any>(toolkit: Toolkit.Toolkit<Tools>) => Tool.ToHandler<Tools>;
+    readonly handlersFor: <Tools extends Record<string, Tool.Any>>(
+      toolkit: Toolkit.Toolkit<Tools>,
+    ) => Toolkit.WithHandler<Tools>;
   }
 >() {
   static layerEmpty = Layer.succeed(ToolExecutionService, {

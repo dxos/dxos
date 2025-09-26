@@ -19,11 +19,12 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
   });
 
-  static resolve = Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
+  static resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError, ToolResolverService> =
+    Effect.serviceFunctionEffect(ToolResolverService, (_) => _.resolve);
 
   static resolveToolkit: (
     ids: ToolId[],
-  ) => Effect.Effect<Toolkit.Toolkit<Tool.Any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
+  ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
       const tools = yield* Effect.all(ids.map(ToolResolverService.resolve));
       return Toolkit.make(...tools);
