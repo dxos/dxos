@@ -15,11 +15,10 @@ const ProjectItem = ({ item, projectionModel }: ItemProps) => {
 };
 
 export const ProjectContainer = ({ project }: { project: DataType.Project; role: string }) => {
-  const handleAddItem = useCallback(() => console.log('[project container]', 'To implement: handle add item'), []);
   const handleAddColumn = useCallback(() => console.log('[project container]', 'To implement: handle add column'), []);
   return (
     <StackItem.Content>
-      <Project.Root Item={ProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
+      <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>
