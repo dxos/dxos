@@ -20,7 +20,7 @@
     "@storybook/builder-vite": "^9.1.8",
     "@storybook/web-components-vite": "^9.1.8",
     "eslint-plugin-storybook": "^9.1.6",
-    "lit": "^3.2.0",
+    "lit": "^3.3.1",
     "storybook": "^9.1.8",
     "vite": "7.1.7"
   }
