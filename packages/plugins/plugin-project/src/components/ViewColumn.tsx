@@ -52,11 +52,10 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     return null;
   }
 
-  // TODO(wittjosiah): This is still reserving space for the footer, even if there is no footer.
   return (
     <CardStack.Root asChild>
       <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
-        <CardStack.Content classNames='density-fine'>
+        <CardStack.Content classNames='density-fine' footer={false}>
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow truncate'>{view.name ?? t('untitled view title')}</h3>
           </StackItem.Heading>
