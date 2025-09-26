@@ -109,21 +109,15 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending]);
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
 
         // Execute the stream request.
         const blocks = yield* LanguageModel.streamText({
           prompt,
-          system,
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
-          Stream.catchTag(
-            'AiError',
-            Effect.fnUntraced(function* (err) {
-              return yield* Effect.fail(yield* mapAiError(err));
-            }),
-          ),
+          // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
             onBlock: (block) => observer.onBlock(block),

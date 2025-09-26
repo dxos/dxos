@@ -29,14 +29,14 @@ export const createToolkit = <Tools extends Record<string, Tool.Any>>({
       ...toolIds,
     ]);
 
-    const blueprintToolkitHandler: Context.Context<Tool.ToHandler<Tool.Any>> = yield* blueprintToolkit.toContext(
+    const blueprintToolkitHandler: Context.Context<Tool.HandlersFor<any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
     const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
     return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
-      Toolkit.ToHandler<any>,
+      Toolkit.WithHandler<any>,
       never,
-      Tool.ToHandler<Tools>
+      Toolkit.HandlersFrom<Tools>
     >;
   });
