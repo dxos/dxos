@@ -198,7 +198,6 @@ export const Collapsible: Story = {
   },
   args: {
     variant: 'unordered',
-    // toggleOpenLabel: 'Open/close storybook list item', // TODO(burdon): ???
   },
 };
 
@@ -229,11 +228,11 @@ export const SelectableListbox: Story = {
             key={id}
             tabIndex={0}
             selected={selectedId === id}
-            classNames={mx('items-center', ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
+            classNames={mx(ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
             onClick={() => setSelectedId(id)}
             onKeyUp={(event) => handleKeyUp(event, id)}
           >
-            <ListItem.Heading classNames='grow'>Lorem ipsum dolor sit amet</ListItem.Heading>
+            <ListItem.Heading classNames='flex pis-1 pie-1 items-center grow truncate'>{text}</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>
