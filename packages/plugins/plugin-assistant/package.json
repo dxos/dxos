@@ -104,7 +104,7 @@
     "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.28.2",
+    "@effect/ai": "0.28.3",
     "@effect/ai-anthropic": "^0.18.1",
     "@effect/ai-openai": "^0.31.1",
     "@effect/experimental": "0.55.0",

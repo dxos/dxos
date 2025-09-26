@@ -74,7 +74,7 @@
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.28.2",
+    "@effect/ai": "0.28.3",
     "@effect/experimental": "0.55.0",
     "@peermetrics/webrtc-stats": "5.7.1",
     "@preact-signals/safe-react": "^0.9.0",

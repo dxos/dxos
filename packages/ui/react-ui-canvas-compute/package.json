@@ -68,7 +68,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect/ai": "0.28.2",
+    "@effect/ai": "0.28.3",
     "@effect/experimental": "0.55.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",

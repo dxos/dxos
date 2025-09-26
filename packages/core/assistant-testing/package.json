@@ -45,7 +45,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.28.2",
+    "@effect/ai": "0.28.3",
     "@effect/experimental": "0.55.0",
     "@effect/platform": "^0.91.1",
     "dfx": "^0.124.1",
