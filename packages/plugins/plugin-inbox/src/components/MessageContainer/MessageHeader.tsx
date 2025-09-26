@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Avatar, Button, DxAnchorActivate, Icon } from '@dxos/react-ui';
+import { Avatar, DxAnchorActivate, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
@@ -38,13 +38,12 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
     [contactDxn, message.sender.name],
   );
 
-  // TODO(burdon): Subject?
+  /* 
   const SenderRoot = contactDxn ? Button : 'div';
   const senderProps = contactDxn
     ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
     : { className: 'p-0 hover:bg-transparent', 'data-variant': 'ghost' };
 
-  /* 
     <SenderRoot {...(senderProps as any)}>
       <div role='none' className='p-1'>
         <Avatar.Content
