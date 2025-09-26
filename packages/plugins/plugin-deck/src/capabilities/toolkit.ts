@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-class Toolkit extends Toolkit.make(
+class DeckToolkit extends Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -25,7 +25,7 @@ class Toolkit extends Toolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    DeckToolkit.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
           const state = context.getCapability(DeckCapabilities.DeckState);
@@ -50,6 +50,6 @@ class Toolkit extends Toolkit.make(
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, DeckToolkit),
+  contributes(Capabilities.ToolkitHandler, DeckToolkit.layer(context)),
 ];

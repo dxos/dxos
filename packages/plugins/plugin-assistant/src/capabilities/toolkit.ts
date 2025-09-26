@@ -17,7 +17,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends Toolkit.make(
+class AssistantToolkit extends Toolkit.make(
   Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
@@ -29,7 +29,8 @@ class Toolkit extends Toolkit.make(
     },
     success: Schema.Void,
     failure: Schema.Never,
-  }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
+    dependencies: [AiContextService, DatabaseService],
+  }),
 
   Tool.make('get-schemas', {
     description: trim`
@@ -74,7 +75,7 @@ class Toolkit extends Toolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    AssistantToolkit.toLayer({
       'add-to-context': Effect.fnUntraced(function* ({ id }) {
         const { binder } = yield* AiContextService;
         const { db } = yield* DatabaseService;
@@ -158,6 +159,6 @@ class Toolkit extends Toolkit.make(
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, AssistantToolkit),
+  contributes(Capabilities.ToolkitHandler, AssistantToolkit.layer(context)),
 ];

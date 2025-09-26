@@ -69,7 +69,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         const allFunctions = functions.flat();
         // TODO(wittjosiah): Don't cast.
-        const toolkit = Toolkit.merge(...toolkits) as Toolkit.Any as Toolkit.Toolkit<Tool.Any>;
+        const toolkit = Toolkit.merge(...toolkits) as Toolkit.Toolkit<any>;
         const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
 
         const space = client.spaces.get(spaceId);

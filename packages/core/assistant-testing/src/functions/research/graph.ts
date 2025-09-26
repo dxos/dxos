@@ -107,7 +107,8 @@ export class LocalSearchToolkit extends Toolkit.make(
     },
     success: Schema.Unknown,
     failure: Schema.Never,
-  }).addRequirement<DatabaseService>(),
+    dependencies: [DatabaseService],
+  }),
 ) {}
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
@@ -150,10 +151,8 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-    })
-      .addRequirement<DatabaseService>()
-      .addRequirement<ContextQueueService>()
-      .annotateContext(Context.make(GraphWriterSchema, { schema })),
+      dependencies: [DatabaseService, ContextQueueService],
+    }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
 

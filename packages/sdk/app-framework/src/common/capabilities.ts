@@ -155,6 +155,8 @@ export namespace Capabilities {
    */
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
+  // TODO(dmaretskyi): Consider combining Toolkit and ToolkitHandler for type-safe context.
+
   /**
    * @category Capability
    */
@@ -163,7 +165,7 @@ export namespace Capabilities {
   /**
    * @category Capability
    */
-  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.ToHandler<Tool.Tool<any>>, never, never>>(
+  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.Handler<any>, never, never>>(
     'dxos.org/app-framework/capability/ai-toolkit-handler',
   );
 

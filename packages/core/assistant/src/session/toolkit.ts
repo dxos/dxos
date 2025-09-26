@@ -5,7 +5,7 @@
 import { type Tool, Toolkit } from '@effect/ai';
 import { type Context, Effect } from 'effect';
 
-import { ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
+import { type AiToolNotFoundError, ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { isNotFalsy } from '@dxos/util';
 
@@ -22,7 +22,11 @@ export const createToolkit = <Tools extends Record<string, Tool.Any>>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
-}: ToolkitParams<Tools>) =>
+}: ToolkitParams<Tools>): Effect.Effect<
+  Toolkit.WithHandler<any>,
+  AiToolNotFoundError,
+  ToolResolverService | ToolExecutionService | Toolkit.HandlersFrom<Tools>
+> =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
       ...blueprints.flatMap(({ tools }) => tools),

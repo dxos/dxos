@@ -13,7 +13,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { MarkdownAction } from '../types';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends Toolkit.make(
+class MarkdownToolkit extends Toolkit.make(
   Tool.make('create-document', {
     description: 'Creates a new markdown document.',
     parameters: {
@@ -26,7 +26,7 @@ class Toolkit extends Toolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    MarkdownToolkit.toLayer({
       'create-document': ({ name, content }) => {
         const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
@@ -42,6 +42,6 @@ class Toolkit extends Toolkit.make(
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, MarkdownToolkit),
+  contributes(Capabilities.ToolkitHandler, MarkdownToolkit.layer(context)),
 ];

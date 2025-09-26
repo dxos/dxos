@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 import { ThreadAction } from '../types';
 
 // TODO(wittjosiah): How to make this work for more than Documents?
-class Toolkit extends Toolkit.make(
+class ThreadToolkit extends Toolkit.make(
   Tool.make('add-proposals', {
     description: trim`
       Proposes a set of changes to a document.
@@ -32,7 +32,7 @@ class Toolkit extends Toolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    ThreadToolkit.toLayer({
       'add-proposals': ({ id, diffs: _diffs }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
@@ -73,6 +73,6 @@ class Toolkit extends Toolkit.make(
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, ThreadToolkit),
+  contributes(Capabilities.ToolkitHandler, ThreadToolkit.layer(context)),
 ];

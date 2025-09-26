@@ -23,7 +23,7 @@ import { AiContextBinder, AiContextService, type ContextBinding } from './contex
 
 export type AiConversationRunRequirements<Tools extends Record<string, Tool.Any>> =
   | AiSessionRunRequirements
-  | Tool.HandlersFor<Tools>;
+  | Toolkit.HandlersFrom<Tools>;
 
 export interface AiConversationRunParams {
   prompt: string;
