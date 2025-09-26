@@ -54,10 +54,7 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div
-      {...attentionAttrs}
-      className='is-full grid grid-cols-2 grid-rows-2 overflow-hidden divide-x divide-y divide-separator'
-    >
+    <div {...attentionAttrs} className='is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
       <Surface role='article' data={mailboxData} />
       <Surface role='article' data={companionData} />
     </div>

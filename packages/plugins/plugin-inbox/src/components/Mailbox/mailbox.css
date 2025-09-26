@@ -9,8 +9,7 @@
 
   & > .dx-grid__cell__content,
   &.message__card {
-    /** TODO(burdon): Reconcile with styles.ts (mailboxGrid) */
-    @apply grid grid-cols-[3rem_1fr] gap-1 p-1 border-0;
+    @apply grid grid-cols-[3rem_1fr] gap-1 border-0;
 
     &::before,
     &::after {
@@ -67,7 +66,7 @@
 
       .message__abstract__from {
         flex: 1 1 0;
-        @apply text-base font-medium truncate;
+        @apply text-base font-medium truncate pbs-0.5;
       }
 
       .message__abstract__date {

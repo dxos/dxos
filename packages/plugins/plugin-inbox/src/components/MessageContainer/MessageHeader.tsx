@@ -8,11 +8,9 @@ import { Avatar, Button, DxAnchorActivate, Icon } from '@dxos/react-ui';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, toHue } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { mailboxGrid } from '../styles';
-import { formatDate, hashString } from '../util';
+import { formatDate } from '../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
@@ -41,17 +39,17 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
     [contactDxn, message.sender.name],
   );
 
+  // TODO(burdon): Subject?
   const SenderRoot = contactDxn ? Button : 'div';
   const senderProps = contactDxn
     ? { variant: 'ghost', classNames: 'pli-2 gap-2 text-start', onClick: handleSenderClick }
     : { className: 'p-0 hover:bg-transparent', 'data-variant': 'ghost' };
 
-  // TODO(burdon): Doens't line up with grid.
   return (
     <div className='flex border-be border-subduedSeparator'>
       <Avatar.Root>
-        <div className={mx('is-full', mailboxGrid)}>
-          <SenderRoot {...(senderProps as any)}>
+        <div className={mx('is-full p-2')}>
+          {/* <SenderRoot {...(senderProps as any)}>
             <div role='none' className='p-1'>
               <Avatar.Content
                 fallback={message.sender.name ? getFirstTwoRenderableChars(message.sender.name).join('') : '?'}
@@ -61,30 +59,33 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
                 size={10}
               />
             </div>
-          </SenderRoot>
+          </SenderRoot> */}
           <div role='none'>
             <Avatar.Label classNames='flex items-center gap-1'>
-              <h3 className='truncate'>{message.sender.name || 'Unknown'}</h3>
+              <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
               {contactDxn && <Icon icon='ph--caret-down--bold' size={3} />}
             </Avatar.Label>
             {message.sender.email && <div className='text-sm text-description truncate'>{message.sender.email}</div>}
           </div>
         </div>
-      </Avatar.Root>
 
-      <div className='grid w-[12rem] justify-items-end'>
-        <div className='text-sm text-description p-1'>
-          {message.created && formatDate(new Date(), new Date(message.created))}
-        </div>
-        {/* View mode indicator. */}
-        {viewMode && (
-          <div className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
-            {viewMode === 'plain' && t('message header view mode plain')}
-            {viewMode === 'enriched' && t('message header view mode enriched')}
-            {viewMode === 'plain-only' && t('message header view mode plain only')}
+        <div className='grid justify-items-end'>
+          <div className='whitespace-nowrap text-sm text-description p-1'>
+            {message.created && formatDate(new Date(), new Date(message.created))}
           </div>
-        )}
-      </div>
+
+          {/* View mode indicator. */}
+          {viewMode && (
+            <div className='p-1'>
+              <span className='dx-tag' data-hue={viewMode === 'enriched' ? 'emerald' : 'neutral'}>
+                {viewMode === 'plain' && t('message header view mode plain')}
+                {viewMode === 'enriched' && t('message header view mode enriched')}
+                {viewMode === 'plain-only' && t('message header view mode plain only')}
+              </span>
+            </div>
+          )}
+        </div>
+      </Avatar.Root>
     </div>
   );
 };
