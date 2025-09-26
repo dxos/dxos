@@ -26,10 +26,10 @@ import { render, withLayout } from '@dxos/storybook-utils';
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
 import { createMessages } from '../../testing';
+import { initializeMailbox } from '../../testing';
 import { Mailbox } from '../../types';
 
 import { Mailbox as MailboxComponent } from './Mailbox';
-import { initializeMailbox } from './testing';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));

@@ -12,11 +12,14 @@ import { intersectBy } from '@dxos/util';
  */
 export type SortDirection = 'asc' | 'desc';
 
-// TODO(ZaymonFC): Switch to generalized object tag pattern when that's available.
 /**
  * Tag structure within a message
  */
-export type Tag = { label: string; hue: string };
+// TODO(ZaymonFC): Switch to generalized object tag pattern when that's available.
+export type Tag = {
+  label: string;
+  hue: string;
+};
 
 /**
  * Sort by date comparison function.
@@ -33,7 +36,6 @@ const sortByDate =
  */
 const createTagToMessageIndex = (messages: DataType.Message[]): Map<string, DataType.Message[]> => {
   const tagToMessagesMap = new Map<string, DataType.Message[]>();
-
   for (const message of messages) {
     const messageTags = message.properties?.tags || [];
     for (const tag of messageTags) {
@@ -54,7 +56,6 @@ const createTagToMessageIndex = (messages: DataType.Message[]): Map<string, Data
  */
 const createTagIndex = (messages: DataType.Message[]): Map<string, Tag> => {
   const tagIndex = new Map<string, Tag>();
-
   for (const message of messages) {
     const messageTags = message.properties?.tags || [];
     for (const tag of messageTags) {
@@ -98,12 +99,11 @@ export class MailboxModel {
 
     this._filteredMessages = computed(() => {
       const selectedTagLabels = this._selectedTagLabels.value;
-      const tagToMessagesIndex = this._tagToMessagesIndex.value;
-
       if (selectedTagLabels.length === 0) {
         return this._messages.value;
       }
 
+      const tagToMessagesIndex = this._tagToMessagesIndex.value;
       const messagesForSelectedTags = selectedTagLabels.map((label) => tagToMessagesIndex.get(label) ?? []);
       return intersectBy(messagesForSelectedTags, (message) => message.id);
     });

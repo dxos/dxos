@@ -3,17 +3,48 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
+import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { Mailbox } from '../../types';
+import { type Tag } from '../components';
+import { Mailbox } from '../types';
 
-const EXAMPLE_TAGS = [
-  { label: 'important', hue: 'amber' },
+const TAGS: Tag[] = [
+  { label: 'important', hue: 'green' },
+  { label: 'investor', hue: 'purple' },
+  { label: 'team', hue: 'green' },
+  { label: 'eng', hue: 'blue' },
   { label: 'work', hue: 'emerald' },
-  { label: 'personal', hue: 'indigo' },
+  { label: 'personal', hue: 'pink' },
 ];
+
+const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
+
+export const createMessages = (count = 10) => {
+  return faker.helpers.multiple(
+    () =>
+      Obj.make(DataType.Message, {
+        created: faker.date.recent().toISOString(),
+        sender: {
+          identityDid: IdentityDid.random(),
+          name: faker.person.fullName(),
+        },
+        blocks: [
+          {
+            _tag: 'text',
+            text: faker.lorem.paragraph(),
+          },
+        ],
+        properties: {
+          subject: faker.commerce.productName(),
+          tags: faker.helpers.uniqueArray(TAGS, faker.number.int(3)).sort(sortTags),
+        },
+      }),
+    { count },
+  );
+};
 
 /**
  * Creates a message with plain and enriched content blocks, where the enriched version
@@ -45,7 +76,7 @@ export const createMessage = (space?: Space) => {
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
-  const tags = faker.helpers.randomSubset(EXAMPLE_TAGS, { min: 0, max: EXAMPLE_TAGS.length });
+  const tags = faker.helpers.randomSubset(TAGS, { min: 0, max: TAGS.length });
 
   const hasBothWorkAndPersonal =
     tags.some((tag) => tag.label === 'work') && tags.some((tag) => tag.label === 'personal');

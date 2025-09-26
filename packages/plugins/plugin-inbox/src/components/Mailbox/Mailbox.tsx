@@ -24,8 +24,7 @@ import { getMessageProps } from '../util';
 import { type Tag } from './model';
 
 const ROW_SIZES = {
-  DEFAULT: 56,
-  WITH_TAG: 76,
+  DEFAULT: 60,
 };
 
 const messageRowDefault = {
@@ -59,19 +58,18 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-inbox-action="current-message"
       data-message-id="${id}"
     >
-      <p class="message__abstract__heading">
-        <span class="message__abstract__from">${from}</span>
-        <span class="message__abstract__date">${date}</span>
-      </p>
-      <p class="message__abstract__body">${subject}</p>
-    ${
-      message.properties?.tags
-        ? `<div class="message__tag-row">
-            ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
-          </div>`
-        : ''
-    }
-    </button>`;
+      <div class="message__abstract__heading">
+        <div class="message__abstract__from">${from}</div>
+        <div class="message__abstract__date">${date}</div>
+      </div>
+      <div class="message__abstract__body">
+        <div class="message__snippet">${subject}</div>
+        <div class="message__tags">
+          ${message.properties?.tags.map((tag: Tag) => `<div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
+        </div>
+      </div>
+    </button>
+  `;
 };
 
 const messageCellClassName = 'message';
@@ -167,11 +165,8 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const gridRows = useMemo(() => {
     return messages.reduce(
       (acc, _, idx) => {
-        const message = messages[idx];
-        const hasTags = message.properties?.tags && message.properties.tags.length > 0;
-
         acc[idx] = {
-          size: hasTags ? ROW_SIZES.WITH_TAG : ROW_SIZES.DEFAULT,
+          size: ROW_SIZES.DEFAULT,
         };
 
         return acc;

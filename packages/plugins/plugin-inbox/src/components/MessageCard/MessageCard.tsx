@@ -9,7 +9,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 import { getFirstTwoRenderableChars } from '@dxos/util';
 
-import { type Tag } from '../Mailbox/model';
+import { type Tag } from '../Mailbox';
 import { getMessageProps } from '../util';
 
 export type MessageCardProps = {
