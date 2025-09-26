@@ -59,9 +59,9 @@ import {
   ChessContainer,
   CommentsContainer,
   type ComponentProps,
+  ExecutionGraphContainer,
   GraphContainer,
   InvocationsContainer,
-  LoggingContainer,
   MessageContainer,
   ProjectContainer,
   PromptContainer,
@@ -477,13 +477,13 @@ export const WithBoard: Story = {
 
 export const WithResearch: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), TablePlugin()],
-    config: config.persistent,
+    plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -615,7 +615,7 @@ export const WithChessTrigger: Story = {
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
-    config: config.local,
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -658,9 +658,8 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     deckComponents: [
-      [ResearchInputStack],
-      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
-      [ResearchOutputStack],
+      [ResearchInputStack, ResearchOutputStack],
+      [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },

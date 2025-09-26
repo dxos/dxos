@@ -4,6 +4,7 @@
 
 export * from './conversation';
 export * from './diff';
+export * from './execution-graph';
 export * from './functions';
 export * from './session';
 export * from './templates';
