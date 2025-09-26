@@ -24,7 +24,7 @@ export const SERVICES_CONFIG: Record<string, Runtime.Services> = {
       server: 'https://ai-service.dxos.workers.dev',
     },
     edge: {
-      url: 'https://edge.dxos.workers.dev',
+      url: 'https://edge-main.dxos.workers.dev',
     },
   },
 };
