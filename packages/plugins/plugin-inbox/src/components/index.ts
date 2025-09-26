@@ -5,9 +5,9 @@
 import { lazy } from 'react';
 
 export * from './Mailbox';
-export { MailboxObjectSettings } from './Mailbox';
+export * from './Related';
 
 export const EventsContainer = lazy(() => import('./Calendar'));
 export const MailboxContainer = lazy(() => import('./Mailbox'));
-export const MessageContainer = lazy(() => import('./MessageContainer'));
 export const MessageCard = lazy(() => import('./MessageCard'));
+export const MessageContainer = lazy(() => import('./MessageContainer'));

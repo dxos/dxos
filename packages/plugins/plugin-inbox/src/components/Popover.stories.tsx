@@ -91,7 +91,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/Related',
+  title: 'plugins/plugin-inbox/Popover',
   decorators: [
     withPluginManager({
       plugins: [
