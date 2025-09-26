@@ -23,7 +23,9 @@ export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const projection = useMemo(() => {
     if (schema) {
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      return new ProjectionModel(jsonSchema, view.projection);
+      const projection = new ProjectionModel(jsonSchema, view.projection);
+      projection.normalizeView();
+      return projection;
     }
   }, [view.projection, JSON.stringify(schema)]);
 

@@ -136,6 +136,7 @@ export const createView = ({
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
+  projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
   const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
   const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
@@ -212,7 +213,7 @@ export const createViewWithReferences = async ({
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
-  const view = await createView({
+  const view = createView({
     name,
     query,
     jsonSchema,

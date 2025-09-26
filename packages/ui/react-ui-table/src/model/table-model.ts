@@ -141,6 +141,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     super();
     this._view = view;
     this._projection = projection ?? new ProjectionModel(schema, view.projection);
+    this._projection.normalizeView();
 
     // TODO(ZaymonFC): Use our more robust config merging module?
     this._features = { ...defaultFeatures, ...features };
