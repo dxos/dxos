@@ -12,6 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -28,7 +29,13 @@ type StoryProps = MarkdownEditorProps & {
 const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]); // TODO(burdon): Remove dependency on createObject.
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
-  return <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />;
+  return (
+    <Stack orientation='horizontal' rail={false}>
+      <StackItem.Root item={{ id: 'story' }}>
+        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
+      </StackItem.Root>
+    </Stack>
+  );
 };
 
 const meta = {
