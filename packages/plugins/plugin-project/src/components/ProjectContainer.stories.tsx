@@ -42,9 +42,9 @@ const DefaultStory = () => {
   }
 
   return (
-    <Stack orientation='horizontal' size='split' rail={false}>
+    <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
       <ProjectContainer role='article' project={project} />
-      <ProjectSettings project={project} />
+      <ProjectSettings project={project} classNames='border-is border-separator' />
     </Stack>
   );
 };

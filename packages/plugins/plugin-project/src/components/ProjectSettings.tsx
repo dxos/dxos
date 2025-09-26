@@ -9,10 +9,11 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
+import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel, createView } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
@@ -23,14 +24,14 @@ import { meta } from '../meta';
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
-export type ProjectSettingsProps = {
+export type ProjectSettingsProps = ThemedClassName<{
   project: DataType.Project;
-};
+}>;
 
 /**
  * ProjectSettings allows for editing the views of a project.
  */
-export const ProjectSettings = ({ project }: ProjectSettingsProps) => {
+export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(project);
@@ -105,8 +106,8 @@ export const ProjectSettings = ({ project }: ProjectSettingsProps) => {
   );
 
   return (
-    <div role='none' className='mbs-cardSpacingBlock'>
-      <h2 className={inputTextLabel}>{t('views label')}</h2>
+    <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
+      <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
 
       <List.Root<DataType.View>
         items={views}
@@ -116,7 +117,7 @@ export const ProjectSettings = ({ project }: ProjectSettingsProps) => {
       >
         {({ items: views }) => (
           <>
-            <div role='list' className={listGrid}>
+            <div role='list' className={mx(listGrid, cardChrome)}>
               {views.map((view) => (
                 <List.Item<DataType.View>
                   key={view.id}
