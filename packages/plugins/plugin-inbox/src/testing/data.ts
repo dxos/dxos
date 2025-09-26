@@ -44,15 +44,22 @@ export const createMessages = (count = 10) => {
   );
 };
 
+type CreateOptions = {
+  paragraphs: number;
+  links: number;
+};
+
 /**
  * Creates a message with plain and enriched content blocks, where the enriched version
  * contains links to contacts and the plain version has the same content with links stripped.
  */
-export const createMessage = (
-  space?: Space,
-  options: { paragraphs?: number; links?: number } = { paragraphs: 5, links: 5 },
-) => {
-  let text = Array.from({ length: options.paragraphs ?? 1 }, () => faker.lorem.paragraph()).join('\n\n');
+export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }) => {
+  let text = faker.helpers
+    .multiple(() => faker.lorem.paragraph(faker.number.int(3)), {
+      count: options.paragraphs || 1,
+    })
+    .join('\n\n');
+
   let enrichedText = text;
 
   if (space) {
@@ -65,7 +72,6 @@ export const createMessage = (
         const fullName = faker.person.fullName();
         const obj = space.db.add(Obj.make(DataType.Person, { fullName }));
         const dxn = Ref.make(obj).dxn.toString();
-
         const position = Math.floor(Math.random() * words.length);
         words.splice(position, 0, `[${fullName}](${dxn})`);
       }
@@ -79,21 +85,7 @@ export const createMessage = (
   }
 
   const tags = faker.helpers.randomSubset(TAGS, { min: 0, max: TAGS.length });
-  const hasBothWorkAndPersonal =
-    tags.some((tag) => tag.label === 'work') && tags.some((tag) => tag.label === 'personal');
-
-  if (hasBothWorkAndPersonal) {
-    const indexToRemove = tags.findIndex((tag) => tag.label === (Math.random() > 0.5 ? 'work' : 'personal'));
-    tags.splice(indexToRemove, 1);
-  }
-
-  // Maybe spam.
-  if (Math.random() < 0.05) {
-    tags.length = 0;
-    tags.push({ label: 'spam', hue: 'error' });
-  }
-
-  tags.sort((a, b) => a.label.localeCompare(b.label));
+  tags.sort(sortTags);
 
   return Obj.make(DataType.Message, {
     created: faker.date.recent().toISOString(),
