@@ -184,8 +184,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -193,9 +191,13 @@ const meta = {
           },
         }),
         SpacePlugin({}),
-        PreviewPlugin(),
-        SettingsPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        PreviewPlugin(),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),

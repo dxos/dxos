@@ -91,12 +91,10 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/Related',
+  title: 'plugins/plugin-inbox/Popover',
   decorators: [
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -112,10 +110,14 @@ const meta = {
             space.db.add(mailbox);
           },
         }),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
+        PreviewPlugin(),
         InboxPlugin(),
       ],
     }),

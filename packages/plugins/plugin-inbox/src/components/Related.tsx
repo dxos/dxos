@@ -11,15 +11,18 @@ import { type DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const RelatedContacts = ({
-  contacts,
-  onContactClick,
-}: {
+export type RelatedContactsProps = {
   contacts: DataType.Person[];
   onContactClick?: (contact: DataType.Person) => void;
-}) => {
+};
+
+export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
   const { t } = useTranslation(meta.id);
-  return contacts.length ? (
+  if (!contacts.length) {
+    return null;
+  }
+
+  return (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
       <Card.Chrome>
@@ -40,18 +43,21 @@ export const RelatedContacts = ({
         ))}
       </Card.Chrome>
     </>
-  ) : null;
+  );
 };
 
-export const RelatedMessages = ({
-  messages,
-  onMessageClick,
-}: {
+export type RelatedMessagesProps = {
   messages: DataType.Message[];
   onMessageClick?: (message: DataType.Message) => void;
-}) => {
+};
+
+export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {
   const { t } = useTranslation(meta.id);
-  return messages.length ? (
+  if (!messages.length) {
+    return null;
+  }
+
+  return (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related messages title')}</h3>
       <Card.Chrome>
@@ -68,5 +74,5 @@ export const RelatedMessages = ({
         ))}
       </Card.Chrome>
     </>
-  ) : null;
+  );
 };

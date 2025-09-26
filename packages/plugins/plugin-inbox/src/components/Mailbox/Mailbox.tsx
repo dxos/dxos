@@ -4,9 +4,10 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, type WheelEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridPlaneCells,
@@ -24,8 +25,7 @@ import { getMessageProps } from '../util';
 import { type Tag } from './model';
 
 const ROW_SIZES = {
-  DEFAULT: 56,
-  WITH_TAG: 76,
+  DEFAULT: 60,
 };
 
 const messageRowDefault = {
@@ -59,42 +59,48 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-inbox-action="current-message"
       data-message-id="${id}"
     >
-      <p class="message__abstract__heading">
-        <span class="message__abstract__from">${from}</span>
-        <span class="message__abstract__date">${date}</span>
-      </p>
-      <p class="message__abstract__body">${subject}</p>
-    ${
-      message.properties?.tags
-        ? `<div class="message__tag-row">
-            ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
-          </div>`
-        : ''
-    }
-    </button>`;
+      <div class="message__abstract__heading">
+        <div class="message__abstract__from">${from}</div>
+        <div class="message__abstract__date">${date}</div>
+      </div>
+      <div class="message__abstract__body">
+        <div class="message__snippet">${subject}</div>
+        <div class="message__tags">
+          ${message.properties?.tags
+            .map(
+              (tag: Tag) => trim`
+                <div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>
+              `,
+            )
+            .join('')}
+        </div>
+      </div>
+    </button>
+  `;
 };
 
 const messageCellClassName = 'message';
 
 export type MailboxAction =
-  | { type: 'select'; messageId: string }
   | { type: 'current'; messageId: string }
-  | { type: 'tag-select'; label: string };
+  | { type: 'select'; messageId: string }
+  | { type: 'select-tag'; label: string };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = {
   id: string;
-  messages: DataType.Message[];
-  ignoreAttention?: boolean;
-  currentMessageId?: string;
-  onAction?: MailboxActionHandler;
   role?: string;
+  messages: DataType.Message[];
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, role }: MailboxProps) => {
+export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
+  const [_, setRow, rowRef] = useStateWithRef<number>(-1);
 
   const handleResize = useCallback<OnResizeCallback>(
     ({ width }) => width && setColumnDefault({ grid: { size: width } }),
@@ -105,21 +111,12 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     onResize: handleResize,
   });
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
-
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
+  const handleClick = useCallback<NonNullable<GridContentProps['onClick']>>(
+    (event) => {
       const target = event.target as HTMLElement;
       const label = target.getAttribute('data-label');
       if (label) {
-        onAction?.({ type: 'tag-select', label });
+        onAction?.({ type: 'select-tag', label });
         return;
       }
 
@@ -140,6 +137,33 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [onAction],
   );
 
+  const handleKeyUp = useCallback<NonNullable<GridContentProps['onKeyUp']>>(
+    (event) => {
+      switch (event.key) {
+        case ' ':
+        case 'Enter': {
+          if (rowRef.current !== -1) {
+            const messageId = messages[rowRef.current]?.id;
+            if (messageId) {
+              onAction?.({ type: 'current', messageId });
+            }
+          }
+          break;
+        }
+      }
+    },
+    [messages, onAction],
+  );
+
+  const handleWheel = useCallback<NonNullable<GridContentProps['onWheelCapture']>>(
+    (event) => {
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
+
   const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
     (range, plane) => {
       if (messages) {
@@ -152,13 +176,14 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
                 accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: `${messageCellClassName}${isCurrent ? ' message--current' : ''}`,
+                className: mx(messageCellClassName, isCurrent && 'message--current'),
               };
             }
             return cells;
           }
         }
       }
+
       return {} as DxGridPlaneCells;
     },
     [messages, currentMessageId],
@@ -167,11 +192,8 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
   const gridRows = useMemo(() => {
     return messages.reduce(
       (acc, _, idx) => {
-        const message = messages[idx];
-        const hasTags = message.properties?.tags && message.properties.tags.length > 0;
-
         acc[idx] = {
-          size: hasTags ? ROW_SIZES.WITH_TAG : ROW_SIZES.DEFAULT,
+          size: ROW_SIZES.DEFAULT,
         };
 
         return acc;
@@ -196,8 +218,11 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           rowDefault={messageRowDefault}
           rows={rows}
           getCells={getCells}
+          onSelect={(ev) => setRow(ev.minRow)}
           onClick={handleClick}
+          onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
+          focusIndicatorVariant='stack'
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>
