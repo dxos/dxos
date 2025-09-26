@@ -191,8 +191,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
@@ -203,10 +201,14 @@ const meta = {
           },
         }),
         SpacePlugin({}),
+        IntentPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         SettingsPlugin(),
         PreviewPlugin(),
-        IntentPlugin(),
         TranscriptionPlugin(),
+        StorybookLayoutPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),

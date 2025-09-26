@@ -81,8 +81,8 @@ const meta = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
         ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],
           onClientInitialized: async ({ client }) => {

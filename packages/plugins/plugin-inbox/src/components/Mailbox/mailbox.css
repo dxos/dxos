@@ -65,7 +65,7 @@
       }
 
       .message__abstract__date {
-        @apply pie-1 text-sm text-description font-normal;
+        @apply pie-2 text-sm text-description font-normal;
       }
     }
 
@@ -77,7 +77,7 @@
       }
 
       .message__tags {
-        @apply flex shrink-0 gap-0.5 flex-nowrap overflow-hidden;
+        @apply flex shrink-0 pie-1 gap-0.5 flex-nowrap overflow-hidden;
 
         .message__tags-item {
           @apply cursor-pointer;

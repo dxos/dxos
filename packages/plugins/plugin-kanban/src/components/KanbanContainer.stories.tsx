@@ -152,7 +152,6 @@ const meta = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
@@ -173,11 +172,12 @@ const meta = {
             });
           },
         }),
-        StorybookLayoutPlugin({}),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
         SettingsPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

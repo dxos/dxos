@@ -62,8 +62,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -88,12 +86,16 @@ const meta = {
           },
         }),
         SpacePlugin({}),
+        GraphPlugin(),
+        IntentPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         AttentionPlugin(),
         SettingsPlugin(),
-        IntentPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
-        GraphPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),

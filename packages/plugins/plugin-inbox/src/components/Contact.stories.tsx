@@ -95,8 +95,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        StorybookLayoutPlugin({}),
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -112,9 +110,11 @@ const meta = {
             space.db.add(mailbox);
           },
         }),
-        PreviewPlugin(),
         SpacePlugin({}),
         IntentPlugin(),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
+        PreviewPlugin(),
         SettingsPlugin(),
         InboxPlugin(),
       ],
