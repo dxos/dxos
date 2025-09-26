@@ -37,7 +37,6 @@ const createChat = Effect.fn(function* (prompt: string) {
   // Initial request.
   // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
   let output = yield* chat.generateText({ toolkit, prompt });
-  console.log(JSON.stringify(yield* chat.export, null, 2));
 
   // Agentic loop.
   // TODO(burdon): Explain how this works?
