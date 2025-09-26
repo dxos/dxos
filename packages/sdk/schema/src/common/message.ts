@@ -84,6 +84,11 @@ export namespace ContentBlock {
     // TODO(dmaretskyi): We might need to be able to reprsent partial json.
     input: Schema.String,
 
+    /**
+     * Is the tool executed by the provider.
+     */
+    providerExecuted: Schema.Boolean,
+
     ...Base.fields,
   }).pipe(Schema.mutable);
   export interface ToolCall extends Schema.Schema.Type<typeof ToolCall> {}
@@ -118,6 +123,11 @@ export namespace ContentBlock {
     // ),
 
     error: Schema.optional(Schema.String),
+
+    /**
+     * Is the tool executed by the provider.
+     */
+    providerExecuted: Schema.Boolean,
 
     ...Base.fields,
   }).pipe(Schema.mutable);

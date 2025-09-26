@@ -37,6 +37,7 @@ const createChat = Effect.fn(function* (prompt: string) {
   // Initial request.
   // NOTE: Providing `toolkit` returns `AiRespose.WithToolCallResults`.
   let output = yield* chat.generateText({ toolkit, prompt });
+  console.log(JSON.stringify(yield* chat.export, null, 2));
 
   // Agentic loop.
   // TODO(burdon): Explain how this works?
@@ -156,7 +157,7 @@ describe('LanguageModel', () => {
     }, TestHelpers.runIf(process.env.OPENAI_API_KEY)),
   );
 
-  it.effect(
+  it.effect.only(
     'should process an agentic loop using Claude',
     Effect.fn(
       function* ({ expect }) {
@@ -177,8 +178,7 @@ describe('LanguageModel', () => {
     ),
   );
 
-  //
-  it.effect.only(
+  it.effect(
     'streaming',
     Effect.fn(
       function* ({ expect: _ }) {
@@ -229,7 +229,7 @@ describe('LanguageModel', () => {
       TestHelpers.taggedTest('llm'),
     ),
     { timeout: 120_000 },
-  );
+  ); //
 
   it.effect(
     'with parser',

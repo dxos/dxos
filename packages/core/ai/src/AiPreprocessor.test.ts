@@ -50,12 +50,14 @@ describe('preprocessor', () => {
             toolCallId: 'call_1',
             name: 'calculator',
             result: JSON.stringify('Result of tool 1'),
+            providerExecuted: false,
           },
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
             name: 'calculator',
             result: JSON.stringify('Result of tool 2'),
+            providerExecuted: false,
           },
           {
             _tag: 'text',
@@ -111,6 +113,7 @@ describe('preprocessor', () => {
             toolCallId: 'call_1',
             name: 'calculator',
             input: JSON.stringify({ operation: 'add', a: 2, b: 2 }),
+            providerExecuted: false,
           },
           {
             _tag: 'text',
@@ -329,12 +332,14 @@ describe('preprocessor', () => {
             toolCallId: 'call_1',
             name: 'calculator',
             result: JSON.stringify('First result'),
+            providerExecuted: false,
           },
           {
             _tag: 'toolResult',
             toolCallId: 'call_2',
             name: 'search',
             result: JSON.stringify('Second result'),
+            providerExecuted: false,
           },
           {
             _tag: 'text',
@@ -428,6 +433,7 @@ describe('preprocessor', () => {
             toolCallId: 'call_1',
             name: 'test',
             input: '{}',
+            providerExecuted: false,
           },
         ],
       });
@@ -452,6 +458,7 @@ describe('preprocessor', () => {
             toolCallId: 'call_1',
             name: 'test',
             result: 'Invalid in assistant',
+            providerExecuted: false,
           },
         ],
       });

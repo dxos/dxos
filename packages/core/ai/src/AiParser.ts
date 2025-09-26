@@ -3,7 +3,7 @@
 //
 
 import { type Response } from '@effect/ai';
-import { Effect, Function, Predicate, Stream } from 'effect';
+import { Effect, Function, Option, Predicate, Stream } from 'effect';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -104,6 +104,7 @@ export const parseResponse =
 
         /** Current partial block used to accumulate content. */
         let current: StreamBlock | undefined;
+        let block: ContentBlock.Any | undefined;
         let blocks = 0;
         let parts = 0;
         let toolCalls = 0;
@@ -145,8 +146,13 @@ export const parseResponse =
             log('part', { type: part.type, part });
             yield* onPart(part);
             switch (part.type) {
-              case 'TextPart': {
-                const chunks = transformer.transform(part.text);
+              case 'text-start': {
+                // no-op
+                break;
+              }
+
+              case 'text-delta': {
+                const chunks = transformer.transform(part.delta);
                 for (const chunk of chunks) {
                   log('text_chunk', { type: current?.type, chunk });
                   switch (current?.type) {
@@ -227,48 +233,100 @@ export const parseResponse =
                 break;
               }
 
-              case 'ToolCallPart': {
+              case 'text-end': {
                 yield* flushText();
+                break;
+              }
+
+              case 'tool-params-start': {
+                // NOTE: Effect-ai outputs both streamed and parsed tool calls. We ignore the streamed version for now.
+                // invariant(!block);
+                // block = {
+                //   _tag: 'toolCall',
+                //   toolCallId: part.id,
+                //   name: part.name,
+                //   input: '',
+                //   pending: true,
+                //   providerExecuted: part.providerExecuted,
+                // } satisfies ContentBlock.ToolCall;
+                // yield* onBlock(block);
+                break;
+              }
+
+              case 'tool-params-delta': {
+                // invariant(block?._tag === 'toolCall');
+                // block.input += part.delta;
+                // yield* onBlock(block);
+                break;
+              }
+
+              case 'tool-params-end': {
+                // invariant(block?._tag === 'toolCall');
+                // block.pending = false;
+                // yield* emitFullBlock(block);
+                // block = undefined;
+                break;
+              }
+
+              case 'tool-call': {
                 yield* emitFullBlock({
                   _tag: 'toolCall',
                   toolCallId: part.id,
                   name: part.name,
                   input: JSON.stringify(part.params),
+                  providerExecuted: part.providerExecuted,
                 } satisfies ContentBlock.ToolCall);
                 toolCalls++;
                 break;
               }
 
-              case 'ReasoningPart': {
-                yield* flushText();
-                const block: ContentBlock.Reasoning = {
-                  _tag: 'reasoning',
-                  reasoningText: part.reasoningText,
-                };
-                if (part.signature) {
-                  block.signature = part.signature;
-                }
-                yield* emitFullBlock(block);
-                break;
-              }
-
-              case 'RedactedReasoningPart': {
-                yield* flushText();
+              case 'tool-result': {
                 yield* emitFullBlock({
-                  _tag: 'reasoning',
-                  redactedText: part.redactedText,
-                } satisfies ContentBlock.Reasoning);
+                  _tag: 'toolResult',
+                  toolCallId: part.id,
+                  name: part.name,
+                  result: JSON.stringify(part.result),
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolResult);
                 break;
               }
 
-              case 'MetadataPart': {
+              case 'reasoning-start': {
+                invariant(!block);
+                block = {
+                  _tag: 'reasoning',
+                  reasoningText: '',
+                  signature:
+                    part.metadata.anthropic?.type === 'thinking' ? part.metadata.anthropic.signature : undefined,
+                  redactedText:
+                    part.metadata.anthropic?.type === 'redacted_thinking'
+                      ? part.metadata.anthropic.redactedData
+                      : undefined,
+                  pending: true,
+                } satisfies ContentBlock.Reasoning;
+                break;
+              }
+              case 'reasoning-delta': {
+                invariant(block?._tag === 'reasoning');
+                block.reasoningText += part.delta;
+                yield* onBlock(block);
+                break;
+              }
+              case 'reasoning-end': {
+                invariant(block?._tag === 'reasoning');
+                block.pending = false;
+                yield* emitFullBlock(block);
+                block = undefined;
+                break;
+              }
+              case 'response-metadata': {
                 yield* flushText();
-                summary.model = part.model;
+                summary.model = Option.getOrUndefined(part.modelId);
                 log('metadata', { metadata: part });
                 break;
               }
 
-              case 'FinishPart': {
+              case 'finish': {
                 yield* flushText();
                 const { inputTokens, outputTokens, totalTokens } = part.usage;
                 summary.duration = Date.now() - start;
@@ -284,6 +342,11 @@ export const parseResponse =
                   _tag: 'summary',
                 } satisfies ContentBlock.Summary);
                 log('finish', { finish: part });
+                break;
+              }
+
+              default: {
+                log.warn('llm stream part ignored', { part: part.type });
                 break;
               }
             }
