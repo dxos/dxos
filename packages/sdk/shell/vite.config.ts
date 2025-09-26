@@ -35,7 +35,6 @@ export default defineConfig({
         '@dxos/react-client/echo',
         '@dxos/react-client/halo',
         '@dxos/react-client/mesh',
-        '@phosphor-icons/react',
         // TODO(wittjosiah): React still being included.
         'react',
         'react-dom',
