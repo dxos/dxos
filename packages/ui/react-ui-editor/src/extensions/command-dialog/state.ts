@@ -9,7 +9,7 @@ import { type RenderCallback } from '../../types';
 import { singleValueFacet } from '../../util';
 
 import { type Action, closeEffect, openEffect } from './action';
-import { type CommandOptions } from './command';
+import { type CommandOptions } from './command-dialog';
 
 export const commandConfig = singleValueFacet<CommandOptions>();
 
