@@ -16,7 +16,7 @@ import { type DataType } from '@dxos/schema';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type ObjectForm } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
@@ -47,7 +47,7 @@ export const CreateObjectPanel = ({
   onTypenameChange,
   onCreateObject,
 }: CreateObjectPanelProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
@@ -115,7 +115,7 @@ const SelectSpace = ({
   defaultSpaceId,
   onChange,
 }: { onChange?: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <SearchList.Root label={t('space input label')} classNames={cardDialogSearchListRoot}>
@@ -156,7 +156,7 @@ const SelectSchema = ({
   options: TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <SearchList.Root label={t('schema input label')} classNames={cardDialogSearchListRoot}>

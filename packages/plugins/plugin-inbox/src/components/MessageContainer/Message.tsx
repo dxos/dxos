@@ -12,12 +12,13 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorSlots,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
+
+import { mailboxGrid } from '../styles';
 
 import { MessageHeader } from './MessageHeader';
 import { type ViewMode } from './MessageHeader';
@@ -45,13 +46,12 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
     return textBlocks[1]?.text || '';
   }, [message.blocks, viewMode]);
 
-  // TODO(ZaymonFC): How to prevent caret and selection?
   const extensions = useMemo(() => {
     if (space) {
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions(),
-        createThemeExtensions({ themeMode, slots: editorSlots }),
+        createThemeExtensions({ themeMode, slots: {} }),
         decorateMarkdown(),
         preview(),
       ];
@@ -64,14 +64,18 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
   return (
     <div
       role='none'
-      className={mx('grid', role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]')}
+      className={mx(
+        'overflow-hidden grid',
+        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+      )}
     >
       <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
-      <div role='none' className={role === 'section' ? 'contents' : 'relative'}>
+      <div role='none' className={mx(role === 'section' ? 'contents' : [mailboxGrid, 'overflow-hidden'])}>
+        <div />
         <div
           role='none'
           ref={parentRef}
-          className={mx(role !== 'section' && 'absolute inset-0', classNames)}
+          className={mx(role !== 'section' && 'flex bs-full overflow-hidden', classNames)}
           data-popover-collision-boundary={true}
         />
       </div>

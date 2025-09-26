@@ -9,12 +9,12 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
 import { WELCOME_SCREEN, WelcomeScreen } from '../components';
-import { WELCOME_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${WELCOME_PLUGIN}/welcome`,
+      id: `${meta.id}/welcome`,
       role: 'dialog',
       filter: (data): data is any => data.component === WELCOME_SCREEN,
       component: () => {

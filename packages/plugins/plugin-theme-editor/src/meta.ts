@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const THEME_EDITOR_PLUGIN = 'dxos.org/plugin/theme-editor';
-
 export const meta: PluginMeta = {
-  id: THEME_EDITOR_PLUGIN,
+  id: 'dxos.org/plugin/theme-editor',
   name: 'Theme editor',
   description: 'DXOS theme editor.',
   icon: 'ph--palette--regular',

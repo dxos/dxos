@@ -276,7 +276,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
-          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1 && increment !== 'col') {
             handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);
@@ -321,7 +321,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               void navigator.clipboard.readText().then((clipboardText) => {
                 try {
                   // Attempt to set the cell's content to clipboard content
-                  model.setCellData(cell, trim(clipboardText));
+                  model.setCellData(cell, trim(clipboardText).replace(/[\n\r]+/, ' '));
                   handleSave();
                 } catch {
                   // If validation fails, emit a DxEditRequest event with initialContent from clipboard

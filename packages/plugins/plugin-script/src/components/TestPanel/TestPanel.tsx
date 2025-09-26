@@ -9,7 +9,7 @@ import { Avatar, Icon, Input, type ThemedClassName, Toolbar, useTranslation } fr
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 type State = 'pending' | 'responding';
 
@@ -24,7 +24,7 @@ export type TestPanelProps = ThemedClassName<{
 
 // TODO(burdon): Need persistent history (currently lost when switching tabs)..
 export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState('');

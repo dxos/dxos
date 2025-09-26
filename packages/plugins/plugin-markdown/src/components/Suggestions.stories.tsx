@@ -8,18 +8,12 @@ import { type Meta } from '@storybook/react-vite';
 import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import {
-  Capabilities,
-  IntentPlugin,
-  SettingsPlugin,
-  contributes,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -27,7 +21,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { type EditorSelection, type Range, command, useTextEditor } from '@dxos/react-ui-editor';
+import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -161,20 +155,22 @@ const storybook: Meta<typeof DefaultStory> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
+        StorybookLayoutPlugin({}),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
+        GraphPlugin(),
       ],
-      capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
+      // TODO(thure): `commandDialog` doesn’t do anything without a `renderDialog` option.
+      // capabilities: [contributes(MarkdownCapabilities.Extensions, [() => commandDialog()])],
     }),
     withLayout({ fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],

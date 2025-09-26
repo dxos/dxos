@@ -8,20 +8,20 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
 import { Banner, DeckSettings } from '../components';
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DeckSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DECK_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DeckSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === DECK_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <DeckSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${DECK_PLUGIN}/banner`,
+      id: `${meta.id}/banner`,
       role: 'banner',
       component: ({ data }) => {
         return <Banner variant={data.variant} />;

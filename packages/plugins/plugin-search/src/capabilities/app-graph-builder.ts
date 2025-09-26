@@ -11,13 +11,13 @@ import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '@dxos/plugin-dec
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { parseId } from '@dxos/react-client/echo';
 
-import { SEARCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SearchAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${SEARCH_PLUGIN}/space-search`,
+      id: `${meta.id}/space-search`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -35,7 +35,7 @@ export default (context: PluginContext) =>
                   type: DECK_COMPANION_TYPE,
                   data: space,
                   properties: {
-                    label: ['search label', { ns: SEARCH_PLUGIN }],
+                    label: ['search label', { ns: meta.id }],
                     icon: 'ph--magnifying-glass--regular',
                     disposition: 'hidden',
                   },
@@ -47,7 +47,7 @@ export default (context: PluginContext) =>
         ),
     }),
     createExtension({
-      id: SEARCH_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -62,7 +62,7 @@ export default (context: PluginContext) =>
                     await dispatch(createIntent(SearchAction.OpenSearch));
                   },
                   properties: {
-                    label: ['search action label', { ns: SEARCH_PLUGIN }],
+                    label: ['search action label', { ns: meta.id }],
                     icon: 'ph--magnifying-glass--regular',
                     keyBinding: {
                       macos: 'shift+meta+f',

@@ -8,7 +8,7 @@ import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
 import { type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { ContentBlock, DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 /**
  * Mercurial-style Commit.
@@ -269,7 +269,7 @@ const messageToCommits = (
 
       return commit;
     })
-    .filter(isNotFalsy);
+    .filter(isNonNullable);
 };
 
 /**

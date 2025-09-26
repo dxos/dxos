@@ -11,19 +11,19 @@ import { findAnnotation } from '@dxos/effect';
 import { type InputProps } from '@dxos/react-ui-form';
 
 import { FileContainer, FileInput } from '../components';
-import { WNFS_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { FileType, WnfsAction } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${WNFS_PLUGIN}/article`,
+      id: `${meta.id}/article`,
       role: ['article', 'section', 'slide'],
       filter: (data): data is { subject: FileType } => Obj.instanceOf(FileType, data.subject),
       component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
     }),
     createSurface({
-      id: `${WNFS_PLUGIN}/create-form`,
+      id: `${meta.id}/create-form`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {
         const annotation = findAnnotation<boolean>(

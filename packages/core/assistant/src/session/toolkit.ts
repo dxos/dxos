@@ -7,7 +7,7 @@ import { type Context, Effect } from 'effect';
 
 import { ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 export type ToolkitParams<Tools extends AiTool.Any> = {
   toolkit?: AiToolkit.AiToolkit<Tools>;
@@ -33,7 +33,7 @@ export const createToolkit = <Tools extends AiTool.Any>({
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
-    const toolkit = AiToolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
+    const toolkit = AiToolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
     return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
       AiToolkit.ToHandler<any>,
       never,

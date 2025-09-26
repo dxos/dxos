@@ -13,7 +13,7 @@ import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
 import { OAUTH_PRESETS, type OAuthPreset } from '../defs';
-import { TOKEN_MANAGER_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 type NewTokenSelectorProps = {
   space: Space;
@@ -22,7 +22,7 @@ type NewTokenSelectorProps = {
 };
 
 export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: NewTokenSelectorProps) => {
-  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const edgeClient = useEdgeClient();
   const [tokenMap] = useState(new Map<string, DataType.AccessToken>());
 
@@ -100,7 +100,7 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
 };
 
 const TokenMenuItem = ({ preset, onSelect }: { preset?: OAuthPreset; onSelect: (preset?: OAuthPreset) => void }) => {
-  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const handleSelect = useCallback(() => onSelect(preset), [preset, onSelect]);
   return (
     <DropdownMenu.Item key={preset?.label} onClick={handleSelect}>

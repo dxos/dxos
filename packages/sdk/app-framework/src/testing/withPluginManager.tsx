@@ -7,6 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
 import { useAsyncEffect } from '@dxos/react-hooks';
+import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
 import { Capabilities, Events } from '../common';
 import { type UseAppOptions, useApp } from '../components';
@@ -20,14 +21,6 @@ import {
   definePlugin,
 } from '../core';
 
-// TODO(burdon): Factor out (use consistently in plugin framework?)
-export type Provider<C, R> = (context: C) => R;
-export type ProviderOrValue<C, R> = Provider<C, R> | R;
-
-export const getValue = <C, R>(providerOrValue: ProviderOrValue<C, R>, context: C): R => {
-  return typeof providerOrValue === 'function' ? (providerOrValue as Provider<C, R>)(context) : providerOrValue;
-};
-
 /**
  * @internal
  */
@@ -39,13 +32,13 @@ export const setupPluginManager = ({
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = new PluginManager({
     pluginLoader: () => raise(new Error('Not implemented')),
-    plugins: [storyPlugin(), ...plugins],
-    core: [STORY_PLUGIN, ...core],
+    plugins: [StoryPlugin(), ...plugins],
+    core: [StoryPlugin.meta.id, ...core],
     ...options,
   });
 
   if (capabilities) {
-    getValue(capabilities, pluginManager.context).forEach((capability) => {
+    getProviderValue(capabilities, pluginManager.context).forEach((capability) => {
       pluginManager.context.contributeCapability({
         interface: capability.interface,
         implementation: capability.implementation,
@@ -59,7 +52,7 @@ export const setupPluginManager = ({
 
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
-  capabilities?: ProviderOrValue<PluginContext, AnyCapability[]>;
+  capabilities?: MaybeProvider<AnyCapability[], PluginContext>;
   /** @deprecated */
   fireEvents?: (ActivationEvent | string)[];
 };
@@ -101,10 +94,13 @@ export const withPluginManager = (options: WithPluginManagerOptions = {}): Decor
   };
 };
 
+const storyMeta = {
+  id: 'dxos.org/app-framework/story',
+  name: 'Story',
+};
+
 // No-op plugin to ensure there exists at least one plugin for the startup event.
 // This is necessary because `createApp` expects the startup event to complete before the app is ready.
-const STORY_PLUGIN = 'dxos.org/app-framework/story';
-const storyPlugin = () =>
-  definePlugin({ id: STORY_PLUGIN, name: 'Story' }, [
-    defineModule({ id: STORY_PLUGIN, activatesOn: Events.Startup, activate: () => [] }),
-  ]);
+const StoryPlugin = definePlugin(storyMeta, () => [
+  defineModule({ id: storyMeta.id, activatesOn: Events.Startup, activate: () => [] }),
+]);

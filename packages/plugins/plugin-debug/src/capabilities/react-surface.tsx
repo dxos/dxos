@@ -63,7 +63,7 @@ import {
   SpaceGenerator,
   Wireframe,
 } from '../components';
-import { DEBUG_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DebugSettingsProps, Devtools } from '../types';
 
 type SpaceDebug = {
@@ -76,7 +76,7 @@ type GraphDebug = {
   root: string;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${DEBUG_PLUGIN}/space` && isSpace(data.space);
+const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === `${meta.id}/space` && isSpace(data.space);
 const isGraphDebug = (data: any): data is GraphDebug => data?.graph instanceof Graph && typeof data?.root === 'string';
 
 // TODO(wittjosiah): Factor out?
@@ -91,14 +91,14 @@ const useCurrentSpace = () => {
 export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${DEBUG_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<DebugSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === DEBUG_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <DebugSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/space`,
+      id: `${meta.id}/space`,
       role: 'article',
       filter: (data): data is { subject: SpaceDebug } => isSpaceDebug(data.subject),
       component: ({ data }) => {
@@ -132,19 +132,17 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/graph`,
+      id: `${meta.id}/graph`,
       role: 'article',
       filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
       component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/wireframe`,
+      id: `${meta.id}/wireframe`,
       role: ['article', 'section'],
       position: 'hoist',
       filter: (data): data is { subject: Obj.Any } => {
-        const settings = context
-          .getCapability(Capabilities.SettingsStore)
-          .getStore<DebugSettingsProps>(DEBUG_PLUGIN)!.value;
+        const settings = context.getCapability(Capabilities.SettingsStore).getStore<DebugSettingsProps>(meta.id)!.value;
         return Obj.isObject(data.subject) && !!settings.wireframe;
       },
       component: ({ data, role }) => (
@@ -152,18 +150,18 @@ export default (context: PluginContext) =>
       ),
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/object-debug`,
+      id: `${meta.id}/object-debug`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => data.subject === 'debug' && Obj.isObject(data.companionTo),
       component: ({ data }) => <DebugObjectPanel object={data.companionTo} />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/devtools-overview`,
+      id: `${meta.id}/devtools-overview`,
       role: 'deck-companion--devtools',
       component: () => <DevtoolsOverviewContainer />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/status`,
+      id: `${meta.id}/status`,
       role: 'status',
       component: () => <DebugStatus />,
     }),
@@ -173,55 +171,55 @@ export default (context: PluginContext) =>
     //
 
     createSurface({
-      id: `${DEBUG_PLUGIN}/client/config`,
+      id: `${meta.id}/client/config`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Config,
       component: () => <ConfigPanel vaultSelector={false} />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/client/storage`,
+      id: `${meta.id}/client/storage`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Storage,
       component: () => <StoragePanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/client/logs`,
+      id: `${meta.id}/client/logs`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Logs,
       component: () => <LoggingPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/client/diagnostics`,
+      id: `${meta.id}/client/diagnostics`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
       component: () => <DiagnosticsPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/client/tracing`,
+      id: `${meta.id}/client/tracing`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Client.Tracing,
       component: () => <TracingPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/halo/identity`,
+      id: `${meta.id}/halo/identity`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Identity,
       component: () => <IdentityPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/halo/devices`,
+      id: `${meta.id}/halo/devices`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Devices,
       component: () => <DeviceListPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/halo/keyring`,
+      id: `${meta.id}/halo/keyring`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Keyring,
       component: () => <KeyringPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/halo/credentials`,
+      id: `${meta.id}/halo/credentials`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Halo.Credentials,
       component: () => {
@@ -230,7 +228,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/spaces`,
+      id: `${meta.id}/echo/spaces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Spaces,
       component: () => {
@@ -243,7 +241,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/space`,
+      id: `${meta.id}/echo/space`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Space,
       component: () => {
@@ -257,7 +255,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/feeds`,
+      id: `${meta.id}/echo/feeds`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Feeds,
       component: () => {
@@ -266,7 +264,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/objects`,
+      id: `${meta.id}/echo/objects`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Objects,
       component: () => {
@@ -275,7 +273,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/schema`,
+      id: `${meta.id}/echo/schema`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Schema,
       component: () => {
@@ -284,7 +282,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/automerge`,
+      id: `${meta.id}/echo/automerge`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Automerge,
       component: () => {
@@ -293,13 +291,13 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/queues`,
+      id: `${meta.id}/echo/queues`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Queues,
       component: () => <QueuesPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/members`,
+      id: `${meta.id}/echo/members`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Members,
       component: () => {
@@ -308,25 +306,25 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/echo/metadata`,
+      id: `${meta.id}/echo/metadata`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Echo.Metadata,
       component: () => <MetadataPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/signal`,
+      id: `${meta.id}/mesh/signal`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Signal,
       component: () => <SignalPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/swarm`,
+      id: `${meta.id}/mesh/swarm`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Swarm,
       component: () => <SwarmPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/mesh/network`,
+      id: `${meta.id}/mesh/network`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Mesh.Network,
       component: () => {
@@ -336,19 +334,19 @@ export default (context: PluginContext) =>
     }),
     // TODO(wittjosiah): Remove?
     // createSurface({
-    //   id: `${DEBUG_PLUGIN}/agent/dashboard`,
+    //   id: `${meta.id}/agent/dashboard`,
     //   role: 'article',
     //   filter: (data): data is any => data.subject === Devtools.Agent.Dashboard,
     //   component: () => <DashboardPanel />,
     // }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/edge/dashboard`,
+      id: `${meta.id}/edge/dashboard`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Dashboard,
       component: () => <EdgeDashboardPanel />,
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/edge/workflows`,
+      id: `${meta.id}/edge/workflows`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Workflows,
       component: () => {
@@ -357,7 +355,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/edge/traces`,
+      id: `${meta.id}/edge/traces`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Traces,
       component: () => {
@@ -366,7 +364,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${DEBUG_PLUGIN}/edge/testing`,
+      id: `${meta.id}/edge/testing`,
       role: 'article',
       filter: (data): data is any => data.subject === Devtools.Edge.Testing,
       component: () => {

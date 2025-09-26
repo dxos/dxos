@@ -20,7 +20,7 @@ import { mainPaddingTransitions } from '@dxos/react-ui-theme';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type DeckSettingsProps, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
@@ -44,7 +44,7 @@ const PlankSeparator = ({ order }: { order: number }) =>
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)!.value;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)!.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck, toasts } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
