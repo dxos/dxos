@@ -4,7 +4,7 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, type WheelEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
 import { useAttention } from '@dxos/react-ui-attention';
@@ -103,17 +103,8 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     onResize: handleResize,
   });
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
-
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
+  const handleClick = useCallback<NonNullable<GridContentProps['onClick']>>(
+    (event) => {
       const target = event.target as HTMLElement;
       const label = target.getAttribute('data-label');
       if (label) {
@@ -138,6 +129,27 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [onAction],
   );
 
+  const handleKeyUp = useCallback<NonNullable<GridContentProps['onKeyUp']>>(
+    (event) => {
+      switch (event.key) {
+        case ' ':
+        case 'Enter':
+          onAction?.({ type: 'select', messageId: currentMessageId! });
+          break;
+      }
+    },
+    [currentMessageId, onAction],
+  );
+
+  const handleWheel = useCallback<NonNullable<GridContentProps['onWheelCapture']>>(
+    (event) => {
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
+
   const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
     (range, plane) => {
       if (messages) {
@@ -150,7 +162,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
                 accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: `${messageCellClassName}${isCurrent ? ' message--current' : ''}`,
+                className: mx(messageCellClassName, isCurrent && 'message--current'),
               };
             }
             return cells;
@@ -192,6 +204,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           rows={rows}
           getCells={getCells}
           onClick={handleClick}
+          onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
