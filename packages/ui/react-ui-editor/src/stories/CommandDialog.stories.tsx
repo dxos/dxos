@@ -12,7 +12,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorWidth } from '../defaults';
-import { type Action, command, floatingMenu } from '../extensions';
+import { type Action, commandDialog } from '../extensions';
 import { str } from '../testing';
 import { createRenderer } from '../util';
 
@@ -23,7 +23,7 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 
   const handleInsert = () => {
     // TODO(burdon): Use queue ref.
-    const link = `[${text}](dxn:queue:data:123)`;
+    const link = `![${text}](dxn:queue:data:123)`;
     onAction(text.length ? { type: 'insert', text: link } : undefined);
   };
 
@@ -66,16 +66,15 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 };
 
 const meta = {
-  title: 'ui/react-ui-editor/Command',
+  title: 'ui/react-ui-editor/CommandDialog',
   decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
     <EditorStory
       text={str('# Command', '', '', '')}
       extensions={[
-        floatingMenu(),
-        command({
+        commandDialog({
           renderDialog: createRenderer(CommandDialog),
-          onHint: () => "Press '/' for commands",
+          onHint: () => "Press '?' to ask a question",
         }),
       ]}
     />

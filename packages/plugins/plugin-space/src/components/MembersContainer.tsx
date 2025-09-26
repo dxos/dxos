@@ -75,7 +75,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       inviteOne: {
         label: t('invite one label', { ns: 'os' }),
         description: t('invite one description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--user-plus--regular' size={5} />,
+        icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
           const { data: invitation } = await dispatch(
@@ -97,7 +97,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       inviteMany: {
         label: t('invite many label', { ns: 'os' }),
         description: t('invite many description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--users-three--regular' size={5} />,
+        icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
           const { data: invitation } = await dispatch(

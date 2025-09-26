@@ -22,7 +22,6 @@ export const useMailboxModel = (queueDxn: DXN, sortDirection: SortDirection = 'd
   const model = useMemo(() => new MailboxModel([], sortDirection), [sortDirection]);
   const queue = useQueue<DataType.Message>(queueDxn);
   const items = useMemo(() => queue?.objects ?? [], [queue?.objects]);
-
   const messages = useMemo(
     () =>
       items.filter(

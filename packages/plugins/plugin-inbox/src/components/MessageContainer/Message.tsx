@@ -18,8 +18,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { mailboxGrid } from '../styles';
-
 import { MessageHeader } from './MessageHeader';
 import { type ViewMode } from './MessageHeader';
 
@@ -42,6 +40,7 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
     if (viewMode === 'plain-only' || viewMode === 'plain') {
       return textBlocks[0]?.text || '';
     }
+
     // Otherwise show enriched content (second block).
     return textBlocks[1]?.text || '';
   }, [message.blocks, viewMode]);
@@ -52,7 +51,9 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: {} }),
-        decorateMarkdown(),
+        decorateMarkdown({
+          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+        }),
         preview(),
       ];
     }
@@ -70,8 +71,7 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
       )}
     >
       <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
-      <div role='none' className={mx(role === 'section' ? 'contents' : [mailboxGrid, 'overflow-hidden'])}>
-        <div />
+      <div role='none' className={mx(role === 'section' ? 'contents' : 'p-2 overflow-hidden')}>
         <div
           role='none'
           ref={parentRef}

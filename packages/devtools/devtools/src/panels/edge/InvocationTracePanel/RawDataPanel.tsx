@@ -4,28 +4,25 @@
 
 import React, { type ComponentType, type FC, type JSX, useMemo } from 'react';
 
-import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
-import { useQueue } from '@dxos/react-client/echo';
+import { type InvocationSpan, TraceEvent } from '@dxos/functions';
+import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
 type RawDataPanelProps = {
   span: InvocationSpan;
+  queue?: Queue;
 };
 
-export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span }) => {
-  const traceQueueDxn = useMemo(() => {
-    return span.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
-  }, [span.invocationTraceQueue]);
-
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn);
+export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ classNames, span, queue }) => {
+  const objects = useQuery(queue, Filter.type(TraceEvent));
 
   const combinedData = useMemo(() => {
     return {
       span,
-      traceEvents: eventQueue?.objects ?? [],
+      traceEvents: objects ?? [],
     };
-  }, [span, eventQueue?.objects]);
+  }, [span, objects]);
 
   const rowRenderer = ({
     rows,
