@@ -276,7 +276,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
-          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1 && increment !== 'col') {
             handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);

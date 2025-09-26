@@ -6,8 +6,6 @@ import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
 
-import { closeEffect, openEffect } from './action';
-
 export type FloatingMenuOptions = {
   icon?: string;
   height?: number;
@@ -63,12 +61,12 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
         }
 
         // TODO(burdon): Timer to fade in/out.
-        if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
+        /*if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(openEffect)))) {
           this.tag.style.display = 'none';
           this.tag.classList.add('opacity-10');
         } else if (update.transactions.some((tr) => tr.effects.some((effect) => effect.is(closeEffect)))) {
           this.tag.style.display = '';
-        } else if (
+        } else */ if (
           update.docChanged ||
           update.focusChanged ||
           update.geometryChanged ||
