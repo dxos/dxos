@@ -109,8 +109,16 @@ export const parseResponse =
         let parts = 0;
         let toolCalls = 0;
 
+        const emitPartialContentBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+          yield* onBlock({ ...block });
+          blocks++;
+        });
+
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
           log('block', { block });
+          if (block.pending === false) {
+            delete block.pending;
+          }
           yield* onBlock(block);
           emit.single(block);
           blocks++;
@@ -120,7 +128,7 @@ export const parseResponse =
           const content = makeContentBlock(block, { parseReasoningTags });
           if (content) {
             content.pending = true;
-            yield* onBlock(content);
+            yield* emitPartialContentBlock(content);
           }
         });
 
@@ -296,20 +304,21 @@ export const parseResponse =
                 block = {
                   _tag: 'reasoning',
                   reasoningText: '',
-                  signature:
-                    part.metadata.anthropic?.type === 'thinking' ? part.metadata.anthropic.signature : undefined,
-                  redactedText:
-                    part.metadata.anthropic?.type === 'redacted_thinking'
-                      ? part.metadata.anthropic.redactedData
-                      : undefined,
                   pending: true,
                 } satisfies ContentBlock.Reasoning;
+                if (part.metadata.anthropic?.type === 'thinking') {
+                  block.signature = part.metadata.anthropic.signature;
+                }
+                if (part.metadata.anthropic?.type === 'redacted_thinking') {
+                  block.redactedText = part.metadata.anthropic.redactedData;
+                }
+                yield* emitPartialContentBlock(block);
                 break;
               }
               case 'reasoning-delta': {
                 invariant(block?._tag === 'reasoning');
                 block.reasoningText += part.delta;
-                yield* onBlock(block);
+                yield* emitPartialContentBlock(block);
                 break;
               }
               case 'reasoning-end': {
