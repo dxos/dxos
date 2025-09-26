@@ -34,13 +34,9 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
     };
   }
 
-  static mock = (): Context.Tag.Service<RemoteFunctionExecutionService> => {
-    return {
-      callFunction: async (deployedFunctionId: string, input: any) => {
-        return input;
-      },
-    };
-  };
-
-  static mockLayer = Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.mock());
+  static layerMock = Layer.succeed(RemoteFunctionExecutionService, {
+    callFunction: async (input: any) => {
+      return { ...input, mockResolved: 'remote' };
+    },
+  });
 }
