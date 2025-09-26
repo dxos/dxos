@@ -9,7 +9,7 @@ import { ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai
 import { type Blueprint } from '@dxos/blueprints';
 import { isNotFalsy } from '@dxos/util';
 
-export type ToolkitParams<Tools extends Tool.Any> = {
+export type ToolkitParams<Tools extends Record<string, Tool.Any>> = {
   toolkit?: Toolkit.Toolkit<Tools>;
   toolIds?: ToolId[];
   blueprints?: Blueprint.Blueprint[];
@@ -18,7 +18,7 @@ export type ToolkitParams<Tools extends Tool.Any> = {
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
-export const createToolkit = <Tools extends Tool.Any>({
+export const createToolkit = <Tools extends Record<string, Tool.Any>>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],

@@ -33,8 +33,8 @@ export const makeToolResolverFromFunctions = (
 
 export const makeToolExecutionServiceFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: Toolkit.Toolkit<Tool.Any>,
-  handlersLayer: Layer.Layer<Tool.ToHandler<Tool.Tool<any>>, never, never>,
+  toolkit: Toolkit.Toolkit<any>,
+  handlersLayer: Layer.Layer<Toolkit.WithHandler<any>, never, never>,
 ): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   return Layer.effect(
     ToolExecutionService,

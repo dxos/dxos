@@ -36,13 +36,13 @@ export type AiSessionRunRequirements =
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends Tool.Any> = {
+export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
-  toolkit?: Toolkit.ToHandler<Tools>;
+  toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver;
 };
 
@@ -71,7 +71,7 @@ export class AiSession {
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
-  run = <Tools extends Tool.Any>({
+  run = <Tools extends Record<string, Tool.Any>>({
     prompt,
     system: systemTemplate,
     history = [],
@@ -185,7 +185,7 @@ export class AiSession {
   // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
-    _options: AiSessionRunParams<Tool.Any>,
+    _options: AiSessionRunParams<any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);

@@ -21,7 +21,9 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export type AiConversationRunRequirements<Tools extends Tool.Any> = AiSessionRunRequirements | Tool.ToHandler<Tools>;
+export type AiConversationRunRequirements<Tools extends Record<string, Tool.Any>> =
+  | AiSessionRunRequirements
+  | Tool.HandlersFor<Tools>;
 
 export interface AiConversationRunParams {
   prompt: string;
@@ -51,7 +53,7 @@ export class AiConversation {
   /**
    * Toolkit from the current session request.
    */
-  private _toolkit: Toolkit.ToHandler<Tool.Any> | undefined;
+  private _toolkit: Toolkit.WithHandler<any> | undefined;
 
   public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
@@ -74,7 +76,7 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest<Tools extends Tool.Any>(
+  createRequest<Tools extends Record<string, Tool.Any>>(
     params: AiConversationRunParams,
   ): Effect.Effect<DataType.Message[], AiSessionRunError, AiConversationRunRequirements<Tools>> {
     return Effect.gen(this, function* () {
