@@ -21,11 +21,13 @@ export type Tag = {
   hue: string;
 };
 
+export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
+
 /**
  * Sort by date comparison function.
  * @param direction The direction to sort (1 for ascending, -1 for descending).
  */
-const sortByDate =
+export const sortMessagesByDate =
   (direction = -1) =>
   ({ created: a = '' }: DataType.Message, { created: b = '' }: DataType.Message) =>
     a < b ? -direction : a > b ? direction : 0;
@@ -110,7 +112,7 @@ export class MailboxModel {
 
     this._sortedFilteredMessages = computed(() => {
       const directionValue = this._sortDirection.value === 'asc' ? 1 : -1;
-      return [...this._filteredMessages.value].sort(sortByDate(directionValue));
+      return [...this._filteredMessages.value].sort(sortMessagesByDate(directionValue));
     });
   }
 

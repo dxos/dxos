@@ -7,6 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridPlaneCells,
@@ -83,16 +84,17 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = {
   id: string;
-  messages: DataType.Message[];
-  ignoreAttention?: boolean;
-  currentMessageId?: string;
-  onAction?: MailboxActionHandler;
   role?: string;
+  messages: DataType.Message[];
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, role }: MailboxProps) => {
+export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
+  const [_, setRow, rowRef] = useStateWithRef<number>(-1);
 
   const handleResize = useCallback<OnResizeCallback>(
     ({ width }) => width && setColumnDefault({ grid: { size: width } }),
@@ -133,12 +135,18 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     (event) => {
       switch (event.key) {
         case ' ':
-        case 'Enter':
-          onAction?.({ type: 'select', messageId: currentMessageId! });
+        case 'Enter': {
+          if (rowRef.current !== -1) {
+            const messageId = messages[rowRef.current]?.id;
+            if (messageId) {
+              onAction?.({ type: 'current', messageId });
+            }
+          }
           break;
+        }
       }
     },
-    [currentMessageId, onAction],
+    [messages, onAction],
   );
 
   const handleWheel = useCallback<NonNullable<GridContentProps['onWheelCapture']>>(
@@ -169,6 +177,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           }
         }
       }
+
       return {} as DxGridPlaneCells;
     },
     [messages, currentMessageId],
@@ -203,6 +212,7 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           rowDefault={messageRowDefault}
           rows={rows}
           getCells={getCells}
+          onSelect={(ev) => setRow(ev.minRow)}
           onClick={handleClick}
           onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}

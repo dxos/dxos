@@ -51,7 +51,9 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: {} }),
-        decorateMarkdown(),
+        decorateMarkdown({
+          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+        }),
         preview(),
       ];
     }

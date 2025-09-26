@@ -238,7 +238,7 @@ export const TreeChildNodes = ({
   } = props;
   return (
     <div className={mx('flex flex-col mt-0.5 gap-0.5', className)}>
-      {children?.map((child, i) => (
+      {children?.map((child) => (
         <TreeNode key={child.id} {...props} depth={depth + 1} node={child} ancestors={[...ancestors, props.node]} />
       ))}
     </div>

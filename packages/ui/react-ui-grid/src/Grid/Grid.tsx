@@ -166,7 +166,7 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
+export { GridRoot, GridContent, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd, useGridContext };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 

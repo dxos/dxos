@@ -8,7 +8,7 @@ import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { type Tag } from '../components';
+import { type Tag, sortTags } from '../components';
 import { Mailbox } from '../types';
 
 const TAGS: Tag[] = [
@@ -19,8 +19,6 @@ const TAGS: Tag[] = [
   { label: 'work', hue: 'emerald' },
   { label: 'personal', hue: 'pink' },
 ];
-
-const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
 
 export const createMessages = (count = 10) => {
   return faker.helpers.multiple(
@@ -50,34 +48,37 @@ export const createMessages = (count = 10) => {
  * Creates a message with plain and enriched content blocks, where the enriched version
  * contains links to contacts and the plain version has the same content with links stripped.
  */
-export const createMessage = (space?: Space) => {
-  // Start with base text
-  let text = faker.lorem.paragraphs(5);
+export const createMessage = (
+  space?: Space,
+  options: { paragraphs?: number; links?: number } = { paragraphs: 5, links: 5 },
+) => {
+  let text = Array.from({ length: options.paragraphs ?? 1 }, () => faker.lorem.paragraph()).join('\n\n');
   let enrichedText = text;
 
   if (space) {
     const words = text.split(' ');
-    const linkCount = Math.floor(Math.random() * 5) + 1;
 
-    for (let i = 0; i < linkCount; i++) {
-      const fullName = faker.person.fullName();
-      const obj = space.db.add(Obj.make(DataType.Person, { fullName }));
-      const dxn = Ref.make(obj).dxn.toString();
+    // Links.
+    if (options.links) {
+      const linkCount = Math.floor(Math.random() * options.links) + 1;
+      for (let i = 0; i < linkCount; i++) {
+        const fullName = faker.person.fullName();
+        const obj = space.db.add(Obj.make(DataType.Person, { fullName }));
+        const dxn = Ref.make(obj).dxn.toString();
 
-      const position = Math.floor(Math.random() * words.length);
-      words.splice(position, 0, `[${fullName}](${dxn})`);
+        const position = Math.floor(Math.random() * words.length);
+        words.splice(position, 0, `[${fullName}](${dxn})`);
+      }
     }
 
-    // First create the enriched text with links
+    // First create the enriched text with links.
     enrichedText = words.join(' ');
 
-    // Then create plain text by stripping out the [label][dxn] syntax
-    // but keeping the label text itself
+    // Then create plain text by stripping out the [label][dxn] syntax but keeping the label text itself.
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
   const tags = faker.helpers.randomSubset(TAGS, { min: 0, max: TAGS.length });
-
   const hasBothWorkAndPersonal =
     tags.some((tag) => tag.label === 'work') && tags.some((tag) => tag.label === 'personal');
 
@@ -100,7 +101,7 @@ export const createMessage = (space?: Space) => {
       email: faker.internet.email(),
       name: faker.person.fullName(),
     },
-    // First block plain text (with links stripped), second block enriched text (with links)
+    // First block plain text (with links stripped), second block enriched text (with links).
     blocks: [
       { _tag: 'text', text },
       { _tag: 'text', text: enrichedText },
