@@ -105,8 +105,8 @@ export const ProjectSettings = ({ project }: ProjectSettingsProps) => {
   );
 
   return (
-    <div role='none'>
-      <h2 className={mx(inputTextLabel)}>{t('views label')}</h2>
+    <div role='none' className='mbs-cardSpacingBlock'>
+      <h2 className={inputTextLabel}>{t('views label')}</h2>
 
       <List.Root<DataType.View>
         items={views}

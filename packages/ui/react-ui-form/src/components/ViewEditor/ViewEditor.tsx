@@ -9,10 +9,19 @@ import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
-import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import {
+  Callout,
+  IconButton,
+  Input,
+  type ThemedClassName,
+  useDensityContext,
+  useElevationContext,
+  useTranslation,
+} from '@dxos/react-ui';
 import { QueryEditor, QuerySerializer, createExpression } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
+import { inputTheme } from '@dxos/react-ui-theme';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import {
   type DataType,
@@ -25,7 +34,7 @@ import {
 
 import { translationKey } from '../../translations';
 import { FieldEditor } from '../FieldEditor';
-import { Form, type FormProps, type InputComponent, type InputProps } from '../Form';
+import { Form, type FormProps, type InputComponent, InputHeader, type InputProps } from '../Form';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
@@ -185,13 +194,30 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         mode === 'query'
           ? {
               ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props: InputProps) => {
+                const density = useDensityContext();
+                const elevation = useElevationContext();
+
                 const handleChange = useCallback(
                   (text: string) => props.onValueChange('string', text),
                   [props.onValueChange],
                 );
 
-                // TODO(wittjosiah): Add label & input styles.
-                return <QueryEditor space={space} initialValue={props.getValue()} onChange={handleChange} />;
+                // TODO(wittjosiah): This is probably not the right way to do these styles.
+                return (
+                  <Input.Root>
+                    <InputHeader label={props.label} />
+                    <QueryEditor
+                      classNames={mx(
+                        inputTheme.input({ density, elevation }),
+                        'flex items-center',
+                        'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
+                      )}
+                      space={space}
+                      initialValue={props.getValue()}
+                      onChange={handleChange}
+                    />
+                  </Input.Root>
+                );
               },
             }
           : {},
