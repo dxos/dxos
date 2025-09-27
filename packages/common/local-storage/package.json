@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",
-    "react": "~18.2.0"
+    "react": "~19.1.1"
   },
   "peerDependencies": {
     "effect": "^3.13.3",
