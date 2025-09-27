@@ -67,7 +67,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
           ${message.properties?.tags
-            .map(
+            ?.map(
               (tag: Tag) => trim`
                 <div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>
               `,
