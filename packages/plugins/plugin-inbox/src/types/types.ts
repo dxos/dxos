@@ -4,8 +4,8 @@
 
 import { Schema } from 'effect';
 
+import { SpaceSchema } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';

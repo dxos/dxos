@@ -12,28 +12,20 @@ import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
-// TODO(burdon): Move to @dxos/keys.
-export const SPACE_ID_LENGTH = 33;
-export const OBJECT_ID_LENGTH = 26;
-export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
-
-export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
-
-export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
-  Schema.filter((x) => isSpace(x)),
-  Schema.annotations({ title: 'Space' }),
-);
-
 // TODO(dmaretskyi): Move to @dxos/echo-schema.
 export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
-  Schema.filter((x) => isLiveObject(x)),
+  Schema.filter((obj) => isLiveObject(obj)),
   Schema.annotations({ title: 'Live' }),
 );
+
 export const EchoObjectSchema: Schema.Schema<AnyLiveObject<any>> = Schema.Any.pipe(
-  Schema.filter((x) => Obj.isObject(x)),
+  Schema.filter((obj) => Obj.isObject(obj)),
   Schema.annotations({ title: 'EchoObject' }),
 );
 
+/**
+ * @param object @deprecated
+ */
 // TODO(wittjosiah): This should be `Obj.getSpace` / `Relation.getSpace` / `Ref.getSpace`.
 export const getSpace = (object?: Live<any>): Space | undefined => {
   if (!object) {
@@ -71,16 +63,29 @@ export const parseFullyQualifiedId = (id: string): [string, string] => {
   return [spaceId, objectId];
 };
 
+// TODO(burdon): Don't export.
+export const SPACE_ID_LENGTH = 33;
+export const OBJECT_ID_LENGTH = 26;
+export const FQ_ID_LENGTH = SPACE_ID_LENGTH + OBJECT_ID_LENGTH + 1;
+
+// TODO(burdon): Move to @dxos/keys.
 export const parseId = (id?: string): { spaceId?: Type.SpaceId; objectId?: Type.ObjectId } => {
   if (!id) {
     return {};
   } else if (id.length === SPACE_ID_LENGTH) {
-    return { spaceId: id as Type.SpaceId };
+    return {
+      spaceId: id as Type.SpaceId,
+    };
   } else if (id.length === OBJECT_ID_LENGTH) {
-    return { objectId: id as Type.ObjectId };
+    return {
+      objectId: id as Type.ObjectId,
+    };
   } else if (id.length === FQ_ID_LENGTH && id.indexOf(':') === SPACE_ID_LENGTH) {
     const [spaceId, objectId] = id.split(':');
-    return { spaceId: spaceId as Type.SpaceId, objectId: objectId as Type.ObjectId };
+    return {
+      spaceId: spaceId as Type.SpaceId,
+      objectId: objectId as Type.ObjectId,
+    };
   } else {
     return {};
   }
