@@ -97,7 +97,7 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@swc-node/register": "1.9.1",
+    "@swc-node/register": "1.11.1",
     "@types/ws": "^7.4.0",
     "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0"
