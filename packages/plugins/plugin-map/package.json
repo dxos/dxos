@@ -69,7 +69,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-core": "^1.12.1",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
