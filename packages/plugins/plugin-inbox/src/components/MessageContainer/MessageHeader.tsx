@@ -42,6 +42,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
           <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
             <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
             {contactDxn && (
+              // TODO(burdon): Create dx-tag like border around h3 if link.
               <IconButton
                 ref={buttonRef}
                 variant='ghost'
