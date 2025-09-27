@@ -3,17 +3,14 @@
   "compilerOptions": {
     "emitDeclarationOnly": false,
     "outDir": "dist",
-    "rootDirs": [
-      "./src", // <-- KEEP "./src" FIRST
-      "./notebooks"
-    ],
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "types": [
       "@dxos/typings",
       "node"
     ]
   },
   "include": [
-    "notebooks",
     "src",
     "src/util/telemetryrc.json"
   ],
