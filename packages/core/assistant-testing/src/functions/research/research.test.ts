@@ -23,6 +23,8 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
   LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
@@ -44,7 +46,7 @@ const MOCK_SEARCH = true;
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research], testToolkit),
-  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({}) as any),
+  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -56,7 +58,9 @@ const TestLayer = Layer.mergeAll(
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
       LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
+      RemoteFunctionExecutionService.layerMock,
+      FunctionInvocationService.layerTest,
+      FunctionImplementationResolver.layerTest({ functions: [research] }),
       TracingService.layerNoop,
     ),
   ),

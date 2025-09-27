@@ -14,6 +14,8 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TracingService,
@@ -25,7 +27,7 @@ import { syncLinearIssues } from '../functions';
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolExecutionServiceFromFunctions(AiToolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -42,9 +44,11 @@ const TestLayer = Layer.mergeAll(
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
       LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
+      RemoteFunctionExecutionService.layerMock,
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
+      FunctionInvocationService.layerTest,
+      FunctionImplementationResolver.layerTest({ functions: [] }),
     ),
   ),
 );

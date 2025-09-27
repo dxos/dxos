@@ -16,6 +16,8 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
   LocalFunctionExecutionService,
   RemoteFunctionExecutionService,
   TracingService,
@@ -28,7 +30,7 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolExecutionServiceFromFunctions(AiToolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -41,7 +43,9 @@ const TestLayer = Layer.mergeAll(
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
       LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
+      RemoteFunctionExecutionService.layerMock,
+      FunctionInvocationService.layerTest,
+      FunctionImplementationResolver.layerTest({ functions: [] }),
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
     ),

@@ -14,7 +14,14 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
+import {
+  DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
+  LocalFunctionExecutionService,
+  TracingService,
+  defineFunction,
+} from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
@@ -122,12 +129,16 @@ export default defineFunction({
         AiService.model('@anthropic/claude-sonnet-4-0'),
         // TODO(dmaretskyi): Extract.
         makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
-        makeToolExecutionServiceFromFunctions(
-          [exaFunction, exaMockFunction],
-          AiToolkit.make() as any,
-          Layer.empty as any,
+        makeToolExecutionServiceFromFunctions(AiToolkit.make() as any, Layer.empty as any),
+      ).pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            LocalFunctionExecutionService.layer,
+            FunctionInvocationService.layerTest,
+            FunctionImplementationResolver.layerTest({ functions: [exaFunction, exaMockFunction] }),
+          ),
         ),
-      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
+      ),
     ),
   ),
 });
