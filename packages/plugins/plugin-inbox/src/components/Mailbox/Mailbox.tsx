@@ -64,16 +64,19 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         <div class="message__abstract__date">${date}</div>
       </div>
       <div class="message__abstract__body">
-        <div class="message__snippet">${subject}</div>
-        <div class="message__tags">
-          ${message.properties?.tags
-            .map(
-              (tag: Tag) => trim`
-                <div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>
-              `,
-            )
-            .join('')}
-        </div>
+        <p class="message__snippet">${subject}</p>
+        ${
+          message.properties?.tags && (
+            <div className='message__tags'>
+              {message.properties.tags
+                .map(
+                  ({ label, hue }: Tag) =>
+                    `<div class="dx-tag message__tags-item" data-label="${label}" data-hue=${hue}>${label}</div>`,
+                )
+                .join('\n')}
+            </div>
+          )
+        }
       </div>
     </button>
   `;
