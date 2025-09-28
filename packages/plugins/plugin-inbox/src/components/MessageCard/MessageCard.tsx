@@ -18,28 +18,32 @@ export type MessageCardProps = {
 };
 
 export const MessageCard = ({ message, role }: MessageCardProps) => {
-  const { date, from, hue, subject } = getMessageProps(message);
+  const { date, from, hue, subject, snippet } = getMessageProps(message);
   return (
-    <Card.SurfaceRoot role={role} classNames='message message__card'>
-      <div role='none' className='message__thumb'>
+    <Card.SurfaceRoot role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr]'>
+      <div role='none' className='grid aspect-square place-items-center'>
         <DxAvatar
           hue={hue}
           hueVariant='surface'
           variant='square'
-          size={8}
+          size={10}
           fallback={from ? getFirstTwoRenderableChars(from).join('') : '?'}
         />
       </div>
-      <div role='none' className='message__abstract'>
-        <div className='message__abstract__heading'>
-          <span className='message__abstract__from'>{from}</span>
-          <span className='message__abstract__date'>{date}</span>
+      <div role='none' className='pis-0 pie-2 pbs-1 pbs-1'>
+        <div className='flex items-center gap-1'>
+          <p className='grow truncate'>{from}</p>
+          <p className='text-xs text-subdued'>{date}</p>
         </div>
-        <p className='message__snippet'>{subject}</p>$
+        <p className='line-clamp-1 text-sm'>{subject}</p>
+      </div>
+      <div />
+      <div>
+        <p className='p-1 pis-0 line-clamp-4 text-sm text-description'>{snippet}</p>
         {message.properties?.tags && (
-          <div className='message__tags'>
+          <div className=''>
             {message.properties.tags.map(({ label, hue }: Tag) => (
-              <div className='dx-tag message__tags-item' key={label} data-label={label} data-hue={hue}>
+              <div className='dx-tag' key={label} data-label={label} data-hue={hue}>
                 {label}
               </div>
             ))}
