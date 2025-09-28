@@ -4,16 +4,29 @@
 
 import { HttpClient, HttpClientRequest } from '@effect/platform';
 import { Effect, Schedule, Schema } from 'effect';
+import TurndownService from 'turndown';
 
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { LabelsResponse, type Message, MessageDetails, MessagesResponse } from './types';
+import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
 
 // TODO(burdon): Evolve into general sync engine.
 
 const API_URL = 'https://gmail.googleapis.com/gmail/v1';
+
+/**
+ * https://www.npmjs.com/package/turndown
+ */
+const turndownService = new TurndownService({}).remove('style').remove('script');
+
+// TODO(burdon): Replace legal disclaimers, etc.
+const normalize = (str: string) => {
+  const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
+  return str.trim().replace(WHITESPACE, '\n\n');
+};
 
 /**
  * Lists the labels in the user's mailbox.
@@ -55,18 +68,20 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     const created = new Date(parseInt(message.internalDate)).toISOString();
     const from = message.payload.headers.find(({ name }) => name === 'From');
     const sender = from && parseEmailString(from.value);
-
-    // TODO(wittjosiah): Improve parsing of email contents.
-    //  https://nodemailer.com/extras/mailparser
-    const content =
+    const data =
       message.payload.body?.data ?? message.payload.parts?.find(({ mimeType }) => mimeType === 'text/plain')?.body.data;
 
     // Skip the message if content or sender is missing.
     // Skip the message if it's the same as the last message.
     // TODO(wittjosiah): This comparison should be done via foreignId probably.
-    if (!sender || !content || created === last?.created) {
-      return undefined;
+    if (!sender || !data || created === last?.created) {
+      return null;
     }
+
+    // TODO(wittjosiah): Improve parsing of email contents.
+    //  https://nodemailer.com/extras/mailparser
+    const text = Buffer.from(data, 'base64').toString('utf-8');
+    const markdown = normalize(turndownService.turndown(text));
 
     const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
     const labels = labelMap
@@ -80,7 +95,7 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
       blocks: [
         {
           _tag: 'text',
-          text: Buffer.from(content, 'base64').toString('utf-8'),
+          text: markdown,
         },
       ],
       properties: {
@@ -130,6 +145,7 @@ const makeRequest = Effect.fnUntraced(function* (url: string) {
   // TODO(burdon): Handle errors (esp. 401).
   if ((response as any).error) {
     // throw new Error((response as any).error);
+    log.catch((response as any).error);
   }
 
   return response;
