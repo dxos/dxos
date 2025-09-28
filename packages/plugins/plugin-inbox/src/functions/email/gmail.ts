@@ -14,7 +14,7 @@ import { type DataType } from '@dxos/schema';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import { Mailbox } from '../../types/mailbox';
 
-import { listLabels, getMessage, listMessages, messageToObject } from './api';
+import { getMessage, listLabels, listMessages, messageToObject } from './api';
 
 // TODO(burdon): Create test.
 export default defineFunction({
