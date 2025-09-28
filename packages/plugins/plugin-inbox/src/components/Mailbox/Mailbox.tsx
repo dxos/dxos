@@ -82,8 +82,6 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
   `;
 };
 
-const messageCellClassName = 'message';
-
 export type MailboxAction =
   | { type: 'current'; messageId: string }
   | { type: 'select'; messageId: string }
@@ -179,7 +177,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
                 accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: mx(messageCellClassName, isCurrent && 'message--current'),
+                className: mx('message', isCurrent && 'message--current'),
               };
             }
             return cells;
