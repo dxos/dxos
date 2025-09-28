@@ -93,6 +93,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
             if (credentials.length === 0) {
               throw new Error(`Credential not found for service: ${query.service}`);
             }
+
             return credentials[0];
           },
           queryCredentials: async (query) => {
@@ -120,6 +121,7 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
     if (!credential) {
       throw new Error(`Credential not found for service: ${query.service}`);
     }
+
     return credential;
   }
 }
