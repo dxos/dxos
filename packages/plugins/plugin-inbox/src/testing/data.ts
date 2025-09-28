@@ -36,11 +36,13 @@ export const createMessages = (count = 10) => {
           },
         ],
         properties: {
-          subject: faker.commerce.productName(),
+          subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
           tags: faker.helpers.uniqueArray(TAGS, faker.number.int(3)).sort(sortTags),
         },
       }),
-    { count },
+    {
+      count,
+    },
   );
 };
 
@@ -61,7 +63,6 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     .join('\n\n');
 
   let enrichedText = text;
-
   if (space) {
     const words = text.split(' ');
 
@@ -90,6 +91,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
   return Obj.make(DataType.Message, {
     created: faker.date.recent().toISOString(),
     sender: {
+      identityDid: IdentityDid.random(),
       email: faker.internet.email(),
       name: faker.person.fullName(),
     },
@@ -98,7 +100,10 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
       { _tag: 'text', text },
       { _tag: 'text', text: enrichedText },
     ],
-    properties: { tags },
+    properties: {
+      subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+      tags,
+    },
   });
 };
 
