@@ -41,11 +41,11 @@ export const MessageCard = ({ message, role }: MessageCardProps) => {
       <div>
         <p className='p-1 pis-0 line-clamp-4 text-sm text-description'>{snippet}</p>
         {message.properties?.tags && (
-          <div className=''>
+          <div role='none'>
             {message.properties.tags.map(({ label, hue }: Tag) => (
-              <div className='dx-tag' key={label} data-label={label} data-hue={hue}>
+              <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
                 {label}
-              </div>
+              </span>
             ))}
           </div>
         )}
