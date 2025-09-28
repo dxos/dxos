@@ -34,7 +34,8 @@ export const getMessageProps = (message: DataType.Message, now: Date = new Date(
   const text = textBlocks[0]?.text || '';
   const date = formatDate(now, message.created ? new Date(message.created) : new Date());
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name ?? message.sender?.email;
-  const snippet = message.properties?.subject ?? text;
   const hue = toHue(hashString(from));
-  return { id, text, date, snippet, hue, from };
+  const subject = message.properties?.subject;
+  const snippet = message.properties?.snippet;
+  return { id, text, date, from, hue, subject, snippet };
 };
