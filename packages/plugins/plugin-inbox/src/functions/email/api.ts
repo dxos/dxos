@@ -4,7 +4,6 @@
 
 import { HttpClient, HttpClientRequest } from '@effect/platform';
 import { Effect, Schedule, Schema } from 'effect';
-import TurndownService from 'turndown';
 
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
@@ -12,28 +11,18 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
+import { createUrl, parseEmailString, stripNewlines, turndown } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
 const API_URL = 'https://gmail.googleapis.com/gmail/v1';
 
 /**
- * https://www.npmjs.com/package/turndown
- */
-const turndownService = new TurndownService({}).remove('style').remove('script');
-
-// TODO(burdon): Replace legal disclaimers, etc.
-const normalize = (str: string) => {
-  const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
-  return str.trim().replace(WHITESPACE, '\n\n');
-};
-
-/**
  * Lists the labels in the user's mailbox.
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/list
  */
 export const listLabels = Effect.fn(function* (userId: string) {
-  const url = getUrl([API_URL, 'users', userId, 'labels']).toString();
+  const url = createUrl([API_URL, 'users', userId, 'labels']).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
 });
 
@@ -47,7 +36,7 @@ export const listMessages = Effect.fn(function* (
   pageSize: number,
   pageToken?: string | undefined,
 ) {
-  const url = getUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
+  const url = createUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessagesResponse)));
 });
 
@@ -56,7 +45,7 @@ export const listMessages = Effect.fn(function* (
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get
  */
 export const getMessage = Effect.fn(function* (userId: string, messageId: string) {
-  const url = getUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
+  const url = createUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessageDetails)));
 });
 
@@ -84,9 +73,10 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
 
     // Normalize text.
     const text = Buffer.from(data, 'base64').toString('utf-8');
-    const markdown = normalize(turndownService.turndown(text));
+    const markdown = stripNewlines(turndown.turndown(text));
 
     const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
+    const snippet = message.snippet; // TODO(burdon): Remove <https://foo.com> tags.
     const labels = labelMap
       ? message.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
       : message.labelIds;
@@ -104,36 +94,24 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
       properties: {
         threadId: message.threadId,
         labels,
-        snippet: message.snippet,
+        snippet,
         subject,
       },
     });
   });
 
-//
-// Utils
-//
-
-const getUrl = (parts: (string | undefined)[], params: Record<string, any> = {}): URL => {
-  const url = new URL(parts.filter(Boolean).join('/'));
-  Object.entries(params)
-    .filter(([_, value]) => value != null)
-    .forEach(([key, value]) => url.searchParams.set(key, value));
-
-  return url;
-};
-
 /**
  * NOTE: Google API bundles size is v. large and caused runtime issues.
  */
+// TODO(burdon): Factor out.
 const makeRequest = Effect.fnUntraced(function* (url: string) {
   const httpClient = yield* HttpClient.HttpClient.pipe(
-    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')), // TODO(burdon): Factor out.
+    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')),
   );
 
   // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
-  //   Is this an issue on Google's side or is it a bug in `@effect/platform`?
-  //   https://github.com/Effect-TS/effect/issues/4568
+  //  Is this an issue on Google's side or is it a bug in `@effect/platform`?
+  //  https://github.com/Effect-TS/effect/issues/4568
   const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
   const response = yield* HttpClientRequest.get(url).pipe(
@@ -153,19 +131,3 @@ const makeRequest = Effect.fnUntraced(function* (url: string) {
 
   return response;
 });
-
-const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
-
-// TODO(burdon): Factor out.
-const parseEmailString = (emailString: string): { name?: string; email: string } | undefined => {
-  const match = emailString.match(EMAIL_REGEX);
-  if (match) {
-    const [, name, email] = match;
-    return {
-      name: name.trim(),
-      email: email.trim(),
-    };
-  }
-
-  return undefined;
-};
