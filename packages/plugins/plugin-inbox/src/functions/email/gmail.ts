@@ -11,11 +11,12 @@ import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
 
-// NOTE: Importing from types/index.ts pulls in @dxos/client dependencies.
+// TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import { Mailbox } from '../../types/mailbox';
 
-import { getLabels, getMessages, messageToObject } from './api';
+import { listLabels, getMessage, listMessages, messageToObject } from './api';
 
+// TODO(burdon): Create test.
 export default defineFunction({
   name: 'dxos.org/function/inbox/gmail-sync',
   description: 'Sync emails from Gmail to the mailbox.',
@@ -35,41 +36,50 @@ export default defineFunction({
     data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 7), 'yyyy-MM-dd'), pageSize = 100 },
   }) =>
     Effect.gen(function* () {
-      yield* Console.log('running gmail sync', { mailboxId, userId, after, pageSize });
+      yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
+
+      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
+      const labels = yield* listLabels(userId);
+      const labelMap = new Map(labels.labels.map((label) => [label.id, label.name]));
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
-      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
-      const labelsResponse = yield* getLabels(userId);
-      const labelMap = new Map(labelsResponse.labels.map((label) => [label.id, label.name]));
-
       do {
+        // Request messages.
+        // TODO(burdon): Query from Oldest to Newest (due to queue order).
         const objects = yield* Effect.tryPromise(() => queue.queryObjects());
         const last = objects.at(-1);
         const q = last
-          ? `in:inbox after:${Math.floor(new Date(last.created).getTime() / 1000)}`
+          ? `in:inbox after:${Math.floor(new Date(last.created).getTime() / 1_000)}`
           : `in:inbox after:${after}`;
         const pageToken = yield* Ref.get(nextPage);
-        yield* Console.log('listing messages', { q, pageToken });
-
-        const { messages, nextPageToken } = yield* getMessages(userId, q, pageSize, pageToken);
+        yield* Console.log('requesting messages', { q, pageToken });
+        const { messages, nextPageToken } = yield* listMessages(userId, q, pageSize, pageToken);
         yield* Ref.update(nextPage, () => nextPageToken);
 
+        // Process messges.
         const messageObjects = yield* pipe(
           messages,
-          Array.map(messageToObject(userId, last, labelMap)),
+          Array.map((message) =>
+            pipe(
+              // Retrieve details.
+              getMessage(userId, message.id),
+              Effect.flatMap(messageToObject(last, labelMap)),
+            ),
+          ),
           Effect.all,
           Effect.map((objects) => Array.filter(objects, isNotNullable)),
           Effect.map((objects) => Array.reverse(objects)),
         );
 
         // TODO(wittjosiah): Set foreignId in object meta.
-        yield* Ref.update(newMessages, (n) => [...messageObjects, ...n]);
+        yield* Ref.update(newMessages, (messages) => [...messageObjects, ...messages]);
       } while (yield* Ref.get(nextPage));
 
+      // Append to queue.
       const queueMessages = yield* Ref.get(newMessages);
       if (queueMessages.length > 0) {
         yield* pipe(
@@ -81,8 +91,9 @@ export default defineFunction({
         );
       }
 
-      yield* Console.log('gmail sync complete', { newMessages: queueMessages.length });
-
-      return { newMessages: queueMessages.length };
+      yield* Console.log('sync complete', { newMessages: queueMessages.length });
+      return {
+        newMessages: queueMessages.length,
+      };
     }).pipe(Effect.provide(FetchHttpClient.layer)),
 });

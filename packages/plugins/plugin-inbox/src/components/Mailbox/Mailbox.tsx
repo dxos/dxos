@@ -37,7 +37,7 @@ const messageColumnDefault = {
 };
 
 const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
-  const { id, hue, from, date, subject } = getMessageProps(message, now);
+  const { id, hue, from, date, snippet } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
   return trim`
@@ -64,7 +64,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         <div class="message__abstract__date">${date}</div>
       </div>
       <div class="message__abstract__body">
-        <div class="message__snippet">${subject}</div>
+        <div class="message__snippet">${snippet}</div>
         <div class="message__tags">
           ${(message.properties?.tags ?? [])
             .map(

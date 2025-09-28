@@ -9,65 +9,69 @@ import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import { LabelsResponse, type Message, MessageDetails, ListMessagesResponse as MessagesResponse } from './types';
+import { LabelsResponse, type Message, MessageDetails, MessagesResponse } from './types';
 
 // TODO(burdon): Evolve into general sync engine.
 
+const API_URL = 'https://gmail.googleapis.com/gmail/v1';
+
 /**
- * Fetches all labels for a Gmail user.
+ * Lists the labels in the user's mailbox.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/list
  */
-export const getLabels = Effect.fn(function* (userId: string) {
-  const url = getUrl(['users', userId, 'labels']).toString();
+export const listLabels = Effect.fn(function* (userId: string) {
+  const url = getUrl([API_URL, 'users', userId, 'labels']).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(LabelsResponse)));
 });
 
 /**
- * Fetches a Gmail messages.
+ * Lists the messages in the user's mailbox.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list
  */
-export const getMessages = Effect.fn(function* (
+export const listMessages = Effect.fn(function* (
   userId: string,
   q: string,
   pageSize: number,
-  pageToken: string | undefined,
+  pageToken?: string | undefined,
 ) {
-  const url = getUrl(['users', userId, 'messages'], { q, pageSize, pageToken }).toString();
+  const url = getUrl([API_URL, 'users', userId, 'messages'], { q, pageSize, pageToken }).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessagesResponse)));
 });
 
 /**
- * Fetches the details of a Gmail message.
+ * Gets the specified message.
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get
  */
 export const getMessage = Effect.fn(function* (userId: string, messageId: string) {
-  const url = getUrl(['users', userId, 'messages', messageId]).toString();
+  const url = getUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
   return yield* makeRequest(url).pipe(Effect.flatMap(Schema.decodeUnknown(MessageDetails)));
 });
 
 /**
- * Transforms a Gmail message to a ECHO message object.
+ * Transforms Gmail message to ECHO message object.
  */
-export const messageToObject = (userId: string, last?: DataType.Message, labelMap?: Map<string, string>) =>
-  Effect.fn(function* (message: Message) {
-    const messageDetails = yield* getMessage(userId, message.id);
-    const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
-    const from = messageDetails.payload.headers.find((h) => h.name === 'From');
+export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, string>) =>
+  Effect.fn(function* (message: MessageDetails) {
+    const created = new Date(parseInt(message.internalDate)).toISOString();
+    const from = message.payload.headers.find(({ name }) => name === 'From');
     const sender = from && parseEmailString(from.value);
 
     // TODO(wittjosiah): Improve parsing of email contents.
+    //  https://nodemailer.com/extras/mailparser
     const content =
-      messageDetails.payload.body?.data ??
-      messageDetails.payload.parts?.find((p) => p.mimeType === 'text/plain')?.body.data;
+      message.payload.body?.data ?? message.payload.parts?.find(({ mimeType }) => mimeType === 'text/plain')?.body.data;
 
     // Skip the message if content or sender is missing.
     // Skip the message if it's the same as the last message.
     // TODO(wittjosiah): This comparison should be done via foreignId probably.
-    if (!content || !sender || created === last?.created) {
+    if (!sender || !content || created === last?.created) {
       return undefined;
     }
 
-    const subject = messageDetails.payload.headers.find((h) => h.name === 'Subject')?.value;
+    const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
     const labels = labelMap
-      ? messageDetails.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
-      : messageDetails.labelIds;
+      ? message.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
+      : message.labelIds;
 
     return Obj.make(DataType.Message, {
       id: Type.ObjectId.random(),
@@ -80,9 +84,10 @@ export const messageToObject = (userId: string, last?: DataType.Message, labelMa
         },
       ],
       properties: {
-        subject,
         threadId: message.threadId,
         labels,
+        snippet: message.snippet,
+        subject,
       },
     });
   });
@@ -91,9 +96,9 @@ export const messageToObject = (userId: string, last?: DataType.Message, labelMa
 // Utils
 //
 
-const getUrl = (parts: (string | undefined)[], params?: Record<string, any>): URL => {
-  const url = new URL([`https://gmail.googleapis.com/gmail/v1`, ...parts].filter(Boolean).join('/'));
-  Object.entries(params ?? {})
+const getUrl = (parts: (string | undefined)[], params: Record<string, any> = {}): URL => {
+  const url = new URL(parts.filter(Boolean).join('/'));
+  Object.entries(params)
     .filter(([_, value]) => value != null)
     .forEach(([key, value]) => url.searchParams.set(key, value));
 
@@ -105,7 +110,7 @@ const getUrl = (parts: (string | undefined)[], params?: Record<string, any>): UR
  */
 const makeRequest = Effect.fnUntraced(function* (url: string) {
   const httpClient = yield* HttpClient.HttpClient.pipe(
-    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')),
+    Effect.map(withAuthorization({ service: 'gmail.com' }, 'Bearer')), // TODO(burdon): Factor out.
   );
 
   // TODO(wittjosiah): Without this, executing the request results in CORS errors when traced.
@@ -113,7 +118,7 @@ const makeRequest = Effect.fnUntraced(function* (url: string) {
   //   https://github.com/Effect-TS/effect/issues/4568
   const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
-  return yield* HttpClientRequest.get(url).pipe(
+  const response = yield* HttpClientRequest.get(url).pipe(
     HttpClientRequest.setHeader('accept', 'application/json'),
     httpClientWithTracerDisabled.execute,
     Effect.flatMap((res) => res.json),
@@ -121,6 +126,13 @@ const makeRequest = Effect.fnUntraced(function* (url: string) {
     Effect.retry(Schedule.exponential(1_000).pipe(Schedule.compose(Schedule.recurs(3)))),
     Effect.scoped,
   );
+
+  // TODO(burdon): Handle errors (esp. 401).
+  if ((response as any).error) {
+    // throw new Error((response as any).error);
+  }
+
+  return response;
 });
 
 const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
