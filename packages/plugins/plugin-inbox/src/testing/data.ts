@@ -21,6 +21,7 @@ const TAGS: Tag[] = [
 ];
 
 export const createMessages = (count = 10) => {
+  const text = faker.lorem.paragraph();
   return faker.helpers.multiple(
     () =>
       Obj.make(DataType.Message, {
@@ -32,11 +33,12 @@ export const createMessages = (count = 10) => {
         blocks: [
           {
             _tag: 'text',
-            text: faker.lorem.paragraph(),
+            text,
           },
         ],
         properties: {
           subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+          snippet: text,
           tags: faker.helpers.uniqueArray(TAGS, faker.number.int(3)).sort(sortTags),
         },
       }),
@@ -102,6 +104,7 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     ],
     properties: {
       subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+      snippet: text,
       tags,
     },
   });
