@@ -30,8 +30,8 @@ const TestLayer = Layer.mergeAll(
  * export ACCESS_TOKEN="xxx"
  * pnpm vitest gmail.test.ts
  */
-describe('sync', { timeout: 30_000 }, () => {
-  it.effect.skip(
+describe.runIf(process.env.ACCESS_TOKEN)('sync', { timeout: 30_000 }, () => {
+  it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
@@ -60,7 +60,6 @@ describe('sync', { timeout: 30_000 }, () => {
       );
 
       expect(message).to.exist;
-      console.log(JSON.stringify(message, null, 2));
     }, Effect.provide(TestLayer)),
   );
 });
