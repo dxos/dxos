@@ -31,19 +31,18 @@ export const MessageCard = ({ message, role }: MessageCardProps) => {
         />
       </div>
       <div role='none' className='message__abstract'>
-        <p className='message__abstract__heading'>
+        <div className='message__abstract__heading'>
           <span className='message__abstract__from'>{from}</span>
           <span className='message__abstract__date'>{date}</span>
-        </p>
+        </div>
         <p className='message__snippet'>{subject}</p>$
         {message.properties?.tags && (
           <div className='message__tags'>
-            {message.properties.tags
-              .map(
-                ({ label, hue }: Tag) =>
-                  `<div class="dx-tag message__tags-item" data-label="${label}" data-hue=${hue}>${label}</div>`,
-              )
-              .join('\n')}
+            {message.properties.tags.map(({ label, hue }: Tag) => (
+              <div className='dx-tag message__tags-item' key={label} data-label={label} data-hue={hue}>
+                {label}
+              </div>
+            ))}
           </div>
         )}
       </div>
