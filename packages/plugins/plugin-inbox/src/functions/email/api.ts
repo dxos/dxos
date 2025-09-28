@@ -65,21 +65,24 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
  */
 export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, string>) =>
   Effect.fn(function* (message: MessageDetails) {
+    // Skip the message if it's the same as the last message.
     const created = new Date(parseInt(message.internalDate)).toISOString();
+    if (created === last?.created) {
+      return null;
+    }
+
     const from = message.payload.headers.find(({ name }) => name === 'From');
     const sender = from && parseEmailString(from.value);
     const data =
       message.payload.body?.data ?? message.payload.parts?.find(({ mimeType }) => mimeType === 'text/plain')?.body.data;
 
     // Skip the message if content or sender is missing.
-    // Skip the message if it's the same as the last message.
     // TODO(wittjosiah): This comparison should be done via foreignId probably.
-    if (!sender || !data || created === last?.created) {
+    if (!sender || !data) {
       return null;
     }
 
-    // TODO(wittjosiah): Improve parsing of email contents.
-    //  https://nodemailer.com/extras/mailparser
+    // Normalize text.
     const text = Buffer.from(data, 'base64').toString('utf-8');
     const markdown = normalize(turndownService.turndown(text));
 
