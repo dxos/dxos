@@ -60,10 +60,11 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-message-id="${id}"
     >
       <div class="message__abstract__heading">
-        <div class="message__abstract__from">${from}</div>
-        <div class="message__abstract__date">${date}</div>
+        <span class="message__abstract__from">${from}</span>
+        <span class="message__abstract__date">${date}</span>
       </div>
       <div class="message__abstract__body">
+<<<<<<< HEAD
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
           ${(message.properties?.tags ?? [])
@@ -74,12 +75,36 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
             )
             .join('\n')}
         </div>
+||||||| b6c4dd678c
+        <div class="message__snippet">${subject}</div>
+        <div class="message__tags">
+          ${message.properties?.tags
+            .map(
+              (tag: Tag) => trim`
+                <div class="dx-tag message__tags-item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>
+              `,
+            )
+            .join('')}
+        </div>
+=======
+        <p class="message__snippet">${subject}</p>
+        ${
+          message.properties?.tags &&
+          trim`
+            <div className='message__tags'>
+              ${message.properties.tags
+                .map(
+                  ({ label, hue }: Tag) =>
+                    `<div class="dx-tag message__tags-item" data-label="${label}" data-hue=${hue}>${label}</div>`,
+                )
+                .join('\n')}
+            </div>`
+        }
+>>>>>>> origin/main
       </div>
     </button>
   `;
 };
-
-const messageCellClassName = 'message';
 
 export type MailboxAction =
   | { type: 'current'; messageId: string }
@@ -176,7 +201,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
                 accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: mx(messageCellClassName, isCurrent && 'message--current'),
+                className: mx('message', isCurrent && 'message--current'),
               };
             }
             return cells;

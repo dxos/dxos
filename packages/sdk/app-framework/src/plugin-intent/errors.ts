@@ -28,6 +28,7 @@ export class NoResolversError extends BaseError {
   }
 }
 
+// TODO(burdon): Detect loops.
 export class CycleDetectedError extends BaseError {
   constructor(context?: Record<string, any>) {
     super(

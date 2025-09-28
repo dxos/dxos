@@ -18,7 +18,7 @@ export type MessageCardProps = {
 };
 
 export const MessageCard = ({ message, role }: MessageCardProps) => {
-  const { from, date, subject, hue } = getMessageProps(message);
+  const { date, from, hue, subject } = getMessageProps(message);
   return (
     <Card.SurfaceRoot role={role} classNames='message message__card'>
       <div role='none' className='message__thumb'>
@@ -31,16 +31,20 @@ export const MessageCard = ({ message, role }: MessageCardProps) => {
         />
       </div>
       <div role='none' className='message__abstract'>
-        <p className='message__abstract__heading'>
+        <div className='message__abstract__heading'>
           <span className='message__abstract__from'>{from}</span>
           <span className='message__abstract__date'>{date}</span>
-        </p>
-        <p className='message__abstract__body'>{subject}</p>
-        {message.properties?.tags
-          ? `<div class="message__tag-row">
-            ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
-          </div>`
-          : ''}
+        </div>
+        <p className='message__snippet'>{subject}</p>$
+        {message.properties?.tags && (
+          <div className='message__tags'>
+            {message.properties.tags.map(({ label, hue }: Tag) => (
+              <div className='dx-tag message__tags-item' key={label} data-label={label} data-hue={hue}>
+                {label}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </Card.SurfaceRoot>
   );

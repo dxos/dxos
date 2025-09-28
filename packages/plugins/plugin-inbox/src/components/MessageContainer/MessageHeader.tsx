@@ -40,6 +40,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
       <div className='grid grid-rows-2 border-be border-subduedSeparator'>
         <div className='flex is-full'>
           <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
+            {/* TODO(burdon): Create dx-tag like border around h3 if link. */}
             <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
             {contactDxn && (
               <IconButton
@@ -73,6 +74,8 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
             </div>
           )}
         </div>
+
+        <div className='p-2'>{message.properties?.subject}</div>
       </div>
     </Avatar.Root>
   );
