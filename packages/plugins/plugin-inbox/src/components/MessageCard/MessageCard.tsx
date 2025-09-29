@@ -21,7 +21,7 @@ export const MessageCard = ({ message, role }: MessageCardProps) => {
   return (
     <Card.SurfaceRoot role={role} classNames='grid grid-cols-[52px_1fr] grid-rows-[min-content_1fr] overflow-hidden'>
       <div role='none' className='grid aspect-square place-items-center'>
-        <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from || '?'} />
+        <DxAvatar hue={hue} hueVariant='surface' variant='square' size={10} fallback={from} />
       </div>
       <div role='none' className='p-1 pie-2 overflow-hidden'>
         <div role='none' className='flex items-center gap-2'>

@@ -18,7 +18,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import { getMessageProps } from '../util';
 
@@ -51,7 +51,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _current?: bool
         hueVariant="surface"
         variant="square"
         size="10"
-        fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
+        fallback="${from}"
       ></dx-avatar>
     </button>
     <button
