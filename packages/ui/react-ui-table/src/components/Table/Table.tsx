@@ -3,6 +3,7 @@
 //
 
 import { type Schema } from 'effect/Schema';
+import { trim } from 'effect/String';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -275,7 +276,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
-          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1 && increment !== 'col') {
             handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);
@@ -320,7 +321,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               void navigator.clipboard.readText().then((clipboardText) => {
                 try {
                   // Attempt to set the cell's content to clipboard content
-                  model.setCellData(cell, clipboardText);
+                  model.setCellData(cell, trim(clipboardText).replace(/[\n\r]+/, ' '));
                   handleSave();
                 } catch {
                   // If validation fails, emit a DxEditRequest event with initialContent from clipboard
@@ -356,6 +357,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
             try {
               model.setCellData(cell, undefined);
               event.preventDefault();
+              handleSave();
             } catch {
               // Delete results in a validation error; don’t prevent default so dx-grid can emit an edit request.
             }

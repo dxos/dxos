@@ -8,7 +8,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { REGISTRY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type PluginItemProps = {
   plugin: Plugin;
@@ -28,7 +28,7 @@ export const PluginItem = ({
   hasSettings: _hasSettings,
   onSettings,
 }: PluginItemProps) => {
-  const { t } = useTranslation(REGISTRY_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, name, description, tags, icon = 'ph--circle--regular' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;

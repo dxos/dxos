@@ -34,7 +34,7 @@ import {
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
@@ -69,7 +69,7 @@ const sheetRowDefault = {
 };
 
 export const GridSheet = () => {
-  const { t } = useTranslation(SHEET_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us

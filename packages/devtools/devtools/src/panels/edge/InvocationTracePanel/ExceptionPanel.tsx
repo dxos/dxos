@@ -4,28 +4,24 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
-import { useQueue } from '@dxos/react-client/echo';
-import { Callout, Icon } from '@dxos/react-ui';
+import { TraceEvent } from '@dxos/functions';
+import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
+import { Callout } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 type ExceptionPanelProps = {
-  span: InvocationSpan;
+  queue?: Queue;
 };
 
-export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
-  const traceQueueDxn = useMemo(() => {
-    return span.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
-  }, [span.invocationTraceQueue]);
-
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
+export const ExceptionPanel: FC<ExceptionPanelProps> = ({ queue }) => {
+  const objects = useQuery(queue, Filter.type(TraceEvent));
 
   const errorLogs = useMemo(() => {
-    if (!eventQueue?.objects?.length) {
+    if (!objects?.length) {
       return [];
     }
 
-    return eventQueue.objects
+    return objects
       .flatMap((event) =>
         event.logs
           .filter((log) => log.level === 'error')
@@ -35,16 +31,7 @@ export const ExceptionPanel: FC<ExceptionPanelProps> = ({ span }) => {
           })),
       )
       .sort((a, b) => a.timestamp - b.timestamp);
-  }, [eventQueue?.objects]);
-
-  if (traceQueueDxn && eventQueue?.isLoading) {
-    // TODO(burdon): Create alert variant?
-    return (
-      <div role='none' className={mx('flex is-full items-center justify-center m-4')}>
-        <Icon icon='ph--spinner-gap--regular' size={5} classNames='animate-spin' />
-      </div>
-    );
-  }
+  }, [objects]);
 
   if (errorLogs.length === 0) {
     return (

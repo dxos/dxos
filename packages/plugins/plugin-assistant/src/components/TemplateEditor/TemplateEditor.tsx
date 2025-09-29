@@ -12,10 +12,11 @@ import {
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -46,11 +47,10 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({ themeMode }),
-
-        // Extend markdown with handlebars support.
         createMarkdownExtensions(),
+        decorateMarkdown(),
         handlebars(),
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     };
   }, [themeMode, template.source?.target]);
 

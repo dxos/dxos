@@ -48,6 +48,9 @@
       "path": "../../core/assistant-testing"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/compute"
     },
     {

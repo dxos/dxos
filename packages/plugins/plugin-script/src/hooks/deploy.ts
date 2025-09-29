@@ -12,7 +12,7 @@ import { type TFunction } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { errorMessageColors } from '@dxos/react-ui-theme';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
@@ -37,7 +37,7 @@ export type CreateDeployOptions = {
 export const createDeploy = ({ state, script, space, fn, client, existingFunctionId, t }: CreateDeployOptions) => {
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: state.error ?? ['no error label', { ns: SCRIPT_PLUGIN }],
+    label: state.error ?? ['no error label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
     hidden: !state.error,
     classNames: state.error && errorMessageColors,
@@ -64,7 +64,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'deploy',
-      label: [state.deploying ? 'pending label' : 'deploy label', { ns: SCRIPT_PLUGIN }],
+      label: [state.deploying ? 'pending label' : 'deploy label', { ns: meta.id }],
       icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: state.deploying,
       classNames: state.deploying ? '[&_svg]:animate-spin' : '',
@@ -81,7 +81,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'copy',
-      label: ['copy link label', { ns: SCRIPT_PLUGIN }],
+      label: ['copy link label', { ns: meta.id }],
       icon: 'ph--link--regular',
       disabled: !state.functionUrl,
     },

@@ -7,18 +7,18 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { AUTOMATION_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { AutomationPanel, type AutomationPanelProps } from './AutomationPanel';
 import { TriggersSettings } from './TriggerSettings';
 
-export const AutomationContainer = (props: AutomationPanelProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+export const AutomationSettings = (props: AutomationPanelProps) => {
+  const { t } = useTranslation(meta.id);
   return (
     <ControlPage>
       <ControlSection
-        title={t('automation verbose label', { ns: AUTOMATION_PLUGIN })}
-        description={t('automation description', { ns: AUTOMATION_PLUGIN })}
+        title={t('automation verbose label', { ns: meta.id })}
+        description={t('automation description', { ns: meta.id })}
       >
         <AutomationPanel {...props} />
         <TriggersSettings space={props.space} />
@@ -27,4 +27,4 @@ export const AutomationContainer = (props: AutomationPanelProps) => {
   );
 };
 
-export default AutomationContainer;
+export default AutomationSettings;

@@ -284,4 +284,37 @@ describe('FeedWrapper', () => {
       console.log('audit', { err, valid });
     });
   });
+
+  test('integrates blocks via putBuffer', async () => {
+    const numBlocks = 5;
+    const builder = new TestBuilder();
+    const feedFactory = builder.createFeedFactory();
+
+    const key = await builder.keyring.createKey();
+    const source = await feedFactory.createFeed(key, { writable: true });
+    const target = await feedFactory.createFeed(key);
+
+    await source.open();
+    await target.open();
+
+    // Append to source.
+    for (let i = 0; i < numBlocks; i++) {
+      await source.append(faker.lorem.sentence() as any);
+    }
+
+    // Integrate into target via putBuffer using proofs from source.
+    for (let i = 0; i < numBlocks; i++) {
+      const data = (await source.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      const proof = await source.proof(i);
+      await target.putBuffer(i, data, proof, null);
+    }
+
+    // Verify data and length.
+    expect(target.length).to.eq(numBlocks);
+    for (let i = 0; i < numBlocks; i++) {
+      const src = (await source.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      const dst = (await target.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      expect(Buffer.from(dst).equals(Buffer.from(src))).to.be.true;
+    }
+  });
 });

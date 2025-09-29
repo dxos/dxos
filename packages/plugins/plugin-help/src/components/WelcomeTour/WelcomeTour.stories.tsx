@@ -111,7 +111,7 @@ const meta = {
   component: WelcomeTour,
   render: DefaultStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin()] }), withTheme],
+  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin({})] }), withTheme],
 } satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

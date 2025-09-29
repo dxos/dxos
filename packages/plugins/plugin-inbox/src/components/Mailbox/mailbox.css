@@ -1,15 +1,15 @@
 .message {
-
   &.message__card {
     @apply pli-cardSpacingChrome plb-cardSpacingChrome;
   }
 
-  & > .dx-grid__cell__content, &.message__card {
-    @apply grid grid-cols-[var(--rail-action)_1fr] gap-1 border-0;
+  body[data-is-keyboard='true'] article:focus-within & > .dx-grid__cell__content {
+    @apply border;
+  }
 
-    body[data-is-keyboard='true'] article:focus-within & {
-      @apply border;
-    }
+  & > .dx-grid__cell__content,
+  &.message__card {
+    @apply grid grid-cols-[min-content_1fr];
 
     &::before,
     &::after {
@@ -28,7 +28,6 @@
       inset-inline-end: 0;
       inline-size: 0.25rem;
     }
-
   }
 
   &.message--current > .dx-grid__cell__content {
@@ -52,41 +51,40 @@
   }
 
   .message__thumb {
-    @apply flex text-start pli-1 plb-1.5;
+    @apply grid aspect-square place-items-center;
   }
 
   .message__abstract {
-    @apply text-start min-is-0 pie-1;
-
-    .message__abstract__body {
-      @apply truncate text-sm text-description;
-    }
+    @apply grid grid-rows-2 is-full min-is-0 overflow-hidden;
 
     .message__abstract__heading {
-      @apply flex gap-2 items-baseline;
+      @apply flex items-center;
 
       .message__abstract__from {
-        flex: 1 1 0;
-        @apply text-base font-medium truncate;
+        @apply flex flex-1 pis-1 truncate text-base font-medium;
       }
 
       .message__abstract__date {
-        @apply text-sm font-normal;
+        @apply pie-2 text-sm text-description font-normal;
       }
     }
-  }
 
-  .message__tag-row {
-    @apply flex flex-row mlb-0.5 gap-1 flex-nowrap is-full overflow-hidden;
-  }
+    .message__abstract__body {
+      @apply flex items-center overflow-hidden;
 
-  .message__tag-row__item {
-    @apply cursor-pointer;
-    transition-property: transform;
-    transition-duration: 80ms;
-  }
+      .message__snippet {
+        @apply text-left grow pis-1 pie-2 truncate text-sm text-description;
+      }
 
-  .message__tag-row__item:active {
-    transform: scale(0.97);
+      .message__tags {
+        @apply flex shrink-0 pie-1 gap-0.5 flex-nowrap overflow-hidden;
+
+        .message__tags-item {
+          @apply cursor-pointer;
+          transition-property: transform;
+          transition-duration: 80ms;
+        }
+      }
+    }
   }
 }

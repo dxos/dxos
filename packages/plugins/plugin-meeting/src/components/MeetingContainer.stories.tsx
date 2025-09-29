@@ -46,8 +46,6 @@ const meta = {
       plugins: [
         AttentionPlugin(),
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
-        IntentPlugin(),
-        SettingsPlugin(),
         ClientPlugin({
           types: [Meeting.Meeting],
           onClientInitialized: async ({ client }) => {
@@ -68,7 +66,9 @@ const meta = {
             );
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+        SettingsPlugin(),
         MarkdownPlugin(),
       ],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],

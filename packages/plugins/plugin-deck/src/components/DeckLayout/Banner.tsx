@@ -8,11 +8,11 @@ import { Surface } from '@dxos/app-framework';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <header
       className={mx(

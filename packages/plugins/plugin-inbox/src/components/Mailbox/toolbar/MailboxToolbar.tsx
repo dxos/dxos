@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
-import { INBOX_PLUGIN } from '../../../meta';
+import { meta } from '../../../meta';
 import { type Mailbox } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';
 
@@ -24,7 +24,7 @@ export const useMailboxToolbarActions = (
         Rx.make((get) =>
           MenuBuilder.make()
             .root({
-              label: ['mailbox toolbar title', { ns: INBOX_PLUGIN }],
+              label: ['mailbox toolbar title', { ns: meta.id }],
             })
             .action(
               'sort',
@@ -32,8 +32,8 @@ export const useMailboxToolbarActions = (
                 label: get(
                   rxFromSignal(() =>
                     model.sortDirection === 'asc'
-                      ? ['mailbox toolbar sort oldest', { ns: INBOX_PLUGIN }]
-                      : ['mailbox toolbar sort newest', { ns: INBOX_PLUGIN }],
+                      ? ['mailbox toolbar sort oldest', { ns: meta.id }]
+                      : ['mailbox toolbar sort newest', { ns: meta.id }],
                   ),
                 ),
                 icon: get(
@@ -51,7 +51,7 @@ export const useMailboxToolbarActions = (
             .action(
               'filter',
               {
-                label: ['mailbox toolbar filter by tags', { ns: INBOX_PLUGIN }],
+                label: ['mailbox toolbar filter by tags', { ns: meta.id }],
                 icon: 'ph--tag--regular',
                 type: 'filter',
                 classNames: get(rxFromSignal(() => (tagFilterVisible.value ? 'text-accentText' : undefined))),
@@ -65,7 +65,7 @@ export const useMailboxToolbarActions = (
             // .action(
             //   'assistant',
             //   {
-            //     label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
+            //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
             //     icon: 'ph--sparkle--regular',
             //     type: 'assistant',
             //   },

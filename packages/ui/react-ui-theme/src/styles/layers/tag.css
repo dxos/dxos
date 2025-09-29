@@ -1,6 +1,6 @@
 @layer dx-tokens {
   :root {
-    --dx-tag-padding-block: 0.2rem;
+    --dx-tag-padding-block: 0.125rem;
   }
 }
 

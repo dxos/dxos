@@ -22,7 +22,7 @@ import { trim } from '@dxos/util';
  * Summarize a mailbox.
  */
 export default defineFunction({
-  name: 'dxos.org/function/inbox/summarize',
+  name: 'dxos.org/function/inbox/email-summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
     messages: Schema.String.annotations({

@@ -4,8 +4,8 @@
 
 import { defineEvent } from '@dxos/app-framework';
 
-import { SCRIPT_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace ScriptEvents {
-  export const SetupCompiler = defineEvent(`${SCRIPT_PLUGIN}/event/setup-compiler`);
+  export const SetupCompiler = defineEvent(`${meta.id}/event/setup-compiler`);
 }

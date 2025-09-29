@@ -9,7 +9,7 @@ import { Capabilities, LayoutAction, type PluginContext, contributes, createInte
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { DeckCapabilities } from './capabilities';
 
@@ -17,7 +17,7 @@ export default (context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: DECK_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -37,7 +37,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
+                  label: ['toggle fullscreen label', { ns: meta.id }],
                   icon: 'ph--arrows-out--regular',
                   keyBinding: {
                     macos: 'ctrl+meta+f',
@@ -63,7 +63,7 @@ export default (context: PluginContext) =>
                   }
                 },
                 properties: {
-                  label: ['close current label', { ns: DECK_PLUGIN }],
+                  label: ['close current label', { ns: meta.id }],
                   icon: 'ph--x--regular',
                 },
               };
@@ -80,7 +80,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['close others label', { ns: DECK_PLUGIN }],
+                  label: ['close others label', { ns: meta.id }],
                   icon: 'ph--x-square--regular',
                 },
               };
@@ -98,7 +98,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['close all label', { ns: DECK_PLUGIN }],
+                  label: ['close all label', { ns: meta.id }],
                   icon: 'ph--x-circle--regular',
                 },
               };
@@ -117,7 +117,7 @@ export default (context: PluginContext) =>
                           : 'open navigation sidebar label',
                       ),
                     ),
-                    { ns: DECK_PLUGIN },
+                    { ns: meta.id },
                   ],
                   icon: 'ph--sidebar--regular',
                   keyBinding: {

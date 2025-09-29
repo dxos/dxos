@@ -7,22 +7,30 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Capabilities, IntentPlugin, SettingsPlugin, Surface, contributes } from '@dxos/app-framework';
+import {
+  type Capabilities,
+  IntentPlugin,
+  LayoutAction,
+  SettingsPlugin,
+  Surface,
+  createIntent,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { todo } from '@dxos/debug';
-import { Query, Type } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { PreviewPlugin } from '@dxos/plugin-preview';
-import { SpaceCapabilities, SpacePlugin } from '@dxos/plugin-space';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -34,11 +42,18 @@ faker.seed(1);
 const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useSpace();
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
 
-  return <Surface role='article' data={data} />;
+  useAsyncEffect(async () => {
+    if (space) {
+      await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+    }
+  }, [space, dispatch]);
+
+  return <Surface role='article' data={data} limit={1} />;
 };
 
 const meta = {
@@ -47,42 +62,40 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
-          types: [Markdown.Document, DataType.Text, Testing.Contact],
+          types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-            const doc = Markdown.makeDocument({ name: 'Test', content: '# Test\n\n' });
+
+            const queue = space.queues.create();
+            const alice = Obj.make(DataType.Person, { fullName: 'Alice' });
+            const acme = Obj.make(DataType.Organization, { name: 'ACME' });
+            await queue.append([alice, acme]);
+
+            const doc = Markdown.makeDocument({
+              name: 'Test',
+              content: `# Test\n\n![Alice](${Obj.getDXN(alice)})\n\n![ACME](${Obj.getDXN(acme)})`,
+            });
             space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
-            await createObjects([{ type: Testing.Contact, count: 10 }]);
+            await createObjects([{ type: DataType.Organization, count: 10 }]);
             await space.db.flush({ indexes: true });
           },
         }),
-        SpacePlugin(),
-        SettingsPlugin(),
+        SpacePlugin({}),
+        GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        AttentionPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
-        GraphPlugin(),
-      ],
-      capabilities: [
-        // NOTE: Editor only queries for object form schemas when linking.
-        contributes(SpaceCapabilities.ObjectForm, {
-          objectSchema: Testing.Contact,
-          getIntent: () => todo(),
-        }),
-        contributes(Capabilities.Metadata, {
-          id: Type.getTypename(Testing.Contact),
-          metadata: {
-            icon: 'ph--user--regular',
-          },
-        }),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),

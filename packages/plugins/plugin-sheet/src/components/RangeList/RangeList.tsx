@@ -10,7 +10,7 @@ import { Callout, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover } from '@dxos/react-ui-theme';
 
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';
 import { Range, type SheetType } from '../../types';
 
@@ -19,7 +19,7 @@ export type RangeListProps = {
 };
 
 export const RangeList = ({ sheet }: RangeListProps) => {
-  const { t } = useTranslation(SHEET_PLUGIN);
+  const { t } = useTranslation(meta.id);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Range) => {};
   const handleDeleteRange = useCallback(

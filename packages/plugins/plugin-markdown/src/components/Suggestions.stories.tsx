@@ -8,14 +8,7 @@ import { type Meta } from '@storybook/react-vite';
 import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import {
-  Capabilities,
-  IntentPlugin,
-  SettingsPlugin,
-  contributes,
-  useCapability,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +21,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { createDocAccessor, fullyQualifiedId, toCursorRange, useQueue, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { type EditorSelection, type Range, command, useTextEditor } from '@dxos/react-ui-editor';
+import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
@@ -161,22 +154,25 @@ const storybook: Meta<typeof DefaultStory> = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, TestItem],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
+        SpacePlugin({}),
         GraphPlugin(),
-        SpacePlugin(),
-        SettingsPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         MarkdownPlugin(),
         PreviewPlugin(),
+        StorybookLayoutPlugin({}),
       ],
-      capabilities: [contributes(MarkdownCapabilities.Extensions, [() => command()])],
+      // TODO(thure): `commandDialog` doesn’t do anything without a `renderDialog` option.
+      // capabilities: [contributes(MarkdownCapabilities.Extensions, [() => commandDialog()])],
     }),
     withLayout({ fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],

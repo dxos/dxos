@@ -10,14 +10,14 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ClientAction } from '../types';
 
-export const JOIN_DIALOG = `${CLIENT_PLUGIN}/JoinDialog`;
+export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const handleCancelResetStorage = useCallback(() => dispatch(createIntent(ClientAction.ShareIdentity)), [dispatch]);
 

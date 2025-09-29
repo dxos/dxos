@@ -15,7 +15,7 @@ import { Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
 import { cellQuery, parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
-import { getDeep, isNotFalsy, setDeep } from '@dxos/util';
+import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
 import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
@@ -76,7 +76,7 @@ export const FormCellEditor = ({
               label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
             };
           })
-          .filter(isNotFalsy);
+          .filter(isTruthy);
       }
 
       return [];

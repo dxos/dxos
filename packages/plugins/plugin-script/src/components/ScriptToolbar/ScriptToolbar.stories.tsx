@@ -20,7 +20,7 @@ const meta = {
   title: 'plugins/plugin-script/Toolbar',
   component: ScriptToolbar,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin()] }), withTheme, withLayout()],
+  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }), withTheme, withLayout()],
 } satisfies Meta<typeof ScriptToolbar>;
 
 export default meta;
