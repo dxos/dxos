@@ -48,7 +48,6 @@ export const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
-      // ...resolveReporterConfig({ browserMode: true, cwd: dirname }),
       browser: {
         enabled: true,
         headless: true,
@@ -71,7 +70,7 @@ export const createStorybookProject = (dirname: string) =>
   });
 
 // TODO(wittjosiah): Reconcile w/ createNodeConfig.
-export const createNodeProject = (dirname: string, environment: 'node' | 'jsdom' = 'node') =>
+export const createNodeProject = (environment: 'node' | 'jsdom' = 'node') =>
   defineProject({
     esbuild: {
       target: 'es2020',
@@ -83,7 +82,6 @@ export const createNodeProject = (dirname: string, environment: 'node' | 'jsdom'
     },
     test: {
       name: 'node',
-      // ...resolveReporterConfig({ browserMode: false, cwd: dirname }),
       environment,
       include: [
         '**/src/**/*.test.{ts,tsx}',

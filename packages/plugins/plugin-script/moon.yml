@@ -11,3 +11,6 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

@@ -2,6 +2,7 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
@@ -11,3 +12,6 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*
