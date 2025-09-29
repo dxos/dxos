@@ -95,6 +95,7 @@ export const createConfig = ({
       publicDir: staticDir,
       resolve: {
         alias: {
+          'node-fetch': 'isomorphic-fetch',
           'tiktoken/lite': resolve(__dirname, './stub.mjs'),
           'node:util': '@dxos/node-std/util',
         },
