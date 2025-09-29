@@ -3,9 +3,10 @@
 //
 
 import { Toolkit } from '@effect/ai';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
@@ -17,7 +18,6 @@ import { Obj } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
-import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 
 import { exaFunction, exaMockFunction } from '../exa';
 

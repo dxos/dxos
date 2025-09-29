@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, Toolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { BrowserKeyValueStore } from '@effect/platform-browser';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 

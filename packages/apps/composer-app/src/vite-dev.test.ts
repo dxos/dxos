@@ -86,11 +86,11 @@ test.skipIf(process.env.CI)(
         visited.add(url);
 
         const r = await fetch(url);
-        if(!r.ok) {
+        if (!r.ok) {
           console.error({
             url,
             status: r.status,
-          })
+          });
         }
         expect(r.ok).toBe(true);
         files++;

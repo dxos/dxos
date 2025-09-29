@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, type Toolkit } from '@effect/ai';
+import { type Toolkit } from '@effect/ai';
 import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';

@@ -7,6 +7,7 @@ import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
+import { WebSearchToolkit } from '@dxos/assistant-testing';
 import { Filter, Obj, Ref, SchemaNotFoundError, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -15,7 +16,6 @@ import { SpaceCapabilities, getActiveSpace } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
-import { WebSearchToolkit } from '@dxos/assistant-testing';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 class AssistantToolkit extends Toolkit.make(

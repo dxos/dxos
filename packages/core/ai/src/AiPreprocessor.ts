@@ -153,7 +153,7 @@ const convertAssistantMessagePart: (
         return Prompt.makePart('reasoning', {
           text: block.reasoningText ?? '',
           options: {
-            anthropic: !!block.redactedText
+            anthropic: block.redactedText
               ? {
                   type: 'redacted_thinking',
                   redactedData: block.redactedText,

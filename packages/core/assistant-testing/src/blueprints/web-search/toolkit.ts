@@ -1,3 +1,7 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Toolkit } from '@effect/ai';
 import { AnthropicTool } from '@effect/ai-anthropic';
 

@@ -34,11 +34,11 @@ import { DataType } from '@dxos/schema';
 import { RESEARCH_BLUEPRINT } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
+import createResearchNote from './create-research-note';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import createResearchNote from './create-research-note';
 
 const MOCK_SEARCH = true;
 

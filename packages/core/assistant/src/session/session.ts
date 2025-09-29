@@ -6,10 +6,10 @@ import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai
 import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
-  type PromptPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
+  type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
@@ -24,7 +24,6 @@ import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
-import { mapAiError } from './error-handling';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 

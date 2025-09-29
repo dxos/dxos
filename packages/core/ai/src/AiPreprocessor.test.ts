@@ -8,10 +8,10 @@ import { Effect, Either } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
+import { bufferToArray } from '@dxos/util';
 
 import { preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
-import { bufferToArray } from '@dxos/util';
 
 describe('preprocessor', () => {
   it.effect(

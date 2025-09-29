@@ -6,10 +6,10 @@ import { type AiError } from '@effect/ai';
 import { Effect, Layer } from 'effect';
 
 import {
-  type PromptPreprocessingError,
   type AiModelNotAvailableError,
   AiService,
   type AiToolNotFoundError,
+  type PromptPreprocessingError,
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';

@@ -18,7 +18,6 @@ import {
   ResearchGraph,
   ResearchOn,
   agent,
-  WEB_SEARCH_BLUEPRINT,
 } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
@@ -496,7 +495,7 @@ export const WithResearch: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
-  blueprints: [RESEARCH_BLUEPRINT.key],
+    blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
 
