@@ -9,7 +9,7 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { formatDate } from '../util';
+import { formatDateTime } from '../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
@@ -56,7 +56,7 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
             )}
           </Avatar.Label>
           <span className='whitespace-nowrap text-sm text-description p-1 pie-2'>
-            {message.created && formatDate(new Date(), new Date(message.created))}
+            {message.created && formatDateTime(new Date(), new Date(message.created))}
           </span>
         </div>
 
