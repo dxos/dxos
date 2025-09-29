@@ -46,13 +46,13 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.28.3",
+    "@effect/ai-anthropic": "0.18.1",
     "@effect/experimental": "0.55.0",
     "@effect/platform": "^0.91.1",
     "dfx": "^0.124.1",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "@effect/ai-anthropic": "0.18.1",
     "@effect/ai-openai": "0.31.1",
     "@effect/sql": "0.45.0",
     "@effect/workflow": "0.10.0",

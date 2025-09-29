@@ -17,6 +17,7 @@ import { Obj } from '@dxos/echo';
 import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 
 import { exaFunction, exaMockFunction } from '../exa';
 
@@ -81,10 +82,11 @@ export default defineFunction({
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
         onAppend: (dxns) => objectDXNs.push(...dxns),
       });
+      const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
 
       const toolkit = yield* createToolkit({
-        toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
-        toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+        toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit, NativeWebSearch),
+        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
