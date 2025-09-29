@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join, dirname } from 'node:path';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineConfig, type ViteUserConfig } from 'vitest/config';
+import { defineConfig, defineProject, type ViteUserConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
@@ -42,6 +43,103 @@ export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
     }
   }
 };
+
+export const createStorybookProject = (dirname: string) =>
+  defineProject({
+    test: {
+      name: 'storybook',
+      // ...resolveReporterConfig({ browserMode: true, cwd: dirname }),
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: 'playwright',
+        instances: [{ browser: 'chromium' }],
+      },
+      setupFiles: ['../../../tools/storybook/.storybook/vitest.setup.ts'],
+    },
+    plugins: [
+      storybookTest({
+        configDir: path.join(dirname, '.storybook'),
+        // The --ci flag will skip prompts and not open a browser.
+        storybookScript: 'storybook dev --ci',
+        tags: {
+          include: ['test'],
+          exclude: ['experimental'],
+        },
+      }),
+    ]
+  });
+
+// TODO(wittjosiah): Reconcile w/ createNodeConfig.
+export const createNodeProject = (dirname: string, environment: 'node' | 'jsdom' = 'node') =>
+  defineProject({
+    esbuild: {
+      target: 'es2020',
+    },
+    server: {
+      fs: {
+        allow: [new URL('./vitest', import.meta.url).pathname],
+      },
+    },
+    test: {
+      name: 'node',
+      // ...resolveReporterConfig({ browserMode: false, cwd: dirname }),
+      environment,
+      include: [
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.browser.test.{ts,tsx}',
+        '!**/test/**/*.browser.test.{ts,tsx}',
+      ],
+      setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+    },
+    // Shows build trace
+    // VITE_INSPECT=1 pnpm vitest --ui
+    // http://localhost:51204/__inspect/#/
+    plugins: [
+      PluginImportSource(),
+
+      process.env.VITE_INSPECT ? Inspect() : undefined,
+
+      // We don't care about react but we want the SWC transforers.
+      react({
+        tsDecorators: true,
+        plugins: [
+          [
+            '@dxos/swc-log-plugin',
+            {
+              to_transform: [
+                {
+                  name: 'log',
+                  package: '@dxos/log',
+                  param_index: 2,
+                  include_args: false,
+                  include_call_site: true,
+                  include_scope: true,
+                },
+                {
+                  name: 'invariant',
+                  package: '@dxos/invariant',
+                  param_index: 2,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: true,
+                },
+                {
+                  name: 'Context',
+                  package: '@dxos/context',
+                  param_index: 1,
+                  include_args: false,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+              ],
+            },
+          ],
+        ],
+      }),
+    ],
+  });
 
 const createNodeConfig = (cwd: string) =>
   defineConfig({
@@ -167,7 +265,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
   });
 
-export const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
+export const resolveReporterConfig = ({ browserMode, cwd }: { browserMode?: boolean; cwd: string }): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirName = packageDir.split('/').pop();

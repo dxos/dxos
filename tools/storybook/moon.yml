@@ -1,7 +1,5 @@
 type: tool
 language: typescript
-tags:
-  - ts-test
 tasks:
   bundle:
     command: storybook build
