@@ -132,7 +132,7 @@ export const ResizeHandle = ({
       ref={buttonRef}
       data-side={side}
       className={mx(
-        'group absolute flex focus-visible:outline-none',
+        'group absolute flex focus:outline-none',
         surfaceZIndex({ elevation, level: 'tooltip' }),
         orientation === 'horizontal'
           ? 'cursor-col-resize is-4 inset-block-0 data-[side="inline-end"]:inline-end-0 data-[side="inline-end"]:before:inline-end-0 data-[side="inline-start"]:inline-start-0 data-[side="inline-start"]:before:inline-start-0 !border-lb-0 before:inset-block-0 before:is-1'
@@ -148,7 +148,7 @@ export const ResizeHandle = ({
             : iconPosition === 'center'
               ? 'justify-center'
               : 'justify-start',
-        'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
+        'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus:before:opacity-100 active:before:opacity-100',
         'before:absolute before:block before:bg-neutralFocusIndicator',
         classNames,
       )}
@@ -157,7 +157,7 @@ export const ResizeHandle = ({
         role='none'
         data-side={side}
         className={mx(
-          'grid place-items-center group-hover:opacity-0 group-focus-visible:opacity-0 group-active:opacity-0',
+          'grid place-items-center group-hover:opacity-0 group-focus:opacity-0 group-active:opacity-0',
           orientation === 'horizontal' ? 'bs-[--rail-size] is-4' : 'is-[--rail-size] bs-4',
         )}
       >

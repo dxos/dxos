@@ -15,7 +15,7 @@ export const hoverableControls =
 
 export const groupHoverControlItemWithTransition = 'transition-opacity duration-200 opacity-0 group-hover:opacity-100';
 
-export const hoverableFocusedKeyboardControls = 'focus-visible:[--controls-opacity:1]';
+export const hoverableFocusedKeyboardControls = 'focus:[--controls-opacity:1]';
 export const hoverableFocusedWithinControls = 'focus-within:[--controls-opacity:1]';
 export const hoverableFocusedControls = 'focus:[--controls-opacity:1]';
 export const hoverableOpenControlItem = 'hover-hover:aria-[expanded=true]:[--controls-opacity:1]';
