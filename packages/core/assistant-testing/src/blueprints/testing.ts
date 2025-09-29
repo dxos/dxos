@@ -31,4 +31,4 @@ export const runSteps = Effect.fn(function* (conversation: AiConversation, steps
 });
 
 // TODO(wittjosiah): Don't cast.
-export const testToolkit = Toolkit.make() as Toolkit.Any as Toolkit.Toolkit<Tool.Any>;
+export const testToolkit = Toolkit.empty as Toolkit.Toolkit<any>;

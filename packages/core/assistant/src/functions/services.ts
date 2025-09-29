@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: Toolkit.Any,
+  toolkit: Toolkit.Toolkit<any>,
 ): Layer.Layer<ToolResolverService> => {
   return Layer.succeed(ToolResolverService, {
     resolve: Effect.fn('resolveTool')(function* (id) {

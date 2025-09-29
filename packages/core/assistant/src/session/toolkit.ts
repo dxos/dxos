@@ -18,14 +18,14 @@ export type ToolkitParams<Tools extends Record<string, Tool.Any>> = {
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
-export const createToolkit = <Tools extends Record<string, Tool.Any>>({
+export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
 }: ToolkitParams<Tools>): Effect.Effect<
   Toolkit.WithHandler<any>,
   AiToolNotFoundError,
-  ToolResolverService | ToolExecutionService | Toolkit.HandlersFrom<Tools>
+  ToolResolverService | ToolExecutionService | Tool.HandlersFor<Tools>
 > =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
@@ -38,9 +38,9 @@ export const createToolkit = <Tools extends Record<string, Tool.Any>>({
     );
 
     const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isNotFalsy));
-    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
+    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as any as Effect.Effect<
       Toolkit.WithHandler<any>,
       never,
-      Toolkit.HandlersFrom<Tools>
+      Tool.HandlersFor<Tools>
     >;
   });

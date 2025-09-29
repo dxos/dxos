@@ -32,7 +32,7 @@ class TestToolkit extends Toolkit.make(
 ) {}
 
 // TODO(burdon): Create minimal toolkit.
-const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Any as Toolkit.Toolkit<Tool.Any>;
+const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
 // TODO(burdon): Explain structure.
 const TestServicesLayer = Layer.mergeAll(
