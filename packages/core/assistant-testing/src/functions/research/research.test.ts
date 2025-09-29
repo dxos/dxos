@@ -64,7 +64,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('Research', { timeout: 600_000 }, () => {
-  it.effect(
+  it.effect.only(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
@@ -78,12 +78,13 @@ describe('Research', { timeout: 600_000 }, () => {
 
         const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
-          mockSearch: MOCK_SEARCH,
+          mockSearch: false,
         });
 
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
+        yield* DatabaseService.flush({ indexes: true });
         const researchGraph = yield* queryResearchGraph();
         const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
           Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
@@ -95,7 +96,7 @@ describe('Research', { timeout: 600_000 }, () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'research blueprint',
     Effect.fn(
       function* ({ expect: _ }) {

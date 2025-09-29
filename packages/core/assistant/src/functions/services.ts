@@ -48,6 +48,9 @@ export const makeToolExecutionServiceFromFunctions = (
           const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
             return Effect.fn('toolFunctionHandler')(function* (input: any) {
               if (toolkitHandler.tools[tool.name]) {
+                if (Tool.isProviderDefined(tool)) {
+                  throw new Error('Attempted to call a provider-defined tool');
+                }
                 // TODO(wittjosiah): Everything is `never` here.
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
@@ -64,7 +67,9 @@ export const makeToolExecutionServiceFromFunctions = (
             });
           };
 
-          return toolkit.of(Record.map(toolkit.tools, (tool, _name) => makeHandler(tool)) as any) as any;
+          return toolkit.of(
+            Record.map(toolkit.tools, (tool, _name) => (Tool.isUserDefined(tool) ? makeHandler(tool) : null)) as any,
+          ) as any;
         },
       };
     }),
@@ -119,6 +124,6 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
   }
 };
 
-const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<R> => {
+const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
   return typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';
 };

@@ -12,7 +12,8 @@ import {
   createResearchNote,
   fetchDiscordMessages,
   research,
-  syncLinearIssues,
+  syncLinearIssues, 
+WEB_SEARCH_BLUEPRINT,
 } from '@dxos/assistant-testing';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -58,4 +59,5 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
   contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
 ];
