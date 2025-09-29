@@ -5,6 +5,7 @@
 import { Chat, LanguageModel, Prompt, Tool, Toolkit } from '@effect/ai';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { NodeHttpClient } from '@effect/platform-node';
@@ -156,7 +157,7 @@ describe('LanguageModel', () => {
     }, TestHelpers.runIf(process.env.OPENAI_API_KEY)),
   );
 
-  it.effect.only(
+  it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(
       function* ({ expect }) {
@@ -266,4 +267,29 @@ describe('LanguageModel', () => {
     ),
     { timeout: 120_000 },
   );
+
+  it.effect.only(
+    'built-in search',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const toolkit = Toolkit.make(
+          AnthropicTool.WebSearch_20250305({
+            // ..
+          }),
+        );
+
+        const prompt = Prompt.fromMessages([
+          Prompt.makeMessage('user', { content: [Prompt.makePart('text', { text: 'What is DXOS?' })] }),
+        ]);
+
+        const result = yield* LanguageModel.generateText({ toolkit, prompt });
+        log.info('result', { result });
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  ); //
 });
