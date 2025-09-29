@@ -40,7 +40,7 @@ const TestLayer = pipe(
       }),
       CredentialsService.layerConfig([]),
       LocalFunctionExecutionService.layerLive,
-      RemoteFunctionExecutionService.mockLayer,
+      RemoteFunctionExecutionService.layerMock,
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
     ),
