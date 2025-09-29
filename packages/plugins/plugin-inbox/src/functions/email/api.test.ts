@@ -30,7 +30,7 @@ const TestLayer = Layer.mergeAll(
  * export ACCESS_TOKEN="xxx"
  * pnpm vitest gmail.test.ts
  */
-describe.runIf(process.env.ACCESS_TOKEN)('sync', { timeout: 30_000 }, () => {
+describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
