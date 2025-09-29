@@ -50,7 +50,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Config } from '@dxos/react-client';
+import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
@@ -104,7 +104,7 @@ class TestingToolkit extends AiToolkit.make(
 type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
   plugins?: Plugin[];
   accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space }) => Promise<void>;
+  onInit?: (props: { client: Client; space: Space }) => Promise<void>;
   onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
 };
 
@@ -161,7 +161,7 @@ export const getDecorators = ({
           }
 
           await space.db.flush({ indexes: true });
-          await onInit?.({ space });
+          await onInit?.({ client, space });
           await space.db.flush({ indexes: true });
         },
         ...props,
