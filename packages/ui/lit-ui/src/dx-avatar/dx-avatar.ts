@@ -120,6 +120,7 @@ export class DxAvatar extends LitElement {
       : 'var(--surface-bg)';
     const fg =
       this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
+
     return html`<span
       role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
@@ -139,44 +140,49 @@ export class DxAvatar extends LitElement {
             ${
               this.variant === 'circle'
                 ? svg`<circle fill="white" cx="50%" cy="50%" r=${r} />`
-                : svg`<rect
-                  fill="white"
-                  width=${2 * r}
-                  height=${2 * r}
-                  x=${ringGap + ringWidth}
-                  y=${ringGap + ringWidth}
-                  rx=${rx}
-                />`
+                : svg`
+                  <rect
+                    fill="white"
+                    width=${2 * r}
+                    height=${2 * r}
+                    x=${ringGap + ringWidth}
+                    y=${ringGap + ringWidth}
+                    rx=${rx}
+                  />`
             }
           </mask>
         </defs>
         ${
           this.variant === 'circle'
-            ? svg` <circle
-              cx="50%"
-              cy="50%"
-              r=${r}
-              fill=${bg}
-            />`
-            : svg` <rect
-              fill=${bg}
-              x=${ringGap + ringWidth}
-              y=${ringGap + ringWidth}
-              width=${2 * r}
-              height=${2 * r}
-              rx=${rx}
-            />`
+            ? svg`
+              <circle
+                cx="50%"
+                cy="50%"
+                r=${r}
+                fill=${bg}
+              />`
+            : svg`
+              <rect
+                fill=${bg}
+                x=${ringGap + ringWidth}
+                y=${ringGap + ringWidth}
+                width=${2 * r}
+                height=${2 * r}
+                rx=${rx}
+              />`
         }
         ${
           this.icon
-            ? svg`<use
+            ? svg`
+              <use
                 class="dx-avatar__icon"
                 href=${this.icon}
                 x=${sizePx / 5}
                 y=${sizePx / 5}
                 width=${(3 * sizePx) / 5}
                 height=${(3 * sizePx) / 5} />`
-            : svg`<text
+            : svg`
+              <text
                 x="50%"
                 y="50%"
                 class="dx-avatar__fallback-text"
@@ -191,7 +197,8 @@ export class DxAvatar extends LitElement {
         }
         ${
           this.imgSrc &&
-          svg`<image
+          svg`
+            <image
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
