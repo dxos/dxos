@@ -40,13 +40,14 @@ export const makeToolExecutionServiceFromFunctions = (
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
+      invariant(isHandlerLike(toolkitHandler));
       const localFunctionExecutionService = yield* LocalFunctionExecutionService;
 
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
             return Effect.fn('toolFunctionHandler')(function* (input: any) {
-              if (toolkitHandler.tools.find((t: Tool.Any) => t.name === tool.name)) {
+              if (toolkitHandler.tools[tool.name]) {
                 // TODO(wittjosiah): Everything is `never` here.
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
@@ -116,4 +117,8 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
   }
+};
+
+const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<R> => {
+  return typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';
 };

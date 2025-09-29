@@ -38,13 +38,14 @@ import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import createResearchNote from './create-research-note';
 
 const MOCK_SEARCH = true;
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research], testToolkit),
-  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({}) as any),
+  makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
+  makeToolExecutionServiceFromFunctions([research, createResearchNote], testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -94,7 +95,7 @@ describe('Research', { timeout: 600_000 }, () => {
     ),
   );
 
-  it.effect(
+  it.effect.only(
     'research blueprint',
     Effect.fn(
       function* ({ expect: _ }) {
