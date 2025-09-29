@@ -268,7 +268,7 @@ describe('LanguageModel', () => {
     { timeout: 120_000 },
   );
 
-  it.effect.only(
+  it.effect(
     'built-in search',
     Effect.fn(
       function* ({ expect: _ }) {
