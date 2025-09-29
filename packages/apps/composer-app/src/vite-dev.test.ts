@@ -19,11 +19,11 @@ const projectRoot = dirname(__dirname); // packages/apps/composer-app
 // TODO(dmaretskyi): Flaky.
 test.skipIf(process.env.CI)(
   'starts Vite dev server, fetches index.html, parses and recursively fetches scripts',
-  { retry: 3 },
+  { retry: 3, timeout: 20_000 },
   async () => {
     const config: InlineConfig = {
       configFile: join(projectRoot, 'vite.config.ts'),
-      logLevel: 'error',
+      logLevel: 'info',
       server: {
         host: '127.0.0.1',
         port: 0, // choose a free port
@@ -86,6 +86,12 @@ test.skipIf(process.env.CI)(
         visited.add(url);
 
         const r = await fetch(url);
+        if(!r.ok) {
+          console.error({
+            url,
+            status: r.status,
+          })
+        }
         expect(r.ok).toBe(true);
         files++;
         bytes += Number(r.headers.get('content-length'));
