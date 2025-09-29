@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as syncGmail } from './gmail';
+export { default as sync } from './sync';

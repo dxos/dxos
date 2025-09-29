@@ -7,7 +7,7 @@ import TurndownService from 'turndown';
 /**
  * https://www.npmjs.com/package/turndown
  */
-export const turndown = new TurndownService({}).remove('style').remove('script');
+export const turndown = new TurndownService({}).remove('script').remove('style');
 
 // TODO(burdon): Replace legal disclaimers, etc.
 export const stripNewlines = (str: string) => {
@@ -15,6 +15,7 @@ export const stripNewlines = (str: string) => {
   return str.trim().replace(WHITESPACE, '\n\n');
 };
 
+// TODO(burdon): Reconcile with @dxos/util.
 export const createUrl = (parts: (string | undefined)[], params: Record<string, any> = {}): URL => {
   const url = new URL(parts.filter(Boolean).join('/'));
   Object.entries(params)

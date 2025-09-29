@@ -24,7 +24,7 @@ const createMockMessage = (): DataType.Message =>
         text: faker.lorem.paragraph(),
       },
     ],
-    created: new Date('2025-01-15T10:30:00Z').toISOString(),
+    created: new Date(Date.now() - 0.5 * 24 * 60 * 60 * 1_000).toISOString(),
     sender: {
       name: 'John Doe',
       email: 'john.doe@example.com',
