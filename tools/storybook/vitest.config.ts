@@ -33,11 +33,6 @@ export default defineConfig({
       headless: true,
       instances: [{ browser: 'chromium' }],
     },
-    poolOptions: {
-      threads: {
-        isolate: true,
-      },
-    },
     setupFiles: ['./.storybook/vitest.setup.ts'],
   },
 });
