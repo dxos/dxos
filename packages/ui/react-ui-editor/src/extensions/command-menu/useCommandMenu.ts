@@ -92,6 +92,9 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
         }
       },
       onTextChange: async (trigger, text) => {
+        if (/\W/.test(text)) {
+          return queueMicrotask(() => handleOpenChange(false));
+        }
         groupsRef.current = await getMenu(trigger, text);
         const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
         if (firstItem) {

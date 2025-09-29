@@ -26,7 +26,7 @@ export class DxAnchor extends LitElement {
   override connectedCallback (): void {
     super.connectedCallback();
     this.tabIndex = 0;
-    this.classList.add('dx-focus-ring');
+    this.classList.add(this.getAttribute('data-visible-focus')==='false' ? 'outline-none' : 'dx-focus-ring');
     if(this.rootclassname){
       this.classList.add(this.rootclassname);
     }

@@ -124,12 +124,12 @@ const meta = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
@@ -165,19 +165,20 @@ export const WithClient: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-        AttentionPlugin(),
-        NavTreePlugin(),
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
-        // Needs to be last so that the dialog and popovers have access to all contexts.
+        SpacePlugin({}),
+        GraphPlugin(),
+        IntentPlugin(),
+        SettingsPlugin(),
+        AttentionPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        NavTreePlugin(),
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [

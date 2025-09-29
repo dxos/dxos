@@ -8,10 +8,10 @@ import { StatusBar } from '@dxos/plugin-status-bar';
 import { Icon, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const ExportStatus = ({ running, lastExport }: { running: boolean; lastExport?: number }) => {
-  const { t } = useTranslation(FILES_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <StatusBar.Item
       title={

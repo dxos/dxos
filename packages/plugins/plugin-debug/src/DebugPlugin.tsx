@@ -9,11 +9,10 @@ import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from './ca
 import { meta } from './meta';
 import { translations } from './translations';
 
-// TODO(wittjosiah): Rename to DevtoolsPlugin?
-export const DebugPlugin = () => {
+// TODO(wittjosiah): Factor out DevtoolsPlugin?
+export const DebugPlugin = definePlugin(meta, () => {
   setupDevtools();
-
-  return definePlugin(meta, [
+  return [
     defineModule({
       id: `${meta.id}/module/settings`,
       activatesOn: Events.SetupSettings,
@@ -39,8 +38,8 @@ export const DebugPlugin = () => {
       activatesOn: Events.SetupAppGraph,
       activate: AppGraphBuilder,
     }),
-  ]);
-};
+  ];
+});
 
 const setupDevtools = () => {
   (globalThis as any).composer ??= {};

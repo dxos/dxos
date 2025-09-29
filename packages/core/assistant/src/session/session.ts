@@ -160,6 +160,8 @@ export class AiSession {
         });
 
         // Add to queue and continue loop.
+        // TODO(wittjosiah): Sometimes tool error results are added to the queue before the tool agent statuses.
+        //   This results in a broken execution graph.
         yield* submitMessage(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),

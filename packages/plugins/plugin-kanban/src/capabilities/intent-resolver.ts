@@ -9,7 +9,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
-import { KANBAN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
@@ -39,7 +39,7 @@ export default (context: PluginContext) =>
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -59,7 +59,7 @@ export default (context: PluginContext) =>
           space.db.remove(card);
           return {
             undoable: {
-              message: ['card deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card deleted label', { ns: meta.id }],
               data: { card },
             },
           };

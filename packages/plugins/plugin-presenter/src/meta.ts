@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const PRESENTER_PLUGIN = 'dxos.org/plugin/presenter';
-
 export const meta: PluginMeta = {
-  id: PRESENTER_PLUGIN,
+  id: 'dxos.org/plugin/presenter',
   name: 'Presenter',
   description: 'Present documents as slideshows.',
   icon: 'ph--presentation--regular',

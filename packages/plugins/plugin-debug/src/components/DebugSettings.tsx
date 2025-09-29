@@ -12,7 +12,7 @@ import { Button, Icon, Input, Select, Toast, useFileDownload, useTranslation } f
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
-import { DEBUG_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DebugSettingsProps } from '../types';
 
 type Toast = {
@@ -26,7 +26,7 @@ const StorageAdapters = {
 } as const;
 
 export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) => {
-  const { t } = useTranslation(DEBUG_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
   const download = useFileDownload();
@@ -78,7 +78,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: DEBUG_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('settings wireframe')}>
             <Input.Switch

@@ -17,7 +17,7 @@ import {
   ThreadComplementary,
   ThreadSettings,
 } from '../components';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ChannelType, type ThreadSettingsProps, ThreadType } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
@@ -25,13 +25,13 @@ import { ThreadCapabilities } from './capabilities';
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${THREAD_PLUGIN}/channel`,
+      id: `${meta.id}/channel`,
       role: 'article',
       filter: (data): data is { subject: ChannelType } => Obj.instanceOf(ChannelType, data.subject),
       component: ({ data: { subject: channel }, role }) => <ChannelContainer channel={channel} role={role} />,
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/chat-companion`,
+      id: `${meta.id}/chat-companion`,
       role: 'article',
       filter: (data): data is { companionTo: ChannelType; subject: 'chat' } =>
         Obj.instanceOf(ChannelType, data.companionTo) && data.subject === 'chat',
@@ -46,7 +46,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/thread`,
+      id: `${meta.id}/thread`,
       role: 'article',
       filter: (data): data is { subject: ThreadType } => Obj.instanceOf(ThreadType, data.subject),
       component: ({ data: { subject: thread } }) => {
@@ -59,7 +59,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/comments`,
+      id: `${meta.id}/comments`,
       role: 'article',
       filter: (data): data is { companionTo: { threads: Ref.Ref<ThreadType>[] } } =>
         data.subject === 'comments' && Obj.isObject(data.companionTo),
@@ -67,19 +67,19 @@ export default () =>
       component: ({ data }) => <ThreadComplementary subject={data.companionTo} />,
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<ThreadSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === THREAD_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <ThreadSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/assistant`,
+      id: `${meta.id}/assistant`,
       role: 'deck-companion--active-call',
       component: () => <CallSidebar />,
     }),
     createSurface({
-      id: `${THREAD_PLUGIN}/devtools-overview`,
+      id: `${meta.id}/devtools-overview`,
       role: 'devtools-overview',
       component: () => {
         const call = useCapability(ThreadCapabilities.CallManager);

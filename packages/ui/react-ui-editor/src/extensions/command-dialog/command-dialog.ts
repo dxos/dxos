@@ -18,7 +18,7 @@ import { type PopupOptions, commandConfig, commandState } from './state';
 
 export type CommandOptions = Partial<PopupOptions & HintOptions>;
 
-export const command = (options: CommandOptions = {}): Extension => {
+export const commandDialog = (options: CommandOptions = {}): Extension => {
   return [
     Prec.highest(keymap.of(commandKeyBindings)),
     commandConfig.of(options),

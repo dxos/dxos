@@ -6,7 +6,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 export type OAuthPreset = {
   label: string;
-  note: string;
+  note: string; // TODO(burdon): Description?
   source: string;
   provider: OAuthProvider;
   scopes: string[];

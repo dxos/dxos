@@ -14,11 +14,11 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
-import { WELCOME_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { Welcome, WelcomeState } from './Welcome';
 
-export const WELCOME_SCREEN = `${WELCOME_PLUGIN}/component/WelcomeScreen`;
+export const WELCOME_SCREEN = `${meta.id}/component/WelcomeScreen`;
 const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {

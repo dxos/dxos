@@ -9,7 +9,7 @@ import { live } from '@dxos/live-object';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
-import { THEME_PLUGIN } from './meta';
+import { meta } from './meta';
 import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
@@ -33,7 +33,7 @@ export default (
   return contributes(
     Capabilities.ReactContext,
     {
-      id: THEME_PLUGIN,
+      id: meta.id,
       context: ({ children }) => {
         const _resources = useCapabilities(Capabilities.Translations);
         const resources = useMemo(

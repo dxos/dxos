@@ -32,7 +32,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
 
 import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';
@@ -103,7 +103,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const type = l0ItemType(item);
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
 
-    const { t } = useTranslation(NAVTREE_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const localizedString = toLocalizedString(item.properties.label, t);
 
     const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
@@ -132,7 +132,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
 );
 
 const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const type = l0ItemType(item);
   const hue = item.properties.hue ?? null;
   const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
@@ -151,7 +151,7 @@ const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
@@ -317,7 +317,7 @@ export type L0MenuProps = {
 };
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <Tabs.Tablist

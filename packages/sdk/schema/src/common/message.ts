@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Obj, Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
-import { Unit, isNotFalsy } from '@dxos/util';
+import { Unit, isTruthy } from '@dxos/util';
 
 import { Actor, type ActorRole } from './actor';
 
@@ -176,11 +176,11 @@ export namespace ContentBlock {
               [`→${Unit.Thousand(usage.inputTokens ?? 0)}`, `←${Unit.Thousand(usage.outputTokens ?? 0)}`].join(' '),
             ),
         ]
-          .filter(isNotFalsy)
+          .filter(isTruthy)
           .join(' '),
       duration && Unit.Duration(duration),
-    ].filter(isNotFalsy);
-    return [message, paren(parts.join(' · '))].filter(isNotFalsy).join(' ');
+    ].filter(isTruthy);
+    return [message, paren(parts.join(' · '))].filter(isTruthy).join(' ');
   };
 
   export const Base64ImageSource = Schema.Struct({

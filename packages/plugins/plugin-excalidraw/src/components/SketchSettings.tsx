@@ -7,15 +7,15 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { EXCALIDRAW_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type SketchSettingsProps } from '../types';
 
 export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) => {
-  const { t } = useTranslation(EXCALIDRAW_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: EXCALIDRAW_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('settings hover tools label')}>
             <Input.Switch

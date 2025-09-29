@@ -62,9 +62,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -88,12 +85,17 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
-        SpacePlugin(),
-        SettingsPlugin(),
+        SpacePlugin({}),
+        GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        AttentionPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
-        GraphPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),

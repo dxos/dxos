@@ -24,7 +24,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { OUTLINER_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type OutlinerController = {
   focus: () => void;
@@ -41,7 +41,7 @@ export type OutlinerProps = ThemedClassName<
 
 export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
-    const { t } = useTranslation(OUTLINER_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

@@ -40,7 +40,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNonNullable, isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';
@@ -117,7 +117,7 @@ export const MarkdownEditor = ({
   }, [getMenu]);
 
   const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
     <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
@@ -190,7 +190,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
           providerExtensions,
           extensions,
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
         ...(role !== 'section' && {
           id,
           scrollTo,
