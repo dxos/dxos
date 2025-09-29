@@ -4,12 +4,17 @@
 
 import { format, formatDistance, isThisWeek, isToday } from 'date-fns';
 
-// https://date-fns.org/v2.29.3/docs/format
+import { type DataType } from '@dxos/schema';
+import { toHue } from '@dxos/util';
 
-export const formatDate = (now: Date, date: Date) =>
-  isToday(date) ? format(date, 'hh:mm aaa') : formatDistance(date, now, { addSuffix: true });
+export const formatDateTime = (date: Date, now: Date, compact = false) =>
+  isToday(date)
+    ? format(date, 'hh:mm aaa')
+    : compact
+      ? formatShortDate(date)
+      : formatDistance(date, now, { addSuffix: true });
 
-export const formatShortDate = (now: Date, date: Date) =>
+export const formatShortDate = (date: Date) =>
   isToday(date) ? format(date, 'hh:mm aaa') : isThisWeek(date) ? format(date, 'EEEE') : format(date, 'MMM d');
 
 /**
@@ -18,21 +23,15 @@ export const formatShortDate = (now: Date, date: Date) =>
  * @returns A non-negative number hash
  */
 export const hashString = (str?: string): number => {
-  if (!str) {
-    return 0;
-  }
-  return Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0));
+  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
 };
 
-import { type DataType } from '@dxos/schema';
-import { toHue } from '@dxos/util';
-
-export const getMessageProps = (message: DataType.Message, now: Date = new Date()) => {
+export const getMessageProps = (message: DataType.Message, now: Date = new Date(), compact = false) => {
   const id = message.id;
   // Always use the first text block for display in the mailbox list.
   const textBlocks = message.blocks.filter((block) => 'text' in block);
   const text = textBlocks[0]?.text || '';
-  const date = formatDate(now, message.created ? new Date(message.created) : new Date());
+  const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, compact);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
   const email = message.sender?.email;
   const hue = toHue(hashString(from));

@@ -36,7 +36,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
+const renderMessageCell = (message: DataType.Message, now: Date, _current?: boolean) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -170,11 +170,11 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
           case 'grid': {
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
-              const isCurrent = currentMessageId === messages[row].id;
+              const current = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: mx('message', isCurrent && 'message--current'),
+                accessoryHtml: renderMessageCell(messages[row], now, current),
+                className: mx('message', current && 'message--current'),
               };
             }
             return cells;
