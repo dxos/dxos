@@ -23,12 +23,12 @@
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
     "lint": "moon run :lint -- --fix",
+    "lockfile": "vite-node scripts/lockfile.ts",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "test": "moon run :test",
-    "toolbox": "vite-node tools/toolbox/src/main.ts",
-    "lockfile": "vite-node scripts/lockfile.ts"
+    "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
     "tslib": "^2.8.1"

@@ -149,7 +149,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "^0.42.4",
+    "@effect-rx/rx-react": "0.42.4",
     "@effect/platform": "0.91.1",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~18.2.0",
