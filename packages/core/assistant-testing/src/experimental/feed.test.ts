@@ -44,7 +44,6 @@ const TestLayer = Layer.mergeAll(
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
       FunctionInvocationService.layerTest({ functions: [syncLinearIssues] }),
-      RemoteFunctionExecutionService.layerMock,
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
     ),

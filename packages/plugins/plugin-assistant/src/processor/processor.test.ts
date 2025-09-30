@@ -43,7 +43,6 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  RemoteFunctionExecutionService.layerMock,
   FunctionInvocationService.layerTest({ functions: [] }),
 );
 

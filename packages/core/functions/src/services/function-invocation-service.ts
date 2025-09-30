@@ -57,7 +57,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
 
   static fromClient = (baseUrl: string, spaceId?: SpaceId) =>
     FunctionInvocationService.layer.pipe(
-      Layer.provide(
+      Layer.provideMerge(
         Layer.mergeAll(
           Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.fromClient(baseUrl, spaceId)),
           LocalFunctionExecutionService.layerLive,

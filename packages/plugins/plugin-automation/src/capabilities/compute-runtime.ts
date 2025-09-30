@@ -16,9 +16,7 @@ import {
   FunctionImplementationResolver,
   FunctionInvocationService,
   InvocationTracer,
-  LocalFunctionExecutionService,
   QueueService,
-  RemoteFunctionExecutionService,
   TriggerDispatcher,
 } from '@dxos/functions';
 import { TriggerStateStore } from '@dxos/functions';
@@ -92,8 +90,6 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.mergeAll(
               space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
               space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-              LocalFunctionExecutionService.layerLive,
-              RemoteFunctionExecutionService.layerMock,
               FunctionInvocationService.fromClient(
                 client.edge.baseUrl,
                 // If agent is not enabled do not provide spaceId because space context is unavailable on EDGE.
