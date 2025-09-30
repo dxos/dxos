@@ -92,7 +92,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
                     const item = liveMarker as unknown as Obj.Any;
                     return (
                       <CardStack.Item asChild key={item.id}>
-                        <StackItem.Root item={item} focusIndicatorVariant='group'>
+                        <StackItem.Root item={item} focusIndicatorVariant='group-always'>
                           <Card.StaticRoot>
                             <Item item={item} projectionModel={projectionModel} />
                           </Card.StaticRoot>
