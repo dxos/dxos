@@ -34,6 +34,7 @@ import { DataType } from '@dxos/schema';
 import { RESEARCH_BLUEPRINT } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
+import createResearchNote from './create-research-note';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
@@ -43,8 +44,8 @@ const MOCK_SEARCH = true;
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research], testToolkit),
-  makeToolExecutionServiceFromFunctions([research], testToolkit, testToolkit.toLayer({}) as any),
+  makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
+  makeToolExecutionServiceFromFunctions([research, createResearchNote], testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -77,12 +78,13 @@ describe('Research', { timeout: 600_000 }, () => {
 
         const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
-          mockSearch: MOCK_SEARCH,
+          mockSearch: false,
         });
 
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
+        yield* DatabaseService.flush({ indexes: true });
         const researchGraph = yield* queryResearchGraph();
         const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
           Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),

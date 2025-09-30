@@ -59,7 +59,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 
         const tokenStream = yield* output.values.tokenStream;
         const tokens = yield* tokenStream.pipe(
-          Stream.filterMap((part) => (part._tag === 'TextPart' ? Option.some(part.text) : Option.none())),
+          Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
           Stream.tap((token) => Console.log(token)),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
@@ -162,7 +162,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
 
         const tokens = yield* outputs.values.tokenStream.pipe(
           Stream.unwrap,
-          Stream.filterMap((part) => (part._tag === 'TextPart' ? Option.some(part.text) : Option.none())),
+          Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
           Stream.tap((token) => Console.log(token)),
           Stream.runCollect,
           Effect.map(Chunk.toArray),

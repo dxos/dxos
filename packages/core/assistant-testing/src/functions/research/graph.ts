@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
 
 import { Obj, type Relation } from '@dxos/echo';
@@ -97,8 +97,8 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
  * Perform vector search in the local database.
  */
 // TODO(dmaretskyi): Rename `GraphReadToolkit`.
-export class LocalSearchToolkit extends AiToolkit.make(
-  AiTool.make('search_local_search', {
+export class LocalSearchToolkit extends Toolkit.make(
+  Tool.make('search_local_search', {
     description: 'Search the local database for information using a vector index',
     parameters: {
       query: Schema.String.annotations({
@@ -107,7 +107,8 @@ export class LocalSearchToolkit extends AiToolkit.make(
     },
     success: Schema.Unknown,
     failure: Schema.Never,
-  }).addRequirement<DatabaseService>(),
+    dependencies: [DatabaseService],
+  }),
 ) {}
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
@@ -144,16 +145,14 @@ class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')
  * Forms typed objects that can be written to the graph database.
  */
 export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNoContext[] }) => {
-  return AiToolkit.make(
-    AiTool.make('graph_writer', {
+  return Toolkit.make(
+    Tool.make('graph_writer', {
       description: 'Write to the local graph database',
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-    })
-      .addRequirement<DatabaseService>()
-      .addRequirement<ContextQueueService>()
-      .annotateContext(Context.make(GraphWriterSchema, { schema })),
+      dependencies: [DatabaseService, ContextQueueService],
+    }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
 
