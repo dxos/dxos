@@ -430,15 +430,13 @@ export class DxGrid extends LitElement {
   }
 
   private moveFocusIntoPlane(plane: DxGridPlane): void {
-    if (this.focusedCell.plane !== plane) {
-      const colPlane = resolveColPlane(plane);
-      const rowPlane = resolveRowPlane(plane);
-      this.focusedCell = {
-        plane,
-        col: colPlane === 'grid' ? this.visColMin : 0,
-        row: rowPlane === 'grid' ? this.visRowMin : 0,
-      };
-    }
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+    this.focusedCell = {
+      plane,
+      col: colPlane === 'grid' ? this.visColMin : 0,
+      row: rowPlane === 'grid' ? this.visRowMin : 0,
+    };
     this.focusedCellElement()?.focus({ preventScroll: true });
   }
 
