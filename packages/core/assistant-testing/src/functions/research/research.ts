@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
@@ -81,10 +82,11 @@ export default defineFunction({
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
         onAppend: (dxns) => objectDXNs.push(...dxns),
       });
+      const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
 
       const toolkit = yield* createToolkit({
-        toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
-        toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+        toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit, NativeWebSearch),
+        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -121,10 +123,10 @@ export default defineFunction({
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
         // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
+        makeToolResolverFromFunctions([exaFunction, exaMockFunction], Toolkit.make()),
         makeToolExecutionServiceFromFunctions(
           [exaFunction, exaMockFunction],
-          AiToolkit.make() as any,
+          Toolkit.make() as any,
           Layer.empty as any,
         ),
       ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),

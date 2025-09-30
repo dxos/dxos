@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -83,8 +83,8 @@ export const config = {
   }),
 };
 
-class TestingToolkit extends AiToolkit.make(
-  AiTool.make('open-item', {
+class TestingToolkit extends Toolkit.make(
+  Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
     `,
