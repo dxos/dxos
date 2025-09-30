@@ -10,7 +10,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
   key: 'dxos.org/function/markdown/read-tasks',
-  name: 'Read markdown tasks',
+  name: 'Read',
   description: 'Read markdown tasks.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
