@@ -16,6 +16,7 @@ export * from './ProjectContainer';
 export * from './PromptContainer';
 export * from './ResearchInputStack';
 export * from './ResearchOutputStack';
+export * from './ScriptContainer';
 export * from './TasksContainer';
 export * from './TokenManagerContainer';
 export * from './TriggersContainer';
