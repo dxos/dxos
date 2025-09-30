@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
+import { type Tool, Toolkit } from '@effect/ai';
 import { type Context, Effect } from 'effect';
 
-import { ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
+import { type AiToolNotFoundError, ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { isTruthy } from '@dxos/util';
 
-export type ToolkitParams<Tools extends AiTool.Any> = {
-  toolkit?: AiToolkit.AiToolkit<Tools>;
+export type ToolkitParams<Tools extends Record<string, Tool.Any>> = {
+  toolkit?: Toolkit.Toolkit<Tools>;
   toolIds?: ToolId[];
   blueprints?: Blueprint.Blueprint[];
 };
@@ -18,25 +18,29 @@ export type ToolkitParams<Tools extends AiTool.Any> = {
 /**
  * Build a combined toolkit from the blueprint tools and the provided toolkit.
  */
-export const createToolkit = <Tools extends AiTool.Any>({
+export const createToolkit = <Tools extends Record<string, Tool.Any> = {}>({
   toolkit: toolkitParam,
   toolIds = [],
   blueprints = [],
-}: ToolkitParams<Tools>) =>
+}: ToolkitParams<Tools>): Effect.Effect<
+  Toolkit.WithHandler<any>,
+  AiToolNotFoundError,
+  ToolResolverService | ToolExecutionService | Tool.HandlersFor<Tools>
+> =>
   Effect.gen(function* () {
     const blueprintToolkit = yield* ToolResolverService.resolveToolkit([
       ...blueprints.flatMap(({ tools }) => tools),
       ...toolIds,
     ]);
 
-    const blueprintToolkitHandler: Context.Context<AiTool.ToHandler<AiTool.Any>> = yield* blueprintToolkit.toContext(
+    const blueprintToolkitHandler: Context.Context<Tool.HandlersFor<any>> = yield* blueprintToolkit.toContext(
       ToolExecutionService.handlersFor(blueprintToolkit),
     );
 
-    const toolkit = AiToolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
-    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as Effect.Effect<
-      AiToolkit.ToHandler<any>,
+    const toolkit = Toolkit.merge(...[toolkitParam, blueprintToolkit].filter(isTruthy));
+    return yield* toolkit.pipe(Effect.provide(blueprintToolkitHandler)) as any as Effect.Effect<
+      Toolkit.WithHandler<any>,
       never,
-      AiTool.ToHandler<Tools>
+      Tool.HandlersFor<Tools>
     >;
   });

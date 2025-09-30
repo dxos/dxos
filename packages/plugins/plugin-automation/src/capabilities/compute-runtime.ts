@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { BrowserKeyValueStore } from '@effect/platform-browser';
 import { Effect, Layer, ManagedRuntime } from 'effect';
 
@@ -69,7 +69,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         const allFunctions = functions.flat();
         // TODO(wittjosiah): Don't cast.
-        const toolkit = AiToolkit.merge(...toolkits) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+        const toolkit = Toolkit.merge(...toolkits) as Toolkit.Toolkit<any>;
         const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
 
         const space = client.spaces.get(spaceId);

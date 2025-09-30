@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -13,8 +13,8 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { MarkdownAction } from '../types';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends AiToolkit.make(
-  AiTool.make('create-document', {
+class MarkdownToolkit extends Toolkit.make(
+  Tool.make('create-document', {
     description: 'Creates a new markdown document.',
     parameters: {
       name: Schema.optional(Schema.String),
@@ -26,7 +26,7 @@ class Toolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    MarkdownToolkit.toLayer({
       'create-document': ({ name, content }) => {
         const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const space = getActiveSpace(context);
@@ -42,6 +42,6 @@ class Toolkit extends AiToolkit.make(
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, MarkdownToolkit),
+  contributes(Capabilities.ToolkitHandler, MarkdownToolkit.layer(context)),
 ];

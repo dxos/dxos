@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer } from 'effect';
@@ -27,8 +27,8 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([], Toolkit.make()),
+  makeToolExecutionServiceFromFunctions([], Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
