@@ -18,7 +18,7 @@ import { getMessage, listLabels, listMessages, messageToObject } from './api';
 
 // TODO(burdon): Create test.
 export default defineFunction({
-  name: 'dxos.org/function/inbox/email-sync',
+  name: 'dxos.org/function/inbox/gmail-sync',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
     mailboxId: Schema.String.annotations({
