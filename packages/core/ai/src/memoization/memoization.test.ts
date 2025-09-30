@@ -39,7 +39,6 @@ describe('memoization', () => {
           const stream = chat.streamText({
             prompt: Prompt.empty,
             toolkit: TestingToolkit,
-            // disableToolCallResolution: true,
           });
           yield* stream.pipe(
             Stream.runForEach((part) => {
@@ -57,7 +56,7 @@ describe('memoization', () => {
         }
       },
       Effect.provide(Layer.merge(AiService.model('@anthropic/claude-sonnet-4-0'), testingLayer)),
-      MemoizedAiService.injectIntoTest,
+      MemoizedAiService.injectIntoTest, // <--- magic here.
       Effect.provide(AiServiceTestingPreset('direct')),
     ),
   );
