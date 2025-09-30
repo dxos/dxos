@@ -24,12 +24,12 @@ describe('memoization', () => {
         console.log(result);
       },
       Effect.provide(AiService.model('@anthropic/claude-sonnet-4-0')),
-      MemoizedAiService.injectIntoTest,
+      MemoizedAiService.injectIntoTest(),
       Effect.provide(AiServiceTestingPreset('direct')),
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'tools',
     Effect.fnUntraced(
       function* (ctx) {
@@ -56,7 +56,7 @@ describe('memoization', () => {
         }
       },
       Effect.provide(Layer.merge(AiService.model('@anthropic/claude-sonnet-4-0'), testingLayer)),
-      MemoizedAiService.injectIntoTest, // <--- magic here.
+      MemoizedAiService.injectIntoTest(), // <--- magic here.
       Effect.provide(AiServiceTestingPreset('direct')),
     ),
   );

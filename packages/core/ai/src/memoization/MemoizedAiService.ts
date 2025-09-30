@@ -18,6 +18,8 @@ export interface MakeOptions {
    * Filename for memoized conversations to be stored at.
    */
   storePath: string;
+
+  allowGeneration: boolean;
 }
 
 export const make = (options: MakeOptions): MemoizedAiService => {
@@ -31,6 +33,7 @@ export const make = (options: MakeOptions): MemoizedAiService => {
             upstreamModel,
             modelName: model,
             storePath: options.storePath,
+            allowGeneration: options.allowGeneration,
           });
         }),
       ),
@@ -45,6 +48,7 @@ export const layer = (options: Omit<MakeOptions, 'upstream'>) =>
       return make({
         upstream,
         storePath: options.storePath,
+        allowGeneration: options.allowGeneration,
       });
     }),
   );
@@ -57,21 +61,25 @@ type TestContextLike = {
   };
 };
 
-export const injectIntoTest = <A, E, R>(
-  effect: Effect.Effect<A, E, R | AiService.AiService>,
-  ctx: TestContextLike,
-): Effect.Effect<A, E, R | AiService.AiService> => {
-  return Effect.provide(
-    layer({
-      storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
-    }),
-  )(effect);
-};
+export const injectIntoTest =
+  () =>
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R | AiService.AiService>,
+    ctx: TestContextLike,
+  ): Effect.Effect<A, E, R | AiService.AiService> => {
+    return Effect.provide(
+      layer({
+        storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
+        allowGeneration: !process.env.CI,
+      }),
+    )(effect);
+  };
 
 interface MakeModelOptions {
   upstreamModel: LanguageModel.Service;
   modelName: string;
   storePath: string;
+  allowGeneration: boolean;
 }
 
 const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Service> => {
@@ -85,6 +93,10 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
         const continuation = getContinuation(params.prompt, memoized.value.history);
         return toResponseParts(continuation);
       } else {
+        if (!options.allowGeneration) {
+          return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+        }
+
         const chat = yield* Chat.empty;
 
         const toolkit = Toolkit.make(...(params.tools as never[]));
@@ -118,6 +130,10 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
             const continuation = getContinuation(params.prompt, memoized.value.history);
             return toResponseStream(continuation);
           } else {
+            if (!options.allowGeneration) {
+              return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+            }
+
             const chat = yield* Chat.empty;
 
             const toolkit = Toolkit.make(...(params.tools as never[]));
