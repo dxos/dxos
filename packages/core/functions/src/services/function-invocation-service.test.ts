@@ -36,7 +36,7 @@ describe('FunctionInvocationService', () => {
 
   it(
     'routes to local when implementation is available',
-    Effect.fnUntraced(function* ({ expect: _ }) {
+    Effect.fnUntraced(function* () {
       const add = defineFunction({
         key: 'example.org/function/add',
         name: 'add',
@@ -48,8 +48,8 @@ describe('FunctionInvocationService', () => {
       const layer = TestLayer.pipe(Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [add] })));
 
       const result = yield* Effect.gen(function* () {
-        const svc = yield* FunctionInvocationService;
-        return yield* svc.invokeFunction(add, { a: 2, b: 3 });
+        const functionInvocationService = yield* FunctionInvocationService;
+        return yield* functionInvocationService.invokeFunction(add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));
 
       expect(result).toEqual(5);
@@ -58,7 +58,7 @@ describe('FunctionInvocationService', () => {
 
   it(
     'routes to remote when no local implementation is found',
-    Effect.fnUntraced(function* ({ expect: _ }) {
+    Effect.fnUntraced(function* () {
       // This function is not deployed, so mock layer will be used.
       const echo = defineFunction({
         key: 'example.org/function/echo',
@@ -70,8 +70,8 @@ describe('FunctionInvocationService', () => {
 
       // No resolver provided → resolveFunctionImplementation will fail → remote path is used.
       const result = yield* Effect.gen(function* () {
-        const svc = yield* FunctionInvocationService;
-        return yield* svc.invokeFunction(echo, { hello: 'world' });
+        const functionInvocationService = yield* FunctionInvocationService;
+        return yield* functionInvocationService.invokeFunction(echo, { hello: 'world' });
       }).pipe(Effect.provide(TestLayer));
 
       // RemoteFunctionExecutionService.mock echos input back.
