@@ -24,6 +24,7 @@ import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
 import { type Live, live } from '@dxos/live-object';
+import { log } from '@dxos/log';
 
 import { getSchemaProperties } from '../properties';
 
@@ -224,8 +225,14 @@ export const createViewWithReferences = async ({
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
   const schema = toEffectSchema(jsonSchema);
+  log.info('schema', {
+    jsonSchema,
+    ast: schema.ast,
+    properties: SchemaAST.getPropertySignatures(schema.ast),
+  });
   const shouldIncludeId = fields?.find((field) => field === 'id') !== undefined;
   const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
+  console.log('properties', properties);
   for (const property of properties) {
     if (fields && !fields.includes(property.name)) {
       continue;

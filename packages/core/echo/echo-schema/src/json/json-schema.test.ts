@@ -698,6 +698,9 @@ describe('reference', () => {
       ],
       description: 'My custom description',
     });
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
   });
 
   test('serialize and deserialize', () => {
