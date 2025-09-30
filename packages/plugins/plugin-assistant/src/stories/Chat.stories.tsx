@@ -868,6 +868,6 @@ export const WithScript: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [ScriptContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [ScriptContainer]],
   },
 };
