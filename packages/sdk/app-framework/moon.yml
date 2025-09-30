@@ -12,3 +12,6 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

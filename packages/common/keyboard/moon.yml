@@ -9,3 +9,6 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
+  test:
+    inputs:
+      - .storybook/*

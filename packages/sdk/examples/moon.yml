@@ -1,6 +1,12 @@
 type: library
 language: typescript
 tags:
+  - ts-test
   - typecheck
   - vite
   - pack
+tasks:
+  test:
+    inputs:
+      - .storybook/*
+      - vite.config.ts

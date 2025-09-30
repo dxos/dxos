@@ -8,3 +8,6 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+  test:
+    inputs:
+      - .storybook/*

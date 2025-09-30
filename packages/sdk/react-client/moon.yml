@@ -17,3 +17,6 @@ tasks:
       - '--entryPoint=src/mesh/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker.ts'
+  test:
+    inputs:
+      - .storybook/*

@@ -1,5 +1,11 @@
 type: application
 language: typescript
 tags:
+  - ts-test
   - typecheck
   - vite
+tasks:
+  test:
+    inputs:
+      - .storybook/*
+      - vite.config.ts

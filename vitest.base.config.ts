@@ -73,10 +73,12 @@ export const createStorybookProject = (dirname: string) =>
 // TODO(wittjosiah): Reconcile w/ createNodeConfig.
 export const createNodeProject = ({
   environment = 'node',
+  retry = 0,
   setupFiles = [],
   plugins = [],
 }: {
   environment?: 'node' | 'jsdom';
+  retry?: number;
   setupFiles?: string[];
   plugins?: Plugin[];
 }) =>
@@ -92,6 +94,7 @@ export const createNodeProject = ({
     test: {
       name: 'node',
       environment,
+      retry,
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
