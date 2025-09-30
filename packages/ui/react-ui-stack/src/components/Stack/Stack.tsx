@@ -37,6 +37,7 @@ export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'ar
     itemsCount?: number;
     getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
     separatorOnScroll?: number;
+    circularFocus?: boolean;
   };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
@@ -73,6 +74,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       itemsCount = Children.count(children),
       getDropElement,
       separatorOnScroll,
+      circularFocus,
       ...props
     },
     forwardedRef,
@@ -152,10 +154,22 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 ? 1
                 : 0;
             if (parallelDelta !== 0) {
-              const adjacentItem = closestStackItems[
-                (closestStackItems.indexOf(closestOwnedItem) + parallelDelta + closestStackItems.length) %
-                  closestStackItems.length
-              ] as HTMLElement | undefined;
+              const currentIndex = closestStackItems.indexOf(closestOwnedItem);
+              const nextIndex = currentIndex + parallelDelta;
+              let adjacentItem: HTMLElement | undefined;
+
+              if (circularFocus) {
+                // Circular navigation: wrap around using modulo
+                adjacentItem = closestStackItems[(nextIndex + closestStackItems.length) % closestStackItems.length] as
+                  | HTMLElement
+                  | undefined;
+              } else {
+                // Non-circular navigation: only move if within bounds
+                if (nextIndex >= 0 && nextIndex < closestStackItems.length) {
+                  adjacentItem = closestStackItems[nextIndex] as HTMLElement | undefined;
+                }
+              }
+
               if (adjacentItem) {
                 event.preventDefault();
                 scrollIntoViewAndFocus(adjacentItem, closestStackOrientation);
@@ -168,10 +182,21 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                     `[data-dx-stack-item="${ancestorStack.getAttribute('data-dx-stack')}"] [data-dx-stack]`,
                   ),
                 ) as HTMLElement[];
-                const adjacentStack = siblingStacks[
-                  (siblingStacks.indexOf(closestStack) + perpendicularDelta + siblingStacks.length) %
-                    siblingStacks.length
-                ] as HTMLElement | undefined;
+                const currentStackIndex = siblingStacks.indexOf(closestStack);
+                const nextStackIndex = currentStackIndex + perpendicularDelta;
+                let adjacentStack: HTMLElement | undefined;
+
+                if (ancestorStack.getAttribute('data-dx-stack-circular-focus') === 'true') {
+                  // Circular navigation: wrap around using modulo
+                  adjacentStack = siblingStacks[(nextStackIndex + siblingStacks.length) % siblingStacks.length] as
+                    | HTMLElement
+                    | undefined;
+                } else {
+                  // Non-circular navigation: only move if within bounds
+                  if (nextStackIndex >= 0 && nextStackIndex < siblingStacks.length) {
+                    adjacentStack = siblingStacks[nextStackIndex] as HTMLElement | undefined;
+                  }
+                }
                 const adjacentStackSelfItem = adjacentStack?.closest(
                   `[data-dx-stack-item=${ancestorStack.getAttribute('data-dx-stack')}]`,
                 ) as HTMLElement | undefined;
@@ -235,7 +260,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         }
         props.onKeyDown?.(event);
       },
-      [props.onKeyDown, stackId],
+      [props.onKeyDown, stackId, circularFocus],
     );
 
     const gridClasses = useMemo(() => {
@@ -280,6 +305,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
           )}
           onKeyDown={handleKeyDown}
           data-dx-stack={stackId}
+          data-dx-stack-circular-focus={circularFocus}
           data-rail={rail}
           aria-orientation={orientation}
           style={styles}
