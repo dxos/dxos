@@ -22,7 +22,7 @@ import {
   isDeleted,
 } from '@dxos/echo/internal';
 import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo/internal';
-import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
+import { Testing, prepareAstForCompare } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

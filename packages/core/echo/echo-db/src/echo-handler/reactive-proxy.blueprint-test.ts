@@ -5,7 +5,7 @@ import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
+import { Testing, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';

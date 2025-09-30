@@ -46,8 +46,8 @@
       "node": "./dist/lib/node-esm/internal/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/types.ts",
-      "types": "./dist/types/src/testing/types.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
     }

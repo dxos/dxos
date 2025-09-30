@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 import { Trigger } from '@dxos/async';
 import { Filter } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { Expando, ObjectId, Ref, getType } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo-schema/testing';
+import { Expando, Obj, ObjectId, Ref, getType } from '@dxos/echo/internal';
+import { Testing } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -358,7 +358,7 @@ describe('CoreDatabase', () => {
       await openAndClose(testBuilder);
       const { db, graph } = await testBuilder.createDatabase();
       graph.schemaRegistry.addSchema([Testing.Contact]);
-      const contact = db.add(live(Testing.Contact, { name: 'Foo' }));
+      const contact = db.add(Obj.make(Testing.Contact, { name: 'Foo' }));
 
       await db._coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
@@ -399,11 +399,11 @@ const createClientDbInSpaceWithObject = async (
 };
 
 const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
-  return live(Expando, props);
+  return Obj.make(Expando, props);
 };
 
 const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {
-  return live(Expando, { content }) as AnyLiveObject<{ content: string }>;
+  return Obj.make(Expando, { content }) as AnyLiveObject<{ content: string }>;
 };
 
 interface DocumentHandles {

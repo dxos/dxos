@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -60,7 +60,7 @@ test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -79,7 +79,7 @@ test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -89,7 +89,7 @@ test('incrementally migrates new objects', async () => {
     expect(objects[0].name).to.eq('John Doe');
   }
 
-  db.add(live(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
+  db.add(Obj.make(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -114,7 +114,7 @@ test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2, ContactV3]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2, migrationV3]);
 

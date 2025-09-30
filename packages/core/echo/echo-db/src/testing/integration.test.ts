@@ -338,7 +338,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(live(Expando, {}));
+    db1.add(Obj.make(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -397,7 +397,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      live({
+      Obj.make({
         content: 'test',
       }),
     );
@@ -417,17 +417,17 @@ describe('Integration tests', () => {
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          live(Testing.Contact, {
+          Obj.make(Testing.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          live(Testing.Contact, {
+          Obj.make(Testing.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          live(Testing.HasManager, {
+          Obj.make(Testing.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -465,7 +465,7 @@ describe('Integration tests', () => {
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-        const object = db.add(live(stored, { field: 'test' }));
+        const object = db.add(Obj.make(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
@@ -519,7 +519,7 @@ describe('Integration tests', () => {
       });
       const [schema] = await db.schemaRegistry.register([Testing.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      db.add(live(schema, { name: 'Bob' }));
+      db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 

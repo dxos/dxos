@@ -164,7 +164,7 @@ describe.skip('loadObjectReferences', () => {
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
-    const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });
+    const object = Obj.make(TestSchema, { nested: [Ref.make(Obj.make(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
     db.add(object);
@@ -181,5 +181,5 @@ describe.skip('loadObjectReferences', () => {
 });
 
 const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
-  return live(Expando, props);
+  return Obj.make(Expando, props);
 };

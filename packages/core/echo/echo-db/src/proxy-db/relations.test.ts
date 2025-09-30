@@ -4,10 +4,9 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo-schema/testing';
-import { live } from '@dxos/live-object';
+import { Testing } from '@dxos/echo/testing';
 
 import { getSource, getTarget, isRelation } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
@@ -31,17 +30,17 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      live(Testing.Contact, {
+      Obj.make(Testing.Contact, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      live(Testing.Contact, {
+      Obj.make(Testing.Contact, {
         name: 'Bob',
       }),
     );
     const hasManager = db.add(
-      live(Testing.HasManager, {
+      Obj.make(Testing.HasManager, {
         [RelationSourceId]: bob,
         [RelationTargetId]: alice,
         since: '2022',

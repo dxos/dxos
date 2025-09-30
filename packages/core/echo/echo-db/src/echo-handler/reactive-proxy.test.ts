@@ -4,9 +4,9 @@
 
 import { describe } from 'vitest';
 
+import { Obj, Type } from '@dxos/echo';
 import { EchoObject, getTypeAnnotation } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo-schema/testing';
-import { live } from '@dxos/live-object';
+import { Testing } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
@@ -24,7 +24,7 @@ describe('Reactive proxy', () => {
     return {
       objectsHaveId: false,
       createObjectFn: async (props = {}) => {
-        return (schema == null ? live(props) : live(schema, props)) as Testing.TestSchema;
+        return (schema == null ? Obj.make(Type.Expando, props) : Obj.make(schema, props)) as Testing.TestSchema;
       },
     };
   });
@@ -55,7 +55,7 @@ describe('Echo reactive proxy', () => {
                 }),
               )
             : schema;
-        const object = (schema == null ? live(props) : live(testSchema as any, props)) as Testing.TestSchema;
+        const object = (schema == null ? Obj.make(Type.Expando, props) : Obj.make(testSchema as any, props)) as Testing.TestSchema;
         if (testSchema && !db.graph.schemaRegistry.hasSchema(testSchema)) {
           db.graph.schemaRegistry.addSchema([testSchema]);
         }

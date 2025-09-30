@@ -70,11 +70,11 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: Ref.make(
-        live(Expando, {
+        Obj.make(Type.Expando, {
           type: 'Person',
           name: 'John Doe',
         }),
@@ -110,10 +110,10 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: live(Expando, { content: 'Some details' }),
+      details: Obj.make(Type.Expando, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();

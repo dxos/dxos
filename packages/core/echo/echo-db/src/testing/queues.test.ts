@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
 import { Ref, getSchema } from '@dxos/echo/internal';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -30,7 +30,7 @@ describe('queues', (ctx) => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const obj = db.add(
-      live({
+      Obj.make(Type.Expando, {
         // TODO(dmaretskyi): Support Ref.make
         queue: Ref.fromDXN(queues.create().dxn) as Ref<Queue>,
       }),
