@@ -54,7 +54,7 @@ export const createStorybookProject = (dirname: string) =>
         provider: 'playwright',
         instances: [{ browser: 'chromium' }],
       },
-      setupFiles: ['../../../tools/storybook/.storybook/vitest.setup.ts'],
+      setupFiles: [new URL('./tools/storybook/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
     optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
