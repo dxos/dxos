@@ -37,7 +37,8 @@ import { ResearchDataTypes } from './types';
  * Exec external service and return the results as a Subgraph.
  */
 export default defineFunction({
-  name: 'dxos.org/function/research',
+  key: 'dxos.org/function/research',
+  name: 'Research',
   description:
     'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({

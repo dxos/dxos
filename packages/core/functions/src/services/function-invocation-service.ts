@@ -24,7 +24,6 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   static layer = Layer.effect(
     FunctionInvocationService,
     Effect.gen(function* () {
-      const resolver = yield* FunctionImplementationResolver;
       const localExecutioner = yield* LocalFunctionExecutionService;
       const remoteExecutioner = yield* RemoteFunctionExecutionService;
 
@@ -39,8 +38,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
               return yield* Effect.promise(() => remoteExecutioner.callFunction(deployedFunctionId, input));
             }
 
-            const resolved = yield* resolver.resolveFunctionImplementation(functionDef);
-            return yield* localExecutioner.invokeFunction(resolved, input);
+            return yield* localExecutioner.invokeFunction(functionDef, input);
           }) as Effect.Effect<O>,
       } satisfies Context.Tag.Service<FunctionInvocationService>;
     }),

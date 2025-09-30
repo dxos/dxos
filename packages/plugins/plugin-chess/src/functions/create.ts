@@ -9,7 +9,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Chess } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/chess/create',
+  key: 'dxos.org/function/chess/create',
+  name: 'Create Chess',
   description: 'Creates a new chess game.',
   inputSchema: Schema.Struct({
     pgn: Schema.optional(

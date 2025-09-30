@@ -20,14 +20,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
     invokeFunction(functionDef: FunctionDefinition<any, any>, input: unknown): Effect.Effect<unknown, never, Services>;
   }
 >() {
-  /**
-   * @deprecated Use layerLive instead.
-   */
-  // TODO(mykola): Remove.
-  static layer = Layer.succeed(LocalFunctionExecutionService, {
-    invokeFunction: (functionDef, input) => invokeFunction(functionDef, input),
-  });
-
   static layerLive = Layer.effect(
     LocalFunctionExecutionService,
     Effect.gen(function* () {
@@ -118,7 +110,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
   static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
       resolveFunctionImplementation: (functionDef) => {
-        const resolved = functions.find((f) => f.name === functionDef.name);
+        const resolved = functions.find((f) => f.key === functionDef.key);
         if (!resolved) {
           return Effect.fail(new FunctionNotFoundError(functionDef.name));
         }

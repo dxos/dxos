@@ -90,7 +90,6 @@ const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
 export type FunctionDefinition<T = any, O = any> = {
   [typeId]: true;
-  // TODO(dmaretskyi): Use `key` for FQN and `name` for human-readable-name.
   key: string;
   name: string;
   description?: string;

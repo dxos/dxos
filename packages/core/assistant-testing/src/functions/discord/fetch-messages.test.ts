@@ -35,10 +35,11 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
-      LocalFunctionExecutionService.layer,
+      LocalFunctionExecutionService.layerLive.pipe(
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [fetchDiscordMessages] })),
+      ),
       RemoteFunctionExecutionService.layerMock,
       FunctionInvocationService.layerTest,
-      FunctionImplementationResolver.layerTest({ functions: [] }),
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
     ),

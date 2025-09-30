@@ -41,7 +41,7 @@ export const makeToolResolverFromFunctions = (
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)
-              : functions.find((fn) => fn.name === id);
+              : functions.find((fn) => fn.key === id);
 
             if (!functionDef) {
               return yield* Effect.fail(new AiToolNotFoundError(id));

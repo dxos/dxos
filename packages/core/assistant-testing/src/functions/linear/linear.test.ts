@@ -42,7 +42,9 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      LocalFunctionExecutionService.layer,
+      LocalFunctionExecutionService.layerLive.pipe(
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [fetchLinearIssues] })),
+      ),
       RemoteFunctionExecutionService.layerMock,
       FunctionInvocationService.layerTest,
       FunctionImplementationResolver.layerTest({ functions: [] }),
