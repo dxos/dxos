@@ -3,8 +3,6 @@
 //
 import { Context, Effect, Layer } from 'effect';
 
-import { type SpaceId } from '@dxos/keys';
-
 import { type FunctionDefinition } from '../handler';
 
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
@@ -54,14 +52,4 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
         ),
       ),
     ) satisfies Layer.Layer<FunctionInvocationService>;
-
-  static fromClient = (baseUrl: string, spaceId?: SpaceId) =>
-    FunctionInvocationService.layer.pipe(
-      Layer.provideMerge(
-        Layer.mergeAll(
-          Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.fromClient(baseUrl, spaceId)),
-          LocalFunctionExecutionService.layerLive,
-        ),
-      ),
-    ) satisfies Layer.Layer<FunctionInvocationService, never, FunctionImplementationResolver>;
 }
