@@ -37,6 +37,31 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
   };
 };
 
+/**
+ * Runtime type-info for a reference extracted from effect AST.
+ */
+export type RefereneAST = {
+  /**
+   * Typename of linked schema.
+   */
+  typename: string;
+
+  /**
+   * Version of linked schema.
+   */
+  version: string;
+};
+
+export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => {
+  if (ast._tag !== 'Declaration' || !ast.annotations[ReferenceAnnotationId]) {
+    return undefined;
+  }
+  return {
+    typename: (ast.annotations[ReferenceAnnotationId] as any).typename,
+    version: (ast.annotations[ReferenceAnnotationId] as any).version,
+  };
+};
+
 export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
 
 /**
