@@ -8,6 +8,7 @@ import { type Rive, useRive } from '@rive-app/react-canvas';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
