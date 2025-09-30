@@ -58,7 +58,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
     ),
   ) satisfies Layer.Layer<FunctionInvocationService>;
 
-  static fromClient = (baseUrl: string, spaceId: SpaceId) =>
+  static fromClient = (baseUrl: string, spaceId?: SpaceId) =>
     FunctionInvocationService.layer.pipe(
       Layer.provide(
         Layer.mergeAll(

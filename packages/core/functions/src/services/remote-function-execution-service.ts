@@ -14,10 +14,15 @@ import { getInvocationUrl } from '../url';
 export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions/RemoteFunctionExecutionService')<
   RemoteFunctionExecutionService,
   {
-    callFunction(deployedFunctionId: string, input: any, spaceId?: SpaceId): Promise<any>;
+    callFunction(deployedFunctionId: string, input: any): Promise<any>;
   }
 >() {
-  static fromClient(baseUrl: string, spaceId: SpaceId): Context.Tag.Service<RemoteFunctionExecutionService> {
+  /**
+   * @param baseUrl URL of the EDGE server.
+   * @param spaceId - The space ID to invoke the function in. If not provided, the function will be without space context.
+   * @returns 
+   */
+  static fromClient(baseUrl: string, spaceId?: SpaceId): Context.Tag.Service<RemoteFunctionExecutionService> {
     return {
       callFunction: async (deployedFunctionId: string, input: any) => {
         const url = getInvocationUrl(deployedFunctionId, baseUrl, { spaceId });
