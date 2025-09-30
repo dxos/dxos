@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
-import { TestingDepreacted } from '@dxos/echo/testing';
+import { TestingDeprecated } from '@dxos/echo/testing';
 
 import { getSource, getTarget, isRelation } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
@@ -21,7 +21,7 @@ describe('Relations', () => {
     testBuilder = await new EchoTestBuilder().open();
     ({ db, graph } = await testBuilder.createDatabase());
 
-    graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.HasManager]);
+    graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
   });
 
   afterEach(async () => {
@@ -30,17 +30,17 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      Obj.make(TestingDepreacted.Contact, {
+      Obj.make(TestingDeprecated.Contact, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      Obj.make(TestingDepreacted.Contact, {
+      Obj.make(TestingDeprecated.Contact, {
         name: 'Bob',
       }),
     );
     const hasManager = db.add(
-      Obj.make(TestingDepreacted.HasManager, {
+      Obj.make(TestingDeprecated.HasManager, {
         [RelationSourceId]: bob,
         [RelationTargetId]: alice,
         since: '2022',

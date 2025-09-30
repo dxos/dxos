@@ -22,7 +22,7 @@ import {
   isDeleted,
 } from '@dxos/echo/internal';
 import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo/internal';
-import { TestingDepreacted, prepareAstForCompare } from '@dxos/echo/testing';
+import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -41,7 +41,7 @@ import { getDatabaseFromObject } from './util';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: TestingDepreacted.TestSchema = {
+const TEST_OBJECT: TestingDeprecated.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -56,10 +56,10 @@ test('id property name is reserved', () => {
 });
 
 // Pass undefined to test untyped proxy.
-for (const schema of [undefined, TestingDepreacted.TestType, TestingDepreacted.TestSchemaType]) {
+for (const schema of [undefined, TestingDeprecated.TestType, TestingDeprecated.TestSchemaType]) {
   const createTestObject = (
-    props: Partial<TestingDepreacted.TestSchemaWithClass> = {},
-  ): AnyLiveObject<TestingDepreacted.TestSchemaWithClass> => {
+    props: Partial<TestingDeprecated.TestSchemaWithClass> = {},
+  ): AnyLiveObject<TestingDeprecated.TestSchemaWithClass> => {
     if (schema) {
       return createObject(Obj.make(schema, props));
     } else {
@@ -85,13 +85,13 @@ for (const schema of [undefined, TestingDepreacted.TestType, TestingDepreacted.T
 
     test('throws when assigning a class instances', () => {
       expect(() => {
-        createTestObject().classInstance = new TestingDepreacted.TestClass();
+        createTestObject().classInstance = new TestingDeprecated.TestClass();
       }).to.throw();
     });
 
     test('throws when creates with a class instances', () => {
       expect(() => {
-        createTestObject({ classInstance: new TestingDepreacted.TestClass() });
+        createTestObject({ classInstance: new TestingDeprecated.TestClass() });
       }).to.throw();
     });
 
@@ -133,7 +133,7 @@ describe('without database', () => {
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = TestingDepreacted.TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
+    const NestedSchema = TestingDeprecated.TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
     expect(prepareAstForCompare(getSchema(obj.nested)!.ast)).to.deep.eq(prepareAstForCompare(NestedSchema.ast));
   });
 
@@ -172,23 +172,23 @@ describe('Reactive Object with ECHO database', () => {
 
   test('throws if schema was not annotated as echo object', async () => {
     const { graph } = await builder.createDatabase();
-    expect(() => graph.schemaRegistry.addSchema([TestingDepreacted.TestSchema])).to.throw();
+    expect(() => graph.schemaRegistry.addSchema([TestingDeprecated.TestSchema])).to.throw();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
     const { db } = await builder.createDatabase();
-    expect(() => db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }))).to.throw();
+    expect(() => db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }))).to.throw();
   });
 
   test('existing proxy objects can be added to the database', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+    graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
 
-    const obj = Obj.make(TestingDepreacted.TestType, { string: 'foo' });
+    const obj = Obj.make(TestingDeprecated.TestType, { string: 'foo' });
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(getSchema(returnObj)).to.eq(TestingDepreacted.TestType);
+    expect(getSchema(returnObj)).to.eq(TestingDeprecated.TestType);
     expect(returnObj === obj).to.be.true;
   });
 
@@ -223,12 +223,12 @@ describe('Reactive Object with ECHO database', () => {
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
     const root = await peer.host.createSpaceRoot(spaceKey);
-    peer.client.graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+    peer.client.graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
 
     let id: string;
     {
       const db = await peer.openDatabase(spaceKey, root.url);
-      const obj = db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }));
+      const obj = db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }));
       id = obj.id;
       await db.flush();
       await peer.close();
@@ -237,15 +237,15 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      peer.client.graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+      peer.client.graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Query.select(Filter.ids(id))).first()) as AnyLiveObject<TestingDepreacted.TestSchema>;
+      const obj = (await db.query(Query.select(Filter.ids(id))).first()) as AnyLiveObject<TestingDeprecated.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      expect(getSchema(obj)).to.eq(TestingDepreacted.TestType);
+      expect(getSchema(obj)).to.eq(TestingDeprecated.TestType);
     }
   });
 
@@ -260,10 +260,10 @@ describe('Reactive Object with ECHO database', () => {
 
     let id: string;
     {
-      peer.client.graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+      peer.client.graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }));
+      const obj = db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }));
       id = obj.id;
       await db.flush();
       await peer.close();
@@ -274,13 +274,13 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestingDepreacted.TestSchema>;
+      const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestingDeprecated.TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      peer.client.graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
-      expect(getSchema(obj)).to.eq(TestingDepreacted.TestType);
+      peer.client.graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
+      expect(getSchema(obj)).to.eq(TestingDeprecated.TestType);
     }
   });
 
@@ -295,9 +295,9 @@ describe('Reactive Object with ECHO database', () => {
   describe('queries', () => {
     test('filter by schema or typename', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
 
-      db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }));
+      db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }));
 
       {
         const queryResult = await db.query(Filter.typename('example.com/type/Test')).run();
@@ -305,21 +305,21 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const queryResult = await db.query(Filter.type(TestingDepreacted.TestType)).run();
+        const queryResult = await db.query(Filter.type(TestingDeprecated.TestType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const queryResult = await db.query(Filter.type(TestingDepreacted.TestSchemaType)).run();
+        const queryResult = await db.query(Filter.type(TestingDeprecated.TestSchemaType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
     });
 
     test('does not return deleted objects', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
-      const obj = db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }));
-      const query = db.query(Filter.type(TestingDepreacted.TestType));
+      graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
+      const obj = db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }));
+      const query = db.query(Filter.type(TestingDeprecated.TestType));
 
       expect((await query.run()).objects.length).to.eq(1);
 
@@ -329,10 +329,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('deleted objects are returned when re-added', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
-      const obj = db.add(Obj.make(TestingDepreacted.TestType, { string: 'foo' }));
+      graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
+      const obj = db.add(Obj.make(TestingDeprecated.TestType, { string: 'foo' }));
       db.remove(obj);
-      const query = await db.query(Filter.type(TestingDepreacted.TestType));
+      const query = await db.query(Filter.type(TestingDeprecated.TestType));
       expect((await query.run()).objects.length).to.eq(0);
 
       db.add(obj);
@@ -342,10 +342,10 @@ describe('Reactive Object with ECHO database', () => {
 
   test('calling toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
+    graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
     const objects = [
-      db.add(Obj.make(TestingDepreacted.TestType, TEST_OBJECT)),
-      db.add(Obj.make(TestingDepreacted.TestSchemaType, TEST_OBJECT)),
+      db.add(Obj.make(TestingDeprecated.TestType, TEST_OBJECT)),
+      db.add(Obj.make(TestingDeprecated.TestSchemaType, TEST_OBJECT)),
     ];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
@@ -360,19 +360,19 @@ describe('Reactive Object with ECHO database', () => {
 
   test('calling Object.toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDepreacted.TestType]);
-    const obj = db.add(Obj.make(TestingDepreacted.TestType, TEST_OBJECT));
+    graph.schemaRegistry.addSchema([TestingDeprecated.TestType]);
+    const obj = db.add(Obj.make(TestingDeprecated.TestType, TEST_OBJECT));
     const objData: any = Obj.toJSON(obj as any);
     expect(objData).to.deep.contain({ id: obj.id, ...TEST_OBJECT });
   });
 
   test('relation toJSON', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.HasManager]);
-    const alice = db.add(Obj.make(TestingDepreacted.Contact, { name: 'Alice' }));
-    const bob = db.add(Obj.make(TestingDepreacted.Contact, { name: 'Bob' }));
+    graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
+    const alice = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Alice' }));
+    const bob = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Bob' }));
     const manager = db.add(
-      Obj.make(TestingDepreacted.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }),
+      Obj.make(TestingDeprecated.HasManager, { [RelationTargetId]: bob, [RelationSourceId]: alice }),
     );
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
@@ -432,10 +432,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('serialized references', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.TestType, TestingDepreacted.TestNestedType]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.TestType, TestingDeprecated.TestNestedType]);
 
-      const obj1 = Obj.make(TestingDepreacted.TestType, {
-        nested: Ref.make(Obj.make(TestingDepreacted.TestNestedType, { field: 'test' })),
+      const obj1 = Obj.make(TestingDeprecated.TestType, {
+        nested: Ref.make(Obj.make(TestingDeprecated.TestNestedType, { field: 'test' })),
       });
 
       // Fully serialized before added to db.
@@ -519,12 +519,12 @@ describe('Reactive Object with ECHO database', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      db.graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.Task]);
+      db.graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.Task]);
 
-      const contact = Obj.make(TestingDepreacted.Contact, { name: 'Contact', tasks: [] });
+      const contact = Obj.make(TestingDeprecated.Contact, { name: 'Contact', tasks: [] });
       db.add(contact);
-      const task1 = Obj.make(TestingDepreacted.Task, { title: 'Task1' });
-      const task2 = Obj.make(TestingDepreacted.Task, { title: 'Task2' });
+      const task1 = Obj.make(TestingDeprecated.Task, { title: 'Task1' });
+      const task2 = Obj.make(TestingDeprecated.Task, { title: 'Task2' });
 
       contact.tasks!.push(Ref.make(task1));
       contact.tasks!.push(Ref.make(task2));
@@ -644,7 +644,7 @@ describe('Reactive Object with ECHO database', () => {
     test('can get type reference of unregistered schema', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(Type.Expando, { field: 1 }));
-      const typeReference = getTypeReference(TestingDepreacted.TestSchema)!;
+      const typeReference = getTypeReference(TestingDeprecated.TestSchema)!;
       getObjectCore(obj).setType(typeReference);
       expect(getType(obj)).to.deep.eq(typeReference);
     });
@@ -672,7 +672,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestingDepreacted.TestSchema>;
+        const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<TestingDeprecated.TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
@@ -790,10 +790,10 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.addSchema([TestingDepreacted.TestSchemaType]);
+    graph.schemaRegistry.addSchema([TestingDeprecated.TestSchemaType]);
 
-    const obj = db.add(Obj.make(TestingDepreacted.TestSchemaType, { string: 'Object 1' }));
-    const another = Obj.make(TestingDepreacted.TestSchemaType, { string: 'Object 2' });
+    const obj = db.add(Obj.make(TestingDeprecated.TestSchemaType, { string: 'Object 1' }));
+    const another = Obj.make(TestingDeprecated.TestSchemaType, { string: 'Object 2' });
     obj.other = Ref.make(another);
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });

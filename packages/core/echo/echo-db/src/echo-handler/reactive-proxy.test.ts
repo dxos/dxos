@@ -1,12 +1,12 @@
-import { Obj, Type, Ref } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
 
 import { describe } from 'vitest';
 
-import { EchoObject, getTypeAnnotation } from '@dxos/echo/internal';
-import { TestingDepreacted } from '@dxos/echo/testing';
+import { getTypeAnnotation } from '@dxos/echo/internal';
+import { TestingDeprecated } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
@@ -26,7 +26,7 @@ describe('Reactive proxy', () => {
       createObjectFn: async (props = {}) => {
         return (
           schema == null ? Obj.make(Type.Expando, props) : Obj.make(schema, props)
-        ) as TestingDepreacted.TestSchema;
+        ) as TestingDeprecated.TestSchema;
       },
     };
   });
@@ -49,7 +49,7 @@ describe('Echo reactive proxy', () => {
       },
       createObjectFn: async (props = {}) => {
         const testSchema =
-          schema === TestingDepreacted.TestSchema
+          schema === TestingDeprecated.TestSchema
             ? schema.pipe(
                 Type.Obj({
                   typename: 'example.com/test/TestSchema',
@@ -59,12 +59,12 @@ describe('Echo reactive proxy', () => {
             : schema;
         const object = (
           schema == null ? Obj.make(Type.Expando, props) : Obj.make(testSchema as any, props)
-        ) as TestingDepreacted.TestSchema;
+        ) as TestingDeprecated.TestSchema;
         if (testSchema && !db.graph.schemaRegistry.hasSchema(testSchema)) {
           db.graph.schemaRegistry.addSchema([testSchema]);
         }
 
-        return db.add(object as any) as TestingDepreacted.TestSchema;
+        return db.add(object as any) as TestingDeprecated.TestSchema;
       },
     };
   });

@@ -26,7 +26,7 @@ import {
   getTypeReference,
 } from '@dxos/echo/internal';
 import { getSchema } from '@dxos/echo/internal';
-import { TestingDepreacted, updateCounter } from '@dxos/echo/testing';
+import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { live } from '@dxos/echo/internal';
@@ -412,22 +412,22 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.HasManager]);
+      db.graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          Obj.make(TestingDepreacted.Contact, {
+          Obj.make(TestingDeprecated.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          Obj.make(TestingDepreacted.Contact, {
+          Obj.make(TestingDeprecated.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          Obj.make(TestingDepreacted.HasManager, {
+          Obj.make(TestingDeprecated.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -517,7 +517,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([TestingDepreacted.Contact]);
+      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
       db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
@@ -530,7 +530,7 @@ describe('Integration tests', () => {
         objects: [obj],
       } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDepreacted.Contact.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDeprecated.Contact.typename);
     }
   });
 });

@@ -38,7 +38,7 @@ describe('Serializer', () => {
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Testing.Task.typename}:${Testing.Task.version}` },
+        '@type': { '/': `dxn:type:${Type.getTypename(Testing.Task)}:${Type.getVersion(Testing.Task)}` },
         title: 'Testing',
       });
     });
@@ -188,7 +188,7 @@ describe('Serializer', () => {
           objects: [contact],
         } = await db.query(Filter.type(Testing.Contact)).run();
         expect(contact.name).to.eq(name);
-        expect(contact instanceof Testing.Contact).to.be.true;
+        expect(Obj.instanceOf(Testing.Contact, contact)).to.be.true;
         expect(getSchema(contact)).to.eq(Testing.Contact);
       }
     });

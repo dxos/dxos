@@ -10,7 +10,7 @@ import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Order, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
-import { TestingDepreacted } from '@dxos/echo/testing';
+import { TestingDeprecated } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -398,14 +398,16 @@ describe('Query', () => {
 
     test('not(or) query', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.Task]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.Task]);
 
-      const _contact = db.add(Obj.make(TestingDepreacted.Contact, {}));
-      const _task = db.add(Obj.make(TestingDepreacted.Task, {}));
+      const _contact = db.add(Obj.make(TestingDeprecated.Contact, {}));
+      const _task = db.add(Obj.make(TestingDeprecated.Task, {}));
       const expando = db.add(Obj.make(Type.Expando, { name: 'expando' }));
 
       const query = db.query(
-        Query.select(Filter.not(Filter.or(Filter.type(TestingDepreacted.Contact), Filter.type(TestingDepreacted.Task)))),
+        Query.select(
+          Filter.not(Filter.or(Filter.type(TestingDeprecated.Contact), Filter.type(TestingDeprecated.Task))),
+        ),
       );
       const result = await query.run();
       expect(result.objects).to.have.length(1);
@@ -425,27 +427,27 @@ describe('Query', () => {
 
     test('query relation by type', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([TestingDepreacted.Contact, TestingDepreacted.HasManager]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
 
       const alice = db.add(
-        Obj.make(TestingDepreacted.Contact, {
+        Obj.make(TestingDeprecated.Contact, {
           name: 'Alice',
         }),
       );
       const bob = db.add(
-        Obj.make(TestingDepreacted.Contact, {
+        Obj.make(TestingDeprecated.Contact, {
           name: 'Bob',
         }),
       );
       const hasManager = db.add(
-        Obj.make(TestingDepreacted.HasManager, {
+        Obj.make(TestingDeprecated.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
         }),
       );
 
-      const { objects } = await db.query(Filter.type(TestingDepreacted.HasManager)).run();
+      const { objects } = await db.query(Filter.type(TestingDeprecated.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
   });
@@ -453,33 +455,35 @@ describe('Query', () => {
   describe('Traversal', () => {
     let db: EchoDatabase;
 
-    let alice: TestingDepreacted.Contact, bob: TestingDepreacted.Contact;
+    let alice: TestingDeprecated.Contact, bob: TestingDeprecated.Contact;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [TestingDepreacted.Contact, TestingDepreacted.HasManager, TestingDepreacted.Task] }));
+      ({ db } = await builder.createDatabase({
+        types: [TestingDeprecated.Contact, TestingDeprecated.HasManager, TestingDeprecated.Task],
+      }));
 
       // TODO(dmaretskyi): Better test data.
       alice = db.add(
-        Obj.make(TestingDepreacted.Contact, {
+        Obj.make(TestingDeprecated.Contact, {
           name: 'Alice',
         }),
       );
       bob = db.add(
-        Obj.make(TestingDepreacted.Contact, {
+        Obj.make(TestingDeprecated.Contact, {
           name: 'Bob',
         }),
       );
       const _hasManager = db.add(
-        Obj.make(TestingDepreacted.HasManager, {
+        Obj.make(TestingDeprecated.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
         }),
       );
 
-      const _task1 = db.add(Obj.make(TestingDepreacted.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
-      const _task2 = db.add(Obj.make(TestingDepreacted.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
-      const _task3 = db.add(Obj.make(TestingDepreacted.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+      const _task1 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
+      const _task2 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
+      const _task3 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
 
       await db.flush({ indexes: true });
     });
@@ -487,8 +491,8 @@ describe('Query', () => {
     test('traverse relation source to target', async () => {
       const { objects } = await db
         .query(
-          Query.select(Filter.type(TestingDepreacted.Contact, { name: 'Bob' }))
-            .sourceOf(TestingDepreacted.HasManager)
+          Query.select(Filter.type(TestingDeprecated.Contact, { name: 'Bob' }))
+            .sourceOf(TestingDeprecated.HasManager)
             .target(),
         )
         .run();
@@ -499,8 +503,8 @@ describe('Query', () => {
     test('traverse relation target to source', async () => {
       const { objects } = await db
         .query(
-          Query.select(Filter.type(TestingDepreacted.Contact, { name: 'Alice' }))
-            .targetOf(TestingDepreacted.HasManager)
+          Query.select(Filter.type(TestingDeprecated.Contact, { name: 'Alice' }))
+            .targetOf(TestingDeprecated.HasManager)
             .source(),
         )
         .run();
@@ -510,7 +514,7 @@ describe('Query', () => {
 
     test('traverse outbound references', async () => {
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDepreacted.Task, { title: 'Task 1' })).reference('assignee'))
+        .query(Query.select(Filter.type(TestingDeprecated.Task, { title: 'Task 1' })).reference('assignee'))
         .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
@@ -529,7 +533,12 @@ describe('Query', () => {
 
     test('traverse inbound references', async () => {
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDepreacted.Contact, { name: 'Alice' })).referencedBy(TestingDepreacted.Task, 'assignee'))
+        .query(
+          Query.select(Filter.type(TestingDeprecated.Contact, { name: 'Alice' })).referencedBy(
+            TestingDeprecated.Task,
+            'assignee',
+          ),
+        )
         .run();
 
       // TODO(dmaretskyi): Sort in query result.
@@ -544,31 +553,38 @@ describe('Query', () => {
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDepreacted.Contact)).referencedBy(Type.Expando, 'objects'))
+        .query(Query.select(Filter.type(TestingDeprecated.Contact)).referencedBy(Type.Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
 
     test('traverse query started from id', async () => {
-      const { objects } = await db.query(Query.select(Filter.ids(bob.id)).sourceOf(TestingDepreacted.HasManager).target()).run();
+      const { objects } = await db
+        .query(Query.select(Filter.ids(bob.id)).sourceOf(TestingDeprecated.HasManager).target())
+        .run();
 
       expect(objects).toMatchObject([{ name: 'Alice' }]);
     });
 
     test('query union', async () => {
-      const query1 = Query.select(Filter.type(TestingDepreacted.Contact, { name: 'Alice' })).referencedBy(
-        TestingDepreacted.Task,
+      const query1 = Query.select(Filter.type(TestingDeprecated.Contact, { name: 'Alice' })).referencedBy(
+        TestingDeprecated.Task,
         'assignee',
       );
-      const query2 = Query.select(Filter.type(TestingDepreacted.Contact, { name: 'Bob' })).referencedBy(TestingDepreacted.Task, 'assignee');
+      const query2 = Query.select(Filter.type(TestingDeprecated.Contact, { name: 'Bob' })).referencedBy(
+        TestingDeprecated.Task,
+        'assignee',
+      );
       const query = Query.all(query1, query2);
       const { objects } = await db.query(query).run();
       expect(objects).toHaveLength(3);
     });
 
     test('query set difference', async () => {
-      const query1 = Query.select(Filter.type(TestingDepreacted.Contact));
-      const query2 = Query.select(Filter.type(TestingDepreacted.Contact)).sourceOf(TestingDepreacted.HasManager).source();
+      const query1 = Query.select(Filter.type(TestingDeprecated.Contact));
+      const query2 = Query.select(Filter.type(TestingDeprecated.Contact))
+        .sourceOf(TestingDeprecated.HasManager)
+        .source();
       const query = Query.without(query1, query2);
       const { objects } = await db.query(query).run();
       expect(objects).toEqual([alice]);
@@ -577,10 +593,10 @@ describe('Query', () => {
 
   describe.skip('text search', () => {
     test('vector', async () => {
-      const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestingDepreacted.Task] });
+      const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestingDeprecated.Task] });
 
-      db.add(Obj.make(TestingDepreacted.Task, { title: 'apples' }));
-      db.add(Obj.make(TestingDepreacted.Task, { title: 'giraffes' }));
+      db.add(Obj.make(TestingDeprecated.Task, { title: 'apples' }));
+      db.add(Obj.make(TestingDeprecated.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
 
@@ -603,10 +619,10 @@ describe('Query', () => {
 
     test('full-text', async () => {
       const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
-      graph.schemaRegistry.addSchema([TestingDepreacted.Task]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.Task]);
 
-      db.add(Obj.make(TestingDepreacted.Task, { title: 'apples' }));
-      db.add(Obj.make(TestingDepreacted.Task, { title: 'giraffes' }));
+      db.add(Obj.make(TestingDeprecated.Task, { title: 'apples' }));
+      db.add(Obj.make(TestingDeprecated.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
 
@@ -760,18 +776,18 @@ describe('Query', () => {
 
     // TODO(dmaretskyi): Fix this test.
     test.skip('deleting an element', async (ctx) => {
-      const { db } = await builder.createDatabase({ types: [TestingDepreacted.Contact] });
+      const { db } = await builder.createDatabase({ types: [TestingDeprecated.Contact] });
 
       // Create 3 test objects: Alice, Bob, Charlie.
-      const _alice = db.add(Obj.make(TestingDepreacted.Contact, { name: 'Alice' }));
-      const bob = db.add(Obj.make(TestingDepreacted.Contact, { name: 'Bob' }));
-      const _charlie = db.add(Obj.make(TestingDepreacted.Contact, { name: 'Charlie' }));
+      const _alice = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Bob' }));
+      const _charlie = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Charlie' }));
       await db.flush({ indexes: true });
 
       // Track all updates to observe the bug.
       log.break();
       const updates: string[][] = [];
-      const unsub = db.query(Query.select(Filter.type(TestingDepreacted.Contact))).subscribe(
+      const unsub = db.query(Query.select(Filter.type(TestingDeprecated.Contact))).subscribe(
         (query) => {
           const names = query.objects.map((obj) => obj.name!);
           log.info('upd', { names });
@@ -862,11 +878,11 @@ describe('Query', () => {
     });
 
     test('query by typename receives updates', async () => {
-      graph.schemaRegistry.addSchema([TestingDepreacted.Contact]);
-      const contact = db.add(Obj.make(TestingDepreacted.Contact, {}));
+      graph.schemaRegistry.addSchema([TestingDeprecated.Contact]);
+      const contact = db.add(Obj.make(TestingDeprecated.Contact, {}));
       const name = 'DXOS User';
 
-      const query = db.query(Filter.typename(Type.getTypename(TestingDepreacted.Contact)));
+      const query = db.query(Filter.typename(Type.getTypename(TestingDeprecated.Contact)));
       const result = await query.run();
       expect(result.objects).to.have.length(1);
       expect(result.objects[0]).to.eq(contact);
@@ -884,14 +900,14 @@ describe('Query', () => {
       onTestFinished(() => unsub());
 
       contact.name = name;
-      db.add(Obj.make(TestingDepreacted.Contact, {}));
+      db.add(Obj.make(TestingDeprecated.Contact, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);
       await asyncTimeout(anotherContactAdded.wait(), 1000);
     });
 
     test('query mutable schema objects', async () => {
-      const [schema] = await db.schemaRegistry.register([TestingDepreacted.Contact]);
+      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
       const contact = db.add(Obj.make(schema, {}));
 
       // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
@@ -902,17 +918,17 @@ describe('Query', () => {
     });
 
     test('`instanceof` operator works', async () => {
-      graph.schemaRegistry.addSchema([TestingDepreacted.Contact]);
+      graph.schemaRegistry.addSchema([TestingDeprecated.Contact]);
       const name = 'DXOS User';
-      const contact = Obj.make(TestingDepreacted.Contact, { name });
+      const contact = Obj.make(TestingDeprecated.Contact, { name });
       db.add(contact);
-      expect(Obj.instanceOf(TestingDepreacted.Contact, contact)).to.be.true;
+      expect(Obj.instanceOf(TestingDeprecated.Contact, contact)).to.be.true;
 
       // query
       {
-        const contact = (await db.query(Filter.type(TestingDepreacted.Contact)).run()).objects[0];
+        const contact = (await db.query(Filter.type(TestingDeprecated.Contact)).run()).objects[0];
         expect(contact.name).to.eq(name);
-        expect(Obj.instanceOf(TestingDepreacted.Contact, contact)).to.be.true;
+        expect(Obj.instanceOf(TestingDeprecated.Contact, contact)).to.be.true;
       }
     });
   });
