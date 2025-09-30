@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -13,11 +13,11 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  TypedObject,
+  getSchema,
+  getType,
   getTypeReference,
   getTypename,
 } from '@dxos/echo/internal';
-import { getSchema, getType } from '@dxos/echo/internal';
 import { TestingDepreacted } from '@dxos/echo/testing';
 
 import { Filter } from '../query';
@@ -26,7 +26,7 @@ import { EchoTestBuilder } from '../testing';
 const TestSchema = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
-}).pipe(TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' }))
+}).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
 describe('EchoSchema', () => {
   let builder: EchoTestBuilder;
@@ -44,7 +44,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestSchema, {}));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' }))
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schema = Ref.make(schema);
@@ -65,10 +65,9 @@ describe('EchoSchema', () => {
 
   test('create echo object with EchoSchema', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
-
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestSchema, { schema: Ref.make(schema) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
@@ -77,9 +76,9 @@ describe('EchoSchema', () => {
   test('push EchoSchema to echo object schema array', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(Obj.make(TestSchema, { schemaArray: [] }));
-    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
     expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
@@ -127,20 +126,14 @@ describe('EchoSchema', () => {
   test('mutable schema refs', async () => {
     const { db } = await setupTest();
 
-    const OrgSchema = TypedObject({
-      typename: 'example.com/type/org',
-      version: '0.1.0',
-    })({
+    const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    });
+    }).pipe(Type.Obj({ typename: 'example.com/type/org', version: '0.1.0' }));
 
-    const ContactSchema = TypedObject({
-      typename: 'example.com/type/contact',
-      version: '0.1.0',
-    })({
+    const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    });
+    }).pipe(Type.Obj({ typename: 'example.com/type/contact', version: '0.1.0' }));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);

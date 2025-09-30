@@ -6,15 +6,13 @@ import { effect } from '@preact/signals-core';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { Expando, ObjectId, Ref, getType } from '@dxos/echo/internal';
-import { Obj } from '@dxos/echo';
-import { Testing } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
+import { Expando, ObjectId, Ref, getType } from '@dxos/echo/internal';
+import { Testing } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -32,7 +30,7 @@ describe('CoreDatabase', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      const object = createExpando();
+      const object = Obj.make(Type.Expando, {});
       db.add(object);
       const docHandles = getDocHandles(db);
       expect(docHandles.linkedDocHandles.length).to.eq(1);
@@ -55,7 +53,7 @@ describe('CoreDatabase', () => {
     test('effect nested reference access triggers document loading', async () => {
       registerSignalsRuntime();
 
-      const document = createExpando({ text: Ref.make(createTextObject('Hello, world!')) });
+      const document = Obj.make(Type.Expando, { text: Ref.make(createTextObject('Hello, world!')) });
       const db = await createClientDbInSpaceWithObject(document);
       const loadedDocument = await db.query(Query.type(Expando, { id: document.id })).first();
       expect(loadedDocument).not.to.be.undefined;
@@ -114,7 +112,7 @@ describe('CoreDatabase', () => {
     });
 
     test('objects are removed if not present in the new document', async () => {
-      const oldObject = createExpando({ title: 'Hello' });
+      const oldObject = Obj.make(Type.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(oldObject);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       const beforeUpdate = await db.query(Query.type(Expando, { id: oldObject.id })).first();
@@ -125,7 +123,7 @@ describe('CoreDatabase', () => {
     });
 
     test('preserved objects are rebound to the new root', async () => {
-      const originalObj = createExpando({ title: 'Hello' });
+      const originalObj = Obj.make(Type.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(originalObj);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
@@ -140,7 +138,7 @@ describe('CoreDatabase', () => {
     });
 
     test('linked objects are loaded on update only if they were loaded before', async () => {
-      const stack = createExpando({
+      const stack = Obj.make(Type.Expando, {
         notLoadedDocument: Ref.make(createTextObject('text1')),
         loadedDocument: Ref.make(createTextObject('text2')),
         partiallyLoadedDocument: Ref.make(createTextObject('text3')),
@@ -169,7 +167,7 @@ describe('CoreDatabase', () => {
     });
 
     test('linked objects can be remapped', async () => {
-      const stack = createExpando({
+      const stack = Obj.make(Type.Expando, {
         text1: Ref.make(createTextObject('text1')),
         text2: Ref.make(createTextObject('text2')),
         text3: Ref.make(createTextObject('text3')),
@@ -205,7 +203,7 @@ describe('CoreDatabase', () => {
     });
 
     test('updates are not received on old handles', async () => {
-      const obj = createExpando({});
+      const obj = Obj.make(Type.Expando, {});
       const db = await createClientDbInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(db).spaceRootHandle;
       const id1 = ObjectId.random();
@@ -244,16 +242,19 @@ describe('CoreDatabase', () => {
     });
 
     test('multiple object update', async () => {
-      const linksToRemove = range(5).map(() => createExpando());
+      const linksToRemove = range(5).map(() => Obj.make(Type.Expando, {}));
       const loadedLinks = range(4).map(() => createTextObject('test'));
       const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
-      const objectsToAdd = range(2).map(() => createExpando());
+      const objectsToAdd = range(2).map(() => Obj.make(Type.Expando, {}));
       const rootObject = [linksToRemove, loadedLinks, partiallyLoadedLinks]
         .flatMap((v: any[]) => v)
-        .reduce((acc: Expando, obj: any) => {
-          acc[obj.id] = Ref.make(obj);
-          return acc;
-        }, createExpando());
+        .reduce(
+          (acc: Expando, obj: any) => {
+            acc[obj.id] = Ref.make(obj);
+            return acc;
+          },
+          Obj.make(Type.Expando, {}),
+        );
 
       const db = await createClientDbInSpaceWithObject(rootObject);
 
@@ -299,7 +300,7 @@ describe('CoreDatabase', () => {
       const kv = createTestLevel(tmpPath);
       const peer = await testBuilder.createPeer({ kv });
       const db = await peer.createDatabase();
-      const object = createExpando({ title: 'first object' });
+      const object = Obj.make(Type.Expando, { title: 'first object' });
       db.add(object);
 
       const spaceKey = db.spaceKey;
@@ -320,7 +321,7 @@ describe('CoreDatabase', () => {
     });
 
     test('load object', async () => {
-      const object = createExpando({ title: 'Hello' });
+      const object = Obj.make(Type.Expando, { title: 'Hello' });
       const db = await createClientDbInSpaceWithObject(object);
       await db.query(Filter.ids(object.id)).first();
       const loadedObject = db.getObjectById(object.id);
@@ -397,10 +398,6 @@ const createClientDbInSpaceWithObject = async (
 
   const peer2 = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
-};
-
-const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
-  return Obj.make(Expando, props);
 };
 
 const createTextObject = (content: string = ''): AnyLiveObject<{ content: string }> => {

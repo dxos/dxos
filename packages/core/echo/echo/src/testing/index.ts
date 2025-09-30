@@ -2,6 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
+export { prepareAstForCompare, Testing as TestingDeprecated, updateCounter } from '../internal/testing';
 export * from './types';
-export { updateCounter, prepareAstForCompare } from '../internal/testing';
-export { Testing as TestingDeprecated } from '../internal/testing';

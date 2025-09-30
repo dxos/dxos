@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
@@ -27,16 +27,16 @@ afterEach(async () => {
 const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.1.0' }));
 
 const ContactV2 = Schema.Struct({
   name: Schema.String,
-}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.2.0' }));
 
 const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.3.0' }));
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.3.0' }));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
