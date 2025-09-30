@@ -38,6 +38,7 @@ describe('FunctionInvocationService', () => {
     'routes to local when implementation is available',
     Effect.fnUntraced(function* ({ expect: _ }) {
       const add = defineFunction({
+        key: 'example.org/function/add',
         name: 'add',
         inputSchema: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
         outputSchema: Schema.Number,
@@ -60,6 +61,7 @@ describe('FunctionInvocationService', () => {
     Effect.fnUntraced(function* ({ expect: _ }) {
       // This function is not deployed, so mock layer will be used.
       const echo = defineFunction({
+        key: 'example.org/function/echo',
         name: 'function-that-is-deployed',
         inputSchema: Schema.Unknown,
         outputSchema: Schema.Unknown,
