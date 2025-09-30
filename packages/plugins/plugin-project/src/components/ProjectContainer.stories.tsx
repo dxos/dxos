@@ -12,6 +12,7 @@ import { Filter, Query, Ref } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
@@ -58,6 +59,7 @@ const meta: Meta<typeof ProjectContainer> = {
             DataType.Organization,
             DataType.Task,
             DataType.Person,
+            DataType.Message,
           ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -101,17 +103,27 @@ const meta: Meta<typeof ProjectContainer> = {
               presentation: project,
             });
 
+            // Create a view for Messages
+            const messageView = createView({
+              name: 'Messages',
+              query: Query.select(Filter.type(DataType.Message)),
+              jsonSchema: Type.toJsonSchema(DataType.Message),
+              presentation: project,
+            });
+
             // Add views to project collections
             project.collections.push(Ref.make(personView));
             project.collections.push(Ref.make(organizationView));
             project.collections.push(Ref.make(taskView));
             project.collections.push(Ref.make(projectView));
+            project.collections.push(Ref.make(messageView));
 
             // Add views and project to space
             space.db.add(personView);
             space.db.add(organizationView);
             space.db.add(taskView);
             space.db.add(projectView);
+            space.db.add(messageView);
             space.db.add(project);
 
             // Generate sample Organizations
@@ -147,6 +159,21 @@ const meta: Meta<typeof ProjectContainer> = {
               });
               space.db.add(nestedProject);
             });
+
+            // Generate sample Messages
+            Array.from({ length: 6 }).forEach(() => {
+              const message = Obj.make(DataType.Message, {
+                created: faker.date.recent().toISOString(),
+                sender: { role: 'user' },
+                blocks: [
+                  {
+                    _tag: 'text' as const,
+                    text: faker.lorem.sentences(2),
+                  },
+                ],
+              });
+              space.db.add(message);
+            });
           },
         }),
         SpacePlugin({}),
@@ -157,6 +184,7 @@ const meta: Meta<typeof ProjectContainer> = {
         ThemePlugin({ tx: defaultTx }),
         AttentionPlugin(),
         PreviewPlugin(),
+        InboxPlugin(),
         StorybookLayoutPlugin({}),
       ],
     }),

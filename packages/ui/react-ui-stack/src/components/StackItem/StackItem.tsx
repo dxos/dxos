@@ -63,7 +63,7 @@ type StackItemRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   onSizeChange?: (nextSize: StackItemSize) => void;
   role?: 'article' | 'section';
   disableRearrange?: boolean;
-  focusIndicatorVariant?: 'over-all' | 'group';
+  focusIndicatorVariant?: 'over-all' | 'group' | 'over-all-always' | 'group-always';
 };
 
 const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
@@ -232,15 +232,22 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             'group/stack-item grid relative',
             focusIndicatorVariant === 'over-all'
               ? 'dx-focus-ring-inset-over-all'
-              : orientation === 'horizontal'
-                ? 'dx-focus-ring-group-x'
-                : 'dx-focus-ring-group-y',
+              : focusIndicatorVariant === 'over-all-always'
+                ? 'dx-focus-ring-inset-over-all-always'
+                : orientation === 'horizontal'
+                  ? focusIndicatorVariant === 'group-always'
+                    ? 'dx-focus-ring-group-x-always'
+                    : 'dx-focus-ring-group-x'
+                  : focusIndicatorVariant === 'group-always'
+                    ? 'dx-focus-ring-group-y-always'
+                    : 'dx-focus-ring-group-y',
             orientation === 'horizontal' ? 'grid-rows-subgrid' : 'grid-cols-subgrid',
             rail && (orientation === 'horizontal' ? 'row-span-2' : 'col-span-2'),
             role === 'section' && orientation !== 'horizontal' && 'border-be border-subduedSeparator',
             classNames,
           )}
           data-dx-stack-item={stackId}
+          data-dx-item-id={item.id}
           {...resizeAttributes}
           style={{
             ...(stackSize !== 'split' && sizeStyle(size, orientation)),
