@@ -23,13 +23,10 @@ import { TestingDepreacted } from '@dxos/echo/testing';
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
-  version: '0.1.0',
-})({
+const TestSchema = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
-}) {}
+}).pipe(TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' }))
 
 describe('EchoSchema', () => {
   let builder: EchoTestBuilder;
@@ -45,12 +42,9 @@ describe('EchoSchema', () => {
   test('set EchoSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(Obj.make(TestSchema, {}));
-    class GeneratedSchema extends TypedObject({
-      typename: 'example.com/type/Test',
-      version: '0.1.0',
-    })({
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
+    }).pipe(TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' }))
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schema = Ref.make(schema);

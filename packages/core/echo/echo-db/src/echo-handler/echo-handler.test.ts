@@ -193,9 +193,9 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('existing proxy objects can be passed to create', async () => {
-    class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    const TestSchema = Schema.Struct({
       field: Schema.Any,
-    }) {}
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestSchema]);
@@ -614,12 +614,12 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('object with meta pushed to array', async () => {
-      class NestedType extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
+      const NestedType = Schema.Struct({
         field: Schema.Number,
-      }) {}
-      class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      }).pipe(Type.Obj({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
+      const TestType = Schema.Struct({
         objects: Schema.mutable(Schema.Array(Ref(NestedType))),
-      }) {}
+      }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
@@ -631,9 +631,9 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('push key to object created with', async () => {
-      class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      const TestType = Schema.Struct({
         field: Schema.Number,
-      }) {}
+      }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestType]);
       const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));

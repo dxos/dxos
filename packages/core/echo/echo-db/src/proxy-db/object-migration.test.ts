@@ -24,19 +24,19 @@ afterEach(async () => {
   await builder.close();
 });
 
-class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}) {}
+}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
 
-class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
+const ContactV2 = Schema.Struct({
   name: Schema.String,
-}) {}
+}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' }));
 
-class ContactV3 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.3.0' })({
+const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}) {}
+}).pipe(TypedObject({ typename: 'example.com/type/Contact', version: '0.3.0' }));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,

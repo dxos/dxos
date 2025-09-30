@@ -51,7 +51,7 @@ describe('Echo reactive proxy', () => {
         const testSchema =
           schema === TestingDepreacted.TestSchema
             ? schema.pipe(
-                Type.obj({
+                Type.Obj({
                   typename: 'example.com/test/TestSchema',
                   version: '0.1.0',
                 }),

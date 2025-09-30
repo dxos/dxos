@@ -459,9 +459,9 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+        const TestSchema = Schema.Struct({
           field: Schema.String,
-        }) {}
+        }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 

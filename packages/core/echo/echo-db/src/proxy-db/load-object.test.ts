@@ -152,11 +152,13 @@ describe.skip('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: Schema.Number }) {}
+    const Nested = Schema.Struct({ value: Schema.Number }).pipe(
+      Type.Obj({ typename: 'example.com/Nested', version: '0.1.0' }),
+    );
 
-    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
-      nested: Schema.mutable(Schema.Array(Ref(Nested))),
-    }) {}
+    const TestSchema = Schema.Struct({
+      nested: Schema.mutable(Schema.Array(Type.Ref(Nested))),
+    }).pipe(Type.Obj({ typename: 'example.com/Test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
@@ -178,7 +180,3 @@ describe.skip('loadObjectReferences', () => {
     expect(value).to.eq(42);
   });
 });
-
-const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
-  return Obj.make(Expando, props);
-};
