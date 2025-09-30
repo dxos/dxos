@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 // TODO(wittjosiah): Reconcile with @dxos/react-ui-components.
 export type Commit = {
   id: string;
-  parents?: string[];
+  parents: string[];
   branch: string;
   icon?: string;
   level?: LogLevel;
@@ -112,6 +112,9 @@ export class ExecutionGraph {
 
     this._commits.push(agentStatusCommit);
 
+    // Update last block ID for sequential chaining.
+    this._lastBlockId = event.id;
+
     // Update pending tool results to point to this AgentStatus.
     if (event.toolCallId) {
       this._lastCommitByBranch.set(branch, event.id);
@@ -128,7 +131,7 @@ export class ExecutionGraph {
 
     return {
       branches: Array.from(this._branchNames),
-      commits: commits,
+      commits,
     };
   }
 
@@ -164,7 +167,7 @@ export class ExecutionGraph {
     if (!toolResultId) return;
 
     const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
-    if (!toolResultCommit?.parents) return;
+    if (!toolResultCommit) return;
 
     const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
     if (!toolCallCommitId) return;
@@ -191,7 +194,7 @@ export class ExecutionGraph {
 
     if (agentStatusCommitId && agentStatusCommitId !== toolCallCommitId) {
       const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
-      if (toolResultCommit?.parents) {
+      if (toolResultCommit) {
         const toolCallIndex = toolResultCommit.parents.indexOf(toolCallCommitId);
         if (toolCallIndex !== -1) {
           toolResultCommit.parents[toolCallIndex] = agentStatusCommitId;
@@ -205,8 +208,8 @@ export class ExecutionGraph {
    * Gets the branch name for a tool call.
    */
   private _getToolCallBranch(parentMessage?: ObjectId, toolCallId?: string): string {
-    if (parentMessage && toolCallId) {
-      return `${parentMessage}_${toolCallId}`;
+    if (toolCallId) {
+      return toolCallId;
     }
     return parentMessage || 'main';
   }
@@ -214,11 +217,11 @@ export class ExecutionGraph {
   /**
    * Gets the parents for an AgentStatus commit.
    */
-  private _getAgentStatusParents(event: AgentStatus): string[] | undefined {
+  private _getAgentStatusParents(event: AgentStatus): string[] {
     if (event.parentMessage && event.toolCallId) {
       return [getToolCallId(event.parentMessage, event.toolCallId)];
     }
-    return undefined;
+    return [];
   }
 
   /**
@@ -422,8 +425,8 @@ const getToolResultId = (messageId: ObjectId, toolCallId: string) => `${messageI
 const getGenericBlockId = (messageId: ObjectId, idx: number) => `${messageId}_block_${idx}`;
 
 const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string }) => {
-  if (options.parentMessage && options.toolCallId) {
-    return `${options.parentMessage}_${options.toolCallId}`;
+  if (options.toolCallId) {
+    return options.toolCallId;
   } else if (options.parentMessage) {
     return options.parentMessage;
   } else {
