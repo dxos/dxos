@@ -247,6 +247,7 @@ const StackItemRoot = forwardRef<HTMLDivElement, StackItemRootProps>(
             classNames,
           )}
           data-dx-stack-item={stackId}
+          data-dx-item-id={item.id}
           {...resizeAttributes}
           style={{
             ...(stackSize !== 'split' && sizeStyle(size, orientation)),

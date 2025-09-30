@@ -81,6 +81,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
   ) => {
     const stackId = useId('stack', props.id);
     const [stackElement, stackRef] = useState<HTMLDivElement | null>(null);
+    const [lastFocusedItem, setLastFocusedItem] = useState<string>();
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
 
     const styles: CSSProperties = {
@@ -115,6 +116,23 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         }
       }
     }, [stackElement, separatorOnScroll, orientation]);
+
+    /**
+     * Handles blur events to track the last focused item within this stack.
+     */
+    const handleBlur = useCallback(
+      (event: React.FocusEvent<HTMLDivElement>) => {
+        if (event.target) {
+          const target = event.target as HTMLElement;
+          const closestStackItem = target.closest(`[data-dx-item-id]`) as HTMLElement | null;
+          if (closestStackItem?.closest(`[data-dx-stack="${stackId}"]`)) {
+            setLastFocusedItem(closestStackItem?.getAttribute('data-dx-item-id') ?? undefined);
+          }
+        }
+        props.onBlur?.(event);
+      },
+      [stackId, props.onBlur],
+    );
 
     /**
      * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack; if the arrow key matches the
@@ -159,12 +177,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
               let adjacentItem: HTMLElement | undefined;
 
               if (circularFocus) {
-                // Circular navigation: wrap around using modulo
+                // Circular navigation: wrap around using modulo.
                 adjacentItem = closestStackItems[(nextIndex + closestStackItems.length) % closestStackItems.length] as
                   | HTMLElement
                   | undefined;
               } else {
-                // Non-circular navigation: only move if within bounds
+                // Non-circular navigation: only move if within bounds.
                 if (nextIndex >= 0 && nextIndex < closestStackItems.length) {
                   adjacentItem = closestStackItems[nextIndex] as HTMLElement | undefined;
                 }
@@ -187,12 +205,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 let adjacentStack: HTMLElement | undefined;
 
                 if (ancestorStack.getAttribute('data-dx-stack-circular-focus') === 'true') {
-                  // Circular navigation: wrap around using modulo
+                  // Circular navigation: wrap around using modulo.
                   adjacentStack = siblingStacks[(nextStackIndex + siblingStacks.length) % siblingStacks.length] as
                     | HTMLElement
                     | undefined;
                 } else {
-                  // Non-circular navigation: only move if within bounds
+                  // Non-circular navigation: only move if within bounds.
                   if (nextStackIndex >= 0 && nextStackIndex < siblingStacks.length) {
                     adjacentStack = siblingStacks[nextStackIndex] as HTMLElement | undefined;
                   }
@@ -207,26 +225,35 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                       ),
                     ) as HTMLElement[])
                   : [];
-                if (adjacentStackItems.length > 0) {
-                  // Find the closest item by position
-                  const ownedItemRect = closestOwnedItem.getBoundingClientRect();
-                  const targetPosition =
-                    closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
-
+                if (adjacentStack && adjacentStackItems.length > 0) {
+                  // Check if the adjacent stack has a last focused item recorded, otherwise find the closest item by position.
                   let closestItem = adjacentStackItems[0];
-                  let closestDistance = Infinity;
+                  // Try to find an item with matching data-dx-stack-item value.
+                  const lastFocusedItem = adjacentStack.querySelector(
+                    `[data-dx-item-id="${adjacentStack.getAttribute('data-dx-last-focused-item') ?? 'never'}"]`,
+                  );
+                  if (lastFocusedItem) {
+                    closestItem = lastFocusedItem as HTMLElement;
+                  } else {
+                    // Fall back to positional calculation
+                    const ownedItemRect = closestOwnedItem.getBoundingClientRect();
+                    const targetPosition =
+                      closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
 
-                  for (const item of adjacentStackItems) {
-                    const itemRect = item.getBoundingClientRect();
-                    const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
-                    const distance = Math.abs(itemPosition - targetPosition);
+                    let closestDistance = Infinity;
 
-                    if (distance < closestDistance) {
-                      closestDistance = distance;
-                      closestItem = item;
-                    }
-                    if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
-                      break;
+                    for (const item of adjacentStackItems) {
+                      const itemRect = item.getBoundingClientRect();
+                      const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
+                      const distance = Math.abs(itemPosition - targetPosition);
+
+                      if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestItem = item;
+                      }
+                      if (closestDistance <= PERPENDICULAR_FOCUS_THRESHHOLD) {
+                        break;
+                      }
                     }
                   }
 
@@ -304,8 +331,10 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
             classNames,
           )}
           onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
           data-dx-stack={stackId}
           data-dx-stack-circular-focus={circularFocus}
+          data-dx-last-focused-item={lastFocusedItem}
           data-rail={rail}
           aria-orientation={orientation}
           style={styles}
