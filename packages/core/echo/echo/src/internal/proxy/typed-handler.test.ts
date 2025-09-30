@@ -5,10 +5,10 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Ref, TypedObject, create, foreignKey, getMeta, getSchema, isInstanceOf } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo-schema/testing';
+import { Ref, TypedObject, create, foreignKey, getMeta, getSchema, isInstanceOf } from '..';
+import { Testing } from '../testing';
 
-import { live } from './object';
+import { live } from './reactive-object';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {

@@ -15,13 +15,11 @@ import {
   attachTypedJsonSerializer,
   defineHiddenProperty,
   getTypeAnnotation,
-} from '../internal';
-import { MetaId } from '../internal';
+} from '..';
+import { MetaId } from '..';
 
-import { type Live } from '@dxos/live-object';
-import { createProxy, isValidProxyTarget } from './proxy';
+import { type Live, createProxy, isValidProxyTarget, UntypedReactiveHandler } from '@dxos/live-object';
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
-import { UntypedReactiveHandler } from './untyped-handler';
 
 /**
  * Creates a reactive object from a plain Javascript object.

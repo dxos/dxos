@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as EchoSchema from '@dxos/echo/internal';
+import * as EchoSchema from './internal';
 
 import type * as Obj from './Obj';
 

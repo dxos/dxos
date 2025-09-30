@@ -5,11 +5,11 @@
 import { Schema } from 'effect';
 import { dual } from 'effect/Function';
 
-import * as EchoSchema from '@dxos/echo/internal';
+import * as EchoSchema from './internal';
+import { live } from './internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
-import { live } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Ref from './Ref';

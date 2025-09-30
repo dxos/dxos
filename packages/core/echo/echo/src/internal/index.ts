@@ -18,3 +18,4 @@ export * from '../../../live-object/src/define-hidden-property';
 export * from './ref';
 export * from './projection';
 export * from './schema';
+export { live } from './proxy/reactive-object';

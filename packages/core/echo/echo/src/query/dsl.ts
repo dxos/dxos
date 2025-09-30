@@ -8,7 +8,7 @@ import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
-import { getTypeReference } from '@dxos/echo/internal';
+import { getTypeReference } from '../internal';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 

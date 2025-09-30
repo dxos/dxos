@@ -7,7 +7,7 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Schema, SchemaAST } from 'effect';
 
 import { inspectCustom } from '@dxos/debug';
-import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '@dxos/echo/internal';
+import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '..';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
@@ -18,7 +18,7 @@ import {
   isValidProxyTarget,
   objectData,
   symbolIsProxy,
-} from './proxy';
+} from '@dxos/live-object';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

@@ -7,11 +7,13 @@ import React, { useMemo, useState } from 'react';
 
 import { DXN, Obj, Query, type QueryAST, Type } from '@dxos/echo';
 import {
+  type PropertyMetaAnnotation,
+  PropertyMetaAnnotationId,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   getTypeAnnotation,
   unwrapOptional,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { type Client, useClient } from '@dxos/react-client';
 import { Filter, type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, ToggleGroup, ToggleGroupIconItem, useAsyncEffect, useTranslation } from '@dxos/react-ui';

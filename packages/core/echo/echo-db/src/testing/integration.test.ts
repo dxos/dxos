@@ -26,10 +26,10 @@ import {
   getTypeReference,
 } from '@dxos/echo/internal';
 import { getSchema } from '@dxos/echo/internal';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
+import { Testing, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
+import { live } from '@dxos/echo/internal';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

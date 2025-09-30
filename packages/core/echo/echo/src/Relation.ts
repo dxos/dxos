@@ -5,10 +5,11 @@
 import { Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import * as EchoSchema from '@dxos/echo/internal';
+import * as EchoSchema from './internal';
+import { live } from './internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { assumeType } from '@dxos/util';
 
 import * as Obj from './Obj';

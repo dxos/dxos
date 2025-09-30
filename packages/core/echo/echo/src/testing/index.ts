@@ -3,3 +3,4 @@
 //
 
 export * from './types';
+export { updateCounter } from '../internal/testing';

@@ -6,8 +6,8 @@ import { type Schema } from 'effect';
 import { type Simplify } from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import * as EchoSchema from '@dxos/echo/internal';
-import { type ToMutable } from '@dxos/echo/internal';
+import { type ToMutable } from './internal';
+import * as EchoSchema from './internal';
 import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
 
@@ -243,4 +243,4 @@ export const getMeta = (schema: Obj.Any | Relation.Any): Meta | undefined => {
 // TODO(dmaretskyi): Remove re-exports.
 export { SpaceId, ObjectId, DXN } from '@dxos/keys';
 
-export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from '@dxos/echo/internal';
+export { Format, JsonSchemaType as JsonSchema, toEffectSchema, toJsonSchema } from './internal';

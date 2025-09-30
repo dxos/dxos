@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { EchoObject, TypedObject, getSchema } from '@dxos/echo/internal';
+import { EchoObject, TypedObject, getSchema } from '..';
 
-import { live } from './object';
+import { live } from './reactive-object';
 
 const Organization = Schema.Struct({
   name: Schema.String,
