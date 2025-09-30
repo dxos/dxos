@@ -7,11 +7,12 @@ import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { StoredSchema } from '@dxos/echo-schema';
+import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { DataType } from '../common';
 
+import { ProjectionModel } from './projection-model';
 import { createView, createViewWithReferences } from './view';
 
 describe('Projection', () => {
@@ -27,11 +28,16 @@ describe('Projection', () => {
 
   test('create view from schema', async ({ expect }) => {
     const schema = DataType.Person;
-    const presentation = Obj.make(Type.Expando, {});
+    const jsonSchema = Type.toJsonSchema(schema);
+
+    const registry = new RuntimeSchemaRegistry();
+    registry.addSchema([DataType.Person, DataType.Organization]);
+
     const view = await createViewWithReferences({
       query: Query.select(Filter.type(schema)),
-      jsonSchema: Type.toJsonSchema(schema),
-      presentation,
+      jsonSchema,
+      presentation: Obj.make(Type.Expando, {}),
+      registry,
     });
     assert(view.query.type === 'select');
     assert(view.query.filter.type === 'object');
@@ -48,6 +54,30 @@ describe('Projection', () => {
       'notes',
       'birthday',
     ]);
+
+    const projection = new ProjectionModel(jsonSchema, view.projection);
+
+    {
+      const { props } = projection.getFieldProjection(projection.getFieldId('fullName')!);
+      expect(props).to.deep.eq({
+        property: 'fullName',
+        title: 'Full Name',
+        type: TypeEnum.String,
+        format: FormatEnum.String,
+      });
+    }
+
+    {
+      const { props } = projection.getFieldProjection(projection.getFieldId('organization')!);
+      expect(props).to.deep.eq({
+        property: 'organization',
+        title: 'Organization',
+        type: TypeEnum.Ref,
+        format: FormatEnum.Ref,
+        referencePath: 'name',
+        referenceSchema: 'dxos.org/type/Organization',
+      });
+    }
   });
 
   test('static schema definitions with references', async ({ expect }) => {
