@@ -9,6 +9,7 @@ import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { Type } from '@dxos/echo';
 
 registerSignalsRuntime();
 
@@ -34,10 +35,10 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<TestingDeprecated.TestSchema>) => Promise<TestingDeprecated.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, TestingDeprecated.TestSchema, TestingDeprecated.TestSchemaType]) {
+  for (const schema of [Type.Expando, TestingDeprecated.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -59,7 +60,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       await afterAllCb?.();
     });
 
-    describe(`Proxy properties(schema=${schema != null})`, () => {
+    describe(`Proxy properties(schema=${Type.getTypename(schema)})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
         log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });
