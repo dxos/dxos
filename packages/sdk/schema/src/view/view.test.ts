@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 
 import { DataType } from '../common';
 import { getSchemaProperties } from '../properties';
-import { Testing } from '../testing';
 
 import { createView, createViewWithReferences } from './view';
 
@@ -78,19 +77,19 @@ describe('Projection', () => {
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = Obj.make(Testing.Contact, {
-      name: 'Alice',
-      email: 'alice@example.com',
+    const organization = Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = Obj.make(DataType.Person, {
+      fullName: 'Alice',
+      emails: [{ value: 'alice@example.com' }],
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Testing.Organization),
-      contact: Type.toJsonSchema(Testing.Contact),
+      organization: Type.toJsonSchema(DataType.Organization),
+      contact: Type.toJsonSchema(DataType.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Testing.Contact.typename);
+    expect(Obj.getTypename(organization)).to.eq(DataType.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(DataType.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
