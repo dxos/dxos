@@ -404,7 +404,7 @@ const isPrefix = (haystack: MemoziedConversation, needle: MemoziedConversation):
     }
   }
 
-  if (haystack.history.content[0].role !== 'assistant') {
+  if (haystack.history.content[needle.history.content.length].role !== 'assistant') {
     return false;
   }
 

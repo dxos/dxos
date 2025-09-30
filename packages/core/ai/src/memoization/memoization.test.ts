@@ -4,7 +4,6 @@ import * as MemoizedAiService from './MemoizedAiService';
 import { AiServiceTestingPreset, testingLayer, TestingToolkit } from '../testing';
 import * as AiService from '../AiService';
 import { Chat, LanguageModel, Prompt } from '@effect/ai';
-import { C } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 describe('memoization', () => {
   it.effect(
@@ -40,7 +39,7 @@ describe('memoization', () => {
           const stream = chat.streamText({
             prompt: Prompt.empty,
             toolkit: TestingToolkit,
-            disableToolCallResolution: true,
+            // disableToolCallResolution: true,
           });
           yield* stream.pipe(
             Stream.runForEach((part) => {
@@ -50,7 +49,7 @@ describe('memoization', () => {
           );
 
           const lastMessage = (yield* chat.history).content.at(-1);
-          if (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') {
+          if (lastMessage?.role === 'tool') {
             continue;
           } else {
             break;
