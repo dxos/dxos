@@ -103,6 +103,12 @@ export const makeToolExecutionServiceFromFunctions = (
 
 /**
  * Tools that are projected from functions have this annotation.
+ *
+ * deployedFunctionId:
+ * - Backend deployment ID assigned by the EDGE function service (typically a UUID).
+ * - Used for remote invocation via `FunctionInvocationService` → `RemoteFunctionExecutionService`.
+ * - Persisted on the corresponding ECHO `FunctionType` object's metadata under the
+ *   `FUNCTIONS_META_KEY` and retrieved with `getUserFunctionIdInMetadata`.
  */
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
@@ -111,6 +117,14 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAn
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
 
+/**
+ * Projects a `FunctionDefinition` into an `AiTool`.
+ *
+ * @param fn The function definition to project into a tool.
+ * @param meta Optional projection metadata.
+ * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present. This is the
+ *        EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
+ */
 const projectFunctionToTool = (
   fn: FunctionDefinition<any, any>,
   meta?: { deployedFunctionId?: string },
