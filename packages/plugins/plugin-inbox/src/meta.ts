@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const INBOX_PLUGIN = 'dxos.org/plugin/inbox';
-
 export const meta: PluginMeta = {
-  id: INBOX_PLUGIN,
+  id: 'dxos.org/plugin/inbox',
   name: 'Inbox',
   description: 'Manages your email, calendar, and contacts.',
   icon: 'ph--address-book-tabs--regular',

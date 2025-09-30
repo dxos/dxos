@@ -36,6 +36,9 @@
       "path": "../../core/echo/echo-schema"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -63,7 +66,13 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-deck"
+    },
+    {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-preview"

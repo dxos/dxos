@@ -8,13 +8,13 @@ import { type Node } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
 export const PlankContentError = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
     <div role='none' className='overflow-y-auto p-8 attention-surface grid place-items-center'>

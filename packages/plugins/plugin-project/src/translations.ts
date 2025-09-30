@@ -26,6 +26,7 @@ export const translations = [
         'untitled view title': 'Query',
         'enumerating tab label': 'List',
         'editing tab label': 'Edit',
+        'project invocations label': 'Invocations',
       },
     },
   },

@@ -197,7 +197,6 @@ export const createDispatcher = (
         .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
       if (candidates.length === 0) {
-        log.info('no resolvers found', { intent: intent.id });
         return yield* Effect.fail(new NoResolversError(intent.id));
       }
 

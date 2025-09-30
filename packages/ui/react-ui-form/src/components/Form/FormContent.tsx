@@ -10,7 +10,7 @@ import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ProjectionModel, type SchemaProperty, getSchemaProperties } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type QueryRefOptions } from '../../hooks';
 import { getRefProps } from '../../util';
@@ -295,7 +295,7 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
               />
             );
           })
-          .filter(isNotFalsy)}
+          .filter(isTruthy)}
       </div>
     );
   },

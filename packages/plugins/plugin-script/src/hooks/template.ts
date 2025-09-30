@@ -6,14 +6,14 @@ import { Obj } from '@dxos/echo';
 import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
 import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { templates } from '../templates';
 
 export type TemplateActionProperties = { type: 'template'; value: string };
 
 const createTemplateSelectGroup = () => {
   return createMenuItemGroup('template-select', {
-    label: ['template select group label', { ns: SCRIPT_PLUGIN }],
+    label: ['template select group label', { ns: meta.id }],
     variant: 'dropdownMenu',
   });
 };

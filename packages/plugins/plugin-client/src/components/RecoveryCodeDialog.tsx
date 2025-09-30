@@ -6,16 +6,16 @@ import React, { useCallback, useState } from 'react';
 
 import { AlertDialog, Button, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const RECOVERY_CODE_DIALOG = `${CLIENT_PLUGIN}/RecoveryCodeDialog`;
+export const RECOVERY_CODE_DIALOG = `${meta.id}/RecoveryCodeDialog`;
 
 export type RecoveryCodeDialogProps = {
   code: string;
 };
 
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [confirmation, setConfirmation] = useState(false);
 
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);

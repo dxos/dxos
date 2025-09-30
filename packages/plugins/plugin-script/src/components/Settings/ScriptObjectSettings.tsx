@@ -13,7 +13,7 @@ import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/ech
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type ScriptObjectSettingsProps = {
   object: ScriptType;
@@ -29,7 +29,7 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
 };
 
 export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <Input.Root>
       <Input.Label>{t('description label')}</Input.Label>
@@ -45,7 +45,7 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
 };
 
 const Binding = ({ object }: ScriptObjectSettingsProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(object);
   const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
@@ -109,7 +109,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
 // TODO(burdon): Move to separate tab?
 const Publishing = ({ object }: ScriptObjectSettingsProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(object);
   const [githubToken] = useQuery(space, Filter.type(DataType.AccessToken, { source: 'github.com' }));

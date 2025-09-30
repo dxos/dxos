@@ -9,17 +9,20 @@ import { Card, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { INBOX_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const RelatedContacts = ({
-  contacts,
-  onContactClick,
-}: {
+export type RelatedContactsProps = {
   contacts: DataType.Person[];
   onContactClick?: (contact: DataType.Person) => void;
-}) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
-  return contacts.length ? (
+};
+
+export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
+  const { t } = useTranslation(meta.id);
+  if (!contacts.length) {
+    return null;
+  }
+
+  return (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related contacts title')}</h3>
       <Card.Chrome>
@@ -40,18 +43,21 @@ export const RelatedContacts = ({
         ))}
       </Card.Chrome>
     </>
-  ) : null;
+  );
 };
 
-export const RelatedMessages = ({
-  messages,
-  onMessageClick,
-}: {
+export type RelatedMessagesProps = {
   messages: DataType.Message[];
   onMessageClick?: (message: DataType.Message) => void;
-}) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
-  return messages.length ? (
+};
+
+export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {
+  const { t } = useTranslation(meta.id);
+  if (!messages.length) {
+    return null;
+  }
+
+  return (
     <>
       <h3 className={mx(cardText, 'text-xs text-description uppercase font-medium')}>{t('related messages title')}</h3>
       <Card.Chrome>
@@ -68,5 +74,5 @@ export const RelatedMessages = ({
         ))}
       </Card.Chrome>
     </>
-  ) : null;
+  );
 };

@@ -36,6 +36,9 @@
       "path": "../../core/ai"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

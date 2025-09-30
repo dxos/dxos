@@ -11,17 +11,17 @@ import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { useInputSurfaceLookup } from '../../hooks';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
-export const CREATE_SPACE_DIALOG = `${SPACE_PLUGIN}/CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${meta.id}/CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatch } = useIntentDispatcher();
 
   const inputSurfaceLookup = useInputSurfaceLookup();

@@ -33,7 +33,7 @@ import {
   POPOVER_RENAME_SPACE,
 } from '../components';
 import { SpaceEvents } from '../events';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 
@@ -415,7 +415,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['field deleted label', { ns: SPACE_PLUGIN }],
+              message: ['field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -470,13 +470,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               createIntent(LayoutAction.AddToast, {
                 part: 'toast',
                 subject: {
-                  id: `${SPACE_PLUGIN}/space-limit`,
-                  title: ['space limit label', { ns: SPACE_PLUGIN }],
-                  description: ['space limit description', { ns: SPACE_PLUGIN }],
+                  id: `${meta.id}/space-limit`,
+                  title: ['space limit label', { ns: meta.id }],
+                  description: ['space limit description', { ns: meta.id }],
                   duration: 5_000,
                   icon: 'ph--warning--regular',
-                  actionLabel: ['remove deleted objects label', { ns: SPACE_PLUGIN }],
-                  actionAlt: ['remove deleted objects alt', { ns: SPACE_PLUGIN }],
+                  actionLabel: ['remove deleted objects label', { ns: meta.id }],
+                  actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
                   onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
                 },
@@ -605,7 +605,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: SPACE_PLUGIN }],
+              message: [undoMessageKey, { ns: meta.id }],
               data: { deletionData },
             },
             intents:
