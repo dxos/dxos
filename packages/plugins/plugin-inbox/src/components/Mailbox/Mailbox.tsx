@@ -69,7 +69,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _current?: bool
           ${(message.properties?.tags ?? [])
             .map(
               ({ label, hue }: Tag) => trim`
-                <span class="dx-tag message__tags-item" data-label="${label}" data-hue=${hue}>${label}</span>
+                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
               `,
             )
             .join('\n')}
