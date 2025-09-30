@@ -28,7 +28,17 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     ids: ToolId[],
   ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
-      const tools = yield* Effect.all(ids.map(ToolResolverService.resolve));
-      return AiToolkit.make(...tools);
+      const maybeTools = yield* Effect.forEach(ids, (id) =>
+        ToolResolverService.resolve(id).pipe(
+          Effect.catchAll((error) =>
+            Effect.sync(() => {
+              log.warn('Failed to resolve AI tool', { id, error });
+              return undefined;
+            }),
+          ),
+        ),
+      );
+      const tools = maybeTools.filter((t): t is Tool.Any => t != null) as unknown as Tool.Any[];
+      return Toolkit.make(...tools);
     });
 }
