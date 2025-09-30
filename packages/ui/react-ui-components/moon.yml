@@ -10,3 +10,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

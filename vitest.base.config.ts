@@ -71,7 +71,15 @@ export const createStorybookProject = (dirname: string) =>
   });
 
 // TODO(wittjosiah): Reconcile w/ createNodeConfig.
-export const createNodeProject = (environment: 'node' | 'jsdom' = 'node') =>
+export const createNodeProject = ({
+  environment = 'node',
+  setupFiles = [],
+  plugins = [],
+}: {
+  environment?: 'node' | 'jsdom';
+  setupFiles?: string[];
+  plugins?: Plugin[];
+}) =>
   defineProject({
     esbuild: {
       target: 'es2020',
@@ -90,12 +98,14 @@ export const createNodeProject = (environment: 'node' | 'jsdom' = 'node') =>
         '!**/src/**/*.browser.test.{ts,tsx}',
         '!**/test/**/*.browser.test.{ts,tsx}',
       ],
-      setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
     },
     // Shows build trace
     // VITE_INSPECT=1 pnpm vitest --ui
     // http://localhost:51204/__inspect/#/
     plugins: [
+      ...plugins,
+
       PluginImportSource(),
 
       process.env.VITE_INSPECT ? Inspect() : undefined,

@@ -2,6 +2,7 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
@@ -9,3 +10,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

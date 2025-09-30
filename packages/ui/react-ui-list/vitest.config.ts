@@ -2,11 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineConfig, mergeConfig } from 'vitest/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vitest/config';
 
-import { baseConfig } from '../../../vitest.base.config';
+import { createNodeProject, createStorybookProject, resolveReporterConfig } from '../../../vitest.base.config';
 
-export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
-  defineConfig({}),
-);
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  test: {
+    ...resolveReporterConfig({ cwd: dirname }),
+    projects: [
+      createNodeProject({}),
+      createStorybookProject(dirname),
+    ]
+  },
+});

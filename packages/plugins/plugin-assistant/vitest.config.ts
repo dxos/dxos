@@ -14,7 +14,7 @@ export default defineConfig({
   test: {
     ...resolveReporterConfig({ cwd: dirname }),
     projects: [
-      createNodeProject('jsdom'),
+      createNodeProject({ environment: 'jsdom' }),
       createStorybookProject(dirname),
     ]
   },

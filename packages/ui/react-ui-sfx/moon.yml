@@ -2,6 +2,7 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
@@ -16,3 +17,6 @@ tasks:
       - src/shaders/glsl/*.*
     outputs:
       - src/shaders/glsl/gen
+  test:
+    inputs:
+      - .storybook/*

@@ -2,6 +2,7 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
@@ -16,3 +17,6 @@ tasks:
       - assets/*.*
     outputs:
       - src/gen
+  test:
+    inputs:
+      - .storybook/*

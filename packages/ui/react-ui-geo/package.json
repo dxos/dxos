@@ -6,8 +6,8 @@
   "bugs": "https://github.com/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "sideEffects": true,
   "type": "module",
+  "sideEffects": true,
   "exports": {
     "./data": {
       "source": "./src/data.ts",
