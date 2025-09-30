@@ -25,7 +25,7 @@ describe('Projection', () => {
     await builder.close();
   });
 
-  test.only('create view from schema', async ({ expect }) => {
+  test('create view from schema', async ({ expect }) => {
     const schema = DataType.Person;
     const presentation = Obj.make(Type.Expando, {});
     const view = await createViewWithReferences({
@@ -48,26 +48,6 @@ describe('Projection', () => {
       'notes',
       'birthday',
     ]);
-
-    // const props = getSchemaProperties(schema.ast);
-    // const labels = props.map((p) => pipe(p.name ?? p.title, String.capitalize));
-    // expect(labels).to.deep.eq([
-    //   'Full Name',
-    //   'Preferred Name',
-    //   'Nickname',
-    //   'Image',
-    //   'Organization',
-    //   'Job Title',
-    //   'Department',
-    //   'Notes',
-    //   'Emails',
-    //   'Identities',
-    //   'Phone Numbers',
-    //   'Addresses',
-    //   'Urls',
-    //   'Birthday',
-    //   'Fields',
-    // ]);
   });
 
   test('static schema definitions with references', async ({ expect }) => {
