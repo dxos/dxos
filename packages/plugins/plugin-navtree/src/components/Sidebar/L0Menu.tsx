@@ -25,7 +25,16 @@ import React, {
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  ListItem,
+  ScrollArea,
+  type ThemedClassName,
+  Tooltip,
+  toLocalizedString,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -132,6 +141,16 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   },
 );
 
+export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
+  <div
+    role='none'
+    className={mx(
+      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie',
+      classNames,
+    )}
+  />
+);
+
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
@@ -211,10 +230,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       >
         <ItemAvatar item={item} />
       </div>
-      <div
-        role='none'
-        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie'
-      />
+      <L0ItemActiveTabIndicator />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
@@ -382,7 +398,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'
