@@ -6,6 +6,7 @@ tags:
   - ts-test
   - vite
   - pack
+  - storybook
 tasks:
   bundle:
     options:

@@ -5,6 +5,7 @@ tags:
   - typecheck
   - vite
   - pack
+  - storybook
 tasks:
   test:
     inputs:

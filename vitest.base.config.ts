@@ -81,7 +81,7 @@ export const createNodeProject = ({
   retry?: number;
   setupFiles?: string[];
   plugins?: Plugin[];
-}) =>
+} = {}) =>
   defineProject({
     esbuild: {
       target: 'es2020',

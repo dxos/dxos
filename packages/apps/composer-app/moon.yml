@@ -6,6 +6,7 @@ tags:
   - typecheck
   - vite
   - ts-test
+  - storybook
 tasks:
   bundle:
     deps:

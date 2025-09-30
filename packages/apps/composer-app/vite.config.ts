@@ -338,7 +338,7 @@ export default defineConfig((env) => ({
   test: {
     ...resolveReporterConfig({ cwd: dirname }),
     projects: [
-      createNodeProject({}),
+      createNodeProject(),
       createStorybookProject(dirname),
     ]
   },
