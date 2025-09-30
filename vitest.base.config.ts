@@ -56,6 +56,7 @@ export const createStorybookProject = (dirname: string) =>
       },
       setupFiles: ['../../../tools/storybook/.storybook/vitest.setup.ts'],
     },
+    optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
     plugins: [
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
@@ -66,7 +67,7 @@ export const createStorybookProject = (dirname: string) =>
           exclude: ['experimental'],
         },
       }),
-    ]
+    ],
   });
 
 // TODO(wittjosiah): Reconcile w/ createNodeConfig.
@@ -263,7 +264,13 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
   });
 
-export const resolveReporterConfig = ({ browserMode, cwd }: { browserMode?: boolean; cwd: string }): ViteUserConfig['test'] => {
+export const resolveReporterConfig = ({
+  browserMode,
+  cwd,
+}: {
+  browserMode?: boolean;
+  cwd: string;
+}): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirName = packageDir.split('/').pop();
