@@ -5,7 +5,7 @@
 import { AiTool, type AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Record, Schema } from 'effect';
 
-import { ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Obj, Query } from '@dxos/echo';
 import {
@@ -17,8 +17,18 @@ import {
   getUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
+/**
+ * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
+ *  1. Toolkit: return an existing tool from the provided `toolkit` if one is present under `id`.
+ *  2. Functions in DB: query `FunctionType` by `key=id`; if found, deserialize and project to a tool
+ *     (propagating any `deployedFunctionId` discovered in the object's metadata).
+ *  3. Functions passed in: fall back to a matching `FunctionDefinition` from the `functions` array.
+ *
+ * If none of the above yield a match, the effect fails with `AiToolNotFoundError`.
+ *
+ * Requires `DatabaseService` in the environment.
+ */
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
   toolkit: AiToolkit.Any,
@@ -28,7 +38,7 @@ export const makeToolResolverFromFunctions = (
     Effect.gen(function* () {
       const dbService = yield* DatabaseService;
       return {
-        resolve: (id): Effect.Effect<AiTool.Any | void> =>
+        resolve: (id): Effect.Effect<AiTool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
             const tool = toolkit.tools[id];
             if (tool) {
@@ -45,8 +55,7 @@ export const makeToolResolverFromFunctions = (
               : functions.find((fn) => fn.key === id);
 
             if (!functionDef) {
-              log.warn('Function not found for a tool', { toolId: id });
-              return;
+              return yield* Effect.fail(new AiToolNotFoundError(id));
             }
 
             return projectFunctionToTool(functionDef, { deployedFunctionId: functionDeploymentId });
