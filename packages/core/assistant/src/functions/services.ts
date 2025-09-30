@@ -5,7 +5,7 @@
 import { AiTool, type AiToolkit } from '@effect/ai';
 import { Context, Effect, Layer, Record, Schema } from 'effect';
 
-import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Obj, Query } from '@dxos/echo';
 import {
@@ -17,6 +17,7 @@ import {
   getUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
@@ -27,7 +28,7 @@ export const makeToolResolverFromFunctions = (
     Effect.gen(function* () {
       const dbService = yield* DatabaseService;
       return {
-        resolve: (id): Effect.Effect<AiTool.Any, AiToolNotFoundError, never> =>
+        resolve: (id): Effect.Effect<AiTool.Any | void> =>
           Effect.gen(function* () {
             const tool = toolkit.tools[id];
             if (tool) {
@@ -44,7 +45,8 @@ export const makeToolResolverFromFunctions = (
               : functions.find((fn) => fn.key === id);
 
             if (!functionDef) {
-              return yield* Effect.fail(new AiToolNotFoundError(id));
+              log.warn('Function not found for a tool', { toolId: id });
+              return;
             }
 
             return projectFunctionToTool(functionDef, { deployedFunctionId: functionDeploymentId });
