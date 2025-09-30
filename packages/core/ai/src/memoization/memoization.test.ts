@@ -1,9 +1,10 @@
 import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect, Layer, Stream } from 'effect';
 import * as MemoizedAiService from './MemoizedAiService';
-import { AiServiceTestingPreset } from '../testing';
+import { AiServiceTestingPreset, testingLayer, TestingToolkit } from '../testing';
 import * as AiService from '../AiService';
-import { LanguageModel } from '@effect/ai';
+import { Chat, LanguageModel, Prompt } from '@effect/ai';
+import { C } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
 
 describe('memoization', () => {
   it.effect(
@@ -24,6 +25,39 @@ describe('memoization', () => {
         console.log(result);
       },
       Effect.provide(AiService.model('@anthropic/claude-sonnet-4-0')),
+      MemoizedAiService.injectIntoTest,
+      Effect.provide(AiServiceTestingPreset('direct')),
+    ),
+  );
+
+  it.effect.only(
+    'tools',
+    Effect.fnUntraced(
+      function* (ctx) {
+        const chat = yield* Chat.fromPrompt('Add 47 + 23');
+
+        while (true) {
+          const stream = chat.streamText({
+            prompt: Prompt.empty,
+            toolkit: TestingToolkit,
+            disableToolCallResolution: true,
+          });
+          yield* stream.pipe(
+            Stream.runForEach((part) => {
+              console.log(part);
+              return Effect.void;
+            }),
+          );
+
+          const lastMessage = (yield* chat.history).content.at(-1);
+          if (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') {
+            continue;
+          } else {
+            break;
+          }
+        }
+      },
+      Effect.provide(Layer.merge(AiService.model('@anthropic/claude-sonnet-4-0'), testingLayer)),
       MemoizedAiService.injectIntoTest,
       Effect.provide(AiServiceTestingPreset('direct')),
     ),

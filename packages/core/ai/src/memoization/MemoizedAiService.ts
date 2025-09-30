@@ -7,6 +7,8 @@ import { open, type FileHandle } from 'node:fs/promises';
 import { deepEqual } from 'node:assert';
 import { isDeepStrictEqual } from 'node:util';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import type { StreamPartEncoded } from '@effect/ai/Response';
 
 export interface MemoizedAiService extends AiService.Service {}
 
@@ -61,7 +63,7 @@ export const injectIntoTest = <A, E, R>(
 ): Effect.Effect<A, E, R | AiService.AiService> => {
   return Effect.provide(
     layer({
-      storePath: ctx.task.file.filepath + '.conversations.json',
+      storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
     }),
   )(effect);
 };
@@ -96,6 +98,8 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
           })
           .pipe(Effect.provideService(LanguageModel.LanguageModel, options.upstreamModel));
 
+        log.info('generateText', { upstreamResult });
+
         const conversation: MemoziedConversation = {
           parameters: getMemoizedConversationParameters(options.modelName, params),
           history: yield* chat.history,
@@ -105,18 +109,61 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
         return reinterpretResponseParts(upstreamResult.content);
       }
     }),
-    streamText: (params) => {
-      return todo();
-    },
+    streamText: (params) =>
+      Stream.unwrap(
+        Effect.gen(function* () {
+          const conversation = getConverstaionFromOptions(options.modelName, params);
+          const memoized = yield* store.getMemoizedConversation(conversation);
+          if (Option.isSome(memoized)) {
+            const continuation = getContinuation(params.prompt, memoized.value.history);
+            return toResponseStream(continuation);
+          } else {
+            const chat = yield* Chat.empty;
+
+            const toolkit = Toolkit.make(...(params.tools as never[]));
+
+            const stream = chat
+              .streamText({
+                prompt: params.prompt,
+                toolkit: yield* toolkit,
+                toolChoice: params.toolChoice as any,
+                disableToolCallResolution: true,
+              })
+              .pipe(Stream.provideService(LanguageModel.LanguageModel, options.upstreamModel));
+
+            // TODO(dmaretskyi): Better way to run code after the stream is finished?
+            return stream.pipe(
+              Stream.map(reinterpretStreamPart),
+              Stream.concat(
+                Stream.fromIterableEffect(
+                  Effect.gen(function* () {
+                    const conversation: MemoziedConversation = {
+                      parameters: getMemoizedConversationParameters(options.modelName, params),
+                      history: yield* chat.history,
+                    };
+                    yield* store.saveMemoizedConversation(conversation);
+
+                    return [];
+                  }),
+                ),
+              ),
+            );
+          }
+        }),
+      ),
   });
 };
 
 const getContinuation = (prompt: Prompt.Prompt, memoized: Prompt.Prompt): Prompt.Part[] => {
   const continuation = memoized.content.slice(prompt.content.length);
-  const message = continuation.at(0);
-  invariant(!!message, 'No message in continuation');
-  invariant(message.role === 'assistant');
-  return [...message.content];
+  log.info('getContinuation', { continuation, memoized, prompt });
+  const continuationParts = pipe(
+    continuation,
+    Array.takeWhile((message) => message.role === 'assistant'),
+    Array.flatMap((message) => message.content),
+  );
+  invariant(continuationParts.length > 0, 'No message in continuation');
+  return continuationParts;
 };
 
 const reinterpretResponseParts = (parts: Response.Part<Record<string, Tool.Any>>[]): Response.PartEncoded[] => {
@@ -167,6 +214,29 @@ const reinterpretResponseParts = (parts: Response.Part<Record<string, Tool.Any>>
   });
 };
 
+const reinterpretStreamPart = (part: Response.StreamPart<Record<string, Tool.Any>>): Response.StreamPartEncoded => {
+  switch (part.type) {
+    case 'text-start':
+    case 'text-end':
+    case 'text-delta':
+      return part;
+    case 'tool-params-start':
+    case 'tool-params-end':
+    case 'tool-params-delta':
+      return part;
+    case 'tool-call':
+      return part;
+    case 'tool-result':
+      return part;
+    case 'response-metadata':
+      return Response.ResponseMetadataPart.pipe(Schema.encodeSync)(part);
+    case 'finish':
+      return Response.FinishPart.pipe(Schema.encodeSync)(part);
+    default:
+      throw new Error(`Unknown part type: ${(part as any).type}`);
+  }
+};
+
 const toResponseParts = (parts: Prompt.Part[]): Response.PartEncoded[] => {
   return parts.map((part): Response.PartEncoded => {
     switch (part.type) {
@@ -206,7 +276,88 @@ const toResponseParts = (parts: Prompt.Part[]): Response.PartEncoded[] => {
 };
 
 const toResponseStream = (continuation: Prompt.Part[]): Stream.Stream<Response.StreamPartEncoded> => {
-  return todo();
+  let idGenerator = 0;
+  return Stream.fromIterable(
+    continuation.flatMap((part): Response.StreamPartEncoded[] => {
+      const id = String(idGenerator++);
+      switch (part.type) {
+        case 'text':
+          return [
+            {
+              type: 'text-start',
+              id,
+              metadata: part.options,
+            },
+            {
+              type: 'text-delta',
+              id,
+              delta: part.text,
+            },
+            {
+              type: 'text-end',
+              id,
+            },
+          ];
+        case 'reasoning':
+          return [
+            {
+              type: 'reasoning-start',
+              id,
+              metadata: part.options,
+            },
+            {
+              type: 'reasoning-delta',
+              id,
+              delta: part.text,
+            },
+            {
+              type: 'reasoning-end',
+              id,
+            },
+          ];
+        case 'tool-call':
+          return [
+            {
+              type: 'tool-params-start',
+              id: part.id,
+              name: part.name,
+              metadata: part.options,
+              providerExecuted: part.providerExecuted,
+            },
+            {
+              type: 'tool-params-delta',
+              id: part.id,
+              delta: JSON.stringify(part.params),
+            },
+            {
+              type: 'tool-params-end',
+              id: part.id,
+            },
+            // TODO(dmaretskyi): Do we need to send both?
+            {
+              type: 'tool-call',
+              id: part.id,
+              name: part.name,
+              params: part.params,
+              metadata: part.options,
+              providerExecuted: part.providerExecuted,
+            },
+          ];
+        case 'tool-result':
+          return [
+            {
+              type: 'tool-result',
+              id: part.id,
+              name: part.name,
+              result: part.result,
+              metadata: part.options,
+            },
+          ];
+        default:
+          throw new Error(`Unknown part type: ${(part as any).type}`);
+      }
+    }),
+  );
 };
 
 const getMemoizedConversationParameters = (
@@ -243,7 +394,7 @@ const isPrefix = (haystack: MemoziedConversation, needle: MemoziedConversation):
     return false;
   }
 
-  if (haystack.history.content.length < needle.history.content.length) {
+  if (haystack.history.content.length <= needle.history.content.length) {
     return false;
   }
 
@@ -251,6 +402,10 @@ const isPrefix = (haystack: MemoziedConversation, needle: MemoziedConversation):
     if (!isDeepStrictEqual(haystack.history.content[i], needle.history.content[i])) {
       return false;
     }
+  }
+
+  if (haystack.history.content[0].role !== 'assistant') {
+    return false;
   }
 
   return true;
