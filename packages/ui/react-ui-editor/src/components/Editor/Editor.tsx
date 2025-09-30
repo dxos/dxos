@@ -10,12 +10,12 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
-export type TextEditorProps = ThemedClassName<UseTextEditorProps>;
+export type EditorProps = ThemedClassName<UseTextEditorProps>;
 
 /**
  * Minimal text editor.
  */
-export const TextEditor = forwardRef<EditorView | undefined, TextEditorProps>(
+export const Editor = forwardRef<EditorView | undefined, EditorProps>(
   ({ classNames, id, extensions, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

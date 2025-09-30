@@ -6,15 +6,16 @@ import { describe, it } from 'vitest';
 
 import { parser } from './gen';
 
+// TODO(burdon): Basic extension.
+// TODO(burdon): Generate query.
+// TODO(burdon): Ref/Relation traversal.
+// TODO(burdon): Factor out.
+
 describe('query', () => {
   it('should parse a simple query', ({ expect }) => {
     const queryParser = parser.configure({
       strict: true,
     });
-
-    // TODO(burdon): Generate query.
-    // TODO(burdon): Ref/Relation traversal.
-    // TODO(burdon): Factor out.
 
     const tests = [
       {

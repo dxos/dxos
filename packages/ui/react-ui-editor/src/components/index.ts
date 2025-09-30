@@ -3,5 +3,5 @@
 //
 
 export * from './CommandMenu';
+export * from './Editor';
 export * from './EditorToolbar';
-export * from './TextEditor';

@@ -9,7 +9,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
-  TextEditor,
+  Editor,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -31,7 +31,7 @@ export const TasksContainer = ({ space }: ComponentProps) => {
       <Toolbar.Root classNames='border-b border-subduedSeparator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
-      <TextEditor
+      <Editor
         id={document.id}
         initialValue={document.content.target.content}
         classNames='h-full p-2 overflow-hidden'
