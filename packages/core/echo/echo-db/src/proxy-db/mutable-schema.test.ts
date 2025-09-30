@@ -18,7 +18,7 @@ import {
   getTypename,
 } from '@dxos/echo/internal';
 import { getSchema, getType } from '@dxos/echo/internal';
-import { Testing } from '@dxos/echo/testing';
+import { TestingDepreacted } from '@dxos/echo/testing';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -93,7 +93,7 @@ describe('EchoSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([TestingDepreacted.EmptySchemaType]);
     const object = Obj.make(schema, {});
     schema.addFields({ field1: Schema.String });
     object.field1 = 'works';
@@ -109,7 +109,7 @@ describe('EchoSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.asEchoDXN()?.echoId).to.be.eq(schema.id);
-    expect(getTypename(object)).to.be.eq(Testing.EmptySchemaType.typename);
+    expect(getTypename(object)).to.be.eq(TestingDepreacted.EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.type(schema)).run()).objects;
@@ -119,13 +119,13 @@ describe('EchoSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([TestingDepreacted.EmptySchemaType]);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
   test('getTypeReference on schema with updated typename', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([TestingDepreacted.EmptySchemaType]);
     schema.updateTypename('example.com/type/Updated');
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });

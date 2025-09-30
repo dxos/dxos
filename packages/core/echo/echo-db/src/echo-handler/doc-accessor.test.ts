@@ -7,6 +7,7 @@ import { describe, it } from 'vitest';
 
 import { Testing } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
+import { Obj, Type, Ref } from '@dxos/echo';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';

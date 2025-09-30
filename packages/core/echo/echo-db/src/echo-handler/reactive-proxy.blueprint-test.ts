@@ -5,14 +5,14 @@ import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
-import { Testing, updateCounter } from '@dxos/echo/testing';
+import { TestingDepreacted, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: Testing.TestSchema = {
+const TEST_OBJECT: TestingDepreacted.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -31,13 +31,13 @@ export interface TestConfiguration {
   allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
+  createObjectFn: (props?: Partial<TestingDepreacted.TestSchema>) => Promise<TestingDepreacted.TestSchema>;
 }
 
 export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
+  for (const schema of [undefined, TestingDepreacted.TestSchema, TestingDepreacted.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;

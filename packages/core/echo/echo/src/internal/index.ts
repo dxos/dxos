@@ -14,8 +14,9 @@ export * from './json';
 export * from './json-schema';
 export * from './object';
 export * from './types';
-export * from '../../../live-object/src/define-hidden-property';
+export { defineHiddenProperty } from '@dxos/live-object';
 export * from './ref';
 export * from './projection';
 export * from './schema';
+// TODO(dmaretskyi): Remove
 export { live } from './proxy/reactive-object';

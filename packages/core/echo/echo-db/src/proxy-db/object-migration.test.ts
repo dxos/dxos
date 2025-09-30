@@ -132,7 +132,7 @@ test('chained migrations', async () => {
 //   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
 
 //   db.add(
-//     live(ViewTypeV1, {
+//     Obj.make(ViewTypeV1, {
 //       fields: [
 //         { id: '8cb60541', path: 'name' as JsonPath },
 //         { id: '902dd8b5', path: 'email' as JsonPath },

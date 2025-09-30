@@ -1,3 +1,4 @@
+import { Obj, Type, Ref } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
@@ -6,10 +7,8 @@ import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
-import { Expando, Ref, TypedObject } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type AnyLiveObject } from '../echo-handler';

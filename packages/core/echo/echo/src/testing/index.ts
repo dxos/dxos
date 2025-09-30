@@ -3,4 +3,5 @@
 //
 
 export * from './types';
-export { updateCounter } from '../internal/testing';
+export { updateCounter, prepareAstForCompare } from '../internal/testing';
+export { Testing as TestingDeprecated } from '../internal/testing';

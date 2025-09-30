@@ -1,3 +1,4 @@
+import { Obj, Type, Ref } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
