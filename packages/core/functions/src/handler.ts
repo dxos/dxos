@@ -102,8 +102,7 @@ export type FunctionDefinition<T = any, O = any> = {
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
   <I, O>(params: {
-    // TODO(dmaretskyi): Make `key` required.
-    key?: string;
+    key: string;
     name: string;
     description?: string;
     inputSchema: Schema.Schema<I, any>;
@@ -149,7 +148,7 @@ export const defineFunction: {
 
   return {
     [typeId]: true,
-    key: key ?? name,
+    key,
     name,
     description,
     inputSchema,
