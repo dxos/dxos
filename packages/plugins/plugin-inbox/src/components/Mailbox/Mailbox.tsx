@@ -10,6 +10,7 @@ import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector'
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridAxisMeta,
   type DxGridPlaneCells,
   Grid,
   type GridContentProps,
@@ -187,8 +188,8 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
     [messages, currentMessageId],
   );
 
-  const gridRows = useMemo(() => {
-    return messages.reduce(
+  const rows = useMemo<DxGridAxisMeta>(() => {
+    const rows = messages.reduce(
       (acc, _, idx) => {
         acc[idx] = {
           size: ROW_SIZES.DEFAULT,
@@ -198,9 +199,9 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
       },
       {} as Record<number, { size: number }>,
     );
-  }, [messages]);
 
-  const rows = useMemo(() => ({ grid: gridRows }), [gridRows]);
+    return { grid: rows };
+  }, [messages]);
 
   return (
     <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
@@ -216,11 +217,11 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
           rowDefault={messageRowDefault}
           rows={rows}
           getCells={getCells}
+          focusIndicatorVariant='stack'
           onSelect={(ev) => setRow(ev.minRow)}
           onClick={handleClick}
           onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
-          focusIndicatorVariant='stack'
         />
         <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>
