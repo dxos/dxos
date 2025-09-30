@@ -11,15 +11,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  FunctionImplementationResolver,
-  FunctionInvocationService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 
 import { default as fetchDiscordMessages } from './fetch-messages';
@@ -35,13 +27,9 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
-      LocalFunctionExecutionService.layerLive.pipe(
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [fetchDiscordMessages] })),
-      ),
-      RemoteFunctionExecutionService.layerMock,
-      FunctionInvocationService.layerTest,
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
+      FunctionInvocationService.layerTest({ functions: [fetchDiscordMessages] }),
     ),
   ),
 );
@@ -53,7 +41,8 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
-        const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
+        const functionInvocationService = yield* FunctionInvocationService;
+        const messages = yield* functionInvocationService.invokeFunction(fetchDiscordMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',

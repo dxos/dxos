@@ -13,7 +13,6 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
   {
-    // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
     invokeFunction<I, O>(
       functionDef: FunctionDefinition<I, O>,
       input: I,
@@ -44,28 +43,25 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
     }),
   );
 
-  static layerTest = FunctionInvocationService.layer.pipe(
-    Layer.provide(
-      Layer.mergeAll(
-        RemoteFunctionExecutionService.layerMock,
-        LocalFunctionExecutionService.layerLive.pipe(
-          // TODO(mykola): Will fail if functions are not provided.
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [] })),
+  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+    FunctionInvocationService.layer.pipe(
+      Layer.provideMerge(
+        Layer.mergeAll(
+          RemoteFunctionExecutionService.layerMock,
+          LocalFunctionExecutionService.layerLive.pipe(
+            Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+          ),
         ),
       ),
-    ),
-  ) satisfies Layer.Layer<FunctionInvocationService>;
+    ) satisfies Layer.Layer<FunctionInvocationService>;
 
   static fromClient = (baseUrl: string, spaceId?: SpaceId) =>
     FunctionInvocationService.layer.pipe(
       Layer.provide(
         Layer.mergeAll(
           Layer.succeed(RemoteFunctionExecutionService, RemoteFunctionExecutionService.fromClient(baseUrl, spaceId)),
-          LocalFunctionExecutionService.layerLive.pipe(
-            // TODO(mykola): Will fail if functions are not provided.
-            Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [] })),
-          ),
+          LocalFunctionExecutionService.layerLive,
         ),
       ),
-    ) satisfies Layer.Layer<FunctionInvocationService>;
+    ) satisfies Layer.Layer<FunctionInvocationService, never, FunctionImplementationResolver>;
 }

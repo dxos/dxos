@@ -13,9 +13,7 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
-  FunctionImplementationResolver,
   FunctionInvocationService,
-  LocalFunctionExecutionService,
   QueueService,
   RemoteFunctionExecutionService,
   TracingService,
@@ -45,10 +43,8 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  LocalFunctionExecutionService.layer,
   RemoteFunctionExecutionService.layerMock,
-  FunctionInvocationService.layerTest,
-  FunctionImplementationResolver.layerTest({ functions: [] }),
+  FunctionInvocationService.layerTest({ functions: [] }),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(

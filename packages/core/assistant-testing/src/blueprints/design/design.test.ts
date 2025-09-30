@@ -17,13 +17,7 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import {
-  DatabaseService,
-  FunctionImplementationResolver,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { DatabaseService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -88,16 +82,15 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
             Layer.mergeAll(
+              TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
               AiServiceTestingPreset('direct'),
-              FunctionInvocationService.layerTest,
-              FunctionImplementationResolver.layerTest({ functions: [readDocument, updateDocument] }),
+              FunctionInvocationService.layerTest({ functions: [readDocument, updateDocument] }),
               TracingService.layerNoop,
             ),
           ),

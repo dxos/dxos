@@ -94,9 +94,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               space ? QueueService.layer(space.queues) : QueueService.notAvailable,
               LocalFunctionExecutionService.layerLive,
               RemoteFunctionExecutionService.layerMock,
-              // TODO(mykola): Use prod layer.
               FunctionInvocationService.fromClient(
                 client.edge.baseUrl,
+                // If agent is not enabled do not provide spaceId because space context is unavailable on EDGE.
                 client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
               ),
             ),

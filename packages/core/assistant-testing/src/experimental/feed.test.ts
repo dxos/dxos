@@ -43,12 +43,10 @@ const TestLayer = Layer.mergeAll(
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      FunctionInvocationService.layerTest,
+      FunctionInvocationService.layerTest({ functions: [syncLinearIssues] }),
       RemoteFunctionExecutionService.layerMock,
       TracingService.layerLogInfo(),
       FetchHttpClient.layer,
-      FunctionInvocationService.layerTest,
-      FunctionImplementationResolver.layerTest({ functions: [] }),
     ),
   ),
 );

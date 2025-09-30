@@ -23,11 +23,8 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  FunctionImplementationResolver,
   FunctionInvocationService,
-  LocalFunctionExecutionService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -57,10 +54,7 @@ const TestLayer = Layer.mergeAll(
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.layerMock,
-      FunctionInvocationService.layerTest,
-      FunctionImplementationResolver.layerTest({ functions: [research] }),
+      FunctionInvocationService.layerTest({ functions: [research] }),
       TracingService.layerNoop,
     ),
   ),
@@ -69,7 +63,7 @@ const TestLayer = Layer.mergeAll(
 describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
-    Effect.fnUntraced(
+    Effect.fn(
       function* ({ expect: _ }) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
@@ -79,7 +73,8 @@ describe('Research', { timeout: 600_000 }, () => {
         );
         yield* DatabaseService.flush({ indexes: true });
 
-        const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
+        const functionInvocationService = yield* FunctionInvocationService;
+        const result = yield* functionInvocationService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
           mockSearch: MOCK_SEARCH,
         });

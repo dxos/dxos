@@ -14,14 +14,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import {
-  DatabaseService,
-  FunctionImplementationResolver,
-  FunctionInvocationService,
-  LocalFunctionExecutionService,
-  TracingService,
-  defineFunction,
-} from '@dxos/functions';
+import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
@@ -133,11 +126,7 @@ export default defineFunction({
         makeToolExecutionServiceFromFunctions(AiToolkit.make() as any, Layer.empty as any),
       ).pipe(
         Layer.provide(
-          Layer.mergeAll(
-            LocalFunctionExecutionService.layer,
-            FunctionInvocationService.layerTest,
-            FunctionImplementationResolver.layerTest({ functions: [exaFunction, exaMockFunction] }),
-          ),
+          Layer.mergeAll(FunctionInvocationService.layerTest({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),
     ),
