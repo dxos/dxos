@@ -10,7 +10,6 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { EchoObject, create, getObjectDXN } from '../object';
 
 import { Ref, getReferenceAst } from './ref';
-import { ReferenceAnnotationId } from '../ast';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
