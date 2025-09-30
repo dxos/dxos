@@ -304,8 +304,8 @@ describe('Database', () => {
       const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getTypename(container.objects![0].target!)).to.equal(Testing.Task.typename);
-      expect(getTypename(container.objects![1].target!)).to.equal(Testing.Contact.typename);
+      expect(getTypename(container.objects![0].target!)).to.equal(Type.getTypename(Testing.Task));
+      expect(getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Contact));
     }
   });
 

@@ -392,7 +392,7 @@ describe('Reactive Object with ECHO database', () => {
       }),
     );
     object.array.push({ field: undefined });
-    for (const value of [object.field, object.nested.deep.field, ...object.array.map((o) => o.field)]) {
+    for (const value of [object.field, object.nested.deep.field, ...object.array.map((o: any) => o.field)]) {
       expect(value).to.be.undefined;
     }
   });

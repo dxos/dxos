@@ -179,8 +179,8 @@ describe.skip('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded = (await restartedDb.query(Filter.ids(object.id)).first()) as TestSchema;
-    const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested.map((n) => n.target));
+    const loaded = await restartedDb.query(Filter.ids(object.id)).first();
+    const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested.map((n: any) => n.target));
     const value: number = loadedNested[0].value;
     expect(value).to.eq(42);
   });

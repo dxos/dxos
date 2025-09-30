@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { Obj,Type } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
