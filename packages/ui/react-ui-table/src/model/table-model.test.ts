@@ -25,7 +25,7 @@ registerSignalsRuntime();
 
 describe('TableModel', () => {
   let updateCount = 0;
-  let model: TableModel;
+  let model: any;
 
   beforeEach(async () => {
     updateCount = 0;
