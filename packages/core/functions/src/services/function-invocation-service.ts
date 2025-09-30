@@ -14,7 +14,11 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   FunctionInvocationService,
   {
     // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
-    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O>;
+    invokeFunction<I, O>(
+      functionDef: FunctionDefinition<I, O>,
+      input: I,
+      deployedFunctionId?: string,
+    ): Effect.Effect<O>;
   }
 >() {
   static layer = Layer.effect(
@@ -25,15 +29,18 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
       const remoteExecutioner = yield* RemoteFunctionExecutionService;
 
       return {
-        invokeFunction: <I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O> =>
+        invokeFunction: <I, O>(
+          functionDef: FunctionDefinition<I, O>,
+          input: I,
+          deployedFunctionId?: string,
+        ): Effect.Effect<O> =>
           Effect.gen(function* () {
-            const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.either);
-            if (resolved._tag === 'Right') {
-              return yield* localExecutioner.invokeFunction(resolved.right as any, input as any);
+            if (deployedFunctionId) {
+              return yield* Effect.promise(() => remoteExecutioner.callFunction(deployedFunctionId, input));
             }
-            return yield* Effect.promise(() =>
-              remoteExecutioner.callFunction(functionDef.key ?? functionDef.name, input),
-            );
+
+            const resolved = yield* resolver.resolveFunctionImplementation(functionDef);
+            return yield* localExecutioner.invokeFunction(resolved, input);
           }) as Effect.Effect<O>,
       } satisfies Context.Tag.Service<FunctionInvocationService>;
     }),

@@ -23,6 +23,7 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
   /**
    * @deprecated Use layerLive instead.
    */
+  // TODO(mykola): Remove.
   static layer = Layer.succeed(LocalFunctionExecutionService, {
     invokeFunction: (functionDef, input) => invokeFunction(functionDef, input),
   });
