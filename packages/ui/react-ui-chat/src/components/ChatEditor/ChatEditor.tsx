@@ -35,26 +35,22 @@ export type ChatEditorProps = ThemedClassName<
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
+// TODO(burdon): Factor out.
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (
     { classNames, extensions, references, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
-
     const { parentRef, view } = useTextEditor(
       () => ({
         debug: true,
         autoFocus,
         extensions: [
           createThemeExtensions({ themeMode }),
+          createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           references ? referencesExtension({ provider: references.provider }) : [],
-          createBasicExtensions({
-            bracketMatching: false,
-            lineWrapping,
-            placeholder,
-          }),
           extensions,
         ].filter(isNonNullable),
       }),
