@@ -157,7 +157,7 @@ describe('Statically generated live object', () => {
   });
 
   test('test', () => {
-    const obj = Obj.make(Contact, { name: 'Bob' });
+    const obj = live(Contact, { name: 'Bob' });
     log('keys', { keys: Object.keys(obj) });
   });
 });
