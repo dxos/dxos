@@ -16,6 +16,7 @@ const AnthropicErrorResponse = Schema.Struct({
   }),
 });
 
+// TODO(dmaretskyi): Needs rework
 export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
   Effect.gen(function* () {
     const cause = err.cause;
@@ -28,7 +29,7 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
         message: body.error.message,
         context: { model: 'anthropic', type: body.error.type },
       });
-      return new AiError.AiError({
+      return AiError.UnknownError.make({
         description: body.error.message,
         module: err.module,
         method: err.method,
