@@ -223,6 +223,7 @@ export class Client {
   /**
    * @deprecated Temporary.
    */
+  // TODO(dmaretskyi): What should we use instead?
   get graph(): Hypergraph {
     return this._echoClient.graph;
   }
@@ -248,7 +249,6 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    // TODO(burdon): Find?
     const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
       this._echoClient.graph.schemaRegistry.addSchema(exists);

@@ -5,31 +5,25 @@
 import { type AiTool, AiToolkit } from '@effect/ai';
 import { Effect } from 'effect';
 
-import { type AiConversation, type AiConversationRunParams, AiSession } from '@dxos/assistant';
+import { ConsolePrinter } from '@dxos/ai';
+import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiConversationRunParams<any>, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiConversationRunParams, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* ({
-  conversation,
-  steps,
-}: {
-  conversation: AiConversation;
-  steps: TestStep[];
-}) {
+export const runSteps = Effect.fn(function* (conversation: AiConversation, steps: TestStep[]) {
   for (const { test, ...props } of steps) {
-    const session = new AiSession();
-    yield* conversation.run({
-      session,
+    yield* conversation.createRequest({
       ...props,
+      observer: GenerationObserver.fromPrinter(new ConsolePrinter({ mode: 'json' })),
     });
-
-    log.info('conv', { messages: yield* Effect.promise(() => conversation.getHistory()) });
+    const messages = yield* Effect.promise(() => conversation.getHistory());
+    log.info('conversation', { messages });
     if (test) {
       yield* Effect.promise(() => test());
     }

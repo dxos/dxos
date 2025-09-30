@@ -6,6 +6,7 @@ import '@dxos-theme';
 
 import { syntaxTree } from '@codemirror/language';
 import { type EditorView } from '@codemirror/view';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -14,11 +15,11 @@ import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
-import { PreviewProvider, useRefPopover } from '../components';
 import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
+import { PreviewPopoverProvider, usePreviewPopover } from '../testing';
 
 import { EditorStory } from './components';
 
@@ -44,7 +45,7 @@ const useRefTarget = (link: PreviewLinkRef): PreviewLinkTarget | undefined => {
 };
 
 const PreviewCard = () => {
-  const { target } = useRefPopover('PreviewCard');
+  const { target } = usePreviewPopover('PreviewCard');
   return (
     <Popover.Portal>
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -165,20 +166,21 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
   );
 };
 
-const meta: Meta<typeof EditorStory> = {
+const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
     const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
-
     const extensions = useMemo(() => {
       return [
         image(),
@@ -198,21 +200,21 @@ export const Default = {
     }, []);
 
     return (
-      <PreviewProvider onLookup={handlePreviewLookup}>
+      <PreviewPopoverProvider onLookup={handlePreviewLookup}>
         <EditorStory
           ref={handleViewRef}
           text={trim`
             # Preview
 
-            This project is part of the [DXOS][dxn:queue:data:123] SDK.
+            This project is part of the [DXOS](dxn:queue:data:123) SDK.
 
-            ![DXOS][?dxn:queue:data:123]
+            ![DXOS](dxn:queue:data:123)
 
-            It consists of [ECHO][dxn:queue:data:echo], [HALO][dxn:queue:data:halo], and [MESH][dxn:queue:data:mesh].
+            It consists of [ECHO](dxn:queue:data:echo), [HALO](dxn:queue:data:halo), and [MESH](dxn:queue:data:mesh).
 
             ## Deep dive
 
-            ![ECHO][dxn:queue:data:echo]
+            ![ECHO](dxn:queue:data:echo)
 
           `}
           extensions={extensions}
@@ -221,7 +223,7 @@ export const Default = {
         {previewBlocks.map(({ link, el }) => (
           <PreviewBlock key={link.ref} link={link} el={el} view={view} />
         ))}
-      </PreviewProvider>
+      </PreviewPopoverProvider>
     );
   },
 };

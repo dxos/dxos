@@ -35,6 +35,7 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
@@ -54,7 +55,7 @@
     "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "effect": "^3.13.3",

@@ -71,7 +71,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     this._preloadSchemaOnOpen = preloadSchemaOnOpen;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(_ctx: Context): Promise<void> {
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {

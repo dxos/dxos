@@ -3,7 +3,7 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
-import { Match } from 'effect';
+import { Match, Predicate } from 'effect';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
@@ -22,6 +22,8 @@ import { filterMatchObject } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
+
+const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.isNullable;
 
 type QueryExecutorOptions = {
   indexer: Indexer;
@@ -245,6 +247,9 @@ export class QueryExecutor extends Resource {
       case 'TraverseStep':
         ({ workingSet: newWorkingSet, trace } = await this._execTraverseStep(step, workingSet));
         break;
+      case 'OrderStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execOrderStep(step, workingSet));
+        break;
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
@@ -382,10 +387,6 @@ export class QueryExecutor extends Resource {
     step: QueryPlan.FilterDeletedStep,
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
-    if (workingSet.length === 6) {
-      log('filter deleted step', { step, workingSet });
-    }
-
     const expected = step.mode === 'only-deleted';
     const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
     return {
@@ -588,6 +589,60 @@ export class QueryExecutor extends Resource {
       }),
       trace,
     };
+  }
+
+  private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const compareItems = (a: QueryItem, b: QueryItem): number =>
+      step.order.reduce((comparison, order) => {
+        // If we already have a definitive result, return it
+        if (comparison !== 0) {
+          return comparison;
+        }
+
+        return this._compareByOrder(a, b, order);
+      }, 0);
+
+    const sortedWorkingSet = [...workingSet].sort(compareItems);
+
+    return {
+      workingSet: sortedWorkingSet,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Order',
+        details: JSON.stringify(step.order),
+        objectCount: sortedWorkingSet.length,
+      },
+    };
+  }
+
+  private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
+    return Match.type<QueryAST.Order>().pipe(
+      Match.withReturnType<number>(),
+      Match.when({ kind: 'natural' }, () => a.objectId.localeCompare(b.objectId)),
+      Match.when({ kind: 'property' }, ({ property, direction }) => {
+        const comparison = this._compareByProperty(a, b, property);
+        return direction === 'desc' ? -comparison : comparison;
+      }),
+      Match.exhaustive,
+    )(order);
+  }
+
+  private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
+    const aValue = a.doc.data[property];
+    const bValue = b.doc.data[property];
+
+    return Match.type<{ a: unknown; b: unknown }>().pipe(
+      Match.withReturnType<number>(),
+      Match.when({ a: isNullable, b: isNullable }, () => 0),
+      Match.when({ a: isNullable }, () => 1),
+      Match.when({ b: isNullable }, () => -1),
+      Match.when({ a: Match.string, b: Match.string }, ({ a, b }) => a.localeCompare(b)),
+      Match.when({ a: Match.number, b: Match.number }, ({ a, b }) => a - b),
+      Match.when({ a: Match.boolean, b: Match.boolean }, ({ a, b }) => (a === b ? 0 : a ? 1 : -1)),
+      Match.when({ a: Match.defined, b: Match.defined }, ({ a, b }) => String(a).localeCompare(String(b))),
+      // TODO(wittjosiah): Why does Match.exhaustive fail here?
+      Match.orElse(() => 0),
+    )({ a: aValue, b: bValue });
   }
 
   private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {

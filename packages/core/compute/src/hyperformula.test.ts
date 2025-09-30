@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { HyperFormula } from '#hyperformula';
+import { HyperFormula } from '@dxos/vendor-hyperformula';
 
 describe('hyperformula', () => {
   test('sanity test', async () => {

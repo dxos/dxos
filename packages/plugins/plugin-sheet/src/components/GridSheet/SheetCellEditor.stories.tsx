@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -19,19 +19,17 @@ import { withTheme } from '@dxos/storybook-utils';
 import { sheetExtension } from '../../extensions';
 import { SheetType, createSheet } from '../../types';
 
-type StoryProps = CellEditorProps;
-
-const Story = ({ value, ...props }: StoryProps) => {
-  const extension = useMemo(() => {
+const DefaultStory = ({ value, ...props }: CellEditorProps) => {
+  const extensions = useMemo(() => {
     const functionNames = getRegisteredFunctionNames();
     const functions = defaultFunctions.filter(({ name }) => functionNames.includes(name));
     return [sheetExtension({ functions })];
   }, []);
 
-  return <CellEditor {...props} value={value} extension={extension} />;
+  return <CellEditor {...props} value={value} extensions={extensions} />;
 };
 
-const AutomergeStory = ({ value, ...props }: StoryProps) => {
+const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
   const cell = 'A1';
   const [object, setObject] = useState<SheetType>();
   useAsyncEffect(async () => {
@@ -47,7 +45,7 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
     setObject(sheet);
   }, [value]);
 
-  const extension = useMemo(() => {
+  const extensions = useMemo(() => {
     if (!object) {
       return [];
     }
@@ -58,35 +56,37 @@ const AutomergeStory = ({ value, ...props }: StoryProps) => {
     return [automerge(accessor), sheetExtension({ functions })];
   }, [object]);
 
-  return <CellEditor {...props} value={value} extension={extension} />;
+  return <CellEditor {...props} value={value} extensions={extensions} />;
 };
 
-export const Default = {};
+const meta = {
+  title: 'plugins/plugin-sheet/CellEditor',
+  component: CellEditor,
+  render: DefaultStory,
+  decorators: [withTheme],
+} satisfies Meta<typeof DefaultStory>;
 
-export const AutoComplete = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+
+export const AutoComplete: Story = {
   args: {
     value: '=SUM',
   },
 };
 
-export const Formatting = {
+export const Formatting: Story = {
   args: {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };
 
-export const Automerge = {
-  render: (args: StoryProps) => <AutomergeStory {...args} />,
+export const Automerge: Story = {
+  render: AutomergeStory,
   args: {
     value: '=SUM(A1:A2, 100, TRUE, "100", SUM(A1:A2, B1:B2))',
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/CellEditor',
-  component: CellEditor,
-  decorators: [withTheme],
-  render: (args: StoryProps) => <Story {...args} />,
-};
-
-export default meta;

@@ -71,12 +71,5 @@
     {
       "path": "../schema"
     }
-  ],
-  "ts-node": {
-    "compilerOptions": {
-      "module": "CommonJS"
-    },
-    "files": true,
-    "transpileOnly": true
-  }
+  ]
 }

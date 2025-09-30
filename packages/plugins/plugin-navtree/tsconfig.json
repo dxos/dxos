@@ -66,6 +66,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../ui/lit-ui"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

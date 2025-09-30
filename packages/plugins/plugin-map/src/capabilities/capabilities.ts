@@ -7,7 +7,7 @@ import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type DeepReadonly } from '@dxos/util';
 
 import { type MapControlType } from '../components';
-import { MAP_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace MapCapabilities {
   export type State = {
@@ -15,6 +15,6 @@ export namespace MapCapabilities {
     center?: LatLngLiteral;
     zoom?: number;
   };
-  export const State = defineCapability<DeepReadonly<State>>(`${MAP_PLUGIN}/capability/state`);
-  export const MutableState = defineCapability<State>(`${MAP_PLUGIN}/capability/state`);
+  export const State = defineCapability<DeepReadonly<State>>(`${meta.id}/capability/state`);
+  export const MutableState = defineCapability<State>(`${meta.id}/capability/state`);
 }

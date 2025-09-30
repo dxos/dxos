@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconWeight } from '@phosphor-icons/react';
 import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef, useCallback } from 'react';
@@ -230,7 +229,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   },
 );
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & { size?: Size; weight?: IconWeight };
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & {
+  size?: Size;
+};
 
 const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   HTMLButtonElement,
@@ -243,7 +244,6 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
       size,
-      weight = 'bold',
       classNames,
       ...props
     },

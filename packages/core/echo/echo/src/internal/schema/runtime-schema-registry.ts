@@ -31,7 +31,8 @@ export class RuntimeSchemaRegistry {
   hasSchema<S extends Schema.Schema.AnyNoContext>(schema: S): boolean {
     const typename = getSchemaTypename(schema);
     const version = getSchemaVersion(schema);
-    invariant(typename);
+    invariant(typename, 'Invalid schema');
+
     const schemas = this._registry.get(typename);
     return schemas?.some((schema) => getSchemaVersion(schema) === version) ?? false;
   }

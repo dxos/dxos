@@ -118,15 +118,18 @@ export type GetAgentStatusResponseBody = {
 
 export type UploadFunctionRequest = {
   name?: string;
-  script: string;
   version: string;
   ownerPublicKey: string;
+  entryPoint: string;
+  assets: Record<string, Uint8Array>;
 };
 
 export type UploadFunctionResponseBody = {
   functionId: string;
   version: string;
   meta: {
+    key?: string;
+    name?: string;
     description?: string;
     /**
      * JSON Schema for the input of the function.

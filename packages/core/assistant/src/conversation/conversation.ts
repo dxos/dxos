@@ -11,15 +11,23 @@ import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type AiSession, type AiSessionRunEffect, type GenerationObserver } from '../session';
+import {
+  AiSession,
+  type AiSessionRunError,
+  type AiSessionRunRequirements,
+  type GenerationObserver,
+  createToolkit,
+} from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunParams<Tools extends AiTool.Any> {
-  session: AiSession;
+export type AiConversationRunRequirements<Tools extends AiTool.Any> =
+  | AiSessionRunRequirements
+  | AiTool.ToHandler<Tools>;
+
+export interface AiConversationRunParams {
   prompt: string;
   system?: string;
-  toolkit?: AiToolkit.AiToolkit<Tools>;
   observer?: GenerationObserver;
 }
 
@@ -29,66 +37,87 @@ export type AiConversationOptions = {
 
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
+ * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
 export class AiConversation {
+  /**
+   * Message and binding queue.
+   */
   private readonly _queue: Queue<DataType.Message | ContextBinding>;
 
   /**
    * Blueprints bound to the conversation.
    */
-  public readonly _context: AiContextBinder;
+  private readonly _context: AiContextBinder;
 
-  constructor(options: AiConversationOptions) {
+  /**
+   * Toolkit from the current session request.
+   */
+  private _toolkit: AiToolkit.ToHandler<AiTool.Any> | undefined;
+
+  public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
     this._context = new AiContextBinder(this._queue);
   }
 
-  // TODO(burdon): Add Space to context?
-  get context() {
+  public get context() {
     return this._context;
   }
 
-  async getHistory(): Promise<DataType.Message[]> {
+  public get toolkit() {
+    return this._toolkit;
+  }
+
+  public async getHistory(): Promise<DataType.Message[]> {
     const queueItems = await this._queue.queryObjects();
     return queueItems.filter(Obj.instanceOf(DataType.Message));
   }
 
   /**
-   * Executes a prompt.
-   * Each invocation creates a new `AiSession`, which handles potential tool calls.
+   * Creates a new cancelable request effect.
    */
-  run = <Tools extends AiTool.Any>({ session, ...params }: AiConversationRunParams<Tools>): AiSessionRunEffect<Tools> =>
-    Effect.gen(this, function* () {
+  createRequest<Tools extends AiTool.Any>(
+    params: AiConversationRunParams,
+  ): Effect.Effect<DataType.Message[], AiSessionRunError, AiConversationRunRequirements<Tools>> {
+    return Effect.gen(this, function* () {
+      const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());
 
-      // Context.
+      // Get context objects.
       const context = yield* Effect.promise(() => this.context.query());
       const blueprints = yield* Effect.forEach(context.blueprints.values(), DatabaseService.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((o) => o.value)),
+        Effect.map(Array.map((option) => option.value)),
       );
       const objects = yield* Effect.forEach(context.objects.values(), DatabaseService.loadOption).pipe(
         Effect.map(Array.filter(Option.isSome)),
-        Effect.map(Array.map((o) => o.value)),
+        Effect.map(Array.map((option) => option.value)),
       );
-      log.info('run', {
+
+      // Create toolkit.
+      const toolkit = yield* createToolkit<Tools>({ blueprints });
+      this._toolkit = toolkit;
+
+      const start = Date.now();
+      log('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
+        tools: this._toolkit?.tools.length ?? 0,
       });
 
       // Process request.
-      const start = Date.now();
-      const messages = yield* session.run({ ...params, history, objects, blueprints }).pipe(
+      const messages = yield* session.run<Tools>({ history, blueprints, objects, toolkit, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
       );
-      log.info('result', {
-        messages: messages,
-        duration: Date.now() - start,
-      });
+
+      log('result', { messages: messages.length, duration: Date.now() - start });
+
+      // Append to queue.
       yield* Effect.promise(() => this._queue.append(messages));
       return messages;
-    }).pipe(Effect.withSpan('AiConversation.run'));
+    }).pipe(Effect.withSpan('AiConversation.request'));
+  }
 }

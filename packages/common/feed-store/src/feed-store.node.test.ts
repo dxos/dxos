@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { faker } from '@dxos/random';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 
-import { TestItemBuilder } from './testing';
+import { type TestItem, TestItemBuilder } from './testing';
 
 describe('FeedStore', () => {
   test('reopens a feed and reads data from storage', async () => {
@@ -28,7 +28,7 @@ describe('FeedStore', () => {
         await feed.append({
           id: String(i),
           value: faker.lorem.sentence(),
-        });
+        } as TestItem);
       }
 
       expect(feed.properties.length).to.eq(numBlocks);

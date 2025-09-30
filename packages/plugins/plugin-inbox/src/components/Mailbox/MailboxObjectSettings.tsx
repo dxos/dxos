@@ -5,18 +5,18 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionTrigger, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { INBOX_PLUGIN } from '../../meta';
-import { type MailboxType } from '../../types';
+import { meta } from '../../meta';
+import { type Mailbox } from '../../types';
 
-export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);
   const triggers = useQuery(space, Filter.type(FunctionTrigger));
@@ -25,7 +25,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const syncTrigger = triggers.find(
-      (trigger) => trigger.spec?.kind === TriggerKind.Timer && trigger.input?.mailboxId === object.id,
+      (trigger) => trigger.spec?.kind === 'timer' && trigger.input?.mailboxId === object.id,
     );
     if (syncTrigger) {
       void dispatch(
@@ -53,7 +53,7 @@ export const MailboxObjectSettings = ({ object }: { object: MailboxType }) => {
     invariant(space);
 
     const subscriptionTrigger = triggers.find((trigger) => {
-      if (trigger.spec?.kind === TriggerKind.Queue) {
+      if (trigger.spec?.kind === 'queue') {
         if (trigger.spec.queue === object.queue.dxn.toString()) {
           return true;
         }

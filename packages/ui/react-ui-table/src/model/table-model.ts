@@ -7,7 +7,6 @@ import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-c
 import { Resource } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import {
-  type FieldSortType,
   FormatEnum,
   type JsonProp,
   type JsonSchemaType,
@@ -28,9 +27,16 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type DataType, ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
+import {
+  type DataType,
+  type FieldSortType,
+  ProjectionModel,
+  type PropertyType,
+  type ValidationError,
+  validateSchema,
+} from '@dxos/schema';
 
-import { TableView } from '../types';
+import { Table } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -92,7 +98,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _view: DataType.View;
   private readonly _projection: ProjectionModel;
-  private _table?: TableView;
+  private _table?: Table.Table;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
@@ -176,7 +182,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._view;
   }
 
-  public get table(): TableView {
+  public get table(): Table.Table {
     invariant(this._table, 'Model not initialized');
     return this._table;
   }
@@ -239,7 +245,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   protected override async _open(): Promise<void> {
     const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(TableView, presentation));
+    invariant(Obj.instanceOf(Table.Table, presentation));
     this._table = presentation;
 
     this.initializeColumnMeta();
@@ -257,7 +263,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return {
         grid: meta,
         frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 40, resizeable: false } },
+        frozenColsEnd: { 0: { size: 32, resizeable: false } },
       };
     });
   }

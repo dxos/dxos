@@ -9,10 +9,10 @@ import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, Icon, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
-import { DEBUG_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DebugSettingsProps } from '../types';
 
 type Toast = {
@@ -26,7 +26,7 @@ const StorageAdapters = {
 } as const;
 
 export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) => {
-  const { t } = useTranslation(DEBUG_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
   const client = useClient();
   const download = useFileDownload();
@@ -77,67 +77,75 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   };
 
   return (
-    <DeprecatedFormContainer>
-      <DeprecatedFormInput label={t('settings wireframe')}>
-        <Input.Switch checked={settings.wireframe} onCheckedChange={(checked) => (settings.wireframe = !!checked)} />
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings download diagnostics')}>
-        <Button onClick={handleDownload}>
-          <Icon icon='ph--download-simple--regular' size={5} />
-        </Button>
-      </DeprecatedFormInput>
-      <DeprecatedFormInput label={t('settings repair')}>
-        <Button onClick={handleRepair}>
-          <Icon icon='ph--first-aid-kit--regular' size={5} />
-        </Button>
-      </DeprecatedFormInput>
+    <ControlPage>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
+        <ControlGroup>
+          <ControlItemInput title={t('settings wireframe')}>
+            <Input.Switch
+              checked={settings.wireframe}
+              onCheckedChange={(checked) => (settings.wireframe = !!checked)}
+            />
+          </ControlItemInput>
+          <ControlItemInput title={t('settings download diagnostics')}>
+            <Button onClick={handleDownload}>
+              <Icon icon='ph--download-simple--regular' size={5} />
+            </Button>
+          </ControlItemInput>
+          <ControlItemInput title={t('settings repair')}>
+            <Button onClick={handleRepair}>
+              <Icon icon='ph--first-aid-kit--regular' size={5} />
+            </Button>
+          </ControlItemInput>
 
-      {/* TODO(burdon): Move to layout? */}
-      {toast && (
-        <Toast.Root>
-          <Toast.Body>
-            <Toast.Title>
-              <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
-              <span>{toast.title}</span>
-            </Toast.Title>
-            {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
-          </Toast.Body>
-        </Toast.Root>
-      )}
+          {/* TODO(burdon): Move to layout? */}
+          {toast && (
+            <Toast.Root>
+              <Toast.Body>
+                <Toast.Title>
+                  <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
+                  <span>{toast.title}</span>
+                </Toast.Title>
+                {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
+              </Toast.Body>
+            </Toast.Root>
+          )}
 
-      <DeprecatedFormInput label={t('settings choose storage adaptor')}>
-        <Select.Root
-          value={
-            Object.entries(StorageAdapters).find(
-              ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
-            )?.[0]
-          }
-          onValueChange={(value) => {
-            if (confirm(t('settings storage adapter changed alert'))) {
-              updateConfig(
-                storageConfig,
-                setStorageConfig,
-                ['runtime', 'client', 'storage', 'dataStore'],
-                StorageAdapters[value as keyof typeof StorageAdapters],
-              );
-            }
-          }}
-        >
-          <Select.TriggerButton placeholder={t('settings data store label')} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {Object.keys(StorageAdapters).map((key) => (
-                  <Select.Option key={key} value={key}>
-                    {t(`settings storage adaptor ${key} label`)}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
-        </Select.Root>
-      </DeprecatedFormInput>
-    </DeprecatedFormContainer>
+          <ControlItemInput title={t('settings choose storage adaptor')}>
+            <Select.Root
+              value={
+                Object.entries(StorageAdapters).find(
+                  ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+                )?.[0]
+              }
+              onValueChange={(value) => {
+                if (confirm(t('settings storage adapter changed alert'))) {
+                  updateConfig(
+                    storageConfig,
+                    setStorageConfig,
+                    ['runtime', 'client', 'storage', 'dataStore'],
+                    StorageAdapters[value as keyof typeof StorageAdapters],
+                  );
+                }
+              }}
+            >
+              <Select.TriggerButton placeholder={t('settings data store label')} />
+              <Select.Portal>
+                <Select.Content>
+                  <Select.Viewport>
+                    {Object.keys(StorageAdapters).map((key) => (
+                      <Select.Option key={key} value={key}>
+                        {t(`settings storage adaptor ${key} label`)}
+                      </Select.Option>
+                    ))}
+                  </Select.Viewport>
+                  <Select.Arrow />
+                </Select.Content>
+              </Select.Portal>
+            </Select.Root>
+          </ControlItemInput>
+        </ControlGroup>
+      </ControlSection>
+    </ControlPage>
   );
 };
 

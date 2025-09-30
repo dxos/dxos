@@ -4,21 +4,21 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Blob, type BlobProps } from './Blob';
+import { Blob } from './Blob';
 
-const meta: Meta<BlobProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Blob',
   component: Blob,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Blob>;
 
 export default meta;
 
-type Story = StoryObj<BlobProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

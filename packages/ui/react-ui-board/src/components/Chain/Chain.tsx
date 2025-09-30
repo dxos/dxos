@@ -7,7 +7,7 @@ import './styles.css';
 import {
   BackgroundVariant,
   type Edge,
-  Background as NativeBackground,
+  Background as NaturalBackground,
   type Node,
   ReactFlow,
   type ReactFlowProps,
@@ -76,7 +76,7 @@ const Root = ({ children, nodes: initialNodes, edges: initialEdges }: RootProps)
 // Background
 //
 
-const Background = () => <NativeBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
+const Background = () => <NaturalBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
 
 //
 // Chain

@@ -22,7 +22,7 @@ import {
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
 const FormSchema = SpaceForm.pipe(
@@ -35,7 +35,7 @@ export type SpaceSettingsContainerProps = {
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
@@ -162,11 +162,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto pli-2'>
+    <StackItem.Content classNames='block overflow-y-auto'>
       <ControlPage>
         <ControlSection
-          title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
-          description={t('space properties settings description', { ns: SPACE_PLUGIN })}
+          title={t('space properties settings verbose label', { ns: meta.id })}
+          description={t('space properties settings description', { ns: meta.id })}
         >
           <Form
             schema={FormSchema}
@@ -175,7 +175,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             onSave={handleSave}
             Custom={customElements}
             outerSpacing={false}
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
           />
         </ControlSection>
       </ControlPage>

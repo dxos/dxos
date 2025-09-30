@@ -44,7 +44,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
   return (
     <PanelContainer
       toolbar={
-        !props.space && (
+        props.space ? undefined : (
           <Toolbar.Root>
             <SpaceSelector />
           </Toolbar.Root>

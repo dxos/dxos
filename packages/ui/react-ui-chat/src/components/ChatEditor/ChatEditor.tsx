@@ -7,8 +7,10 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type AutocompleteOptions,
   type BasicExtensionsOptions,
   type UseTextEditorProps,
+  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   useTextEditor,
@@ -16,10 +18,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type AutocompleteOptions, autocomplete } from './autocomplete';
 import { type ReferencesOptions, references as referencesExtension } from './references';
-
-// TODO(burdon): Handle object references.
 
 export interface ChatEditorController {
   focus(): void;
@@ -42,8 +41,9 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
+
     const { parentRef, view } = useTextEditor(
-      {
+      () => ({
         debug: true,
         autoFocus,
         extensions: [
@@ -57,8 +57,8 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
           }),
           extensions,
         ].filter(isNonNullable),
-      },
-      [themeMode, extensions, onSubmit, onSuggest],
+      }),
+      [themeMode, extensions, onSubmit, onSuggest, onCancel],
     );
 
     // Expose editor view.

@@ -17,7 +17,7 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { type MaybeProvider, getProviderValue, isNotFalsy } from '@dxos/util';
+import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
 import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
@@ -96,19 +96,7 @@ export const useTextEditor = (
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          // TODO(burdon): Factor out debug inspector.
-          // ViewPlugin.fromClass(
-          //   class {
-          //     constructor(_view: EditorView) {
-          //       log('construct', { id });
-          //     }
-          //
-          //     destroy() {
-          //       log('destroy', { id });
-          //     }
-          //   },
-          // ),
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig

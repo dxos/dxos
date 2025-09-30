@@ -81,6 +81,7 @@ export default (context: PluginContext) =>
           const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
+
         await state.transcriptionManager?.setEnabled(enabled);
       },
     }),

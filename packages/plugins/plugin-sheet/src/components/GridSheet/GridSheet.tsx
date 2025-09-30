@@ -34,7 +34,7 @@ import {
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
@@ -69,7 +69,7 @@ const sheetRowDefault = {
 };
 
 export const GridSheet = () => {
-  const { t } = useTranslation(SHEET_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
@@ -279,7 +279,7 @@ export const GridSheet = () => {
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
-  const extension = useMemo(
+  const extensions = useMemo(
     () => [
       editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
       sheetExtension({ functions: model.graph.getFunctions() }),
@@ -309,7 +309,7 @@ export const GridSheet = () => {
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
     <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
+      <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLS}

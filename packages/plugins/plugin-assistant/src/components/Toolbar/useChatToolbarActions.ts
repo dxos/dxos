@@ -35,12 +35,17 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
     useMemo(
       () =>
         Rx.make(() => {
-          const base = MenuBuilder.make()
+          const builder = MenuBuilder.make()
             .root({
               label: ['chat toolbar title', { ns: meta.id }],
             })
             .action(
               'new',
+              {
+                label: ['button new thread', { ns: meta.id }],
+                icon: 'ph--plus--regular',
+                type: 'new',
+              },
               () =>
                 Effect.gen(function* () {
                   invariant(space);
@@ -55,24 +60,24 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                         target: companionTo,
                       }),
                     );
+
                     yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat: object }));
                   }
                 }).pipe(Effect.runPromise),
-              {
-                label: ['button new thread', { ns: meta.id }],
-                icon: 'ph--plus--regular',
-                type: 'new',
-              },
             )
-            .action('branch', () => {}, {
-              label: ['button branch thread', { ns: meta.id }],
-              icon: 'ph--git-branch--regular',
-              type: 'branch',
-              disabled: true,
-            });
+            .action(
+              'branch',
+              {
+                label: ['button branch thread', { ns: meta.id }],
+                icon: 'ph--git-branch--regular',
+                type: 'branch',
+                disabled: true,
+              },
+              () => {},
+            );
 
           if (chats.length > 0) {
-            base.group(
+            builder.group(
               'chats',
               {
                 label: ['chat history label', { ns: meta.id }],
@@ -87,14 +92,14 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
                   .forEach((chat) => {
                     builder.action(
                       chat.id,
+                      {
+                        label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
+                      },
                       () =>
                         Effect.gen(function* () {
                           invariant(companionTo);
                           yield* dispatch(createIntent(AssistantAction.SetCurrentChat, { companionTo, chat }));
                         }).pipe(Effect.runPromise),
-                      {
-                        label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Assistant.Chat.typename }],
-                      },
                     );
                   });
               },
@@ -102,14 +107,18 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
           }
 
           if (onReset) {
-            base.action('reset', onReset, {
-              label: ['button reset', { ns: meta.id }],
-              icon: 'ph--trash--regular',
-              type: 'reset',
-            });
+            builder.action(
+              'reset',
+              {
+                label: ['button reset', { ns: meta.id }],
+                icon: 'ph--trash--regular',
+                type: 'reset',
+              },
+              onReset,
+            );
           }
 
-          return base.build();
+          return builder.build();
         }),
       [chats],
     ),

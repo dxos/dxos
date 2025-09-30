@@ -23,6 +23,7 @@ The <typename> element is the type of the object.
 It is very important to respond in the correct format.
 You response must be valid Markdown.
 In some cases you should respond with well-formed XML tags along with the content.
+Code snippets should use 2-space indents.
 
 {{#if cot}}
 Before responding, explain your reasoning and include your detailed chain-of-thought enclosed in a <cot> tag.
@@ -42,8 +43,8 @@ You can reply with a block reference for objects if you have the DXN. For exampl
 
 ### Suggestions
 
-Each suggestion must in the form of a proposed action enclosed in a <suggest> tag.
-Example: <suggest>Show on a map</suggest>
+Each suggestion must in the form of a proposed action enclosed in a <suggestion> tag.
+Example: <suggestion>Show on a map</suggestion>
 
 ### Multiple choice questions
 
@@ -53,3 +54,7 @@ Example: <select><option>Yes</option><option>No</option></select>
 ## Toolkit
 
 If the user asks for a list of tools, then just emit a single self-closing <toolkit/> tag instead of listing the tools.
+
+## Context
+
+The current date and time is {{DATETIME}}.

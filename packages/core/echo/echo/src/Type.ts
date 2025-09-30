@@ -74,7 +74,7 @@ export const Obj: {
 /**
  * Object schema type definitions.
  */
-export namespace Obj {
+export declare namespace Obj {
   /**
    * Type that represents an arbitrary schema type of an object.
    * NOTE: This is not an instance type.

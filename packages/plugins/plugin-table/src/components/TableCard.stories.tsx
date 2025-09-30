@@ -14,9 +14,9 @@ import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { createTable, translations as tableTranslations } from '@dxos/react-ui-table';
+import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -28,24 +28,26 @@ faker.seed(1234);
 
 type StoryProps = { role: string };
 
-const meta: Meta<StoryProps> = {
-  title: 'plugins/plugin-table/Card',
-  render: ({ role }) => {
-    const { schema, view } = useTestTableModel();
-    if (!schema || !view) {
-      return <div />;
-    }
+const DefaultStory = ({ role }: StoryProps) => {
+  const { schema, view } = useTestTableModel();
+  if (!schema || !view) {
+    return <div />;
+  }
 
-    return (
-      <CardContainer icon='ph--text-aa--regular' role={role}>
-        <TableCard role={role} view={view} />
-      </CardContainer>
-    );
-  },
+  return (
+    <CardContainer icon='ph--text-aa--regular' role={role}>
+      <TableCard role={role} view={view} />
+    </CardContainer>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-table/Card',
+  render: DefaultStory,
   decorators: [
     // TODO(burdon): Should not require space.
     withClientProvider({
-      types: [DataType.View, TableView],
+      types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -75,7 +77,7 @@ const meta: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view } = await createTable({ client, space, typename });
+        const { view } = await Table.makeView({ client, space, typename });
         space.db.add(view);
 
         // Populate.
@@ -100,26 +102,26 @@ const meta: Meta<StoryProps> = {
     translations: [...translations, ...tableTranslations],
   },
   tags: ['cards'],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Popover = {
+export const Popover: Story = {
   args: {
     role: 'card--popover',
   },
-} satisfies Story;
+};
 
-export const Intrinsic = {
+export const Intrinsic: Story = {
   args: {
     role: 'card--intrinsic',
   },
-} satisfies Story;
+};
 
-export const Extrinsic = {
+export const Extrinsic: Story = {
   args: {
     role: 'card--extrinsic',
   },
-} satisfies Story;
+};

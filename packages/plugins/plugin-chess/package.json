@@ -20,6 +20,12 @@
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
+    },
+    "./functions": {
+      "source": "./src/functions/index.ts",
+      "types": "./dist/types/src/functions/index.d.ts",
+      "browser": "./dist/lib/browser/functions/index.mjs",
+      "node": "./dist/lib/node-esm/functions/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -51,6 +57,7 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-gameboard": "workspace:*",
+    "@dxos/react-ui-sfx": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -68,7 +75,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-core';
 import { inspectCustom } from '@dxos/debug';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Live, live } from '@dxos/live-object';
-import { type MakeOptional, isNotFalsy, removeBy } from '@dxos/util';
+import { type MakeOptional, isTruthy, removeBy } from '@dxos/util';
 
 import { type BaseGraphEdge, type BaseGraphNode, type Graph, type GraphEdge, type GraphNode } from './types';
 import { createEdgeId } from './util';
@@ -108,7 +108,7 @@ export class ReadonlyGraphModel<
     visited.add(root.id);
     const targets = this.filterEdges({ source: root.id })
       .map((edge) => this.getNode(edge.target))
-      .filter(isNotFalsy);
+      .filter(isTruthy);
 
     return [root, ...targets.flatMap((target) => this._traverse(target, visited))];
   }

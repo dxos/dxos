@@ -7,7 +7,7 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type ExecutableTool } from '@dxos/ai';
+import { type AiService, type AiServiceRouter } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
@@ -157,12 +157,6 @@ export namespace Capabilities {
 
   /**
    * @category Capability
-   * @deprecated
-   */
-  export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
-
-  /**
-   * @category Capability
    */
   export const Toolkit = defineCapability<AiToolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
 
@@ -178,6 +172,18 @@ export namespace Capabilities {
    */
   export const BlueprintDefinition = defineCapability<Blueprint.Blueprint>(
     'dxos.org/app-framework/capability/blueprint-definition',
+  );
+
+  export type AiServiceLayer = Layer.Layer<AiService.AiService>;
+  export const AiServiceLayer = defineCapability<AiServiceLayer>(
+    'dxos.org/app-framework/capability/ai-service-factory',
+  );
+
+  /**
+   * Plugins can contribute them to provide model resolvers.
+   */
+  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
+    'dxos.org/app-framework/capability/ai-model-resolver',
   );
 
   /**

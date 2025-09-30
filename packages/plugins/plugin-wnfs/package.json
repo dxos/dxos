@@ -32,9 +32,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.10.3",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -73,7 +73,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

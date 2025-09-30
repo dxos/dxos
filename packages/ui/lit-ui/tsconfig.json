@@ -23,6 +23,9 @@
     },
     {
       "path": "../primitives/react-hooks"
+    },
+    {
+      "path": "../react-ui-types"
     }
   ]
 }

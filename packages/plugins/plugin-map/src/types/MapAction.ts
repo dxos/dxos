@@ -9,6 +9,7 @@ import { DataType, TypenameAnnotationId } from '@dxos/schema';
 
 import { meta } from '../meta';
 
+import { Map } from './Map';
 import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({
@@ -19,7 +20,7 @@ export const CreateMap = Schema.Struct({
       title: 'Record type',
     }),
   ),
-  locationFieldId: Schema.String.annotations({
+  locationFieldName: Schema.String.annotations({
     [LocationAnnotationId]: true,
     title: 'Location property',
   }),
@@ -28,11 +29,12 @@ export const CreateMap = Schema.Struct({
 export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
 
 export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-  input: Schema.extend(
-    Schema.Struct({
-      space: SpaceSchema,
-    }),
-    CreateMap,
+  input: Schema.Struct({
+    space: SpaceSchema,
+  }).pipe(
+    // prettier-ignore
+    Schema.extend(CreateMap),
+    Schema.extend(Map.pipe(Schema.pick('center', 'zoom', 'coordinates'))),
   ),
   output: Schema.Struct({
     object: DataType.View,

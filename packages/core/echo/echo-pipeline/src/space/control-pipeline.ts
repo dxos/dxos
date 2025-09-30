@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
+import { DeferredTask, scheduleMicroTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import {
   type DelegateInvitationCredential,
@@ -83,9 +83,12 @@ export class ControlPipeline {
 
       // TODO(burdon): Check not stopping.
       if (info.assertion.designation === AdmittedFeed.Designation.CONTROL && !info.key.equals(genesisFeed.key)) {
-        queueMicrotask(async () => {
+        scheduleMicroTask(this._ctx, async () => {
           try {
             const feed = await feedProvider(info.key);
+            if (this._ctx.disposed) {
+              return;
+            }
             if (!this._pipeline.hasFeed(feed.key)) {
               await this._pipeline.addFeed(feed);
             }

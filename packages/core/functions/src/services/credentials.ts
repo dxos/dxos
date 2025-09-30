@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer } from 'effect';
+import { HttpClient, HttpClientRequest } from '@effect/platform';
+import { type Config, Context, Effect, Layer, Redacted } from 'effect';
 
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
 import { DatabaseService } from './database';
 
-type CredentialQuery = {
+export type CredentialQuery = {
   service?: string;
 };
 
@@ -43,8 +44,34 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
       return yield* Effect.promise(() => credentials.getCredential(query));
     });
 
+  static getApiKey = (query: CredentialQuery): Effect.Effect<Redacted.Redacted<string>, never, CredentialsService> =>
+    Effect.gen(function* () {
+      const credential = yield* CredentialsService.getCredential(query);
+      if (!credential.apiKey) {
+        throw new Error(`API key not found for service: ${query.service}`);
+      }
+      return Redacted.make(credential.apiKey);
+    });
+
   static configuredLayer = (credentials: ServiceCredential[]) =>
     Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
+
+  static layerConfig = (credentials: { service: string; apiKey: Config.Config<Redacted.Redacted<string>> }[]) =>
+    Layer.effect(
+      CredentialsService,
+      Effect.gen(function* () {
+        const serviceCredentials = yield* Effect.forEach(credentials, ({ service, apiKey }) =>
+          Effect.gen(function* () {
+            return {
+              service,
+              apiKey: Redacted.value(yield* apiKey),
+            };
+          }),
+        );
+
+        return new ConfiguredCredentialsService(serviceCredentials);
+      }),
+    );
 
   static layerFromDatabase = () =>
     Layer.effect(
@@ -66,6 +93,7 @@ export class CredentialsService extends Context.Tag('@dxos/functions/Credentials
             if (credentials.length === 0) {
               throw new Error(`Credential not found for service: ${query.service}`);
             }
+
             return credentials[0];
           },
           queryCredentials: async (query) => {
@@ -93,6 +121,19 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
     if (!credential) {
       throw new Error(`Credential not found for service: ${query.service}`);
     }
+
     return credential;
   }
 }
+
+/**
+ * Maps the request to include the API key from the credential.
+ */
+export const withAuthorization = (query: CredentialQuery, kind?: 'Bearer' | 'Basic') =>
+  HttpClient.mapRequestEffect(
+    Effect.fnUntraced(function* (request) {
+      const key = yield* CredentialsService.getApiKey(query).pipe(Effect.map(Redacted.value));
+      const authorization = kind ? `${kind} ${key}` : key;
+      return HttpClientRequest.setHeader(request, 'Authorization', authorization);
+    }),
+  );

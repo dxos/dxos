@@ -27,7 +27,7 @@ import { log } from '@dxos/log';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
-import { CalendarType, InboxAction, MailboxType } from '../types';
+import { Calendar, InboxAction, Mailbox } from '../types';
 
 import { InboxCapabilities } from './capabilities';
 
@@ -40,7 +40,7 @@ export default (context: PluginContext) =>
       intent: InboxAction.CreateMailbox,
       resolve: ({ spaceId, name }) => ({
         data: {
-          object: Obj.make(MailboxType, {
+          object: Obj.make(Mailbox.Mailbox, {
             name,
             // TODO(dmaretskyi): Use space.queues.create() instead.
             queue: Ref.fromDXN(createQueueDXN(spaceId)),
@@ -51,7 +51,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: InboxAction.CreateCalendar,
       resolve: () => ({
-        data: { object: Obj.make(CalendarType, {}) },
+        data: { object: Calendar.make() },
       }),
     }),
     createResolver({

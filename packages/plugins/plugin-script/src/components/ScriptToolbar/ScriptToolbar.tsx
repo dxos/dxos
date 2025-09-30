@@ -8,7 +8,14 @@ import React, { useMemo } from 'react';
 import { type ScriptType } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { MenuProvider, ToolbarMenu, createGapSeparator, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  MenuProvider,
+  ToolbarMenu,
+  createGapSeparator,
+  rxFromSignal,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
@@ -18,9 +25,9 @@ import {
   createTemplateSelect,
   useDeployDeps,
 } from '../../hooks';
-import { SCRIPT_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
-const createToolbar = ({ state, script, ...options }: CreateDeployOptions) =>
+const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Rx.Rx<ActionGraphProps> =>
   Rx.make((get) =>
     get(
       rxFromSignal(() => {
@@ -43,9 +50,12 @@ export type ScriptToolbarProps = ThemedClassName<{
 }>;
 
 export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
-  const { t } = useTranslation(SCRIPT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
-  const toolbarCreator = useMemo(() => createToolbar({ state, script, t, ...options }), [state, script, options, t]);
+  const toolbarCreator = useMemo(
+    () => createToolbarActions({ state, script, t, ...options }),
+    [state, script, options, t],
+  );
   const menu = useMenuActions(toolbarCreator);
 
   return (

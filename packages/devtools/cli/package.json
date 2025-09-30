@@ -84,7 +84,7 @@
     "platform": "^1.3.6",
     "react": "~18.2.0",
     "ws": "^8.14.2",
-    "wtfnode": "^0.9.1"
+    "wtfnode": "^0.10.0"
   },
   "devDependencies": {
     "@oclif/test": "^4.1.0",
@@ -97,6 +97,7 @@
     "@types/react-dom": "~18.2.0",
     "oclif": "^4.15.12",
     "shx": "^0.3.3",
+    "ts-node": "10.9.1",
     "undici": "*"
   },
   "peerDependencies": {

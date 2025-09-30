@@ -48,9 +48,10 @@ export const deployScript = async ({
   }
 
   try {
-    const { bundle, error } = await bundleScript(script.source!.target!.content);
-    if (error || !bundle) {
-      throw error || new Error('Bundle creation failed');
+    const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
+    const buildResult = await bundler.bundle({ source: script.source!.target!.content });
+    if ('error' in buildResult) {
+      throw buildResult.error || new Error('Bundle creation failed');
     }
 
     const { functionId, version, meta } = await uploadWorkerFunction({
@@ -58,7 +59,8 @@ export const deployScript = async ({
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
       functionId: existingFunctionId,
-      source: bundle,
+      entryPoint: buildResult.entryPoint,
+      assets: { [buildResult.entryPoint]: buildResult.asset },
     });
 
     if (functionId === undefined || version === undefined) {
@@ -86,17 +88,6 @@ const validateDeployInputs = (script: ScriptType, space: Space): Error | null =>
     return new Error('Script source or space not available');
   }
   return null;
-};
-
-const bundleScript = async (source: string): Promise<{ bundle?: string; error?: Error }> => {
-  const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
-  const buildResult = await bundler.bundle({ source });
-
-  if (buildResult.error || !buildResult.bundle) {
-    return { error: buildResult.error || new Error('Bundle creation failed') };
-  }
-
-  return { bundle: buildResult.bundle };
 };
 
 const createOrUpdateFunctionInSpace = (

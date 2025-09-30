@@ -45,6 +45,7 @@ export const translations = [
         'open ambient chat label': 'Open Assistant',
         'assistant chat label': 'Assistant',
         'plugin name': 'Assistant',
+        'settings title': 'Assistant settings',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
         'create trigger label': 'Create trigger',
@@ -59,6 +60,10 @@ export const translations = [
         'service registry label': 'Service Registry',
         'type filter placeholder': 'Type',
         'any type filter label': 'Any',
+        'no blueprint message': 'No active blueprints',
+        'calling tool label': 'Calling tool...',
+        'calling label': 'Calling',
+        'error label': 'Error',
 
         'sequence logs label': 'Logs',
 
@@ -69,7 +74,7 @@ export const translations = [
         'no results': 'No results',
 
         'button retry': 'Retry',
-        'button suggest': 'Assistant suggestion',
+        'button suggestion': 'Assistant suggestion',
         'button select option': 'Select option',
         'button cancel': 'Cancel',
         'button save': 'Save',
@@ -78,13 +83,10 @@ export const translations = [
         'chat history label': 'Chat History',
 
         'toolkit label': 'Toolkit',
-
-        'calling tool label': 'Calling tool...',
-        'calling label': 'Calling',
-        'error label': 'Error',
+        'summary label': 'Summary',
 
         'search placeholder': 'Search...',
-        'prompt placeholder': 'Ask or search for anything...',
+        'prompt placeholder': 'Enter question or command...',
         'button context objects': 'Add to context',
         'button context settings': 'Chat settings',
         'button microphone': 'Click to speak',

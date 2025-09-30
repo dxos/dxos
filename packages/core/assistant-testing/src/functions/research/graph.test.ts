@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AnthropicClient } from '@effect/ai-anthropic';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, pipe } from 'effect';
@@ -42,22 +42,23 @@ describe('graph', () => {
   //   const relatedSchemas = await findRelatedSchema(db, Schema.Struct({}));
   // });
 
+  const Toolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
+  const ToolkitLayer = makeGraphWriterHandler(Toolkit);
+
   it.effect.skip(
     'calculator',
     Effect.fn(
       function* ({ expect: _ }) {
-        const graphWriteToolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
-
         const session = new AiSession();
-        const response = yield* session
-          .run({
-            prompt: 'What is 10 + 20?',
-            toolkit: graphWriteToolkit,
-          })
-          .pipe(Effect.provide(makeGraphWriterHandler(graphWriteToolkit)));
+        const toolkit = yield* Toolkit;
+        const response = yield* session.run({
+          toolkit,
+          prompt: 'What is 10 + 20?',
+        });
+
         log.info('response', { response });
       },
-      Effect.provide(TestLayer),
+      Effect.provide(Layer.mergeAll(TestLayer, ToolkitLayer)),
       TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
     ),
   );

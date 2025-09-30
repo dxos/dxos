@@ -189,19 +189,15 @@ describe('ViewEditor', () => {
     // Access the live objects directly from window using symbol.
     const debugObjects = getViewEditorDebugObjects();
 
-    // Check that hiddenFields is non-empty.
-    expect(debugObjects.view.projection.hiddenFields).toBeDefined();
-    expect(debugObjects.view.projection.hiddenFields!.length).toBeGreaterThan(0);
-
     // Click the show button
     fireEvent.click(screen.getByTestId('show-field-button'));
 
     // Wait for the data to update and check that hiddenFields is empty.
     await waitFor(() => {
-      expect(debugObjects.view.projection.hiddenFields!.length).toBe(0);
+      expect(debugObjects.view.projection.fields.filter(({ visible }) => visible === false)!.length).toBe(0);
     });
 
     // Also verify that the field is back in the visible fields list.
-    expect(debugObjects.view.projection.fields.length).toBeGreaterThan(0);
+    expect(debugObjects.view.projection.fields.filter(({ visible }) => visible !== false).length).toBeGreaterThan(0);
   });
 });

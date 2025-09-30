@@ -6,7 +6,7 @@ import { type ObjectMeta } from '@dxos/echo/internal';
 import { type SpaceId } from '@dxos/keys';
 
 // TODO: use URL scheme for source?
-const FUNCTIONS_META_KEY = 'dxos.org/service/function';
+export const FUNCTIONS_META_KEY = 'dxos.org/service/function';
 
 export const FUNCTIONS_PRESET_META_KEY = 'dxos.org/service/function-preset';
 

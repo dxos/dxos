@@ -6,7 +6,7 @@ import { computed } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
 import { updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
@@ -14,7 +14,7 @@ import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView } from '@dxos/schema';
 
-import { TableView } from '../types';
+import { Table } from '../types';
 
 import { TableModel, type TableModelProps } from './table-model';
 
@@ -73,7 +73,6 @@ describe('TableModel', () => {
   describe('reactivity', () => {
     it('pure signals should nest', () => {
       const signal$ = live({ arr: [{ thingInside: 1 }, { thingInside: 2 }] });
-
       const computed$ = computed(() => {
         return signal$.arr.map((row) =>
           computed(() => {
@@ -108,7 +107,11 @@ class Test extends TypedObject({ typename: 'example.com/type/Test', version: '0.
 
 const createTableModel = (props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const table = Obj.make(TableView, { sizes: {} });
-  const view = createView({ typename: schema.typename, jsonSchema: schema.jsonSchema, presentation: table });
+  const table = Table.make();
+  const view = createView({
+    query: Query.select(Filter.type(schema)),
+    jsonSchema: schema.jsonSchema,
+    presentation: table,
+  });
   return new TableModel({ view, schema: schema.jsonSchema, ...props });
 };

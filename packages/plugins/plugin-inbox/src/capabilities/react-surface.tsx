@@ -18,62 +18,75 @@ import { Obj } from '@dxos/echo';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery, useQueue, useSpace } from '@dxos/react-client/echo';
-import { TableView } from '@dxos/react-ui-table/types';
-import { DataType } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 
-import { EventsContainer, MailboxContainer, MailboxObjectSettings, MessageContainer } from '../components';
-import { RelatedContacts, RelatedMessages } from '../components/Related';
-import { INBOX_PLUGIN } from '../meta';
-import { CalendarType, InboxAction, MailboxType } from '../types';
+import {
+  EventsContainer,
+  MailboxContainer,
+  MailboxObjectSettings,
+  MessageCard,
+  MessageContainer,
+  RelatedContacts,
+  RelatedMessages,
+} from '../components';
+import { meta } from '../meta';
+import { Calendar, InboxAction, Mailbox } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${INBOX_PLUGIN}/mailbox`,
-      role: 'article',
-      filter: (data): data is { subject: MailboxType; variant: undefined } =>
-        Obj.instanceOf(MailboxType, data.subject) && !data.variant,
-      component: ({ data }) => <MailboxContainer mailbox={data.subject} />,
+      id: `${meta.id}/mailbox`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
+      component: ({ data, role }) => <MailboxContainer mailbox={data.subject} role={role} />,
     }),
     createSurface({
-      id: `${INBOX_PLUGIN}/message`,
-      role: 'article',
-      filter: (data): data is { companionTo: MailboxType; subject: DataType.Message | 'message' } =>
-        Obj.instanceOf(MailboxType, data.companionTo) &&
+      id: `${meta.id}/message`,
+      role: ['article', 'section'],
+      filter: (data): data is { companionTo: Mailbox.Mailbox; subject: DataType.Message | 'message' } =>
+        Obj.instanceOf(Mailbox.Mailbox, data.companionTo) &&
         (data.subject === 'message' || Obj.instanceOf(DataType.Message, data.subject)),
-      component: ({ data: { companionTo, subject: message } }) => {
+      component: ({ data: { companionTo, subject: message }, role }) => {
         const space = getSpace(companionTo);
         return (
           <MessageContainer
             message={typeof message === 'string' ? undefined : message}
             space={space}
             inMailbox={companionTo}
+            role={role}
           />
         );
       },
     }),
     createSurface({
-      id: `${INBOX_PLUGIN}/calendar`,
+      id: `${meta.id}/calendar`,
       role: 'article',
-      filter: (data): data is { subject: CalendarType } => Obj.instanceOf(CalendarType, data.subject),
+      filter: (data): data is { subject: Calendar.Calendar } => Obj.instanceOf(Calendar.Calendar, data.subject),
       component: ({ data }) => <EventsContainer calendar={data.subject} />,
     }),
     createSurface({
-      id: `${INBOX_PLUGIN}/mailbox/companion/settings`,
+      id: `${meta.id}/message-card`,
+      role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
+      filter: (data): data is { subject: DataType.Message } => Obj.instanceOf(DataType.Message, data?.subject),
+      component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
+    }),
+    createSurface({
+      id: `${meta.id}/mailbox/companion/settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: MailboxType } => Obj.instanceOf(MailboxType, data.subject),
+      filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
       component: ({ data }) => <MailboxObjectSettings object={data.subject} />,
     }),
 
     // TODO(wittjosiah): Generalize the mess below.
     createSurface({
-      id: `${INBOX_PLUGIN}/contact-related`,
+      id: `${meta.id}/contact-related`,
       role: 'related',
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data: { subject: contact } }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = useSpace();
-        const [mailbox] = useQuery(space, Filter.type(MailboxType));
+        const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
         const queue = useQueue<DataType.Message>(mailbox?.queue.dxn);
         const messages = queue?.objects ?? [];
         const related = messages
@@ -113,7 +126,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${INBOX_PLUGIN}/organization-related`,
+      id: `${meta.id}/organization-related`,
       role: 'related',
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data: { subject: organization } }) => {
@@ -134,11 +147,13 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Person.typename && Obj.instanceOf(TableView, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Person.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceContactTable = defaultSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Person.typename && Obj.instanceOf(TableView, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Person.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.

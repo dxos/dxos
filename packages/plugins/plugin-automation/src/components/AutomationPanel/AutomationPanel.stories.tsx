@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -29,9 +29,9 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-automation/AutomationPanel',
-  component: AutomationPanel,
+  component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -51,8 +51,10 @@ const meta: Meta = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

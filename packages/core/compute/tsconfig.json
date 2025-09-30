@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../../vendor/hyperformula"
+    },
+    {
       "path": "../../common/async"
     },
     {

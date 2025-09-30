@@ -4,11 +4,12 @@
 
 import { Schema } from 'effect';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { Unit, isTruthy } from '@dxos/util';
 
-import { Actor } from './actor';
+import { Actor, type ActorRole } from './actor';
 
 /**
  * Messages are made of typed content blocks.
@@ -122,6 +123,56 @@ export namespace ContentBlock {
   }).pipe(Schema.mutable);
   export interface ToolResult extends Schema.Schema.Type<typeof ToolResult> {}
 
+  /**
+   * GPT Summary
+   */
+  export const Summary = Schema.TaggedStruct('summary', {
+    mimeType: Schema.optional(Schema.String),
+    message: Schema.optional(Schema.String),
+    model: Schema.optional(Schema.String),
+    usage: Schema.optional(
+      // TOOD(burdon): Reuse AI Usage struct?
+      Schema.Struct({
+        inputTokens: Schema.optional(Schema.Number),
+        outputTokens: Schema.optional(Schema.Number),
+        totalTokens: Schema.optional(Schema.Number),
+      }),
+    ),
+    toolCalls: Schema.optional(Schema.Number),
+    errors: Schema.optional(Schema.Number),
+    duration: Schema.optional(Schema.Number).annotations({
+      description: 'Duration in ms.',
+    }),
+    ...Base.fields,
+  }).pipe(Schema.mutable);
+  export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+
+  /**
+   * Claude-like message
+   * ⎿ Done (15 tool uses · 21.5k tokens (→21.1k ←0.4k) · 1m 13.5s)
+   */
+  // TODO(burdon): String builder.
+  // TODO(burdon): Move to UI (and use translations).
+  export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = false) => {
+    const paren = (str: string) => `(${str})`;
+    const parts = [
+      verbose && model,
+      toolCalls && `${toolCalls} tool uses`,
+      usage &&
+        [
+          `${Unit.Thousand(usage.totalTokens ?? 0)} tokens`,
+          verbose &&
+            paren(
+              [`→${Unit.Thousand(usage.inputTokens ?? 0)}`, `←${Unit.Thousand(usage.outputTokens ?? 0)}`].join(' '),
+            ),
+        ]
+          .filter(isTruthy)
+          .join(' '),
+      duration && Unit.Duration(duration),
+    ].filter(isTruthy);
+    return [message, paren(parts.join(' · '))].filter(isTruthy).join(' ');
+  };
+
   export const Base64ImageSource = Schema.Struct({
     type: Schema.Literal('base64'),
     mediaType: Schema.String,
@@ -203,13 +254,12 @@ export namespace ContentBlock {
   /**
    * Suggestion for a follow-up prompt for the user.
    */
-  // TODO(burdon): Rename Suggestion.
-  export const Suggest = Schema.TaggedStruct('suggest', {
+  export const Suggestion = Schema.TaggedStruct('suggestion', {
     text: Schema.String,
 
     ...Base.fields,
   }).pipe(Schema.mutable);
-  export interface Suggest extends Schema.Schema.Type<typeof Suggest> {}
+  export interface Suggestion extends Schema.Schema.Type<typeof Suggestion> {}
 
   /**
    * Multiple choice selection.
@@ -281,7 +331,8 @@ export namespace ContentBlock {
     Reference,
     Select,
     Status,
-    Suggest,
+    Suggestion,
+    Summary,
     Text,
     Toolkit,
     ToolCall,
@@ -331,6 +382,14 @@ export const Message = MessageSchema.pipe(
 );
 
 export interface Message extends Schema.Schema.Type<typeof Message> {}
+
+export const makeMessage = (sender: Actor | ActorRole, blocks: ContentBlock.Any[]) => {
+  return Obj.make(Message, {
+    created: new Date().toISOString(),
+    sender: typeof sender === 'string' ? { role: sender } : sender,
+    blocks,
+  });
+};
 
 /** @deprecated */
 export enum MessageV1State {

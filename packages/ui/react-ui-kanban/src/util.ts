@@ -4,7 +4,8 @@
 
 import { type SelectOption } from '@dxos/echo/internal';
 
-import { type BaseKanbanItem, type KanbanView, UNCATEGORIZED_VALUE } from './types';
+import { type BaseKanbanItem, UNCATEGORIZED_VALUE } from './model';
+import { type Kanban } from './types';
 
 export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
   kanban,
@@ -12,7 +13,7 @@ export const computeArrangement = <T extends BaseKanbanItem = { id: string }>({
   pivotPath,
   selectOptions,
 }: {
-  kanban: KanbanView;
+  kanban: Kanban.Kanban;
   items: T[];
   pivotPath?: string;
   selectOptions: SelectOption[];

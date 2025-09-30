@@ -7,9 +7,21 @@ import { Obj, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-export const testTypes = [DataType.Organization, DataType.Person, DataType.Employer, DataType.HasConnection];
+// import { faker } from '@dxos/random';
+// import { DataType } from '@dxos/schema';
+// import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
+// faker.seed(1);
+// const generator = faker as any as ValueGenerator;
+// const objectGenerator = createGenerator(generator, DataType.Organization, { force: true });
 
-const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
+export const testTypes: Type.Obj.Any[] = [
+  DataType.Organization,
+  DataType.Person,
+  DataType.Employer,
+  DataType.HasConnection,
+];
+
+export const organizations: (Type.Properties<DataType.Organization> & { id: string })[] = [
   { id: 'dxos', name: 'DXOS', website: 'https://dxos.org' },
   { id: 'socket_supply', name: 'Socket Supply', website: 'https://socketsupply.com' },
   { id: 'ink_and_switch', name: 'Ink & Switch', website: 'https://inkandswitch.com' },

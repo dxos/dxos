@@ -8,7 +8,7 @@ import { isAction } from '@dxos/app-graph';
 import { DensityProvider, Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
 import { type NavTreeItemColumnsProps } from '../types';
@@ -16,7 +16,7 @@ import { type NavTreeItemColumnsProps } from '../types';
 import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;

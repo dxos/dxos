@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { TRANSCRIPTION_PLUGIN } from '../../../meta';
+import { meta } from '../../../meta';
 
 /**
  * Transcription fragment.
@@ -125,7 +125,7 @@ export type TranscriptViewProps = ThemedClassName<{
  * @@deprecated
  */
 export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
-  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
   const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);

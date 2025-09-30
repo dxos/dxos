@@ -6,41 +6,34 @@ import { Rx } from '@effect-rx/rx-react';
 import { type Signal } from '@preact/signals-core';
 import { useMemo } from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { MenuBuilder, rxFromSignal, useMenuActions } from '@dxos/react-ui-menu';
 
-import { INBOX_PLUGIN } from '../../../meta';
-import { InboxAction, type MailboxType } from '../../../types';
+import { meta } from '../../../meta';
+import { type Mailbox } from '../../../types';
 import { type MailboxModel } from '../model/mailbox-model';
 
 export const useMailboxToolbarActions = (
-  mailbox: MailboxType,
+  mailbox: Mailbox.Mailbox,
   model: MailboxModel,
   tagFilterVisible: Signal<boolean>,
   setTagFilterVisible: (visible: boolean) => void,
 ) => {
-  const { dispatchPromise } = useIntentDispatcher();
-
   return useMenuActions(
     useMemo(
       () =>
         Rx.make((get) =>
           MenuBuilder.make()
             .root({
-              label: ['mailbox toolbar title', { ns: INBOX_PLUGIN }],
+              label: ['mailbox toolbar title', { ns: meta.id }],
             })
             .action(
               'sort',
-              () => {
-                const newDirection = model.sortDirection === 'asc' ? 'desc' : 'asc';
-                model.sortDirection = newDirection;
-              },
               {
                 label: get(
                   rxFromSignal(() =>
                     model.sortDirection === 'asc'
-                      ? ['mailbox toolbar sort oldest', { ns: INBOX_PLUGIN }]
-                      : ['mailbox toolbar sort newest', { ns: INBOX_PLUGIN }],
+                      ? ['mailbox toolbar sort oldest', { ns: meta.id }]
+                      : ['mailbox toolbar sort newest', { ns: meta.id }],
                   ),
                 ),
                 icon: get(
@@ -50,25 +43,34 @@ export const useMailboxToolbarActions = (
                 ),
                 type: 'sort',
               },
+              () => {
+                const newDirection = model.sortDirection === 'asc' ? 'desc' : 'asc';
+                model.sortDirection = newDirection;
+              },
             )
             .action(
               'filter',
-              () => {
-                const newVisibility = !tagFilterVisible.value;
-                setTagFilterVisible(newVisibility);
-              },
               {
-                label: ['mailbox toolbar filter by tags', { ns: INBOX_PLUGIN }],
+                label: ['mailbox toolbar filter by tags', { ns: meta.id }],
                 icon: 'ph--tag--regular',
                 type: 'filter',
                 classNames: get(rxFromSignal(() => (tagFilterVisible.value ? 'text-accentText' : undefined))),
               },
+              () => {
+                const newVisibility = !tagFilterVisible.value;
+                setTagFilterVisible(newVisibility);
+              },
             )
-            .action('assistant', () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })), {
-              label: ['mailbox toolbar run mailbox ai', { ns: INBOX_PLUGIN }],
-              icon: 'ph--sparkle--regular',
-              type: 'assistant',
-            })
+            // TODO(wittjosiah): Not implemented.
+            // .action(
+            //   'assistant',
+            //   {
+            //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
+            //     icon: 'ph--sparkle--regular',
+            //     type: 'assistant',
+            //   },
+            //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+            // )
             .build(),
         ),
       [model, tagFilterVisible, setTagFilterVisible],

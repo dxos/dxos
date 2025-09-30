@@ -20,7 +20,7 @@ registerSignalsRuntime();
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
 export const createEchoSchema = (schema: Schema.Schema.AnyNoContext): EchoSchema => {
   const typename = getSchemaTypename(schema);
-  assertArgument(typename, 'Schema does not have a typename.');
+  assertArgument(typename, 'typename', 'Schema does not have a typename.');
 
   const echoSchema = new EchoSchema(
     live(StoredSchema, {

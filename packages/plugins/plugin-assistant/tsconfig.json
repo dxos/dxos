@@ -160,6 +160,9 @@
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
+      "path": "../../ui/react-ui-table"
+    },
+    {
       "path": "../../ui/react-ui-tabs"
     },
     {
@@ -170,6 +173,9 @@
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-automation"
     },
     {
       "path": "../plugin-board"
@@ -202,6 +208,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-project"
+    },
+    {
       "path": "../plugin-script"
     },
     {
@@ -221,6 +230,9 @@
     },
     {
       "path": "../plugin-thread"
+    },
+    {
+      "path": "../plugin-token-manager"
     },
     {
       "path": "../plugin-transcription"

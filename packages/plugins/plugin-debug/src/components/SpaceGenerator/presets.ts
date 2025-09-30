@@ -4,10 +4,14 @@
 
 import { Schema } from 'effect';
 
+import { RESEARCH_BLUEPRINT, ResearchOn, agent } from '@dxos/assistant-testing';
+import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Key, Obj, Ref, Type } from '@dxos/echo';
-import { FunctionTrigger, TriggerKind, type TriggerType } from '@dxos/functions';
+import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -31,11 +35,14 @@ import {
   pointsToRect,
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
+import { DataType, createView } from '@dxos/schema';
 import { range } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
 export enum PresetName {
+  DXOS_TEAM = 'dxos-team',
+  ORG_RESEARCH_PROJECT = 'org-research-project',
   // EMAIL_TABLE = 'email-table',
   GPT_QUEUE = 'webhook-gpt-queue',
   CHAT_GPT = 'chat-gpt-text',
@@ -52,6 +59,122 @@ export const generator = () => ({
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
+      PresetName.DXOS_TEAM,
+      async (space, n, cb) => {
+        const objects = range(n, () => {
+          const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
+
+          const doc = space.db.add(
+            Markdown.makeDocument({
+              name: 'DXOS Research',
+              content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
+            }),
+          );
+          space.db.add(
+            Relation.make(ResearchOn, {
+              [Relation.Source]: doc,
+              [Relation.Target]: org,
+              completedAt: new Date().toISOString(),
+            }),
+          );
+
+          space.db.add(
+            Obj.make(DataType.Person, { fullName: 'Rich', jobTitle: 'investor', organization: Ref.make(org) }),
+          );
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Mykola', organization: Ref.make(org) }));
+          space.db.add(Obj.make(DataType.Person, { fullName: 'Will', organization: Ref.make(org) }));
+
+          return doc;
+        });
+        cb?.(objects);
+        return objects;
+      },
+    ],
+    [
+      PresetName.ORG_RESEARCH_PROJECT,
+      async (space, n, cb) => {
+        const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+
+        const objects = range(n, () => {
+          // TODO(wittjosiah): Move filter to another property.
+          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
+          const organizationsQuery = contactsQuery.reference('organization');
+          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+          const researchPrompt = space.db.add(
+            Prompt.make({
+              name: 'Research',
+              description: 'Research organization',
+              input: Schema.Struct({
+                org: Schema.Any,
+              }),
+              output: Schema.Any,
+
+              // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
+              // Remove the mock prompt to do the actual research.
+              instructions:
+                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+              blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+            }),
+          );
+
+          const researchTrigger = Obj.make(FunctionTrigger, {
+            enabled: true,
+            spec: {
+              kind: 'subscription',
+              query: organizationsQuery.ast,
+            },
+            function: Ref.make(serializeFunction(agent)),
+            input: {
+              prompt: Ref.make(researchPrompt),
+              input: '{{event.subject}}',
+            },
+          });
+          space.db.add(researchTrigger);
+
+          const mailboxView = createView({
+            name: 'Mailbox',
+            query: Query.select(
+              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+            ).options({
+              queues: [mailbox.queue.dxn.toString()],
+            }),
+            jsonSchema: Type.toJsonSchema(DataType.Message),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const contactsView = createView({
+            name: 'Contacts',
+            query: contactsQuery,
+            jsonSchema: Type.toJsonSchema(DataType.Person),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const organizationsView = createView({
+            name: 'Organizations',
+            query: organizationsQuery,
+            jsonSchema: Type.toJsonSchema(DataType.Organization),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+          const notesView = createView({
+            name: 'Notes',
+            query: notesQuery,
+            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            presentation: Obj.make(DataType.Collection, { objects: [] }),
+          });
+
+          return space.db.add(
+            DataType.makeProject({
+              name: 'Investor Research',
+              collections: [mailboxView, contactsView, organizationsView, notesView].map((view) => Ref.make(view)),
+            }),
+          );
+        });
+        cb?.(objects.flat());
+        return objects.flat();
+      },
+    ],
+    [
       PresetName.GPT_QUEUE,
       async (space, n, cb) => {
         const objects = range(n, () => {
@@ -62,7 +185,7 @@ export const generator = () => ({
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
               spaceId: space.id,
-              triggerKind: TriggerKind.Webhook,
+              triggerKind: 'webhook',
               ...position({ x: -18, y: -2 }),
             });
             const trigger = canvasModel.createNode(triggerShape);
@@ -96,8 +219,8 @@ export const generator = () => ({
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
-            TriggerKind.Subscription,
-            (triggerSpec) => (triggerSpec.filter = { type: 'dxn:type:dxos.org/type/Chess' }),
+            'subscription',
+            (triggerSpec) => (triggerSpec.query = Query.select(Filter.typename('dxos.org/type/Chess')).ast),
             'type',
           );
           return addToSpace(PresetName.OBJECT_CHANGE_QUEUE, space, canvasModel, computeModel);
@@ -113,7 +236,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
-            TriggerKind.Timer,
+            'timer',
             (triggerSpec) => (triggerSpec.cron = '*/5 * * * * *'),
             'result',
           );
@@ -147,7 +270,7 @@ export const generator = () => ({
     //       canvasModel.builder.call((builder) => {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Email,
+    //           triggerKind: 'email',
     //           ...position({ x: -18, y: -2 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);
@@ -254,7 +377,7 @@ export const generator = () => ({
     //         );
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Email,
+    //           triggerKind: 'email',
     //           ...rawPosition({ centerX: -736, centerY: -384, width: 182, height: 192 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);
@@ -358,7 +481,7 @@ export const generator = () => ({
           canvasModel.builder.call((builder) => {
             const triggerShape = createTrigger({
               spaceId: space.id,
-              triggerKind: TriggerKind.Timer,
+              triggerKind: 'timer',
               ...position({ x: -10, y: -5 }),
             });
             const trigger = canvasModel.createNode(triggerShape);
@@ -416,7 +539,7 @@ export const generator = () => ({
     //       canvasModel.builder.call((builder) => {
     //         const triggerShape = createTrigger({
     //           spaceId: space.id,
-    //           triggerKind: TriggerKind.Queue,
+    //           triggerKind: 'queue',
     //           ...position({ x: -10, y: -5 }),
     //         });
     //         const trigger = canvasModel.createNode(triggerShape);

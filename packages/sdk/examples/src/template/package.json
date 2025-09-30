@@ -19,8 +19,8 @@
   "devDependencies": {
     "@types/react": "~18.2.0",
     "@types/react-dom": "~18.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react": "^5.0.0",
     "noise-protocol": "3.0.1",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   }
 }

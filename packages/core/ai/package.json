@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#parjs": {
@@ -50,10 +50,11 @@
     "src"
   ],
   "scripts": {
-    "run:chat": "tsx src/bin/chat.ts"
+    "run:chat": "vite-node src/bin/chat.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -66,11 +67,12 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.25.2",
-    "@effect/ai-anthropic": "^0.15.1",
-    "@effect/ai-openai": "0.28.2",
+    "@effect/ai-anthropic": "^0.16.1",
+    "@effect/ai-openai": "^0.29.1",
     "@effect/platform": "^0.90.2",
     "@effect/platform-node": "^0.95.0",
     "@preact/signals-core": "^1.9.0",

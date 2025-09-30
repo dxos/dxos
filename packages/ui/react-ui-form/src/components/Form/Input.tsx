@@ -19,9 +19,12 @@ export type InputProps = {
   type: SimpleType;
   format?: FormatEnum;
   label: string;
-  disabled?: boolean;
   placeholder?: string;
   inputOnly?: boolean;
+  /**
+   * Specifies the readonly variant: either disabled inputs, elements indicating they are usually editable but currently are not; or `static`, a field’s representation as regular content without signifiers that it is ever editable.
+   */
+  readonly?: 'disabled-input' | 'static' | false;
 } & FormInputStateProps;
 
 /**

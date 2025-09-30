@@ -14,7 +14,7 @@ import { CollectionAction } from '@dxos/plugin-space/types';
 
 import { Assistant, AssistantAction } from '../types';
 
-import { BLUEPRINT, BLUEPRINT_KEY } from './blueprint-definition';
+import { BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
@@ -31,29 +31,31 @@ export default (context: PluginContext) => [
             createIntent(CollectionAction.CreateQueryCollection, { typename: Blueprint.Blueprint.typename }),
           );
           rootCollection.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection));
+
+          // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
-          space.db.add(BLUEPRINT);
         }),
     }),
     createResolver({
       intent: AssistantAction.CreateChat,
       resolve: async ({ space, name }) => {
         const queue = space.queues.create();
-        const object = Obj.make(Assistant.Chat, {
-          name,
-          queue: Ref.fromDXN(queue.dxn),
-        });
-
+        const chat = Obj.make(Assistant.Chat, { name, queue: Ref.fromDXN(queue.dxn) });
         const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         // TODO(wittjosiah): This should be a space-level setting.
-        const defaultBlueprint = blueprints.find((blueprint) => blueprint.key === BLUEPRINT_KEY);
-        if (defaultBlueprint) {
-          const binder = new AiContextBinder(queue);
-          await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
+        // TODO(burdon): Clone when activated. Copy-on-write for template.
+        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === BLUEPRINT_KEY);
+        if (!defaultBlueprint) {
+          defaultBlueprint = space.db.add(createBlueprint());
         }
 
-        return { data: { object } };
+        const binder = new AiContextBinder(queue);
+        await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
+
+        return {
+          data: { object: chat },
+        };
       },
     }),
     createResolver({

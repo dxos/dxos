@@ -45,6 +45,12 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/assistant-testing"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/compute"
     },
     {
@@ -127,6 +133,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-markdown"

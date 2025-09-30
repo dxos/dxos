@@ -61,7 +61,8 @@ export const translations = [
         'call tab label': 'Call',
         'meeting status title': 'Meeting',
         'share meeting link label': 'Share meeting',
-        'show webrtc stats title': 'Detailed WebRTC Stats',
+        'show webrtc stats title': 'WebRTC Stats',
+        'show calls history title': 'Service History',
 
         'meeting summary label': 'Summary',
         'summarize label': 'Summarize',

@@ -3,13 +3,13 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, Option, Stream } from 'effect';
+import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
+  type ContextBinding,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
@@ -33,36 +33,18 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const session = new AiSession();
-        const printer = new ConsolePrinter({ mode: 'json' });
-        const messageQueue = session.messageQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
-        );
-        const blockQueue = session.blockQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((block) =>
-            Effect.sync(() =>
-              Option.match(block, {
-                onSome: (block) => printer.printContentBlock(block),
-                onNone: () => Effect.void,
-              }),
-            ),
-          ),
+        yield* DatabaseService.add(blueprint);
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(blueprint)],
+          }),
         );
 
-        db.add(blueprint);
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
-
-        const artifact = db.add(Markdown.makeDocument());
-
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument());
         let prevContent = artifact.content;
         const matchList =
           ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>
@@ -114,8 +96,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           },
         ];
 
-        const run = runSteps({ conversation, steps });
-        yield* Effect.all([run, messageQueue, blockQueue]);
+        yield* runSteps(conversation, steps);
       },
       Effect.provide(
         Layer.mergeAll(

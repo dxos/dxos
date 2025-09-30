@@ -6,14 +6,13 @@ import { Schema } from 'effect';
 
 import { Label } from '../plugin-intent';
 
-export const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
-export const LAYOUT_ACTION = `${LAYOUT_PLUGIN}/action`;
+const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
 
 /**
  * Expected payload for layout actions.
  */
 export namespace LayoutAction {
-  export const UPDATE_LAYOUT = `${LAYOUT_ACTION}/update-layout`;
+  export const UPDATE_LAYOUT = `${LAYOUT_PLUGIN}/action/update-layout`;
 
   /**
    * Generic layout action.

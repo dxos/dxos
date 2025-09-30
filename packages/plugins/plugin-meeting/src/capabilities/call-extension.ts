@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
-import { extractionAnthropicFn, processTranscriptMessage } from '@dxos/assistant/extraction';
+import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -19,7 +19,7 @@ import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_p
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { not_meta } from '../meta';
+import { meta } from '../meta';
 import { Meeting, MeetingAction } from '../types';
 
 import { MeetingCapabilities } from './capabilities';
@@ -32,7 +32,7 @@ export default (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const client = context.getCapability(ClientCapabilities.Client);
   const state = context.getCapability(MeetingCapabilities.State);
-  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(not_meta.id)!.value;
+  const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
   return contributes(ThreadCapabilities.CallExtension, {
     onJoin: async ({ channel }: { channel?: ChannelType }) => {
@@ -100,7 +100,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
         message,
         objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
       },
-      function: extractionAnthropicFn,
+      function: extractionAnthropicFunction,
       executor,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });

@@ -2,6 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
+// TODO(dmaretskyi): Reconcile with @dxos/errors
+
 /**
  * NOTE: Messages should be sentences (Start with a capital letter and end with a period).
  * Errors can optionally include a JSON context object.

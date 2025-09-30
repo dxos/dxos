@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
+import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
@@ -16,6 +17,36 @@ import type * as Type from '../Type';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
+// TODO(wittjosiah): Make Filter & Query pipeable.
+
+export interface Order<T> {
+  // TODO(dmaretskyi): See new effect-schema approach to variance.
+  '~Order': { value: T };
+
+  ast: QueryAST.Order;
+}
+
+class OrderClass implements Order<any> {
+  private static variance: Order<any>['~Order'] = {} as Order<any>['~Order'];
+
+  static is(value: unknown): value is Order<any> {
+    return typeof value === 'object' && value !== null && '~Order' in value;
+  }
+
+  constructor(public readonly ast: QueryAST.Order) {}
+
+  '~Order' = OrderClass.variance;
+}
+
+export namespace Order {
+  export const natural: Order<any> = new OrderClass({ kind: 'natural' });
+  export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
+    new OrderClass({
+      kind: 'property',
+      property,
+      direction,
+    });
+}
 
 export interface Query<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -33,10 +64,18 @@ export interface Query<T> {
 
   /**
    * Traverse an outgoing reference.
-   * @param key - Property path inside T that is a reference.
+   * @param key - Property path inside T that is a reference or optional reference.
    * @returns Query for the target of the reference.
    */
-  reference<K extends RefPropKey<T>>(key: K): Query<T[K] extends Ref.Any ? Ref.Target<T[K]> : never>;
+  reference<K extends RefPropKey<T>>(
+    key: K,
+  ): Query<
+    T[K] extends Ref.Any
+      ? Ref.Target<T[K]>
+      : T[K] extends Ref.Any | undefined
+        ? Ref.Target<Exclude<T[K], undefined>>
+        : never
+  >;
 
   /**
    * Find objects referencing this object.
@@ -86,6 +125,14 @@ export interface Query<T> {
   target(): Query<Type.Relation.Target<T>>;
 
   /**
+   * Order the query results.
+   * Orders are specified in priority order. The first order will be applied first, etc.
+   * @param order - Order to sort the results.
+   * @returns Query for the ordered results.
+   */
+  orderBy(...order: NonEmptyArray<Order<T>>): Query<T>;
+
+  /**
    * Add options to a query.
    */
   options(options: QueryAST.QueryOptions): Query<T>;
@@ -93,6 +140,9 @@ export interface Query<T> {
 
 interface QueryAPI {
   is(value: unknown): value is Query.Any;
+
+  /** Construct a query from an ast. */
+  fromAst(ast: QueryAST.Query): Query<any>;
 
   /**
    * Select objects based on a filter.
@@ -253,6 +303,12 @@ interface FilterAPI {
   in<T>(...values: T[]): Filter<T>;
 
   /**
+   * Predicate for an array property to contain the provided value.
+   * @param value - Value to check against.
+   */
+  contains<T>(value: T): Filter<T[]>;
+
+  /**
    * Predicate for property to be in the provided range.
    * @param from - Start of the range (inclusive).
    * @param to - End of the range (exclusive).
@@ -329,6 +385,7 @@ class FilterClass implements Filter<any> {
   static ids(...ids: ObjectId[]): Filter<any> {
     assertArgument(
       ids.every((id) => ObjectId.isValid(id)),
+      'ids',
       'ids must be valid',
     );
 
@@ -357,7 +414,7 @@ class FilterClass implements Filter<any> {
   }
 
   static typename(typename: string): Filter<any> {
-    assertArgument(!typename.startsWith('dxn:'), 'Typename must no be qualified');
+    assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
     return new FilterClass({
       type: 'object',
       typename: DXN.fromTypename(typename).toString(),
@@ -461,6 +518,13 @@ class FilterClass implements Filter<any> {
     });
   }
 
+  static contains<T>(value: T): Filter<T[]> {
+    return new FilterClass({
+      type: 'contains',
+      value,
+    });
+  }
+
   static between<T>(from: T, to: T): Filter<T> {
     return new FilterClass({
       type: 'range',
@@ -506,7 +570,11 @@ type RefPropKey<T> = keyof T & string;
 const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
   if ('id' in predicates) {
-    assertArgument(typeof predicates.id === 'string' || Array.isArray(predicates.id), 'invalid id filter');
+    assertArgument(
+      typeof predicates.id === 'string' || Array.isArray(predicates.id),
+      'predicates.id',
+      'invalid id filter',
+    );
     idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
     Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
   }
@@ -516,9 +584,35 @@ const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterOb
     props: Object.fromEntries(
       Object.entries(predicates)
         .filter(([prop, _value]) => prop !== 'id')
-        .map(([prop, predicate]) => [prop, Filter.is(predicate) ? predicate.ast : Filter.eq(predicate).ast]),
+        .map(([prop, predicate]) => [prop, processPredicate(predicate)]),
     ) as Record<string, QueryAST.Filter>,
   };
+};
+
+const processPredicate = (predicate: any): QueryAST.Filter => {
+  return Match.value(predicate).pipe(
+    Match.withReturnType<QueryAST.Filter>(),
+    Match.when(Filter.is, (predicate) => predicate.ast),
+    // TODO(wittjosiah): Add support for array predicates.
+    Match.when(Array.isArray, (_predicate) => {
+      throw new Error('Array predicates are not yet supported.');
+    }),
+    Match.when(
+      (predicate: any) => !Ref.isRef(predicate) && typeof predicate === 'object' && predicate !== null,
+      (predicate) => {
+        const nestedProps = Object.fromEntries(
+          Object.entries(predicate).map(([key, value]) => [key, processPredicate(value)]),
+        );
+
+        return {
+          type: 'object',
+          typename: null,
+          props: nestedProps,
+        };
+      },
+    ),
+    Match.orElse((value) => Filter.eq(value).ast),
+  );
 };
 
 class QueryClass implements Query<any> {
@@ -526,6 +620,10 @@ class QueryClass implements Query<any> {
 
   static is(value: unknown): value is Query<any> {
     return typeof value === 'object' && value !== null && '~Query' in value;
+  }
+
+  static fromAst(ast: QueryAST.Query): Query<any> {
+    return new QueryClass(ast);
   }
 
   static select<F extends Filter.Any>(filter: F): Query<Filter.Type<F>> {
@@ -631,6 +729,14 @@ class QueryClass implements Query<any> {
       type: 'relation-traversal',
       anchor: this.ast,
       direction: 'target',
+    });
+  }
+
+  orderBy(...order: Order<any>[]): Query<any> {
+    return new QueryClass({
+      type: 'order',
+      query: this.ast,
+      order: order.map((o) => o.ast),
     });
   }
 

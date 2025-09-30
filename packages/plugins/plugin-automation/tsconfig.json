@@ -8,16 +8,20 @@
     ]
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
+    "src"
   ],
   "references": [
     {
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"
@@ -30,6 +34,12 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
     },
     {
       "path": "../../core/conductor"

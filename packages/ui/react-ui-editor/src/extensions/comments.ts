@@ -58,7 +58,11 @@ const setCommentState = StateEffect.define<CommentsState>();
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 export const commentsState = StateField.define<CommentsState>({
-  create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
+  create: (state) => ({
+    id: state.facet(documentId),
+    comments: [],
+    selection: {},
+  }),
   update: (value, tr) => {
     for (const effect of tr.effects) {
       // Update selection.
@@ -99,15 +103,15 @@ export const commentsState = StateField.define<CommentsState>({
  */
 const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
-    margin: '0 -3px',
-    padding: '3px',
-    borderRadius: '3px',
+    padding: '3px 0',
+    backgroundColor: 'var(--dx-cmCommentSurface)',
+  },
+  '.cm-comment > span, .cm-comment-current > span': {
+    boxDecorationBreak: 'clone',
+    boxShadow: '0 0 1px 3px var(--dx-cmCommentSurface)',
     backgroundColor: 'var(--dx-cmCommentSurface)',
     color: 'var(--dx-cmComment)',
     cursor: 'pointer',
-  },
-  '.cm-comment:hover, .cm-comment-current': {
-    textDecoration: 'underline',
   },
 });
 

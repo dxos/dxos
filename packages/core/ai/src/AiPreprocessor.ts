@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { assumeType, bufferToArray } from '@dxos/util';
 
-import { AiInputPreprocessingError } from './errors';
+import { AiInputPreprocessingError as AiInputPreprocesorError } from './errors';
 
 /**
  * Preprocesses messages for AI input.
@@ -24,7 +24,7 @@ import { AiInputPreprocessingError } from './errors';
  */
 export const preprocessAiInput: (
   messages: DataType.Message[],
-) => Effect.Effect<AiInput.AiInput, AiInputPreprocessingError, never> = Effect.fn('preprocessAiInput')(
+) => Effect.Effect<AiInput.AiInput, AiInputPreprocesorError, never> = Effect.fn('preprocessAiInput')(
   function* (messages) {
     return yield* pipe(
       messages,
@@ -88,7 +88,7 @@ export const preprocessAiInput: (
 
 const convertUserMessagePart: (
   block: ContentBlock.Any,
-) => Effect.Effect<AiInput.UserMessagePart | undefined, AiInputPreprocessingError, never> = Effect.fnUntraced(
+) => Effect.Effect<AiInput.UserMessagePart | undefined, AiInputPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     switch (block._tag) {
       case 'text':
@@ -119,7 +119,7 @@ const convertUserMessagePart: (
               url: new URL(block.source.url),
             });
           default:
-            return yield* Effect.fail(new AiInputPreprocessingError('Invalid image source'));
+            return yield* Effect.fail(new AiInputPreprocesorError({ message: 'Invalid image source' }));
         }
       case 'file':
         // TODO(dmaretskyi): Convert data URIs into AiInput.FilePart
@@ -128,7 +128,9 @@ const convertUserMessagePart: (
         });
       case 'reasoning':
       case 'toolCall':
-        return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
+        return yield* Effect.fail(
+          new AiInputPreprocesorError({ message: `Invalid assistant content block: ${block._tag}` }),
+        );
       default:
         return undefined;
     }
@@ -137,7 +139,7 @@ const convertUserMessagePart: (
 
 const convertAssistantMessagePart: (
   block: ContentBlock.Any,
-) => Effect.Effect<AiInput.AssistantMessagePart | undefined, AiInputPreprocessingError, never> = Effect.fnUntraced(
+) => Effect.Effect<AiInput.AssistantMessagePart | undefined, AiInputPreprocesorError, never> = Effect.fnUntraced(
   function* (block) {
     log('parse', { block });
     switch (block._tag) {
@@ -147,7 +149,7 @@ const convertAssistantMessagePart: (
         });
       case 'reasoning':
         if (block.reasoningText && block.redactedText) {
-          return yield* Effect.fail(new AiInputPreprocessingError('Invalid reasoning part'));
+          return yield* Effect.fail(new AiInputPreprocesorError({ message: 'Invalid reasoning part' }));
         } else if (block.reasoningText) {
           return new AiInput.ReasoningPart({
             reasoningText: block.reasoningText ?? block.redactedText ?? '',
@@ -158,7 +160,7 @@ const convertAssistantMessagePart: (
             redactedText: block.redactedText,
           });
         } else {
-          return yield* Effect.fail(new AiInputPreprocessingError('Invalid reasoning part'));
+          return yield* Effect.fail(new AiInputPreprocesorError({ message: 'Invalid reasoning part' }));
         }
       case 'toolCall':
         return new AiInput.ToolCallPart({
@@ -179,9 +181,9 @@ const convertAssistantMessagePart: (
         return new AiInput.TextPart({
           text: `<status>${block.statusText}</status>`,
         });
-      case 'suggest':
+      case 'suggestion':
         return new AiInput.TextPart({
-          text: `<suggest>${block.text}</suggest>`,
+          text: `<suggestion>${block.text}</suggestion>`,
         });
       case 'select':
         return new AiInput.TextPart({
@@ -206,7 +208,9 @@ const convertAssistantMessagePart: (
       case 'image':
       case 'file':
         // TODO(burdon): Just log and ignore?
-        return yield* Effect.fail(new AiInputPreprocessingError(`Invalid assistant content block: ${block._tag}`));
+        return yield* Effect.fail(new AiInputPreprocesorError({ message: `Invalid content block: ${block._tag}` }));
+      case 'summary':
+        break;
       default:
         // Ignore spurious tags.
         log.warn('ignoring spurious tag', { block });

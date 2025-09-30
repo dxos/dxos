@@ -24,15 +24,16 @@ import React, {
 
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
+import { DxAvatar } from '@dxos/lit-ui/react';
 import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/react-ui-theme';
-import { arrayMove, getFirstTwoRenderableChars } from '@dxos/util';
+import { arrayMove } from '@dxos/util';
 
 import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { l0ItemType } from '../../util';
 import { useNavTreeContext } from '../NavTreeContext';
 import { UserAccountAvatar } from '../UserAccountAvatar';
@@ -103,7 +104,7 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const type = l0ItemType(item);
     const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
 
-    const { t } = useTranslation(NAVTREE_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const localizedString = toLocalizedString(item.properties.label, t);
 
     const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
@@ -131,27 +132,9 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
   },
 );
 
-const L0Avatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const type = l0ItemType(item);
-  const hue = item.properties.hue ?? null;
-  const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
-  const localizedString = toLocalizedString(item.properties.label, t);
-  const avatarValue = useMemo(
-    () => (type === 'tab' ? getFirstTwoRenderableChars(localizedString).join('').toUpperCase() : []),
-    [type, item.properties.label, t],
-  );
-
-  return (
-    <span role='img' className='place-self-center text-xl font-light' {...hueFgStyle}>
-      {avatarValue}
-    </span>
-  );
-};
-
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const itemElement = useRef<HTMLElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
@@ -241,6 +224,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
 };
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
+  const { t } = useTranslation(meta.id);
   const type = l0ItemType(item);
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
@@ -249,7 +233,9 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   }
 
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
-    return <L0Avatar item={item} />;
+    const hue = item.properties.hue ?? null;
+    const localizedString = toLocalizedString(item.properties.label, t);
+    return <DxAvatar hue={hue} hueVariant='surface' variant='square' size={12} fallback={localizedString} />;
   }
 
   return null;
@@ -317,7 +303,7 @@ export type L0MenuProps = {
 };
 
 export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountItem, parent, path }: L0MenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <Tabs.Tablist

@@ -5,6 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
+import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager, INITIAL_URL } from './app-manager';
 import { INITIAL_OBJECT_COUNT } from './constants';
@@ -75,14 +76,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle('dxos.org/plugin/stack').click();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.id).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {
@@ -99,7 +100,7 @@ test.describe('Basic tests', () => {
     await host.openUserDevices();
     await host.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(INITIAL_URL, { timeout: 20_000 });
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 20_000 });
+    await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 });

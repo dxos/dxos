@@ -5,7 +5,7 @@
 import { DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { createSystemPrompt } from '@dxos/assistant';
 
-import { type AiChatProcessorOptions } from '../hooks';
+import { type AiChatProcessorOptions } from '../processor';
 
 /**
  * @deprecated

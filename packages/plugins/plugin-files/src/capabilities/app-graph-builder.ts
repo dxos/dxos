@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FilesSettingsProps, LocalFilesAction } from '../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 
@@ -18,7 +18,7 @@ export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     // Create export/import actions.
     createExtension({
-      id: `${FILES_PLUGIN}/export`,
+      id: `${meta.id}/export`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -32,7 +32,7 @@ export default (context: PluginContext) =>
                   await dispatch(createIntent(LocalFilesAction.Export));
                 },
                 properties: {
-                  label: ['export label', { ns: FILES_PLUGIN }],
+                  label: ['export label', { ns: meta.id }],
                   icon: 'ph--floppy-disk--regular',
                 },
               },
@@ -43,7 +43,7 @@ export default (context: PluginContext) =>
                   await dispatch(createIntent(LocalFilesAction.Import));
                 },
                 properties: {
-                  label: ['import label', { ns: FILES_PLUGIN }],
+                  label: ['import label', { ns: meta.id }],
                   icon: 'ph--folder-open--regular',
                 },
               },
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
 
     // Create files group node.
     createExtension({
-      id: `${FILES_PLUGIN}/root`,
+      id: `${meta.id}/root`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -63,9 +63,7 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.flatMap(() => {
               const settingsStore = get(context.capabilities(Capabilities.SettingsStore))[0];
-              const settings = get(
-                rxFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(FILES_PLUGIN)?.value),
-              );
+              const settings = get(rxFromSignal(() => settingsStore?.getStore<FilesSettingsProps>(meta.id)?.value));
               return settings ? Option.some(settings) : Option.none();
             }),
             Option.map((settings) => {
@@ -74,10 +72,10 @@ export default (context: PluginContext) =>
                     {
                       // TODO(wittjosiah): Deck does not currently support `/` in ids.
                       id: 'dxos:plugin-files',
-                      type: FILES_PLUGIN,
+                      type: meta.id,
                       // TODO(burdon): Factor out palette constants.
                       properties: {
-                        label: ['plugin name', { ns: FILES_PLUGIN }],
+                        label: ['plugin name', { ns: meta.id }],
                         role: 'branch',
                         disposition: 'workspace',
                       },
@@ -92,12 +90,12 @@ export default (context: PluginContext) =>
 
     // Create files nodes.
     createExtension({
-      id: `${FILES_PLUGIN}/files`,
+      id: `${meta.id}/files`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (node.id === FILES_PLUGIN ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
                 id: LocalFilesAction.OpenFile._tag,
@@ -108,7 +106,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['open file label', { ns: FILES_PLUGIN }],
+                  label: ['open file label', { ns: meta.id }],
                   icon: 'ph--file-plus--regular',
                 },
               },
@@ -126,7 +124,7 @@ export default (context: PluginContext) =>
                         );
                       },
                       properties: {
-                        label: ['open directory label', { ns: FILES_PLUGIN }],
+                        label: ['open directory label', { ns: meta.id }],
                         icon: 'ph--folder-plus--regular',
                       },
                     },
@@ -140,7 +138,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (node.id === FILES_PLUGIN ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
             Option.map(() => {
               const state = context.getCapability(FileCapabilities.State);
               return state.files.map((entity) => ({
@@ -161,7 +159,7 @@ export default (context: PluginContext) =>
 
     // Create sub-files nodes.
     createExtension({
-      id: `${FILES_PLUGIN}/sub-files`,
+      id: `${meta.id}/sub-files`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -185,7 +183,7 @@ export default (context: PluginContext) =>
 
     // Create file actions.
     createExtension({
-      id: `${FILES_PLUGIN}/actions`,
+      id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -199,7 +197,7 @@ export default (context: PluginContext) =>
                   await dispatch(createIntent(LocalFilesAction.Close, { id: entity.id }));
                 },
                 properties: {
-                  label: ['close label', { ns: FILES_PLUGIN }],
+                  label: ['close label', { ns: meta.id }],
                   icon: 'ph--x--regular',
                 },
               },
@@ -212,7 +210,7 @@ export default (context: PluginContext) =>
                         await dispatch(createIntent(LocalFilesAction.Reconnect, { id: entity.id }));
                       },
                       properties: {
-                        label: ['re-open label', { ns: FILES_PLUGIN }],
+                        label: ['re-open label', { ns: meta.id }],
                         icon: 'ph--plugs--regular',
                       },
                     },
@@ -227,7 +225,7 @@ export default (context: PluginContext) =>
                         await dispatch(createIntent(LocalFilesAction.Save, { id: entity.id }));
                       },
                       properties: {
-                        label: [entity.handle ? 'save label' : 'save as label', { ns: FILES_PLUGIN }],
+                        label: [entity.handle ? 'save label' : 'save as label', { ns: meta.id }],
                         icon: 'ph--floppy-disk--regular',
                         keyBinding: {
                           macos: 'meta+s',

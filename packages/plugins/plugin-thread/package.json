@@ -35,9 +35,9 @@
     "src"
   ],
   "dependencies": {
-    "@codemirror/language": "^6.10.3",
-    "@codemirror/state": "^6.4.1",
-    "@codemirror/view": "^6.34.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.38.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -81,7 +81,7 @@
     "extendable-media-recorder": "^9.2.19",
     "extendable-media-recorder-wav-encoder": "^7.0.123",
     "md5-hex": "5.0.0",
-    "react-resize-detector": "^12.0.2",
+    "react-resize-detector": "^11.0.1",
     "wavefile": "^11.0.0"
   },
   "devDependencies": {
@@ -97,7 +97,7 @@
     "effect": "3.17.7",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

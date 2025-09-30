@@ -33,7 +33,34 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../sdk/client-protocol"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
+      "path": "../react-ui-stack"
     },
     {
       "path": "../react-ui-syntax-highlighter"

@@ -21,7 +21,9 @@ import { meta } from '../meta';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
-import { commentControlClassNames } from './CommentsThreadContainer';
+
+export const buttonGroupClassNames = 'flex flex-row items-center gap-0.5 pie-2';
+export const buttonClassNames = '!p-1 transition-opacity';
 
 export type MessageContainerProps = {
   message: DataType.Message;
@@ -59,7 +61,7 @@ export const MessageContainer = ({
   return (
     <MessageRoot {...messageMetadata} classNames={[hoverableControls, hoverableFocusedWithinControls]}>
       <MessageHeading authorName={messageMetadata.authorName} timestamp={messageMetadata.timestamp}>
-        <div className='flex flex-row items-center gap-0.5'>
+        <div role='none' className={buttonGroupClassNames}>
           {userIsAuthor && editable && (
             <IconButton
               data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
@@ -67,7 +69,7 @@ export const MessageContainer = ({
               icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
               iconOnly
               label={t(editing ? 'save message label' : 'edit message label')}
-              classNames={[commentControlClassNames, hoverableControlItem]}
+              classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleEdit}
             />
           )}
@@ -79,7 +81,7 @@ export const MessageContainer = ({
               icon='ph--check--regular'
               iconOnly
               label={t('accept proposal label')}
-              classNames={[commentControlClassNames, hoverableControlItem]}
+              classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleAcceptProposal}
             />
           )}
@@ -90,7 +92,7 @@ export const MessageContainer = ({
               icon='ph--x--regular'
               iconOnly
               label={t('delete message label')}
-              classNames={[commentControlClassNames, hoverableControlItem]}
+              classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleDelete}
             />
           )}

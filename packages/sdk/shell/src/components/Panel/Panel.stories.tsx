@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
@@ -15,11 +16,15 @@ import { Actions } from './Actions';
 import { Heading } from './Heading';
 import { Label } from './Label';
 
-export default {
+const meta = {
   title: 'sdk/shell/StorybookDialog',
   component: StorybookDialog,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof StorybookDialog>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Normal = (props: any) => {
   return (

@@ -15,13 +15,16 @@ export const useVideoStreamTrack = (videoElement: RefObject<HTMLVideoElement>, v
     }
     hadRun.current = true;
     videoElement.current.addEventListener('playing', () => {
+      if (videoStreamTrack) {
+        return;
+      }
       const stream = (videoElement.current as any).captureStream();
       const track = stream.getTracks()[0];
-      if (track) {
+      if (track && !videoStreamTrack) {
         setVideoStreamTrack(track);
       }
       stream.onaddtrack = (event: MediaStreamTrackEvent) => {
-        if (event.track.kind === 'video') {
+        if (event.track.kind === 'video' && !videoStreamTrack) {
           setVideoStreamTrack(event.track);
         }
       };

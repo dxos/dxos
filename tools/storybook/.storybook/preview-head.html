@@ -7,16 +7,25 @@
 <style>
   @media (prefers-color-scheme: dark) {
     html {
-      /* Fixes white flash in dark mode. */
-      background-color: #121314;
       color-scheme: dark;
+    }
+    /**
+     * Minimizes white flash while story loads.
+     * https://github.com/storybookjs/storybook/discussions/32392
+     */
+    html,
+    body,
+    .sb-preparing-story,
+    .sb-preparing-docs,
+    .sb-previewBlock {
+      background: #181818 !important;
     }
   }
 </style>
 <style>
   :root {
     --cube-a: #e2e2e2;
-    --cube-b: #eee;
+    --cube-b: #c26d6d;
     --cube-c: #ddd;
   }
   .dark {

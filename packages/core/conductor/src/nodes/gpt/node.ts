@@ -3,10 +3,10 @@
 //
 
 import { AiResponse } from '@effect/ai';
-import { Effect, Layer, Schema, Stream, Struct } from 'effect';
+import { Effect, Layer, PubSub, Schema, Stream, Struct } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
-import { AiSession } from '@dxos/assistant';
+import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ComputeEventLogger, QueueService, TracingService } from '@dxos/functions';
@@ -110,7 +110,11 @@ export const gptNode = defineComputeNode({
   output: GptOutput,
   exec: Effect.fnUntraced(function* (input) {
     const { systemPrompt, prompt, context, history, conversation, tools = [] } = yield* ValueBag.unwrap(input);
-    assertArgument(history === undefined || conversation === undefined, 'Cannot use both history and conversation');
+    assertArgument(
+      history === undefined || conversation === undefined,
+      'history|conversation',
+      'Cannot use both history and conversation',
+    );
 
     const { queues } = yield* QueueService;
     const historyMessages = conversation
@@ -126,20 +130,16 @@ export const gptNode = defineComputeNode({
       operationModel: 'configured',
     });
 
-    const logger = yield* ComputeEventLogger;
-    const tokenStream = Stream.fromQueue(session.eventQueue).pipe(
-      Stream.tap((event) =>
-        Effect.sync(() => {
-          // TODO(wittjosiah): Consider using Effect logger.
-          logger.log({
-            type: 'custom',
-            nodeId: logger.nodeId!,
-            event,
-          });
+    const tokenPubSub = yield* PubSub.unbounded<AiResponse.Part>();
+    const observer = GenerationObserver.make({
+      onPart: (event) =>
+        Effect.gen(function* () {
+          logger.log({ type: 'custom', nodeId: logger.nodeId!, event });
+          yield* PubSub.publish(tokenPubSub, event);
         }),
-      ),
-    );
+    });
 
+    const logger = yield* ComputeEventLogger;
     const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
     // TODO(dmaretskyi): Is there a better way to satisfy deps?
@@ -161,6 +161,7 @@ export const gptNode = defineComputeNode({
           system: systemPrompt,
           prompt: fullPrompt,
           history: [...historyMessages],
+          observer,
         })
         .pipe(Effect.provide(runDeps));
       log.info('messages', { messages });
@@ -191,7 +192,7 @@ export const gptNode = defineComputeNode({
     });
 
     return ValueBag.make<GptOutput>({
-      tokenStream,
+      tokenStream: Stream.fromPubSub(tokenPubSub),
       messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
       tokenCount: resultEffect.pipe(Effect.map(Struct.get('tokenCount'))),
       text: resultEffect.pipe(Effect.map(Struct.get('text'))),

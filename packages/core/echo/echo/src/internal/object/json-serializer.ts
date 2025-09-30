@@ -63,9 +63,9 @@ export const objectFromJSON = async (
   { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
 ): Promise<AnyEchoObject> => {
   assumeType<ObjectJSON>(jsonData);
-  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'expect object');
-  assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'expected object to have a type');
-  assertArgument(typeof jsonData.id === 'string', 'expected object to have an id');
+  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
+  assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
+  assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
   const type = DXN.parse(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);

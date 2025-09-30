@@ -36,7 +36,7 @@ const Story = () => {
   return <MeetingContainer meeting={meeting} />;
 };
 
-const meta: Meta<MeetingContainerProps> = {
+const meta = {
   title: 'plugins/plugin-meeting/MeetingContainer',
   component: MeetingContainer,
   render: () => <Story />,
@@ -44,8 +44,6 @@ const meta: Meta<MeetingContainerProps> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
-        IntentPlugin(),
-        SettingsPlugin(),
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
@@ -65,15 +63,19 @@ const meta: Meta<MeetingContainerProps> = {
             );
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+        SettingsPlugin(),
         MarkdownPlugin(),
       ],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
     withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
   ],
-};
+} satisfies Meta<typeof MeetingContainer>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: StoryObj<MeetingContainerProps> = {};

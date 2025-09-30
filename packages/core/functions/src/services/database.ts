@@ -4,12 +4,20 @@
 
 import { Context, Effect, Layer, Option, type Schema } from 'effect';
 
-import { type Filter, type Live, Obj, type Query, type Ref, type Relation, type Type } from '@dxos/echo';
+import {
+  type Filter,
+  type Live,
+  Obj,
+  ObjectNotFoundError,
+  type Query,
+  type Ref,
+  type Relation,
+  type Type,
+} from '@dxos/echo';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
 import type { EchoSchema } from '@dxos/echo/internal';
 import { promiseWithCauseCapture } from '@dxos/effect';
-import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
@@ -65,7 +73,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       );
 
       if (!object) {
-        return yield* Effect.fail(new ObjectNotFoundError({ dxn }));
+        return yield* Effect.fail(new ObjectNotFoundError(dxn));
       }
       invariant(!schema || Obj.instanceOf(schema, object), 'Object type mismatch.');
       return object as any;
@@ -77,7 +85,7 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   static load: <T>(ref: Ref.Ref<T>) => Effect.Effect<T, ObjectNotFoundError, never> = Effect.fn(function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new ObjectNotFoundError({ dxn: ref.dxn }));
+      return yield* Effect.fail(new ObjectNotFoundError(ref.dxn));
     }
     return object;
   });
@@ -85,12 +93,43 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
   /**
    * Loads an object reference option.
    */
+  // TODO(burdon): Option?
   static loadOption: <T>(ref: Ref.Ref<T>) => Effect.Effect<Option.Option<T>, never, never> = Effect.fn(function* (ref) {
     const object = yield* DatabaseService.load(ref).pipe(
       Effect.catchTag('OBJECT_NOT_FOUND', () => Effect.succeed(undefined)),
     );
     return Option.fromNullable(object);
   });
+
+  // TODO(burdon): Can we create a proxy for the following methods on EchoDatabase? Use @inheritDoc?
+  // TODO(burdon): Figure out how to chain query().run();
+
+  /**
+   * @link EchoDatabase.add
+   */
+  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
+
+  /**
+   * @link EchoDatabase.remove
+   */
+  static remove = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<void, never, DatabaseService> =>
+    DatabaseService.pipe(Effect.map(({ db }) => db.remove(obj)));
+
+  /**
+   * @link EchoDatabase.flush
+   */
+  static flush = (opts?: FlushOptions) =>
+    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
+
+  /**
+   * @link EchoDatabase.getObjectById
+   */
+  static getObjectById = <T extends Obj.Any | Relation.Any>(
+    id: string,
+  ): Effect.Effect<Live<T> | undefined, never, DatabaseService> => {
+    return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
+  };
 
   /**
    * Creates a `QueryResult` object that can be subscribed to.
@@ -129,20 +168,4 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     DatabaseService.schemaQuery(query).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
-
-  /**
-   * Adds an object to the database.
-   */
-  static add = <T extends Obj.Any | Relation.Any>(obj: T): Effect.Effect<T, never, DatabaseService> =>
-    DatabaseService.pipe(Effect.map(({ db }) => db.add(obj)));
-
-  static flush = (opts?: FlushOptions) =>
-    DatabaseService.pipe(Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.flush(opts))));
-}
-
-// TODO(burdon): Move to echo/errors.
-class ObjectNotFoundError extends BaseError.extend('OBJECT_NOT_FOUND') {
-  constructor(context?: Record<string, unknown>) {
-    super('Object not found', { context });
-  }
 }

@@ -38,7 +38,7 @@
     "src"
   ],
   "scripts": {
-    "run:chat": "tsx ./bin/chat.ts"
+    "run:chat": "vite-node ./bin/chat.ts"
   },
   "dependencies": {
     "@automerge/automerge": "3.1.1",
@@ -62,7 +62,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.25.2",
-    "@effect/ai-anthropic": "^0.15.1",
+    "@effect/ai-anthropic": "^0.16.1",
     "@effect/platform": "^0.90.2",
     "@effect/platform-node": "^0.95.0",
     "@preact/signals-core": "^1.9.0",

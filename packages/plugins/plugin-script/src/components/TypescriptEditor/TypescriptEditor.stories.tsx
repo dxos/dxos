@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -15,16 +15,6 @@ import { templates } from '../../templates';
 
 import { TypescriptEditor } from './TypescriptEditor';
 
-// TODO(burdon): Features:
-// - language support for S
-// - hierarchical editor (DND)
-// - virtual document image rendering
-// - mobile rendering error
-
-// TODO(burdon): JSX.
-// TODO(burdon): Effect schema.
-// TODO(burdon): react-buddy for storybook?
-
 const DefaultStory = () => {
   const object = useMemo(() => createObject({ content: templates[0].source }), []);
   const initialValue = useMemo(() => object.content, [object]);
@@ -33,13 +23,15 @@ const DefaultStory = () => {
   return <TypescriptEditor id='test' initialValue={initialValue} extensions={extensions} />;
 };
 
-export const Default = {};
-
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
-  component: TypescriptEditor,
+  component: TypescriptEditor as any,
   render: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

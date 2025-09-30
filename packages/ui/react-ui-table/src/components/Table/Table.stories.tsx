@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import {
   EchoObject,
   FormatAnnotation,
@@ -30,11 +30,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
-import { TableView } from '../../types';
-import { createTable } from '../../util';
+import { Table } from '../../types';
 import { TableToolbar } from '../TableToolbar';
 
-import { Table } from './Table';
+import { Table as TableComponent } from './Table';
 
 const TestSchema = Schema.Struct({
   // TODO(wittjosiah): Should be title. Currently name to work with default label.
@@ -77,13 +76,13 @@ const StoryViewEditor = ({
   space?: Space;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
-  const handleTypenameChanged = useCallback(
+  const handleQueryChanged = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       schema.updateTypename(typename);
       invariant(view);
-      view.query.typename = typename;
+      view.query = Query.select(Filter.typename(typename)).ast;
     },
     [schema, view],
   );
@@ -97,7 +96,7 @@ const StoryViewEditor = ({
       registry={space?.db.schemaRegistry}
       schema={schema}
       view={view}
-      onTypenameChanged={handleTypenameChanged}
+      onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}
     />
   );
@@ -129,8 +128,8 @@ const DefaultStory = () => {
     <div className='grow grid grid-cols-[1fr_350px]'>
       <div className='grid grid-rows-[min-content_1fr] min-bs-0 overflow-hidden'>
         <TableToolbar classNames='border-be border-subduedSeparator' onAdd={handleInsertRow} onSave={handleSaveView} />
-        <Table.Root>
-          <Table.Main
+        <TableComponent.Root>
+          <TableComponent.Main
             ref={tableRef}
             model={model}
             presentation={presentation}
@@ -138,11 +137,11 @@ const DefaultStory = () => {
             client={client}
             ignoreAttention
           />
-        </Table.Root>
+        </TableComponent.Root>
       </div>
       <div className='flex flex-col h-full border-l border-separator overflow-y-auto'>
         <StoryViewEditor view={view} schema={schema} space={space} handleDeleteColumn={handleDeleteColumn} />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
+        <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
@@ -158,7 +157,7 @@ type StoryProps = { rows?: number };
 
 // TODO(burdon): Need super simple story.
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   parameters: {
@@ -172,12 +171,17 @@ const meta: Meta<StoryProps> = {
     withTheme,
     withLayout({ fullscreen: true }),
     withClientProvider({
-      types: [DataType.View, TableView],
+      types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
-        const { view } = await createTable({ client, space, typename: schema.typename });
+        const { view } = await Table.makeView({ client, space, typename: schema.typename });
+        view.projection.fields = [
+          view.projection.fields.find((field) => field.path === 'name')!,
+          ...view.projection.fields.filter((field) => field.path !== 'name'),
+        ];
+
         space.db.add(view);
 
         Array.from({ length: 10 }).map(() => {
@@ -192,22 +196,24 @@ const meta: Meta<StoryProps> = {
       },
     }),
   ],
-};
+} satisfies Meta<typeof TableComponent>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
 
 export const StaticSchema: StoryObj = {
   render: DefaultStory,
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [DataType.View, TableView, Testing.Contact, Testing.Organization],
+      types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const { view } = await createTable({ client, space, typename: Testing.Contact.typename });
+        const { view } = await Table.makeView({ client, space, typename: Testing.Contact.typename });
         space.db.add(view);
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -244,11 +250,11 @@ export const ArrayOfObjects: StoryObj = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [DataType.View, TableView, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
+      types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
-        const { view } = await createTable({ client, space, typename: ContactWithArrayOfEmails.typename });
+        const { view } = await Table.makeView({ client, space, typename: ContactWithArrayOfEmails.typename });
         space.db.add(view);
 
         const factory = createObjectFactory(space.db, faker as any);
@@ -270,7 +276,7 @@ export const Tags: Meta<StoryProps> = {
   parameters: { translations },
   decorators: [
     withClientProvider({
-      types: [DataType.View, TableView],
+      types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
       onSpaceCreated: async ({ client, space }) => {
@@ -301,7 +307,7 @@ export const Tags: Meta<StoryProps> = {
         const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
-        const { view } = await createTable({ client, space, typename });
+        const { view } = await Table.makeView({ client, space, typename });
         space.db.add(view);
 
         // Populate.

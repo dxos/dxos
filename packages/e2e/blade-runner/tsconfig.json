@@ -112,8 +112,5 @@
     {
       "path": "../../sdk/config"
     }
-  ],
-  "ts-node": {
-    "swc": true
-  }
+  ]
 }

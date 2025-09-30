@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer, Schema } from 'effect';
+import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { TracingService, defineFunction } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 /**
@@ -34,17 +33,24 @@ export default defineFunction({
       const result = yield* new AiSession().run({
         prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
         history: [],
-        system: SUMMARIZE_PROMPT,
+        system: systemPrompt,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
       });
 
-      const lastBlock = result.at(-1)?.blocks.at(-1);
-      const summary = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
-      invariant(summary, 'No summary found');
+      const summary = pipe(
+        result,
+        Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
+        Option.flatMap((msg) =>
+          pipe(
+            msg.blocks,
+            Array.findLast((block) => block._tag === 'text'),
+            Option.map((block) => block.text),
+          ),
+        ),
+        Option.getOrThrowWith(() => new Error('No summary found')),
+      );
 
-      return {
-        summary,
-      };
+      return { summary };
     },
     Effect.provide(
       Layer.mergeAll(
@@ -57,7 +63,7 @@ export default defineFunction({
   ),
 });
 
-const SUMMARIZE_PROMPT = trim`
+const systemPrompt = trim`
   You are a helpful assistant that summarizes transcripts of meetings.
 
   # Goal

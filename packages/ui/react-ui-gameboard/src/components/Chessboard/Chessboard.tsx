@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, type PropsWithChildren, memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useTrackProps } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef, useTrackProps } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import {
   type DOMRectBounds,
@@ -35,10 +35,11 @@ export type ChessboardProps = ThemedClassName<
 /**
  * Chessboard layout.
  */
-export const Chessboard = memo(
-  ({ orientation, showLabels, debug, rows = 8, cols = 8, classNames }: ChessboardProps) => {
+const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
+  ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
     useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
-    const { ref: containerRef, width, height } = useResizeDetector({ refreshRate: 200 });
+    const targetRef = useForwardedRef(forwardedRef);
+    const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
 
     // Board squares.
@@ -93,11 +94,11 @@ export const Chessboard = memo(
           const bounds = grid[locationToString(piece.location)];
           return { piece, bounds };
         })
-        .filter(isNotFalsy);
+        .filter(isTruthy);
     }, [grid, model?.pieces.value, promoting]);
 
     return (
-      <div ref={containerRef} className={mx('relative', classNames)}>
+      <div ref={targetRef} tabIndex={0} className={mx('relative outline-none', classNames)}>
         {/* DOM Layout. */}
         <div ref={gridRef} className='grid grid-rows-8 grid-cols-8 aspect-square select-none'>
           {layout}
@@ -147,11 +148,9 @@ export const Chessboard = memo(
   },
 );
 
-Chessboard.displayName = 'Chessboard';
+ChessboardComponent.displayName = 'Chessboard';
 
-const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
-  return container.querySelector(`[data-location="${locationToString(location)}"]`);
-};
+export const Chessboard = memo(ChessboardComponent);
 
 const PromotionSelector = ({
   grid,
@@ -184,13 +183,17 @@ const PromotionSelector = ({
       {positions.map(({ piece, bounds }) => (
         <Gameboard.Piece
           key={piece.id}
+          classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
           piece={piece}
           bounds={bounds}
           Component={ChessPieces[piece.type as ChessPiece]}
-          classNames={mx('border-2 border-neutral-700 rounded-full', boardStyles.promotion)}
           onClick={() => handleSelect(piece)}
         />
       ))}
     </>
   );
+};
+
+const getSquareLocation = (container: HTMLElement, location: Location): HTMLElement | null => {
+  return container.querySelector(`[data-location="${locationToString(location)}"]`);
 };

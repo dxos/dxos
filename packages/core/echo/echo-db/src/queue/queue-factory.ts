@@ -36,7 +36,7 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   get<T extends Obj.Any | Relation.Any>(dxn: DXN): Queue<T> {
-    assertArgument(dxn instanceof DXN, 'dxn must be a DXN');
+    assertArgument(dxn instanceof DXN, 'dxn', 'dxn must be a DXN');
     assertState(this._service, 'Service not set');
 
     const stringDxn = dxn.toString();

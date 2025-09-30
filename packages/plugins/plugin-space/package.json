@@ -61,6 +61,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -94,7 +95,7 @@
     "@types/react-dom": "~18.2.0",
     "react": "~18.2.0",
     "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

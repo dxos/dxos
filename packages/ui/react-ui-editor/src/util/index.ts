@@ -3,7 +3,9 @@
 //
 
 export * from './cursor';
+export * from './decorations';
 export * from './debug';
 export * from './dom';
+export * from './domino';
 export * from './facet';
 export * from './react';

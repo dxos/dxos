@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -46,7 +46,7 @@ const DefaultStory = () => {
   return <D3ForceGraph model={model} />;
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-explorer/D3ForceGraph',
   component: D3ForceGraph,
   render: render(DefaultStory),
@@ -58,8 +58,10 @@ const meta: Meta = {
     withTheme,
     withLayout({ fullscreen: true }),
   ],
-};
+} satisfies Meta<typeof D3ForceGraph>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

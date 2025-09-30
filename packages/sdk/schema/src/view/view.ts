@@ -6,7 +6,7 @@ import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
@@ -14,7 +14,6 @@ import {
   JsonSchemaType,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-  QueryType,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   type RuntimeSchemaRegistry,
@@ -30,6 +29,7 @@ import { getSchemaProperties } from '../properties';
 
 import { FieldSchema } from './field';
 import { ProjectionModel } from './projection-model';
+import { FieldSortType } from './sort';
 
 export const Projection = Schema.Struct({
   /**
@@ -44,11 +44,10 @@ export const Projection = Schema.Struct({
   fields: Schema.mutable(Schema.Array(FieldSchema)),
 
   /**
-   * Array of fields that are part of the view's schema but hidden from UI display.
-   * These fields follow the FieldSchema structure but are marked for exclusion from visual rendering.
+   * The id for the field used to pivot the view.
+   * E.g., the field to use for kanban columns or the field to use for map coordinates.
    */
-  // TODO(wittjosiah): Remove? This can be easily derived from fields.
-  hiddenFields: Schema.optional(Schema.mutable(Schema.Array(FieldSchema))),
+  pivotFieldId: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
 export type Projection = Schema.Schema.Type<typeof Projection>;
 
@@ -56,7 +55,7 @@ export type Projection = Schema.Schema.Type<typeof Projection>;
  * Views are generated or user-defined projections of a schema's properties.
  * They are used to configure the visual representation of the data.
  */
-export const View = Schema.Struct({
+const View_ = Schema.Struct({
   /**
    * Name of the view.
    */
@@ -72,7 +71,12 @@ export const View = Schema.Struct({
    * This includes the base type that the view schema (above) references.
    * It may include predicates that represent a persistent "drill-down" query.
    */
-  query: QueryType,
+  query: QueryAST.Query,
+
+  /**
+   * @deprecated Prefer ordering in query.
+   */
+  sort: Schema.optional(Schema.Array(FieldSortType)),
 
   /**
    * Projection of the data returned from the query.
@@ -85,40 +89,48 @@ export const View = Schema.Struct({
   presentation: Type.Ref(Type.Expando),
 })
   .pipe(LabelAnnotation.set(['name']))
-  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.3.0' }));
-export type View = Schema.Schema.Type<typeof View>;
+  .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
+export interface View extends Schema.Schema.Type<typeof View_> {}
+export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
+export const View: Schema.Schema<View, ViewEncoded> = View_;
+
+/** @deprecated */
+// TODO(wittjosiah): Try to remove. Use full query instead.
+export const typenameFromQuery = (query: QueryAST.Query) =>
+  query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   name?: string;
-  typename: string;
+  query: Query.Any;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
   fields?: string[];
+  pivotFieldName?: string;
 };
+
+// TODO(wittjosiah): Export as `DataType.View.make`.
 
 /**
  * Create view from provided schema.
  */
 export const createView = ({
   name,
-  typename,
+  query,
   jsonSchema,
   overrideSchema,
   presentation,
   fields: include,
+  pivotFieldName,
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: {
-      typename,
-    },
+    query: query.ast,
     projection: {
       schema: overrideSchema,
       fields: [],
-      hiddenFields: [],
     },
     presentation: Ref.make(presentation),
   });
@@ -133,7 +145,7 @@ export const createView = ({
     }
 
     // Omit objects from initial projection as they are difficult to handle automatically.
-    if (property.type === 'object') {
+    if (property.type === 'object' && !property.format) {
       continue;
     }
 
@@ -147,6 +159,13 @@ export const createView = ({
       const indexB = include.indexOf(b.path);
       return indexA - indexB;
     });
+  }
+
+  if (pivotFieldName) {
+    const fieldId = projection.getFieldId(pivotFieldName);
+    if (fieldId) {
+      view.projection.pivotFieldId = fieldId;
+    }
   }
 
   return view;
@@ -184,21 +203,23 @@ type CreateViewWithReferencesProps = CreateViewProps & {
  */
 export const createViewWithReferences = async ({
   name,
-  typename,
+  query,
   jsonSchema,
   overrideSchema,
   presentation,
   fields,
+  pivotFieldName,
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
   const view = await createView({
     name,
-    typename,
+    query,
     jsonSchema,
     overrideSchema,
     presentation,
     fields,
+    pivotFieldName,
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
@@ -260,12 +281,12 @@ export const createViewWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'typename' | 'jsonSchema' | 'registry'> &
-  Partial<Pick<CreateViewWithReferencesProps, 'typename'>> & {
-    client?: Client;
-    space: Space;
-    createInitial?: number;
-  };
+export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'query' | 'jsonSchema' | 'registry'> & {
+  client?: Client;
+  space: Space;
+  typename?: string;
+  createInitial?: number;
+};
 
 /**
  * Create view from a schema in provided space or client.
@@ -299,7 +320,7 @@ export const createViewFromSpace = async ({
     jsonSchema,
     view: await createViewWithReferences({
       ...props,
-      typename,
+      query: Query.select(Filter.typename(typename)),
       jsonSchema,
       registry: client?.graph.schemaRegistry,
       echoRegistry: space.db.schemaRegistry,
@@ -327,4 +348,9 @@ export const createDefaultSchema = () =>
         }),
     ),
     description: Schema.optional(Schema.String).annotations({ title: 'Description' }),
-  }).pipe(Type.Obj({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }));
+  }).pipe(
+    Type.Obj({
+      typename: `example.com/type/${PublicKey.random().truncate()}`,
+      version: '0.1.0',
+    }),
+  );

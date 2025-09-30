@@ -2,6 +2,7 @@ packages:
   - docs
   - packages/**/*
   - tools/**/*
+  - vendor/**/*
   - '!packages/deprecated/**'
   - '!packages/sdk/examples/src/template'
   - '!**/build/**'

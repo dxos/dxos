@@ -4,18 +4,19 @@
 
 import { type Schema } from 'effect';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo/internal';
-import type { JsonSchemaType, SortDirectionType } from '@dxos/echo/internal';
+import type { JsonSchemaType } from '@dxos/echo/internal';
 import {
   type DataType,
   ProjectionModel,
   type SchemaPropertyDefinition,
+  type SortDirectionType,
   createView,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
-import { TableView } from '../types';
+import { Table } from '../types';
 
 // TODO(ZaymonFC): Upstream these extra fields to SchemaPropertyDefinition to enhance schema-tools schema creation.
 type PropertyDisplayProps = {
@@ -62,9 +63,9 @@ export const makeDynamicTable = ({
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; view: DataType.View } => {
-  const table = Obj.make(TableView, { sizes: {} });
+  const table = Obj.make(Table.Table, { sizes: {} });
   const view = createView({
-    typename,
+    query: Query.select(Filter.typename(typename)),
     jsonSchema,
     presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),
@@ -81,7 +82,7 @@ export const makeDynamicTable = ({
 const setProperties = (
   view: DataType.View,
   projection: ProjectionModel,
-  table: TableView,
+  table: Table.Table,
   properties: TablePropertyDefinition[],
 ) => {
   for (const property of properties) {
@@ -101,7 +102,7 @@ const setProperties = (
 
       if (property.sort) {
         const fieldId = field.id;
-        view.query.sort = [{ fieldId, direction: property.sort }];
+        view.sort = [{ fieldId, direction: property.sort }];
       }
     }
   }

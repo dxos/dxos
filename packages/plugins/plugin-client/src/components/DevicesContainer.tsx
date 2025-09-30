@@ -20,11 +20,10 @@ import {
   ControlPage,
   ControlSection,
 } from '@dxos/react-ui-form';
-import { StackItem } from '@dxos/react-ui-stack';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ClientAction } from '../types';
 
 export type DevicesContainerProps = {
@@ -51,70 +50,57 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content classNames='block overflow-y-auto'>
-        <ControlPage>
-          <ControlSection
-            title={t('devices verbose label', { ns: CLIENT_PLUGIN })}
-            description={t('devices description', { ns: CLIENT_PLUGIN })}
-          >
-            <ControlFrame>
-              <ControlFrameItem title={t('devices label', { ns: CLIENT_PLUGIN })}>
-                <List>
-                  {devices.map((device: Device) => {
-                    return (
-                      <DeviceListItem
-                        key={device.deviceKey.toHex()}
-                        device={device}
-                        connectionState={connectionState}
-                      />
-                    );
-                  })}
-                </List>
+      <ControlPage>
+        <ControlSection
+          title={t('devices verbose label', { ns: meta.id })}
+          description={t('devices description', { ns: meta.id })}
+        >
+          <ControlFrame>
+            <ControlFrameItem title={t('devices label', { ns: meta.id })}>
+              <List>
+                {devices.map((device: Device) => {
+                  return (
+                    <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
+                  );
+                })}
+              </List>
+            </ControlFrameItem>
+            {createInvitationUrl && (
+              <ControlFrameItem title='Add device'>
+                <DeviceInvitation createInvitationUrl={createInvitationUrl} />
               </ControlFrameItem>
-              {createInvitationUrl && (
-                <ControlFrameItem title='Add device'>
-                  <DeviceInvitation createInvitationUrl={createInvitationUrl} />
-                </ControlFrameItem>
-              )}
-            </ControlFrame>
-          </ControlSection>
-          <ControlSection
-            title={t('danger zone title', { ns: CLIENT_PLUGIN })}
-            description={t('danger zone description', { ns: CLIENT_PLUGIN })}
-          >
-            <ControlGroup>
-              <ControlItem
-                title={t('reset device label')}
-                description={t('reset device description', { ns: CLIENT_PLUGIN })}
-              >
-                <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-                  {t('reset device label')}
-                </Button>
-              </ControlItem>
-              <ControlItem
-                title={t('recover identity label')}
-                description={t('recover identity description', { ns: CLIENT_PLUGIN })}
-              >
-                <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                  {t('recover identity label')}
-                </Button>
-              </ControlItem>
-              <ControlItem
-                title={t('join new identity label')}
-                description={t('join new identity description', { ns: CLIENT_PLUGIN })}
-              >
-                <Button
-                  variant='destructive'
-                  onClick={handleJoinNewIdentity}
-                  data-testid='devicesContainer.joinExisting'
-                >
-                  {t('join new identity label')}
-                </Button>
-              </ControlItem>
-            </ControlGroup>
-          </ControlSection>
-        </ControlPage>
-      </StackItem.Content>
+            )}
+          </ControlFrame>
+        </ControlSection>
+        <ControlSection
+          title={t('danger zone title', { ns: meta.id })}
+          description={t('danger zone description', { ns: meta.id })}
+        >
+          <ControlGroup>
+            <ControlItem title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
+              <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
+                {t('reset device label')}
+              </Button>
+            </ControlItem>
+            <ControlItem
+              title={t('recover identity label')}
+              description={t('recover identity description', { ns: meta.id })}
+            >
+              <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                {t('recover identity label')}
+              </Button>
+            </ControlItem>
+            <ControlItem
+              title={t('join new identity label')}
+              description={t('join new identity description', { ns: meta.id })}
+            >
+              <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
+                {t('join new identity label')}
+              </Button>
+            </ControlItem>
+          </ControlGroup>
+        </ControlSection>
+      </ControlPage>
     </Clipboard.Provider>
   );
 };
@@ -189,7 +175,7 @@ const InvitationSection = ({
   onInvitationDone = () => {},
   onInvitationCreate = () => {},
 }: InvitationComponentProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const activeView =
     state < 0
       ? 'init'
@@ -236,7 +222,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: CLIENT_PLUGIN })}</p>
+      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
         <div role='none' className='is-full aspect-square relative text-description'>
           <QR

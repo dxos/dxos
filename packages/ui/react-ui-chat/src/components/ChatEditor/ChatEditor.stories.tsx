@@ -14,7 +14,7 @@ import { translations } from '../../translations';
 import { ChatEditor } from './ChatEditor';
 import { type ReferenceData } from './references';
 
-const meta: Meta<typeof ChatEditor> = {
+const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
   component: ChatEditor,
   decorators: [withTheme],
@@ -22,13 +22,13 @@ const meta: Meta<typeof ChatEditor> = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof ChatEditor>;
 
 export default meta;
 
 const classNames = 'w-[20rem] p-2 border border-separator';
 
-type Story = StoryObj<typeof ChatEditor>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
