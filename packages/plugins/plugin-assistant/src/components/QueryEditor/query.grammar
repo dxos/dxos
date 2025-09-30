@@ -12,9 +12,17 @@ expression {
   Filter
 }
 
-Not { @specialize<Identifier, "NOT" | "!"> }
-And { @specialize<Identifier, "AND" | "&&"> }
-Or { @specialize<Identifier, "OR" | "||"> }
+// Boolean logic
+
+Not { 
+  @specialize<Identifier, "NOT" | "!"> 
+}
+And { 
+  @specialize<Identifier, "AND" | "&&">
+}
+Or { 
+  @specialize<Identifier, "OR" | "||">
+}
 
 // Filter
 

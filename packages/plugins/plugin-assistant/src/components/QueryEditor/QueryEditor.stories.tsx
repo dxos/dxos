@@ -15,7 +15,7 @@ import { QueryEditor } from './QueryEditor';
 const meta = {
   title: 'plugins/plugin-assistant/QueryEditor',
   component: QueryEditor,
-  decorators: [withTheme, withLayout({ classNames: 'w-[30rem]' })],
+  decorators: [withTheme, withLayout({ classNames: 'w-[40rem]' })],
   parameters: {
     layout: 'centered',
     translations,
@@ -26,4 +26,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    text: '(type:Person OR type:Organization) AND { title:"Hello World" }',
+  },
+};
