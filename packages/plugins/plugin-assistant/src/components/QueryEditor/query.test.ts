@@ -12,7 +12,9 @@ describe('query', () => {
       strict: true,
     });
 
+    // TODO(burdon): Generate query.
     // TODO(burdon): Ref/Relation traversal.
+    // TODO(burdon): Factor out.
 
     const tests = [
       {
