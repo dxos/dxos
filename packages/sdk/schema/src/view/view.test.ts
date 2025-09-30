@@ -10,6 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { StoredSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
+import { DataType } from '../common';
 import { getSchemaProperties } from '../properties';
 import { Testing } from '../testing';
 
@@ -27,7 +28,7 @@ describe('Projection', () => {
   });
 
   test('create view from TypedObject', async ({ expect }) => {
-    const schema = Testing.Contact;
+    const schema = DataType.Person;
     const presentation = Obj.make(Type.Expando, {});
     const view = await createViewWithReferences({
       query: Query.select(Filter.type(schema)),
@@ -38,21 +39,41 @@ describe('Projection', () => {
     assert(view.query.filter.type === 'object');
     expect(view.query.filter.typename).to.eq(Type.getDXN(schema)?.toString());
     expect(view.projection.fields.map((f) => f.path)).to.deep.eq([
-      'name',
+      'fullName',
+      'preferredName',
+      'nickname',
       'image',
-      'email',
-      // 'address',
       'organization',
+      'jobTitle',
+      'department',
+      'notes',
+      'emails',
+      'identities',
+      'phoneNumbers',
+      'addresses',
+      'urls',
+      'birthday',
+      'fields',
     ]);
 
     const props = getSchemaProperties(schema.ast);
     const labels = props.map((p) => pipe(p.name ?? p.title, String.capitalize));
     expect(labels).to.deep.eq([
-      'Name',
+      'Full Name',
+      'Preferred Name',
+      'Nickname',
       'Image',
-      'Email',
-      // 'Address',
       'Organization',
+      'Job Title',
+      'Department',
+      'Notes',
+      'Emails',
+      'Identities',
+      'Phone Numbers',
+      'Addresses',
+      'Urls',
+      'Birthday',
+      'Fields',
     ]);
   });
 
