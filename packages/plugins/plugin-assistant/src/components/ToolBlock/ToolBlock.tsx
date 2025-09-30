@@ -18,8 +18,7 @@ import {
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
-import { safeParseJson } from '@dxos/util';
+import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -114,6 +113,7 @@ type ToolContainerParams = {
   items: { title: string; content: any }[];
 };
 
+// TODO(burdon): Maintain scroll position when closing.
 export const ToolContainer = ({ items }: ToolContainerParams) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);

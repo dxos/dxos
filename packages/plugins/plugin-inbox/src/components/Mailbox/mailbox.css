@@ -1,4 +1,27 @@
 .message {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &::after {
+    inset: 0;
+  }
+
+  &::before {
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: 0.25rem;
+  }
+
+  &:focus-visible::before {
+    inset-block: var(--dx-gridFocusIndicatorWidth);
+    inset-inline-end:  var(--dx-gridFocusIndicatorWidth);
+  }
+
   &.message__card {
     @apply pli-cardSpacingChrome plb-cardSpacingChrome;
   }
@@ -10,28 +33,10 @@
   & > .dx-grid__cell__content,
   &.message__card {
     @apply grid grid-cols-[min-content_1fr];
-
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    &::after {
-      inset: 0;
-    }
-
-    &::before {
-      inset-block: 0;
-      inset-inline-end: 0;
-      inline-size: 0.25rem;
-    }
   }
 
-  &.message--current > .dx-grid__cell__content {
-    &::after {
+  &.message--current {
+    & > .dx-grid__cell__content, &::after {
       @apply bg-currentRelated;
     }
 
