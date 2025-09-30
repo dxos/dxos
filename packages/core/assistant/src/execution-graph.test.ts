@@ -259,7 +259,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
-        created: '2025-01-01T00:00:00Z',
+        created: '2025-01-01T00:02:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Processing tool call...',
@@ -340,7 +340,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
-        created: '2025-01-01T00:00:00Z',
+        created: '2025-01-01T00:02:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Tool execution failed',
@@ -574,7 +574,7 @@ describe('ExecutionGraph', () => {
         // AgentStatus events
         Obj.make(AgentStatus, {
           id: status1Id,
-          created: '2025-01-01T00:00:00Z',
+          created: '2025-01-01T00:05:00Z',
           parentMessage: msg2Id,
           toolCallId: 'tool1',
           message: 'Processing task 1...',
@@ -582,7 +582,7 @@ describe('ExecutionGraph', () => {
 
         Obj.make(AgentStatus, {
           id: status2Id,
-          created: '2025-01-01T00:00:00Z',
+          created: '2025-01-01T00:06:00Z',
           parentMessage: msg4Id,
           toolCallId: 'tool2',
           message: 'Processing task 2...',
