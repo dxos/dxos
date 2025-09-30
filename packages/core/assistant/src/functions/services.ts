@@ -95,7 +95,7 @@ export const makeToolExecutionServiceFromFunctions = (
  */
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
-  { definition: FunctionDefinition<any, any>; deployedFunctionId?: string; spaceId?: strings }
+  { definition: FunctionDefinition<any, any>; deployedFunctionId?: string; spaceId?: string }
 >() {}
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
