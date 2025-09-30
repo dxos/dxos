@@ -12050,6 +12050,9 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
     devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
