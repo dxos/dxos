@@ -65,7 +65,7 @@ export class MessageSyncer {
 
   sync(messages: DataType.Message[]) {
     log('sync', {
-      messages: messages.map((m) => m.blocks.length),
+      messages: messages.map((message) => message.blocks.length),
       currentMessageIndex: this._currentMessageIndex,
       currentBlockIndex: this._currentBlockIndex,
       currentBlockContent: this._currentBlockContent,
@@ -96,7 +96,7 @@ export class MessageSyncer {
 
           void this._model.append(content);
           this._currentBlockContent = currentBlockContent;
-          log('append', { message: i, block: j, content });
+          log.info('append', { message: i, block: j, content });
         }
 
         if (block.pending) {

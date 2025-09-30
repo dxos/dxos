@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",

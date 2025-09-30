@@ -75,7 +75,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <CardStack.Item asChild key={card.id}>
                       <StackItem.Root
                         item={card}
-                        focusIndicatorVariant='group'
+                        focusIndicatorVariant='group-always'
                         prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
                         onClick={() => multiSelect([card.id])}

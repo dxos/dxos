@@ -7,7 +7,6 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
 
 import { makeId } from '@dxos/react-hooks';
-import { getFirstTwoRenderableChars } from '@dxos/util';
 
 import { type Size } from '../defs';
 
@@ -120,6 +119,7 @@ export class DxAvatar extends LitElement {
       : 'var(--surface-bg)';
     const fg =
       this.hue && this.hueVariant === 'surface' ? `var(--dx-${this.hue}SurfaceText)` : 'var(--dx-accentSurfaceText)';
+
     return html`<span
       role="none"
       class=${`dx-avatar${this.rootClassName ? ` ${this.rootClassName}` : ''}`}
@@ -139,44 +139,49 @@ export class DxAvatar extends LitElement {
             ${
               this.variant === 'circle'
                 ? svg`<circle fill="white" cx="50%" cy="50%" r=${r} />`
-                : svg`<rect
-                  fill="white"
-                  width=${2 * r}
-                  height=${2 * r}
-                  x=${ringGap + ringWidth}
-                  y=${ringGap + ringWidth}
-                  rx=${rx}
-                />`
+                : svg`
+                  <rect
+                    fill="white"
+                    width=${2 * r}
+                    height=${2 * r}
+                    x=${ringGap + ringWidth}
+                    y=${ringGap + ringWidth}
+                    rx=${rx}
+                  />`
             }
           </mask>
         </defs>
         ${
           this.variant === 'circle'
-            ? svg` <circle
-              cx="50%"
-              cy="50%"
-              r=${r}
-              fill=${bg}
-            />`
-            : svg` <rect
-              fill=${bg}
-              x=${ringGap + ringWidth}
-              y=${ringGap + ringWidth}
-              width=${2 * r}
-              height=${2 * r}
-              rx=${rx}
-            />`
+            ? svg`
+              <circle
+                cx="50%"
+                cy="50%"
+                r=${r}
+                fill=${bg}
+              />`
+            : svg`
+              <rect
+                fill=${bg}
+                x=${ringGap + ringWidth}
+                y=${ringGap + ringWidth}
+                width=${2 * r}
+                height=${2 * r}
+                rx=${rx}
+              />`
         }
         ${
           this.icon
-            ? svg`<use
+            ? svg`
+              <use
                 class="dx-avatar__icon"
                 href=${this.icon}
                 x=${sizePx / 5}
                 y=${sizePx / 5}
                 width=${(3 * sizePx) / 5}
                 height=${(3 * sizePx) / 5} />`
-            : svg`<text
+            : svg`
+              <text
                 x="50%"
                 y="50%"
                 class="dx-avatar__fallback-text"
@@ -191,7 +196,8 @@ export class DxAvatar extends LitElement {
         }
         ${
           this.imgSrc &&
-          svg`<image
+          svg`
+            <image
               width="100%"
               height="100%"
               preserveAspectRatio="xMidYMid slice"
@@ -211,3 +217,49 @@ export class DxAvatar extends LitElement {
     return this;
   }
 }
+
+// Regular expression to match renderable characters
+// Excludes control characters, combining marks, and other non-renderable characters. Also excludes punctuation.
+const renderableCharRegex =
+  /^(?![\p{Control}\p{Mark}\p{Separator}\p{Surrogate}\p{Unassigned}\p{P}])[\p{L}\p{N}\p{S}\p{Emoji}]$/u;
+
+/**
+ * Returns the first two renderable characters from a string that are separated by non-word characters.
+ * Handles Unicode characters correctly.
+ *
+ * @param {string} label The input string to process.
+ * @returns {[string, string]} Array containing the two characters, or empty strings if not found.
+ */
+// TODO(burdon): Move to ui package.
+const getFirstTwoRenderableChars = (label: string): string[] => {
+  const words = label.split(/\s+/);
+  if (words.length === 2) {
+    return words.map((word) => word[0].toUpperCase());
+  }
+
+  // Convert string to array of Unicode characters.
+  const characters = Array.from(label);
+
+  // Keep track of found renderable characters.
+  const result = ['', ''];
+  let foundFirst = false;
+
+  for (let i = 0; i < characters.length; i++) {
+    const char = characters[i];
+    if (renderableCharRegex.test(char)) {
+      if (!foundFirst) {
+        result[0] = char;
+        foundFirst = true;
+      } else {
+        // Check if there's at least one non-word character between the first and current char.
+        const textBetween = characters.slice(result[0].length, i).join('');
+        if (/[^\p{L}\p{N}_]/u.test(textBetween)) {
+          result[1] = char;
+          break;
+        }
+      }
+    }
+  }
+
+  return result;
+};
