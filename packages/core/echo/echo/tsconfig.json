@@ -1,9 +1,13 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["@dxos/typings"]
+    "types": [
+      "@dxos/typings"
+    ]
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
       "path": "../../../common/debug"
