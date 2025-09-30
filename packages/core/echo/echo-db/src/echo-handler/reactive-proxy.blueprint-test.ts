@@ -4,15 +4,16 @@
 import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
+import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
+import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
+import { Type } from '@dxos/echo';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: Testing.TestSchema = {
+const TEST_OBJECT: TestingDeprecated.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -31,13 +32,13 @@ export interface TestConfiguration {
   allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
+  createObjectFn: (props?: Partial<TestingDeprecated.TestSchema>) => Promise<TestingDeprecated.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
+  for (const schema of [Type.Expando, TestingDeprecated.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -59,7 +60,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       await afterAllCb?.();
     });
 
-    describe(`Proxy properties(schema=${schema != null})`, () => {
+    describe(`Proxy properties(schema=${Type.getTypename(schema)})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
         log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });

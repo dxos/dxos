@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { Device, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 

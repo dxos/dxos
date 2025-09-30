@@ -11,7 +11,6 @@
   "type": "module",
   "dependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

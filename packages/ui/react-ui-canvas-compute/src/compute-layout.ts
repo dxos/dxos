@@ -3,7 +3,7 @@
 //
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo/internal';
 import { type Anchor, ShapeLayout, type ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 
 import { type ComputeGraphController } from './graph';

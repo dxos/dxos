@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import { SchemaAST } from 'effect';
 
 import { Filter, getMeta } from '@dxos/client/echo';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo/internal';
 import { FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';

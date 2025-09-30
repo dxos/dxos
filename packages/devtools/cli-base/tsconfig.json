@@ -36,7 +36,7 @@
       "path": "../../core/agent"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/protocols"

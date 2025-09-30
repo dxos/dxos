@@ -18,7 +18,7 @@ import {
 } from '@dxos/assistant/extraction';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo-schema';
+import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo/internal';
 
 export { AccessToken } from './access-token';
 export { Actor, ActorRole, ActorRoles } from './actor';
@@ -16,7 +16,7 @@ export { Organization, OrganizationStatusOptions } from './organization';
 export { PostalAddress } from './postal-address';
 export { Person } from './person';
 export { Project } from './project';
-export { StoredSchema } from '@dxos/echo-schema';
+export { StoredSchema } from '@dxos/echo/internal';
 export { Task } from './task';
 export { Text } from './text';
 export { View } from '../view';

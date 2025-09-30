@@ -7,7 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { Client } from '@dxos/client';
 import { Filter, type Space, live } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo/internal';
 
 import { Migrations } from './migrations';
 

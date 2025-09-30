@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
 import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
 
 export const Map = Schema.Struct({

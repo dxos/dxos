@@ -58,9 +58,6 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
       "path": "../echo/live-object"
     },
     {

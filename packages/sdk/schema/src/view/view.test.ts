@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { StoredSchema } from '@dxos/echo-schema';
+import { StoredSchema } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 import { getSchemaProperties } from '../properties';

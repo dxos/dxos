@@ -51,9 +51,6 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {

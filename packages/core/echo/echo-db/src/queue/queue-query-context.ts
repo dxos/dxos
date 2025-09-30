@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { BaseObject } from '@dxos/echo-schema';
+import type { BaseObject } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
 import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';

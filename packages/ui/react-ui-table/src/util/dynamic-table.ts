@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 
 import { Filter, Obj, Query } from '@dxos/echo';
-import { getTypename, toJsonSchema } from '@dxos/echo-schema';
-import type { JsonSchemaType } from '@dxos/echo-schema';
+import { getTypename, toJsonSchema } from '@dxos/echo/internal';
+import type { JsonSchemaType } from '@dxos/echo/internal';
 import {
   type DataType,
   ProjectionModel,

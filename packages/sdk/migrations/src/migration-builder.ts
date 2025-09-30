@@ -16,7 +16,7 @@ import {
   SpaceDocVersion,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { requireTypeReference } from '@dxos/echo-schema';
+import { requireTypeReference } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 

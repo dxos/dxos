@@ -5,7 +5,7 @@
 import { Schema, SchemaAST } from 'effect';
 
 import { Obj, QueryAST, Type } from '@dxos/echo';
-import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 import { FunctionType } from './schema';

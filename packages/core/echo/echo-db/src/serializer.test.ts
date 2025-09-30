@@ -4,12 +4,11 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Query } from '@dxos/echo';
-import { Expando, Ref, getSchema } from '@dxos/echo-schema';
-import { Testing } from '@dxos/echo-schema/testing';
+import { Obj, Query, Type } from '@dxos/echo';
+import { Expando, Ref, getSchema } from '@dxos/echo/internal';
+import { Testing } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
@@ -33,13 +32,13 @@ describe('Serializer', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([Testing.Task]);
 
-      const task = db.add(live(Testing.Task, { title: 'Testing' }));
+      const task = db.add(Obj.make(Testing.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
         '@id': task.id,
         '@meta': { keys: [] },
-        '@type': { '/': `dxn:type:${Testing.Task.typename}:${Testing.Task.version}` },
+        '@type': { '/': `dxn:type:${Type.getTypename(Testing.Task)}:${Type.getVersion(Testing.Task)}` },
         title: 'Testing',
       });
     });
@@ -53,7 +52,7 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = live({} as any);
+        const obj = Obj.make(Type.Expando, {});
         obj.title = 'Test';
         db.add(obj);
         await db.flush();
@@ -90,8 +89,8 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const preserved = db.add(live(objValue));
-        const deleted = db.add(live({ value: preserved.value + 1 }));
+        const preserved = db.add(Obj.make(Type.Expando, objValue));
+        const deleted = db.add(Obj.make(Type.Expando, { value: preserved.value + 1 }));
         db.remove(deleted);
         await db.flush();
 
@@ -124,22 +123,22 @@ describe('Serializer', () => {
 
       {
         const { db } = await builder.createDatabase();
-        const obj = live({
+        const obj = Obj.make(Type.Expando, {
           title: 'Main task',
           subtasks: [
             Ref.make(
-              live(Expando, {
+              Obj.make(Expando, {
                 title: 'Subtask 1',
               }),
             ),
             Ref.make(
-              live(Expando, {
+              Obj.make(Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
           previous: Ref.make(
-            live(Expando, {
+            Obj.make(Expando, {
               title: 'Previous task',
             }),
           ),
@@ -169,7 +168,7 @@ describe('Serializer', () => {
       {
         const { db, graph } = await builder.createDatabase();
         graph.schemaRegistry.addSchema([Testing.Contact]);
-        const contact = live(Testing.Contact, { name });
+        const contact = Obj.make(Testing.Contact, { name });
         db.add(contact);
         await db.flush();
         data = await new Serializer().export(db);
@@ -189,7 +188,7 @@ describe('Serializer', () => {
           objects: [contact],
         } = await db.query(Filter.type(Testing.Contact)).run();
         expect(contact.name).to.eq(name);
-        expect(contact instanceof Testing.Contact).to.be.true;
+        expect(Obj.instanceOf(Testing.Contact, contact)).to.be.true;
         expect(getSchema(contact)).to.eq(Testing.Contact);
       }
     });
@@ -210,7 +209,7 @@ describe('Serializer', () => {
       {
         const db = await peer.openDatabase(spaceKey, root.url);
         for (let i = 0; i < totalObjects; i++) {
-          db.add(live({ value: i }));
+          db.add(Obj.make(Type.Expando, { value: i }));
         }
         await db.flush();
         await peer.close();

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Obj, type Ref, Type } from '@dxos/echo';
-import { JsonSchemaType, toJsonSchema } from '@dxos/echo-schema';
+import { JsonSchemaType, toJsonSchema } from '@dxos/echo/internal';
 
 import { Blueprint } from '../blueprint';
 

@@ -1,3 +1,4 @@
+import { Obj, Type, Ref } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
@@ -14,7 +15,7 @@ import {
   TypeIdentifierAnnotationId,
   getSchemaTypename,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
@@ -122,7 +123,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = live(StoredSchema, {
+    const schemaToStore = Obj.make(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
       jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),
