@@ -7,28 +7,51 @@ import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { type FunctionDefinition, FunctionImplementationResolver, FunctionInvocationService } from '@dxos/functions';
+import { Obj, Query } from '@dxos/echo';
+import {
+  DatabaseService,
+  FunctionDefinition,
+  type FunctionImplementationResolver,
+  FunctionInvocationService,
+  FunctionType,
+  getUserFunctionIdInMetadata,
+} from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
   toolkit: AiToolkit.Any,
-): Layer.Layer<ToolResolverService> => {
-  return Layer.succeed(ToolResolverService, {
-    resolve: Effect.fn('resolveTool')(function* (id) {
-      const tool = toolkit.tools[id];
-      if (tool) {
-        return tool;
-      }
+): Layer.Layer<ToolResolverService, never, DatabaseService> => {
+  return Layer.effect(
+    ToolResolverService,
+    Effect.gen(function* () {
+      const dbService = yield* DatabaseService;
+      return {
+        resolve: (id): Effect.Effect<AiTool.Any, AiToolNotFoundError, never> =>
+          Effect.gen(function* () {
+            const tool = toolkit.tools[id];
+            if (tool) {
+              return tool;
+            }
 
-      const functionDef = functions.find((fn) => fn.name === id);
-      if (!functionDef) {
-        return yield* Effect.fail(new AiToolNotFoundError(id));
-      }
+            const {
+              objects: [dbFunction],
+            } = yield* DatabaseService.runQuery(Query.type(FunctionType, { key: id }));
+            const functionDeploymentId = dbFunction ? getUserFunctionIdInMetadata(Obj.getMeta(dbFunction)) : undefined;
 
-      return projectFunctionToTool(functionDef);
+            const functionDef = dbFunction
+              ? FunctionDefinition.deserialize(dbFunction)
+              : functions.find((fn) => fn.name === id);
+
+            if (!functionDef) {
+              return yield* Effect.fail(new AiToolNotFoundError(id));
+            }
+
+            return projectFunctionToTool(functionDef, { deployedFunctionId: functionDeploymentId });
+          }).pipe(Effect.provideService(DatabaseService, dbService)),
+      } satisfies Context.Tag.Service<ToolResolverService>;
     }),
-  });
+  );
 };
 
 export const makeToolExecutionServiceFromFunctions = (
@@ -38,7 +61,6 @@ export const makeToolExecutionServiceFromFunctions = (
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const functionsResolver = yield* FunctionImplementationResolver;
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
       const functionInvocationService = yield* FunctionInvocationService;
 
@@ -51,16 +73,12 @@ export const makeToolExecutionServiceFromFunctions = (
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
 
-              const { functionName } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
-              const functionDef = yield* functionsResolver.resolveFunctionImplementation({
-                name: functionName,
-              } as FunctionDefinition<any, any>);
-              if (!functionDef) {
-                return yield* Effect.fail(new AiToolNotFoundError(tool.name));
-              }
+              const { definition: functionDef, deployedFunctionId } = Context.get(FunctionToolAnnotation)(
+                tool.annotations as any,
+              );
 
               return yield* functionInvocationService
-                .invokeFunction(functionDef, input)
+                .invokeFunction(functionDef, input as any, deployedFunctionId)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });
           };
@@ -75,16 +93,17 @@ export const makeToolExecutionServiceFromFunctions = (
 /**
  * Tools that are projected from functions have this annotation.
  */
-class FunctionToolAnnotation extends Context.Tag('@dxos/assisatnt/FunctionToolAnnotation')<
+class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
-  {
-    functionName: string;
-  }
+  { definition: FunctionDefinition<any, any>; deployedFunctionId?: string; spaceId?: strings }
 >() {}
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
 
-const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => {
+const projectFunctionToTool = (
+  fn: FunctionDefinition<any, any>,
+  meta?: { deployedFunctionId?: string },
+): AiTool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
@@ -94,7 +113,7 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => 
     parameters: createStructFieldsFromSchema(fn.inputSchema),
     // TODO(dmaretskyi): Include output schema.
     failure: Schema.Any, // TODO(dmaretskyi): Better type for the failure?
-  }).annotate(FunctionToolAnnotation, { functionName: fn.name });
+  }).annotate(FunctionToolAnnotation, { definition: fn, deployedFunctionId: meta?.deployedFunctionId });
   toolCache.set(fn, tool);
   return tool;
 };
