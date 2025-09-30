@@ -20,6 +20,7 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
     const ctx = new Context();
 
     scheduleTask(ctx, async () => {
+      // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
       try {
         const response = await fetch(audioUrl);
         const blob = await response.blob();

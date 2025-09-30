@@ -44,10 +44,13 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 const DefaultStory = () => {
   const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
-    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
-    if (response.ok) {
+    // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
+    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
+      log.catch(error);
+    });
+    if (response?.ok) {
       return await response.arrayBuffer();
-    } else {
+    } else if (response) {
       console.log(response.status);
     }
   });
