@@ -12,3 +12,10 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
       - '--preactSignalTracking'
+  prebuild:
+    script: pnpm run build:parser
+    inputs:
+      - src/components/QueryEditor/query.grammar
+    outputs:
+      - src/components/QueryEditor/gen/query.terms.ts
+      - src/components/QueryEditor/gen/query.ts

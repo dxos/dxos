@@ -9,7 +9,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { createDocAccessor, useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
 import {
-  Editor,
+  TextEditor,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -31,12 +31,11 @@ export const TasksContainer = ({ space }: ComponentProps) => {
       <Toolbar.Root classNames='border-b border-subduedSeparator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
-      <Editor
+      <TextEditor
         id={document.id}
-        text={document.content.target}
+        initialValue={document.content.target.content}
         classNames='h-full p-2 overflow-hidden'
         extensions={[
-          // TODO(burdon): Create util.
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions(),

@@ -1,0 +1,101 @@
+//
+// lezer Query grammar
+//
+
+@top Query { expression }
+
+expression {
+  !Not Not expression |
+  expression !And And expression |
+  expression !Or Or expression |
+  "(" expression ")" |
+  Filter
+}
+
+Not { @specialize<Identifier, "NOT" | "!"> }
+And { @specialize<Identifier, "AND" | "&&"> }
+Or { @specialize<Identifier, "OR" | "||"> }
+
+// Filter
+
+Filter {
+  ObjectLiteral |
+  TypeFilter |
+  PropertyFilter
+}
+
+// Type
+
+TypeFilter {
+  @specialize[@name=TypeKeyword]<Identifier, "type"> ":" Identifier
+}
+
+// Property
+
+PropertyFilter {
+  PropertyPath ":" Value
+}
+
+PropertyPath {
+  Identifier ("." Identifier)*
+}
+
+// Object
+
+ObjectLiteral {
+  "{" (ObjectProperty ("," ObjectProperty)*)? "}"
+}
+
+ObjectProperty {
+  PropertyKey ":" Value
+}
+
+PropertyKey {
+  Identifier |
+  String
+}
+
+// Array
+
+ArrayLiteral {
+  "[" (Value ("," Value)*)? "]"
+}
+
+Value {
+  String |
+  Number |
+  Boolean |
+  Null |
+  ObjectLiteral |
+  ArrayLiteral
+}
+
+@tokens {
+  Identifier { $[a-zA-Z_]$[a-zA-Z0-9_]* }
+
+  String { 
+    '"' (!["\\] | "\\" _)* '"' |
+    "'" (!['\\] | "\\" _)* "'"
+  }
+
+  Number { 
+    "-"? @digit+ ("." @digit+)? (("e" | "E") ("+" | "-")? @digit+)?
+  }
+
+  Boolean { "true" | "false" }
+
+  Null { "null" }
+  
+  space { @whitespace+ }
+
+  "{" "}" "[" "]" "(" ")"
+  ":" ","  "."
+}
+
+@skip { space }
+
+@precedence {
+  Not @right,
+  And @left,
+  Or @left
+}
