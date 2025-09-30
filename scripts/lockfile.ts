@@ -6,6 +6,8 @@ import { parse } from 'yaml';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+type VersionId = string;
+
 /**
  * Represents a dependency specification in the lockfile.
  */
@@ -84,6 +86,14 @@ export interface Package {
 }
 
 /**
+ * Represents a snapshot of a package.
+ */
+export interface Snapshot {
+  /** The resolved version. */
+  dependencies?: Record<string, VersionId>;
+}
+
+/**
  * Represents patches applied to dependencies.
  */
 export interface PatchedDependency {
@@ -120,7 +130,8 @@ export interface PnpmLockfile {
   /** Workspace packages and their dependencies. */
   importers: Record<string, Importer>;
   /** All resolved packages in the lockfile. */
-  packages?: Record<string, Package>;
+  packages?: Record<PackageId, Package>;
+  snapshots?: Record<PackageId, Snapshot>;
   /** Specifiers for packages. */
   specifiers?: Record<string, string>;
   /** Time when packages were resolved. */
@@ -158,13 +169,13 @@ const dependants = new Map<PackageId, Set<PackageId>>();
  */
 function parsePackageId(packageId: PackageId): PackageInfo | null {
   // Handle scoped packages like @babel/core@7.25.2
-  const scopedMatch = packageId.match(/^(@[^/]+\/[^@]+)@([^(]+)/);
+  const scopedMatch = packageId.match(/^(@[^/]+\/[^@]+)@(.+)$/);
   if (scopedMatch) {
     return { name: scopedMatch[1], version: scopedMatch[2] };
   }
 
   // Handle non-scoped packages like react@18.2.0
-  const match = packageId.match(/^([^@]+)@([^(]+)/);
+  const match = packageId.match(/^([^@]+)@(.+)$/);
   if (match) {
     return { name: match[1], version: match[2] };
   }
@@ -178,38 +189,17 @@ const lockfileContent = await readFile(lockfilePath, 'utf-8');
 const lockfileData = parse(lockfileContent) as PnpmLockfile;
 
 // Fill dependants map from lockfile.
-if (lockfileData.packages) {
-  for (const [packageId, packageData] of Object.entries(lockfileData.packages)) {
+if (lockfileData.snapshots) {
+  for (const [snapshotId, snapshotData] of Object.entries(lockfileData.snapshots)) {
     // Collect all dependencies from different fields.
     const allDeps: string[] = [];
 
-    if (packageData.dependencies) {
-      allDeps.push(...Object.keys(packageData.dependencies));
-    }
-    if (packageData.devDependencies) {
-      allDeps.push(...Object.keys(packageData.devDependencies));
-    }
-    if (packageData.peerDependencies) {
-      allDeps.push(...Object.keys(packageData.peerDependencies));
-    }
-    if (packageData.optionalDependencies) {
-      allDeps.push(...Object.keys(packageData.optionalDependencies));
-    }
-
-    // For each dependency, add the current package as a dependant.
-    for (const depName of allDeps) {
-      // Find the package ID for this dependency in the lockfile.
-      // We need to search through all package IDs to find matching ones.
-      for (const [depPackageId, depPackageData] of Object.entries(lockfileData.packages)) {
-        const depInfo = parsePackageId(depPackageId);
-        if (depInfo && depInfo.name === depName) {
-          // Add this package as a dependant of the dependency.
-          if (!dependants.has(depPackageId)) {
-            dependants.set(depPackageId, new Set<PackageId>());
-          }
-          dependants.get(depPackageId)!.add(packageId);
-        }
+    for (const [depName, depVersionId] of Object.entries(snapshotData.dependencies ?? {})) {
+      const depPackageId = `${depName}@${depVersionId}`;
+      if (!dependants.has(depPackageId)) {
+        dependants.set(depPackageId, new Set<PackageId>());
       }
+      dependants.get(depPackageId)!.add(snapshotId);
     }
   }
 }
@@ -248,17 +238,30 @@ for (const [importerPath, importerData] of Object.entries(lockfileData.importers
     }
 
     // Find the matching package in the packages section.
-    for (const [packageId, packageData] of Object.entries(lockfileData.packages || {})) {
-      const packageInfo = parsePackageId(packageId);
-      if (packageInfo && packageInfo.name === depName) {
-        // Add the importer as a dependant.
-        if (!dependants.has(packageId)) {
-          dependants.set(packageId, new Set<PackageId>());
-        }
-        // Use the importer path as the dependant ID for workspace packages.
-        dependants.get(packageId)!.add(`importer:${importerPath}`);
-      }
+    const packageId = `${depName}@${depVersion}`;
+    if (!dependants.has(packageId)) {
+      dependants.set(packageId, new Set<PackageId>());
     }
+    // Use the importer path as the dependant ID for workspace packages.
+    dependants.get(packageId)!.add(`importer:${importerPath}`);
+  }
+}
+
+function getImporterSpecifier(importer: string, dep: string): string | undefined {
+  if (!lockfileData.importers[importer]) {
+    return;
+  }
+  if (lockfileData.importers[importer].dependencies?.[dep]) {
+    return lockfileData.importers[importer].dependencies[dep].specifier;
+  }
+  if (lockfileData.importers[importer].devDependencies?.[dep]) {
+    return lockfileData.importers[importer].devDependencies[dep].specifier;
+  }
+  if (lockfileData.importers[importer].peerDependencies?.[dep]) {
+    return lockfileData.importers[importer].peerDependencies[dep].specifier;
+  }
+  if (lockfileData.importers[importer].optionalDependencies?.[dep]) {
+    return lockfileData.importers[importer].optionalDependencies[dep].specifier;
   }
 }
 
@@ -272,6 +275,7 @@ function printDependantsTree(
   visited: Set<PackageId> = new Set(),
   indent: string = '',
   isLast: boolean = true,
+  parent?: PackageId,
 ): void {
   if (depth > maxDepth || visited.has(packageId)) {
     return;
@@ -291,17 +295,27 @@ function printDependantsTree(
     console.log(displayName);
   } else {
     const connector = isLast ? '└─' : '├─';
-    console.log(`${indent}${connector} ${displayName}`);
+    let extraData = '';
+    if (packageId.startsWith('importer:') && parent) {
+      const parentInfo = parsePackageId(parent);
+      if (parentInfo) {
+        const specifier = getImporterSpecifier(packageId.slice('importer:'.length), parentInfo.name);
+        if (specifier) {
+          extraData += ` (${specifier})`;
+        }
+      }
+    }
+    console.log(`${indent}${connector} ${displayName}${extraData}`);
   }
 
   const deps = dependants.get(packageId);
   if (deps && depth < maxDepth) {
     const sortedDeps = Array.from(deps).sort();
     const newIndent = depth === 0 ? '' : indent + (isLast ? '   ' : '│  ');
-    
+
     sortedDeps.forEach((dep, index) => {
       const isLastChild = index === sortedDeps.length - 1;
-      printDependantsTree(dep, depth + 1, maxDepth, visited, newIndent, isLastChild);
+      printDependantsTree(dep, depth + 1, maxDepth, visited, newIndent, isLastChild, packageId);
     });
   }
 }
@@ -313,7 +327,7 @@ function findPackagesByName(packageName: string): PackageId[] {
   const matches: PackageId[] = [];
 
   if (lockfileData.packages) {
-    for (const packageId of Object.keys(lockfileData.packages)) {
+    for (const packageId of Object.keys(lockfileData.snapshots ?? {})) {
       const packageInfo = parsePackageId(packageId);
       if (packageInfo && packageInfo.name === packageName) {
         matches.push(packageId);

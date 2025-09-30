@@ -252,6 +252,17 @@ export const Default: Story = {
   },
 };
 
+export const WithWebSearch: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
+    config: config.remote,
+  }),
+  args: {
+    deckComponents: [[ChatContainer]],
+    blueprints: ['dxos.org/blueprint/web-search'],
+  },
+};
+
 // Test with prompt: Propose changes to my document based on the style guide.
 export const WithDocument: Story = {
   decorators: getDecorators({

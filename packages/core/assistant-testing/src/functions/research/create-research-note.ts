@@ -18,6 +18,7 @@ export default defineFunction({
   name: 'Create research note',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
+    // TODO(dmaretskyi): Use a specialized type for this (e.g. ArtifactId renamed as RefFromLLM)
     target: Schema.String.annotations({
       description: 'Id of the object (org, contact, etc.) for which the research was performed. This must be a ulid.',
     }),

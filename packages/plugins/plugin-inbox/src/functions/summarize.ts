@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
@@ -42,7 +42,7 @@ export default defineFunction({
       });
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 
-      const toolkit = yield* AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
+      const toolkit = yield* Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
         Effect.provide(
           Layer.mergeAll(
             //
