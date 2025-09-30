@@ -95,7 +95,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               LocalFunctionExecutionService.layerLive,
               RemoteFunctionExecutionService.layerMock,
               // TODO(mykola): Use prod layer.
-              FunctionInvocationService.layerTest,
+              FunctionInvocationService.fromClient(client.edge.baseUrl, spaceId),
             ),
           ),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),

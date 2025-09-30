@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { getMeta, getSpace } from '@dxos/react-client/echo';
 
@@ -30,7 +30,12 @@ export const getFunctionUrl = ({
   });
 };
 
-export const updateFunctionMetadata = (script: ScriptType, storedFunction: any, meta: any, functionId: string) => {
+export const updateFunctionMetadata = (
+  script: ScriptType,
+  storedFunction: FunctionType,
+  meta: any,
+  functionId: string,
+) => {
   if (script.description !== undefined && script.description.trim() !== '') {
     storedFunction.description = script.description;
   } else if (meta.description) {
@@ -49,5 +54,11 @@ export const updateFunctionMetadata = (script: ScriptType, storedFunction: any, 
     storedFunction.outputSchema = meta.outputSchema;
   } else {
     log.verbose('no output schema in function metadata', { functionId });
+  }
+
+  if (meta.key) {
+    storedFunction.key = meta.key;
+  } else {
+    log.verbose('no key in function metadata', { functionId });
   }
 };
