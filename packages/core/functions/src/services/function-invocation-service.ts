@@ -58,8 +58,6 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   }) => Layer.Layer<FunctionInvocationService, FunctionError, InvocationServices> = ({ functions }) =>
     FunctionInvocationService.layer.pipe(
       Layer.provideMerge(
-        // Provide mock for remote execution at the top level so that
-        // FunctionInvocationService.layer can resolve it as a dependency.
         LocalFunctionExecutionService.layerLive.pipe(
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
           Layer.provideMerge(AiService.notAvailable),
