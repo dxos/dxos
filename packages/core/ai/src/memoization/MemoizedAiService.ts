@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import * as AiService from '../AiService';
 import { TestContextService } from '@dxos/effect';
+import { log } from '@dxos/log';
 
 export interface MemoizedAiService extends AiService.Service {}
 
@@ -68,13 +69,6 @@ export const layerTest = (options: Partial<Omit<MakeOptions, 'upstream'>> = {}) 
     }),
   );
 
-type TestContextLike = {
-  task: {
-    file: {
-      filepath: string;
-    };
-  };
-};
 interface MakeModelOptions {
   upstreamModel: LanguageModel.Service;
   modelName: string;
@@ -146,21 +140,16 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
               })
               .pipe(Stream.provideService(LanguageModel.LanguageModel, options.upstreamModel));
 
-            // TODO(dmaretskyi): Better way to run code after the stream is finished?
             return stream.pipe(
               Stream.map(reinterpretStreamPart),
-              Stream.concat(
-                Stream.fromIterableEffect(
-                  Effect.gen(function* () {
-                    const conversation: MemoziedConversation = {
-                      parameters: getMemoizedConversationParameters(options.modelName, params),
-                      history: yield* chat.history,
-                    };
-                    yield* store.saveMemoizedConversation(conversation);
-
-                    return [];
-                  }),
-                ),
+              Stream.onEnd(
+                Effect.gen(function* () {
+                  const conversation: MemoziedConversation = {
+                    parameters: getMemoizedConversationParameters(options.modelName, params),
+                    history: yield* chat.history,
+                  };
+                  yield* store.saveMemoizedConversation(conversation);
+                }),
               ),
             );
           }
@@ -182,6 +171,7 @@ const getContinuation = (prompt: Prompt.Prompt, memoized: Prompt.Prompt): Prompt
 
 const reinterpretResponseParts = (parts: Response.Part<Record<string, Tool.Any>>[]): Response.PartEncoded[] => {
   return parts.map((part): Response.PartEncoded => {
+    log.info('response part', part);
     switch (part.type) {
       case 'text':
         return Response.TextPart.pipe(Schema.encodeSync)(part);
