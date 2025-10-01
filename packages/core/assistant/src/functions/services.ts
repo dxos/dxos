@@ -7,14 +7,13 @@ import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Obj, Query } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import {
   DatabaseService,
   FunctionDefinition,
   type FunctionImplementationResolver,
   FunctionInvocationService,
   FunctionType,
-  getUserFunctionIdInMetadata,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -48,7 +47,6 @@ export const makeToolResolverFromFunctions = (
             const {
               objects: [dbFunction],
             } = yield* DatabaseService.runQuery(Query.type(FunctionType, { key: id }));
-            const functionDeploymentId = dbFunction ? getUserFunctionIdInMetadata(Obj.getMeta(dbFunction)) : undefined;
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)
@@ -58,7 +56,7 @@ export const makeToolResolverFromFunctions = (
               return yield* Effect.fail(new AiToolNotFoundError(id));
             }
 
-            return projectFunctionToTool(functionDef, { deployedFunctionId: functionDeploymentId });
+            return projectFunctionToTool(functionDef);
           }).pipe(Effect.provideService(DatabaseService, dbService)),
       } satisfies Context.Tag.Service<ToolResolverService>;
     }),
@@ -88,12 +86,10 @@ export const makeToolExecutionServiceFromFunctions = (
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
 
-              const { definition: functionDef, deployedFunctionId } = Context.get(FunctionToolAnnotation)(
-                tool.annotations as any,
-              );
+              const { definition: functionDef } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
 
               return yield* functionInvocationService
-                .invokeFunction(functionDef, input as any, deployedFunctionId)
+                .invokeFunction(functionDef, input as any)
                 .pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
             });
           };
@@ -107,18 +103,9 @@ export const makeToolExecutionServiceFromFunctions = (
   );
 };
 
-/**
- * Tools that are projected from functions have this annotation.
- *
- * deployedFunctionId:
- * - Backend deployment ID assigned by the EDGE function service (typically a UUID).
- * - Used for remote invocation via `FunctionInvocationService` → `RemoteFunctionExecutionService`.
- * - Persisted on the corresponding ECHO `FunctionType` object's metadata under the
- *   `FUNCTIONS_META_KEY` and retrieved with `getUserFunctionIdInMetadata`.
- */
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
-  { definition: FunctionDefinition<any, any>; deployedFunctionId?: string; spaceId?: string }
+  { definition: FunctionDefinition<any, any> }
 >() {}
 
 const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
@@ -131,7 +118,7 @@ const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
  * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present. This is the
  *        EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
  */
-const projectFunctionToTool = (fn: FunctionDefinition<any, any>, meta?: { deployedFunctionId?: string }): Tool.Any => {
+const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
@@ -141,7 +128,7 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>, meta?: { deploy
     parameters: createStructFieldsFromSchema(fn.inputSchema),
     // TODO(dmaretskyi): Include output schema.
     failure: Schema.Any, // TODO(dmaretskyi): Better type for the failure?
-  }).annotate(FunctionToolAnnotation, { definition: fn, deployedFunctionId: meta?.deployedFunctionId });
+  }).annotate(FunctionToolAnnotation, { definition: fn });
   toolCache.set(fn, tool);
   return tool;
 };

@@ -20,11 +20,7 @@ import { RemoteFunctionExecutionService } from './remote-function-execution-serv
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
   {
-    invokeFunction<I, O>(
-      functionDef: FunctionDefinition<I, O>,
-      input: I,
-      deployedFunctionId?: string,
-    ): Effect.Effect<O, never, InvocationServices>;
+    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
   }
 >() {
   static layer = Layer.effect(
@@ -37,11 +33,10 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
         invokeFunction: <I, O>(
           functionDef: FunctionDefinition<I, O>,
           input: I,
-          deployedFunctionId?: string,
         ): Effect.Effect<O, never, InvocationServices> =>
           Effect.gen(function* () {
-            if (deployedFunctionId) {
-              return yield* remoteExecutioner.callFunction<I, O>(deployedFunctionId, input);
+            if (functionDef.meta?.deployedFunctionId) {
+              return yield* remoteExecutioner.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
             }
 
             return yield* localExecutioner.invokeFunction(functionDef, input);

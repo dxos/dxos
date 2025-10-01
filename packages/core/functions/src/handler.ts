@@ -13,6 +13,7 @@ import { type QueryResult } from '@dxos/protocols';
 
 import { FunctionType } from './schema';
 import { type Services } from './services';
+import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
@@ -96,6 +97,18 @@ export type FunctionDefinition<T = any, O = any> = {
   inputSchema: Schema.Schema<T, any>;
   outputSchema?: Schema.Schema<O, any>;
   handler: FunctionHandler<T, O>;
+  meta?: {
+    /**
+     * Tools that are projected from functions have this annotation.
+     *
+     * deployedFunctionId:
+     * - Backend deployment ID assigned by the EDGE function service (typically a UUID).
+     * - Used for remote invocation via `FunctionInvocationService` → `RemoteFunctionExecutionService`.
+     * - Persisted on the corresponding ECHO `FunctionType` object's metadata under the
+     *   `FUNCTIONS_META_KEY` and retrieved with `getUserFunctionIdInMetadata`.
+     */
+    deployedFunctionId?: string;
+  };
 };
 
 // TODO(dmaretskyi): Output type doesn't get typechecked.
@@ -176,8 +189,8 @@ export declare namespace FunctionDefinition {
   export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
 }
 
-export const serializeFunction = (functionDef: FunctionDefinition<any, any>): FunctionType =>
-  Obj.make(FunctionType, {
+export const serializeFunction = (functionDef: FunctionDefinition<any, any>): FunctionType => {
+  const fn = Obj.make(FunctionType, {
     key: functionDef.key,
     name: functionDef.name,
     version: '0.1.0',
@@ -185,6 +198,11 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
     inputSchema: Type.toJsonSchema(functionDef.inputSchema),
     outputSchema: !functionDef.outputSchema ? undefined : Type.toJsonSchema(functionDef.outputSchema),
   });
+  if (functionDef.meta?.deployedFunctionId) {
+    setUserFunctionIdInMetadata(Obj.getMeta(fn), functionDef.meta.deployedFunctionId);
+  }
+  return fn;
+};
 
 export const deserializeFunction = (functionObj: FunctionType): FunctionDefinition<unknown, unknown> => {
   return {
@@ -197,5 +215,8 @@ export const deserializeFunction = (functionObj: FunctionType): FunctionDefiniti
     outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
+    meta: {
+      deployedFunctionId: getUserFunctionIdInMetadata(Obj.getMeta(functionObj)),
+    },
   };
 };
