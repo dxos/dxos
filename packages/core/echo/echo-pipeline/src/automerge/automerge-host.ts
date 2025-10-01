@@ -719,25 +719,23 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const docs = await Promise.all(
-      documentIds.map(async (documentId) => {
-        const handle = this._repo.handles[documentId];
-        if (!handle || !handle.isReady()) {
-          log.warn('document not ready, skipping', { documentId });
-          return;
-        }
-        const doc = handle.doc();
-        if (!doc) {
-          log.warn('document not available, skipping', { documentId });
-          return;
-        }
-        return {
-          documentId,
-          data: save(doc),
-          heads: getHeads(doc),
-        };
-      }),
-    );
+    const docs = documentIds.map((documentId) => {
+      const handle = this._repo.handles[documentId];
+      if (!handle || !handle.isReady()) {
+        log.warn('document not ready, skipping', { documentId });
+        return;
+      }
+      const doc = handle.doc();
+      if (!doc) {
+        log.warn('document not available, skipping', { documentId });
+        return;
+      }
+      return {
+        documentId,
+        data: save(doc),
+        heads: getHeads(doc),
+      };
+    });
 
     await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
   }
