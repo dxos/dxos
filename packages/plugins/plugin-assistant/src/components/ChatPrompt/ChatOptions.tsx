@@ -177,7 +177,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
 
   return (
     <SearchList.Root>
-      <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
+      <SearchList.Content classNames='p-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
         {objects.length ? (
           objects.map((object) => {
             const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
@@ -199,7 +199,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
         )}
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 mbe-cardSpacingChrome'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardSpacingChrome mbe-cardSpacingChrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
           <Select.Portal>
