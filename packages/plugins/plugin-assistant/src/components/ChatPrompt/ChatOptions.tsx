@@ -16,7 +16,7 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
 
-const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-[25rem] max-is-[--text-content]';
+const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
 
 export type ChatOptionsProps = {
   space: Space;
@@ -132,6 +132,10 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const arrowGroup = useArrowNavigationGroup({ axis: 'vertical' });
+  // TODO(thure): This is implemented manually because of the available components `DropdownMenu` and `List` of
+  //  `react-ui-list`, neither were flexible enough to simply produce a listbox with options with the required keyboard
+  //  access without setting up more code than what you see here. This is an unusual situation, so the exception seems
+  //  merited here, but we should consider moving this upstream so it tracks with changes to the design system.
   return (
     <ul role='listbox' className='plb-cardSpacingChrome' {...arrowGroup}>
       {presets?.map(({ id, label }) => {
