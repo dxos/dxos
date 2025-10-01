@@ -7,7 +7,8 @@ import { Effect, Schema } from 'effect';
 import { defineFunction } from '../handler';
 
 export default defineFunction({
-  name: 'example.org/function/fib',
+  key: 'example.org/function/fib',
+  name: 'Fibonacci',
   description: 'Function that calculates a Fibonacci number',
   inputSchema: Schema.Struct({
     iterations: Schema.optional(Schema.Number).annotations({

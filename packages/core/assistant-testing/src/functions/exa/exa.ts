@@ -8,7 +8,8 @@ import Exa from 'exa-js';
 import { CredentialsService, defineFunction } from '@dxos/functions';
 
 export default defineFunction({
-  name: 'dxos.org/function/exa',
+  key: 'dxos.org/function/exa',
+  name: 'Exa',
   description: 'Search the web for information',
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({

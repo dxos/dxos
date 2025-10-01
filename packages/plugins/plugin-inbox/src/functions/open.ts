@@ -12,7 +12,8 @@ import { DataType } from '@dxos/schema';
 import { Mailbox } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/inbox/email-open',
+  key: 'dxos.org/function/inbox/email-open',
+  name: 'Open email',
   description: 'Opens and reads the contents of an mailbox object.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

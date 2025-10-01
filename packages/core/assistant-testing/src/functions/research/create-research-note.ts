@@ -14,7 +14,8 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { ResearchOn } from './research-graph';
 
 export default defineFunction({
-  name: 'dxos.org/function/create-research-note',
+  key: 'dxos.org/function/create-research-note',
+  name: 'Create research note',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
     // TODO(dmaretskyi): Use a specialized type for this (e.g. ArtifactId renamed as RefFromLLM)

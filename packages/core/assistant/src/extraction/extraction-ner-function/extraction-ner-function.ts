@@ -20,6 +20,8 @@ import { findQuotes, insertReferences } from '../quotes';
  */
 // TODO(mykola): Make it use vector index to query objects and not pass objects as input.
 export const extractionNerFunction = defineFunction({
+  key: 'dxos.org/function/extraction/extract-entities',
+  name: 'Extract Entities',
   description: 'Extracts named entities from a text',
   inputSchema: ExtractionInput,
   outputSchema: ExtractionOutput,

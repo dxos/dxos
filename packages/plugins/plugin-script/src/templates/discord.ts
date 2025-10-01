@@ -36,6 +36,8 @@ const generateSnowflake = (unixTimestamp: number): bigint => {
 };
 
 export default defineFunction({
+  key: 'dxos.org/script/discord',
+  name: 'Discord',
   inputSchema: S.Struct({
     // TODO(wittjosiah): Remove. This is used to provide a terminal for a cron trigger.
     tick: S.optional(S.String),

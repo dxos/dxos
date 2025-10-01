@@ -7,7 +7,8 @@ import { Effect, Schema } from 'effect';
 import { defineFunction } from '../handler';
 
 export default defineFunction({
-  name: 'example.org/function/sleep',
+  key: 'example.org/function/sleep',
+  name: 'Sleep',
   description: 'Function that sleeps for a given amount of time',
   inputSchema: Schema.Struct({
     duration: Schema.optional(Schema.Number).annotations({
