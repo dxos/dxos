@@ -21,7 +21,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
-import { createNodeProject, createStorybookProject, resolveReporterConfig } from '../../../vitest.base.config';
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 import { APP_KEY } from './src/constants';
 
@@ -335,13 +335,7 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  test: {
-    ...resolveReporterConfig({ cwd: dirname }),
-    projects: [
-      createNodeProject(),
-      createStorybookProject(dirname),
-    ]
-  },
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
 
 /**

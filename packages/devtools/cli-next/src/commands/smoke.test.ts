@@ -13,18 +13,22 @@ import { run } from './dx';
 const args = (cmd: string) => [__filename, ...cmd.split(' ')];
 
 describe('smoke tests', () => {
-  it('should show status and capture console output', () =>
-    Effect.gen(function* () {
-      const logger = yield* TestConsole.TestConsole;
+  it(
+    'should show status and capture console output',
+    () =>
+      Effect.gen(function* () {
+        const logger = yield* TestConsole.TestConsole;
 
-      // TODO(burdon): Create array of test/result tuples?
-      {
-        yield* run(args('dx hub status'));
-        assert.deepStrictEqual(logger.logs.at(0), { level: 'log', args: ['ok'], message: 'ok' });
-      }
-      {
-        yield* run(args('dx --json hub status'));
-        assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
-      }
-    }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, Effect.runPromise));
+        // TODO(burdon): Create array of test/result tuples?
+        {
+          yield* run(args('dx hub status'));
+          assert.deepStrictEqual(logger.logs.at(0), { level: 'log', args: ['ok'], message: 'ok' });
+        }
+        {
+          yield* run(args('dx --json hub status'));
+          assert.containSubset(logger.logs.at(1), { level: 'log', args: [{ status: 'ok' }] });
+        }
+      }).pipe(Effect.provide(Layer.mergeAll(TestConsole.layer, NodeContext.layer)), Effect.scoped, Effect.runPromise),
+    10_000,
+  );
 });

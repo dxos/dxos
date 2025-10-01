@@ -16,7 +16,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
-import { createNodeProject, createStorybookProject, resolveReporterConfig } from '../../../vitest.base.config';
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
@@ -162,12 +162,6 @@ export default defineConfig(
           },
         },
       ],
-      test: {
-        ...resolveReporterConfig({ cwd: dirname }),
-        projects: [
-          createNodeProject(),
-          createStorybookProject(dirname),
-        ]
-      },
+      ...createTestConfig({ dirname, node: true, storybook: true }),
     }) as UserConfig,
 );

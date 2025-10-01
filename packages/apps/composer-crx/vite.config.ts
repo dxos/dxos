@@ -16,7 +16,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
-import { createNodeProject, createStorybookProject, resolveReporterConfig } from '../../../vitest.base.config';
+// import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 // @ts-ignore
 import packageJson from './package.json';
@@ -144,11 +144,5 @@ export default defineConfig({
     },
   ],
   // TODO(wittjosiah): Tests failing.
-  // test: {
-  //   ...resolveReporterConfig({ cwd: dirname }),
-  //   projects: [
-  //     createNodeProject(),
-  //     createStorybookProject(dirname),
-  //   ]
-  // },
+  // ...createTestConfig({ dirname, node: true, storybook: true }),
 });
