@@ -36,8 +36,9 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const ai = yield* AiService.AiService;
       const credentials = yield* CredentialsService;
       const database = yield* DatabaseService;
-      const functionCallService = yield* RemoteFunctionExecutionService;
       const queues = yield* QueueService;
+      // TODO(mykola): Delete, should not be required for local execution.
+      const functionCallService = yield* RemoteFunctionExecutionService;
       return {
         // TODO(dmaretskyi): Better error types.
         invokeFunction: <I, O>(
@@ -52,8 +53,8 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
             Effect.provideService(AiService.AiService, ai),
             Effect.provideService(CredentialsService, credentials),
             Effect.provideService(DatabaseService, database),
-            Effect.provideService(RemoteFunctionExecutionService, functionCallService),
             Effect.provideService(QueueService, queues),
+            Effect.provideService(RemoteFunctionExecutionService, functionCallService),
           ),
       };
     }),
