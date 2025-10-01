@@ -17,8 +17,6 @@ import {
   DatabaseService,
   FunctionInvocationService,
   QueueService,
-  type RemoteFunctionExecutionService,
-  type Services,
   TracingService,
 } from '../services';
 import {
@@ -78,11 +76,12 @@ interface ScheduledTrigger {
 
 // TODO(dmaretskyi): Refactor service management.
 type TriggerDispatcherServices =
-  | Exclude<Services, ComputeEventLogger | TracingService | RemoteFunctionExecutionService>
   | FunctionInvocationService
   // TODO(dmaretskyi): Move those into layer deps.
   | TriggerStateStore
-  | InvocationTracer;
+  | InvocationTracer
+  | QueueService
+  | DatabaseService;
 
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
