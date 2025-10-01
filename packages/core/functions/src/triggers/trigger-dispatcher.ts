@@ -17,6 +17,7 @@ import {
   DatabaseService,
   FunctionInvocationService,
   QueueService,
+  type RemoteFunctionExecutionService,
   type Services,
   TracingService,
 } from '../services';
@@ -77,7 +78,7 @@ interface ScheduledTrigger {
 
 // TODO(dmaretskyi): Refactor service management.
 type TriggerDispatcherServices =
-  | Exclude<Services, ComputeEventLogger | TracingService>
+  | Exclude<Services, ComputeEventLogger | TracingService | RemoteFunctionExecutionService>
   | FunctionInvocationService
   // TODO(dmaretskyi): Move those into layer deps.
   | TriggerStateStore
