@@ -225,7 +225,7 @@ export class DxAvatar extends LitElement {
 const getInitials = (label: string): string[] => {
   return label
     .split(/\s+/)
-    .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
+    .map((str) => str.replace(/[^\p{L}\p{N}\p{Emoji}\s]/gu, ''))
     .filter(Boolean)
     .slice(0, 2)
     .map((word) => word[0].toUpperCase());
