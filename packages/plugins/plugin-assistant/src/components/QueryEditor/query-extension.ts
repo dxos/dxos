@@ -6,7 +6,7 @@ import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting } from 
 import { type Extension } from '@codemirror/state';
 import { styleTags, tags as t } from '@lezer/highlight';
 
-import { parser } from './gen/query';
+import { parser } from '@dxos/echo-query';
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
