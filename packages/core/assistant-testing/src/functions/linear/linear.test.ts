@@ -18,7 +18,6 @@ import {
   DatabaseService,
   FunctionInvocationService,
   LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';

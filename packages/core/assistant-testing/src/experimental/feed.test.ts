@@ -14,10 +14,8 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
-  FunctionImplementationResolver,
   FunctionInvocationService,
   LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
