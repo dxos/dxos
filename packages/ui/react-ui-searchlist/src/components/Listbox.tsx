@@ -51,6 +51,9 @@ const [ListboxProvider, useListboxContext] = createListboxContext<ListboxContext
 const [ListboxOptionProvider, useListboxOptionContext] =
   createListboxOptionContext<ListboxOptionContextValue>(LISTBOX_OPTION_NAME);
 
+// TODO(thure): Note that this is essentially an implementation of the `SelectableListbox` story of `List.tsx` in
+//  `react-ui`, but this specifies standard consumable `role="listbox"` interactivity and coheres with SearchList
+//  styles. This is a candidate for promotion to `List.tsx`, but that component will need some cleanup.
 const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
   (props: ListboxScopedProps<ListboxRootProps>, forwardedRef) => {
     const {
@@ -153,8 +156,10 @@ const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentP
 
 ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;
 
-const ListboxOptionIndicator = forwardRef<SVGSVGElement, IconProps>(
-  (props: ListboxOptionScopedProps<IconProps>, forwardedRef) => {
+type ListboxOptionIndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
+
+const ListboxOptionIndicator = forwardRef<SVGSVGElement, ListboxOptionIndicatorProps>(
+  (props: ListboxOptionScopedProps<ListboxOptionIndicatorProps>, forwardedRef) => {
     const { __listboxOptionScope, classNames, ...rootProps } = props;
     const { isSelected } = useListboxOptionContext(LISTBOX_OPTION_INDICATOR_NAME, __listboxOptionScope);
 

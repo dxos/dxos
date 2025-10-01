@@ -134,7 +134,7 @@ const ModelsPanel = ({
     <Listbox.Root value={preset} onValueChange={onPresetChange}>
       {presets?.map(({ id, label }) => {
         return (
-          <Listbox.Option key={id} value={id} onSelect={() => onPresetChange?.(id)}>
+          <Listbox.Option key={id} value={id}>
             <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
             <Listbox.OptionIndicator />
           </Listbox.Option>
