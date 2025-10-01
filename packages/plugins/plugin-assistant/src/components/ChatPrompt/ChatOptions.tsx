@@ -131,7 +131,7 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   return (
-    <Listbox.Root value={preset} onValueChange={onPresetChange}>
+    <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
       {presets?.map(({ id, label }) => {
         return (
           <Listbox.Option key={id} value={id}>

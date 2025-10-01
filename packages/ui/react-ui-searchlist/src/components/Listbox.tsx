@@ -6,7 +6,7 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type ComponentPropsWithRef, type ReactNode, forwardRef, useCallback, useEffect, useRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef } from 'react';
 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -22,10 +22,10 @@ type ListboxScopedProps<P> = P & { __listboxScope?: Scope };
 type ListboxOptionScopedProps<P> = P & { __listboxOptionScope?: Scope };
 
 type ListboxRootProps = ThemedClassName<ComponentPropsWithRef<'ul'>> & {
-  children: ReactNode;
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  autoFocus?: boolean;
 };
 
 type ListboxOptionProps = ThemedClassName<ComponentPropsWithRef<'li'>> & {
@@ -64,6 +64,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
       value: propsValue,
       defaultValue,
       onValueChange,
+      autoFocus,
       ...rootProps
     } = props;
 
@@ -83,13 +84,8 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
 
     useEffect(() => {
       // Autofocus the selected option on mount using querySelector
-      if (ref.current) {
-        const selectedOption = ref.current.querySelector('[aria-selected="true"]') as HTMLLIElement;
-        if (selectedOption) {
-          selectedOption.focus();
-        }
-      }
-    }, [selectedValue]);
+      (ref.current?.querySelector('[aria-selected="true"]') as HTMLLIElement)?.focus();
+    }, [autoFocus]);
 
     return (
       <ListboxProvider scope={__listboxScope} selectedValue={selectedValue} onValueChange={handleValueChange}>
