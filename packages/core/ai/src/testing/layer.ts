@@ -10,6 +10,7 @@ import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
 
 import { tapHttpErrors } from './tap';
+import { Redacted } from 'effect';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
 
@@ -22,7 +23,7 @@ export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, nev
 export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+      apiKey: Config.redacted('ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       transformClient: tapHttpErrors,
     }),
   ),

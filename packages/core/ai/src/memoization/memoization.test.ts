@@ -10,6 +10,12 @@ import * as AiService from '../AiService';
 import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing';
 
 import * as MemoizedAiService from './MemoizedAiService';
+import { TestHelpers } from '@dxos/effect';
+
+const TestLayer = Layer.merge(testingLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+  Layer.provideMerge(MemoizedAiService.layerTest()),
+  Layer.provide(AiServiceTestingPreset('direct')),
+);
 
 describe('memoization', () => {
   it.effect(
@@ -25,13 +31,12 @@ describe('memoization', () => {
     Effect.fnUntraced(
       function* (ctx) {
         const result = yield* LanguageModel.generateText({
-          prompt: 'Write me a long poem!',
+          prompt: 'Write me a poem!',
         });
         console.log(result);
       },
-      Effect.provide(AiService.model('@anthropic/claude-sonnet-4-0')),
-      MemoizedAiService.injectIntoTest(),
-      Effect.provide(AiServiceTestingPreset('direct')),
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
     ),
   );
 
@@ -61,9 +66,8 @@ describe('memoization', () => {
           }
         }
       },
-      Effect.provide(Layer.merge(AiService.model('@anthropic/claude-sonnet-4-0'), testingLayer)),
-      MemoizedAiService.injectIntoTest(), // <--- magic here.
-      Effect.provide(AiServiceTestingPreset('direct')),
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
     ),
   );
 });

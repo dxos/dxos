@@ -7,11 +7,12 @@ import { isDeepStrictEqual } from 'node:util';
 
 import { Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
-import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
+import { Array, Effect, Layer, Option, Order, Schema, Stream, TestContext, pipe } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
 import * as AiService from '../AiService';
+import { TestContextService } from '@dxos/effect';
 
 export interface MemoizedAiService extends AiService.Service {}
 
@@ -43,15 +44,26 @@ export const make = (options: MakeOptions): MemoizedAiService => {
   };
 };
 
-export const layer = (options: Omit<MakeOptions, 'upstream'>) =>
+/**
+ * Memoizes the requests to the AI service.
+ * All conversations will be saved in `<test-file>.conversations.json`.
+ * Unless `ALLOW_LLM_GENERATION=1` is specified, no generation will be performed and the agent will error if it cannot find a memoized conversation with matching prompt
+ * If `ALLOW_LLM_GENERATION=1` is specified, the agent will generate a response if it cannot find a memoized conversation with matching prompt.
+ * Requires `TestContextService` to be provided to extract the test file path.
+ *
+ * @param options.storePath [default: `<test-file>.conversations.json`] - Filename for memoized conversations to be stored at.
+ * @param options.allowGeneration [default: `ALLOW_LLM_GENERATION=1`] - Whether to allow generation if no memoized conversation is found.
+ */
+export const layerTest = (options: Partial<Omit<MakeOptions, 'upstream'>> = {}) =>
   Layer.effect(
     AiService.AiService,
     Effect.gen(function* () {
+      const ctx = yield* TestContextService;
       const upstream = yield* AiService.AiService;
       return make({
         upstream,
-        storePath: options.storePath,
-        allowGeneration: options.allowGeneration,
+        storePath: options.storePath ?? ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
+        allowGeneration: options.allowGeneration ?? ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0'),
       });
     }),
   );
@@ -63,21 +75,6 @@ type TestContextLike = {
     };
   };
 };
-
-export const injectIntoTest =
-  () =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R | AiService.AiService>,
-    ctx: TestContextLike,
-  ): Effect.Effect<A, E, R | AiService.AiService> => {
-    return Effect.provide(
-      layer({
-        storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
-        allowGeneration: ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0'),
-      }),
-    )(effect);
-  };
-
 interface MakeModelOptions {
   upstreamModel: LanguageModel.Service;
   modelName: string;
@@ -605,7 +602,11 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
         'saved',
         'new',
       );
-      return yield* Effect.dieMessage(`No memoized conversation found for the given prompt. Closest match:\n${patch}`);
+      return yield* Effect.dieMessage(
+        `No memoized conversation found for the given prompt. Closest match:\n${patch}\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.`,
+      );
     }
-    return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+    return yield* Effect.dieMessage(
+      'No memoized conversation found for the given prompt.\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
+    );
   });
