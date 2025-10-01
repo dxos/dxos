@@ -24,7 +24,7 @@ import {
   parseCellIndex,
   useGridContext,
 } from '@dxos/react-ui-grid';
-import { createLinks, tagPicker } from '@dxos/react-ui-tag-picker';
+import { createLinks, queryEditor } from '@dxos/react-ui-query-editor';
 import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
@@ -216,14 +216,14 @@ export const TableCellEditor = ({
 
     const format = fieldProjection.props.format;
     if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
-      // TODO(ZaymonFC): Reconcile this with the TagPicker component?
+      // TODO(ZaymonFC): Reconcile this with the QueryEditor component?
       const options = fieldProjection.props.options || [];
       const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
 
       // Add markdown extensions needed by tag picker.
       extensions.push(createMarkdownExtensions());
       extensions.push(
-        tagPicker({
+        queryEditor({
           mode,
           keymap: false,
           onSearch: (text, selectedIds) => {
