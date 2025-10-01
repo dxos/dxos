@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Tree } from '@lezer/common';
 import { describe, it } from 'vitest';
 
 import { Filter } from '@dxos/echo';
@@ -137,60 +138,10 @@ describe('query', () => {
         ],
       },
       {
-        query: '(type:dxos.org/echo/Contact) => (type:dxos.org/echo/Organization)',
+        query: 'type:dxos.org/type/Contact => type:dxos.org/type/Organization',
         parts: [
           'Query',
-          // (type:dxos.org/echo/Contact)
-          '(',
-          'Filter',
-          'TypeFilter',
-          'TypeKeyword',
-          ':',
-          'Identifier',
-          ')',
-          // =>
-          'Relation',
-          '=>',
-          // (type:dxos.org/echo/Organization)
-          '(',
-          'Filter',
-          'TypeFilter',
-          'TypeKeyword',
-          ':',
-          'Identifier',
-          ')',
-        ],
-      },
-      {
-        query: '(type:dxos.org/echo/Organization) <= (type:dxos.org/echo/Contact)',
-        parts: [
-          'Query',
-          // (type:dxos.org/echo/Organization)
-          '(',
-          'Filter',
-          'TypeFilter',
-          'TypeKeyword',
-          ':',
-          'Identifier',
-          ')',
-          // <=
-          'Relation',
-          '<=',
-          // (type:dxos.org/echo/Contact)
-          '(',
-          'Filter',
-          'TypeFilter',
-          'TypeKeyword',
-          ':',
-          'Identifier',
-          ')',
-        ],
-      },
-      {
-        query: 'type:dxos.org/echo/Contact => type:dxos.org/echo/Organization',
-        parts: [
-          'Query',
-          // type:dxos.org/echo/Contact
+          // type:dxos.org/type/Contact
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -199,7 +150,7 @@ describe('query', () => {
           // =>
           'Relation',
           '=>',
-          // type:dxos.org/echo/Organization
+          // type:dxos.org/type/Organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -208,10 +159,10 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/echo/Organization <= type:dxos.org/echo/Contact',
+        query: 'type:dxos.org/type/Organization <= type:dxos.org/type/Contact',
         parts: [
           'Query',
-          // type:dxos.org/echo/Organization
+          // type:dxos.org/type/Organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -220,7 +171,38 @@ describe('query', () => {
           // <=
           'Relation',
           '<=',
-          // type:dxos.org/echo/Contact
+          // type:dxos.org/type/Contact
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+        ],
+      },
+      {
+        query: '(type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Contact',
+        parts: [
+          'Query',
+          '(',
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          'And',
+          'Filter',
+          'ObjectLiteral',
+          '{',
+          'ObjectProperty',
+          'PropertyKey',
+          'Identifier',
+          ':',
+          'Value',
+          'String',
+          '}',
+          ')',
+          'Relation',
+          '=>',
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -231,24 +213,27 @@ describe('query', () => {
     ];
 
     for (const { query, parts } of tests) {
+      let tree: Tree;
       try {
-        const tree = queryParser.parse(query);
-        const cursor = tree.cursor();
-        const result: string[] = [];
-        do {
-          result.push(cursor.node.name);
-        } while (cursor.next());
-        expect(result).toEqual(parts);
+        tree = queryParser.parse(query);
       } catch (err) {
         console.error(query, err);
+        continue;
       }
+
+      const cursor = tree.cursor();
+      const result: string[] = [];
+      do {
+        result.push(cursor.node.name);
+      } while (cursor.next());
+      expect(result).toEqual(parts);
     }
   });
 
   it.skip('should build a query', ({ expect }) => {
     const queryParser = parser.configure({ strict: true });
-    const tree = queryParser.parse('type:example.com/type/Foo');
+    const tree = queryParser.parse('type:dxos.org/type/Contact');
     const query = buildQuery(tree);
-    expect(query).toEqual(Filter.typename('example.com/type/Foo'));
+    expect(query).toEqual(Filter.typename('dxos.org/type/Contact'));
   });
 });
