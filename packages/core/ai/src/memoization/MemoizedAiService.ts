@@ -1,15 +1,17 @@
-import { Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
-import * as AiService from '../AiService';
-import { Effect, Layer, Schema, type Context, Option, Stream, Array, Order, pipe, Data } from 'effect';
-import { todo } from '@dxos/debug';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { readFile, writeFile } from 'node:fs/promises';
-import { open, type FileHandle } from 'node:fs/promises';
-import { deepEqual } from 'node:assert';
 import { isDeepStrictEqual } from 'node:util';
+
+import { Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
+import { createPatch } from 'diff';
+import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
+
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import type { StreamPartEncoded } from '@effect/ai/Response';
-import { diffChars, createPatch } from 'diff';
+
+import * as AiService from '../AiService';
 
 export interface MemoizedAiService extends AiService.Service {}
 

@@ -1,9 +1,15 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Chat, LanguageModel, Prompt } from '@effect/ai';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer, Stream } from 'effect';
-import * as MemoizedAiService from './MemoizedAiService';
-import { AiServiceTestingPreset, testingLayer, TestingToolkit } from '../testing';
+
 import * as AiService from '../AiService';
-import { Chat, LanguageModel, Prompt } from '@effect/ai';
+import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing';
+
+import * as MemoizedAiService from './MemoizedAiService';
 
 describe('memoization', () => {
   it.effect(
