@@ -7,401 +7,414 @@ import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 import { Filter } from '@dxos/client/echo';
 
 /**
- * Build a query from a parsed DSL tree.
+ * Stateless query builder that parses DSL trees into filters.
  */
-export const buildQuery = (tree: Tree, input: string, parser?: Parser): Filter.Any => {
-  const cursor = tree.cursor();
+export class QueryBuilder {
+  constructor(private readonly _parser: Parser) {}
 
-  // Start at root (Query node).
-  if (cursor.node.name !== 'Query') {
-    return Filter.nothing();
-  }
-
-  // Check if Query has multiple children (binary expression).
-  const children: Array<{ name: string; from: number; to: number }> = [];
-  if (cursor.firstChild()) {
-    do {
-      children.push({ name: cursor.node.name, from: cursor.from, to: cursor.to });
-    } while (cursor.nextSibling());
-    cursor.parent();
-  }
-
-  // If we have an operator in the children, parse as binary expression.
-  const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
-  if (hasOperator) {
-    return parseBinaryExpression(cursor, input, parser);
-  }
-
-  // Otherwise, parse the single expression.
-  if (!cursor.firstChild()) {
-    return Filter.nothing();
-  }
-
-  return parseExpression(cursor, input, parser);
-};
-
-/**
- * Parse an expression node.
- */
-const parseExpression = (cursor: TreeCursor, input: string, parser?: Parser): Filter.Any => {
-  const nodeName = cursor.node.name;
-
-  switch (nodeName) {
-    case 'Filter':
-      return parseFilter(cursor, input, parser);
-
-    case 'Not': {
-      // Move past NOT token to the expression.
-      cursor.nextSibling();
-      const notFilter = parseExpression(cursor, input, parser);
-      return Filter.not(notFilter);
+  /**
+   * Check valid input.
+   */
+  validate(input: string): boolean {
+    try {
+      const tree = this._parser.parse(input);
+      return tree.cursor().node.name === 'Query';
+    } catch {
+      return false;
     }
+  }
 
-    case 'And':
-    case 'Or':
-      // This is the operator node, we need to handle the binary expression.
-      // The cursor is positioned at the operator, we need to go back to parent.
-      cursor.parent();
-      return parseBinaryExpression(cursor, input, parser);
+  /**
+   * Build a query from a parsed DSL tree.
+   */
+  buildQuery(tree: Tree, input: string): Filter.Any {
+    const cursor = tree.cursor();
 
-    case '(': {
-      // Skip opening paren.
-      cursor.nextSibling();
-      const parenFilter = parseExpression(cursor, input, parser);
-      // Skip closing paren.
-      cursor.nextSibling();
-      return parenFilter;
-    }
-
-    default: {
-      // Check if this is a binary expression (has And/Or as a child).
-      const savedPos = cursor.from;
-      if (cursor.firstChild()) {
-        // Look for And/Or operators.
-        let hasOperator = false;
-        do {
-          if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
-            hasOperator = true;
-            break;
-          }
-        } while (cursor.nextSibling());
-
-        // Reset cursor to the saved position.
-        cursor.parent();
-        cursor.firstChild();
-        while (cursor.from !== savedPos && cursor.nextSibling()) {}
-
-        if (hasOperator) {
-          cursor.parent();
-          return parseBinaryExpression(cursor, input, parser);
-        } else {
-          const result = parseExpression(cursor, input, parser);
-          cursor.parent();
-          return result;
-        }
-      }
+    // Start at root (Query node).
+    if (cursor.node.name !== 'Query') {
       return Filter.nothing();
     }
+
+    // Check if Query has multiple children (binary expression).
+    const children: Array<{ name: string; from: number; to: number }> = [];
+    if (cursor.firstChild()) {
+      do {
+        children.push({ name: cursor.node.name, from: cursor.from, to: cursor.to });
+      } while (cursor.nextSibling());
+      cursor.parent();
+    }
+
+    // If we have an operator in the children, parse as binary expression.
+    const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
+    if (hasOperator) {
+      return this._parseBinaryExpression(cursor, input);
+    }
+
+    // Otherwise, parse the single expression.
+    if (!cursor.firstChild()) {
+      return Filter.nothing();
+    }
+
+    return this._parseExpression(cursor, input);
   }
-};
 
-/**
- * Parse a binary expression (AND/OR).
- */
-const parseBinaryExpression = (cursor: TreeCursor, input: string, parser?: Parser): Filter.Any => {
-  const filters: Filter.Any[] = [];
-  let operator: 'and' | 'or' | null = null;
+  /**
+   * Parse an expression node.
+   */
+  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any {
+    const nodeName = cursor.node.name;
 
-  // Collect all filters and operators.
-  if (cursor.firstChild()) {
-    do {
-      const nodeName = cursor.node.name;
+    switch (nodeName) {
+      case 'Filter':
+        return this._parseFilter(cursor, input);
 
-      if (nodeName === 'And' || nodeName === 'Or') {
-        operator = nodeName.toLowerCase() as 'and' | 'or';
-      } else if (nodeName === '(') {
-        // Handle parenthesized expression.
-        // Look ahead to see if this is a binary expression.
-        const savedPos = cursor.from;
-        cursor.nextSibling(); // Move past '('
+      case 'Not': {
+        // Move past NOT token to the expression.
+        cursor.nextSibling();
+        const notFilter = this._parseExpression(cursor, input);
+        return Filter.not(notFilter);
+      }
 
-        // Check if the parentheses contain a binary expression.
-        let hasBinaryOp = false;
-        do {
-          if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
-            hasBinaryOp = true;
-            break;
-          }
-        } while (cursor.nextSibling() && cursor.node.name !== ')');
-
-        // Reset cursor to start of parenthesized content.
+      case 'And':
+      case 'Or':
+        // This is the operator node, we need to handle the binary expression.
+        // The cursor is positioned at the operator, we need to go back to parent.
         cursor.parent();
-        cursor.firstChild();
-        while (cursor.from !== savedPos && cursor.nextSibling()) {}
-        cursor.nextSibling(); // Move past '(' again.
+        return this._parseBinaryExpression(cursor, input);
 
-        if (hasBinaryOp) {
-          // Find the matching closing parenthesis.
-          let depth = 1;
-          const exprStart = cursor.from;
-          let exprEnd = cursor.to;
+      case '(': {
+        // Skip opening paren.
+        cursor.nextSibling();
+        const parenFilter = this._parseExpression(cursor, input);
+        // Skip closing paren.
+        cursor.nextSibling();
+        return parenFilter;
+      }
 
-          while (cursor.nextSibling() && depth > 0) {
-            if (cursor.node.name === '(') depth++;
-            else if (cursor.node.name === ')') {
-              depth--;
-              if (depth === 0) {
-                exprEnd = cursor.from;
+      default: {
+        // Check if this is a binary expression (has And/Or as a child).
+        const savedPos = cursor.from;
+        if (cursor.firstChild()) {
+          // Look for And/Or operators.
+          let hasOperator = false;
+          do {
+            if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
+              hasOperator = true;
+              break;
+            }
+          } while (cursor.nextSibling());
+
+          // Reset cursor to the saved position.
+          cursor.parent();
+          cursor.firstChild();
+          while (cursor.from !== savedPos && cursor.nextSibling()) {}
+
+          if (hasOperator) {
+            cursor.parent();
+            return this._parseBinaryExpression(cursor, input);
+          } else {
+            const result = this._parseExpression(cursor, input);
+            cursor.parent();
+            return result;
+          }
+        }
+        return Filter.nothing();
+      }
+    }
+  }
+
+  /**
+   * Parse a binary expression (AND/OR).
+   */
+  private _parseBinaryExpression(cursor: TreeCursor, input: string): Filter.Any {
+    const filters: Filter.Any[] = [];
+    let operator: 'and' | 'or' | null = null;
+
+    // Collect all filters and operators.
+    if (cursor.firstChild()) {
+      do {
+        const nodeName = cursor.node.name;
+
+        if (nodeName === 'And' || nodeName === 'Or') {
+          operator = nodeName.toLowerCase() as 'and' | 'or';
+        } else if (nodeName === '(') {
+          // Handle parenthesized expression.
+          // Look ahead to see if this is a binary expression.
+          const savedPos = cursor.from;
+          cursor.nextSibling(); // Move past '('
+
+          // Check if the parentheses contain a binary expression.
+          let hasBinaryOp = false;
+          do {
+            if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
+              hasBinaryOp = true;
+              break;
+            }
+          } while (cursor.nextSibling() && cursor.node.name !== ')');
+
+          // Reset cursor to start of parenthesized content.
+          cursor.parent();
+          cursor.firstChild();
+          while (cursor.from !== savedPos && cursor.nextSibling()) {}
+          cursor.nextSibling(); // Move past '(' again.
+
+          if (hasBinaryOp) {
+            // Find the matching closing parenthesis.
+            let depth = 1;
+            const exprStart = cursor.from;
+            let exprEnd = cursor.to;
+
+            while (cursor.nextSibling() && depth > 0) {
+              if (cursor.node.name === '(') depth++;
+              else if (cursor.node.name === ')') {
+                depth--;
+                if (depth === 0) {
+                  exprEnd = cursor.from;
+                }
               }
             }
-          }
 
-          // Parse the expression inside parentheses as a subtree.
-          const subInput = input.slice(exprStart, exprEnd);
-          if (parser) {
-            const subTree = parser.parse(subInput);
-            filters.push(buildQuery(subTree, subInput, parser));
+            // Parse the expression inside parentheses as a subtree.
+            const subInput = input.slice(exprStart, exprEnd);
+            const subTree = this._parser.parse(subInput);
+            filters.push(this.buildQuery(subTree, subInput));
           } else {
-            // Fallback: treat as simple expression.
-            filters.push(parseExpression(cursor, input, parser));
+            // Simple parenthesized expression.
+            filters.push(this._parseExpression(cursor, input));
+            // Skip until we find the closing parenthesis.
             while (cursor.nextSibling() && cursor.node.name !== ')') {}
           }
-        } else {
-          // Simple parenthesized expression.
-          filters.push(parseExpression(cursor, input, parser));
-          // Skip until we find the closing parenthesis.
-          while (cursor.nextSibling() && cursor.node.name !== ')') {}
+        } else if (nodeName !== ')') {
+          filters.push(this._parseExpression(cursor, input));
         }
-      } else if (nodeName !== ')') {
-        filters.push(parseExpression(cursor, input, parser));
-      }
-    } while (cursor.nextSibling());
+      } while (cursor.nextSibling());
+
+      cursor.parent();
+    }
+
+    if (filters.length === 0) {
+      return Filter.nothing();
+    }
+
+    if (filters.length === 1) {
+      return filters[0];
+    }
+
+    return operator === 'or' ? Filter.or(...filters) : Filter.and(...filters);
+  }
+
+  /**
+   * Parse a Filter node.
+   */
+  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any {
+    if (!cursor.firstChild()) {
+      return Filter.nothing();
+    }
+
+    const filterType = cursor.node.name;
+    let result: Filter.Any;
+
+    switch (filterType) {
+      case 'TypeFilter':
+        result = this._parseTypeFilter(cursor, input);
+        break;
+
+      case 'ObjectLiteral':
+        result = this._parseObjectLiteral(cursor, input);
+        break;
+
+      case 'PropertyFilter':
+        result = this._parsePropertyFilter(cursor, input);
+        break;
+
+      default:
+        result = Filter.nothing();
+    }
 
     cursor.parent();
+    return result;
   }
 
-  if (filters.length === 0) {
-    return Filter.nothing();
+  /**
+   * Parse a TypeFilter node (type:typename).
+   */
+  private _parseTypeFilter(cursor: TreeCursor, input: string): Filter.Any {
+    // Skip TypeKeyword
+    cursor.firstChild();
+    cursor.nextSibling(); // Skip ':'
+    cursor.nextSibling(); // Move to Identifier
+
+    const typename = this._getNodeText(cursor, input);
+    cursor.parent();
+
+    return Filter.typename(typename);
   }
 
-  if (filters.length === 1) {
-    return filters[0];
-  }
+  /**
+   * Parse an ObjectLiteral node.
+   */
+  private _parseObjectLiteral(cursor: TreeCursor, input: string): Filter.Any {
+    const props: Record<string, any> = {};
 
-  return operator === 'or' ? Filter.or(...filters) : Filter.and(...filters);
-};
-
-/**
- * Parse a Filter node.
- */
-const parseFilter = (cursor: TreeCursor, input: string, _parser?: Parser): Filter.Any => {
-  if (!cursor.firstChild()) {
-    return Filter.nothing();
-  }
-
-  const filterType = cursor.node.name;
-  let result: Filter.Any;
-
-  switch (filterType) {
-    case 'TypeFilter':
-      result = parseTypeFilter(cursor, input);
-      break;
-
-    case 'ObjectLiteral':
-      result = parseObjectLiteral(cursor, input);
-      break;
-
-    case 'PropertyFilter':
-      result = parsePropertyFilter(cursor, input);
-      break;
-
-    default:
-      result = Filter.nothing();
-  }
-
-  cursor.parent();
-  return result;
-};
-
-/**
- * Parse a TypeFilter node (type:typename).
- */
-const parseTypeFilter = (cursor: TreeCursor, input: string): Filter.Any => {
-  // Skip TypeKeyword
-  cursor.firstChild();
-  cursor.nextSibling(); // Skip ':'
-  cursor.nextSibling(); // Move to Identifier
-
-  const typename = getNodeText(cursor, input);
-  cursor.parent();
-
-  return Filter.typename(typename);
-};
-
-/**
- * Parse an ObjectLiteral node.
- */
-const parseObjectLiteral = (cursor: TreeCursor, input: string): Filter.Any => {
-  const props: Record<string, any> = {};
-
-  if (cursor.firstChild()) {
-    do {
-      if (cursor.node.name === 'ObjectProperty') {
-        const { key, value } = parseObjectProperty(cursor, input);
-        if (key) {
-          props[key] = value;
+    if (cursor.firstChild()) {
+      do {
+        if (cursor.node.name === 'ObjectProperty') {
+          const { key, value } = this._parseObjectProperty(cursor, input);
+          if (key) {
+            props[key] = value;
+          }
         }
+      } while (cursor.nextSibling());
+
+      cursor.parent();
+    }
+
+    return Filter._props(props);
+  }
+
+  /**
+   * Parse an ObjectProperty node.
+   */
+  private _parseObjectProperty(cursor: TreeCursor, input: string): { key: string | null; value: any } {
+    let key: string | null = null;
+    let value: any = null;
+
+    if (cursor.firstChild()) {
+      // First child is PropertyKey
+      if (cursor.node.name === 'PropertyKey' && cursor.firstChild()) {
+        key = this._getNodeText(cursor, input);
+        cursor.parent();
       }
-    } while (cursor.nextSibling());
 
-    cursor.parent();
-  }
+      // Skip ':' and move to Value
+      cursor.nextSibling();
+      cursor.nextSibling();
 
-  return Filter._props(props);
-};
-
-/**
- * Parse an ObjectProperty node.
- */
-const parseObjectProperty = (cursor: TreeCursor, input: string): { key: string | null; value: any } => {
-  let key: string | null = null;
-  let value: any = null;
-
-  if (cursor.firstChild()) {
-    // First child is PropertyKey
-    if (cursor.node.name === 'PropertyKey' && cursor.firstChild()) {
-      key = getNodeText(cursor, input);
-      cursor.parent();
-    }
-
-    // Skip ':' and move to Value
-    cursor.nextSibling();
-    cursor.nextSibling();
-
-    if (cursor.node.name === 'Value' && cursor.firstChild()) {
-      value = parseValue(cursor, input);
-      cursor.parent();
-    }
-
-    cursor.parent();
-  }
-
-  return { key, value };
-};
-
-/**
- * Parse a PropertyFilter node (property:value).
- */
-const parsePropertyFilter = (cursor: TreeCursor, input: string): Filter.Any => {
-  let path: string | null = null;
-  let value: any = null;
-
-  if (cursor.firstChild()) {
-    // First child is PropertyPath
-    if (cursor.node.name === 'PropertyPath') {
-      path = parsePropertyPath(cursor, input);
-    }
-
-    // Skip ':' and move to Value
-    cursor.nextSibling();
-    cursor.nextSibling();
-
-    if (cursor.node.name === 'Value' && cursor.firstChild()) {
-      value = parseValue(cursor, input);
-      cursor.parent();
-    }
-
-    cursor.parent();
-  }
-
-  if (!path) {
-    return Filter.nothing();
-  }
-
-  return Filter._props({ [path]: value });
-};
-
-/**
- * Parse a PropertyPath node (supports dot notation).
- */
-const parsePropertyPath = (cursor: TreeCursor, input: string): string => {
-  const parts: string[] = [];
-
-  if (cursor.firstChild()) {
-    do {
-      if (cursor.node.name === 'Identifier') {
-        parts.push(getNodeText(cursor, input));
+      if (cursor.node.name === 'Value' && cursor.firstChild()) {
+        value = this._parseValue(cursor, input);
+        cursor.parent();
       }
-    } while (cursor.nextSibling());
 
-    cursor.parent();
-  }
-
-  return parts.join('.');
-};
-
-/**
- * Parse a Value node.
- */
-const parseValue = (cursor: TreeCursor, input: string): any => {
-  const valueType = cursor.node.name;
-
-  switch (valueType) {
-    case 'String': {
-      // Remove quotes
-      const str = getNodeText(cursor, input);
-      return str.slice(1, -1);
+      cursor.parent();
     }
 
-    case 'Number':
-      return Number(getNodeText(cursor, input));
+    return { key, value };
+  }
 
-    case 'Boolean':
-      return getNodeText(cursor, input) === 'true';
+  /**
+   * Parse a PropertyFilter node (property:value).
+   */
+  private _parsePropertyFilter(cursor: TreeCursor, input: string): Filter.Any {
+    let path: string | null = null;
+    let value: any = null;
 
-    case 'Null':
-      return null;
+    if (cursor.firstChild()) {
+      // First child is PropertyPath
+      if (cursor.node.name === 'PropertyPath') {
+        path = this._parsePropertyPath(cursor, input);
+      }
 
-    case 'ObjectLiteral': {
-      // For nested objects, parse recursively
-      const props: Record<string, any> = {};
-      if (cursor.firstChild()) {
-        do {
-          if (cursor.node.name === 'ObjectProperty') {
-            const { key, value } = parseObjectProperty(cursor, input);
-            if (key) {
-              props[key] = value;
+      // Skip ':' and move to Value
+      cursor.nextSibling();
+      cursor.nextSibling();
+
+      if (cursor.node.name === 'Value' && cursor.firstChild()) {
+        value = this._parseValue(cursor, input);
+        cursor.parent();
+      }
+
+      cursor.parent();
+    }
+
+    if (!path) {
+      return Filter.nothing();
+    }
+
+    return Filter._props({ [path]: value });
+  }
+
+  /**
+   * Parse a PropertyPath node (supports dot notation).
+   */
+  private _parsePropertyPath(cursor: TreeCursor, input: string): string {
+    const parts: string[] = [];
+
+    if (cursor.firstChild()) {
+      do {
+        if (cursor.node.name === 'Identifier') {
+          parts.push(this._getNodeText(cursor, input));
+        }
+      } while (cursor.nextSibling());
+
+      cursor.parent();
+    }
+
+    return parts.join('.');
+  }
+
+  /**
+   * Parse a Value node.
+   */
+  private _parseValue(cursor: TreeCursor, input: string): any {
+    const valueType = cursor.node.name;
+
+    switch (valueType) {
+      case 'String': {
+        // Remove quotes
+        const str = this._getNodeText(cursor, input);
+        return str.slice(1, -1);
+      }
+
+      case 'Number':
+        return Number(this._getNodeText(cursor, input));
+
+      case 'Boolean':
+        return this._getNodeText(cursor, input) === 'true';
+
+      case 'Null':
+        return null;
+
+      case 'ObjectLiteral': {
+        // For nested objects, parse recursively
+        const props: Record<string, any> = {};
+        if (cursor.firstChild()) {
+          do {
+            if (cursor.node.name === 'ObjectProperty') {
+              const { key, value } = this._parseObjectProperty(cursor, input);
+              if (key) {
+                props[key] = value;
+              }
             }
-          }
-        } while (cursor.nextSibling());
-        cursor.parent();
+          } while (cursor.nextSibling());
+          cursor.parent();
+        }
+        return props;
       }
-      return props;
-    }
 
-    case 'ArrayLiteral': {
-      // Parse array values
-      const array: any[] = [];
-      if (cursor.firstChild()) {
-        do {
-          if (cursor.node.name === 'Value' && cursor.firstChild()) {
-            array.push(parseValue(cursor, input));
-            cursor.parent();
-          }
-        } while (cursor.nextSibling());
-        cursor.parent();
+      case 'ArrayLiteral': {
+        // Parse array values
+        const array: any[] = [];
+        if (cursor.firstChild()) {
+          do {
+            if (cursor.node.name === 'Value' && cursor.firstChild()) {
+              array.push(this._parseValue(cursor, input));
+              cursor.parent();
+            }
+          } while (cursor.nextSibling());
+          cursor.parent();
+        }
+        return array;
       }
-      return array;
-    }
 
-    default:
-      return null;
+      default:
+        return null;
+    }
   }
-};
 
-/**
- * Get the text content of the current node.
- */
-const getNodeText = (cursor: TreeCursor, input: string): string => {
-  return input.slice(cursor.from, cursor.to);
-};
+  /**
+   * Get the text content of the current node.
+   */
+  private _getNodeText(cursor: TreeCursor, input: string): string {
+    return input.slice(cursor.from, cursor.to);
+  }
+}

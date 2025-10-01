@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import { Filter } from '@dxos/echo';
 
 import { parser } from './gen';
-import { buildQuery } from './query-builder';
+import { QueryBuilder } from './query-builder';
 
 // TODO(burdon): Generate query + test.
 // TODO(burdon): Ref/Relation traversal.
@@ -234,6 +234,7 @@ describe('query', () => {
 
   it('should build a query', ({ expect }) => {
     const queryParser = parser.configure({ strict: true });
+    const queryBuilder = new QueryBuilder(queryParser);
 
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
@@ -264,7 +265,7 @@ describe('query', () => {
 
     for (const { input, expected } of tests) {
       const tree = queryParser.parse(input);
-      const query = buildQuery(tree, input, queryParser);
+      const query = queryBuilder.buildQuery(tree, input);
       expect(query).toEqual(expected);
     }
   });
