@@ -133,11 +133,10 @@ const ModelsPanel = ({
   return (
     <Listbox.Root value={preset} onValueChange={onPresetChange}>
       {presets?.map(({ id, label }) => {
-        const isSelected = preset === id;
         return (
           <Listbox.Option key={id} value={id} onSelect={() => onPresetChange?.(id)}>
-            <div className='grow truncate'>{label}</div>
-            <Icon icon='ph--check--regular' classNames={[!isSelected && 'invisible']} />
+            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
+            <Listbox.OptionIndicator />
           </Listbox.Option>
         );
       })}
