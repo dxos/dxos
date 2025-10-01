@@ -66,7 +66,7 @@ const TestLayer = Layer.mergeAll(
 describe('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
-    Effect.fn(
+    Effect.fnUntraced(
       function* ({ expect: _ }) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
@@ -99,7 +99,7 @@ describe('Research', { timeout: 600_000 }, () => {
 
   it.effect(
     'research blueprint',
-    Effect.fn(
+    Effect.fnUntraced(
       function* ({ expect: _ }) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
