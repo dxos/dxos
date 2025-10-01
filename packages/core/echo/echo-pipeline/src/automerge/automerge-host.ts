@@ -25,7 +25,6 @@ import {
   type StorageKey,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { exportBundle } from '@automerge/automerge-repo-bundles';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -343,7 +342,7 @@ export class AutomergeHost extends Resource {
     });
     if (headsToWait.length > 0) {
       await Promise.all(
-        headsToWait.map(async (entry, index) => {
+        headsToWait.map(async (entry) => {
           const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
@@ -720,16 +719,27 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const handles = documentIds.map((documentId) => this._repo.handles[documentId]);
-    const bundle = exportBundle(this._repo, handles);
-    await this._echoNetworkAdapter.pushBundle(
-      peerId,
-      Array.from(bundle.docs.entries()).map(([documentId, doc]) => ({
-        documentId,
-        data: doc.data,
-        heads: doc.heads,
-      })),
+    const docs = await Promise.all(
+      documentIds.map(async (documentId) => {
+        const handle = this._repo.handles[documentId];
+        if (!handle || !handle.isReady()) {
+          log.warn('document not ready, skipping', { documentId });
+          return;
+        }
+        const doc = handle.doc();
+        if (!doc) {
+          log.warn('document not available, skipping', { documentId });
+          return;
+        }
+        return {
+          documentId,
+          data: save(doc),
+          heads: getHeads(doc),
+        };
+      }),
     );
+
+    await this._echoNetworkAdapter.pushBundle(peerId, docs);
   }
 
   private async _pullInBundles(
