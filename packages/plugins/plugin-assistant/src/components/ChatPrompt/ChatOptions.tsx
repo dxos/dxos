@@ -71,7 +71,7 @@ export const ChatOptions = ({
                 <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                   <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
                 </Tabs.Tabpanel>
-                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
                   <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                 </Tabs.Tabpanel>
                 <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
@@ -144,6 +144,11 @@ const ModelsPanel = ({
             tabIndex={0}
             className='overflow-hidden dx-focus-ring flex gap-2 p-cardSpacingChrome items-center rounded-sm select-none cursor-pointer hover:bg-hoverOverlay mli-cardSpacingChrome'
             onClick={() => onPresetChange?.(id)}
+            onKeyDown={({ key }) => {
+              if (['Enter', 'Space'].includes(key)) {
+                onPresetChange?.(id);
+              }
+            }}
           >
             <div className='grow truncate'>{label}</div>
             <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
@@ -186,7 +191,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ space, context });
 
   return (
-    <SearchList.Root classNames='pis-2 pie-2'>
+    <SearchList.Root>
       <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
         {objects.length ? (
           objects.map((object) => {
