@@ -217,6 +217,11 @@ const convertAssistantMessagePart: (
           text: block.data,
         });
       case 'toolResult':
+        return Prompt.makePart('tool-result', {
+          id: block.toolCallId,
+          name: block.name,
+          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+        });
       case 'image':
       case 'file':
         // TODO(burdon): Just log and ignore?
