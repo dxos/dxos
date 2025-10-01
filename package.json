@@ -148,7 +148,7 @@
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
     "types-package-json": "^2.0.39",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.39.0",
     "unplugin": "^1.7.1",
     "uuid": "^9.0.0",
