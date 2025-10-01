@@ -23,7 +23,7 @@ overrides:
   react: ~18.2.0
   react-dom: ~18.2.0
 
-pnpmfileChecksum: sha256-XVz9RTbs3oyH8GPhEz/rYkJM1EPz9Sgoc3h/NOCGpXk=
+pnpmfileChecksum: sha256-fre4bzrE63qm04nbNam1UsUQyYtUxb2vQGDtsr8UhM0=
 
 patchedDependencies:
   '@automerge/automerge-repo':
@@ -25868,7 +25868,7 @@ packages:
   esbuild-plugin-raw@0.3.0:
     resolution: {integrity: sha512-zO9UzFr/VVvSUPeYxV7Un4d2Uxb+TPOEx545rE/V9tL8ORQB0B8eXDgN1rk6FioB9ZjDKuB8tsu65eTNOH9tVw==}
     peerDependencies:
-      esbuild: 0.25.6
+      esbuild: ^0.14.36 || ^0.15.0 || ^0.16.0 || ^0.17.0 || ^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.23.0 || ^0.24.0 || ^0.25.0
 
   esbuild-plugin-wasm@1.1.0:
     resolution: {integrity: sha512-0bQ6+1tUbySSnxzn5jnXHMDvYnT0cN/Wd4Syk8g/sqAIJUg7buTIi22svS3Qz6ssx895NT+TgLPb33xi1OkZig==}
