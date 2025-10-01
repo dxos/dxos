@@ -178,7 +178,7 @@ export declare namespace FunctionDefinition {
 
 export const serializeFunction = (functionDef: FunctionDefinition<any, any>): FunctionType =>
   Obj.make(FunctionType, {
-    key: functionDef.name,
+    key: functionDef.key,
     name: functionDef.name,
     version: '0.1.0',
     description: functionDef.description,
