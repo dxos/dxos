@@ -29,7 +29,7 @@ export const preprocessPrompt: (
   messages,
   { system } = {},
 ) {
-  return yield* pipe(
+  let prompt = yield* pipe(
     messages,
     Effect.forEach(
       Effect.fnUntraced(function* (msg) {
@@ -82,8 +82,14 @@ export const preprocessPrompt: (
       }),
     ),
     Effect.map(Array.flatten),
-    Effect.map(Prompt.make),
+    Effect.map(Prompt.fromMessages),
   );
+
+  if (system) {
+    prompt = Prompt.setSystem(prompt, system);
+  }
+
+  return prompt;
 });
 
 const convertUserMessagePart: (
