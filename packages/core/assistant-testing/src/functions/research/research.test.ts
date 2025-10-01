@@ -23,9 +23,8 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  LocalFunctionExecutionService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -45,7 +44,7 @@ const MOCK_SEARCH = true;
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
-  makeToolExecutionServiceFromFunctions([research, createResearchNote], testToolkit, testToolkit.toLayer({}) as any),
+  makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -56,9 +55,10 @@ const TestLayer = Layer.mergeAll(
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerNoop,
+      FunctionInvocationService.layerTest({ functions: [research] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerNoop),
+      ),
     ),
   ),
 );
@@ -76,7 +76,8 @@ describe('Research', { timeout: 600_000 }, () => {
         );
         yield* DatabaseService.flush({ indexes: true });
 
-        const result = yield* LocalFunctionExecutionService.invokeFunction(research, {
+        const functionInvocationService = yield* FunctionInvocationService;
+        const result = yield* functionInvocationService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
           mockSearch: false,
         });
@@ -98,7 +99,7 @@ describe('Research', { timeout: 600_000 }, () => {
 
   it.effect(
     'research blueprint',
-    Effect.fn(
+    Effect.fnUntraced(
       function* ({ expect: _ }) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),

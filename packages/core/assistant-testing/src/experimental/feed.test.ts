@@ -11,13 +11,7 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
 
 import { syncLinearIssues } from '../functions';
@@ -25,7 +19,7 @@ import { syncLinearIssues } from '../functions';
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
-  makeToolExecutionServiceFromFunctions([], Toolkit.make() as any, Layer.empty as any),
+  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -41,9 +35,10 @@ const TestLayer = Layer.mergeAll(
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
+      FunctionInvocationService.layerTest({ functions: [syncLinearIssues] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
       FetchHttpClient.layer,
     ),
   ),
@@ -85,7 +80,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
 
-        const linearIssues = yield* LocalFunctionExecutionService.invokeFunction(syncLinearIssues, {
+        const linearIssues = yield* FunctionInvocationService.invokeFunction(syncLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
         console.log(linearIssues);

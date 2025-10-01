@@ -13,9 +13,8 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
-  LocalFunctionExecutionService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -43,14 +42,16 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  LocalFunctionExecutionService.layer,
-  RemoteFunctionExecutionService.mockLayer,
+  FunctionInvocationService.layerTest({ functions: [] }).pipe(
+    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+    Layer.provideMerge(TracingService.layerNoop),
+  ),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], toolkit),
-  makeToolExecutionServiceFromFunctions([], toolkit, toolkit.toLayer({}) as any),
+  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
   ComputeEventLogger.layerFromTracing,
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
