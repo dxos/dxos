@@ -4,18 +4,18 @@
 
 import { describe, it } from 'vitest';
 
-import { parser } from './gen';
+import { Filter } from '@dxos/echo';
 
-// TODO(burdon): Basic extension.
-// TODO(burdon): Generate query.
+import { parser } from './gen';
+import { buildQuery } from './query-builder';
+
+// TODO(burdon): Generate query + test.
 // TODO(burdon): Ref/Relation traversal.
 // TODO(burdon): Factor out.
 
 describe('query', () => {
   it('should parse a simple query', ({ expect }) => {
-    const queryParser = parser.configure({
-      strict: true,
-    });
+    const queryParser = parser.configure({ strict: true });
 
     const tests = [
       {
@@ -145,8 +145,14 @@ describe('query', () => {
       do {
         result.push(cursor.node.name);
       } while (cursor.next());
-
       expect(result).toEqual(parts);
     }
+  });
+
+  it('should build a query', ({ expect }) => {
+    const queryParser = parser.configure({ strict: true });
+    const tree = queryParser.parse('type:example.com/type/Foo');
+    const query = buildQuery(tree);
+    expect(query).toEqual(Filter.typename('example.com/type/Foo'));
   });
 });
