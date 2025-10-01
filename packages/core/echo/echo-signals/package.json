@@ -59,11 +59,11 @@
   },
   "devDependencies": {
     "preact": "^10.26.9",
-    "react": "~18.2.0"
+    "react": "~19.1.1"
   },
   "optionalDependencies": {
     "preact": "^10.26.9",
-    "react": "~18.2.0"
+    "react": "~19.1.1"
   },
   "publishConfig": {
     "access": "public"
