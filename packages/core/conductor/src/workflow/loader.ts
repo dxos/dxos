@@ -14,8 +14,8 @@ import {
   AnyOutput,
   type ComputeGraph,
   ComputeGraphModel,
-  DEFAULT_INPUT,
   type ComputeNode,
+  DEFAULT_INPUT,
   type Executable,
   synchronizedComputeFunction,
 } from '../types';
