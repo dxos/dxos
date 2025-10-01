@@ -90,6 +90,11 @@ function readPackage(packageJson, context) {
       break;
     }
 
+    case 'detective-typescript': {
+      packageJson.dependencies['@typescript-eslint/typescript-estree'] = '8.39.0';
+      break;
+    }
+
     case 'ink':
     case 'ink-select-input':
     case 'ink-syntax-highlight':
