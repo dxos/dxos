@@ -122,20 +122,18 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
         : type !== 'collection'
           ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-          : { onClick: handleClick };
-
-    const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
+          : { onClick: handleClick, role: 'button' };
 
     return (
       <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-        <Root
+        <Tabs.TabPrimitive
           {...(rootProps as any)}
           data-type={type}
           className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
           ref={forwardedRef}
         >
           {children}
-        </Root>
+        </Tabs.TabPrimitive>
       </Tooltip.Trigger>
     );
   },
@@ -333,20 +331,22 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       <MenuProvider>
         <DropdownMenu.Root group={parent} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <DropdownMenu.Trigger
-              data-testid='spacePlugin.addSpace'
-              className={mx(l0ItemRoot, 'grid place-items-center')}
-            >
-              <div
-                role='none'
-                className={mx(
-                  l0ItemContent,
-                  'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
-                )}
+            <Tabs.TabPrimitive value='options' asChild role='button'>
+              <DropdownMenu.Trigger
+                data-testid='spacePlugin.addSpace'
+                className={mx(l0ItemRoot, 'grid place-items-center dx-focus-ring-group')}
               >
-                <Icon icon='ph--list--regular' size={5} />
-              </div>
-            </DropdownMenu.Trigger>
+                <div
+                  role='none'
+                  className={mx(
+                    l0ItemContent,
+                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                  )}
+                >
+                  <Icon icon='ph--list--regular' size={5} />
+                </div>
+              </DropdownMenu.Trigger>
+            </Tabs.TabPrimitive>
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
