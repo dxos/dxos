@@ -99,6 +99,7 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
+      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
       MOON_CONCURRENCY: 4
     steps:
       - name: Setup tmate session
