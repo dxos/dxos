@@ -3,7 +3,7 @@
 //
 
 import { type Tool, Toolkit } from '@effect/ai';
-import { Context, Effect, Layer } from 'effect';
+import { Context, Effect, Layer, Array, Either, Option } from 'effect';
 
 import { log } from '@dxos/log';
 
@@ -28,17 +28,17 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
     ids: ToolId[],
   ) => Effect.Effect<Toolkit.Toolkit<any>, AiToolNotFoundError, ToolResolverService> = (ids) =>
     Effect.gen(function* () {
-      const maybeTools = yield* Effect.forEach(ids, (id) =>
+      const tools = yield* Effect.forEach(ids, (id) =>
         ToolResolverService.resolve(id).pipe(
-          Effect.catchAll((error) =>
+          Effect.tapErrorTag('AI_TOOL_NOT_FOUND', (error) =>
             Effect.sync(() => {
               log.warn('Failed to resolve AI tool', { id, error });
-              return undefined;
+              return Effect.void;
             }),
           ),
+          Effect.either,
         ),
-      );
-      const tools = maybeTools.filter((t): t is Tool.Any => t != null) as unknown as Tool.Any[];
+      ).pipe(Effect.map(Array.filterMap(Either.getRight)));
       return Toolkit.make(...tools);
     });
 }
