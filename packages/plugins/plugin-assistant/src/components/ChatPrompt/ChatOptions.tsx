@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
@@ -65,12 +66,12 @@ export const ChatOptions = ({
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list'>
+            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
               <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
-                <Tabs.Tabpanel value='blueprints'>
+                <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                   <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
                 </Tabs.Tabpanel>
-                <Tabs.Tabpanel value='model'>
+                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
                   <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                 </Tabs.Tabpanel>
                 <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
@@ -120,7 +121,7 @@ const BlueprintsPanel = ({
           );
         })}
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' />
+      <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -130,8 +131,9 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
+  const arrowGroup = useArrowNavigationGroup({ axis: 'vertical' });
   return (
-    <ul role='listbox' className='plb-cardSpacingChrome'>
+    <ul role='listbox' className='plb-cardSpacingChrome' {...arrowGroup}>
       {presets?.map(({ id, label }) => {
         const isActive = preset === id;
         return (
@@ -140,7 +142,7 @@ const ModelsPanel = ({
             key={id}
             aria-selected={isActive}
             tabIndex={0}
-            className='overflow-hidden dx-focus-ring flex gap-2 p-1 pis-2 pie-2 items-center rounded-sm select-none cursor-pointer hover:bg-hoverOverlay'
+            className='overflow-hidden dx-focus-ring flex gap-2 p-cardSpacingChrome items-center rounded-sm select-none cursor-pointer hover:bg-hoverOverlay mli-cardSpacingChrome'
             onClick={() => onPresetChange?.(id)}
           >
             <div className='grow truncate'>{label}</div>
@@ -226,7 +228,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' />
+        <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' autoFocus />
       </div>
     </SearchList.Root>
   );
