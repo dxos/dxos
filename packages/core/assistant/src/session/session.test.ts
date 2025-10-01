@@ -99,7 +99,7 @@ describe('AiSession', () => {
         const toolkit = yield* TestToolkit;
         const response = yield* session.run({
           toolkit,
-          prompt: 'What is 10 + 20?',
+          prompt: 'What is 10 + 30?',
           history: [],
         });
         log.info('response', { response });
