@@ -11,13 +11,13 @@ import { Filter } from '@dxos/client/echo';
  */
 export const buildQuery = (tree: Tree, input: string, parser?: Parser): Filter.Any => {
   const cursor = tree.cursor();
-  
-  // Start at root (Query node)
+
+  // Start at root (Query node).
   if (cursor.node.name !== 'Query') {
     return Filter.nothing();
   }
-  
-  // Check if Query has multiple children (binary expression)
+
+  // Check if Query has multiple children (binary expression).
   const children: Array<{ name: string; from: number; to: number }> = [];
   if (cursor.firstChild()) {
     do {
@@ -25,18 +25,18 @@ export const buildQuery = (tree: Tree, input: string, parser?: Parser): Filter.A
     } while (cursor.nextSibling());
     cursor.parent();
   }
-  
-  // If we have an operator in the children, parse as binary expression
-  const hasOperator = children.some(child => child.name === 'And' || child.name === 'Or');
+
+  // If we have an operator in the children, parse as binary expression.
+  const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
   if (hasOperator) {
     return parseBinaryExpression(cursor, input, parser);
   }
-  
-  // Otherwise, parse the single expression
+
+  // Otherwise, parse the single expression.
   if (!cursor.firstChild()) {
     return Filter.nothing();
   }
-  
+
   return parseExpression(cursor, input, parser);
 };
 
@@ -51,7 +51,7 @@ const parseExpression = (cursor: TreeCursor, input: string, parser?: Parser): Fi
       return parseFilter(cursor, input, parser);
 
     case 'Not': {
-      // Move past NOT token to the expression
+      // Move past NOT token to the expression.
       cursor.nextSibling();
       const notFilter = parseExpression(cursor, input, parser);
       return Filter.not(notFilter);
@@ -59,25 +59,25 @@ const parseExpression = (cursor: TreeCursor, input: string, parser?: Parser): Fi
 
     case 'And':
     case 'Or':
-      // This is the operator node, we need to handle the binary expression
-      // The cursor is positioned at the operator, we need to go back to parent
+      // This is the operator node, we need to handle the binary expression.
+      // The cursor is positioned at the operator, we need to go back to parent.
       cursor.parent();
       return parseBinaryExpression(cursor, input, parser);
 
     case '(': {
-      // Skip opening paren
+      // Skip opening paren.
       cursor.nextSibling();
       const parenFilter = parseExpression(cursor, input, parser);
-      // Skip closing paren
+      // Skip closing paren.
       cursor.nextSibling();
       return parenFilter;
     }
 
     default: {
-      // Check if this is a binary expression (has And/Or as a child)
+      // Check if this is a binary expression (has And/Or as a child).
       const savedPos = cursor.from;
       if (cursor.firstChild()) {
-        // Look for And/Or operators
+        // Look for And/Or operators.
         let hasOperator = false;
         do {
           if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
@@ -85,12 +85,12 @@ const parseExpression = (cursor: TreeCursor, input: string, parser?: Parser): Fi
             break;
           }
         } while (cursor.nextSibling());
-        
-        // Reset cursor to the saved position
+
+        // Reset cursor to the saved position.
         cursor.parent();
         cursor.firstChild();
         while (cursor.from !== savedPos && cursor.nextSibling()) {}
-        
+
         if (hasOperator) {
           cursor.parent();
           return parseBinaryExpression(cursor, input, parser);
@@ -112,7 +112,7 @@ const parseBinaryExpression = (cursor: TreeCursor, input: string, parser?: Parse
   const filters: Filter.Any[] = [];
   let operator: 'and' | 'or' | null = null;
 
-  // Collect all filters and operators
+  // Collect all filters and operators.
   if (cursor.firstChild()) {
     do {
       const nodeName = cursor.node.name;
@@ -120,12 +120,12 @@ const parseBinaryExpression = (cursor: TreeCursor, input: string, parser?: Parse
       if (nodeName === 'And' || nodeName === 'Or') {
         operator = nodeName.toLowerCase() as 'and' | 'or';
       } else if (nodeName === '(') {
-        // Handle parenthesized expression
-        // Look ahead to see if this is a binary expression
+        // Handle parenthesized expression.
+        // Look ahead to see if this is a binary expression.
         const savedPos = cursor.from;
         cursor.nextSibling(); // Move past '('
-        
-        // Check if the parentheses contain a binary expression
+
+        // Check if the parentheses contain a binary expression.
         let hasBinaryOp = false;
         do {
           if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
@@ -133,19 +133,19 @@ const parseBinaryExpression = (cursor: TreeCursor, input: string, parser?: Parse
             break;
           }
         } while (cursor.nextSibling() && cursor.node.name !== ')');
-        
-        // Reset cursor to start of parenthesized content
+
+        // Reset cursor to start of parenthesized content.
         cursor.parent();
         cursor.firstChild();
         while (cursor.from !== savedPos && cursor.nextSibling()) {}
-        cursor.nextSibling(); // Move past '(' again
-        
+        cursor.nextSibling(); // Move past '(' again.
+
         if (hasBinaryOp) {
-          // Find the matching closing parenthesis
+          // Find the matching closing parenthesis.
           let depth = 1;
           const exprStart = cursor.from;
           let exprEnd = cursor.to;
-          
+
           while (cursor.nextSibling() && depth > 0) {
             if (cursor.node.name === '(') depth++;
             else if (cursor.node.name === ')') {
@@ -155,21 +155,21 @@ const parseBinaryExpression = (cursor: TreeCursor, input: string, parser?: Parse
               }
             }
           }
-          
-          // Parse the expression inside parentheses as a subtree
+
+          // Parse the expression inside parentheses as a subtree.
           const subInput = input.slice(exprStart, exprEnd);
           if (parser) {
             const subTree = parser.parse(subInput);
             filters.push(buildQuery(subTree, subInput, parser));
           } else {
-            // Fallback: treat as simple expression
+            // Fallback: treat as simple expression.
             filters.push(parseExpression(cursor, input, parser));
             while (cursor.nextSibling() && cursor.node.name !== ')') {}
           }
         } else {
-          // Simple parenthesized expression
+          // Simple parenthesized expression.
           filters.push(parseExpression(cursor, input, parser));
-          // Skip until we find the closing parenthesis
+          // Skip until we find the closing parenthesis.
           while (cursor.nextSibling() && cursor.node.name !== ')') {}
         }
       } else if (nodeName !== ')') {
