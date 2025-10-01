@@ -26,7 +26,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
-  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
+  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   const adapter = useStoreAdapter(sketch, {
     onUpdate: ({ elements }) => {
       excalidrawAPIRef.current?.updateScene({ elements });

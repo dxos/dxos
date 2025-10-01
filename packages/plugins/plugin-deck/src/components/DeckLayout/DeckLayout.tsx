@@ -54,7 +54,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
 
-  const scrollLeftRef = useRef<number | null>();
+  const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
   // Ensure the first plank is attended when the deck is first rendered.

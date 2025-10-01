@@ -144,7 +144,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
     [hasAttention, ignoreAttention],
   );
 
-  const abortControllerRef = useRef<AbortController>();
+  const abortControllerRef = useRef<AbortController>(null);
 
   const handleResize = useCallback(
     async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
