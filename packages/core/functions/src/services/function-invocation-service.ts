@@ -3,10 +3,16 @@
 //
 import { Context, Effect, Layer } from 'effect';
 
+import { type FunctionError } from '../errors';
 import { type FunctionDefinition } from '../handler';
 
-import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
+import {
+  FunctionImplementationResolver,
+  type InvocationServices,
+  LocalFunctionExecutionService,
+} from './local-function-execution';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
+import { type Services } from './service-container';
 
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
@@ -15,7 +21,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
       functionDef: FunctionDefinition<I, O>,
       input: I,
       deployedFunctionId?: string,
-    ): Effect.Effect<O>;
+    ): Effect.Effect<O, FunctionError, InvocationServices>;
   }
 >() {
   static layer = Layer.effect(
@@ -29,19 +35,23 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
           functionDef: FunctionDefinition<I, O>,
           input: I,
           deployedFunctionId?: string,
-        ): Effect.Effect<O> =>
+        ): Effect.Effect<O, FunctionError, InvocationServices> =>
           Effect.gen(function* () {
             if (deployedFunctionId) {
-              return yield* remoteExecutioner.callFunction(deployedFunctionId, input);
+              return yield* remoteExecutioner.callFunction<I, O>(deployedFunctionId, input);
             }
 
             return yield* localExecutioner.invokeFunction(functionDef, input);
-          }) as Effect.Effect<O>,
+          }),
       } satisfies Context.Tag.Service<FunctionInvocationService>;
     }),
   );
 
-  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+  static layerTest: ({
+    functions,
+  }: {
+    functions: FunctionDefinition<any, any>[];
+  }) => Layer.Layer<FunctionInvocationService, FunctionError, Services> = ({ functions }) =>
     FunctionInvocationService.layer.pipe(
       Layer.provideMerge(
         Layer.mergeAll(
@@ -51,5 +61,5 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
           ),
         ),
       ),
-    ) satisfies Layer.Layer<FunctionInvocationService>;
+    );
 }

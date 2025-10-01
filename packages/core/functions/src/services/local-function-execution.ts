@@ -4,34 +4,57 @@
 
 import { Context, Effect, Layer, Schema } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { log } from '@dxos/log';
 
 import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
+import { CredentialsService } from './credentials';
+import { DatabaseService } from './database';
+import { type ComputeEventLogger } from './event-logger';
+import { QueueService } from './queues';
+import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import type { Services } from './service-container';
+import { type TracingService } from './tracing';
+
+export type InvocationServices = TracingService | ComputeEventLogger;
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
     // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
-    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, Services>;
+    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
   }
 >() {
   static layerLive = Layer.effect(
     LocalFunctionExecutionService,
     Effect.gen(function* () {
       const resolver = yield* FunctionImplementationResolver;
+      const ai = yield* AiService.AiService;
+      const credentials = yield* CredentialsService;
+      const database = yield* DatabaseService;
+      const functionCallService = yield* RemoteFunctionExecutionService;
+      const queues = yield* QueueService;
       return {
         // TODO(dmaretskyi): Better error types.
-        invokeFunction: <I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, Services> =>
+        invokeFunction: <I, O>(
+          functionDef: FunctionDefinition<I, O>,
+          input: I,
+        ): Effect.Effect<O, never, InvocationServices> =>
           Effect.gen(function* () {
             const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
             const output = yield* invokeFunction(resolved, input);
             return output as O;
-          }),
+          }).pipe(
+            Effect.provideService(AiService.AiService, ai),
+            Effect.provideService(CredentialsService, credentials),
+            Effect.provideService(DatabaseService, database),
+            Effect.provideService(RemoteFunctionExecutionService, functionCallService),
+            Effect.provideService(QueueService, queues),
+          ),
       };
     }),
   );
