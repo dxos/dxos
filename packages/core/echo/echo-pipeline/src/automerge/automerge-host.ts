@@ -38,7 +38,7 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, isNonNullable, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -739,7 +739,7 @@ export class AutomergeHost extends Resource {
       }),
     );
 
-    await this._echoNetworkAdapter.pushBundle(peerId, docs);
+    await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
   }
 
   private async _pullInBundles(
