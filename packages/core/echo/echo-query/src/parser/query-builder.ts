@@ -269,6 +269,7 @@ export class QueryBuilder {
       cursor.parent();
     }
 
+    // TODO(burdon): Internal only?
     return Filter._props(props);
   }
 
