@@ -11,7 +11,7 @@ import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -109,8 +109,9 @@ describe('workflow', () => {
 
       const services = createTestExecutionContext({
         functions: {
-          callFunction: (deployedFunctionId, input: any) =>
+          callFunction: (deployedFunctionId, { input }: any) =>
             Effect.sync(() => {
+              log.info('callFunction', { deployedFunctionId, input });
               expect(deployedFunctionId).toEqual(`/${functionId}`);
               return { result: Math.pow(input.num1, input.num2) } as any;
             }),

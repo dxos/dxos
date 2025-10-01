@@ -15,7 +15,6 @@ import {
   type ComputeGraph,
   ComputeGraphModel,
   type ComputeNode,
-  DEFAULT_INPUT,
   type Executable,
   synchronizedComputeFunction,
 } from '../types';
@@ -135,7 +134,7 @@ export class WorkflowLoader {
     const output = node.outputSchema ? toEffectSchema(node.outputSchema) : AnyOutput;
     const result: Executable = {
       meta: { input: node.inputSchema ? toEffectSchema(node.inputSchema) : AnyInput, output },
-      exec: synchronizedComputeFunction((input) => executeFunction(path, input[DEFAULT_INPUT], output)),
+      exec: synchronizedComputeFunction((input) => executeFunction(path, input, output)),
     };
 
     cache.loadedFunctionsMap.set(cacheKey, result);
