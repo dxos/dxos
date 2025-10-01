@@ -136,6 +136,10 @@ describe('query', () => {
           '}',
         ],
       },
+      // {
+      //   query: '(type:dxos.org/echo/Contact)',
+      //   parts: ['Query', '(', 'Filter', 'TypeFilter', 'TypeKeyword', ':', 'Identifier', ')'],
+      // },
     ];
 
     for (const { query, parts } of tests) {
