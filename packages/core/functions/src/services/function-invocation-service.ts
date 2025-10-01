@@ -62,4 +62,6 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
         ),
       ),
     );
+
+  static invokeFunction = Effect.serviceFunctionEffect(FunctionInvocationService, (_) => _.invokeFunction);
 }

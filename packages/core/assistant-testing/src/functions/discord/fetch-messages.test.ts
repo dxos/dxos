@@ -43,8 +43,7 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* ({ expect: _ }) {
-        const functionInvocationService = yield* FunctionInvocationService;
-        const messages = yield* functionInvocationService.invokeFunction(fetchDiscordMessages, {
+        const messages = yield* FunctionInvocationService.invokeFunction(fetchDiscordMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',

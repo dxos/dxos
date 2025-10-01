@@ -48,8 +48,7 @@ describe('FunctionInvocationService', () => {
       const layer = TestLayer.pipe(Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [add] })));
 
       const result = yield* Effect.gen(function* () {
-        const functionInvocationService = yield* FunctionInvocationService;
-        return yield* functionInvocationService.invokeFunction(add, { a: 2, b: 3 });
+        return yield* FunctionInvocationService.invokeFunction(add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));
 
       expect(result).toEqual(5);
@@ -70,8 +69,7 @@ describe('FunctionInvocationService', () => {
 
       // No resolver provided → resolveFunctionImplementation will fail → remote path is used.
       const result = yield* Effect.gen(function* () {
-        const functionInvocationService = yield* FunctionInvocationService;
-        return yield* functionInvocationService.invokeFunction(echo, { hello: 'world' });
+        return yield* FunctionInvocationService.invokeFunction(echo, { hello: 'world' });
       }).pipe(Effect.provide(TestLayer));
 
       // RemoteFunctionExecutionService.mock echos input back.

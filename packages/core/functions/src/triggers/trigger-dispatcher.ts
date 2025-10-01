@@ -245,16 +245,13 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const inputData = this._prepareInputData(trigger, event);
 
         // Invoke the function
-        const functionInvocationService = yield* FunctionInvocationService;
-        return yield* functionInvocationService
-          .invokeFunction(functionDef, inputData)
-          .pipe(
-            Effect.provide(
-              ComputeEventLogger.layerFromTracing.pipe(
-                Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
-              ),
+        return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
+          Effect.provide(
+            ComputeEventLogger.layerFromTracing.pipe(
+              Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
             ),
-          );
+          ),
+        );
       }).pipe(Effect.exit);
 
       const triggerExecutionResult: TriggerExecutionResult = {

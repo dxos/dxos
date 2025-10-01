@@ -55,8 +55,7 @@ describe('Linear', { timeout: 600_000 }, () => {
       function* ({ expect: _ }) {
         yield* DatabaseService.flush({ indexes: true });
 
-        const functionInvocationService = yield* FunctionInvocationService;
-        yield* functionInvocationService.invokeFunction(fetchLinearIssues, {
+        yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 

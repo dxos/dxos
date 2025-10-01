@@ -80,8 +80,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
 
-        const linearIssues = yield* FunctionInvocationService;
-        yield* linearIssues.invokeFunction(syncLinearIssues, {
+        const linearIssues = yield* FunctionInvocationService.invokeFunction(syncLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
         console.log(linearIssues);
