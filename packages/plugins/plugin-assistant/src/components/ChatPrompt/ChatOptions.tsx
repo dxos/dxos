@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import React, { type JSX, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { SearchList, commandItem, searchListItem } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
@@ -132,45 +130,17 @@ const ModelsPanel = ({
   preset,
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
-  const arrowGroup = useArrowNavigationGroup({ axis: 'vertical' });
-  const activeOptionRef = useRef<HTMLLIElement>(null);
-
-  useEffect(() => {
-    // Autofocus the active option on mount
-    if (activeOptionRef.current) {
-      activeOptionRef.current.focus();
-    }
-  }, []);
-
-  // TODO(thure): This is implemented manually because, of the available components `DropdownMenu` and `List` of
-  //  `react-ui-list`, neither were flexible enough to simply produce a listbox with options with the required keyboard
-  //  access without setting up more code than what you see here. This is an unusual situation, so the exception seems
-  //  merited here, but we should consider moving this upstream so it tracks with changes to the design system.
   return (
-    <ul role='listbox' className='p-cardSpacingChrome' {...arrowGroup}>
+    <Listbox.Root value={preset} onValueChange={onPresetChange}>
       {presets?.map(({ id, label }) => {
-        const isActive = preset === id;
         return (
-          <li
-            role='option'
-            key={id}
-            ref={isActive ? activeOptionRef : null}
-            aria-selected={isActive}
-            tabIndex={0}
-            className={mx(commandItem, searchListItem, 'dx-focus-ring')}
-            onClick={() => onPresetChange?.(id)}
-            onKeyDown={({ key }) => {
-              if (['Enter', 'Space'].includes(key)) {
-                onPresetChange?.(id);
-              }
-            }}
-          >
-            <div className='grow truncate'>{label}</div>
-            <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-          </li>
+          <Listbox.Option key={id} value={id}>
+            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
+            <Listbox.OptionIndicator />
+          </Listbox.Option>
         );
       })}
-    </ul>
+    </Listbox.Root>
   );
 };
 

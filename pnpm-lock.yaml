@@ -5643,9 +5643,6 @@ importers:
       '@effect/platform-browser':
         specifier: 0.71.0
         version: 0.71.0(@effect/platform@0.91.1(effect@3.17.14))(effect@3.17.14)
-      '@fluentui/react-tabster':
-        specifier: ^9.24.2
-        version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -14308,9 +14305,15 @@ importers:
 
   packages/ui/react-ui-searchlist:
     dependencies:
+      '@fluentui/react-tabster':
+        specifier: ^9.24.2
+        version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)

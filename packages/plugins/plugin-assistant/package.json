@@ -109,7 +109,6 @@
     "@effect/ai-openai": "^0.31.1",
     "@effect/experimental": "0.55.0",
     "@effect/platform-browser": "0.71.0",
-    "@fluentui/react-tabster": "^9.24.2",
     "@lezer/highlight": "^1.2.1",
     "@lezer/markdown": "^1.3.1",
     "@preact-signals/safe-react": "^0.9.0",
