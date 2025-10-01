@@ -33,7 +33,7 @@ describe('memoization', () => {
         const result = yield* LanguageModel.generateText({
           prompt: 'Write me a poem!',
         });
-        console.log(result);
+        // console.log(result);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -53,7 +53,7 @@ describe('memoization', () => {
           });
           yield* stream.pipe(
             Stream.runForEach((part) => {
-              console.log(part);
+              // console.log(part);
               return Effect.void;
             }),
           );
