@@ -6,7 +6,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import '@dxos/lit-ui/dx-tag-picker.pcss';
+import '@dxos/lit-ui/dx-query-editor.pcss';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -21,38 +21,38 @@ import { mx } from '@dxos/react-ui-theme';
 import { translationKey } from '../../translations';
 
 import {
-  type TagPickerItemData,
-  type TagPickerMode,
-  type TagPickerOptions,
+  type QueryEditorItemData,
+  type QueryEditorMode,
+  type QueryEditorOptions,
   createLinks,
-  tagPicker,
-} from './tag-picker-extension';
-import { TagPickerItem } from './TagPickerItem';
+  queryEditor,
+} from './query-editor-extension';
+import { QueryEditorItem } from './QueryEditorItem';
 
-export type TagPickerProps = ThemedClassName<
+export type QueryEditorProps = ThemedClassName<
   {
-    items?: TagPickerItemData[];
+    items?: QueryEditorItemData[];
     readonly?: boolean;
-    mode?: TagPickerMode;
+    mode?: QueryEditorMode;
     placeholder?: string;
-  } & Pick<TagPickerOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
+  } & Pick<QueryEditorOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
 >;
 
-export interface TagPickerHandle {
+export interface QueryEditorHandle {
   focus: () => void;
 }
 
-export const TagPicker = forwardRef<TagPickerHandle, TagPickerProps>(({ readonly, ...props }, ref) => {
+export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(({ readonly, ...props }, ref) => {
   if (readonly) {
-    return <ReadonlyTagPicker {...props} />;
+    return <ReadonlyQueryEditor {...props} />;
   } else {
-    return <EditableTagPicker ref={ref} {...props} />;
+    return <EditableQueryEditor ref={ref} {...props} />;
   }
 });
 
-TagPicker.displayName = 'TagPicker';
+QueryEditor.displayName = 'QueryEditor';
 
-const ReadonlyTagPicker = ({ classNames, items, onSelect }: TagPickerProps) => {
+const ReadonlyQueryEditor = ({ classNames, items, onSelect }: QueryEditorProps) => {
   const handleItemClick = useCallback(
     ({ itemId, action }: DxTagPickerItemClick) => {
       if (action === 'activate') {
@@ -65,7 +65,7 @@ const ReadonlyTagPicker = ({ classNames, items, onSelect }: TagPickerProps) => {
   return (
     <div className={mx(classNames)}>
       {items?.map((item) => (
-        <TagPickerItem
+        <QueryEditorItem
           key={item.id}
           itemId={item.id}
           label={item.label}
@@ -78,7 +78,7 @@ const ReadonlyTagPicker = ({ classNames, items, onSelect }: TagPickerProps) => {
   );
 };
 
-const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
+const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
   ({ classNames, items = [], mode, placeholder, onBlur, onUpdate, onSearch, onSelect }, ref) => {
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
@@ -106,7 +106,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
               content: { className: '!text-sm' },
             },
           }),
-          tagPicker({
+          queryEditor({
             debug: true,
             onUpdate: handleUpdate,
             removeLabel: t('remove label'),
@@ -137,7 +137,7 @@ const EditableTagPicker = forwardRef<TagPickerHandle, TagPickerProps>(
       <div
         ref={composedRef}
         className={mx('min-is-0 grow', classNames)}
-        style={{ '--dx-tag-picker-width': `${width}px` } as CSSProperties}
+        style={{ '--dx-query-editor-width': `${width}px` } as CSSProperties}
       />
     );
   },

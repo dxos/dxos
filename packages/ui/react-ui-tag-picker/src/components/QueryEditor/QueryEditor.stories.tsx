@@ -10,10 +10,10 @@ import React, { useState } from 'react';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type TagPickerItemData } from './tag-picker-extension';
-import { TagPicker } from './TagPicker';
+import { type QueryEditorItemData } from './query-editor-extension';
+import { QueryEditor } from './QueryEditor';
 
-const allItems: TagPickerItemData[] = [
+const allItems: QueryEditorItemData[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -24,8 +24,8 @@ const allItems: TagPickerItemData[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-tag-picker/TagPicker',
-  component: TagPicker,
+  title: 'ui/react-ui-query-editor/QueryEditor',
+  component: QueryEditor,
   render: ({ items: initialItems, mode }) => {
     const [items, setItems] = useState(initialItems ?? []);
     const [selected, setSelected] = useState<string>();
@@ -34,7 +34,7 @@ const meta = {
     return (
       <div className='w-[20rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
-          <TagPicker
+          <QueryEditor
             items={items}
             mode={mode}
             onSelect={(id) => setSelected(id)}
@@ -56,7 +56,7 @@ const meta = {
           />
         </div>
         <div className='flex border p-1 border-separator'>
-          <TagPicker readonly items={items} onSelect={(id) => setSelected(id)} />
+          <QueryEditor readonly items={items} onSelect={(id) => setSelected(id)} />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items: items.map(({ id }) => id), selected }, null, 2)}</pre>
@@ -66,11 +66,11 @@ const meta = {
   },
   decorators: [withTheme, withLayout()],
   parameters: { layout: 'centered' },
-} satisfies Meta<typeof TagPicker>;
+} satisfies Meta<typeof QueryEditor>;
 
 export default meta;
 
-type Story = StoryObj<typeof TagPicker>;
+type Story = StoryObj<typeof QueryEditor>;
 
 export const MultiSelect: Story = {
   args: {

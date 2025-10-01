@@ -28,29 +28,29 @@ import {
 import { type ChromaticPalette } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
-import { type TagPickerItemProps } from './TagPickerItem';
+import { type QueryEditorItemProps } from './QueryEditorItem';
 
-export type TagPickerItemData = {
+export type QueryEditorItemData = {
   id: string;
   label: string;
   hue?: ChromaticPalette;
 };
 
-export const createLinks = (items: TagPickerItemData[]) => {
+export const createLinks = (items: QueryEditorItemData[]) => {
   return items.map(({ id, label }) => `[${label}](${id})`).join('');
 };
 
 /**
  * Apply function formats item as link.
  */
-export const tagPickerApply = (
+export const queryEditorApply = (
   view: EditorView,
   completion: Completion,
   from: number,
   to: number,
-  mode?: TagPickerMode,
+  mode?: QueryEditorMode,
 ) => {
-  const id = (completion as TagPickerItemData).id;
+  const id = (completion as QueryEditorItemData).id;
   const label = completion.label;
 
   if (mode === 'single-select') {
@@ -80,23 +80,23 @@ const scrollToCursor = (view: EditorView) => {
   }
 };
 
-export type TagPickerMode = 'single-select' | 'multi-select';
+export type QueryEditorMode = 'single-select' | 'multi-select';
 
-export type TagPickerOptions = {
+export type QueryEditorOptions = {
   debug?: boolean;
   keymap?: boolean;
   removeLabel?: string;
-  mode?: TagPickerMode;
+  mode?: QueryEditorMode;
   onBlur?: (event: FocusEvent) => void;
   onSelect?: (id: string) => void;
-  onSearch?: (text: string, ids: string[]) => TagPickerItemData[];
+  onSearch?: (text: string, ids: string[]) => QueryEditorItemData[];
   onUpdate?: (ids: string[]) => void;
 };
 
 /**
  * Uses the markdown parser to parse links, which are decorated as pill buttons.
  */
-export const tagPicker = ({
+export const queryEditor = ({
   debug,
   keymap: _keymap = true,
   removeLabel,
@@ -104,7 +104,7 @@ export const tagPicker = ({
   onSelect,
   onSearch,
   onUpdate,
-}: TagPickerOptions): Extension => {
+}: QueryEditorOptions): Extension => {
   // Ordered list of ids.
   const ids: string[] = [];
 
@@ -185,7 +185,7 @@ export const tagPicker = ({
                   const id = view.state.sliceDoc(urlNode.from, urlNode.to);
                   const text = view.state.doc.sliceString(from + 1, urlNode.from - 2);
                   const originalItem = onSearch?.('', []).find((item) => item.id === id);
-                  const item: TagPickerItemData = {
+                  const item: QueryEditorItemData = {
                     id,
                     label: text,
                     hue: originalItem?.hue,
@@ -259,7 +259,7 @@ export const tagPicker = ({
               id,
               label,
               hue,
-              apply: (view, completion, from, to) => tagPickerApply(view, completion, from, to, mode),
+              apply: (view, completion, from, to) => queryEditorApply(view, completion, from, to, mode),
             })),
           };
         },
@@ -271,9 +271,9 @@ export const tagPicker = ({
 };
 
 class ItemWidget extends WidgetType {
-  private props: TagPickerItemProps;
+  private props: QueryEditorItemProps;
 
-  constructor(props: TagPickerItemProps) {
+  constructor(props: QueryEditorItemProps) {
     super();
     this.props = props;
   }
@@ -300,7 +300,7 @@ const styles = EditorView.theme({
   // Constrain max width to editor.
   '.cm-tooltip.cm-tooltip-autocomplete': {
     left: '3px !important',
-    width: 'var(--dx-tag-picker-width)',
+    width: 'var(--dx-query-editor-width)',
     marginTop: '6.5px',
   },
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
