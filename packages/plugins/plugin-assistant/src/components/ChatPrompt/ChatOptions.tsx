@@ -132,7 +132,7 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const arrowGroup = useArrowNavigationGroup({ axis: 'vertical' });
-  // TODO(thure): This is implemented manually because of the available components `DropdownMenu` and `List` of
+  // TODO(thure): This is implemented manually because, of the available components `DropdownMenu` and `List` of
   //  `react-ui-list`, neither were flexible enough to simply produce a listbox with options with the required keyboard
   //  access without setting up more code than what you see here. This is an unusual situation, so the exception seems
   //  merited here, but we should consider moving this upstream so it tracks with changes to the design system.
