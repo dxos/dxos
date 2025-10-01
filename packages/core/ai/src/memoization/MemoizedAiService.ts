@@ -1,19 +1,18 @@
 //
 // Copyright 2025 DXOS.org
 //
+import jsonStableStringify from 'json-stable-stringify';
 
 import { readFile, writeFile } from 'node:fs/promises';
-import { isDeepStrictEqual } from 'node:util';
 
-import { AiError, Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
+import { AiError, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
-import { Array, Effect, Layer, Option, Order, Schema, Stream, TestContext, pipe } from 'effect';
+import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
 
-import { invariant } from '@dxos/invariant';
 
-import * as AiService from '../AiService';
 import { TestContextService } from '@dxos/effect';
-import { log } from '@dxos/log';
+import { expect } from 'vitest';
+import * as AiService from '../AiService';
 
 export interface MemoizedAiService extends AiService.Service {}
 
@@ -158,7 +157,6 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
                 ),
                 Stream.mapChunksEffect(
                   Effect.fnUntraced(function* (chunk) {
-                    const parts = Array.fromIterable(chunk);
                     parts.push(...chunk);
                     return chunk;
                   }),
@@ -209,11 +207,12 @@ const getConverstaionFromOptions = (
 };
 
 const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
-  if (!isDeepStrictEqual(haystack.parameters, needle.parameters)) {
+  // TODO(dmaretskyi): dequal doesn't work for some reason.
+  if (jsonStableStringify(haystack.parameters) !== jsonStableStringify(needle.parameters)) {
     return false;
   }
 
-  if (!isDeepStrictEqual(haystack.prompt, needle.prompt)) {
+  if (jsonStableStringify(haystack.prompt) !== jsonStableStringify(needle.prompt)) {
     return false;
   }
 
@@ -250,10 +249,7 @@ class MemoizedStore {
         stored.conversations,
         Array.sortBy(
           Order.mapInput(Order.number, (x) =>
-            levensteinDistance(
-              formatMemoizedConversation(x, prompted.prompt.content.length),
-              formatMemoizedConversation(prompted, prompted.prompt.content.length),
-            ),
+            levensteinDistance(formatMemoizedConversation(x), formatMemoizedConversation(prompted)),
           ),
         ),
         Option.fromIterable,
@@ -324,10 +320,18 @@ const ConversationStore = Schema.Struct({
 }).pipe(Schema.mutable);
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
-const formatMemoizedConversation = (conversation: MemoziedConversation, historyLength: number): string => {
+const formatMemoizedConversation = (conversation: MemoziedConversation): string => {
+  return jsonStableStringify(
+    {
+      parameters: conversation.parameters,
+      prompt: conversation.prompt,
+    },
+    { space: 2 },
+  );
+
   let buf = '';
   buf += JSON.stringify(conversation.parameters, null, 2) + '\n\n';
-  for (const message of conversation.prompt.content.slice(0, historyLength)) {
+  for (const message of conversation.prompt.content) {
     buf += `[${message.role}]\n`;
     for (const part of message.content) {
       switch (message.role) {
@@ -393,10 +397,11 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
   Effect.gen(function* () {
     const closestMatch = yield* store.getClosestMatch(conversation);
     if (Option.isSome(closestMatch)) {
+      expect(closestMatch.value.parameters).toEqual(conversation.parameters);
       const patch = createPatch(
         'converstaion',
-        formatMemoizedConversation(closestMatch.value, conversation.prompt.content.length),
-        formatMemoizedConversation(conversation, conversation.prompt.content.length),
+        formatMemoizedConversation(closestMatch.value),
+        formatMemoizedConversation(conversation),
         'saved',
         'new',
       );
