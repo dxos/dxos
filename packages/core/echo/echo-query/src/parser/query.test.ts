@@ -233,8 +233,7 @@ describe('query', () => {
   });
 
   it('should build a query', ({ expect }) => {
-    const queryParser = parser.configure({ strict: true });
-    const queryBuilder = new QueryBuilder(queryParser);
+    const queryBuilder = new QueryBuilder();
 
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
@@ -264,8 +263,7 @@ describe('query', () => {
     ];
 
     for (const { input, expected } of tests) {
-      const tree = queryParser.parse(input);
-      const query = queryBuilder.buildQuery(tree, input);
+      const query = queryBuilder.build(input);
       expect(query).toEqual(expected);
     }
   });

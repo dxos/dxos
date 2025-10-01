@@ -35,7 +35,6 @@ export type ChatEditorProps = ThemedClassName<
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
-// TODO(burdon): Factor out.
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (
     { classNames, extensions, references, autoFocus, lineWrapping = false, placeholder, onSubmit, onSuggest, onCancel },

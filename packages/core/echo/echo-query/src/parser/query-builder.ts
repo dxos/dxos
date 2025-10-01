@@ -4,13 +4,15 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
+
+import { parser } from './gen';
 
 /**
  * Stateless query builder that parses DSL trees into filters.
  */
 export class QueryBuilder {
-  constructor(private readonly _parser: Parser) {}
+  constructor(private readonly _parser: Parser = parser.configure({ strict: true })) {}
 
   /**
    * Check valid input.
@@ -22,6 +24,14 @@ export class QueryBuilder {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Build a query from the input string.
+   */
+  build(input: string): Filter.Any {
+    const tree = this._parser.parse(input);
+    return this.buildQuery(tree, input);
   }
 
   /**
