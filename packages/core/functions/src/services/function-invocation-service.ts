@@ -5,7 +5,6 @@ import { Context, Effect, Layer } from 'effect';
 
 import { AiService } from '@dxos/ai';
 
-import { type FunctionError } from '../errors';
 import { type FunctionDefinition } from '../handler';
 
 import { CredentialsService } from './credentials';
@@ -51,11 +50,11 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
     }),
   );
 
-  static layerTest: ({
+  static layerTest = ({
     functions,
   }: {
     functions: FunctionDefinition<any, any>[];
-  }) => Layer.Layer<FunctionInvocationService, FunctionError, InvocationServices> = ({ functions }) =>
+  }): Layer.Layer<FunctionInvocationService | FunctionImplementationResolver, never, InvocationServices> =>
     FunctionInvocationService.layer.pipe(
       Layer.provideMerge(
         LocalFunctionExecutionService.layerLive.pipe(

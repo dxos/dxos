@@ -17,7 +17,6 @@ import {
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,
-  LocalFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
@@ -40,8 +39,10 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      FunctionInvocationService.layerTest({ functions: [fetchLinearIssues] }),
-      TracingService.layerLogInfo(),
+      FunctionInvocationService.layerTest({ functions: [fetchLinearIssues] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
       FetchHttpClient.layer,
     ),
   ),
@@ -54,7 +55,8 @@ describe('Linear', { timeout: 600_000 }, () => {
       function* ({ expect: _ }) {
         yield* DatabaseService.flush({ indexes: true });
 
-        yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+        const functionInvocationService = yield* FunctionInvocationService;
+        yield* functionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 

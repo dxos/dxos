@@ -55,8 +55,10 @@ const TestLayer = Layer.mergeAll(
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      FunctionInvocationService.layerTest({ functions: [research] }),
-      TracingService.layerNoop,
+      FunctionInvocationService.layerTest({ functions: [research] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerNoop),
+      ),
     ),
   ),
 );

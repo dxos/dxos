@@ -16,7 +16,14 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { DatabaseService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import {
+  ComputeEventLogger,
+  DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -105,10 +112,15 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
+          Layer.provideMerge(
+            FunctionInvocationService.layerTest({ functions: [readTasks, updateTasks] }).pipe(
+              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+              Layer.provideMerge(TracingService.layerNoop),
+            ),
+          ),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [readTasks, updateTasks] })),
           Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(TracingService.layerNoop),
-          Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [readTasks, updateTasks] })),
         ),
       ),
       TestHelpers.taggedTest('llm'),

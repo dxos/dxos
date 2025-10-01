@@ -15,7 +15,6 @@ import {
   CredentialsService,
   FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -43,7 +42,10 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationService.layerTest({ functions: [] }),
+  FunctionInvocationService.layerTest({ functions: [] }).pipe(
+    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+    Layer.provideMerge(TracingService.layerNoop),
+  ),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
