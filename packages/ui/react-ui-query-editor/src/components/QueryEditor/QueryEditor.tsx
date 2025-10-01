@@ -6,7 +6,7 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import '@dxos/lit-ui/dx-query-editor.pcss';
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
