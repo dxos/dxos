@@ -122,7 +122,6 @@ describe('query', () => {
           ':',
           'Identifier',
           ')',
-          // AND
           'And',
           // { name: "DXOS" }
           'Filter',
@@ -147,7 +146,6 @@ describe('query', () => {
           'TypeKeyword',
           ':',
           'Identifier',
-          // =>
           'Relation',
           '=>',
           // type:dxos.org/type/Organization
@@ -168,7 +166,6 @@ describe('query', () => {
           'TypeKeyword',
           ':',
           'Identifier',
-          // <=
           'Relation',
           '<=',
           // type:dxos.org/type/Contact
@@ -180,9 +177,10 @@ describe('query', () => {
         ],
       },
       {
-        query: '(type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Contact',
+        query: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Contact)',
         parts: [
           'Query',
+          '(',
           '(',
           'Filter',
           'TypeFilter',
@@ -208,6 +206,7 @@ describe('query', () => {
           'TypeKeyword',
           ':',
           'Identifier',
+          ')',
         ],
       },
     ];
