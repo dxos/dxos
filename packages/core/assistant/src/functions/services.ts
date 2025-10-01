@@ -131,10 +131,7 @@ const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
  * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present. This is the
  *        EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
  */
-const projectFunctionToTool = (
-  fn: FunctionDefinition<any, any>,
-  meta?: { deployedFunctionId?: string },
-): Tool.Any => {
+const projectFunctionToTool = (fn: FunctionDefinition<any, any>, meta?: { deployedFunctionId?: string }): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
