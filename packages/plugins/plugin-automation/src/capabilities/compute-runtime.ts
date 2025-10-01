@@ -14,6 +14,7 @@ import {
   CredentialsService,
   DatabaseService,
   FunctionImplementationResolver,
+  FunctionInvocationService,
   InvocationTracer,
   LocalFunctionExecutionService,
   QueueService,
@@ -81,21 +82,32 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.mergeAll(
               InvocationTracerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
-              serviceLayer,
               makeToolResolverFromFunctions(allFunctions, toolkit),
-              makeToolExecutionServiceFromFunctions(allFunctions, toolkit, handlersLayer),
-              CredentialsService.layerFromDatabase(),
+              makeToolExecutionServiceFromFunctions(toolkit, handlersLayer),
             ),
           ),
           Layer.provideMerge(
             Layer.mergeAll(
-              space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable,
-              space ? QueueService.layer(space.queues) : QueueService.notAvailable,
-              LocalFunctionExecutionService.layerLive,
-              RemoteFunctionExecutionService.mockLayer,
+              FunctionInvocationService.layer.pipe(
+                Layer.provideMerge(
+                  LocalFunctionExecutionService.layerLive.pipe(
+                    Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),
+                    Layer.provideMerge(
+                      RemoteFunctionExecutionService.fromClient(
+                        client.edge.baseUrl,
+                        // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
+                        client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
+                      ),
+                    ),
+                    Layer.provideMerge(serviceLayer),
+                    Layer.provideMerge(CredentialsService.layerFromDatabase()),
+                    Layer.provideMerge(space ? DatabaseService.layer(space.db) : DatabaseService.notAvailable),
+                    Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+                  ),
+                ),
+              ),
             ),
           ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: allFunctions })),
         );
       }),
     );

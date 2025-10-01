@@ -11,7 +11,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 // TODO(burdon): Common error handling.
 // TODO(burdon): Factor out to space plugin.
 export default defineFunction({
-  name: 'dxos.org/function/assistant/load',
+  key: 'dxos.org/function/assistant/load',
+  name: 'Assistant load',
   description: 'Loads the object.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

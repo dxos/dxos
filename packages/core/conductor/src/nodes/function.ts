@@ -33,10 +33,7 @@ export const executeFunction = (
   return Effect.gen(function* () {
     const functionCallService = yield* RemoteFunctionExecutionService;
 
-    const result = yield* Effect.tryPromise({
-      try: () => functionCallService.callFunction(path, input),
-      catch: (e) => e,
-    });
+    const result = yield* functionCallService.callFunction(path, input).pipe(Effect.catchAll((e) => Effect.succeed(e)));
 
     return yield* Schema.decodeUnknown(outputSchema)(result);
   });

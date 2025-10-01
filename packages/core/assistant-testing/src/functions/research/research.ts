@@ -15,7 +15,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
+import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
@@ -31,7 +31,8 @@ import { ResearchDataTypes } from './types';
  * Exec external service and return the results as a Subgraph.
  */
 export default defineFunction({
-  name: 'dxos.org/function/research',
+  key: 'dxos.org/function/research',
+  name: 'Research',
   description:
     'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
@@ -124,12 +125,12 @@ export default defineFunction({
         AiService.model('@anthropic/claude-sonnet-4-0'),
         // TODO(dmaretskyi): Extract.
         makeToolResolverFromFunctions([exaFunction, exaMockFunction], Toolkit.make()),
-        makeToolExecutionServiceFromFunctions(
-          [exaFunction, exaMockFunction],
-          Toolkit.make() as any,
-          Layer.empty as any,
+        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+      ).pipe(
+        Layer.provide(
+          Layer.mergeAll(FunctionInvocationService.layerTest({ functions: [exaFunction, exaMockFunction] })),
         ),
-      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
+      ),
     ),
   ),
 });

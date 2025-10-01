@@ -35,7 +35,8 @@ export const modules = [
   'ui/primitives/*/src/**',
 ];
 
-export const stories = modules.map((dir) => join(packages, dir, storyFiles));
+// NOTE: Storybook test depends on relative paths.
+export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
 export const content = modules.map((dir) => join(packages, dir, contentFiles));
 
 if (isTrue(process.env.DX_DEBUG)) {
@@ -95,6 +96,7 @@ export const createConfig = ({
       publicDir: staticDir,
       resolve: {
         alias: {
+          'node-fetch': 'isomorphic-fetch',
           'tiktoken/lite': resolve(__dirname, './stub.mjs'),
           'node:util': '@dxos/node-std/util',
         },

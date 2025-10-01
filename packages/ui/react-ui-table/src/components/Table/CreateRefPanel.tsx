@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Type } from '@dxos/echo';
 import { live } from '@dxos/live-object';
 // TODO(wittjosiah): Remove dependency on react-client.
-import { useClient } from '@dxos/react-client';
+import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -16,12 +16,11 @@ import { type GridScopedProps, useGridContext } from '@dxos/react-ui-grid';
 
 import { type ModalController, type TableModel } from '../../model';
 
-export type CreateRefPanelProps = { model?: TableModel; modals: ModalController };
+export type CreateRefPanelProps = { client: Client; model?: TableModel; modals: ModalController };
 
-// TODO(burdon): Factor out Space dependency (to plugin?)
-export const CreateRefPanel = ({ model, modals, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
+// TODO(burdon): Factor out Client dependency (to plugin?)
+export const CreateRefPanel = ({ client, model, modals, __gridScope }: GridScopedProps<CreateRefPanelProps>) => {
   const { id: gridId } = useGridContext('TableCellEditor', __gridScope);
-  const client = useClient();
   const space = model && getSpace(model?.view);
   const state = modals.state.value;
 
