@@ -111,7 +111,6 @@ describe('workflow', () => {
         functions: {
           callFunction: (deployedFunctionId, { input }: any) =>
             Effect.sync(() => {
-              log.info('callFunction', { deployedFunctionId, input });
               expect(deployedFunctionId).toEqual(`/${functionId}`);
               return { result: Math.pow(input.num1, input.num2) } as any;
             }),
