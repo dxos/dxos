@@ -2,20 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chat, LanguageModel, Prompt } from '@effect/ai';
+import { Chat, LanguageModel, Prompt, Toolkit, Tool } from '@effect/ai';
 import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer, Stream } from 'effect';
+import { Effect, Layer, Stream, Schema } from 'effect';
 
 import * as AiService from '../AiService';
 import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing';
 
 import * as MemoizedAiService from './MemoizedAiService';
 import { TestHelpers } from '@dxos/effect';
+import { log } from '@dxos/log';
 
-const TestLayer = Layer.merge(testingLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
-  Layer.provideMerge(MemoizedAiService.layerTest()),
-  Layer.provide(AiServiceTestingPreset('direct')),
-);
+class DateToolkit extends Toolkit.make(
+  Tool.make('get-date', {
+    description: 'Get the current date',
+    success: Schema.DateFromString,
+  }),
+) {
+  static layerTest = DateToolkit.toLayer({
+    'get-date': Effect.fnUntraced(function* () {
+      return new Date('2025-10-01');
+    }),
+  });
+}
+
+const TestLayer = Layer.mergeAll(
+  testingLayer,
+  DateToolkit.layerTest,
+  AiService.model('@anthropic/claude-sonnet-4-0'),
+).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
 describe('memoization', () => {
   it.effect(
@@ -62,6 +77,31 @@ describe('memoization', () => {
           if (lastMessage?.role === 'tool') {
             continue;
           } else {
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'tools with encoding',
+    Effect.fnUntraced(
+      function* ({}) {
+        const chat = yield* Chat.fromPrompt('What is the current date?');
+
+        while (true) {
+          const response = yield* chat.generateText({
+            prompt: Prompt.empty,
+            toolkit: DateToolkit,
+          });
+          if (response.finishReason === 'tool-calls') {
+            continue;
+          } else {
+            expect(response.finishReason).toBe('stop');
+            console.log(response.text);
             break;
           }
         }

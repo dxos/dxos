@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -40,8 +40,6 @@ import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
-const MOCK_SEARCH = true;
-
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
@@ -50,7 +48,8 @@ const TestLayer = Layer.mergeAll(
 ).pipe(
   Layer.provideMerge(
     Layer.mergeAll(
-      AiServiceTestingPreset('direct'),
+      TracingService.layerNoop,
+      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
@@ -58,16 +57,15 @@ const TestLayer = Layer.mergeAll(
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
       LocalFunctionExecutionService.layer,
       RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerNoop,
     ),
   ),
 );
 
 describe('Research', { timeout: 600_000 }, () => {
-  it.effect(
+  it.effect.only(
     'call a function to generate a research report',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* ({}) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
             name: 'Notion',
@@ -92,14 +90,14 @@ describe('Research', { timeout: 600_000 }, () => {
         console.log(inspect(data, { depth: null, colors: true }));
       },
       Effect.provide(TestLayer),
-      TestHelpers.taggedTest('llm'),
+      TestHelpers.provideTestContext,
     ),
   );
 
   it.effect(
     'research blueprint',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* ({}) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
@@ -118,7 +116,7 @@ describe('Research', { timeout: 600_000 }, () => {
         });
       },
       Effect.provide(TestLayer),
-      TestHelpers.taggedTest('llm'),
+      TestHelpers.provideTestContext,
     ),
   );
 });

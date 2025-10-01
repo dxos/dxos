@@ -5,7 +5,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 
-import { Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
+import { AiError, Chat, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
 import { Array, Effect, Layer, Option, Order, Schema, Stream, TestContext, pipe } from 'effect';
 
@@ -81,295 +81,113 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
 
   return LanguageModel.make({
     generateText: Effect.fn('MemoizedLanguageModel.generateText')(function* (params) {
-      const conversation = getConverstaionFromOptions(options.modelName, params);
+      const conversation = getConverstaionFromOptions(options.modelName, false, params);
       const memoized = yield* store.getMemoizedConversation(conversation);
       if (Option.isSome(memoized)) {
-        const continuation = getContinuation(params.prompt, memoized.value.history);
-        return toResponseParts(continuation);
+        return memoized.value.response as Response.PartEncoded[];
       } else {
         if (!options.allowGeneration) {
           return yield* throwErrorWithClosestMatch(store, conversation);
         }
 
-        const chat = yield* Chat.empty;
-
         const toolkit = Toolkit.make(...(params.tools as never[]));
 
-        const upstreamResult = yield* chat
-          .generateText({
-            prompt: params.prompt,
-            toolkit: yield* toolkit,
-            toolChoice: params.toolChoice as any,
-            disableToolCallResolution: true,
-          })
-          .pipe(Effect.provideService(LanguageModel.LanguageModel, options.upstreamModel));
+        const upstreamResult = yield* options.upstreamModel.generateText({
+          prompt: params.prompt,
+          toolkit: yield* toolkit,
+          toolChoice: params.toolChoice as any,
+          disableToolCallResolution: true,
+        });
+        const response = yield* Schema.mutable(Schema.Array(Response.Part(toolkit)))
+          .pipe(Schema.encode)(upstreamResult.content)
+          .pipe(
+            Effect.catchTag('ParseError', (error) =>
+              AiError.MalformedOutput.fromParseError({
+                module: 'LanguageModel',
+                method: 'generateText',
+                error,
+              }),
+            ),
+          );
 
         const newConversation: MemoziedConversation = {
-          parameters: getMemoizedConversationParameters(options.modelName, params),
-          history: yield* chat.history,
+          parameters: getMemoizedConversationParameters(options.modelName, false, params),
+          prompt: params.prompt,
+          response,
         };
         yield* store.saveMemoizedConversation(newConversation);
 
-        return reinterpretResponseParts(upstreamResult.content);
+        return response;
       }
     }),
     streamText: (params) =>
       Stream.unwrap(
         Effect.gen(function* () {
-          const conversation = getConverstaionFromOptions(options.modelName, params);
+          const conversation = getConverstaionFromOptions(options.modelName, true, params);
 
           const memoized = yield* store.getMemoizedConversation(conversation);
           if (Option.isSome(memoized)) {
-            const continuation = getContinuation(params.prompt, memoized.value.history);
-            return toResponseStream(continuation);
+            return Stream.fromIterable(memoized.value.response as Response.StreamPartEncoded[]);
           } else {
             if (!options.allowGeneration) {
               return yield* throwErrorWithClosestMatch(store, conversation);
             }
 
-            const chat = yield* Chat.empty;
-
             const toolkit = Toolkit.make(...(params.tools as never[]));
+            const PartCodec = Response.StreamPart(toolkit);
 
-            const stream = chat
+            let parts: Response.AllPartsEncoded[] = [];
+            return options.upstreamModel
               .streamText({
                 prompt: params.prompt,
                 toolkit: yield* toolkit,
                 toolChoice: params.toolChoice as any,
                 disableToolCallResolution: true,
               })
-              .pipe(Stream.provideService(LanguageModel.LanguageModel, options.upstreamModel));
-
-            return stream.pipe(
-              Stream.map(reinterpretStreamPart),
-              Stream.onEnd(
-                Effect.gen(function* () {
-                  const conversation: MemoziedConversation = {
-                    parameters: getMemoizedConversationParameters(options.modelName, params),
-                    history: yield* chat.history,
-                  };
-                  yield* store.saveMemoizedConversation(conversation);
-                }),
-              ),
-            );
+              .pipe(
+                Stream.mapEffect((part) =>
+                  Schema.encode(PartCodec)(part).pipe(
+                    Effect.catchTag('ParseError', (error) =>
+                      AiError.MalformedOutput.fromParseError({
+                        module: 'LanguageModel',
+                        method: 'generateText',
+                        error,
+                      }),
+                    ),
+                  ),
+                ),
+                Stream.mapChunksEffect(
+                  Effect.fnUntraced(function* (chunk) {
+                    const parts = Array.fromIterable(chunk);
+                    parts.push(...chunk);
+                    return chunk;
+                  }),
+                ),
+                Stream.onEnd(
+                  Effect.gen(function* () {
+                    const conversation: MemoziedConversation = {
+                      parameters: getMemoizedConversationParameters(options.modelName, true, params),
+                      prompt: params.prompt,
+                      response: parts,
+                    };
+                    yield* store.saveMemoizedConversation(conversation);
+                  }),
+                ),
+              );
           }
         }),
       ),
   });
 };
 
-const getContinuation = (prompt: Prompt.Prompt, memoized: Prompt.Prompt): Prompt.Part[] => {
-  const continuation = memoized.content.slice(prompt.content.length);
-  const continuationParts = pipe(
-    continuation,
-    Array.takeWhile((message) => message.role === 'assistant'),
-    Array.flatMap((message) => message.content),
-  );
-  invariant(continuationParts.length > 0, 'No message in continuation');
-  return continuationParts;
-};
-
-const reinterpretResponseParts = (parts: Response.Part<Record<string, Tool.Any>>[]): Response.PartEncoded[] => {
-  return parts.map((part): Response.PartEncoded => {
-    log.info('response part', part);
-    switch (part.type) {
-      case 'text':
-        return Response.TextPart.pipe(Schema.encodeSync)(part);
-      case 'reasoning':
-        return Response.ReasoningPart.pipe(Schema.encodeSync)(part);
-      case 'finish':
-        return Response.FinishPart.pipe(Schema.encodeSync)(part);
-      case 'response-metadata':
-        return Response.ResponseMetadataPart.pipe(Schema.encodeSync)(part);
-      case 'file':
-        return Response.FilePart.pipe(Schema.encodeSync)(part);
-      case 'source':
-        switch (part.sourceType) {
-          case 'url':
-            return Response.UrlSourcePart.pipe(Schema.encodeSync)(part);
-          case 'document':
-            return Response.DocumentSourcePart.pipe(Schema.encodeSync)(part);
-          default:
-            throw new Error(`Unknown source type: ${(part as any).sourceType}`);
-        }
-      case 'tool-call':
-        return {
-          type: 'tool-call',
-          id: part.id,
-          name: part.name,
-          params: part.params, // TODO: Pass params through the tool schema.
-          metadata: part.metadata,
-          providerExecuted: part.providerExecuted,
-          providerName: part.providerName,
-        };
-      case 'tool-result':
-        return {
-          type: 'tool-result',
-          id: part.id,
-          name: part.name,
-          result: part.result,
-          metadata: part.metadata,
-          providerExecuted: part.providerExecuted,
-          providerName: part.providerName,
-        };
-      default:
-        throw new Error(`Unknown part type: ${(part as any).type}`);
-    }
-  });
-};
-
-const reinterpretStreamPart = (part: Response.StreamPart<Record<string, Tool.Any>>): Response.StreamPartEncoded => {
-  switch (part.type) {
-    case 'text-start':
-    case 'text-end':
-    case 'text-delta':
-      return part;
-    case 'tool-params-start':
-    case 'tool-params-end':
-    case 'tool-params-delta':
-      return part;
-    case 'tool-call':
-      return part;
-    case 'tool-result':
-      return part;
-    case 'response-metadata':
-      return Response.ResponseMetadataPart.pipe(Schema.encodeSync)(part);
-    case 'finish':
-      return Response.FinishPart.pipe(Schema.encodeSync)(part);
-    default:
-      throw new Error(`Unknown part type: ${(part as any).type}`);
-  }
-};
-
-const toResponseParts = (parts: Prompt.Part[]): Response.PartEncoded[] => {
-  return parts.map((part): Response.PartEncoded => {
-    switch (part.type) {
-      case 'text':
-        return {
-          type: 'text',
-          metadata: part.options,
-          text: part.text,
-        };
-      case 'reasoning':
-        return {
-          type: 'reasoning',
-          metadata: part.options,
-          text: part.text,
-        };
-      case 'tool-call':
-        return {
-          type: 'tool-call',
-          id: part.id,
-          name: part.name,
-          params: part.params, // TODO: Pass params through the tool schema.
-          metadata: part.options,
-          providerExecuted: part.providerExecuted,
-        };
-      case 'tool-result':
-        return {
-          type: 'tool-result',
-          id: part.id,
-          name: part.name,
-          result: part.result,
-          metadata: part.options,
-        };
-      default:
-        throw new Error(`Unknown part type: ${(part as any).type}`);
-    }
-  });
-};
-
-const toResponseStream = (continuation: Prompt.Part[]): Stream.Stream<Response.StreamPartEncoded> => {
-  let idGenerator = 0;
-  return Stream.fromIterable(
-    continuation.flatMap((part): Response.StreamPartEncoded[] => {
-      const id = String(idGenerator++);
-      switch (part.type) {
-        case 'text':
-          return [
-            {
-              type: 'text-start',
-              id,
-              metadata: part.options,
-            },
-            {
-              type: 'text-delta',
-              id,
-              delta: part.text,
-            },
-            {
-              type: 'text-end',
-              id,
-            },
-          ];
-        case 'reasoning':
-          return [
-            {
-              type: 'reasoning-start',
-              id,
-              metadata: part.options,
-            },
-            {
-              type: 'reasoning-delta',
-              id,
-              delta: part.text,
-            },
-            {
-              type: 'reasoning-end',
-              id,
-            },
-          ];
-        case 'tool-call':
-          return [
-            {
-              type: 'tool-params-start',
-              id: part.id,
-              name: part.name,
-              metadata: part.options,
-              providerExecuted: part.providerExecuted,
-            },
-            {
-              type: 'tool-params-delta',
-              id: part.id,
-              delta: JSON.stringify(part.params),
-            },
-            {
-              type: 'tool-params-end',
-              id: part.id,
-            },
-            // TODO(dmaretskyi): Do we need to send both?
-            {
-              type: 'tool-call',
-              id: part.id,
-              name: part.name,
-              params: part.params,
-              metadata: part.options,
-              providerExecuted: part.providerExecuted,
-            },
-          ];
-        case 'tool-result':
-          return [
-            {
-              type: 'tool-result',
-              id: part.id,
-              name: part.name,
-              result: part.result,
-              metadata: part.options,
-            },
-          ];
-        default:
-          throw new Error(`Unknown part type: ${(part as any).type}`);
-      }
-    }),
-  );
-};
-
 const getMemoizedConversationParameters = (
   model: string,
+  stream: boolean,
   params: LanguageModel.ProviderOptions,
 ): ConversationParameters => {
   return {
     model,
+    stream,
     tools: params.tools.map((tool) => ({
       name: tool.name,
       description: Tool.getDescription(tool as any),
@@ -378,37 +196,24 @@ const getMemoizedConversationParameters = (
   };
 };
 
-const getConverstaionFromOptions = (model: string, params: LanguageModel.ProviderOptions): MemoziedConversation => {
+const getConverstaionFromOptions = (
+  model: string,
+  stream: boolean,
+  params: LanguageModel.ProviderOptions,
+): MemoziedConversation => {
   return {
-    parameters: getMemoizedConversationParameters(model, params),
-    history: params.prompt,
+    parameters: getMemoizedConversationParameters(model, stream, params),
+    prompt: params.prompt,
+    response: [],
   };
 };
 
-const isPrefix = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
-  if (
-    haystack.parameters.model !== needle.parameters.model ||
-    haystack.parameters.tools.length !== needle.parameters.tools.length
-  ) {
+const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
+  if (!isDeepStrictEqual(haystack.parameters, needle.parameters)) {
     return false;
   }
 
-  // TODO(dmaretskyi): This might not compare tools correctly.
-  if (!isDeepStrictEqual(haystack.parameters.tools, needle.parameters.tools)) {
-    return false;
-  }
-
-  if (haystack.history.content.length <= needle.history.content.length) {
-    return false;
-  }
-
-  for (let i = 0; i < needle.history.content.length; i++) {
-    if (!isDeepStrictEqual(haystack.history.content[i], needle.history.content[i])) {
-      return false;
-    }
-  }
-
-  if (haystack.history.content[needle.history.content.length].role !== 'assistant') {
+  if (!isDeepStrictEqual(haystack.prompt, needle.prompt)) {
     return false;
   }
 
@@ -430,8 +235,7 @@ class MemoizedStore {
       const stored = yield* this.#loadStore();
       return pipe(
         stored.conversations,
-        Array.sortBy(Order.mapInput(Order.number, (x) => x.history.content.length)),
-        Array.findFirst((x) => isPrefix(x, prompted)),
+        Array.findFirst((x) => converstationMatches(x, prompted)),
       );
     });
   }
@@ -447,8 +251,8 @@ class MemoizedStore {
         Array.sortBy(
           Order.mapInput(Order.number, (x) =>
             levensteinDistance(
-              formatMemoizedConversation(x, prompted.history.content.length),
-              formatMemoizedConversation(prompted, prompted.history.content.length),
+              formatMemoizedConversation(x, prompted.prompt.content.length),
+              formatMemoizedConversation(prompted, prompted.prompt.content.length),
             ),
           ),
         ),
@@ -464,7 +268,6 @@ class MemoizedStore {
   saveMemoizedConversation(conversation: MemoziedConversation): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const store = yield* this.#loadStore();
-      store.conversations = store.conversations.filter((_) => !isPrefix(_, conversation));
       store.conversations.push(conversation);
       yield* this.#saveStore(store);
     });
@@ -495,6 +298,7 @@ class MemoizedStore {
 
 const ConversationParameters = Schema.Struct({
   model: Schema.String,
+  stream: Schema.Boolean,
   tools: Schema.Array(
     Schema.Struct({
       name: Schema.String,
@@ -507,7 +311,11 @@ type ConversationParameters = Schema.Schema.Type<typeof ConversationParameters>;
 
 const MemoziedConversation = Schema.Struct({
   parameters: ConversationParameters,
-  history: Prompt.Prompt,
+  prompt: Prompt.Prompt,
+
+  // This is supposed to be Response.AllParts for arbitrary tools.
+  // Tool call schema is generated based on the available tools so we can't use a static schema.
+  response: Schema.Array(Schema.Unknown),
 });
 type MemoziedConversation = Schema.Schema.Type<typeof MemoziedConversation>;
 
@@ -519,7 +327,7 @@ type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 const formatMemoizedConversation = (conversation: MemoziedConversation, historyLength: number): string => {
   let buf = '';
   buf += JSON.stringify(conversation.parameters, null, 2) + '\n\n';
-  for (const message of conversation.history.content.slice(0, historyLength)) {
+  for (const message of conversation.prompt.content.slice(0, historyLength)) {
     buf += `[${message.role}]\n`;
     for (const part of message.content) {
       switch (message.role) {
@@ -587,8 +395,8 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
     if (Option.isSome(closestMatch)) {
       const patch = createPatch(
         'converstaion',
-        formatMemoizedConversation(closestMatch.value, conversation.history.content.length),
-        formatMemoizedConversation(conversation, conversation.history.content.length),
+        formatMemoizedConversation(closestMatch.value, conversation.prompt.content.length),
+        formatMemoizedConversation(conversation, conversation.prompt.content.length),
         'saved',
         'new',
       );
