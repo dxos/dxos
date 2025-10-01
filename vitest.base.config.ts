@@ -140,7 +140,7 @@ type NodeOptions = {
 const createNodeProject = ({
   environment = 'node',
   retry,
-  timeout = 10_000,
+  timeout,
   setupFiles = [],
   plugins = [],
 }: NodeOptions = {}) =>
