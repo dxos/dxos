@@ -51,10 +51,10 @@ const [ListboxProvider, useListboxContext] = createListboxContext<ListboxContext
 const [ListboxOptionProvider, useListboxOptionContext] =
   createListboxOptionContext<ListboxOptionContextValue>(LISTBOX_OPTION_NAME);
 
-// TODO(thure): Note that this is essentially an implementation of the `SelectableListbox` story of `List.tsx` in
-//  `react-ui`, but this specifies standard consumable `role="listbox"` interactivity (not to be confused with
-//  `role="list"`) and coheres with SearchList styles. This is a candidate for promotion to `List.tsx`, but that
-//  component will need some cleanup.
+// TODO(thure): Note that this overlaps significantly with the the `SelectableListbox` story of `List.tsx` in `react-ui`,
+//  making this an exemplar of `List` specifying standard `role="listbox"` interactivity, though it is here because it
+//  coheres with SearchList’s styles and norms. This can be promoted to `react-ui`, but doing so should involve clearing
+//  the technical- and design-debt in its `List` component.
 const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
   (props: ListboxScopedProps<ListboxRootProps>, forwardedRef) => {
     const {
