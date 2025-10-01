@@ -1,0 +1,12 @@
+[ INFO 2025-10-01 21:51:37.463] moon_remote::remote_service  Remote service, powered by the Bazel Remote Execution API, is currently unstable  docs="https://github.com/bazelbuild/remote-apis"
+[ INFO 21:51:37.464] moon_remote::remote_service  Please report any issues to GitHub or Discord 
+[ WARN 21:51:37.464] moon_remote::remote_client  Auth token DEPOT_TOKEN does not exist, unable to authorize for remote service 
+▪▪▪▪ observability:prebuild (cached, b2dd9a88)
+▪▪▪▪ dx-build:compile (cached, 9b57e0bf)
+▪▪▪▪ protocols:gen-buf (cached, b089f5ed)
+▪▪▪▪ vite-plugin-import-source:compile
+▪▪▪▪ esbuild-plugins:compile (cached, ef664942)
+
+Tasks: 3 completed (3 cached), 1 skipped
+ Time: 360ms (interrupted)
+
