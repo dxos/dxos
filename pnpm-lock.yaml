@@ -26,9 +26,6 @@ overrides:
 pnpmfileChecksum: sha256-+Pk/k93ckg9qlIZV1Oeszh4z0QYAqUeUMKPfhDIKcbI=
 
 patchedDependencies:
-  '@automerge/automerge-repo':
-    hash: cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030
-    path: patches/@automerge__automerge-repo.patch
   random-access-idb@1.2.2:
     hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
     path: patches/random-access-idb@1.2.2.patch
@@ -2724,8 +2721,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2858,11 +2855,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
-      '@automerge/automerge-repo-bundles':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -5012,14 +5006,14 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        specifier: 2.3.1
+        version: 2.3.1
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11140,8 +11134,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11330,8 +11324,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11590,8 +11584,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -13085,6 +13079,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@fluentui/react-tabster':
+        specifier: ^9.24.2
+        version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
@@ -13435,11 +13432,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+        specifier: 2.3.1
+        version: 2.3.1
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.3.0-alpha.0
-        version: 2.3.0-alpha.0
+        specifier: 2.3.1
+        version: 2.3.1
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -14329,9 +14326,15 @@ importers:
 
   packages/ui/react-ui-searchlist:
     dependencies:
+      '@fluentui/react-tabster':
+        specifier: ^9.24.2
+        version: 9.24.6(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@18.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@18.2.79)(react@18.2.0)
@@ -15627,20 +15630,17 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-bundles@2.3.0-alpha.0':
-    resolution: {integrity: sha512-HcpMpr3lB+Sf2N1P0ETA8ZxGjTOt3n+SxaMGzF9tJXuNOkPR3BsnsB/IgY49X5G5JLYkx+ALmLlI3TnfPRKQWg==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.3.1':
+    resolution: {integrity: sha512-e2m2/ZWL59i6/NEjn2VQPF6dvMSq15byF3nidx+ZZew043Ke1N4QP2491C4rgaAP501L+a4K4WeZFKXYeYyMMA==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
-    resolution: {integrity: sha512-xXYKQyCLpZ5pORRhBDXoWMxR42+S1e6bFrJDVz/BeBvQbyl04k9CtyI7k1XkNfm/WBoWCW8FEJzJ9m7r26CyEQ==}
+  '@automerge/automerge-repo-network-websocket@2.3.1':
+    resolution: {integrity: sha512-imoxIIwd59exxU1zSHSKl+i25PgWn3Wvr6i948fcBDVXt7LkixK+wWMXMgbttjt/48YNbQRidSaKWzgzicYSKA==}
 
-  '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
-    resolution: {integrity: sha512-DxMaq0ESNZ2mH/H9bWN+rOpYFsndHxed855nlTlyF0j1ZeRpRI8zGgPr2j9TZ+zaWEFRgh448baTlyJ0pc0Vhw==}
+  '@automerge/automerge-repo-storage-indexeddb@2.3.1':
+    resolution: {integrity: sha512-Nw8cvA30cGhiSkJ73RvbHGv6eY9zuQCyFvUWpwmuHB6SDSgYT+fIS44DAtTyfiejVFJyU0vW7O8SxBjbvDMdMw==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
-    resolution: {integrity: sha512-ul7OBBF1HEGyo+emN6DyCMa7UULo4BC2sx2AXGFzSA/wGToaOpFIEadZ0am2xNwZFHQqBUYdZH2hdoHSIXEzvA==}
-
-  '@automerge/automerge-repo@2.3.0-alpha.0':
-    resolution: {integrity: sha512-yiO0j7w0ggtYfxVRYA1F8FYuN51Efmyk1RvfrECaFH7yI2wJ7vLwsIAN7a/vyI5SqB0PBx1UZt7IS9kw8h7YYA==}
+  '@automerge/automerge-repo@2.3.1':
+    resolution: {integrity: sha512-ZQ6jdwSsdjAiQoT+1vAvmMRcXaxtMv4PH298x9VSVPD5o5N0nNUweE2HuAsNNrXleZ/apfG2vH8uYentSQQFvQ==}
 
   '@automerge/automerge@3.1.1':
     resolution: {integrity: sha512-x7tZiMBLk4/SKYimVEVl1/wPntT9buGvLOWCey9ZcH8JUsB0dgm49C0S7Ojzgvflcs2hc/YjiXRPcFeFkinIgw==}
@@ -34292,22 +34292,15 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-bundles@2.3.0-alpha.0':
+  '@automerge/automerge-repo-network-broadcastchannel@2.3.1':
     dependencies:
-      '@automerge/automerge': 3.1.1
-      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+      '@automerge/automerge-repo': 2.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.3.0-alpha.0':
+  '@automerge/automerge-repo-network-websocket@2.3.1':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
-    transitivePeerDependencies:
-      - supports-color
-
-  '@automerge/automerge-repo-network-websocket@2.3.0-alpha.0':
-    dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+      '@automerge/automerge-repo': 2.3.1
       cbor-x: 1.5.4
       debug: 4.4.1
       eventemitter3: 5.0.1
@@ -34318,13 +34311,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.3.0-alpha.0':
+  '@automerge/automerge-repo-storage-indexeddb@2.3.1':
     dependencies:
-      '@automerge/automerge-repo': 2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)
+      '@automerge/automerge-repo': 2.3.1
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.3.0-alpha.0(patch_hash=cbfec44f2488cdd8b968fbc4e2003a7ffa0d2536c70fca59e482cdfc401f6030)':
+  '@automerge/automerge-repo@2.3.1':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1

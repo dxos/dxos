@@ -6,6 +6,12 @@ import { type Page } from '@playwright/test';
 
 import { StackManager } from '@dxos/react-ui-stack/playwright';
 
+export const StackPlugin = {
+  meta: {
+    id: 'dxos.org/plugin/stack',
+  },
+};
+
 // TODO(wittjosiah): If others find this useful, factor out the stack plugin.
 export const Stack = {
   getStack: (page: Page) => new StackManager(page.getByTestId('main.stack')),
