@@ -9,6 +9,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { StreamPartEncoded } from '@effect/ai/Response';
+import { diffChars, createPatch } from 'diff';
 
 export interface MemoizedAiService extends AiService.Service {}
 
@@ -70,7 +71,7 @@ export const injectIntoTest =
     return Effect.provide(
       layer({
         storePath: ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
-        allowGeneration: !process.env.CI,
+        allowGeneration: ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0'),
       }),
     )(effect);
   };
@@ -94,7 +95,7 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
         return toResponseParts(continuation);
       } else {
         if (!options.allowGeneration) {
-          return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+          return yield* throwErrorWithClosestMatch(store, conversation);
         }
 
         const chat = yield* Chat.empty;
@@ -110,13 +111,11 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
           })
           .pipe(Effect.provideService(LanguageModel.LanguageModel, options.upstreamModel));
 
-        log.info('generateText', { upstreamResult });
-
-        const conversation: MemoziedConversation = {
+        const newConversation: MemoziedConversation = {
           parameters: getMemoizedConversationParameters(options.modelName, params),
           history: yield* chat.history,
         };
-        yield* store.saveMemoizedConversation(conversation);
+        yield* store.saveMemoizedConversation(newConversation);
 
         return reinterpretResponseParts(upstreamResult.content);
       }
@@ -125,13 +124,14 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
       Stream.unwrap(
         Effect.gen(function* () {
           const conversation = getConverstaionFromOptions(options.modelName, params);
+
           const memoized = yield* store.getMemoizedConversation(conversation);
           if (Option.isSome(memoized)) {
             const continuation = getContinuation(params.prompt, memoized.value.history);
             return toResponseStream(continuation);
           } else {
             if (!options.allowGeneration) {
-              return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+              return yield* throwErrorWithClosestMatch(store, conversation);
             }
 
             const chat = yield* Chat.empty;
@@ -172,7 +172,6 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
 
 const getContinuation = (prompt: Prompt.Prompt, memoized: Prompt.Prompt): Prompt.Part[] => {
   const continuation = memoized.content.slice(prompt.content.length);
-  log.info('getContinuation', { continuation, memoized, prompt });
   const continuationParts = pipe(
     continuation,
     Array.takeWhile((message) => message.role === 'assistant'),
@@ -434,6 +433,9 @@ class MemoizedStore {
     this.#path = path;
   }
 
+  /**
+   * @returns A stored converstation that starts with the same parameters and messages as the prompted conversation.
+   */
   getMemoizedConversation(prompted: MemoziedConversation): Effect.Effect<Option.Option<MemoziedConversation>> {
     return Effect.gen(this, function* () {
       const stored = yield* this.#loadStore();
@@ -445,6 +447,31 @@ class MemoizedStore {
     });
   }
 
+  /**
+   * @returns A stored converstation that is the closest match to the prompted conversation.
+   */
+  getClosestMatch(prompted: MemoziedConversation): Effect.Effect<Option.Option<MemoziedConversation>> {
+    return Effect.gen(this, function* () {
+      const stored = yield* this.#loadStore();
+      return pipe(
+        stored.conversations,
+        Array.sortBy(
+          Order.mapInput(Order.number, (x) =>
+            levensteinDistance(
+              formatMemoizedConversation(x, prompted.history.content.length),
+              formatMemoizedConversation(prompted, prompted.history.content.length),
+            ),
+          ),
+        ),
+        Option.fromIterable,
+      );
+    });
+  }
+
+  /**
+   * Saves the conversation to the store.
+   * @param conversation The conversation to save.
+   */
   saveMemoizedConversation(conversation: MemoziedConversation): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const store = yield* this.#loadStore();
@@ -499,3 +526,84 @@ const ConversationStore = Schema.Struct({
   conversations: Schema.Array(MemoziedConversation).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
+
+const formatMemoizedConversation = (conversation: MemoziedConversation, historyLength: number): string => {
+  let buf = '';
+  buf += JSON.stringify(conversation.parameters, null, 2) + '\n\n';
+  for (const message of conversation.history.content.slice(0, historyLength)) {
+    buf += `[${message.role}]\n`;
+    for (const part of message.content) {
+      switch (message.role) {
+        case 'system':
+          buf += message.content + '\n';
+          break;
+        case 'user':
+        case 'assistant':
+        case 'tool':
+          for (const part of message.content) {
+            switch (part.type) {
+              case 'text':
+                buf += part.text + '\n';
+                break;
+              case 'reasoning':
+                buf += `<reasoning>${part.text}</reasoning>`;
+                break;
+              case 'tool-call':
+                buf += JSON.stringify(part.params) + '\n';
+                break;
+              case 'tool-result':
+                buf += JSON.stringify(part.result) + '\n';
+                break;
+            }
+          }
+          break;
+      }
+    }
+  }
+  return buf;
+};
+
+const levensteinDistance = (a: string, b: string): number => {
+  const m = a.length;
+  const n = b.length;
+
+  if (m === 0) {
+    return n;
+  }
+  if (n === 0) {
+    return m;
+  }
+
+  const dp = Array.replicate(0, m + 1).map(() => Array.replicate(0, n + 1));
+
+  for (let i = 0; i <= m; i++) {
+    dp[i][0] = i;
+  }
+  for (let j = 0; j <= n; j++) {
+    dp[0][j] = j;
+  }
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+
+  return dp[m][n];
+};
+
+const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: MemoziedConversation) =>
+  Effect.gen(function* () {
+    const closestMatch = yield* store.getClosestMatch(conversation);
+    if (Option.isSome(closestMatch)) {
+      const patch = createPatch(
+        'converstaion',
+        formatMemoizedConversation(closestMatch.value, conversation.history.content.length),
+        formatMemoizedConversation(conversation, conversation.history.content.length),
+        'saved',
+        'new',
+      );
+      return yield* Effect.dieMessage(`No memoized conversation found for the given prompt. Closest match:\n${patch}`);
+    }
+    return yield* Effect.dieMessage('No memoized conversation found for the given prompt.');
+  });
