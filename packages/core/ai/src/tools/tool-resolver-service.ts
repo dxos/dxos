@@ -3,7 +3,7 @@
 //
 
 import { type Tool, Toolkit } from '@effect/ai';
-import { Context, Effect, Layer, Array, Either, Option } from 'effect';
+import { Array, Context, Effect, Either, Layer } from 'effect';
 
 import { log } from '@dxos/log';
 
