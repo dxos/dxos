@@ -74,6 +74,8 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   if (context) {
     if (Object.keys(context).length === 1 && 'error' in context) {
       args.push(context.error);
+    } else if (Object.keys(context).length === 1 && 'err' in context) {
+      args.push(context.err);
     } else {
       args.push(context);
     }

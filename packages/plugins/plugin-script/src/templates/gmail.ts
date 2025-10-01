@@ -17,6 +17,8 @@ import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.17.0?bundle=false';
 
 export default defineFunction({
+  key: 'dxos.org/script/gmail',
+  name: 'Gmail',
   inputSchema: S.Struct({
     mailboxId: S.String,
     userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),

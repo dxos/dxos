@@ -4,16 +4,21 @@
 
 import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
 // https://vitejs.dev/config
 export default defineConfig({
-  root: __dirname,
+  root: dirname,
   server: {
     host: true,
     https:
@@ -45,10 +50,10 @@ export default defineConfig({
   },
   plugins: [
     ThemePlugin({
-      root: __dirname,
+      root: dirname,
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, './index.html'),
+        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     TopLevelAwaitPlugin(),
@@ -68,12 +73,13 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = path.join(dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

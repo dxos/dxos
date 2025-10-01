@@ -85,4 +85,4 @@ export const toolDefinitions = ({
 }: {
   tools?: string[];
   functions?: FunctionDefinition[];
-}) => [...functions.map((fn) => ToolId.make(fn.name)), ...tools.map((tool) => ToolId.make(tool))];
+}) => [...functions.map((fn) => ToolId.make(fn.key)), ...tools.map((tool) => ToolId.make(tool))];

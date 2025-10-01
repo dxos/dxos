@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
@@ -29,8 +29,8 @@ const CalendarEventSchema = Schema.Struct({
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('Calculator', {
+class TestToolkit extends Toolkit.make(
+  Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
       input: Schema.String.annotations({

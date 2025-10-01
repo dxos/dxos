@@ -23,9 +23,13 @@ const DefaultStory = (props: VideoObjectProps) => {
   useEffect(() => {
     const ctx = new Context();
     scheduleTask(ctx, async () => {
-      const stream = new MediaStream();
-      stream.addTrack(await getUserMediaTrack('videoinput'));
-      setVideoStream(stream);
+      try {
+        const stream = new MediaStream();
+        stream.addTrack(await getUserMediaTrack('videoinput'));
+        setVideoStream(stream);
+      } catch (err) {
+        log.catch(err);
+      }
     });
 
     return () => {

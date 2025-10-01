@@ -90,8 +90,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '0.25.6';
+    case 'detective-typescript': {
+      packageJson.dependencies['@typescript-eslint/typescript-estree'] = '8.39.0';
       break;
     }
 

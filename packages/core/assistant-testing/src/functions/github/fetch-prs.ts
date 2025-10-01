@@ -8,7 +8,8 @@ import { Effect, Schema } from 'effect';
 import { defineFunction, withAuthorization } from '@dxos/functions';
 
 export default defineFunction({
-  name: 'dxos.org/function/github/fetch-prs',
+  key: 'dxos.org/function/github/fetch-prs',
+  name: 'Fetch PRs',
   description: 'Fetches PRs from GitHub.',
   inputSchema: Schema.Struct({
     owner: Schema.String.annotations({

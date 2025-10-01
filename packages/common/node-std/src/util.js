@@ -7,4 +7,4 @@ import './globals';
 import util from 'util/';
 
 export default util;
-export { callbackify, inspect, promisify } from 'util/';
+export { callbackify, inspect, promisify, debuglog, stripVTControlCharacters } from 'util/';

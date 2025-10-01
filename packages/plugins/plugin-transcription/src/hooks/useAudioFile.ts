@@ -20,58 +20,63 @@ export const useAudioFile = (audioUrl: string, constraints?: MediaTrackConstrain
     const ctx = new Context();
 
     scheduleTask(ctx, async () => {
-      const response = await fetch(audioUrl);
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      ctx.onDispose(() => {
-        URL.revokeObjectURL(objectUrl);
-      });
+      // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
+      try {
+        const response = await fetch(audioUrl);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        ctx.onDispose(() => {
+          URL.revokeObjectURL(objectUrl);
+        });
 
-      const audio = new Audio();
-      audio.src = objectUrl;
+        const audio = new Audio();
+        audio.src = objectUrl;
 
-      await new Promise<void>((resolve, reject) => {
-        audio.addEventListener(
-          'error',
-          (err) => {
-            log.error('error', { err });
-            reject(err);
-          },
-          { once: true },
-        );
-        audio.addEventListener(
-          'canplay',
-          async () => {
-            resolve();
-          },
-          { once: true },
-        );
-        audio.load();
-      });
+        await new Promise<void>((resolve, reject) => {
+          audio.addEventListener(
+            'error',
+            (err) => {
+              log.error('error', { err });
+              reject(err);
+            },
+            { once: true },
+          );
+          audio.addEventListener(
+            'canplay',
+            async () => {
+              resolve();
+            },
+            { once: true },
+          );
+          audio.load();
+        });
 
-      const audioCtx = new AudioContext();
+        const audioCtx = new AudioContext();
 
-      // Resume AudioContext if it's suspended.
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
+        // Resume AudioContext if it's suspended.
+        if (audioCtx.state === 'suspended') {
+          await audioCtx.resume();
+        }
+
+        const destination = audioCtx.createMediaStreamDestination();
+        destination.channelCount = 1;
+
+        const source = audioCtx.createMediaElementSource(audio);
+        source.connect(destination);
+        const track = destination.stream.getAudioTracks()[0];
+        if (constraints) {
+          await track.applyConstraints(constraints).catch((err) => log.catch(err));
+        }
+
+        // Also connect to speakers so audio is audible.
+        setStream({
+          audio,
+          stream: destination.stream,
+          track: destination.stream.getAudioTracks()[0],
+        });
+      } catch (err) {
+        log.catch(err);
       }
-
-      const destination = audioCtx.createMediaStreamDestination();
-      destination.channelCount = 1;
-
-      const source = audioCtx.createMediaElementSource(audio);
-      source.connect(destination);
-      const track = destination.stream.getAudioTracks()[0];
-      if (constraints) {
-        await track.applyConstraints(constraints).catch((err) => log.catch(err));
-      }
-
-      // Also connect to speakers so audio is audible.
-      setStream({
-        audio,
-        stream: destination.stream,
-        track: destination.stream.getAudioTracks()[0],
-      });
     });
 
     return () => {

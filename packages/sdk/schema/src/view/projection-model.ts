@@ -128,7 +128,9 @@ export class ProjectionModel {
     const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
-    const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
+    const unwrappedProperty =
+      'allOf' in jsonProperty && jsonProperty.allOf?.length ? jsonProperty.allOf[0] : jsonProperty;
+    const { typename: referenceSchema } = getSchemaReference(unwrappedProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
 
     const format =

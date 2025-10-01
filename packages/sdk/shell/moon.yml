@@ -3,8 +3,10 @@ language: typescript
 tags:
   - e2e
   - ts-build
+  - ts-test
   - vite
   - pack
+  - storybook
 tasks:
   bundle:
     options:
@@ -16,3 +18,7 @@ tasks:
       - '--entryPoint=src/react.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*
+      - vite.config.ts

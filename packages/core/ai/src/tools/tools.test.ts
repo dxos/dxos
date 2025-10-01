@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
@@ -15,7 +15,7 @@ import { ToolResolverService } from './tool-resolver-service';
 const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
   resolve: (_id: ToolId) =>
     Effect.succeed(
-      AiTool.make('Calculator', {
+      Tool.make('Calculator', {
         description: 'Basic calculator tool',
         parameters: {
           input: Schema.String.annotations({
@@ -31,7 +31,7 @@ const TestToolResolverService = Layer.sync(ToolResolverService, () => ({
 }));
 
 const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
-  handlersFor: <Tools extends AiTool.Any>(toolkit: AiToolkit.AiToolkit<Tools>) =>
+  handlersFor: <Tools extends Record<string, Tool.Any>>(toolkit: Toolkit.Toolkit<Tools>) =>
     toolkit.of({
       Calculator: Effect.fn(function* ({ input }) {
         const result = (() => {
@@ -48,8 +48,8 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
     } as any),
 }));
 
-class UserToolkit extends AiToolkit.make(
-  AiTool.make('test/age', {
+class UserToolkit extends Toolkit.make(
+  Tool.make('test/age', {
     description: 'Gets the age of the user',
     parameters: {},
     success: Schema.Number,
@@ -72,10 +72,10 @@ describe('ToolResolverService', () => {
           yield* ToolExecutionService.handlersFor(dynamicToolkit) as Effect.Effect<any, never, ToolExecutionService>,
         );
 
-        const toolkit = AiToolkit.merge(dynamicToolkit, UserToolkit);
+        const toolkit = Toolkit.merge(dynamicToolkit, UserToolkit);
         const results = Effect.gen(function* () {
           return {
-            sum: yield* callTool(toolkit, 'Calculator' as any, { input: '1 + 1' }),
+            sum: yield* callTool(toolkit, 'Calculator', { input: '1 + 1' }),
             age: yield* callTool(toolkit, 'test/age', {}),
           };
         });
@@ -88,9 +88,9 @@ describe('ToolResolverService', () => {
   );
 });
 
-const callTool = <Tools extends AiTool.Any>(
-  toolkit: AiToolkit.AiToolkit<Tools>,
-  toolName: AiTool.Name<Tools>,
-  toolParams: AiTool.Parameters<Tools>,
-): Effect.Effect<AiTool.Success<Tools>, AiTool.Failure<Tools>, AiTool.Context<Tools>> =>
+const callTool = <Tools extends Record<string, Tool.Any>, Name extends keyof Tools>(
+  toolkit: Toolkit.Toolkit<Tools>,
+  toolName: Name,
+  toolParams: Tool.Parameters<Tools[Name]> extends never ? unknown : Tool.Parameters<Tools[Name]>,
+): Effect.Effect<Tool.Success<Tools[Name]>, Tool.Failure<Tools[Name]>, Tool.Requirements<Tools[Name]>> =>
   toolkit.pipe(Effect.flatMap((h: any) => h.handle(toolName, toolParams) as Effect.Effect<any, any, any>));

@@ -2,37 +2,42 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
-import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
+import ReactPlugin from '@vitejs/plugin-react';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
+import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
-import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
+// import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
 // @ts-ignore
 import packageJson from './package.json';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
-const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
 
 /**
  * https://vitejs.dev/config
  */
 export default defineConfig({
-  root: __dirname,
+  root: dirname,
   build: {
     rollupOptions: {
       // https://crxjs.dev/vite-plugin/concepts/pages
       input: {
         // Everything mentioned in manifest.json will be bundled.
         // We need to specify the 'panel' entry point here because it's not mentioned in manifest.json.
-        panel: resolve(__dirname, 'panel.html'),
+        panel: path.resolve(dirname, 'panel.html'),
       },
       output: {
         sourcemap: true,
@@ -51,14 +56,14 @@ export default defineConfig({
   plugins: [
     SourceMapsPlugin(),
     ConfigPlugin({
-      root: __dirname,
+      root: dirname,
     }),
     ThemePlugin({
-      root: __dirname,
+      root: dirname,
       content: [
-        join(__dirname, './index.html'),
-        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, './index.html'),
+        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     IconsPlugin({
@@ -67,8 +72,8 @@ export default defineConfig({
         `${phosphorIconsCore}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
       spriteFile: 'icons.svg',
       contentPaths: [
-        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
-        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
     }),
 
@@ -130,12 +135,14 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = path.join(dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+  // TODO(wittjosiah): Tests failing.
+  // ...createTestConfig({ dirname, node: true, storybook: true }),
 });

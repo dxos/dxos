@@ -311,6 +311,7 @@ const toolCalls = [
         name: 'dxos_org_function_create_research_note',
         input:
           '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nKey contact identified: @dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T\\n\\n<object><dxn>dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T</dxn></object>"}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -343,6 +344,7 @@ const toolCalls = [
         name: 'dxos_org_function_create_research_note',
         input:
           '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nDXOS represents an emerging trend in software development that challenges traditional centralized architectures by promoting local-first, peer-to-peer solutions that give users more control over their data and computing resources."}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -394,6 +396,7 @@ const testExecutionGraph = [
         name: 'dxos_org_function_research',
         input:
           '{"query":"DXOS organization dxos.org","mockSearch":true,"researchInstructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -422,6 +425,7 @@ const testExecutionGraph = [
         name: 'dxos_org_function_research',
         result:
           '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:dxos.org/type/Person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
+        providerExecuted: false,
       },
     ],
     properties: {},
@@ -443,6 +447,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
         name: 'dxos_org_function_create_research_note',
         error: 'FUNCTION_ERROR: Function invocation error\ncaused by:\nOBJECT_NOT_FOUND: Object not found',
+        providerExecuted: false,
       },
     ],
     properties: {},
@@ -464,6 +469,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
         name: 'dxos_org_function_create_research_note',
         error: 'FUNCTION_ERROR: Function invocation error\ncaused by:\nOBJECT_NOT_FOUND: Object not found',
+        providerExecuted: false,
       },
     ],
     properties: {},

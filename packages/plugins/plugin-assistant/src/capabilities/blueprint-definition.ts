@@ -8,6 +8,7 @@ import {
   DISCORD_BLUEPRINT,
   LINEAR_BLUEPRINT,
   RESEARCH_BLUEPRINT,
+  WEB_SEARCH_BLUEPRINT,
   agent,
   createResearchNote,
   fetchDiscordMessages,
@@ -58,4 +59,5 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
   contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
 ];

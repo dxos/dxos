@@ -18,6 +18,8 @@ import { ReferencedQuotes, insertReferences } from '../quotes';
 import PROMPT from './instructions.tpl?raw';
 
 export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
+  key: 'dxos.org/function/extraction/extract-entities',
+  name: 'Extract Entities',
   description: 'Extract entities from the transcript message and add them to the message.',
   inputSchema: ExtractionInput,
   outputSchema: ExtractionOutput,

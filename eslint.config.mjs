@@ -46,6 +46,8 @@ export default tseslint.config(
       '**/postcss.config.cjs',
       '**/tailwind.ts',
       '**/esbuild-server.config.js',
+      '**/.storybook/main.mts',
+      '**/.storybook/preview.mts',
 
       // Dependencies
       'node_modules',

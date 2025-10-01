@@ -5,6 +5,7 @@ tags:
   - ts-build
   - ts-test
   - typedoc
+  - storybook
 tasks:
   compile:
     args:
@@ -12,3 +13,6 @@ tasks:
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

@@ -8,6 +8,7 @@ import { type Rive, useRive } from '@rive-app/react-canvas';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
@@ -44,10 +45,13 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 const DefaultStory = () => {
   const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
-    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
-    if (response.ok) {
+    // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
+    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
+      log.catch(error);
+    });
+    if (response?.ok) {
       return await response.arrayBuffer();
-    } else {
+    } else if (response) {
       console.log(response.status);
     }
   });

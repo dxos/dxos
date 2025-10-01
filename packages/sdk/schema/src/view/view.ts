@@ -212,7 +212,7 @@ export const createViewWithReferences = async ({
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
-  const view = await createView({
+  const view = createView({
     name,
     query,
     jsonSchema,

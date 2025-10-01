@@ -9,7 +9,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/read',
+  key: 'dxos.org/function/markdown/read',
+  name: 'Read markdown document',
   description: 'Read markdown document.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

@@ -2,9 +2,14 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
       - '--platform=browser'
+  test:
+    inputs:
+      - .storybook/*

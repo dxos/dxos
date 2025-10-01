@@ -25,6 +25,7 @@ export const Mailbox = Schema.Struct({
   }),
   ItemAnnotation.set(true),
 );
+
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {

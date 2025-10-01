@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -23,3 +24,6 @@ tasks:
       - moon.yml
     outputs:
       - dist/assets
+  test:
+    inputs:
+      - .storybook/*

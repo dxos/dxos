@@ -25,7 +25,7 @@ registerSignalsRuntime();
 
 describe('TableModel', () => {
   let updateCount = 0;
-  let model: TableModel;
+  let model: any;
 
   beforeEach(async () => {
     updateCount = 0;
@@ -33,6 +33,11 @@ describe('TableModel', () => {
       onCellUpdate: () => updateCount++,
     });
     await model.open();
+    model.setRows([
+      { id: '1', title: 'Test', completed: false },
+      { id: '2', title: 'Test 2', completed: true },
+      { id: '3', title: 'Test 3', completed: false },
+    ]);
   });
 
   afterEach(async () => {

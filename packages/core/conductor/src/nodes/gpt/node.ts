@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiResponse } from '@effect/ai';
+import { Response, Toolkit } from '@effect/ai';
 import { Effect, Layer, PubSub, Schema, Stream, Struct } from 'effect';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
@@ -89,7 +89,7 @@ export const GptOutput = Schema.Struct({
   /**
    * Stream of tokens emitted by the model.
    */
-  tokenStream: StreamSchema(AiResponse.Part),
+  tokenStream: StreamSchema(Response.StreamPart(Toolkit.empty)),
 
   /**
    * Number of tokens emitted by the model.
@@ -130,7 +130,7 @@ export const gptNode = defineComputeNode({
       operationModel: 'configured',
     });
 
-    const tokenPubSub = yield* PubSub.unbounded<AiResponse.Part>();
+    const tokenPubSub = yield* PubSub.unbounded<Response.StreamPart<any>>();
     const observer = GenerationObserver.make({
       onPart: (event) =>
         Effect.gen(function* () {
@@ -192,7 +192,7 @@ export const gptNode = defineComputeNode({
     });
 
     return ValueBag.make<GptOutput>({
-      tokenStream: Stream.fromPubSub(tokenPubSub),
+      tokenStream: Stream.fromPubSub(tokenPubSub) as Stream.Stream<Response.StreamPart<{}>, never, never>,
       messages: resultEffect.pipe(Effect.map(Struct.get('messages'))),
       tokenCount: resultEffect.pipe(Effect.map(Struct.get('tokenCount'))),
       text: resultEffect.pipe(Effect.map(Struct.get('text'))),

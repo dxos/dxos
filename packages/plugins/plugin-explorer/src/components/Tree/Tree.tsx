@@ -75,8 +75,8 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
   const context = useRef<SVGContext>(null);
 
   useEffect(() => {
-    if (context.current) {
-      const { width, height } = context.current.size!;
+    if (context.current?.size) {
+      const { width, height } = context.current.size;
       const size = Math.min(width, height);
       const radius = size * 0.4;
       const options = {

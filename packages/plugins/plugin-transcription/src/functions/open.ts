@@ -13,7 +13,8 @@ import { renderByline } from '../components';
 import { Transcript } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/transcription/open',
+  key: 'dxos.org/function/transcription/open',
+  name: 'Open',
   description: 'Opens and reads the contents of a transcription object.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

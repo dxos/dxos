@@ -45,15 +45,12 @@ export const DynamicTable = ({
   ...props
 }: DynamicTableProps) => {
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
-  const { typename, jsonSchema } = useMemo(
+  const { jsonSchema } = useMemo(
     () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
     [name, properties, _jsonSchema, schema],
   );
 
-  const { projection, view } = useMemo(
-    () => makeDynamicTable({ typename, jsonSchema, properties }),
-    [typename, jsonSchema, properties],
-  );
+  const { projection, view } = useMemo(() => makeDynamicTable({ jsonSchema, properties }), [jsonSchema, properties]);
 
   const tableRef = useRef<TableController>(null);
   const handleCellUpdate = useCallback((cell: any) => {

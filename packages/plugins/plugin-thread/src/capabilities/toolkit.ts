@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Array, Effect, Schema, pipe } from 'effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -16,8 +16,8 @@ import { trim } from '@dxos/util';
 import { ThreadAction } from '../types';
 
 // TODO(wittjosiah): How to make this work for more than Documents?
-class Toolkit extends AiToolkit.make(
-  AiTool.make('add-proposals', {
+class ThreadToolkit extends Toolkit.make(
+  Tool.make('add-proposals', {
     description: trim`
       Proposes a set of changes to a document.
     `,
@@ -32,7 +32,7 @@ class Toolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    ThreadToolkit.toLayer({
       'add-proposals': ({ id, diffs: _diffs }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
@@ -73,6 +73,6 @@ class Toolkit extends AiToolkit.make(
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, ThreadToolkit),
+  contributes(Capabilities.ToolkitHandler, ThreadToolkit.layer(context)),
 ];

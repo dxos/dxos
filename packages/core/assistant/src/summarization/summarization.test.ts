@@ -18,6 +18,8 @@ import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
 
 const summarizationFn = defineFunction({
+  key: 'dxos.org/function/summarization/summarize',
+  name: 'Summarize transcript',
   description: 'Summarize a document',
   inputSchema: Schema.Struct({
     document: Schema.optional(DataType.Text),
@@ -82,6 +84,8 @@ const summarizationFn = defineFunction({
 });
 
 const refinementFn = defineFunction({
+  key: 'dxos.org/function/summarization/refine',
+  name: 'Refine transcript summary',
   description: 'Refine a summary',
   inputSchema: Schema.Struct({
     summaries: Schema.Array(DataType.Text),

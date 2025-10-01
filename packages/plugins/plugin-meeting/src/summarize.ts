@@ -6,10 +6,10 @@ import { type AiError } from '@effect/ai';
 import { Effect, Layer } from 'effect';
 
 import {
-  type AiInputPreprocessingError,
   type AiModelNotAvailableError,
   AiService,
   type AiToolNotFoundError,
+  type PromptPreprocessingError,
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
@@ -38,7 +38,7 @@ export const getMeetingContent = async (
 export const summarizeTranscript: (content: string) => Effect.Effect<
   string,
   // TODO(dmaretskyi): There should be a clear re-export for all AI-related errors.
-  AiAssistantError | AiInputPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
+  AiAssistantError | PromptPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
   AiService.AiService
 > = Effect.fn('summarizeTranscript')(
   function* (content) {

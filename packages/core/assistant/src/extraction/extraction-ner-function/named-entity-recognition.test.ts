@@ -10,7 +10,8 @@ import { createTestData } from '@dxos/schema/testing';
 
 import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
 
-describe('NamedEntityRecognition', () => {
+// TODO(mykola): This should not run on CI.
+describe.skip('NamedEntityRecognition', () => {
   let ner: TokenClassificationPipelineType;
 
   beforeAll(async () => {

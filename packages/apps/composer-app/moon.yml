@@ -6,6 +6,7 @@ tags:
   - typecheck
   - vite
   - ts-test
+  - storybook
 tasks:
   bundle:
     deps:
@@ -25,3 +26,7 @@ tasks:
   serve:
     deps:
       - prebuild
+  test:
+    inputs:
+      - .storybook/*
+      - vite.config.ts

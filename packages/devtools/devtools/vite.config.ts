@@ -4,7 +4,8 @@
 
 import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import VitePluginFonts from 'unplugin-fonts/vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -14,11 +15,15 @@ import WasmPlugin from 'vite-plugin-wasm';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
 const PACKAGE_VERSION = require('./package.json').version;
 
 // https://vitejs.dev/config
 export default defineConfig({
-  root: __dirname,
+  root: dirname,
   base: '', // Ensures relative path to assets.
   server: {
     host: true,
@@ -54,15 +59,15 @@ export default defineConfig({
       }),
     },
     ConfigPlugin({
-      root: __dirname,
+      root: dirname,
       env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_SENTRY_DESTINATION', 'DX_TELEMETRY_API_KEY', 'PACKAGE_VERSION'],
     }),
     ThemePlugin({
-      root: __dirname,
+      root: dirname,
       content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, './index.html'),
+        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
     TopLevelAwaitPlugin(),
@@ -138,12 +143,13 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'out');
+        const outDir = path.join(dirname, 'out');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 });
