@@ -35,7 +35,7 @@ import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { ProjectPlugin } from '@dxos/plugin-project';
-import { ScriptPlugin } from '@dxos/plugin-script';
+import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
 import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
@@ -825,22 +825,7 @@ export const WithScript: Story = {
     types: [ScriptType, DataType.Text],
     onInit: async ({ client, space }) => {
       const { identityKey } = client.halo.identity.get()!;
-      await client.halo.writeCredentials([
-        {
-          issuer: identityKey,
-          issuanceDate: new Date(),
-          subject: {
-            id: identityKey,
-            assertion: {
-              '@type': 'dxos.halo.credentials.ServiceAccess',
-              serverName: 'hub.dxos.network',
-              serverKey: identityKey,
-              identityKey,
-              capabilities: ['composer:beta'],
-            },
-          },
-        },
-      ]);
+      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
       const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
       invariant(template, 'Template not found');

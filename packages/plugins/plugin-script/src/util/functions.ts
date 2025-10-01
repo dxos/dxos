@@ -3,9 +3,10 @@
 //
 
 import { type FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { getMeta, getSpace } from '@dxos/react-client/echo';
-
 /**
  * Get the function URL for a given script and client configuration
  */
@@ -61,4 +62,21 @@ export const updateFunctionMetadata = (
   } else {
     log.verbose('no key in function metadata', { functionId });
   }
+};
+
+export const getAccessCredential = (identityKey: PublicKey): Credential => {
+  return {
+    issuer: identityKey,
+    issuanceDate: new Date(),
+    subject: {
+      id: identityKey,
+      assertion: {
+        '@type': 'dxos.halo.credentials.ServiceAccess',
+        serverName: 'hub.dxos.network',
+        serverKey: identityKey,
+        identityKey,
+        capabilities: ['composer:beta'],
+      },
+    },
+  };
 };
