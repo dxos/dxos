@@ -6,13 +6,14 @@ import { Tool, Toolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, MemoizedAiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { AiSession } from './session';
+import { TestHelpers } from '@dxos/effect';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
@@ -61,52 +62,50 @@ const toolkitLayer = TestToolkit.toLayer({
     }),
 });
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS)('AiSession', () => {
-  it.effect('no tools', () =>
-    Effect.gen(function* () {
-      const session = new AiSession({ operationModel: 'configured' });
-      const response = yield* session.run({
-        prompt: 'Hello world!',
-        history: [],
-      });
-      log.info('response', { response });
-    }).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          toolkitLayer,
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-            Layer.provideMerge(ToolResolverService.layerEmpty),
-            Layer.provideMerge(ToolExecutionService.layerEmpty),
-            Layer.provideMerge(AiServiceTestingPreset('direct')),
-            Layer.provideMerge(TracingService.layerNoop),
-          ),
-        ),
-      ),
+const TestLayer = Layer.mergeAll(
+  toolkitLayer,
+  AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
+  TracingService.layerNoop,
+  ToolResolverService.layerEmpty,
+  ToolExecutionService.layerEmpty,
+).pipe(
+  //
+  Layer.provideMerge(MemoizedAiService.layerTest()),
+  Layer.provide(AiServiceTestingPreset('direct')),
+);
+
+describe('AiSession', () => {
+  it.effect(
+    'no tools',
+    Effect.fnUntraced(
+      function* ({}) {
+        const session = new AiSession({ operationModel: 'configured' });
+        const response = yield* session.run({
+          prompt: 'Hello world!',
+          history: [],
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
     ),
   );
 
-  it.effect('calculator', () =>
-    Effect.gen(function* () {
-      const session = new AiSession({ operationModel: 'configured' });
-      const toolkit = yield* TestToolkit;
-      const response = yield* session.run({
-        toolkit,
-        prompt: 'What is 10 + 20?',
-        history: [],
-      });
-      log.info('response', { response });
-    }).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          TracingService.layerNoop,
-          AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(
-            Layer.provideMerge(AiServiceTestingPreset('direct')),
-          ),
-          ToolResolverService.layerEmpty,
-          ToolExecutionService.layerEmpty,
-          toolkitLayer,
-        ),
-      ),
+  it.effect(
+    'calculator',
+    Effect.fnUntraced(
+      function* ({}) {
+        const session = new AiSession({ operationModel: 'configured' });
+        const toolkit = yield* TestToolkit;
+        const response = yield* session.run({
+          toolkit,
+          prompt: 'What is 10 + 20?',
+          history: [],
+        });
+        log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
     ),
   );
 });

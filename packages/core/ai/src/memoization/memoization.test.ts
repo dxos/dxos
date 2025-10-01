@@ -29,7 +29,7 @@ describe('memoization', () => {
   it.effect(
     'generate a poem',
     Effect.fnUntraced(
-      function* (ctx) {
+      function* ({}) {
         const result = yield* LanguageModel.generateText({
           prompt: 'Write me a poem!',
         });
@@ -43,7 +43,7 @@ describe('memoization', () => {
   it.effect(
     'tools',
     Effect.fnUntraced(
-      function* (ctx) {
+      function* ({}) {
         const chat = yield* Chat.fromPrompt('Add 47 + 23');
 
         while (true) {
