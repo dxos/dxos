@@ -9,9 +9,8 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { SearchList, Listbox, commandItem, searchListItem } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/react-ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
@@ -132,16 +131,11 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   return (
-    <Listbox.Root>
+    <Listbox.Root value={preset} onValueChange={onPresetChange}>
       {presets?.map(({ id, label }) => {
         const isSelected = preset === id;
         return (
-          <Listbox.Option
-            key={id}
-            selected={isSelected}
-            onSelect={() => onPresetChange?.(id)}
-            classNames={mx(commandItem, searchListItem)}
-          >
+          <Listbox.Option key={id} value={id} onSelect={() => onPresetChange?.(id)}>
             <div className='grow truncate'>{label}</div>
             <Icon icon='ph--check--regular' classNames={[!isSelected && 'invisible']} />
           </Listbox.Option>
