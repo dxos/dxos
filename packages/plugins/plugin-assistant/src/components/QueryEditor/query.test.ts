@@ -177,6 +177,8 @@ describe('query', () => {
         ],
       },
       {
+        // Contacts for Organizations with name "DXOS"
+        // TODO(burdon): Filter relations.
         query: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Contact)',
         parts: [
           'Query',
