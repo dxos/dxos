@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -19,3 +20,6 @@ tasks:
     outputs:
       - src/components/QueryEditor/gen/query.terms.ts
       - src/components/QueryEditor/gen/query.ts
+  test:
+    inputs:
+      - .storybook/*

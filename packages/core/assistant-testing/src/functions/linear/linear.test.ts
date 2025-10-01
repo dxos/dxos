@@ -16,8 +16,7 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
+  FunctionInvocationService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
@@ -28,7 +27,7 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], Toolkit.make()),
-  makeToolExecutionServiceFromFunctions([], Toolkit.make() as any, Layer.empty as any),
+  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -40,9 +39,10 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
+      FunctionInvocationService.layerTest({ functions: [fetchLinearIssues] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
       FetchHttpClient.layer,
     ),
   ),
@@ -55,7 +55,7 @@ describe('Linear', { timeout: 600_000 }, () => {
       function* ({ expect: _ }) {
         yield* DatabaseService.flush({ indexes: true });
 
-        yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+        yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 

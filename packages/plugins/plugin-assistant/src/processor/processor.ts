@@ -27,8 +27,8 @@ import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type DatabaseService,
+  type FunctionInvocationService,
   type QueueService,
-  type RemoteFunctionExecutionService,
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -41,7 +41,7 @@ export type AiChatServices =
   | CredentialsService
   | DatabaseService
   | QueueService
-  | RemoteFunctionExecutionService
+  | FunctionInvocationService
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService
