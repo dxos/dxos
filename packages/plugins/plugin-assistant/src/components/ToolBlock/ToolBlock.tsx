@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool } from '@effect/ai';
+import { type Tool } from '@effect/ai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
@@ -18,8 +18,7 @@ import {
 } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
-import { isNonNullable } from '@dxos/util';
-import { safeParseJson } from '@dxos/util';
+import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -34,7 +33,7 @@ export type ToolBlockProps = {
 export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
+  const getToolCaption = (tool?: Tool.Any, status?: AgentStatus) => {
     if (!tool) {
       return t('calling tool label');
     }
@@ -43,9 +42,9 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   };
 
   const items = useMemo(() => {
-    let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
+    let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
-    const tools: AiTool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
+    const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
       .map((block) => {
@@ -114,6 +113,7 @@ type ToolContainerParams = {
   items: { title: string; content: any }[];
 };
 
+// TODO(burdon): Maintain scroll position when closing.
 export const ToolContainer = ({ items }: ToolContainerParams) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, type AiToolkit } from '@effect/ai';
+import { Tool, type Toolkit } from '@effect/ai';
 import { Context, Effect, Layer, Record, Schema } from 'effect';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 export const makeToolResolverFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: AiToolkit.Any,
+  toolkit: Toolkit.Toolkit<any>,
 ): Layer.Layer<ToolResolverService> => {
   return Layer.succeed(ToolResolverService, {
     resolve: Effect.fn('resolveTool')(function* (id) {
@@ -33,20 +33,24 @@ export const makeToolResolverFromFunctions = (
 
 export const makeToolExecutionServiceFromFunctions = (
   functions: FunctionDefinition<any, any>[],
-  toolkit: AiToolkit.AiToolkit<AiTool.Any>,
-  handlersLayer: Layer.Layer<AiTool.ToHandler<AiTool.AiTool<any>>, never, never>,
+  toolkit: Toolkit.Toolkit<any>,
+  handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
 ): Layer.Layer<ToolExecutionService, never, LocalFunctionExecutionService> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitHandler = yield* toolkit.pipe(Effect.provide(handlersLayer));
+      invariant(isHandlerLike(toolkitHandler));
       const localFunctionExecutionService = yield* LocalFunctionExecutionService;
 
       return {
         handlersFor: (toolkit) => {
-          const makeHandler = (tool: AiTool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
+          const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
             return Effect.fn('toolFunctionHandler')(function* (input: any) {
-              if (toolkitHandler.tools.find((t: AiTool.Any) => t.name === tool.name)) {
+              if (toolkitHandler.tools[tool.name]) {
+                if (Tool.isProviderDefined(tool)) {
+                  throw new Error('Attempted to call a provider-defined tool');
+                }
                 // TODO(wittjosiah): Everything is `never` here.
                 return yield* (toolkitHandler.handle as any)(tool.name, input);
               }
@@ -63,7 +67,9 @@ export const makeToolExecutionServiceFromFunctions = (
             });
           };
 
-          return toolkit.of(Record.map(toolkit.tools, (tool, _name) => makeHandler(tool)) as any) as any;
+          return toolkit.of(
+            Record.map(toolkit.tools, (tool, _name) => (Tool.isUserDefined(tool) ? makeHandler(tool) : null)) as any,
+          ) as any;
         },
       };
     }),
@@ -80,14 +86,14 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assisatnt/FunctionToolAn
   }
 >() {}
 
-const toolCache = new WeakMap<FunctionDefinition<any, any>, AiTool.Any>();
+const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
 
-const projectFunctionToTool = (fn: FunctionDefinition<any, any>): AiTool.Any => {
+const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
 
-  const tool = AiTool.make(makeToolName(fn.name), {
+  const tool = Tool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),
     // TODO(dmaretskyi): Include output schema.
@@ -116,4 +122,8 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
     default:
       return todo(`Unsupported schema AST: ${schema.ast._tag}`);
   }
+};
+
+const isHandlerLike = (value: unknown): value is Toolkit.WithHandler<Record<string, Tool.Any>> => {
+  return typeof (value as any).tools === 'object' && typeof (value as any).handle === 'function';
 };

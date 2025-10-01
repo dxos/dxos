@@ -17,10 +17,11 @@ test('json-schema annotations for filter refinement get combined', () => {
     $schema: 'http://json-schema.org/draft-07/schema#',
     foo: 'foo',
     bar: 'bar',
+    type: 'number',
   });
 });
 
-test('json-schema annotations on types overrides the default serialization', () => {
+test('json-schema annotations on types do not override the default serialization', () => {
   const type = Schema.Number.annotations({
     jsonSchema: { foo: 'foo' },
   });
@@ -29,6 +30,7 @@ test('json-schema annotations on types overrides the default serialization', () 
   expect(jsonSchema).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     foo: 'foo',
+    type: 'number',
   });
 });
 
@@ -57,12 +59,12 @@ test('date with title and description annotations', () => {
   expect(JSONSchema.make(date)).toEqual({
     $schema: 'http://json-schema.org/draft-07/schema#',
     $defs: {
-      Date: {
+      DateFromString: {
         description: 'a string to be decoded into a Date',
         type: 'string',
       },
     },
-    $ref: '#/$defs/Date',
+    $ref: '#/$defs/DateFromString',
   });
 });
 

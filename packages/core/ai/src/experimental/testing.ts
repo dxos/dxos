@@ -2,24 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiChat, AiLanguageModel } from '@effect/ai';
+import { type Chat, LanguageModel } from '@effect/ai';
 import { Chunk, Effect, Stream } from 'effect';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import * as AiParser from '../AiParser';
+import * as AiPreprocessor from '../AiPreprocessor';
 import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
 
 // TODO(dmaretskyi): What is the right stopping condition?
-export const hasToolCall = Effect.fn(function* (chat: AiChat.AiChat.Service) {
+export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
   const history = yield* chat.history;
+  const lastMessage = history.content.at(-1);
   return (
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallPart' ||
-    history.messages.at(-1)?.parts.at(-1)?._tag === 'ToolCallResultPart'
+    (lastMessage?.role === 'assistant' && lastMessage.content.at(-1)?.type === 'tool-call') ||
+    lastMessage?.role === 'tool'
   );
 });
 
@@ -37,13 +38,12 @@ export const processMessages = Effect.fn(function* ({
   const history: DataType.Message[] = [...messages];
 
   do {
-    const prompt = yield* preprocessAiInput(history);
-    const blocks = yield* AiLanguageModel.streamText({
+    const prompt = yield* AiPreprocessor.preprocessPrompt(history, { system });
+    const blocks = yield* LanguageModel.streamText({
       disableToolCallResolution: true,
       toolkit,
-      system,
       prompt,
-    }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
+    }).pipe(AiParser.parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
 
     const message = Obj.make(DataType.Message, {
       created: new Date().toISOString(),
