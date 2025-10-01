@@ -186,6 +186,48 @@ describe('query', () => {
           ')',
         ],
       },
+      {
+        query: 'type:dxos.org/echo/Contact => type:dxos.org/echo/Organization',
+        parts: [
+          'Query',
+          // type:dxos.org/echo/Contact
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          // =>
+          'Relation',
+          '=>',
+          // type:dxos.org/echo/Organization
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+        ],
+      },
+      {
+        query: 'type:dxos.org/echo/Organization <= type:dxos.org/echo/Contact',
+        parts: [
+          'Query',
+          // type:dxos.org/echo/Organization
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          // <=
+          'Relation',
+          '<=',
+          // type:dxos.org/echo/Contact
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+        ],
+      },
     ];
 
     for (const { query, parts } of tests) {
