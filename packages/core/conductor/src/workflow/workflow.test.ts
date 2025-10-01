@@ -11,7 +11,7 @@ import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
 import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { LogLevel, log } from '@dxos/log';
+import { LogLevel } from '@dxos/log';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
