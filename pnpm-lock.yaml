@@ -2448,8 +2448,8 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       dfx:
-        specifier: ^0.124.1
-        version: 0.124.2(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.126.0
+        version: 0.126.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
@@ -25526,11 +25526,11 @@ packages:
   dfa@1.2.0:
     resolution: {integrity: sha512-ED3jP8saaweFTjeGX8HQPjeC1YYyZs98jGNZx6IiBvxW7JG5v492kamAQB3m2wop07CvU/RQmzcKr6bgcC5D/Q==}
 
-  dfx@0.124.2:
-    resolution: {integrity: sha512-t0Aor9B/h3CYNq5ML36S/pRdtVLo0bMmfz9m1cLVhMa/QfcP9wKaqKcpGM3z6qT+KIh5/zc+wfdFfKAWCqV58g==}
+  dfx@0.126.0:
+    resolution: {integrity: sha512-j+/0VEopUON4WaUAdx0J8dbpPkf5pUeFS6Xoi8G9saHP6/lS+K5IYZYZmHxfScByglW+QUpWRank6PugDessBA==}
     peerDependencies:
-      '@effect/platform': ^0.90
-      effect: ^3.17
+      '@effect/platform': ^0.92
+      effect: ^3.18
 
   did-resolver@4.1.0:
     resolution: {integrity: sha512-S6fWHvCXkZg2IhS4RcVHxwuyVejPR7c+a4Go0xbQ9ps5kILa8viiYQgrM4gfTyeTjJ0ekgJH9gk/BawTpmkbZA==}
@@ -45915,7 +45915,7 @@ snapshots:
 
   dfa@1.2.0: {}
 
-  dfx@0.124.2(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1):
+  dfx@0.126.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1):
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.1)
       discord-api-types: 0.38.26
