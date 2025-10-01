@@ -32,7 +32,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
         ): Effect.Effect<O> =>
           Effect.gen(function* () {
             if (deployedFunctionId) {
-              return yield* Effect.promise(() => remoteExecutioner.callFunction(deployedFunctionId, input));
+              return yield* remoteExecutioner.callFunction(deployedFunctionId, input);
             }
 
             return yield* localExecutioner.invokeFunction(functionDef, input);
