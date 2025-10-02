@@ -54,7 +54,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
 
-  const scrollLeftRef = useRef<number | null>();
+  const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
 
   // Ensure the first plank is attended when the deck is first rendered.
@@ -217,7 +217,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
             <div
               role='none'
               className={!solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
-              {...(solo && { inert: '' })}
+              {...(solo && { inert: true })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
               {!topbar && !fullscreen && (
@@ -251,7 +251,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
             <div
               role='none'
               className={solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
-              {...(!solo && { inert: '' })}
+              {...(!solo && { inert: true })}
             >
               {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
               {!topbar && !fullscreen && (

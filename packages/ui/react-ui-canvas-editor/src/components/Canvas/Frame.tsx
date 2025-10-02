@@ -220,7 +220,7 @@ export const FrameContent = forwardRef<HTMLDivElement, FrameContentProps>(
       }
     }, [selected]);
 
-    const clickTimer = useRef<number>();
+    const clickTimer = useRef<number>(undefined);
     const handleClick: MouseEventHandler<HTMLDivElement> = (ev) => {
       if (ev.detail === 1 && !editing) {
         clickTimer.current = window.setTimeout(() => {
