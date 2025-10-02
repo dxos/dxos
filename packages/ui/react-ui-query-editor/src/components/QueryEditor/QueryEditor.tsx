@@ -3,7 +3,15 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+import React, {
+  type CSSProperties,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -20,16 +28,23 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type QueryEditorTag, queryEditorTags, renderTag, renderTags } from './query-editor-extension';
+import {
+  type QueryEditorExtensionProps,
+  type QueryTag,
+  queryEditor,
+  renderTag,
+  renderTags,
+} from './query-editor-extension';
 import { QueryEditorItem } from './QueryEditorItem';
 
 export type QueryEditorProps = ThemedClassName<{
-  items?: QueryEditorTag[];
+  items?: QueryTag[];
   readonly?: boolean;
   placeholder?: string;
-  onSearch?: (text: string, ids: string[]) => QueryEditorTag[];
+  onSearch?: (text: string, ids: string[]) => QueryTag[];
   onBlur?: (event: FocusEvent) => void;
-}>;
+}> &
+  QueryEditorExtensionProps;
 
 export interface QueryEditorHandle {
   focus: () => void;
@@ -62,7 +77,7 @@ const ReadonlyQueryEditor = ({ classNames, items }: QueryEditorProps) => {
 };
 
 const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
-  ({ classNames, items = [], placeholder, onSearch, onBlur }, ref) => {
+  ({ classNames, items = [], placeholder, onSearch, onBlur, onChange }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
     const viewRef = useRef<EditorView | null>(null);
@@ -103,6 +118,8 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       getMenu,
     });
 
+    const queryEditorExtension = useMemo(() => queryEditor({ onChange }), [onChange]);
+
     const { parentRef, view } = useTextEditor(
       () => ({
         initialValue: renderTags(items),
@@ -116,13 +133,13 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             },
           }),
           commandMenuExtension,
-          queryEditorTags,
+          queryEditorExtension,
           EditorView.domEventHandlers({
             blur: (event) => onBlur?.(event),
           }),
         ],
       }),
-      [themeMode, onSearch, onBlur, commandMenuExtension],
+      [themeMode, onBlur, commandMenuExtension],
     );
 
     const composedRef = useComposedRefs(resizeRef, parentRef);

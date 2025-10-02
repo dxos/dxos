@@ -9,10 +9,10 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type QueryEditorTag } from './query-editor-extension';
+import { type QueryTag } from './query-editor-extension';
 import { QueryEditor } from './QueryEditor';
 
-const allItems: QueryEditorTag[] = [
+const allTags: QueryTag[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -36,10 +36,11 @@ const meta = {
           <QueryEditor
             items={items}
             onSearch={(text, ids) =>
-              allItems.filter(
+              allTags.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               )
             }
+            onChange={(items) => console.log('[items]', items)}
           />
         </div>
         <div className='flex border p-1 border-separator'>
@@ -61,12 +62,12 @@ type Story = StoryObj<typeof QueryEditor>;
 
 export const MultiSelect: Story = {
   args: {
-    items: [allItems[0], allItems[1]],
+    items: [allTags[0], allTags[1]],
   },
 };
 
 export const SingleSelect: Story = {
   args: {
-    items: [allItems[0]],
+    items: [allTags[0]],
   },
 };

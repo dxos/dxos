@@ -2,27 +2,165 @@
 // Copyright 2025 DXOS.org
 //
 
+import { syntaxTree } from '@codemirror/language';
+import { type EditorState } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 
 import { type ChromaticPalette } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, extendedMarkdown, getXmlTextChild, xmlTags } from '@dxos/react-ui-editor';
 
-export type QueryEditorTag = {
+export type QueryTag = {
   id: string;
   label: string;
   hue?: ChromaticPalette;
 };
 
-export type QueryEditorText = {
+export type QueryText = {
   content: string;
 };
 
-export type QueryItem = QueryEditorText | QueryEditorTag;
+export type QueryItem = QueryText | QueryTag;
 
-export const renderTag = (tag: QueryEditorTag) =>
+/**
+ * Parse the CodeMirror content to extract QueryItems from the AST.
+ * Regular text is converted to QueryText objects (trimmed).
+ * Anchor elements are converted to QueryTag objects.
+ */
+export const parseQueryItems = (state: EditorState): QueryItem[] => {
+  const items: QueryItem[] = [];
+  const tree = syntaxTree(state);
+  const doc = state.doc;
+
+  if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
+    // If no tree or empty, treat entire content as text
+    const content = doc.toString().trim();
+    if (content) {
+      items.push({ content });
+    }
+    return items;
+  }
+
+  // Track processed ranges to avoid duplicating text
+  const processedRanges: Array<{ from: number; to: number }> = [];
+
+  // First pass: find all anchor elements
+  tree.iterate({
+    enter: (node) => {
+      if (node.type.name === 'Element') {
+        try {
+          // Parse the element to check if it's an anchor
+          const openTag = node.node.getChild('OpenTag') || node.node.getChild('SelfClosingTag');
+          if (openTag) {
+            const tagName = openTag.getChild('TagName');
+            if (tagName) {
+              const tagNameText = doc.sliceString(tagName.from, tagName.to);
+              if (tagNameText === 'anchor') {
+                // Extract anchor attributes
+                let refid = '';
+                let hue: ChromaticPalette | undefined;
+                let label = '';
+
+                // Extract attributes
+                let attributeNode = openTag.getChild('Attribute');
+                while (attributeNode) {
+                  const attrName = attributeNode.getChild('AttributeName');
+                  const attrValue = attributeNode.getChild('AttributeValue');
+                  if (attrName) {
+                    const attr = doc.sliceString(attrName.from, attrName.to);
+                    if (attrValue) {
+                      let value = doc.sliceString(attrValue.from, attrValue.to);
+                      // Remove quotes
+                      if (
+                        (value.startsWith('"') && value.endsWith('"')) ||
+                        (value.startsWith("'") && value.endsWith("'"))
+                      ) {
+                        value = value.slice(1, -1);
+                      }
+                      if (attr === 'refid') {
+                        refid = value;
+                      } else if (attr === 'hue') {
+                        hue = value as ChromaticPalette;
+                      }
+                    }
+                  }
+                  attributeNode = attributeNode.nextSibling;
+                }
+
+                // Extract text content (label)
+                if (node.type.name === 'Element' && openTag.type.name !== 'SelfClosingTag') {
+                  let child = node.node.firstChild;
+                  while (child) {
+                    if (child.type.name === 'Text') {
+                      const text = doc.sliceString(child.from, child.to).trim();
+                      if (text) {
+                        label = text;
+                        break;
+                      }
+                    }
+                    child = child.nextSibling;
+                  }
+                }
+
+                if (refid && label) {
+                  const queryTag: QueryTag = { id: refid, label };
+                  if (hue) {
+                    queryTag.hue = hue;
+                  }
+                  items.push(queryTag);
+                  processedRanges.push({ from: node.node.from, to: node.node.to });
+                }
+              }
+            }
+          }
+        } catch (err) {
+          // Ignore parsing errors
+        }
+        return false; // Don't descend into children
+      }
+    },
+  });
+
+  // Second pass: extract text content not covered by anchor elements
+  let currentPos = 0;
+  const docLength = doc.length;
+
+  // Sort processed ranges by position
+  processedRanges.sort((a, b) => a.from - b.from);
+
+  for (const range of processedRanges) {
+    // Add text before this anchor
+    if (currentPos < range.from) {
+      const textContent = doc.sliceString(currentPos, range.from).trim();
+      if (textContent) {
+        items.push({ content: textContent });
+      }
+    }
+    currentPos = range.to;
+  }
+
+  // Add remaining text after the last anchor
+  if (currentPos < docLength) {
+    const textContent = doc.sliceString(currentPos, docLength).trim();
+    if (textContent) {
+      items.push({ content: textContent });
+    }
+  }
+
+  // If no anchors were found, treat entire content as text
+  if (processedRanges.length === 0) {
+    const content = doc.toString().trim();
+    if (content) {
+      items.push({ content });
+    }
+  }
+
+  return items;
+};
+
+export const renderTag = (tag: QueryTag) =>
   `<anchor${tag.hue ? ` hue="${tag.hue}"` : ''} refid="${tag.id}">${tag.label}</anchor> `;
 
-export const renderTags = (tags: QueryEditorTag[]) => {
+export const renderTags = (tags: QueryTag[]) => {
   return tags.map(renderTag).join('');
 };
 
@@ -65,9 +203,21 @@ export const queryEditorTagRegistry = {
   },
 } satisfies XmlWidgetRegistry;
 
-export const queryEditorTags = [
+export type QueryEditorExtensionProps = { onChange?: (items: QueryItem[]) => void };
+
+export const queryEditor = ({ onChange }: QueryEditorExtensionProps) => [
   extendedMarkdown({ registry: queryEditorTagRegistry }),
   xmlTags({ registry: queryEditorTagRegistry }),
+  ...(onChange
+    ? [
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            const queryItems = parseQueryItems(update.state);
+            onChange(queryItems);
+          }
+        }),
+      ]
+    : []),
   EditorView.theme({
     // Hide scrollbar.
     '.cm-scroller': {
