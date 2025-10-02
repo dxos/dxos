@@ -121,7 +121,7 @@ export const withMultiClientProvider = ({
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
     const builder = useRef(new TestBuilder());
-    const hostRef = useRef<Client>();
+    const hostRef = useRef<Client>(null);
     const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.

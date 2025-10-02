@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
   const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (

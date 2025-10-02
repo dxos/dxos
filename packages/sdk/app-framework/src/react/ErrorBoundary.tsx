@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Component, type FC, type JSX, type PropsWithChildren, type ReactNode } from 'react';
+import React, { Component, type FC, type PropsWithChildren, type ReactNode } from 'react';
 
 type State = {
   error: Error | undefined;
@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
     }
   }
 
-  override render(): string | number | boolean | JSX.Element | Iterable<ReactNode> | null | undefined {
+  override render(): ReactNode {
     if (this.state.error) {
       const Fallback = this.props.fallback ?? DefaultFallback;
       return <Fallback data={this.props.data} error={this.state.error} />;

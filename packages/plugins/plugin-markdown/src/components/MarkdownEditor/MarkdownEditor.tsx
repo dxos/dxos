@@ -75,7 +75,7 @@ export const MarkdownEditor = ({
   ...props
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
 
   const getMenu = useCallback(
     (trigger: string, query?: string) => {
@@ -126,7 +126,7 @@ export const MarkdownEditor = ({
   );
 };
 
-const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProps>(
+const MarkdownEditorImpl = forwardRef<EditorView | null, MarkdownEditorProps>(
   (
     {
       id,
@@ -203,7 +203,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
     );
 
-    useImperativeHandle(forwardedRef, () => editorView, [editorView]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
     useTest(editorView);
     useSelectCurrentThread(editorView, id);
 
@@ -282,7 +282,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
+const useTest = (view: EditorView | null) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {

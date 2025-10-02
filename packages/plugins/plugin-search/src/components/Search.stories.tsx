@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Decorator, type Meta, type StoryFn, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -37,7 +37,7 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
 };
 
 const searchContextDecorator = (): Decorator => {
-  return (Story: StoryFn) => (
+  return (Story) => (
     <SearchContextProvider>
       <Story />
     </SearchContextProvider>
