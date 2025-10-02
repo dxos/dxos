@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import ReactPlugin from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -72,8 +72,13 @@ export default defineConfig({
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
-    // https://github.com/preactjs/signals/issues/269
-    ReactPlugin({ jsxRuntime: 'classic' }),
+    react({
+      tsDecorators: true,
+      plugins: [
+        // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+        ['@preact-signals/safe-react/swc', { mode: 'all' }],
+      ],
+    }),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,
