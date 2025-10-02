@@ -102,5 +102,25 @@ export const Default: Story = {
     const anchorsAfter = canvasElement.querySelectorAll('dx-anchor');
     await expect(anchorsAfter.length).toBe(1);
     await expect(anchorsAfter[0].textContent).toBe('Cloudflare');
+
+    // Type Space to add some separation
+    await userEvent.keyboard(' ');
+
+    // Type #curs to trigger search for "Cursor"
+    await userEvent.keyboard('#curs');
+
+    // Wait for the autocomplete menu to appear
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Press Enter to select the "Cursor" option
+    await userEvent.keyboard('{Enter}');
+
+    // Wait for the change to be processed
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Confirm that a new anchor was added with text content "Cursor"
+    const anchorsAfterAdd = canvasElement.querySelectorAll('dx-anchor');
+    await expect(anchorsAfterAdd.length).toBe(2);
+    await expect(anchorsAfterAdd[anchorsAfterAdd.length - 1].textContent).toBe('Cursor');
   },
 };
