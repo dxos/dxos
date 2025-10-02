@@ -45,7 +45,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     onReady?: (view: EditorView) => void;
   };
 
-export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
+export const EditorStory = forwardRef<EditorView | null, StoryProps>(
   ({ debug, debugCustom, text, extensions: _extensions, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes('test-panel');
     const [tree, setTree] = useState<DebugNode>();
@@ -83,7 +83,7 @@ export const EditorStory = forwardRef<EditorView | undefined, StoryProps>(
 /**
  * Default story component.
  */
-export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
+export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
   (
     {
       id = defaultId,
@@ -121,7 +121,7 @@ export const EditorComponent = forwardRef<EditorView | undefined, StoryProps>(
       [id, object, extensions, themeMode],
     );
 
-    useImperativeHandle(forwardedRef, () => view, [view]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
     useEffect(() => {
       if (view) {

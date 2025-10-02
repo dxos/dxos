@@ -16,7 +16,7 @@ export const useStateRef = <V>(
   initialValue?: V | (() => V),
 ): [V | undefined, Dispatch<SetStateAction<V | undefined>>, RefObject<V | undefined>] => {
   const [value, setValue] = useState<V | undefined>(initialValue);
-  const ref = useRef<V>();
+  const ref = useRef<V>(null);
   useEffect(() => {
     ref.current = value;
   }, [initialValue, value]);

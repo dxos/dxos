@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import {
@@ -24,9 +24,10 @@ interface InvitationReducerState {
   status: Invitation.State; // TODO(burdon): Rename state.
   haltedAt?: Invitation.State;
   result: InvitationResult;
-  error?: number;
+  error?: Error;
   id?: string;
   multiUse?: boolean;
+  shareable?: boolean;
   invitationCode?: string;
   authCode?: string;
   authMethod?: Invitation.AuthMethod;
@@ -72,7 +73,7 @@ export type InvitationStatus = {
   multiUse?: boolean;
   shareable?: boolean;
   result: InvitationResult;
-  error?: number;
+  error?: Error;
   cancel(): void;
   // TODO(wittjosiah): Remove?
   connect(observable: CancellableInvitationObservable): void;
@@ -82,11 +83,11 @@ export type InvitationStatus = {
 // Without private key, the invitation code cannot be created.
 // These invitations are only available to be accepted but not shared.
 const isShareableInvitation = (invitation: Invitation) =>
-  invitation.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY || invitation.guestKeypair?.privateKey;
+  invitation.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY || !!invitation.guestKeypair?.privateKey;
 
 export const useInvitationStatus = (observable?: CancellableInvitationObservable): InvitationStatus => {
-  const [state, dispatch] = useReducer<Reducer<InvitationReducerState, InvitationAction>, null>(
-    (prev, action) => {
+  const [state, dispatch] = useReducer(
+    (prev: InvitationReducerState, action: InvitationAction): InvitationReducerState => {
       log('useInvitationStatus', { action });
       const invitationProps =
         'invitation' in action
@@ -115,10 +116,10 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
           action.status === Invitation.State.TIMEOUT) && {
           haltedAt: typeof prev.haltedAt === 'undefined' ? action.haltedAt : prev.haltedAt,
         }),
-      } as InvitationReducerState;
+      };
     },
     null,
-    (_arg: null) => {
+    (_arg: null): InvitationReducerState => {
       const invitation = observable?.get();
       return {
         status: Invitation.State.INIT,
