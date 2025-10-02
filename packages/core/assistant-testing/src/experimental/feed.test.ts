@@ -48,7 +48,7 @@ describe('Feed', { timeout: 600_000 }, () => {
   it.effect(
     'fetch discord messages',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         // const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
         //   serverId: '837138313172353095',
         //   // channelId: '1404487604761526423',

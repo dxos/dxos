@@ -52,7 +52,7 @@ describe('Linear', { timeout: 600_000 }, () => {
   it.effect(
     'sync',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         yield* DatabaseService.flush({ indexes: true });
 
         yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {

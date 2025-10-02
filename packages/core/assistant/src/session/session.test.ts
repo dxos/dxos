@@ -78,7 +78,7 @@ describe('AiSession', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const session = new AiSession({ operationModel: 'configured' });
         const response = yield* session.run({
           prompt: 'Hello world!',
@@ -94,7 +94,7 @@ describe('AiSession', () => {
   it.effect(
     'calculator',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const session = new AiSession({ operationModel: 'configured' });
         const toolkit = yield* TestToolkit;
         const response = yield* session.run({

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, LanguageModel, Prompt, type Tool, type Toolkit } from '@effect/ai';
-import { Chunk, Effect, Schema, Stream } from 'effect';
+import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
+import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
   AiParser,

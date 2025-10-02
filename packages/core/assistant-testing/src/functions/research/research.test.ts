@@ -67,7 +67,7 @@ describe.skip('Research', { timeout: 600_000 }, () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
             name: 'Notion',
@@ -100,7 +100,7 @@ describe.skip('Research', { timeout: 600_000 }, () => {
   it.effect(
     'research blueprint',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
