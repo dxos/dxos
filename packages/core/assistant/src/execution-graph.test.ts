@@ -7,6 +7,7 @@ import { describe, expect, it } from '@effect/vitest';
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { ExecutionGraph } from './execution-graph';
@@ -52,6 +53,40 @@ describe('ExecutionGraph', () => {
         parents: [],
         tags: ['user'],
       });
+    });
+
+    it('should handle basic status & message processing', () => {
+      const graph = new ExecutionGraph();
+      const status = Obj.make(AgentStatus, {
+        created: '2025-01-01T00:00:00Z',
+        message: 'Running Research',
+      });
+      const message = Obj.make(DataType.Message, {
+        created: '2025-09-29T14:29:37.860Z',
+        sender: {
+          role: 'user',
+        },
+        blocks: [
+          {
+            _tag: 'text',
+            text: '{"id":"01K6AXZKK79H4E54RKP1YZDARK","@type":"dxn:type:dxos.org/type/Organization:0.1.0","@meta":{"keys":[]},"name":"Blue Yard","website":"https://blueyard.com"}',
+          },
+        ],
+        properties: {},
+      });
+
+      graph.addEvents([status, message]);
+      const result = graph.getGraph();
+      log.info('result', result);
+
+      expect(result.branches).toEqual(['main']);
+      expect(result.commits).toHaveLength(2);
+      expect(result.commits[0].branch).toEqual('main');
+      expect(result.commits[0].message).toEqual('Running Research');
+      expect(result.commits[0].parents).toEqual([]);
+      expect(result.commits[1].branch).toEqual('main');
+      expect(result.commits[1].message).toEqual('Processing request...');
+      expect(result.commits[1].parents).toEqual([status.id]);
     });
 
     it('should add an assistant message with text', () => {
@@ -224,6 +259,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
+        created: '2025-01-01T00:02:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Processing tool call...',
@@ -304,6 +340,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
+        created: '2025-01-01T00:02:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Tool execution failed',
@@ -380,6 +417,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event (processed after tool result)
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
+        created: '2025-01-01T00:00:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Processing...',
@@ -421,6 +459,7 @@ describe('ExecutionGraph', () => {
       // AgentStatus event (processed before tool result)
       const agentStatus = Obj.make(AgentStatus, {
         id: statusId,
+        created: '2025-01-01T00:00:00Z',
         parentMessage: message1Id,
         toolCallId,
         message: 'Processing...',
@@ -535,6 +574,7 @@ describe('ExecutionGraph', () => {
         // AgentStatus events
         Obj.make(AgentStatus, {
           id: status1Id,
+          created: '2025-01-01T00:05:00Z',
           parentMessage: msg2Id,
           toolCallId: 'tool1',
           message: 'Processing task 1...',
@@ -542,6 +582,7 @@ describe('ExecutionGraph', () => {
 
         Obj.make(AgentStatus, {
           id: status2Id,
+          created: '2025-01-01T00:06:00Z',
           parentMessage: msg4Id,
           toolCallId: 'tool2',
           message: 'Processing task 2...',
