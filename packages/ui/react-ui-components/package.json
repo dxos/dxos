@@ -24,7 +24,7 @@
   ],
   "dependencies": {
     "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.2",
+    "@codemirror/view": "^6.38.4",
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
