@@ -187,11 +187,22 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
           }
 
           if (shouldKeep) {
-            filteredDecorations.push(range);
+            // Map the decoration position through the transaction changes.
+            const mappedFrom = tr.changes.mapPos(range.from, -1);
+            const mappedTo = tr.changes.mapPos(range.to, 1);
+
+            // Only keep the decoration if mapping was successful and positions are valid.
+            if (mappedFrom >= 0 && mappedTo >= mappedFrom && mappedTo <= state.doc.length) {
+              filteredDecorations.push({
+                from: mappedFrom,
+                to: mappedTo,
+                value: range.value,
+              });
+            }
           }
         }
 
-        // Return updated decorations with adjacent ones removed.
+        // Return updated decorations with adjacent ones removed and positions mapped.
         return {
           from,
           decorations: Decoration.set(filteredDecorations),
