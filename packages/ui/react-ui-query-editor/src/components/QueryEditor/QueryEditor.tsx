@@ -15,7 +15,6 @@ import {
   EditorView,
   createBasicExtensions,
   createThemeExtensions,
-  decorateMarkdown,
   useCommandMenu,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -116,7 +115,6 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
               content: { className: '!text-sm' },
             },
           }),
-          decorateMarkdown(),
           commandMenuExtension,
           queryEditorTags,
           EditorView.domEventHandlers({
