@@ -43,9 +43,6 @@ const meta = {
             onChange={(items) => console.log('[items]', items)}
           />
         </div>
-        <div className='flex border p-1 border-separator'>
-          <QueryEditor readonly items={items} />
-        </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items, selected }, null, 2)}</pre>
         </div>
