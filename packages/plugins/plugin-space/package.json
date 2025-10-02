@@ -81,7 +81,7 @@
     "jszip": "^3.10.1",
     "localforage": "^1.10.0",
     "react-drag-drop-files": "^2.3.8",
-    "react-is": "~18.2.0",
+    "react-is": "~19.1.1",
     "react-qr-rounded": "^1.0.0"
   },
   "devDependencies": {
@@ -104,8 +104,8 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"
