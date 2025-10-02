@@ -30,15 +30,18 @@ import { mx } from '@dxos/react-ui-theme';
 
 import {
   type QueryEditorExtensionProps,
+  type QueryItem,
   type QueryTag,
+  itemIsTag,
+  itemIsText,
   queryEditor,
+  renderItems,
   renderTag,
-  renderTags,
 } from './query-editor-extension';
 import { QueryEditorItem } from './QueryEditorItem';
 
 export type QueryEditorProps = ThemedClassName<{
-  items?: QueryTag[];
+  items?: QueryItem[];
   readonly?: boolean;
   placeholder?: string;
   onSearch?: (text: string, ids: string[]) => QueryTag[];
@@ -63,15 +66,27 @@ QueryEditor.displayName = 'QueryEditor';
 const ReadonlyQueryEditor = ({ classNames, items }: QueryEditorProps) => {
   return (
     <div className={mx(classNames)}>
-      {items?.map((item) => (
-        <QueryEditorItem
-          key={item.id}
-          itemId={item.id}
-          label={item.label}
-          {...(item.hue ? { hue: item.hue } : {})}
-          rootClassName='mie-1'
-        />
-      ))}
+      {items?.map((item) => {
+        if (itemIsTag(item)) {
+          return (
+            <QueryEditorItem
+              key={item.id}
+              itemId={item.id}
+              label={item.label}
+              {...(item.hue ? { hue: item.hue } : {})}
+              rootClassName='mie-1'
+            />
+          );
+        } else if (itemIsText(item)) {
+          return (
+            <span key={item.content} className='mie-1'>
+              {item.content}
+            </span>
+          );
+        } else {
+          return null;
+        }
+      })}
     </div>
   );
 };
@@ -87,7 +102,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     const getMenu = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
         if (trigger === '#' && onSearch) {
-          const currentIds = itemsRef.current.map((item) => item.id);
+          const currentIds = itemsRef.current.filter(itemIsTag).map((item) => item.id);
           const results = onSearch(query || '', currentIds);
           const menuItems: CommandMenuItem[] = results.map((item) => ({
             id: item.id,
@@ -122,7 +137,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
 
     const { parentRef, view } = useTextEditor(
       () => ({
-        initialValue: renderTags(items),
+        initialValue: renderItems(items),
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           createThemeExtensions({
@@ -150,7 +165,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     }, [view]);
 
     useEffect(() => {
-      const text = renderTags(items);
+      const text = renderItems(items);
       if (text !== view?.state.doc.toString()) {
         // TODO(burdon): This will cancel any current autocomplete; need to merge?
         view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });

@@ -47,7 +47,7 @@ const meta = {
           <QueryEditor readonly items={items} />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
-          <pre>{JSON.stringify({ items: items.map(({ id }) => id), selected }, null, 2)}</pre>
+          <pre>{JSON.stringify({ items, selected }, null, 2)}</pre>
         </div>
       </div>
     );
@@ -60,14 +60,8 @@ export default meta;
 
 type Story = StoryObj<typeof QueryEditor>;
 
-export const MultiSelect: Story = {
+export const Default: Story = {
   args: {
-    items: [allTags[0], allTags[1]],
-  },
-};
-
-export const SingleSelect: Story = {
-  args: {
-    items: [allTags[0]],
+    items: [allTags[0], { content: 'Junie' }, allTags[1]],
   },
 };

@@ -21,6 +21,14 @@ export type QueryText = {
 
 export type QueryItem = QueryText | QueryTag;
 
+export const itemIsTag = (item: Record<string, string>): item is QueryTag => {
+  return 'id' in item && typeof item.id === 'string' && 'label' in item && typeof item.label === 'string';
+};
+
+export const itemIsText = (item: Record<string, string>): item is QueryText => {
+  return 'content' in item && typeof item.content === 'string';
+};
+
 /**
  * Parse the CodeMirror content to extract QueryItems from the AST.
  * Regular text is converted to QueryText objects (trimmed).
@@ -158,10 +166,23 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
 };
 
 export const renderTag = (tag: QueryTag) =>
-  `<anchor${tag.hue ? ` hue="${tag.hue}"` : ''} refid="${tag.id}">${tag.label}</anchor> `;
+  `<anchor${tag.hue ? ` hue="${tag.hue}"` : ''} refid="${tag.id}">${tag.label}</anchor>`;
 
-export const renderTags = (tags: QueryTag[]) => {
-  return tags.map(renderTag).join('');
+export const renderText = (text: QueryText) => `${text.content}`;
+
+export const renderItems = (items: QueryItem[]) => {
+  return items
+    .map((item) => {
+      if (itemIsTag(item)) {
+        return renderTag(item);
+      } else if (itemIsText(item)) {
+        return renderText(item);
+      } else {
+        return false;
+      }
+    })
+    .filter(Boolean)
+    .join(' ');
 };
 
 class TagWidget extends WidgetType {
