@@ -7,13 +7,12 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type QueryEditorItemData } from './query-editor-extension';
+import { type QueryEditorTag } from './query-editor-extension';
 import { QueryEditor } from './QueryEditor';
 
-const allItems: QueryEditorItemData[] = [
+const allItems: QueryEditorTag[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
   { id: 'cursor', label: 'Cursor' },
   { id: 'dxos', label: 'DXOS', hue: 'green' },
@@ -41,15 +40,6 @@ const meta = {
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               )
             }
-          />
-          <IconButton
-            icon='ph--x--regular'
-            label='Clear'
-            iconOnly
-            onClick={() => {
-              setItems([]);
-              setSelected(undefined);
-            }}
           />
         </div>
         <div className='flex border p-1 border-separator'>

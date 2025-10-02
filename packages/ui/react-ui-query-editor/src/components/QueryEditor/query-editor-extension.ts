@@ -7,20 +7,26 @@ import { EditorView, WidgetType } from '@codemirror/view';
 import { type ChromaticPalette } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, extendedMarkdown, getXmlTextChild, xmlTags } from '@dxos/react-ui-editor';
 
-export type QueryEditorItemData = {
+export type QueryEditorTag = {
   id: string;
   label: string;
   hue?: ChromaticPalette;
 };
 
-export const renderTag = (item: QueryEditorItemData) =>
-  `<anchor${item.hue ? ` hue="${item.hue}"` : ''} refid="${item.id}">${item.label}</anchor> `;
-
-export const renderTags = (items: QueryEditorItemData[]) => {
-  return items.map(renderTag).join('');
+export type QueryEditorText = {
+  content: string;
 };
 
-class AnchorWidget extends WidgetType {
+export type QueryEditorItem = QueryEditorText | QueryEditorTag;
+
+export const renderTag = (tag: QueryEditorTag) =>
+  `<anchor${tag.hue ? ` hue="${tag.hue}"` : ''} refid="${tag.id}">${tag.label}</anchor> `;
+
+export const renderTags = (tags: QueryEditorTag[]) => {
+  return tags.map(renderTag).join('');
+};
+
+class TagWidget extends WidgetType {
   private label: string;
   private id: string;
   private hue?: string;
@@ -38,14 +44,14 @@ class AnchorWidget extends WidgetType {
   }
 
   toDOM(): HTMLElement {
-    const el = document.createElement('dx-anchor');
-    el.textContent = this.label;
-    el.setAttribute('class', 'dx-tag');
+    const anchor = document.createElement('dx-anchor');
+    anchor.textContent = this.label;
+    anchor.setAttribute('class', 'dx-tag');
     if (this.hue) {
-      el.setAttribute('data-hue', this.hue);
+      anchor.setAttribute('data-hue', this.hue);
     }
-    el.setAttribute('refid', this.id);
-    return el;
+    anchor.setAttribute('refid', this.id);
+    return anchor;
   }
 }
 
@@ -54,7 +60,7 @@ export const queryEditorTagRegistry = {
     block: false,
     factory: (props: any) => {
       const text = getXmlTextChild(props.children);
-      return text ? new AnchorWidget(text, props.refid, props.hue) : null;
+      return text ? new TagWidget(text, props.refid, props.hue) : null;
     },
   },
 } satisfies XmlWidgetRegistry;
@@ -71,10 +77,10 @@ export const queryEditorTags = [
       display: 'none', // WebKit.
     },
     '.cm-line': {
-      lineHeight: '1.125rem !important',
+      display: 'flex',
+      flexWrap: 'wrap',
+      alignItems: 'middle',
     },
-    'dx-anchor': {
-      verticalAlign: 'middle',
-    },
+    'dx-anchor': {},
   }),
 ];

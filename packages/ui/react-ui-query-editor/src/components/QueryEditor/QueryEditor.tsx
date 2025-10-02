@@ -21,14 +21,14 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { type QueryEditorItemData, queryEditorTags, renderTag, renderTags } from './query-editor-extension';
+import { type QueryEditorTag, queryEditorTags, renderTag, renderTags } from './query-editor-extension';
 import { QueryEditorItem } from './QueryEditorItem';
 
 export type QueryEditorProps = ThemedClassName<{
-  items?: QueryEditorItemData[];
+  items?: QueryEditorTag[];
   readonly?: boolean;
   placeholder?: string;
-  onSearch?: (text: string, ids: string[]) => QueryEditorItemData[];
+  onSearch?: (text: string, ids: string[]) => QueryEditorTag[];
   onBlur?: (event: FocusEvent) => void;
 }>;
 
