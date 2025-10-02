@@ -7921,9 +7921,6 @@ importers:
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
-      effect:
-        specifier: 3.18.1
-        version: 3.18.1
       mermaid:
         specifier: ^10.9.4
         version: 10.9.4
@@ -7946,6 +7943,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.0
         version: 19.2.0(@types/react@19.2.0)
+      effect:
+        specifier: 3.18.1
+        version: 3.18.1
       react:
         specifier: ~19.2.0
         version: 19.2.0
