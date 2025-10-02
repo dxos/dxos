@@ -1,22 +1,26 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { afterAll, beforeAll, it } from '@effect/vitest';
+import { SpanStatusCode, trace } from '@opentelemetry/api';
+import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import { ConsoleLogRecordExporter, LoggerProvider, SimpleLogRecordProcessor } from '@opentelemetry/sdk-logs';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
-import { Effect, Duration } from 'effect';
-import { it, beforeAll, afterAll } from '@effect/vitest';
-import { TestContext } from 'vitest';
-import { layerOtel } from './otel';
-import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
-  ATTR_SERVICE_NAME,
   ATTR_CODE_FILE_PATH,
   ATTR_CODE_LINE_NUMBER,
   ATTR_CODE_STACKTRACE,
+  ATTR_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
-import { SpanStatusCode, trace } from '@opentelemetry/api';
-import { afterEach, beforeEach } from 'vitest';
+import { Duration, Effect } from 'effect';
+import { beforeEach } from 'vitest';
 
-import { logs, SeverityNumber, type Logger } from '@opentelemetry/api-logs';
-import { LoggerProvider, SimpleLogRecordProcessor, ConsoleLogRecordExporter } from '@opentelemetry/sdk-logs';
-import { log, LogLevel, type LogProcessor } from '@dxos/log';
+import { LogLevel, type LogProcessor, log } from '@dxos/log';
+
+import { layerOtel } from './otel';
 
 const resource = resourceFromAttributes({
   [ATTR_SERVICE_NAME]: 'test',
@@ -77,9 +81,9 @@ beforeAll(() => {
   sdk.start();
 });
 
-afterAll(() => {
-  loggerProvider.shutdown();
-  sdk.shutdown();
+afterAll(async () => {
+  await loggerProvider.shutdown();
+  await sdk.shutdown();
 });
 
 beforeEach((ctx) => {

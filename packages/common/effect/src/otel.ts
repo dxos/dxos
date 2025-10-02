@@ -1,5 +1,9 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Resource, Tracer } from '@effect/opentelemetry';
-import { trace, type Attributes, context, type TracerProvider } from '@opentelemetry/api';
+import { type Attributes, trace } from '@opentelemetry/api';
 import { Effect, Layer } from 'effect';
 import { type LazyArg } from 'effect/Function';
 
