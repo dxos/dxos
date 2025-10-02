@@ -284,12 +284,14 @@ const ConversationStore = Schema.Struct({
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
 const formatMemoizedConversation = (conversation: MemoziedConversation): string => {
-  return jsonStableStringify(
-    {
-      parameters: conversation.parameters,
-      prompt: conversation.prompt,
-    },
-    { space: 2 },
+  return (
+    jsonStableStringify(
+      {
+        parameters: conversation.parameters,
+        prompt: conversation.prompt,
+      },
+      { space: 2 },
+    ) ?? ''
   );
 };
 
