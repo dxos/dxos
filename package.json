@@ -53,8 +53,8 @@
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
-    "@effect/language-service": "^0.41.0",
-    "@effect/vitest": "~0.25.1",
+    "@effect/language-service": "^0.41.1",
+    "@effect/vitest": "~0.26.0",
     "@eslint/js": "^9.35.0",
     "@moonrepo/cli": "^1.40.4",
     "@octokit/rest": "^19.0.5",
@@ -99,7 +99,7 @@
     "cli-table3": "^0.6.5",
     "concurrently": "^9.2.0",
     "depcheck": "^1.4.7",
-    "effect": "3.17.14",
+    "effect": "3.18.1",
     "esbuild": "0.25.10",
     "esbuild-plugin-glsl": "^1.4.0",
     "esbuild-plugin-raw": "0.3.0",
@@ -147,7 +147,7 @@
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
     "types-package-json": "^2.0.39",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "typescript-eslint": "^8.39.0",
     "unplugin": "^1.7.1",
     "uuid": "^9.0.0",
@@ -215,7 +215,6 @@
       "react-dom": "~19.1.1"
     },
     "patchedDependencies": {
-      "@automerge/automerge-repo": "patches/@automerge__automerge-repo.patch",
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",
       "ts-node@10.9.1": "patches/ts-node@10.9.1.patch",
       "uuid@8.3.2": "patches/uuid@8.3.2.patch"

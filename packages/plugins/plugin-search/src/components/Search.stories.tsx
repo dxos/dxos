@@ -36,7 +36,7 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
   );
 };
 
-const SearchContextDecorator = (): Decorator => {
+const searchContextDecorator = (): Decorator => {
   return (Story) => (
     <SearchContextProvider>
       <Story />
@@ -63,7 +63,7 @@ const meta = {
     withLayout({
       fullscreen: true,
     }),
-    SearchContextDecorator(),
+    searchContextDecorator(),
   ],
   parameters: {
     layout: 'fullscreen',

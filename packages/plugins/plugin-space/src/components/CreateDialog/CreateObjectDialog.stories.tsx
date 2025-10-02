@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -35,6 +37,8 @@ const meta = {
   component: CreateObjectDialog,
   render: Story,
   decorators: [
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
     withTheme,
     withLayout(),

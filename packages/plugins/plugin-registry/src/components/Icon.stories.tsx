@@ -10,6 +10,7 @@ import React, { type ReactElement, type SVGProps, forwardRef } from 'react';
 
 import { Icon } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 /**
  * Serializable icon props.
@@ -103,6 +104,7 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
+  decorators: [withTheme],
 } satisfies Meta<typeof IconBase>;
 
 export default meta;

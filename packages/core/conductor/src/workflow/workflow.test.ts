@@ -109,10 +109,11 @@ describe('workflow', () => {
 
       const services = createTestExecutionContext({
         functions: {
-          callFunction: async (path, { input }) => {
-            expect(path).toEqual(`/${functionId}`);
-            return { result: Math.pow(input.num1, input.num2) };
-          },
+          callFunction: (deployedFunctionId, { input }: any) =>
+            Effect.sync(() => {
+              expect(deployedFunctionId).toEqual(`/${functionId}`);
+              return { result: Math.pow(input.num1, input.num2) } as any;
+            }),
         },
       });
 

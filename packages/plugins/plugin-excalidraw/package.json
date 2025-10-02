@@ -24,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge": "3.1.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -47,7 +47,7 @@
     "@excalidraw/excalidraw": "^0.17.6",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.14",
+    "effect": "3.18.1",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },

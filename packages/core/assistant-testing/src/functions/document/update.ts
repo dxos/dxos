@@ -9,7 +9,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/update',
+  key: 'dxos.org/function/markdown/update',
+  name: 'Update markdown',
   description: 'Updates the entire contents of the markdown document.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

@@ -54,8 +54,7 @@
     "@preact/signals-core": "^1.9.0",
     "@radix-ui/react-dismissable-layer": "1.1.5",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "date-fns": "^3.3.1",
-    "effect": "3.17.14"
+    "date-fns": "^3.3.1"
   },
   "devDependencies": {
     "@dxos/echo-signals": "workspace:*",
@@ -69,9 +68,10 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
-    "@effect/platform": "0.91.1",
+    "@effect/platform": "0.92.1",
     "@types/react": "~19.1.16",
     "@types/react-dom": "~19.1.9",
+    "effect": "3.18.1",
     "react": "~19.1.1",
     "react-dom": "~19.1.1",
     "vite": "7.1.7"

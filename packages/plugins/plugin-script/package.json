@@ -106,7 +106,7 @@
     "esbuild-wasm": "^0.16.14",
     "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.6.1",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
@@ -114,10 +114,10 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
-    "@effect/platform": "0.91.1",
+    "@effect/platform": "0.92.1",
     "@types/react": "~19.1.16",
     "@types/react-dom": "~19.1.9",
-    "effect": "3.17.14",
+    "effect": "3.18.1",
     "react": "~19.1.1",
     "react-dom": "~19.1.1",
     "vite": "7.1.7"
