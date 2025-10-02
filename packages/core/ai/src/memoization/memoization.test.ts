@@ -3,6 +3,7 @@
 //
 
 import { Chat, LanguageModel, Prompt, Toolkit, Tool } from '@effect/ai';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer, Stream, Schema } from 'effect';
 
@@ -96,6 +97,31 @@ describe('memoization', () => {
           const response = yield* chat.generateText({
             prompt: Prompt.empty,
             toolkit: DateToolkit,
+          });
+          if (response.finishReason === 'tool-calls') {
+            continue;
+          } else {
+            expect(response.finishReason).toBe('stop');
+            console.log(response.text);
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect.only(
+    'provider-defined tool',
+    Effect.fnUntraced(
+      function* ({}) {
+        const chat = yield* Chat.fromPrompt('Who is the current pope?');
+
+        while (true) {
+          const response = yield* chat.generateText({
+            prompt: Prompt.empty,
+            toolkit: Toolkit.make(AnthropicTool.WebSearch_20250305({})),
           });
           if (response.finishReason === 'tool-calls') {
             continue;
