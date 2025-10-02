@@ -96,8 +96,9 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const objects = useQuery(space, Query.type(Type.Expando, { type: 'test' }));
 
   useEffect(() => {
-    if (!source && objects.length) {
-      const source = createDocAccessor(objects[0].content, ['content']);
+    const content = objects[0]?.content.target;
+    if (!source && content) {
+      const source = createDocAccessor(content, ['content']);
       setSource(source);
     }
   }, [objects, source]);

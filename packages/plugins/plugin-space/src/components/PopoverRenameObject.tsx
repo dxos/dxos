@@ -10,12 +10,12 @@ import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const POPOVER_RENAME_OBJECT = `${SPACE_PLUGIN}/PopoverRenameObject`;
+export const POPOVER_RENAME_OBJECT = `${meta.id}/PopoverRenameObject`;
 
 export const PopoverRenameObject = ({ object }: { object: Live<any> }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(Obj.getLabel(object));
   const { dispatchPromise: dispatch } = useIntentDispatcher();

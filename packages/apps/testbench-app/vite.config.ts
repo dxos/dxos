@@ -5,7 +5,8 @@
 // import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sourceMaps from 'rollup-plugin-sourcemaps';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -14,6 +15,10 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
+
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config/
 export default defineConfig(
@@ -55,8 +60,8 @@ export default defineConfig(
         target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
         rollupOptions: {
           input: {
-            main: resolve(__dirname, './index.html'),
-            shell: resolve(__dirname, './shell.html'),
+            main: path.resolve(dirname, './index.html'),
+            shell: path.resolve(dirname, './shell.html'),
           },
           output: {
             manualChunks: {
@@ -79,12 +84,12 @@ export default defineConfig(
             projects: ['../../../tsconfig.paths.json'],
           }),
         ConfigPlugin({
-          root: __dirname,
-          env: ['DX_VAULT', 'BASELIME_API_KEY'],
+          root: dirname,
+          env: ['DX_VAULT'],
         }),
         ThemePlugin({
-          root: __dirname,
-          content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
+          root: dirname,
+          content: [path.resolve(dirname, './index.html'), path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}')],
         }),
         WasmPlugin(),
         ReactPlugin({
@@ -149,13 +154,14 @@ export default defineConfig(
                 }
               }
             }
-            const outDir = join(__dirname, 'out');
+            const outDir = path.join(dirname, 'out');
             if (!existsSync(outDir)) {
               mkdirSync(outDir);
             }
-            writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+            writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
           },
         },
       ],
+      ...createTestConfig({ dirname, node: true, storybook: true }),
     }) as UserConfig,
 );

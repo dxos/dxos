@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ValueEncoding } from 'hypercore';
-
 import { Keyring } from '@dxos/keyring';
 import { type Directory, type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import type { ValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';

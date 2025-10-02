@@ -20,16 +20,16 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { DataType } from '@dxos/schema';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction } from '../../types';
 
 import { CreateObjectPanel, type CreateObjectPanelProps } from './CreateObjectPanel';
 
-export const CREATE_OBJECT_DIALOG = `${SPACE_PLUGIN}/CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.id}/CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<
   CreateObjectPanelProps,
@@ -49,7 +49,7 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const manager = usePluginManager();
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces();
   const { dispatch } = useIntentDispatcher();
@@ -58,7 +58,9 @@ export const CreateObjectDialog = ({
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const space = isSpace(target) ? target : getSpace(target);
   const queryCollections = useQuery(space, Query.type(DataType.QueryCollection));
-  const hiddenTypenames = queryCollections.map((collection) => collection.query.typename).filter(isNonNullable);
+  const hiddenTypenames = queryCollections
+    .map((collection) => typenameFromQuery(collection.query))
+    .filter(isNonNullable);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (typename) =>

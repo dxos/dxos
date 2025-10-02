@@ -7,6 +7,7 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
+import { createObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -41,7 +42,7 @@ type StoryProps = {
 
 const DefaultStory = ({ content = '' }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(DataType.makeText(content));
+  const [text] = useState(createObject(DataType.makeText(content)));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {
@@ -51,7 +52,7 @@ const DefaultStory = ({ content = '' }: StoryProps) => {
       extensions: [
         formattingObserver,
         createBasicExtensions({ readOnly: toolbarState.viewMode === 'readonly' }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
         createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({

@@ -8,7 +8,8 @@ import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export default defineFunction({
-  name: 'dxos.org/function/assistant-analysis',
+  key: 'dxos.org/function/assistant-analysis',
+  name: 'Assistant analysis',
   description: 'Enter analysis analysis mode.',
   inputSchema: Schema.Struct({
     enable: Schema.Boolean.annotations({ description: 'Enable or disable analysis mode.' }),

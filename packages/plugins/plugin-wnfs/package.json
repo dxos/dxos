@@ -57,7 +57,7 @@
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "debounce": "^2.2.0",
-    "effect": "3.17.7",
+    "effect": "3.18.1",
     "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
     "it-all": "^3.0.6",
@@ -70,18 +70,18 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "7.1.1"
+    "@types/react": "~19.2.0",
+    "@types/react-dom": "~19.2.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -8,8 +8,7 @@ export * from './schema';
 export * from './trace';
 export * from './types';
 export * from './url';
-
-// Trigger dispatcher
-export * from './triggers/trigger-dispatcher';
+export * from './triggers';
 export * from './services';
 export * from './executor';
+export * as exampleFunctions from './examples';

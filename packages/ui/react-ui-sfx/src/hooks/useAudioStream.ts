@@ -17,11 +17,11 @@ export type UseAudioStream = {
  */
 // TODO(burdon): Factor out; reconcile with transcription API.
 export const useAudioStream = (active?: boolean): UseAudioStream => {
-  const audioContextRef = useRef<AudioContext>();
-  const analyserRef = useRef<AnalyserNode>();
-  const dataArrayRef = useRef<Uint8Array>();
-  const tracksRef = useRef<MediaStreamTrack[]>();
-  const sourceRef = useRef<MediaStreamAudioSourceNode>();
+  const audioContextRef = useRef<AudioContext>(undefined);
+  const analyserRef = useRef<AnalyserNode>(undefined);
+  const dataArrayRef = useRef<Uint8Array>(undefined);
+  const tracksRef = useRef<MediaStreamTrack[]>(undefined);
+  const sourceRef = useRef<MediaStreamAudioSourceNode>(undefined);
 
   const close = () => {
     log.info('closing microphone');

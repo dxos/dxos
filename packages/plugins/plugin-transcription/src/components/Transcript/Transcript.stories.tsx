@@ -184,18 +184,20 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        PreviewPlugin(),
-        SpacePlugin(),
-        SettingsPlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        PreviewPlugin(),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),
@@ -232,10 +234,13 @@ export const WithQueue: StoryObj<typeof QueueStoryWrapper> = {
   },
 };
 
-export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
-  render: EntityExtractionQueueStory,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix AI service in entity extraction function.
+// TODO(mykola): Fix hugging face quota issues.
+// export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
+//   render: EntityExtractionQueueStory,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//   },
+// };

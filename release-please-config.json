@@ -65,11 +65,6 @@
         },
         {
           "type": "json",
-          "path": "packages/common/crypto-names/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/common/debug/package.json",
           "jsonpath": "$.version"
         },
@@ -585,6 +580,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-project/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-pwa/package.json",
           "jsonpath": "$.version"
         },
@@ -1011,6 +1011,16 @@
         {
           "type": "json",
           "path": "tools/x/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/hypercore/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/hyperformula/package.json",
           "jsonpath": "$.version"
         }
       ]

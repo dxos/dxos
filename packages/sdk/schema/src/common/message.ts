@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Obj, Type } from '@dxos/echo';
 import { defineObjectMigration } from '@dxos/echo-db';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
-import { Unit, isNotFalsy } from '@dxos/util';
+import { Unit, isTruthy } from '@dxos/util';
 
 import { Actor, type ActorRole } from './actor';
 
@@ -84,6 +84,11 @@ export namespace ContentBlock {
     // TODO(dmaretskyi): We might need to be able to reprsent partial json.
     input: Schema.String,
 
+    /**
+     * Is the tool executed by the provider.
+     */
+    providerExecuted: Schema.Boolean,
+
     ...Base.fields,
   }).pipe(Schema.mutable);
   export interface ToolCall extends Schema.Schema.Type<typeof ToolCall> {}
@@ -118,6 +123,11 @@ export namespace ContentBlock {
     // ),
 
     error: Schema.optional(Schema.String),
+
+    /**
+     * Is the tool executed by the provider.
+     */
+    providerExecuted: Schema.Boolean,
 
     ...Base.fields,
   }).pipe(Schema.mutable);
@@ -166,11 +176,11 @@ export namespace ContentBlock {
               [`→${Unit.Thousand(usage.inputTokens ?? 0)}`, `←${Unit.Thousand(usage.outputTokens ?? 0)}`].join(' '),
             ),
         ]
-          .filter(isNotFalsy)
+          .filter(isTruthy)
           .join(' '),
       duration && Unit.Duration(duration),
-    ].filter(isNotFalsy);
-    return [message, paren(parts.join(' · '))].filter(isNotFalsy).join(' ');
+    ].filter(isTruthy);
+    return [message, paren(parts.join(' · '))].filter(isTruthy).join(' ');
   };
 
   export const Base64ImageSource = Schema.Struct({
@@ -185,6 +195,8 @@ export namespace ContentBlock {
   }).pipe(Schema.mutable);
 
   export const ImageSource = Schema.Union(Base64ImageSource, HttpImageSource);
+
+  // TODO(dmaretskyi): Combine image and file similar to effect-ai types.
 
   /**
    * Image

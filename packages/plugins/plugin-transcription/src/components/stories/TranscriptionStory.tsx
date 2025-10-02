@@ -19,7 +19,7 @@ export const TranscriptionStory: FC<{
   disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
-  audioRef?: RefObject<HTMLAudioElement>;
+  audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   const space = useSpace();
 
@@ -37,7 +37,7 @@ export const TranscriptionStory: FC<{
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Content>
-          <TranscriptView space={space} model={model} attendableId='story' />
+          <TranscriptView space={space} model={model} />
         </ScrollContainer.Content>
       </ScrollContainer.Root>
     </div>

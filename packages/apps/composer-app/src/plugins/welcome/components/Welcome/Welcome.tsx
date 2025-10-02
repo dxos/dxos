@@ -11,7 +11,7 @@ import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type ActionMenuItem, BifurcatedAction, CompoundButton } from '@dxos/shell/react';
 
-import { WELCOME_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
@@ -32,7 +32,7 @@ export const Welcome = ({
   onSpaceInvitation,
   onGoToLogin,
 }: WelcomeScreenProps) => {
-  const { t } = useTranslation(WELCOME_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const emailRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState('');
   const [pending, setPending] = useState(false);
@@ -70,7 +70,7 @@ export const Welcome = ({
           passkey: {
             label: t('redeem passkey button label'),
             description: t('redeem passkey button description'),
-            icon: (props: any) => <Icon icon='ph--key--regular' {...props} />,
+            icon: 'ph--key--regular',
             onClick: onPasskey,
           },
         }),
@@ -78,7 +78,7 @@ export const Welcome = ({
         deviceInvitation: {
           label: t('join device button label'),
           description: t('join device button description'),
-          icon: (props: any) => <Icon icon='ph--qr-code--regular' {...props} />,
+          icon: 'ph--qr-code--regular',
           onClick: onJoinIdentity,
         },
       }),
@@ -86,7 +86,7 @@ export const Welcome = ({
         recoveryCode: {
           label: t('recover identity button label'),
           description: t('recover identity button description'),
-          icon: (props: any) => <Icon icon='ph--receipt--regular' {...props} />,
+          icon: 'ph--receipt--regular',
           onClick: onRecoverIdentity,
         },
       }),

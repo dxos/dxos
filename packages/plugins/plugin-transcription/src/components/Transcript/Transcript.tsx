@@ -8,6 +8,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  autoScroll,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -17,7 +18,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
 import { type Transcript } from '../../types';
@@ -52,10 +53,10 @@ export const renderByline =
   };
 
 export type TranscriptViewProps = ThemedClassName<{
-  transcript?: Transcript.Transcript;
   space?: Space;
+  transcript?: Transcript.Transcript;
   model: SerializationModel<DataType.Message>;
-  // TODO(wittjosiah): Move to container.
+  // TODO(burdon): Are these still in use?
   attendableId?: string;
   ignoreAttention?: boolean;
 }>;
@@ -63,28 +64,22 @@ export type TranscriptViewProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const TranscriptView = ({
-  classNames,
-  transcript: object,
-  space,
-  model,
-  attendableId,
-  ignoreAttention,
-}: TranscriptViewProps) => {
+export const TranscriptView = ({ classNames, space, transcript: object, model }: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        space && preview(),
+        preview(),
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
         }),
-      ].filter(isNotFalsy),
+        autoScroll(),
+      ].filter(isTruthy),
     };
   }, [space, model]);
 

@@ -7,7 +7,7 @@ import React from 'react';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import {
   type DeckSettingsProps,
   type NewPlankPositioning,
@@ -19,11 +19,11 @@ import {
 const isSocket = !!(globalThis as any).__args;
 
 export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: DECK_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('settings enable deck label')}>
             <Input.Switch

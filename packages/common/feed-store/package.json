@@ -50,8 +50,9 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-hypercore": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
-    "race-as-promised": "^0.0.2",
+    "race-as-promised": "^0.0.3",
     "streamx": "^2.12.5"
   },
   "devDependencies": {

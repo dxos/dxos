@@ -9,6 +9,7 @@ import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
 import {
@@ -241,7 +242,14 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   }
 
   let result: Schema.Schema.AnyNoContext = Schema.Unknown;
-  if ('$id' in root) {
+  if ('$ref' in root) {
+    switch (root.$ref) {
+      case '/schemas/echo/ref': {
+        result = refToEffectSchema(root);
+        break;
+      }
+    }
+  } else if ('$id' in root) {
     switch (root.$id as string) {
       case '/schemas/any': {
         result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
@@ -259,6 +267,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       // Custom ECHO object reference.
       case '/schemas/echo/ref': {
         result = refToEffectSchema(root);
+        break;
       }
     }
   } else if ('enum' in root) {
@@ -267,6 +276,13 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     result = Schema.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('anyOf' in root) {
     result = Schema.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
+  } else if ('allOf' in root) {
+    if (root.allOf!.length === 1) {
+      result = toEffectSchema(root.allOf![0], defs);
+    } else {
+      log.warn('allOf with multiple schemas is not supported');
+      result = Schema.Unknown;
+    }
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {

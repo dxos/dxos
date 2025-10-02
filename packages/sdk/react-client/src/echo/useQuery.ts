@@ -4,7 +4,7 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Echo, Filter, type Live, Query, type Space, isSpace } from '@dxos/client/echo';
+import { type Echo, Filter, type Live, Query, type Queue, type Space, isSpace } from '@dxos/client/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -12,16 +12,24 @@ const noop = () => {};
 
 // TODO(dmaretskyi): Queries are fully serializable, so we can remove `deps` argument.
 interface UseQueryFn {
-  <Q extends Query.Any>(spaceOrEcho: Space | Echo | undefined, query: Q, deps?: any[]): Live<Query.Type<Q>>[];
+  <Q extends Query.Any>(
+    spaceOrEcho: Space | Echo | Queue<any> | undefined,
+    query: Q,
+    deps?: any[],
+  ): Live<Query.Type<Q>>[];
 
-  <F extends Filter.Any>(spaceOrEcho: Space | Echo | undefined, filter: F, deps?: any[]): Live<Filter.Type<F>>[];
+  <F extends Filter.Any>(
+    spaceOrEcho: Space | Echo | Queue<any> | undefined,
+    filter: F,
+    deps?: any[],
+  ): Live<Filter.Type<F>>[];
 }
 
 /**
  * Create subscription.
  */
 export const useQuery: UseQueryFn = (
-  spaceOrEcho: Space | Echo | undefined,
+  spaceOrEcho: Space | Echo | Queue<any> | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
 ): Live<unknown>[] => {

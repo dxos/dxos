@@ -16,10 +16,9 @@ import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
-import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
@@ -33,7 +32,11 @@ import {
   ChatReferences,
   ChatStatusIndicator,
 } from '../ChatPrompt';
-import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import {
+  type ChatThreadController,
+  ChatThread as NaturalChatThread,
+  type ChatThreadProps as NaturalChatThreadProps,
+} from '../ChatThread';
 
 import { type ChatEvent } from './events';
 
@@ -52,7 +55,6 @@ type ChatContextValue = {
   processor: AiChatProcessor;
 };
 
-// NOTE: Do not export.
 export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
@@ -93,9 +95,10 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
         }
 
         case 'submit': {
-          if (!streaming) {
+          const text = ev.text.trim();
+          if (!streaming && text.length) {
             lastPrompt.current = ev.text;
-            void processor.request({ message: ev.text });
+            void processor.request({ message: text });
           }
           break;
         }
@@ -134,8 +137,8 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
       event={event}
       chat={chat}
       space={space}
-      processor={processor}
       messages={messages}
+      processor={processor}
       {...props}
     >
       <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
@@ -244,10 +247,10 @@ const ChatPrompt = ({
                 return true;
               },
             },
-          ].filter(isNotFalsy),
+          ].filter(isTruthy),
         ),
       ),
-    ].filter(isNotFalsy);
+    ].filter(isTruthy);
   }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
@@ -269,6 +272,7 @@ const ChatPrompt = ({
 
   return (
     <div
+      role='group'
       className={mx(
         'is-full flex flex-col density-fine',
         outline && [
@@ -277,7 +281,7 @@ const ChatPrompt = ({
         classNames,
       )}
     >
-      <div className='flex gap-2'>
+      <div role='none' className='flex gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
         <ChatEditor
@@ -291,7 +295,7 @@ const ChatPrompt = ({
         />
       </div>
 
-      <div className='flex pbs-2 items-center'>
+      <div role='none' className='flex pbs-2 items-center'>
         <ChatOptions
           space={space}
           blueprintRegistry={processor.blueprintRegistry}
@@ -314,6 +318,7 @@ const ChatPrompt = ({
         >
           {online !== undefined && (
             <Input.Root>
+              <Input.Label srOnly>{t('online switch label')}</Input.Label>
               <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
             </Input.Root>
           )}
@@ -329,30 +334,31 @@ ChatPrompt.displayName = 'Chat.Prompt';
 // Thread
 //
 
-type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onEvent'>;
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
 
 const ChatThread = (props: ChatThreadProps) => {
-  const { debug, event, space, messages, processor } = useChatContext(ChatThread.displayName);
+  const { event, messages, processor } = useChatContext(ChatThread.displayName);
   const identity = useIdentity();
-
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
 
-  const toolProvider = useCallback<NonNullable<ChatThreadProps['toolProvider']>>(
-    () => processor.conversation.toolkit?.tools ?? [],
-    [processor],
-  );
-
-  const scrollerRef = useRef<ScrollController>(null);
+  const scrollerRef = useRef<ChatThreadController | null>(null);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
         case 'submit':
         case 'scroll-to-bottom':
-          scrollerRef.current?.scrollToBottom('smooth');
+          scrollerRef.current?.scrollToBottom();
           break;
       }
     });
   }, [event]);
+
+  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
 
   if (!identity) {
     return null;
@@ -362,13 +368,10 @@ const ChatThread = (props: ChatThreadProps) => {
     <NaturalChatThread
       {...props}
       ref={scrollerRef}
-      debug={debug}
       identity={identity}
-      space={space}
       messages={messages}
       error={error}
-      toolProvider={toolProvider}
-      onEvent={(ev) => event.emit(ev)}
+      onEvent={handleEvent}
     />
   );
 };
