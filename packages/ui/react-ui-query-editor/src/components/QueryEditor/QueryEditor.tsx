@@ -66,7 +66,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
   ({ classNames, items = [], placeholder, onSearch, onBlur }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
-    const viewRef = useRef<EditorView>();
+    const viewRef = useRef<EditorView | null>(null);
 
     const itemsRef = useDynamicRef(items);
 
