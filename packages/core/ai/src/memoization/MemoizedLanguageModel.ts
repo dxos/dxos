@@ -8,7 +8,6 @@ import { AiError, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect
 import { createPatch } from 'diff';
 import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
 import jsonStableStringify from 'json-stable-stringify';
-import { expect } from 'vitest';
 
 export interface LayerOptions {
   modelName: string;
@@ -327,7 +326,6 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
   Effect.gen(function* () {
     const closestMatch = yield* store.getClosestMatch(conversation);
     if (Option.isSome(closestMatch)) {
-      expect(closestMatch.value.parameters).toEqual(conversation.parameters);
       const patch = createPatch(
         'converstaion',
         formatMemoizedConversation(closestMatch.value),

@@ -125,11 +125,11 @@ const convertUserMessagePart: (
           mediaType: block.mediaType ?? 'application/octet-stream',
         });
       case 'toolResult':
-        return Prompt.makePart('tool-result', {
-          id: block.toolCallId,
-          name: block.name,
-          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
-        });
+        return yield* Effect.fail(
+          new PromptPreprocesorError({
+            message: `Tool results are not supported inside user messages, use "tool" actor instead.`,
+          }),
+        );
       default:
         return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid user content block: ${block._tag}` }));
     }

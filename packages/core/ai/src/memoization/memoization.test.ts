@@ -96,7 +96,7 @@ describe('memoization', () => {
         while (true) {
           const response = yield* chat.generateText({
             prompt: Prompt.empty,
-            toolkit: DateToolkit,
+            toolkit: yield* DateToolkit,
           });
           if (response.finishReason === 'tool-calls') {
             continue;
@@ -121,7 +121,7 @@ describe('memoization', () => {
         while (true) {
           const response = yield* chat.generateText({
             prompt: Prompt.empty,
-            toolkit: Toolkit.make(AnthropicTool.WebSearch_20250305({})),
+            toolkit: yield* Toolkit.make(AnthropicTool.WebSearch_20250305({})),
           });
           if (response.finishReason === 'tool-calls') {
             continue;
