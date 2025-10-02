@@ -5589,6 +5589,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -5604,9 +5607,6 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tag-picker
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -7238,15 +7238,15 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query-editor
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tag-picker
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -13572,15 +13572,15 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../react-ui-tag-picker
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -14300,6 +14300,73 @@ importers:
         specifier: 7.1.7
         version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
 
+  packages/ui/react-ui-query-editor:
+    dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.18.7
+        version: 6.19.0
+      '@codemirror/lang-markdown':
+        specifier: ^6.3.4
+        version: 6.4.0
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/search':
+        specifier: ^6.5.11
+        version: 6.5.11
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: ^6.38.2
+        version: 6.38.4
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.0
+        version: 19.2.0
+      '@types/react-dom':
+        specifier: ~19.2.0
+        version: 19.2.0(@types/react@19.2.0)
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+      vite:
+        specifier: 7.1.7
+        version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
+
   packages/ui/react-ui-searchlist:
     dependencies:
       '@fluentui/react-tabster':
@@ -14657,6 +14724,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
@@ -14666,9 +14736,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../react-ui-tag-picker
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -14788,73 +14855,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@types/react':
-        specifier: ~19.2.0
-        version: 19.2.0
-      '@types/react-dom':
-        specifier: ~19.2.0
-        version: 19.2.0(@types/react@19.2.0)
-      react:
-        specifier: ~19.2.0
-        version: 19.2.0
-      react-dom:
-        specifier: ~19.2.0
-        version: 19.2.0(react@19.2.0)
-      vite:
-        specifier: 7.1.7
-        version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
-
-  packages/ui/react-ui-tag-picker:
-    dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.19.0
-      '@codemirror/lang-markdown':
-        specifier: ^6.3.4
-        version: 6.4.0
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
-      '@codemirror/search':
-        specifier: ^6.5.11
-        version: 6.5.11
-      '@codemirror/state':
-        specifier: ^6.5.2
-        version: 6.5.2
-      '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.4
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: ^0.9.0
-        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
-      '@radix-ui/react-compose-refs':
-        specifier: 1.1.1
-        version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
-      react-resize-detector:
-        specifier: ^11.0.1
-        version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -36447,7 +36447,7 @@ snapshots:
     dependencies:
       '@codemirror/state': 6.5.2
       '@codemirror/view': 6.38.4
-      crelt: 1.0.5
+      crelt: 1.0.6
 
   '@codemirror/state@6.5.2':
     dependencies:
