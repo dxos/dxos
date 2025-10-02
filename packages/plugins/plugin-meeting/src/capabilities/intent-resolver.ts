@@ -22,7 +22,7 @@ import { MeetingCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: MeetingAction.OnSpaceCreated,
+      intent: MeetingAction.onCreateSpace,
       resolve: ({ rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

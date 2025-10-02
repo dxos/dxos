@@ -48,7 +48,7 @@ export const translations = [
         'format hostname': 'Hostname',
         'format integer': 'Integer',
         'format json': 'JSON',
-        'format latlng': 'Geopoint',
+        'format lnglat': 'Geopoint',
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',

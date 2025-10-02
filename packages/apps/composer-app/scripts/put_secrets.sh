@@ -11,7 +11,6 @@ put_secret preview composer.space DX_TELEMETRY_API_KEY
 put_secret preview composer.space IPFS_API_SECRET
 put_secret preview composer.space JWT_SECRET
 
-put_secret production composer.space BASELIME_API_KEY
 put_secret production composer.space DX_SENTRY_DESTINATION
 put_secret production composer.space DX_TELEMETRY_API_KEY
 put_secret production composer.space IPFS_API_SECRET

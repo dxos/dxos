@@ -50,7 +50,7 @@ const meta = {
       types: [DataType.View, DataType.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const { view } = await Table.makeView({ client, space, typename: DataType.Task.typename });
         space.db.add(view);
         Array.from({ length: 10 }).forEach(() => {

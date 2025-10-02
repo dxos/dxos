@@ -8,6 +8,7 @@ import {
   DecimalPrecision,
   FormatEnum,
   JsonProp,
+  type JsonSchemaType,
   type SelectOption,
   SelectOptionSchema,
   TypeEnum,
@@ -160,7 +161,12 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   //
 
   // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
-  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Array),
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Array, {
+    // TODO(wittjosiah): If this is an array or tuple then it shows up in the form.
+    items: Schema.Any,
+    minItems: Schema.Literal(2),
+    additionalItems: Schema.Literal(false),
+  }),
 };
 
 /**
@@ -218,6 +224,43 @@ export const PropertySchema = Schema.Union(
 );
 
 export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
+
+export const formatToAdditionalPropertyAttributes: Record<FormatEnum, Partial<JsonSchemaType>> = {
+  [FormatEnum.None]: {},
+  [FormatEnum.String]: {},
+  [FormatEnum.Number]: {},
+  [FormatEnum.Boolean]: {},
+  [FormatEnum.Ref]: {},
+  [FormatEnum.DID]: {},
+  [FormatEnum.DXN]: {},
+  [FormatEnum.Email]: {},
+  [FormatEnum.Formula]: {},
+  [FormatEnum.Hostname]: {},
+  [FormatEnum.JSON]: {},
+  [FormatEnum.Markdown]: {},
+  [FormatEnum.Regex]: {},
+  [FormatEnum.URL]: {},
+  [FormatEnum.UUID]: {},
+  [FormatEnum.SingleSelect]: {},
+  [FormatEnum.MultiSelect]: {},
+  [FormatEnum.Currency]: {},
+  [FormatEnum.Integer]: {},
+  [FormatEnum.Percent]: {},
+  [FormatEnum.Timestamp]: {},
+  [FormatEnum.DateTime]: {},
+  [FormatEnum.Date]: {},
+  [FormatEnum.Time]: {},
+  [FormatEnum.Duration]: {},
+  [FormatEnum.GeoPoint]: {
+    items: [
+      { title: 'Longitude', type: TypeEnum.Number },
+      { title: 'Latitude', type: TypeEnum.Number },
+      { title: 'Height ASL (m)', type: TypeEnum.Number },
+    ],
+    minItems: 2,
+    additionalItems: false,
+  },
+};
 
 export const getFormatSchema = (format?: FormatEnum): Schema.Schema.AnyNoContext => {
   if (format === undefined) {

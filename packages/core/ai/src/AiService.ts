@@ -8,15 +8,14 @@ import { Context, Effect, Layer } from 'effect';
 import { AiModelNotAvailableError } from './errors';
 import { type ModelName } from './model';
 
+export interface Service {
+  readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
+}
+
 /**
  * AI Model Factory.
  */
-export class AiService extends Context.Tag('@dxos/ai/AiService')<
-  AiService,
-  {
-    readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
-  }
->() {}
+export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
 
 export const model: (
   model: ModelName,
