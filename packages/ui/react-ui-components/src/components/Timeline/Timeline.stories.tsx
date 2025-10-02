@@ -9,7 +9,7 @@ import React, { useMemo, useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -18,6 +18,7 @@ import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-compone
 import { DataType } from '@dxos/schema';
 import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
 
 faker.seed(1);
@@ -221,14 +222,33 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
+const slice = 0;
 export const ExecutionGraph: Story = {
   render: () => {
     const space = useSpace();
     const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
-      await queue?.append(testExecutionGraph);
+      const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));
+      if (slice > 0) {
+        await queue?.append(objects.slice(0, slice));
+        return;
+      }
+
+      let i = 0;
+      const interval = setInterval(async () => {
+        const obj = objects[i];
+        await queue?.append([obj]);
+
+        i++;
+        if (i >= objects.length) {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
     }, [queue]);
-    const { branches, commits } = useExecutionGraph(queue, true);
+    const { branches, commits } = useExecutionGraph(queue);
+    log.info('execution graph', { branches, commits });
     return <Timeline branches={branches} commits={commits} />;
   },
   decorators: [withClientProvider({ createIdentity: true })],
@@ -365,6 +385,7 @@ const toolCalls = [
 
 const testExecutionGraph = [
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:39.014Z',
     message: 'Running Research',
   }),
   Obj.make(DataType.Message, {
@@ -432,6 +453,7 @@ const testExecutionGraph = [
   }),
   toolCalls[0],
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:44.267Z',
     parentMessage: toolCalls[0].id,
     toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
     message: 'Creating research note...',
@@ -454,6 +476,7 @@ const testExecutionGraph = [
   }),
   toolCalls[1],
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:59.934Z',
     parentMessage: toolCalls[1].id,
     toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
     message: 'Creating research note...',

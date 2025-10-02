@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.32.5",
-    "astro": "^5.5.3",
+    "astro": "^5.13.1",
     "sharp": "^0.32.5",
     "starlight-links-validator": "^0.14.3"
   },
@@ -29,6 +29,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.9.0"
+    "@preact/signals-core": "^1.12.1"
   }
 }
