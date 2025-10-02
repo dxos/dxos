@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Obj, Query, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
@@ -105,6 +105,16 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
     [expandedId, project.collections, space],
   );
 
+  const handleAdd = useCallback(() => {
+    const view = createView({
+      query: Query.select(Filter.type(DataType.Task)),
+      jsonSchema: Type.toJsonSchema(DataType.Task),
+      presentation: Obj.make(DataType.Collection, { objects: [] }),
+    });
+    project.collections.push(Ref.make(view));
+    setExpandedId(view.id);
+  }, [project]);
+
   return (
     <div role='none' className={mx('plb-cardSpacingBlock overflow-y-auto', classNames)}>
       <h2 className={mx(inputTextLabel, cardText)}>{t('views label')}</h2>
@@ -160,6 +170,10 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
           </>
         )}
       </List.Root>
+
+      <div role='none' className='mlb-cardSpacingBlock'>
+        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='is-full' />
+      </div>
     </div>
   );
 };
