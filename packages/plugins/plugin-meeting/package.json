@@ -89,11 +89,11 @@
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
     "@effect/platform": "0.92.1",
-    "@types/react": "~19.1.16",
+    "@types/react": "~19.2.0",
     "effect": "3.18.1",
     "preact": "~10.11.0",
-    "react": "~19.1.1",
-    "react-dom": "~19.1.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "tailwindcss": "~3.4.1"
   },
   "peerDependencies": {
