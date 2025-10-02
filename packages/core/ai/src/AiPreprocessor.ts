@@ -124,13 +124,14 @@ const convertUserMessagePart: (
           data: new URL(block.url),
           mediaType: block.mediaType ?? 'application/octet-stream',
         });
-      case 'reasoning':
-      case 'toolCall':
-        return yield* Effect.fail(
-          new PromptPreprocesorError({ message: `Invalid assistant content block: ${block._tag}` }),
-        );
+      case 'toolResult':
+        return Prompt.makePart('tool-result', {
+          id: block.toolCallId,
+          name: block.name,
+          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+        });
       default:
-        return undefined;
+        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid user content block: ${block._tag}` }));
     }
   },
 );
@@ -147,7 +148,7 @@ export const convertToolMessagePart: (
           result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
         });
       default:
-        return undefined;
+        return yield* Effect.fail(new PromptPreprocesorError({ message: `Invalid tool content block: ${block._tag}` }));
     }
   },
 );
