@@ -7,7 +7,7 @@ import { Array, Effect, Predicate, pipe } from 'effect';
 
 import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
-import { assumeType, bufferToArray } from '@dxos/util';
+import { bufferToArray } from '@dxos/util';
 
 import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
 

@@ -1,17 +1,17 @@
 //
 // Copyright 2025 DXOS.org
 //
-import jsonStableStringify from 'json-stable-stringify';
 
 import { readFile, writeFile } from 'node:fs/promises';
 
 import { AiError, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
 import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
-
+import jsonStableStringify from 'json-stable-stringify';
+import { expect } from 'vitest';
 
 import { TestContextService } from '@dxos/effect';
-import { expect } from 'vitest';
+
 import * as AiService from '../AiService';
 
 export interface MemoizedAiService extends AiService.Service {}
@@ -135,7 +135,7 @@ const makeModel = (options: MakeModelOptions): Effect.Effect<LanguageModel.Servi
             const toolkit = Toolkit.make(...(params.tools as never[]));
             const PartCodec = Response.StreamPart(toolkit);
 
-            let parts: Response.AllPartsEncoded[] = [];
+            const parts: Response.AllPartsEncoded[] = [];
             return options.upstreamModel
               .streamText({
                 prompt: params.prompt,

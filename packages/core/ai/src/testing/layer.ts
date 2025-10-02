@@ -5,12 +5,12 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { Config, type ConfigError, Layer } from 'effect';
+import { Redacted } from 'effect';
 
 import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
 
 import { tapHttpErrors } from './tap';
-import { Redacted } from 'effect';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
 

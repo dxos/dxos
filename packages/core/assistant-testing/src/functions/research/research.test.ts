@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,

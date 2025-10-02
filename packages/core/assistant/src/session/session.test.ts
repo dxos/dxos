@@ -9,11 +9,11 @@ import { Effect, Layer, Schema } from 'effect';
 import { AiService, MemoizedAiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { Obj, Type } from '@dxos/echo';
+import { TestHelpers } from '@dxos/effect';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { AiSession } from './session';
-import { TestHelpers } from '@dxos/effect';
 
 // Define a calendar event artifact schema.
 const CalendarEventSchema = Schema.Struct({
