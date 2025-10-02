@@ -35,42 +35,32 @@ export const preprocessPrompt: (
       Effect.fnUntraced(function* (msg) {
         switch (msg.sender.role) {
           case 'user':
-            return yield* pipe(
-              msg.blocks,
-              (arr) => splitBy(arr, (left, right) => isToolResult(left) !== isToolResult(right)),
-              Effect.forEach(
-                Effect.fnUntraced(function* (chunk) {
-                  switch (chunk[0]._tag) {
-                    case 'toolResult':
-                      assumeType<ContentBlock.ToolResult[]>(chunk);
-                      return Prompt.makeMessage('tool', {
-                        content: chunk.map((block) =>
-                          Prompt.makePart('tool-result', {
-                            id: block.toolCallId,
-                            name: block.name,
-                            result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
-                          }),
-                        ),
-                      });
-                    default:
-                      return Prompt.makeMessage('user', {
-                        content: yield* pipe(
-                          chunk,
-                          Effect.forEach(convertUserMessagePart),
-                          Effect.map(Array.filter(Predicate.isNotUndefined)),
-                        ),
-                      });
-                  }
-                }),
-              ),
-            );
-
+            return [
+              Prompt.makeMessage('user', {
+                content: yield* pipe(
+                  msg.blocks,
+                  Effect.forEach(convertUserMessagePart),
+                  Effect.map(Array.filter(Predicate.isNotUndefined)),
+                ),
+              }),
+            ];
           case 'assistant':
             return [
               Prompt.makeMessage('assistant', {
                 content: yield* pipe(
                   msg.blocks,
                   Effect.forEach(convertAssistantMessagePart),
+                  Effect.map(Array.filter(Predicate.isNotUndefined)),
+                ),
+              }),
+            ];
+
+          case 'tool':
+            return [
+              Prompt.makeMessage('tool', {
+                content: yield* pipe(
+                  msg.blocks,
+                  Effect.forEach(convertToolMessagePart),
                   Effect.map(Array.filter(Predicate.isNotUndefined)),
                 ),
               }),
@@ -145,6 +135,23 @@ const convertUserMessagePart: (
   },
 );
 
+export const convertToolMessagePart: (
+  block: ContentBlock.Any,
+) => Effect.Effect<Prompt.ToolMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
+  function* (block) {
+    switch (block._tag) {
+      case 'toolResult':
+        return Prompt.makePart('tool-result', {
+          id: block.toolCallId,
+          name: block.name,
+          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+        });
+      default:
+        return undefined;
+    }
+  },
+);
+
 const convertAssistantMessagePart: (
   block: ContentBlock.Any,
 ) => Effect.Effect<Prompt.AssistantMessagePart | undefined, PromptPreprocesorError, never> = Effect.fnUntraced(
@@ -178,7 +185,7 @@ const convertAssistantMessagePart: (
           id: block.toolCallId,
           name: block.name,
           params: JSON.parse(block.input),
-          providerExecuted: false,
+          providerExecuted: block.providerExecuted,
         });
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.

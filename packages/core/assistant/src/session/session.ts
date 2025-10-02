@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
-import { Chunk, Effect, type Schema, Stream } from 'effect';
+import { type AiError, LanguageModel, Prompt, type Tool, type Toolkit } from '@effect/ai';
+import { Chunk, Effect, Schema, Stream } from 'effect';
 
 import {
   AiParser,
@@ -110,6 +110,8 @@ export class AiSession {
 
         const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
 
+        console.log(Prompt.FromJson.pipe(Schema.encodeSync)(prompt));
+
         // Execute the stream request.
         const blocks = yield* LanguageModel.streamText({
           prompt,
@@ -164,7 +166,7 @@ export class AiSession {
         yield* submitMessage(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: { role: 'user' },
+            sender: { role: 'tool' },
             blocks: toolResults,
           }),
         );
