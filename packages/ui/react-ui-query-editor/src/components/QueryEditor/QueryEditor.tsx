@@ -99,6 +99,14 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
 
     const itemsRef = useDynamicRef(items);
 
+    const handleChange = useCallback(
+      (items: QueryItem[]) => {
+        itemsRef.current = items;
+        onChange?.(items);
+      },
+      [onChange],
+    );
+
     const getMenu = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
         if (trigger === '#' && onSearch) {
@@ -133,7 +141,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       getMenu,
     });
 
-    const queryEditorExtension = useMemo(() => queryEditor({ onChange }), [onChange]);
+    const queryEditorExtension = useMemo(() => queryEditor({ onChange: handleChange }), [handleChange]);
 
     const { parentRef, view } = useTextEditor(
       () => ({
