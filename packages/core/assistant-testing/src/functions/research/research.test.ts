@@ -49,7 +49,8 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(
     Layer.mergeAll(
       TracingService.layerNoop,
-      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
+      AiServiceTestingPreset('direct'),
+      // MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
