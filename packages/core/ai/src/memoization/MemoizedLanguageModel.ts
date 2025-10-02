@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { readFile, writeFile } from 'node:fs/promises';
-
 import { AiError, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
 import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
@@ -234,6 +232,8 @@ class MemoizedStore {
 
   #loadStore(): Effect.Effect<ConversationStore> {
     return Effect.promise(async () => {
+      // Avoids importing FS in browser. We can use effect's fs layer instead.
+      const { readFile } = await import('node:fs/promises');
       try {
         const data = await readFile(this.#path, 'utf-8');
         return Schema.decodeSync(Schema.parseJson(ConversationStore))(data);
@@ -250,6 +250,8 @@ class MemoizedStore {
   #saveStore(store: ConversationStore): Effect.Effect<void> {
     // TODO(dmaretskyi): Figure out how to make this thread-safe.
     return Effect.promise(async () => {
+      // Avoids importing FS in browser. We can use effect's fs layer instead.
+      const { writeFile } = await import('node:fs/promises');
       await writeFile(this.#path, Schema.encodeSync(Schema.parseJson(ConversationStore))(store));
     });
   }
