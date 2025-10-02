@@ -26,7 +26,7 @@ const allItems: QueryEditorItemData[] = [
 const meta = {
   title: 'ui/react-ui-query-editor/QueryEditor',
   component: QueryEditor,
-  render: ({ items: initialItems, mode }) => {
+  render: ({ items: initialItems }) => {
     const [items, setItems] = useState(initialItems ?? []);
     const [selected, setSelected] = useState<string>();
     // TODO(burdon): Line height.
@@ -36,9 +36,6 @@ const meta = {
         <div className='flex p-1 border items-center border-separator'>
           <QueryEditor
             items={items}
-            mode={mode}
-            onSelect={(id) => setSelected(id)}
-            onUpdate={(ids) => setItems(ids.map((id) => allItems.find(({ id: itemId }) => itemId === id)!))}
             onSearch={(text, ids) =>
               allItems.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
@@ -56,7 +53,7 @@ const meta = {
           />
         </div>
         <div className='flex border p-1 border-separator'>
-          <QueryEditor readonly items={items} onSelect={(id) => setSelected(id)} />
+          <QueryEditor readonly items={items} />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items: items.map(({ id }) => id), selected }, null, 2)}</pre>
@@ -80,7 +77,6 @@ export const MultiSelect: Story = {
 
 export const SingleSelect: Story = {
   args: {
-    mode: 'single-select',
     items: [allItems[0]],
   },
 };

@@ -3,40 +3,34 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle } from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
 import {
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  CommandMenuProvider,
   EditorView,
   createBasicExtensions,
-  createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
+  useCommandMenu,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import { translationKey } from '../../translations';
-
-import {
-  type QueryEditorItemData,
-  type QueryEditorMode,
-  type QueryEditorOptions,
-  createLinks,
-  queryEditor,
-} from './query-editor-extension';
+import { type QueryEditorItemData, queryEditorTags, renderTag, renderTags } from './query-editor-extension';
 import { QueryEditorItem } from './QueryEditorItem';
 
-export type QueryEditorProps = ThemedClassName<
-  {
-    items?: QueryEditorItemData[];
-    readonly?: boolean;
-    mode?: QueryEditorMode;
-    placeholder?: string;
-  } & Pick<QueryEditorOptions, 'onBlur' | 'onSelect' | 'onSearch' | 'onUpdate'>
->;
+export type QueryEditorProps = ThemedClassName<{
+  items?: QueryEditorItemData[];
+  readonly?: boolean;
+  placeholder?: string;
+  onSearch?: (text: string, ids: string[]) => QueryEditorItemData[];
+  onBlur?: (event: FocusEvent) => void;
+}>;
 
 export interface QueryEditorHandle {
   focus: () => void;
@@ -52,16 +46,7 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(({ re
 
 QueryEditor.displayName = 'QueryEditor';
 
-const ReadonlyQueryEditor = ({ classNames, items, onSelect }: QueryEditorProps) => {
-  const handleItemClick = useCallback(
-    ({ itemId, action }: DxTagPickerItemClick) => {
-      if (action === 'activate') {
-        onSelect?.(itemId);
-      }
-    },
-    [onSelect],
-  );
-
+const ReadonlyQueryEditor = ({ classNames, items }: QueryEditorProps) => {
   return (
     <div className={mx(classNames)}>
       {items?.map((item) => (
@@ -71,7 +56,6 @@ const ReadonlyQueryEditor = ({ classNames, items, onSelect }: QueryEditorProps) 
           label={item.label}
           {...(item.hue ? { hue: item.hue } : {})}
           rootClassName='mie-1'
-          onItemClick={handleItemClick}
         />
       ))}
     </div>
@@ -79,26 +63,52 @@ const ReadonlyQueryEditor = ({ classNames, items, onSelect }: QueryEditorProps) 
 };
 
 const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
-  ({ classNames, items = [], mode, placeholder, onBlur, onUpdate, onSearch, onSelect }, ref) => {
-    const { t } = useTranslation(translationKey);
+  ({ classNames, items = [], placeholder, onSearch, onBlur }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
+    const viewRef = useRef<EditorView>();
 
     const itemsRef = useDynamicRef(items);
-    const handleUpdate = (ids: string[]) => {
-      const modified = ids.length !== itemsRef.current.length || ids.some((id, i) => id !== itemsRef.current[i].id);
-      if (modified) {
-        onUpdate?.(ids);
-      }
-    };
+
+    const getMenu = useCallback(
+      async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
+        if (trigger === '#' && onSearch) {
+          const currentIds = itemsRef.current.map((item) => item.id);
+          const results = onSearch(query || '', currentIds);
+          const menuItems: CommandMenuItem[] = results.map((item) => ({
+            id: item.id,
+            label: item.label,
+            onSelect: (view: EditorView) => {
+              const newItem = renderTag(item);
+              const selection = view.state.selection.main;
+              view.dispatch({
+                changes: { from: selection.from, to: selection.to, insert: newItem },
+                selection: { anchor: selection.from + newItem.length },
+              });
+            },
+          }));
+          return [{ id: 'query-items', items: menuItems }];
+        }
+        return [];
+      },
+      [onSearch, itemsRef],
+    );
+
+    const {
+      commandMenu: commandMenuExtension,
+      groupsRef,
+      ...commandMenuProps
+    } = useCommandMenu({
+      viewRef,
+      trigger: '#',
+      getMenu,
+    });
 
     const { parentRef, view } = useTextEditor(
       () => ({
-        initialValue: createLinks(items),
+        initialValue: renderTags(items),
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
-          // TODO(burdon): Limit to tags.
-          createMarkdownExtensions(),
           createThemeExtensions({
             themeMode,
             slots: {
@@ -106,27 +116,26 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
               content: { className: '!text-sm' },
             },
           }),
-          queryEditor({
-            debug: true,
-            onUpdate: handleUpdate,
-            removeLabel: t('remove label'),
-            mode,
-            onSearch,
-            onSelect,
-          }),
+          decorateMarkdown(),
+          commandMenuExtension,
+          queryEditorTags,
           EditorView.domEventHandlers({
             blur: (event) => onBlur?.(event),
           }),
         ],
       }),
-      [themeMode, mode, onSearch, onSelect, onBlur],
+      [themeMode, onSearch, onBlur, commandMenuExtension],
     );
 
     const composedRef = useComposedRefs(resizeRef, parentRef);
     useImperativeHandle(ref, () => ({ focus: () => view?.focus() }), [view]);
 
     useEffect(() => {
-      const text = createLinks(items);
+      viewRef.current = view;
+    }, [view]);
+
+    useEffect(() => {
+      const text = renderTags(items);
       if (text !== view?.state.doc.toString()) {
         // TODO(burdon): This will cancel any current autocomplete; need to merge?
         view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
@@ -134,11 +143,13 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     }, [view, items]);
 
     return (
-      <div
-        ref={composedRef}
-        className={mx('min-is-0 grow', classNames)}
-        style={{ '--dx-query-editor-width': `${width}px` } as CSSProperties}
-      />
+      <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
+        <div
+          ref={composedRef}
+          className={mx('min-is-0 grow', classNames)}
+          style={{ '--dx-query-editor-width': `${width}px` } as CSSProperties}
+        />
+      </CommandMenuProvider>
     );
   },
 );

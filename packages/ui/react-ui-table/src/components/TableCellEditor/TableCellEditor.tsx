@@ -12,7 +12,6 @@ import type { Client } from '@dxos/client';
 import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
-import { createMarkdownExtensions } from '@dxos/react-ui-editor';
 import {
   type EditorBlurHandler,
   type EditorKeyEvent,
@@ -24,7 +23,6 @@ import {
   parseCellIndex,
   useGridContext,
 } from '@dxos/react-ui-grid';
-import { createLinks, queryEditor } from '@dxos/react-ui-query-editor';
 import { type FieldProjection } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
@@ -213,48 +211,6 @@ export const TableCellEditor = ({
         ...(editing?.initialContent && { onNav: handleClose }),
       }),
     ];
-
-    const format = fieldProjection.props.format;
-    if (format === FormatEnum.SingleSelect || format === FormatEnum.MultiSelect) {
-      // TODO(ZaymonFC): Reconcile this with the QueryEditor component?
-      const options = fieldProjection.props.options || [];
-      const mode = format === FormatEnum.SingleSelect ? ('single-select' as const) : ('multi-select' as const);
-
-      // Add markdown extensions needed by tag picker.
-      extensions.push(createMarkdownExtensions());
-      extensions.push(
-        queryEditor({
-          mode,
-          keymap: false,
-          onSearch: (text, selectedIds) => {
-            return options
-              .filter(
-                (option) =>
-                  selectedIds.indexOf(option.id) === -1 &&
-                  (text.length === 0 || option.title.toLowerCase().includes(text.toLowerCase())),
-              )
-              .map((option) => ({
-                id: option.id,
-                label: option.title,
-                hue: option.color as any,
-              }));
-          },
-          onUpdate: (ids) => {
-            if (model && editing) {
-              if (ids.length === 0) {
-                return;
-              }
-              if (mode === 'single-select') {
-                void handleEnter(ids[0]);
-              } else {
-                void handleEnter(ids);
-              }
-            }
-          },
-        }),
-      );
-    }
-
     // Add validation extension to handle content changes.
     if (model && editing) {
       extensions.push(
@@ -283,52 +239,6 @@ export const TableCellEditor = ({
   const getCellContent = useCallback<GridCellEditorProps['getCellContent']>(() => {
     if (model && editing) {
       const cell = parseCellIndex(editing.index);
-      const { col } = cell;
-      const field = model.projection.fields[col];
-      const fieldProjection = model.projection.getFieldProjection(field.id);
-
-      if (
-        fieldProjection?.props.format === FormatEnum.SingleSelect ||
-        fieldProjection?.props.format === FormatEnum.MultiSelect
-      ) {
-        const value = model.getCellData(cell);
-        if (value !== undefined) {
-          const options = fieldProjection.props.options || [];
-          if (fieldProjection.props.format === FormatEnum.MultiSelect) {
-            const tagItems = value
-              .split(',')
-              .map((id: string) => {
-                const option = options.find((o) => o.id === id);
-                if (option) {
-                  return {
-                    id,
-                    label: option.title,
-                    hue: option.color as any,
-                  };
-                }
-                return undefined;
-              })
-              .filter((item: any): item is { id: any; label: string; hue: any } => item !== undefined);
-
-            return createLinks(tagItems);
-          } else {
-            const option = options.find((o) => o.id === value);
-
-            if (option) {
-              const tagItem = {
-                id: value,
-                label: option.title,
-                hue: option.color as any,
-              };
-
-              return createLinks([tagItem]);
-            }
-          }
-        }
-
-        return '';
-      }
-
       const value = model.getCellData(cell);
       return value !== undefined ? String(value) : '';
     }

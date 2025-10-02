@@ -52,6 +52,11 @@ export type XmlWidgetDef = {
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
 
+export const getXmlTextChild = (children: any[]): string | null => {
+  const child = children?.[0];
+  return typeof child === 'string' ? child : null;
+};
+
 /**
  * Update context.
  */
