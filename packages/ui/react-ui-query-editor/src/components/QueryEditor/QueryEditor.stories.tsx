@@ -26,11 +26,9 @@ const allTags: QueryTag[] = [
 const meta = {
   title: 'ui/react-ui-query-editor/QueryEditor',
   component: QueryEditor,
-  render: ({ items: initialItems }) => {
+  render: ({ items: initialItems, onChange }) => {
     const [items, setItems] = useState(initialItems ?? []);
     const [selected, setSelected] = useState<string>();
-    // TODO(burdon): Line height.
-    // TODO(burdon): Wrap option.
     return (
       <div className='w-[20rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
@@ -41,7 +39,7 @@ const meta = {
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               )
             }
-            onChange={fn()}
+            onChange={onChange}
           />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
@@ -61,9 +59,13 @@ type Story = StoryObj<typeof QueryEditor>;
 export const Default: Story = {
   args: {
     items: [allTags[0], { content: 'Junie' }, allTags[1]],
+    onChange: fn(),
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+
+    // Get the onChange mock function to verify calls
+    const onChangeMock = args.onChange;
 
     // Find the editor element
     const editorContainer = canvas.getByRole('textbox');
@@ -103,6 +105,12 @@ export const Default: Story = {
     await expect(anchorsAfter.length).toBe(1);
     await expect(anchorsAfter[0].textContent).toBe('Cloudflare');
 
+    // Verify onChange was called after backspace with updated QueryItems
+    await expect(onChangeMock).toHaveBeenLastCalledWith([
+      { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
+      { content: 'Junie' },
+    ]);
+
     // Type Space to add some separation
     await userEvent.keyboard(' ');
 
@@ -122,5 +130,12 @@ export const Default: Story = {
     const anchorsAfterAdd = canvasElement.querySelectorAll('dx-anchor');
     await expect(anchorsAfterAdd.length).toBe(2);
     await expect(anchorsAfterAdd[anchorsAfterAdd.length - 1].textContent).toBe('Cursor');
+
+    // Verify onChange was called after adding new anchor with final QueryItems
+    await expect(onChangeMock).toHaveBeenLastCalledWith([
+      { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
+      { content: 'Junie' },
+      { id: 'cursor', label: 'Cursor' },
+    ]);
   },
 };
