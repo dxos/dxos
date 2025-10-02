@@ -41,7 +41,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     }
   };
 
-  const controller = useRef<AbortController>();
+  const controller = useRef<AbortController>(null);
   useEffect(() => {
     return () => {
       handleStop();
@@ -50,7 +50,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
 
   const handleStop = () => {
     controller.current?.abort('stop');
-    controller.current = undefined;
+    controller.current = null;
   };
 
   const handleClear = () => {
@@ -62,7 +62,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
-    controller.current = undefined;
+    controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setResult('');
     setState(null);
