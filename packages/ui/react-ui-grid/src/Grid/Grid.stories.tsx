@@ -13,7 +13,7 @@ import { DropdownMenu } from '@dxos/react-ui';
 import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Grid, type GridEditing, type GridContentProps, type GridRootProps } from './Grid';
+import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
 const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
@@ -101,12 +101,12 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   );
 };
 
-const meta: Meta<GridStoryProps> = {
+const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
   decorators: [withTheme],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof GridStory>;
 
 export default meta;
 

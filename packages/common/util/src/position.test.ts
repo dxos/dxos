@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { byPosition, type Position } from './position';
+import { type Position, byPosition } from './position';
 
 type TestItem = {
   id: number;

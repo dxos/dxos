@@ -4,10 +4,10 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Button, IconButton, type ButtonProps, Tooltip } from '../components';
+import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
 import { withTheme } from '../testing';
 
 // TODO(burdon): Change density to 3 or 4 sizes: (large, medium, small; or 22, 28, 32, 40)
@@ -120,13 +120,13 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   );
 };
 
-const meta: Meta<typeof Button> = {
+const meta = {
   title: 'ui/react-ui-core/Playground/Custom',
   component: Button,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { layout: 'centered' },
-};
+} satisfies Meta<typeof Button>;
 
 export default meta;
 

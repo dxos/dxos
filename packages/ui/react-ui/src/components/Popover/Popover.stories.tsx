@@ -4,13 +4,15 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { Popover } from './Popover';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Popover } from './Popover';
 
 faker.seed(1234);
 
@@ -28,15 +30,19 @@ const DefaultStory = ({ openTrigger, children }: PropsWithChildren<{ openTrigger
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Popover',
-  component: Popover,
+  component: Popover.Root,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     openTrigger: <Button>Open popover</Button>,
     children: faker.lorem.paragraphs(3),

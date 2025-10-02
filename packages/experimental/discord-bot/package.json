@@ -11,6 +11,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
@@ -25,7 +26,7 @@
     "src"
   ],
   "scripts": {
-    "test-bot": "node -r ts-node/register/transpile-only --experimental-fetch --no-warnings ./src/test-bot.ts"
+    "test-bot": "vite-node ./src/test-bot.ts"
   },
   "dependencies": {
     "@dxos/config": "workspace:*",

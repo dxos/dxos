@@ -4,16 +4,18 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { ClientPlugin } from '../ClientPlugin';
+import { translations } from '../translations';
 
 import { ResetDialog, type ResetDialogProps } from './ResetDialog';
-import { translations } from '../translations';
 
 const Render = (props: ResetDialogProps) => {
   return (
@@ -25,14 +27,13 @@ const Render = (props: ResetDialogProps) => {
   );
 };
 
-const meta: Meta<ResetDialogProps> = {
+const meta = {
   title: 'plugins/plugin-client/ResetDialog',
   component: ResetDialog,
   render: Render,
   decorators: [
-    withPluginManager({
-      plugins: [IntentPlugin()],
-    }),
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }),
     withTheme,
     withLayout(),
   ],
@@ -40,11 +41,11 @@ const meta: Meta<ResetDialogProps> = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof ResetDialog>;
 
 export default meta;
 
-type Story = StoryObj<ResetDialogProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: { mode: 'reset storage' } };
 

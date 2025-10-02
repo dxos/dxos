@@ -6,10 +6,11 @@ import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import { type RelationSourceTargetRefs } from './relation';
-import { EntityKind, TypeAnnotationId, Typename, Version, type TypeAnnotation, type TypeMeta } from '../ast';
+import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
 import { type HasId } from '../types';
+
+import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
+import { type RelationSourceTargetRefs } from './relation';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -39,9 +40,13 @@ export type TypedRelationProps = TypeMeta & {
  * Base class factory for typed objects.
  * @deprecated Use {@link EchoRelation} instead.
  */
-export const TypedRelation = ({ typename: _typename, version: _version, disableValidation }: TypedRelationProps) => {
-  const typename = Typename.make(_typename, { disableValidation });
-  const version = Version.make(_version, { disableValidation });
+export const TypedRelation = ({
+  typename: typenameParam,
+  version: versionParam,
+  disableValidation,
+}: TypedRelationProps) => {
+  const typename = Typename.make(typenameParam, { disableValidation });
+  const version = SchemaVersion.make(versionParam, { disableValidation });
 
   /**
    * Return class definition factory.

@@ -7,8 +7,8 @@ import { createRoot } from 'react-dom/client';
 
 import { ClientProvider } from '@dxos/react-client';
 import {
-  type Space,
   Filter,
+  type Space,
   useQuery,
   useSpace,
   useSpaces,

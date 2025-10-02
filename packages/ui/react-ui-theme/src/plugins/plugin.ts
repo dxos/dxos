@@ -4,19 +4,21 @@
 
 /* eslint-disable no-console */
 
-import chTokens from '@ch-ui/tokens';
-import autoprefixer from 'autoprefixer';
 import { readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+
+import chTokens from '@ch-ui/tokens';
+import autoprefixer from 'autoprefixer';
 import postcss from 'postcss';
 import postcssImport from 'postcss-import';
 import tailwindcss from 'tailwindcss';
 import nesting from 'tailwindcss/nesting/index.js';
 import { type ThemeConfig } from 'tailwindcss/types/config';
-import { type UserConfig, type Plugin } from 'vite';
+import { type Plugin, type UserConfig } from 'vite';
+
+import { tailwindConfig, tokenSet } from '../config';
 
 import { resolveKnownPeers } from './resolveContent';
-import { tailwindConfig, tokenSet } from '../config';
 
 export type ThemePluginOptions = {
   jit?: boolean;

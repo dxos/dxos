@@ -2,20 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Option } from 'effect';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { getTypeAnnotation, type TypeAnnotation } from '@dxos/echo-schema';
-import { type SpaceId, type Space } from '@dxos/react-client/echo';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type Space, type SpaceId } from '@dxos/react-client/echo';
+import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { cardDialogOverflow, cardDialogPaddedOverflow, cardDialogSearchListRoot } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
-import { isNonNullable, type MaybePromise } from '@dxos/util';
+import { type MaybePromise, isNonNullable } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '../../hooks';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type ObjectForm } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
@@ -24,7 +25,8 @@ export type CreateObjectPanelProps = {
   spaces: Space[];
   typename?: string;
   target?: Space | DataType.Collection;
-  name?: string;
+  views?: boolean;
+  initialFormValues?: Partial<BaseObject>;
   defaultSpaceId?: SpaceId;
   resolve?: (typename: string) => Record<string, any>;
   onTargetChange?: (target: Space) => void;
@@ -37,16 +39,25 @@ export const CreateObjectPanel = ({
   spaces,
   typename,
   target,
-  name: initialName,
+  views,
+  initialFormValues: _initialFormValues,
   defaultSpaceId,
   resolve,
   onTargetChange,
   onTypenameChange,
   onCreateObject,
 }: CreateObjectPanelProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
+  const initialFormValues = useDefaultValue(_initialFormValues, () => ({}));
   const form = forms.find((form) => Type.getTypename(form.objectSchema) === typename);
   const options: TypeAnnotation[] = forms
+    .filter((form) => {
+      if (views == null) {
+        return true;
+      } else {
+        return views === ViewAnnotation.get(form.objectSchema).pipe(Option.getOrElse(() => false));
+      }
+    })
     .map((form) => getTypeAnnotation(form.objectSchema))
     .filter(isNonNullable)
     .sort((a, b) => {
@@ -88,7 +99,7 @@ export const CreateObjectPanel = ({
     <div role='none' className={cardDialogOverflow}>
       <Form
         autoFocus
-        values={{ name: initialName }}
+        values={initialFormValues}
         schema={form.formSchema}
         testId='create-object-form'
         onSave={handleCreateObject}
@@ -104,7 +115,7 @@ const SelectSpace = ({
   defaultSpaceId,
   onChange,
 }: { onChange?: (space: Space) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <SearchList.Root label={t('space input label')} classNames={cardDialogSearchListRoot}>
@@ -145,7 +156,7 @@ const SelectSchema = ({
   options: TypeAnnotation[];
   onChange: (type: string) => void;
 } & Pick<CreateObjectPanelProps, 'resolve'>) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <SearchList.Root label={t('schema input label')} classNames={cardDialogSearchListRoot}>

@@ -9,7 +9,7 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
+import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
 import { TypedObject } from '@dxos/echo-schema';
@@ -42,7 +42,7 @@ export class EchoReplicant {
   @trace.span()
   async open(): Promise<void> {
     log.trace('dxos.echo-replicant.open');
-    this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
+    this._testPeer = new EchoTestPeer({ kv: createTestLevel(this.env.params.planRunDir) });
     await this._testPeer.open();
   }
 

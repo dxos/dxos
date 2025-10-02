@@ -128,7 +128,6 @@ class SpaceMonitor {
 
       const newMessages = pipeline.currentDataTimeframe!.newMessages(pipeline.currentEpoch.subject.assertion.timeframe);
       const timeSinceLastEpoch = Date.now() - pipeline.currentEpoch.issuanceDate.getTime();
-
       if (
         newMessages > this._options.minMessagesBetweenEpochs &&
         timeSinceLastEpoch > this._options.minTimeBetweenEpochs
@@ -159,6 +158,7 @@ class SpaceMonitor {
     if (this._creatingEpoch) {
       return;
     }
+
     this._creatingEpoch = true;
     try {
       log.info('creating epoch', { key: this._space.key });

@@ -4,30 +4,36 @@
 
 import '@dxos-theme';
 
-import { TextB } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Toggle } from './Toggle';
 import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
+
+import { Toggle } from './Toggle';
 
 type StorybookToggleProps = {};
 
 const DefaultStory = (props: StorybookToggleProps) => {
   return (
     <Toggle {...props}>
-      <TextB />
+      <Icon icon='ph--text-b--regular' />
     </Toggle>
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Toggle',
   component: Toggle,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof Toggle>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

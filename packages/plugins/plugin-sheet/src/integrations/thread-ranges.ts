@@ -6,24 +6,24 @@ import { Schema, pipe } from 'effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
+  LayoutAction,
+  chain,
   createIntent,
   createResolver,
-  LayoutAction,
-  useIntentResolver,
   useIntentDispatcher,
-  chain,
+  useIntentResolver,
 } from '@dxos/app-framework';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ThreadAction, ThreadType } from '@dxos/plugin-thread/types';
-import { Filter, fullyQualifiedId, getSpace, Query, useQuery } from '@dxos/react-client/echo';
-import { type DxGridElement, type DxGridPosition, type GridContentProps } from '@dxos/react-ui-grid';
+import { Filter, Query, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
 
 import { useSheetContext } from '../components';
-import { SHEET_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
   return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
@@ -72,7 +72,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
     [model.sheet, setActiveRefs],
   );
 
-  useIntentResolver(SHEET_PLUGIN, scrollIntoViewResolver);
+  useIntentResolver(meta.id, scrollIntoViewResolver);
 };
 
 export const useSelectThreadOnCellFocus = () => {
@@ -111,13 +111,14 @@ export const useSelectThreadOnCellFocus = () => {
   );
 
   const debounced = useMemo(() => {
-    return debounce((cellCoords: DxGridPosition) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
+    return debounce((cellCoords: CellAddress) => requestAnimationFrame(() => selectClosestThread(cellCoords)), 50);
   }, [selectClosestThread]);
 
   useEffect(() => {
     if (!cursor) {
       return;
     }
+
     debounced(cursor);
   }, [cursor, debounced]);
 };

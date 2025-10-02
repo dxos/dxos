@@ -9,18 +9,18 @@ import { createRoot } from 'react-dom/client';
 
 import { useApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { log, LogLevel } from '@dxos/log';
-import { getObservabilityGroup, isObservabilityDisabled, initializeAppObservability } from '@dxos/observability';
-import { Tooltip, ThemeProvider } from '@dxos/react-ui';
+import { LogLevel, log } from '@dxos/log';
+import { getObservabilityGroup, initializeAppObservability, isObservabilityDisabled } from '@dxos/observability';
+import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
 import { APP_KEY } from './constants';
-import { getCore, getDefaults, getPlugins, type PluginConfig } from './plugin-defs';
+import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
-import { defaultStorageIsEmpty, isTrue, isFalse } from './util';
+import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
 
 const PARAM_SAFE_MODE = 'safe';
 const PARAM_LOG_LEVEL = 'log';
@@ -96,7 +96,7 @@ const main = async () => {
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
-    isSocket: !!(globalThis as any).__args,
+    isTauri: !!(globalThis as any).__TAURI__,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
@@ -122,6 +122,7 @@ const main = async () => {
       defaults,
       cacheEnabled: true,
       safeMode,
+      debounce: 1_000,
     });
 
     return <App />;

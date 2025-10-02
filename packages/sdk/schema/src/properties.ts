@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, Option, pipe } from 'effect';
+import { Option, Schema, SchemaAST, pipe } from 'effect';
 import { capitalize } from 'effect/String';
 
 import {
+  type BaseObject,
   FormatEnum,
+  type JsonSchemaType,
+  OptionsAnnotationId,
+  type OptionsAnnotationType,
+  type PropertyKey,
   getFormatAnnotation,
   getSchemaReference,
-  type BaseObject,
-  type JsonSchemaType,
-  type OptionsAnnotationType,
-  OptionsAnnotationId,
-  type PropertyKey,
 } from '@dxos/echo-schema';
 import {
   type SimpleType,
@@ -163,6 +163,7 @@ const processProperty = <T extends BaseObject>(
         invariant(SchemaAST.isTransformation(baseType));
         type = getSimpleType(baseType.from);
       } else {
+        // TODO(wittjosiah): Can this ever happen?
         // Tuples.
         // https://effect.website/docs/schema/basic-usage/#rest-element
         baseType = findNode(prop.type, SchemaAST.isTupleType);
@@ -172,9 +173,20 @@ const processProperty = <T extends BaseObject>(
           if (tupleType) {
             invariant(baseType.elements.length === 0);
             baseType = findNode(tupleType.type, isSimpleType);
+
             if (baseType) {
-              type = getSimpleType(baseType);
-              array = true;
+              const jsonSchema = findAnnotation<JsonSchemaType>(baseType, SchemaAST.JSONSchemaAnnotationId);
+              if (jsonSchema && '$id' in jsonSchema) {
+                const { typename } = getSchemaReference(jsonSchema) ?? {};
+                if (typename) {
+                  type = 'object';
+                  format = FormatEnum.Ref;
+                  array = true;
+                }
+              } else {
+                type = getSimpleType(baseType);
+                array = true;
+              }
             }
           }
         } else {

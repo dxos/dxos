@@ -4,21 +4,22 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { GridSheet } from './GridSheet';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
 import { SheetType } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetProvider } from '../SheetContext';
+
+import { GridSheet } from './GridSheet';
 
 export const Basic = () => {
   const space = useSpace();
@@ -35,7 +36,7 @@ export const Basic = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
   decorators: [
@@ -48,6 +49,8 @@ const meta: Meta = {
     }),
   ],
   parameters: { translations },
-};
+} satisfies Meta<typeof GridSheet>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

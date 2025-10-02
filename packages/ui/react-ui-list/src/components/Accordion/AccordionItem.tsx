@@ -9,8 +9,9 @@ import React, { type PropsWithChildren } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useAccordionContext } from './AccordionRoot';
 import { type ListItemRecord } from '../List';
+
+import { useAccordionContext } from './AccordionRoot';
 
 const ACCORDION_ITEM_NAME = 'AccordionItem';
 
@@ -18,7 +19,9 @@ type AccordionItemContext<T extends ListItemRecord> = {
   item: T;
 };
 
-export const [AccordionItemProvider, useAccordionItemContext] =
+// TODO(wittjosiah): This seems to be conflicting with something in the bundle.
+//  Perhaps @radix-ui/react-accordion?
+export const [AccordionItemProvider, useDxAccordionItemContext] =
   createContext<AccordionItemContext<any>>(ACCORDION_ITEM_NAME);
 
 export type AccordionItemProps<T extends ListItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;

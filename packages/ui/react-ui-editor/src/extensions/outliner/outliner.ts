@@ -7,12 +7,13 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/react-ui-theme';
 
+import { floatingMenu } from '../floating-menu';
+import { decorateMarkdown } from '../markdown';
+
 import { commands } from './commands';
 import { editor } from './editor';
-import { selectionCompartment, selectionFacet, selectionEquals } from './selection';
+import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
 import { outlinerTree, treeFacet } from './tree';
-import { floatingMenu } from '../command';
-import { decorateMarkdown } from '../markdown';
 
 // ISSUES:
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -37,7 +38,7 @@ export type OutlinerProps = {};
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = (options: OutlinerProps = {}): Extension => [
+export const outliner = (_options: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -158,7 +159,7 @@ const decorations = () => [
       '.cm-list-item-focused': {
         borderColor: 'var(--dx-accentFocusIndicator)',
       },
-      '[data-has-focus] & .cm-list-item-selected': {
+      '&:focus-within .cm-list-item-selected': {
         borderColor: 'var(--dx-separator)',
       },
     }),

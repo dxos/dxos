@@ -4,16 +4,17 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { RecoveryCodeDialog, type RecoveryCodeDialogProps } from './RecoveryCodeDialog';
 import { translations } from '../translations';
+
+import { RecoveryCodeDialog } from './RecoveryCodeDialog';
 
 const DefaultStory = () => {
   const client = useClient();
@@ -32,19 +33,19 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<RecoveryCodeDialogProps> = {
+const meta = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
-  component: RecoveryCodeDialog,
+  component: RecoveryCodeDialog as any,
   render: DefaultStory,
   decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RecoveryCodeDialogProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

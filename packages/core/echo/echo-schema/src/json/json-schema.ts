@@ -2,33 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JSONSchema, Option, Schema, SchemaAST, type Types } from 'effect';
+import { Array, JSONSchema, Option, Schema, SchemaAST, type Types, pipe } from 'effect';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 import {
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
 } from '../ast';
 import { EntityKind, EntityKindSchema } from '../ast';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
   ECHO_ANNOTATIONS_NS_KEY,
-  getNormalizedEchoAnnotations,
   type JsonSchemaEchoAnnotations,
   type JsonSchemaType,
+  getNormalizedEchoAnnotations,
 } from '../json-schema';
 import { Expando } from '../object';
-import { createEchoReferenceSchema, Ref, type JsonSchemaReferenceInfo } from '../ref';
+import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
+
+import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
 
 /**
  * Create object jsonSchema.
@@ -234,13 +236,20 @@ const withEchoRefinements = (
  * @param definitions
  */
 export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
-  const defs = root.$defs ? { ..._defs, ...root.$defs } : _defs ?? {};
+  const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
   let result: Schema.Schema.AnyNoContext = Schema.Unknown;
-  if ('$id' in root) {
+  if ('$ref' in root) {
+    switch (root.$ref) {
+      case '/schemas/echo/ref': {
+        result = refToEffectSchema(root);
+        break;
+      }
+    }
+  } else if ('$id' in root) {
     switch (root.$id as string) {
       case '/schemas/any': {
         result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
@@ -258,6 +267,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       // Custom ECHO object reference.
       case '/schemas/echo/ref': {
         result = refToEffectSchema(root);
+        break;
       }
     }
   } else if ('enum' in root) {
@@ -266,6 +276,13 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
     result = Schema.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('anyOf' in root) {
     result = Schema.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
+  } else if ('allOf' in root) {
+    if (root.allOf!.length === 1) {
+      result = toEffectSchema(root.allOf![0], defs);
+    } else {
+      log.warn('allOf with multiple schemas is not supported');
+      result = Schema.Unknown;
+    }
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {
@@ -289,12 +306,17 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
       case 'array': {
         if (Array.isArray(root.items)) {
-          result = Schema.Tuple(...root.items.map((v) => toEffectSchema(v, defs)));
+          const [required, optional] = pipe(
+            root.items,
+            Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
+            Array.splitAt(root.minItems ?? root.items.length),
+          );
+          result = Schema.Tuple(...required, ...optional.map(Schema.optionalElement));
         } else {
           invariant(root.items);
           const items = root.items;
           result = Array.isArray(items)
-            ? Schema.Tuple(...items.map((v) => toEffectSchema(v, defs)))
+            ? Schema.Tuple(...items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))
             : Schema.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;

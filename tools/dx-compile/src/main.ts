@@ -2,13 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname } from 'node:path';
+
 import type * as Swc from '@swc/core';
-import { build, type Format, type Platform, type Plugin } from 'esbuild';
+import { type Format, type Platform, type Plugin, build } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import { yamlPlugin } from 'esbuild-plugin-yaml';
-import { readFile, writeFile, readdir, rm } from 'node:fs/promises';
-import { basename, dirname } from 'node:path';
 import pkgUp from 'pkg-up';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -107,7 +108,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             })(),
           ],
         },
-        target: 'es2022',
+        target: 'es2020',
       },
     }),
   });

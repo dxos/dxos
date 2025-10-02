@@ -5,14 +5,14 @@
 import './styles.css';
 
 import {
-  Background as NativeBackground,
   BackgroundVariant,
+  type Edge,
+  Background as NaturalBackground,
+  type Node,
   ReactFlow,
   type ReactFlowProps,
-  type Node,
-  type Edge,
-  useNodesState,
   useEdgesState,
+  useNodesState,
 } from '@xyflow/react';
 import React, { type PropsWithChildren } from 'react';
 
@@ -76,7 +76,7 @@ const Root = ({ children, nodes: initialNodes, edges: initialEdges }: RootProps)
 // Background
 //
 
-const Background = () => <NativeBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
+const Background = () => <NaturalBackground variant={BackgroundVariant.Dots} gap={16} size={0.5} />;
 
 //
 // Chain

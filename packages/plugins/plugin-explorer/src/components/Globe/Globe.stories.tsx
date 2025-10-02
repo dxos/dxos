@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { plot, sphere, geo, graticule, dot } from '@observablehq/plot';
+import { dot, geo, graticule, plot, sphere } from '@observablehq/plot';
 import { type Meta } from '@storybook/react-vite';
 import { geoCircle } from 'd3';
 import React, { useEffect } from 'react';
@@ -14,9 +14,10 @@ import { feature } from 'topojson-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Globe } from './Globe';
 import CitiesData from '../../../data/cities.js';
 import CountriesData from '../../../data/countries-110m.js';
+
+import { Globe } from './Globe';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -80,13 +81,13 @@ const ExtendedStory = () => {
   return <div ref={containerRef} className='grow p-8' />;
 };
 
+const meta = {
+  title: 'plugins/plugin-explorer/Globe',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+} satisfies Meta;
+
+export default meta;
+
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
 
 export const Extended = () => <ClientRepeater component={ExtendedStory} createSpace />;
-
-const meta: Meta = {
-  title: 'plugins/plugin-explorer/Globe',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export default meta;

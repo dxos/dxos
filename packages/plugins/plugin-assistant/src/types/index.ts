@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './schema';
+export * as Assistant from './Assistant';
+export * as AssistantAction from './AssistantAction';
+
+export * from './defs';
 export * from './service';
-export * from './template';

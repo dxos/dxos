@@ -7,16 +7,14 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Icon, DropdownMenu } from '@dxos/react-ui';
+import { DropdownMenu, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { StackItem } from './StackItem';
+import { StackItem, type StackItemRootProps } from './StackItem';
 
-const meta: Meta<typeof StackItem.Root> = {
-  title: 'ui/react-ui-stack/StackItem',
-  component: StackItem.Root,
-  render: (args) => (
-    <StackItem.Root role='section' {...args} classNames='w-[20rem] border border-separator'>
+const DefaultStory = (props: StackItemRootProps) => {
+  return (
+    <StackItem.Root role='section' {...props} classNames='w-[20rem] border border-separator'>
       <StackItem.Heading>
         <span className='sr-only'>Title</span>
         <div role='none' className='sticky -block-start-px bg-[--sticky-bg] p-1 is-full'>
@@ -31,16 +29,22 @@ const meta: Meta<typeof StackItem.Root> = {
       </StackItem.Heading>
       <StackItem.Content classNames='p-2'>Content</StackItem.Content>
     </StackItem.Root>
-  ),
+  );
+};
+
+const meta = {
+  title: 'ui/react-ui-stack/StackItem',
+  component: StackItem.Root as any,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof StackItem.Root>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DeferredTask, Event, scheduleTask, sleep, TimeoutError, Trigger, scheduleMicroTask } from '@dxos/async';
-import { type Context, rejectOnDispose, Resource } from '@dxos/context';
+import { DeferredTask, Event, TimeoutError, Trigger, scheduleMicroTask, scheduleTask, sleep } from '@dxos/async';
+import { type Context, Resource, rejectOnDispose } from '@dxos/context';
 import { type CredentialProcessor, verifyCredential } from '@dxos/credentials';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedWriter } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceId } from '@dxos/keys';
-import { logInfo, log } from '@dxos/log';
+import { log, logInfo } from '@dxos/log';
 import { EdgeCallFailedError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';

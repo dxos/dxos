@@ -4,11 +4,12 @@
 
 import { Schema } from 'effect';
 
+import { meta } from '../meta';
+
 import { ViewType } from './schema';
-import { EXPLORER_PLUGIN } from '../meta';
 
 export namespace ExplorerAction {
-  const EXPLORER_ACTION = `${EXPLORER_PLUGIN}/action`;
+  const EXPLORER_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${EXPLORER_ACTION}/create`, {
     input: Schema.Struct({

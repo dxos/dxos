@@ -3,17 +3,17 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { Schema, Effect, pipe, Option } from 'effect';
+import { Effect, Option, Schema, pipe } from 'effect';
 
 import {
   Capabilities,
-  createResolver,
-  contributes,
   IntentAction,
   LayoutAction,
   type PluginContext,
-  createIntent,
   chain,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -24,19 +24,20 @@ import { isActionLike } from '@dxos/plugin-graph';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
-import { DeckCapabilities } from './capabilities';
 import { closeEntry, createEntryId, incrementPlank, openEntry } from '../layout';
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import {
   DeckAction,
-  type LayoutMode,
   type DeckSettingsProps,
-  isLayoutMode,
-  getMode,
-  defaultDeck,
+  type LayoutMode,
   PLANK_COMPANION_TYPE,
+  defaultDeck,
+  getMode,
+  isLayoutMode,
 } from '../types';
 import { setActive } from '../util';
+
+import { DeckCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -55,11 +56,11 @@ export default (context: PluginContext) =>
           ...layout.toasts,
           {
             id: layout.currentUndoId,
-            title: data.message ?? ['undo available label', { ns: DECK_PLUGIN }],
+            title: data.message ?? ['undo available label', { ns: meta.id }],
             duration: 10_000,
-            actionLabel: ['undo action label', { ns: DECK_PLUGIN }],
-            actionAlt: ['undo action alt', { ns: DECK_PLUGIN }],
-            closeLabel: ['undo close label', { ns: DECK_PLUGIN }],
+            actionLabel: ['undo action label', { ns: meta.id }],
+            actionAlt: ['undo action alt', { ns: meta.id }],
+            closeLabel: ['undo close label', { ns: meta.id }],
             onAction: () => undo(),
           },
         ];
@@ -92,7 +93,7 @@ export default (context: PluginContext) =>
           layout.complementarySidebarPanel = subject;
         }
 
-        const next = subject ? 'expanded' : options?.state ?? layout.complementarySidebarState;
+        const next = subject ? 'expanded' : (options?.state ?? layout.complementarySidebarState);
         if (next !== layout.complementarySidebarState) {
           layout.complementarySidebarState = next;
         }
@@ -260,7 +261,7 @@ export default (context: PluginContext) =>
           const attention = context.getCapability(AttentionCapabilities.Attention);
           const settings = context
             .getCapabilities(Capabilities.SettingsStore)[0]
-            ?.getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+            ?.getStore<DeckSettingsProps>(meta.id)?.value;
 
           if (options?.workspace && state.activeDeck !== options?.workspace) {
             const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

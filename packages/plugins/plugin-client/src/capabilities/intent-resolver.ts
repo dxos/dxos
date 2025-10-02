@@ -6,22 +6,23 @@ import { pipe } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
   chain,
   contributes,
   createIntent,
   createResolver,
-  LayoutAction,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { PublicKey } from '@dxos/react-client';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { ClientCapabilities } from './capabilities';
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../components';
 import { ClientEvents } from '../events';
 import { Account, ClientAction } from '../types';
+
+import { ClientCapabilities } from './capabilities';
 
 type IntentResolverOptions = {
   context: PluginContext;
@@ -173,7 +174,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
             challenge: new Uint8Array(),
             rp: { id: location.hostname, name: appName },
             user: {
-              id: lookupKey.asUint8Array(),
+              id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
               name: identity.did,
               displayName: identity.profile?.displayName ?? '',
             },

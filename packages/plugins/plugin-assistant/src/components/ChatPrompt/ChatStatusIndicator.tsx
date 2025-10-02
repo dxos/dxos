@@ -2,25 +2,41 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Icon, Tooltip } from '@dxos/react-ui';
-import { Spinner } from '@dxos/react-ui-sfx';
-import { errorText } from '@dxos/react-ui-theme';
+import { type ThemedClassName, Tooltip, useTimeout } from '@dxos/react-ui';
+import { Spinner, type SpinnerProps } from '@dxos/react-ui-sfx';
+import { mx } from '@dxos/react-ui-theme';
 
-export type ChatStatusIndicatorProps = {
-  error?: Error;
-  processing?: boolean;
-};
+const period = 3_000;
 
-export const ChatStatusIndicator = ({ error, processing }: ChatStatusIndicatorProps) => {
-  if (error) {
-    return (
-      <Tooltip.Trigger content={error.message} delayDuration={0}>
-        <Icon icon='ph--warning-circle--regular' classNames={errorText} size={5} />
-      </Tooltip.Trigger>
-    );
-  }
+export type ChatStatusIndicatorProps = ThemedClassName<
+  {
+    preset?: string;
+    processing?: boolean;
+    error?: Error;
+  } & Pick<SpinnerProps, 'size' | 'onClick'>
+>;
 
-  return <Spinner active={processing} />;
+export const ChatStatusIndicator = ({ classNames, preset, processing, error, ...props }: ChatStatusIndicatorProps) => {
+  const [init, setInit] = useState(false);
+  useEffect(() => setInit(false), [preset]);
+  useTimeout(
+    async () => {
+      setInit(true);
+    },
+    period / 2,
+    [preset],
+  );
+
+  return (
+    <div role='none' className={mx('relative flex', classNames)}>
+      <Spinner duration={period} state={!init ? 'flash' : error ? 'error' : processing ? 'spin' : 'pulse'} {...props} />
+      {error && (
+        <Tooltip.Trigger asChild content={error.message}>
+          <div className='absolute inset-0' />
+        </Tooltip.Trigger>
+      )}
+    </div>
+  );
 };

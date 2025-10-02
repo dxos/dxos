@@ -5,12 +5,12 @@
 // NOTE(thure): The following unused imports quell TS2742 (“likely not portable”).
 
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { createContext, type Scope, type CreateScope } from '@radix-ui/react-context';
+import { type CreateScope, type Scope, createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { useMemo, type FocusEvent, type PropsWithChildren, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChildren, forwardRef, useMemo } from 'react';
 
-import { useDefaultValue, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
@@ -47,7 +47,7 @@ const useAttended = () => {
 };
 
 /**
- * Computes HTML element attributes to apply so the attention system can detect changes
+ * Computes HTML element attributes to apply so the attention system can detect changes.
  * @param attendableId
  */
 const useAttentionAttributes = (attendableId?: string) => {

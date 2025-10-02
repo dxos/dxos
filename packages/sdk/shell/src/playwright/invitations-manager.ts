@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { expect, type Browser, type ConsoleMessage } from '@playwright/test';
+import { type Browser, type ConsoleMessage, expect } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { type Invitation } from '@dxos/react-client/invitations';

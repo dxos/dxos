@@ -10,39 +10,43 @@ import { Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type CreateAgentResponseBody,
   type CreateAgentRequestBody,
+  type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeHttpResponse,
+  type EdgeStatus,
   type ExecuteWorkflowResponseBody,
+  type ExportBundleRequest,
+  type ExportBundleResponse,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
+  type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
   type JoinSpaceRequest,
   type JoinSpaceResponseBody,
-  type RecoverIdentityRequest,
-  type RecoverIdentityResponseBody,
   type ObjectId,
   type PostNotarizationRequestBody,
-  type QueueQuery,
   type QueryResult,
+  type QueueQuery,
+  type RecoverIdentityRequest,
+  type RecoverIdentityResponseBody,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
-  type EdgeStatus,
 } from '@dxos/protocols';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
-import { encodeAuthHeader, HttpConfig, withLogging, withRetryConfig } from './http-client';
+import { HttpConfig, encodeAuthHeader, withLogging, withRetryConfig } from './http-client';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_RETRY_TIMEOUT = 1500;
 const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
+const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
 export type RetryConfig = {
   /**
@@ -64,6 +68,15 @@ type EdgeHttpRequestArgs = {
   context?: Context;
   retry?: RetryConfig;
   body?: any;
+  /**
+   * @default true
+   */
+  json?: boolean;
+
+  /**
+   * Do not expect a standard EDGE JSON response with a `success` field.
+   */
+  rawResponse?: boolean;
 };
 
 export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry'>;
@@ -246,8 +259,63 @@ export class EdgeHttpClient {
     body: UploadFunctionRequest,
     args?: EdgeHttpGetArgs,
   ): Promise<UploadFunctionResponseBody> {
+    const formData = new FormData();
+    formData.append('name', body.name ?? '');
+    formData.append('version', body.version);
+    formData.append('ownerPublicKey', body.ownerPublicKey);
+    formData.append('entryPoint', body.entryPoint);
+    for (const [filename, content] of Object.entries(body.assets)) {
+      formData.append(
+        'assets',
+        new Blob([content as Uint8Array<ArrayBuffer>], { type: getFileMimeType(filename) }),
+        filename,
+      );
+    }
+
     const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
-    return this._call(new URL(path, this.baseUrl), { ...args, body, method: 'PUT' });
+    return this._call(new URL(path, this.baseUrl), {
+      ...args,
+      body: formData,
+      method: 'PUT',
+      json: false,
+    });
+  }
+
+  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
+    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  public async invokeFunction(
+    params: {
+      functionId: string;
+      version?: string;
+      spaceId?: SpaceId;
+      cpuTimeLimit?: number;
+      subrequestsLimit?: number;
+    },
+    input: unknown,
+    args?: EdgeHttpGetArgs,
+  ): Promise<any> {
+    const url = new URL(`/functions/${params.functionId}`, this.baseUrl);
+    if (params.version) {
+      url.searchParams.set('version', params.version);
+    }
+    if (params.spaceId) {
+      url.searchParams.set('spaceId', params.spaceId.toString());
+    }
+    if (params.cpuTimeLimit) {
+      url.searchParams.set('cpuTimeLimit', params.cpuTimeLimit.toString());
+    }
+    if (params.subrequestsLimit) {
+      url.searchParams.set('subrequestsLimit', params.subrequestsLimit.toString());
+    }
+
+    return this._call(url, {
+      ...args,
+      body: input,
+      method: 'POST',
+      rawResponse: true,
+    });
   }
 
   //
@@ -263,6 +331,38 @@ export class EdgeHttpClient {
     return this._call(new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
       ...args,
       body: input,
+      method: 'POST',
+    });
+  }
+
+  //
+  // Triggers
+  //
+
+  public async getCronTriggers(spaceId: SpaceId) {
+    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), { method: 'GET' });
+  }
+
+  //
+  // Import/Export space.
+  //
+
+  public async importBundle(
+    spaceId: SpaceId, //
+    body: ImportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<void> {
+    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+  }
+
+  public async exportBundle(
+    spaceId: SpaceId,
+    body: ExportBundleRequest,
+    args?: EdgeHttpGetArgs,
+  ): Promise<ExportBundleResponse> {
+    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+      ...args,
+      body,
       method: 'POST',
     });
   }
@@ -291,7 +391,7 @@ export class EdgeHttpClient {
 
     let handledAuth = false;
     while (true) {
-      let processingError: EdgeCallFailedError;
+      let processingError: EdgeCallFailedError | undefined = undefined;
       let retryAfterHeaderValue: number = Number.NaN;
       try {
         const request = createRequest(args, this._authHeader);
@@ -299,6 +399,15 @@ export class EdgeHttpClient {
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
         if (response.ok) {
           const body = (await response.json()) as EdgeHttpResponse<T>;
+
+          if (args.rawResponse) {
+            return body as any;
+          }
+
+          if (!('success' in body)) {
+            return body;
+          }
+
           if (body.success) {
             return body.data;
           }
@@ -306,7 +415,7 @@ export class EdgeHttpClient {
           log.warn('unsuccessful edge response', { url, body });
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else {
+          } else if (body.errorData) {
             processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
@@ -314,16 +423,16 @@ export class EdgeHttpClient {
           handledAuth = true;
           continue;
         } else {
-          processingError = EdgeCallFailedError.fromHttpFailure(response);
+          processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
         log('retrying edge request', { url, processingError });
       } else {
-        throw processingError;
+        throw processingError!;
       }
     }
   }
@@ -331,7 +440,7 @@ export class EdgeHttpClient {
   private async _handleUnauthorized(response: Response): Promise<string> {
     if (!this._edgeIdentity) {
       log.warn('unauthorized response received before identity was set');
-      throw EdgeCallFailedError.fromHttpFailure(response);
+      throw await EdgeCallFailedError.fromHttpFailure(response);
     }
 
     const challenge = await handleAuthChallenge(response, this._edgeIdentity);
@@ -339,11 +448,32 @@ export class EdgeHttpClient {
   }
 }
 
-const createRequest = ({ method, body }: EdgeHttpRequestArgs, authHeader: string | undefined): RequestInit => {
+const createRequest = (
+  { method, body, json = true }: EdgeHttpRequestArgs,
+  authHeader: string | undefined,
+): RequestInit => {
+  let requestBody: BodyInit | undefined;
+  const headers: HeadersInit = {};
+
+  if (json) {
+    requestBody = body && JSON.stringify(body);
+    headers['Content-Type'] = 'application/json';
+  } else {
+    requestBody = body;
+  }
+
+  if (typeof requestBody === 'string' && requestBody.length > WARNING_BODY_SIZE) {
+    log.warn('Request with large body', { bodySize: requestBody.length });
+  }
+
+  if (authHeader) {
+    headers['Authorization'] = authHeader;
+  }
+
   return {
     method,
-    body: body && JSON.stringify(body),
-    headers: authHeader ? { Authorization: authHeader } : undefined,
+    body: requestBody,
+    headers,
   };
 };
 
@@ -374,3 +504,10 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
     return true;
   };
 };
+
+const getFileMimeType = (filename: string) =>
+  ['.js', '.mjs'].some((codeExtension) => filename.endsWith(codeExtension))
+    ? 'application/javascript+module'
+    : filename.endsWith('.wasm')
+      ? 'application/wasm'
+      : 'application/octet-stream';

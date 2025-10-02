@@ -2,17 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { cbor } from '@automerge/automerge-repo';
+import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
 
-import { Mutex, scheduleTask, scheduleMicroTask } from '@dxos/async';
+import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { randomUUID } from '@dxos/crypto';
 import type { CollectionId } from '@dxos/echo-protocol';
-import { type EdgeConnection } from '@dxos/edge-client';
+import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, type AutomergeProtocolMessage, type PeerId } from '@dxos/protocols';
+import {
+  type AutomergeProtocolMessage,
+  DocumentCodec,
+  EdgeService,
+  type ExportBundleRequest,
+  type ImportBundleRequest,
+  type PeerId,
+} from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -20,15 +27,16 @@ import {
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { bufferToArray } from '@dxos/util';
 
-import { InflightRequestLimiter } from './inflight-request-limiter';
 import {
-  getSpaceIdFromCollectionId,
   type EchoReplicator,
   type EchoReplicatorContext,
   type ReplicatorConnection,
   type ShouldAdvertiseParams,
   type ShouldSyncCollectionParams,
+  getSpaceIdFromCollectionId,
 } from '../automerge';
+
+import { InflightRequestLimiter } from './inflight-request-limiter';
 
 /**
  * Delay before restarting the connection after receiving a forbidden error.
@@ -39,11 +47,13 @@ const MAX_RESTART_DELAY = 5000;
 
 export type EchoEdgeReplicatorParams = {
   edgeConnection: EdgeConnection;
+  edgeHttpClient: EdgeHttpClient;
   disableSharePolicy?: boolean;
 };
 
 export class EchoEdgeReplicator implements EchoReplicator {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
 
   private _ctx?: Context = undefined;
@@ -52,8 +62,9 @@ export class EchoEdgeReplicator implements EchoReplicator {
   private _connections = new Map<SpaceId, EdgeReplicatorConnection>();
   private _sharePolicyEnabled = true;
 
-  constructor({ edgeConnection, disableSharePolicy }: EchoEdgeReplicatorParams) {
+  constructor({ edgeConnection, edgeHttpClient, disableSharePolicy }: EchoEdgeReplicatorParams) {
     this._edgeConnection = edgeConnection;
+    this._edgeHttpClient = edgeHttpClient;
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
@@ -127,14 +138,17 @@ export class EchoEdgeReplicator implements EchoReplicator {
     let restartScheduled = false;
 
     const connection = new EdgeReplicatorConnection({
+      edgeHttpClient: this._edgeHttpClient,
       edgeConnection: this._edgeConnection,
       spaceId,
       context: this._context,
       sharedPolicyEnabled: this._sharePolicyEnabled,
       onRemoteConnected: async () => {
+        log.trace('dxos.echo.edge.replicator.onRemoteConnected', { spaceId });
         this._context?.onConnectionOpen(connection);
       },
       onRemoteDisconnected: async () => {
+        log.trace('dxos.echo.edge.replicator.onRemoteDisconnected', { spaceId });
         this._context?.onConnectionClosed(connection);
       },
       onRestartRequested: async () => {
@@ -162,6 +176,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
             if (ctx?.disposed) {
               return;
             }
+            log.trace('dxos.echo.edge.replicator.restart', { spaceId, reconnects, restartDelay });
             await this._openConnection(spaceId, reconnects + 1);
           },
           restartDelay,
@@ -176,6 +191,7 @@ export class EchoEdgeReplicator implements EchoReplicator {
 
 type EdgeReplicatorConnectionsParams = {
   edgeConnection: EdgeConnection;
+  edgeHttpClient: EdgeHttpClient;
   spaceId: SpaceId;
   context: EchoReplicatorContext;
   sharedPolicyEnabled: boolean;
@@ -189,6 +205,7 @@ const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
   private readonly _edgeConnection: EdgeConnection;
+  private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _remotePeerId: string | null = null;
   private readonly _targetServiceId: string;
   private readonly _spaceId: SpaceId;
@@ -210,6 +227,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
   constructor({
     edgeConnection,
+    edgeHttpClient,
     spaceId,
     context,
     sharedPolicyEnabled,
@@ -219,6 +237,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   }: EdgeReplicatorConnectionsParams) {
     super();
     this._edgeConnection = edgeConnection;
+    this._edgeHttpClient = edgeHttpClient;
     this._spaceId = spaceId;
     this._context = context;
     // Generate a unique peer id for every connection.
@@ -252,10 +271,23 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     await this._requestLimiter.open();
 
-    // TODO: handle reconnects
     this._ctx.onDispose(
       this._edgeConnection.onMessage((msg: RouterMessage) => {
         this._onMessage(msg);
+      }),
+    );
+
+    let firstReconnect = true;
+    this._ctx.onDispose(
+      // NOTE: This will fire immediately if the connection is already open.
+      this._edgeConnection.onReconnected(async () => {
+        if (firstReconnect) {
+          log.verbose('first reconnect skipped');
+          firstReconnect = false;
+          return;
+        }
+
+        this._onRestartRequested();
       }),
     );
 
@@ -327,6 +359,27 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     this._processMessage(payload);
   }
 
+  get bundleSyncEnabled(): boolean {
+    return true;
+  }
+
+  async pushBundle(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+    const request: ImportBundleRequest = {
+      bundle: bundle.map(({ documentId, data, heads }) => ({
+        documentId,
+        mutation: DocumentCodec.encode(data),
+        heads,
+      })),
+    };
+    await this._edgeHttpClient.importBundle(this._spaceId, request);
+  }
+
+  async pullBundle(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
+    const request: ExportBundleRequest = { docHeads };
+    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request);
+    return Object.fromEntries(response.bundle.map((doc) => [doc.documentId, DocumentCodec.decode(doc.mutation)]));
+  }
+
   private _processMessage(message: AutomergeProtocolMessage): void {
     // There's a race between the credentials being replicated that are needed for access control and the data replication.
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
@@ -353,16 +406,20 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     const encoded = cbor.encode(message);
 
-    await this._edgeConnection.send(
-      buf.create(RouterMessageSchema, {
-        serviceId: this._targetServiceId,
-        source: {
-          identityKey: this._edgeConnection.identityKey,
-          peerKey: this._edgeConnection.peerKey,
-        },
-        payload: { value: bufferToArray(encoded) },
-      }),
-    );
+    try {
+      await this._edgeConnection.send(
+        buf.create(RouterMessageSchema, {
+          serviceId: this._targetServiceId,
+          source: {
+            identityKey: this._edgeConnection.identityKey,
+            peerKey: this._edgeConnection.peerKey,
+          },
+          payload: { value: bufferToArray(encoded) },
+        }),
+      );
+    } catch (err) {
+      log.error('failed to send message', { err });
+    }
   }
 }
 

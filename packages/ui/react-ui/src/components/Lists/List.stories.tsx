@@ -5,10 +5,10 @@
 import '@dxos-theme';
 
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import { DotsSixVertical, PushPin } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
 import {
@@ -20,15 +20,21 @@ import {
   surfaceShadow,
 } from '@dxos/react-ui-theme';
 
-import { List, ListItem, type ListScopedProps } from './List';
 import { withTheme } from '../../testing';
+import { Icon } from '../Icon';
 
-export default {
+import { List, ListItem, type ListScopedProps } from './List';
+
+const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof List>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const UniformListItem = ({ id, text }: { id: string; text: string }) => {
   const { attributes, listeners, setNodeRef, transform } = useSortable({ id });
@@ -41,17 +47,17 @@ const UniformListItem = ({ id, text }: { id: string; text: string }) => {
       style={{ transform: CSS.Transform.toString(transform) }}
     >
       <ListItem.Endcap>
-        <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--dots-six-vertical--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
       <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
       <ListItem.Endcap>
-        <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
     </ListItem.Root>
   );
 };
 
-export const UniformSizeDraggable = {
+export const UniformSizeDraggable: Story = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -103,19 +109,19 @@ const ManySizesDraggableListItem = ({
       style={{ transform: CSS.Translate.toString(transform) }}
     >
       <ListItem.Endcap>
-        <DotsSixVertical className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--dots-six-vertical--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
       <ListItem.Heading classNames='grow pbs-2' asChild>
         {text}
       </ListItem.Heading>
       <ListItem.Endcap>
-        <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+        <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
       </ListItem.Endcap>
     </ListItem.Root>
   );
 };
 
-export const ManySizesDraggable = {
+export const ManySizesDraggable: Story = {
   render: ({ ...args }) => {
     const [items, setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -163,7 +169,7 @@ export const ManySizesDraggable = {
   args: {},
 };
 
-export const Collapsible = {
+export const Collapsible: Story = {
   render: ({ ...args }) => {
     const [items, _setItems] = useState(
       [...Array(12)].map((_, index) => ({
@@ -181,7 +187,7 @@ export const Collapsible = {
               {index !== 2 ? <ListItem.OpenTrigger /> : <ListItem.MockOpenTrigger />}
               <ListItem.Heading classNames='grow pbs-2'>{text}</ListItem.Heading>
               <ListItem.Endcap>
-                <PushPin className={mx(getSize(5), 'mbs-2.5')} />
+                <Icon icon='ph--push-pin--regular' classNames={mx(getSize(5), 'mbs-2.5')} />
               </ListItem.Endcap>
             </div>
             {index !== 2 && <ListItem.CollapsibleContent>{body}</ListItem.CollapsibleContent>}
@@ -192,11 +198,10 @@ export const Collapsible = {
   },
   args: {
     variant: 'unordered',
-    // toggleOpenLabel: 'Open/close storybook list item', // TODO(burdon): ???
   },
 };
 
-export const SelectableListbox = {
+export const SelectableListbox: Story = {
   render: () => {
     const [selectedId, setSelectedId] = useState<string>();
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical' });
@@ -223,11 +228,11 @@ export const SelectableListbox = {
             key={id}
             tabIndex={0}
             selected={selectedId === id}
-            classNames={mx('items-center', ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
+            classNames={mx(ghostHover, ghostSelected, ghostSelectedTrackingInterFromNormal)}
             onClick={() => setSelectedId(id)}
             onKeyUp={(event) => handleKeyUp(event, id)}
           >
-            <ListItem.Heading classNames='grow'>Lorem ipsum dolor sit amet</ListItem.Heading>
+            <ListItem.Heading classNames='flex pis-1 pie-1 items-center grow truncate'>{text}</ListItem.Heading>
           </ListItem.Root>
         ))}
       </List>

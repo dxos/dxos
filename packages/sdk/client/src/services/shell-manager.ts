@@ -13,15 +13,16 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AppContextRequest,
+  type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
-  type InvitationUrlRequest,
 } from '@dxos/protocols/proto/dxos/iframe';
-import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
-import { type IFrameManager } from './iframe-manager';
 import { RPC_TIMEOUT } from '../common';
+
+import { type IFrameManager } from './iframe-manager';
 
 const shellStyles = Object.entries({
   display: 'none',

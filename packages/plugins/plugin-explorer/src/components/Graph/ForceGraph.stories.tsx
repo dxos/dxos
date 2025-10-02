@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -14,12 +14,13 @@ import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
-import { withLayout, withTheme, render } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { useGraphModel } from '../../hooks';
+import { ViewType } from '../../types';
 
 import { ForceGraph } from './ForceGraph';
 import { generate } from './testing';
-import { useGraphModel } from '../../hooks';
-import { ViewType } from '../../types';
 
 const generator = faker as any as ValueGenerator;
 
@@ -45,7 +46,7 @@ const DefaultStory = () => {
   return <ForceGraph model={model} />;
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-explorer/ForceGraph',
   component: ForceGraph,
   render: render(DefaultStory),
@@ -57,8 +58,10 @@ const meta: Meta = {
     withTheme,
     withLayout({ fullscreen: true }),
   ],
-};
+} satisfies Meta<typeof ForceGraph>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

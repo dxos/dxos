@@ -2,19 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, useTranslation } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
-import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../../meta';
+import { COMMANDS_DIALOG, meta } from '../../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <Button
       classNames='m-1 pli-1 lg:pli-2'
@@ -31,7 +29,7 @@ export const CommandsTrigger = () => {
       }
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
-      <MagnifyingGlass className={getSize(5)} />
+      <Icon icon='ph--magnifying-glass--regular' size={5} />
     </Button>
   );
 };

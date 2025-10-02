@@ -12,7 +12,11 @@ import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useFileDownload } from '@dxos/react-ui';
+import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
+
+import { Document, Item } from '../data';
+import { defs } from '../defs';
+import { exportData, importData } from '../util';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
@@ -20,9 +24,6 @@ import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { Document, Item } from '../data';
-import { defs } from '../defs';
-import { exportData, importData } from '../util';
 
 export const Main = () => {
   const client = useClient();
@@ -43,7 +44,7 @@ export const Main = () => {
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
-  const flushingPromise = useRef<Promise<void>>();
+  const flushingPromise = useRef<Promise<void>>(null);
   const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
@@ -67,21 +68,16 @@ export const Main = () => {
   const identity = client.halo.identity.get();
 
   // Handle invitation.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     const url = new URL(window.location.href);
     const invitationCode = url.searchParams.get('spaceInvitationCode');
-    let t: ReturnType<typeof setTimeout>;
     if (invitationCode && identity) {
-      t = setTimeout(async () => {
-        const { space } = await client.shell.joinSpace({ invitationCode });
-        setSpace(space);
+      const { space } = await client.shell.joinSpace({ invitationCode });
+      setSpace(space);
 
-        url.searchParams.delete('spaceInvitationCode');
-        history.replaceState({}, document.title, url.href);
-      });
+      url.searchParams.delete('spaceInvitationCode');
+      history.replaceState({}, document.title, url.href);
     }
-
-    return () => clearTimeout(t);
   }, [identity]);
 
   const handleObjectCreate = (n = 1) => {

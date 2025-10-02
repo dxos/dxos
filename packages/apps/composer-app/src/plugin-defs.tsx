@@ -2,59 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
-// NOTE(ZaymonFC): This is a workaround. See: https://discord.com/channels/837138313172353095/1363955461350621235
+// NOTE(ZaymonFC): Workaround; see: https://discord.com/channels/837138313172353095/1363955461350621235
 import '@dxos/plugin-inbox/css';
 
-import { INTENT_PLUGIN, IntentPlugin, SETTINGS_PLUGIN, SettingsPlugin } from '@dxos/app-framework';
-import { type Config, type ClientServicesProvider } from '@dxos/client';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
+import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
-import { AssistantPlugin, ASSISTANT_PLUGIN } from '@dxos/plugin-assistant';
-import { AttentionPlugin, ATTENTION_PLUGIN } from '@dxos/plugin-attention';
-import { AutomationPlugin, AUTOMATION_PLUGIN } from '@dxos/plugin-automation';
-// TODO(burdon): Could BoardPlugin contain meta (e.g., BoardPlugin.meta.id)
+import { AssistantPlugin } from '@dxos/plugin-assistant';
+import { AttentionPlugin } from '@dxos/plugin-attention';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin, CLIENT_PLUGIN } from '@dxos/plugin-client';
+import { ClientPlugin, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
-import { DebugPlugin, DEBUG_PLUGIN } from '@dxos/plugin-debug';
-import { DeckPlugin, DECK_PLUGIN } from '@dxos/plugin-deck';
+import { DebugPlugin } from '@dxos/plugin-debug';
+import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FilesPlugin, FILES_PLUGIN } from '@dxos/plugin-files';
-import { GraphPlugin, GRAPH_PLUGIN } from '@dxos/plugin-graph';
-import { HelpPlugin, HELP_PLUGIN } from '@dxos/plugin-help';
+import { FilesPlugin } from '@dxos/plugin-files';
+import { GraphPlugin } from '@dxos/plugin-graph';
+import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
-import { KanbanPlugin, KANBAN_PLUGIN } from '@dxos/plugin-kanban';
+import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
-import { MARKDOWN_PLUGIN, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MeetingPlugin, MEETING_PLUGIN } from '@dxos/plugin-meeting';
+import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
-import { NativePlugin, NATIVE_PLUGIN } from '@dxos/plugin-native';
-import { NavTreePlugin, NAVTREE_PLUGIN } from '@dxos/plugin-navtree';
-import { ObservabilityPlugin, OBSERVABILITY_PLUGIN } from '@dxos/plugin-observability';
-import { OutlinerPlugin, OUTLINER_PLUGIN } from '@dxos/plugin-outliner';
+import { NativePlugin } from '@dxos/plugin-native';
+import { NavTreePlugin } from '@dxos/plugin-navtree';
+import { ObservabilityPlugin } from '@dxos/plugin-observability';
+import { OutlinerPlugin } from '@dxos/plugin-outliner';
 import { PresenterPlugin } from '@dxos/plugin-presenter';
-import { PreviewPlugin, PREVIEW_PLUGIN } from '@dxos/plugin-preview';
-import { PwaPlugin, PWA_PLUGIN } from '@dxos/plugin-pwa';
-import { RegistryPlugin, REGISTRY_PLUGIN } from '@dxos/plugin-registry';
+import { PreviewPlugin } from '@dxos/plugin-preview';
+import { ProjectPlugin } from '@dxos/plugin-project';
+import { PwaPlugin } from '@dxos/plugin-pwa';
+import { RegistryPlugin } from '@dxos/plugin-registry';
 import { ScriptPlugin } from '@dxos/plugin-script';
 import { SearchPlugin } from '@dxos/plugin-search';
-import { SheetPlugin, SHEET_PLUGIN } from '@dxos/plugin-sheet';
-import { SketchPlugin, SKETCH_PLUGIN } from '@dxos/plugin-sketch';
-import { SpacePlugin, SPACE_PLUGIN } from '@dxos/plugin-space';
+import { SheetPlugin } from '@dxos/plugin-sheet';
+import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
-import { StatusBarPlugin, STATUS_BAR_PLUGIN } from '@dxos/plugin-status-bar';
-import { TablePlugin, TABLE_PLUGIN } from '@dxos/plugin-table';
-import { ThemePlugin, THEME_PLUGIN } from '@dxos/plugin-theme';
+import { StatusBarPlugin } from '@dxos/plugin-status-bar';
+import { TablePlugin } from '@dxos/plugin-table';
+import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThemeEditorPlugin } from '@dxos/plugin-theme-editor';
-import { ThreadPlugin, THREAD_PLUGIN } from '@dxos/plugin-thread';
-import { TokenManagerPlugin, TOKEN_MANAGER_PLUGIN } from '@dxos/plugin-token-manager';
-import { TranscriptionPlugin, TRANSCRIPTION_PLUGIN } from '@dxos/plugin-transcription';
-import { WnfsPlugin, WNFS_PLUGIN } from '@dxos/plugin-wnfs';
-import { isNotFalsy } from '@dxos/util';
+import { ThreadPlugin } from '@dxos/plugin-thread';
+import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
-import { WelcomePlugin, WELCOME_PLUGIN } from './plugins';
+import { WelcomePlugin } from './plugins';
 
 export type State = {
   appKey: string;
@@ -66,64 +66,64 @@ export type State = {
 export type PluginConfig = State & {
   isDev?: boolean;
   isPwa?: boolean;
-  isSocket?: boolean;
+  isTauri?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
 };
 
-export const getCore = ({ isPwa, isSocket }: PluginConfig): string[] =>
+export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
   [
-    ATTENTION_PLUGIN,
-    AUTOMATION_PLUGIN,
-    CLIENT_PLUGIN,
-    DECK_PLUGIN,
-    FILES_PLUGIN,
-    GRAPH_PLUGIN,
-    HELP_PLUGIN,
-    INTENT_PLUGIN,
-    isSocket && NATIVE_PLUGIN,
-    NAVTREE_PLUGIN,
-    OBSERVABILITY_PLUGIN,
-    PREVIEW_PLUGIN,
-    !isSocket && isPwa && PWA_PLUGIN,
-    REGISTRY_PLUGIN,
-    SETTINGS_PLUGIN,
-    SPACE_PLUGIN,
-    STATUS_BAR_PLUGIN,
-    THEME_PLUGIN,
-    TOKEN_MANAGER_PLUGIN,
-    WELCOME_PLUGIN,
+    AttentionPlugin.meta.id,
+    AutomationPlugin.meta.id,
+    ClientPlugin.meta.id,
+    DeckPlugin.meta.id,
+    FilesPlugin.meta.id,
+    GraphPlugin.meta.id,
+    HelpPlugin.meta.id,
+    IntentPlugin.meta.id,
+    isTauri && NativePlugin.meta.id,
+    NavTreePlugin.meta.id,
+    ObservabilityPlugin.meta.id,
+    PreviewPlugin.meta.id,
+    !isTauri && isPwa && PwaPlugin.meta.id,
+    RegistryPlugin.meta.id,
+    SettingsPlugin.meta.id,
+    SpacePlugin.meta.id,
+    StatusBarPlugin.meta.id,
+    ThemePlugin.meta.id,
+    TokenManagerPlugin.meta.id,
+    WelcomePlugin.meta.id,
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
 
 export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
   [
     // Default
-    KANBAN_PLUGIN,
-    MARKDOWN_PLUGIN,
-    SHEET_PLUGIN,
-    SKETCH_PLUGIN,
-    TABLE_PLUGIN,
-    THREAD_PLUGIN,
-    WNFS_PLUGIN,
+    KanbanPlugin.meta.id,
+    MarkdownPlugin.meta.id,
+    SheetPlugin.meta.id,
+    SketchPlugin.meta.id,
+    TablePlugin.meta.id,
+    ThreadPlugin.meta.id,
+    WnfsPlugin.meta.id,
 
     // Dev
-    isDev && DEBUG_PLUGIN,
+    isDev && DebugPlugin.meta.id,
 
     // Labs
     (isDev || isLabs) && [
-      // prettier-ignore
-      ASSISTANT_PLUGIN,
-      MEETING_PLUGIN,
-      OUTLINER_PLUGIN,
-      TRANSCRIPTION_PLUGIN,
+      AssistantPlugin.meta.id,
+      ProjectPlugin.meta.id,
+      MeetingPlugin.meta.id,
+      OutlinerPlugin.meta.id,
+      TranscriptionPlugin.meta.id,
     ],
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isSocket }: PluginConfig) =>
+export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
   [
     AssistantPlugin(),
     AttentionPlugin(),
@@ -133,16 +133,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     ClientPlugin({
       config,
       services,
-      onReset: ({ target }) => {
-        localStorage.clear();
-        if (target === 'deviceInvitation') {
-          window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
-        } else if (target === 'recoverIdentity') {
-          window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
-        } else {
-          window.location.pathname = '/';
-        }
-      },
+      onReset: handleReset,
     }),
     ConductorPlugin(),
     DebugPlugin(),
@@ -159,30 +150,50 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     MarkdownPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isSocket && NativePlugin(),
+    isTauri && NativePlugin(),
     NavTreePlugin(),
-    ObservabilityPlugin({ namespace: appKey, observability: () => observability }),
+    ObservabilityPlugin({
+      namespace: appKey,
+      observability: () => observability,
+    }),
     OutlinerPlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    !isSocket && isPwa && PwaPlugin(),
+    !isTauri && isPwa && PwaPlugin(),
+    ProjectPlugin(),
     RegistryPlugin(),
     ScriptPlugin(),
     isLabs && SearchPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SpacePlugin({ observability: true }),
+    SpacePlugin({
+      observability: true,
+    }),
     StackPlugin(),
     StatusBarPlugin(),
     ThemeEditorPlugin(),
     TablePlugin(),
-    ThemePlugin({ appName: 'Composer', noCache: isDev }),
+    ThemePlugin({
+      appName: 'Composer',
+      noCache: isDev,
+    }),
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
   ]
-    .filter(isNotFalsy)
+    .filter(isTruthy)
     .flat();
+
+const handleReset: ClientPluginOptions['onReset'] = ({ target }) => {
+  localStorage.clear();
+  if (target === 'deviceInvitation') {
+    window.location.assign(new URL('/?deviceInvitationCode=', window.location.origin));
+  } else if (target === 'recoverIdentity') {
+    window.location.assign(new URL('/?recoverIdentity=true', window.location.origin));
+  } else {
+    window.location.pathname = '/';
+  }
+};

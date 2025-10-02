@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTask, Event, scheduleTaskInterval } from '@dxos/async';
+import { Event, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

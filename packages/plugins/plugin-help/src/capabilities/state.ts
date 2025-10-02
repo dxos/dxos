@@ -5,11 +5,12 @@
 import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 
+import { meta } from '../meta';
+
 import { HelpCapabilities } from './capabilities';
-import { HELP_PLUGIN } from '../meta';
 
 export default () => {
-  const state = new LocalStorageStore<HelpCapabilities.State>(HELP_PLUGIN, {
+  const state = new LocalStorageStore<HelpCapabilities.State>(meta.id, {
     running: false,
     showHints: true,
     showWelcome: true,

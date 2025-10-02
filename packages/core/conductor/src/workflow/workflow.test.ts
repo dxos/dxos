@@ -3,19 +3,17 @@
 //
 
 import { type Context, Effect, type Layer, type Scope } from 'effect';
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-import { MockAiServiceClient } from '@dxos/ai/testing';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
-import { AiService, FunctionType, ServiceContainer, setUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
 
-import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
-import { createEventLogger, type FunctionCallService } from '../services';
 import {
   AnyInput,
   AnyOutput,
@@ -28,6 +26,8 @@ import {
   ValueBag,
   synchronizedComputeFunction,
 } from '../types';
+
+import { WorkflowLoader, type WorkflowLoaderParams } from './loader';
 
 describe('workflow', () => {
   test('run', async () => {
@@ -99,9 +99,9 @@ describe('workflow', () => {
 
   describe('function', () => {
     test('function resolved before execution', async () => {
-      const functionUrl = 'https://test.com/foo';
+      const functionId = '1234';
       const { fnObject, functionRef, resolveCount } = createFunction();
-      setUserFunctionUrlInMetadata(Obj.getMeta(fnObject), functionUrl);
+      setUserFunctionIdInMetadata(Obj.getMeta(fnObject), functionId);
       const graph = createFunctionTransform(functionRef);
       const workflowLoader = new WorkflowLoader(createResolver(graph));
       const workflow = await workflowLoader.load(graph.graphDxn);
@@ -109,10 +109,11 @@ describe('workflow', () => {
 
       const services = createTestExecutionContext({
         functions: {
-          callFunction: async (path, { input }) => {
-            expect(path).toEqual(functionUrl);
-            return { result: Math.pow(input.num1, input.num2) };
-          },
+          callFunction: (deployedFunctionId, { input }: any) =>
+            Effect.sync(() => {
+              expect(deployedFunctionId).toEqual(`/${functionId}`);
+              return { result: Math.pow(input.num1, input.num2) } as any;
+            }),
         },
       });
 
@@ -244,13 +245,12 @@ describe('workflow', () => {
 });
 
 const createTestExecutionContext = (mocks?: {
-  functions?: Context.Tag.Service<FunctionCallService>;
+  functions?: Context.Tag.Service<RemoteFunctionExecutionService>;
 }): TestEffectLayers => {
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
       functionCallService: mocks?.functions,
-      ai: AiService.make(new MockAiServiceClient()),
     })
     .createLayer();
 };

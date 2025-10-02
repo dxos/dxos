@@ -3,11 +3,13 @@
 //
 
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import { Chess } from 'https://esm.sh/chess.js@0.13.1?bundle=false';
 
 export default defineFunction({
+  key: 'dxos.org/script/chess',
+  name: 'Chess',
   description: 'Plays a random move in a chess game.',
 
   inputSchema: S.Struct({

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle } from '@codemirror/language';
 import { lintKeymap } from '@codemirror/lint';
@@ -11,15 +12,14 @@ import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
-import { tsSync, tsFacet, tsLinter, tsAutocomplete, tsHover, type HoverInfo } from '@valtown/codemirror-ts';
+import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
+import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorInputMode,
   InputModeExtensions,
   type UseTextEditorProps,
-  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   folding,
@@ -64,6 +64,7 @@ export const TypescriptEditor = ({
           lineWrapping: false,
           monospace: true,
           scrollPastEnd: true,
+          search: true,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],
@@ -74,7 +75,8 @@ export const TypescriptEditor = ({
         // TODO(burdon): Factor out.
         javascript({ typescript: true }),
         // https://github.com/val-town/codemirror-ts
-        autocomplete({ override: env ? [tsAutocomplete()] : undefined }),
+        keymap.of(completionKeymap),
+        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
         keymap.of(lintKeymap),
         env && [
           tsFacet.of({ env, path: `/src/${id}.ts` }),

@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "node": "./dist/lib/node-esm/index.mjs"
     }
@@ -25,11 +26,9 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "fs-ext": "^2.0.0"
+    "koffi": "^2.8.0"
   },
-  "devDependencies": {
-    "@types/fs-ext": "^2.0.0"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   }

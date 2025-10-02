@@ -8,10 +8,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { SyncStatusIndicator } from './SyncStatus';
 import { translations } from '../../translations';
 
-const meta: Meta = {
+import { SyncStatusIndicator } from './SyncStatus';
+
+const meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
   decorators: [withTheme],
@@ -19,11 +20,11 @@ const meta: Meta = {
     translations,
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof SyncStatusIndicator>;
 
 export default meta;
 
-type Story = StoryObj<typeof SyncStatusIndicator>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

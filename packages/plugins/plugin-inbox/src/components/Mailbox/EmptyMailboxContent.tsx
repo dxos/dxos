@@ -4,19 +4,19 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
-import { useTranslation, Button } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 
-import { INBOX_PLUGIN } from '../../meta';
-import { type MailboxType } from '../../types';
+import { meta } from '../../meta';
+import { type Mailbox } from '../../types';
 
-export const EmptyMailboxContent = ({ mailbox }: { mailbox: MailboxType }) => {
+export const EmptyMailboxContent = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const space = getSpace(mailbox);
   const tokens = useQuery(space, Filter.type(DataType.AccessToken));
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const openSpaceSettings = useCallback(() => {

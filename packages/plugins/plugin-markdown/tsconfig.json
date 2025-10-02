@@ -49,19 +49,25 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
-    },
-    {
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../sdk/app-framework"

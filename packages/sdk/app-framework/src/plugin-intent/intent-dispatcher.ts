@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, pipe, Ref } from 'effect';
+import { Effect, Option, Ref, pipe } from 'effect';
 import { type Simplify } from 'effect/Types';
 
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { byPosition, type MaybePromise, type Position, type GuardedType } from '@dxos/util';
+import { type GuardedType, type MaybePromise, type Position, byPosition } from '@dxos/util';
+
+import { Capabilities, Events } from '../common';
+import { type PluginContext, contributes } from '../core';
 
 import { IntentAction } from './actions';
 import { CycleDetectedError, NoResolversError } from './errors';
 import {
-  createIntent,
   type AnyIntent,
   type AnyIntentChain,
   type Intent,
@@ -22,9 +24,8 @@ import {
   type IntentResultData,
   type IntentSchema,
   type Label,
+  createIntent,
 } from './intent';
-import { Events, Capabilities } from '../common';
-import { contributes, type PluginContext } from '../core';
 
 const EXECUTION_LIMIT = 100;
 const HISTORY_LIMIT = 100;
@@ -196,7 +197,7 @@ export const createDispatcher = (
         .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
       if (candidates.length === 0) {
-        yield* Effect.fail(new NoResolversError(intent.id));
+        return yield* Effect.fail(new NoResolversError(intent.id));
       }
 
       const effect = candidates[0].resolve(intent.data, intent.undo ?? false);
@@ -207,7 +208,7 @@ export const createDispatcher = (
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {
       if (depth > executionLimit) {
-        yield* Effect.fail(new CycleDetectedError());
+        return yield* Effect.fail(new CycleDetectedError());
       }
 
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
@@ -230,7 +231,7 @@ export const createDispatcher = (
           //     error: result.error.message,
           //   }),
           // );
-          yield* Effect.fail(result.error);
+          return yield* Effect.fail(result.error);
         }
       }
 

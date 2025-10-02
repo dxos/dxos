@@ -9,18 +9,32 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplicant, type GlobalOptions } from './plan';
-import { type RunParams } from './plan/run-process';
 import {
+  type GlobalOptions,
+  type RunParams,
+  type RunPlanParams,
+  type TestPlan,
+  readYAMLSpecFile,
+  runPlan,
+  runReplicant,
+} from './plan';
+import {
+  AutomergeTestPlan,
+  AutomergeTestPlan,
+  EdgeSync,
+  EdgeWs,
   EmptyTestPlan,
-  StorageTestPlan,
-  TransportTestPlan,
+  QueryTestPlan,
   QueryTestPlan,
   ReplicationTestPlan,
-  AutomergeTestPlan,
+  ReplicationTestPlan,
+  StorageTestPlan,
+  TransportTestPlan,
 } from './spec';
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
+  edgeSync: () => new EdgeSync(),
+  edgeWs: () => new EdgeWs(),
   automerge: () => new AutomergeTestPlan(),
   // signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
@@ -60,10 +74,11 @@ const start = async () => {
       repeatAnalysis: {
         type: 'string',
         alias: 'r',
-        describe: 'skip the test, just process the output JSON file from a prior run',
+        describe: 'skip the test, process the output file from a prior run',
       },
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
+      browser: { type: 'boolean', default: true, describe: 'build the browser bundle', alias: 'b' },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
@@ -84,6 +99,7 @@ const start = async () => {
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
     headless: argv.headless,
+    shouldBuildBrowser: argv.browser,
   };
 
   if (options.repeatAnalysis) {
@@ -94,9 +110,10 @@ const start = async () => {
     log.info(`using spec file: ${argv.specfile}`);
     plan = await readYAMLSpecFile(argv.specfile, planGenerator(), options);
   } else {
+    const testPlan = planGenerator();
     plan = () => ({
-      plan: planGenerator(),
-      spec: planGenerator().defaultSpec(),
+      plan: testPlan,
+      spec: testPlan.defaultSpec(),
       options,
     });
   }

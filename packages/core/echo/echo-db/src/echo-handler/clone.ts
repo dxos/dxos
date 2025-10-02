@@ -3,12 +3,13 @@
 //
 
 import { type BaseObject, ObjectId } from '@dxos/echo-schema';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
+
+import { ObjectCore } from '../core-db';
 
 import { type AnyLiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { symbolInternals } from './echo-proxy-target';
-import { ObjectCore } from '../core-db';
 
 export type CloneOptions = {
   /**
@@ -36,8 +37,12 @@ export const clone = <T extends BaseObject>(
   obj: AnyLiveObject<T>,
   { retainId = true, additional = [] }: CloneOptions = {},
 ): T => {
-  assertArgument(isEchoObject(obj), 'expect obj to be an EchoObject');
-  assertArgument(retainId === true || additional.length === 0, 'retainId must be true when additional is not empty');
+  assertArgument(isEchoObject(obj), 'obj', 'expect obj to be an EchoObject');
+  assertArgument(
+    retainId === true || additional.length === 0,
+    'retainId',
+    'retainId must be true when additional is not empty',
+  );
 
   const clone = cloneInner(obj, retainId ? obj.id : ObjectId.random());
   const clones: AnyLiveObject<any>[] = [clone];

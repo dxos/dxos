@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { type MapController, type ControlProps } from '../components';
+import { type ControlProps, type MapController } from '../components';
 
 export const useMapZoomHandler = (controller: MapController | null | undefined): ControlProps['onAction'] => {
   return useCallback<ControlProps['onAction']>(

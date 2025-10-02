@@ -2,27 +2,33 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type ChannelType } from '@dxos/plugin-thread/types';
-import { getSpace, Query, useQuery } from '@dxos/react-client/echo';
+import { Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { MEETING_PLUGIN } from '../meta';
-import { MeetingAction, MeetingType } from '../types';
+import { meta } from '../meta';
+import { Meeting, MeetingAction } from '../types';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
 const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
 
-const MeetingItem = ({ meeting, getLabel }: { meeting: MeetingType; getLabel: (meeting: MeetingType) => string }) => {
-  const { t } = useTranslation(MEETING_PLUGIN);
+const MeetingItem = ({
+  meeting,
+  getLabel,
+}: {
+  meeting: Meeting.Meeting;
+  getLabel: (meeting: Meeting.Meeting) => string;
+}) => {
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleSelectMeeting = useCallback(
@@ -31,7 +37,7 @@ const MeetingItem = ({ meeting, getLabel }: { meeting: MeetingType; getLabel: (m
   );
 
   return (
-    <List.Item<MeetingType>
+    <List.Item<Meeting.Meeting>
       key={meeting.id}
       item={meeting}
       classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
@@ -45,10 +51,10 @@ const MeetingItem = ({ meeting, getLabel }: { meeting: MeetingType; getLabel: (m
 };
 
 export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
-  const { t } = useTranslation(MEETING_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(channel);
-  const meetings = useQuery(space, Query.type(MeetingType));
+  const meetings = useQuery(space, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.
   const sortedMeetings = useMemo(() => {
     return meetings.toSorted((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
@@ -60,13 +66,13 @@ export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
       metadata
         .filter(
           (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-            capability.id === MeetingType.typename,
+            capability.id === Meeting.Meeting.typename,
         )
         .map((c) => c.metadata),
     [metadata],
   );
 
-  const getId = useCallback((meeting: MeetingType) => meeting.id, []);
+  const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(space);
     const intent = pipe(
@@ -82,7 +88,7 @@ export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
       <div className='pli-2 min-bs-[3rem] flex justify-end items-center'>
         <Button onClick={handleCreateMeeting}>{t('create meeting label')}</Button>
       </div>
-      <List.Root<MeetingType> items={sortedMeetings} isItem={Schema.is(MeetingType)} getId={getId}>
+      <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
         {({ items }) => (
           <div role='list' className='flex flex-col w-full'>
             {items?.map((meeting) => (

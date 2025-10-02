@@ -2,8 +2,8 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized, Trigger } from '@dxos/async';
-import { Context, cancelWithContext, ContextDisposedError } from '@dxos/context';
+import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -11,9 +11,9 @@ import { log, logInfo } from '@dxos/log';
 import { type PeerInfo } from '@dxos/messaging';
 import {
   CancelledError,
-  ProtocolError,
   ConnectionResetError,
   ConnectivityError,
+  ProtocolError,
   TimeoutError,
   trace,
 } from '@dxos/protocols';
@@ -414,7 +414,7 @@ export class Connection {
     invariant(msg.author.peerKey === this.remoteInfo.peerKey);
     invariant(msg.recipient.peerKey === this.localInfo.peerKey);
 
-    const signals = msg.data.signalBatch ? msg.data.signalBatch.signals ?? [] : [msg.data.signal];
+    const signals = msg.data.signalBatch ? (msg.data.signalBatch.signals ?? []) : [msg.data.signal];
     for (const signal of signals) {
       if (!signal) {
         continue;

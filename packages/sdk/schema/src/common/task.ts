@@ -5,19 +5,38 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { FormatAnnotation, FormatEnum, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo-schema';
+import {
+  FormatAnnotation,
+  FormatEnum,
+  GeneratorAnnotation,
+  LabelAnnotation,
+  PropertyMetaAnnotationId,
+} from '@dxos/echo-schema';
+
+import { ItemAnnotation } from '../annotations';
 
 import { Person } from './person';
+import { Project } from './project';
 
 /**
  * Task schema.
  */
 const TaskSchema = Schema.Struct({
-  title: Schema.String.annotations({ title: 'Title' }),
+  title: Schema.String.pipe(
+    Schema.annotations({ title: 'Title' }),
+    GeneratorAnnotation.set({
+      generator: 'lorem.words',
+      args: [{ min: 3, max: 10 }],
+    }),
+  ),
   priority: Schema.optional(
-    Schema.Literal('none', 'low', 'medium', 'high', 'urgent')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-      .annotations({
+    Schema.Literal('none', 'low', 'medium', 'high', 'urgent').pipe(
+      FormatAnnotation.set(FormatEnum.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [['none', 'low', 'medium', 'high', 'urgent']],
+      }),
+      Schema.annotations({
         title: 'Priority',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -31,11 +50,16 @@ const TaskSchema = Schema.Struct({
           },
         },
       }),
+    ),
   ),
   status: Schema.optional(
-    Schema.Literal('todo', 'in-progress', 'done')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-      .annotations({
+    Schema.Literal('todo', 'in-progress', 'done').pipe(
+      FormatAnnotation.set(FormatEnum.SingleSelect),
+      GeneratorAnnotation.set({
+        generator: 'helpers.arrayElement',
+        args: [['todo', 'in-progress', 'done']],
+      }),
+      Schema.annotations({
         title: 'Status',
         [PropertyMetaAnnotationId]: {
           singleSelect: {
@@ -47,15 +71,24 @@ const TaskSchema = Schema.Struct({
           },
         },
       }),
+    ),
   ),
   assigned: Schema.optional(Type.Ref(Person).annotations({ title: 'Assigned' })),
   estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
-  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+  description: Schema.optional(
+    Schema.String.annotations({ title: 'Description' }).pipe(
+      GeneratorAnnotation.set({
+        generator: 'lorem.paragraphs',
+        args: [{ min: 1, max: 3 }],
+      }),
+    ),
+  ),
+  project: Schema.optional(Type.Ref(Project).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
-}).pipe(LabelAnnotation.set(['title']));
+}).pipe(LabelAnnotation.set(['title']), ItemAnnotation.set(true));
 
 export const Task = TaskSchema.pipe(
   Type.Obj({

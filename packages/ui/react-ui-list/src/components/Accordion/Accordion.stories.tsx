@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -41,11 +41,11 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof Accordion> = {
+const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex justify-center' })],
-};
+} satisfies Meta<typeof Accordion>;
 
 export default meta;
 

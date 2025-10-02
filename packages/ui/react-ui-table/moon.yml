@@ -3,10 +3,16 @@ language: typescript
 tags:
   - e2e
   - ts-build
+  - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/types/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

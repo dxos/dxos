@@ -4,24 +4,26 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Searchbar, type SearchbarProps } from './Searchbar';
+import { Searchbar } from './Searchbar';
 
-const meta: Meta<SearchbarProps> = {
+const meta = {
   title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof Searchbar>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     placeholder: 'Search...',
   },

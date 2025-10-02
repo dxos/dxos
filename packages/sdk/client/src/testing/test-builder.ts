@@ -19,16 +19,16 @@ import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  createIceProvider,
-  createRtcTransportFactory,
   MemoryTransportFactory,
   type TransportFactory,
   TransportKind,
+  createIceProvider,
+  createRtcTransportFactory,
 } from '@dxos/network-manager';
 import { TcpTransportFactory } from '@dxos/network-manager/transport/tcp';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
-import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';

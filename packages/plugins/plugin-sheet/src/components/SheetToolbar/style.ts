@@ -5,11 +5,11 @@
 import { useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute';
-import { createMenuAction, createMenuItemGroup, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type SheetModel } from '../../model';
-import { rangeFromIndex, rangeToIndex, type StyleKey, type StyleValue } from '../../types';
+import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
 export type StyleState = Partial<Record<StyleValue, boolean>>;
@@ -89,7 +89,7 @@ const createStyleActions = (model: SheetModel, state: StyleState, cursorFallback
         key: 'style',
         value: styleValue as StyleValue,
         icon,
-        label: [`range value ${styleValue} label`, { ns: SHEET_PLUGIN }],
+        label: [`range value ${styleValue} label`, { ns: meta.id }],
         checked: !!state[styleValue as StyleValue],
       },
     );

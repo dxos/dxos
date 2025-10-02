@@ -5,19 +5,20 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, createIntent, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { createExtension } from '@dxos/app-graph';
 
-import { HelpCapabilities } from './capabilities';
 import { SHORTCUTS_DIALOG } from '../components';
-import { HELP_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { HelpAction } from '../types';
+
+import { HelpCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: HELP_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -33,7 +34,7 @@ export default (context: PluginContext) =>
                   await dispatch(createIntent(HelpAction.Start));
                 },
                 properties: {
-                  label: ['open help tour', { ns: HELP_PLUGIN }],
+                  label: ['open help tour', { ns: meta.id }],
                   icon: 'ph--info--regular',
                   keyBinding: {
                     macos: 'shift+meta+/',
@@ -45,7 +46,7 @@ export default (context: PluginContext) =>
                 },
               },
               {
-                id: 'dxos.org/plugin/help/open-shortcuts',
+                id: `${meta.id}/open-shortcuts`,
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   const state = context.getCapability(HelpCapabilities.MutableState);
@@ -61,7 +62,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['open shortcuts label', { ns: HELP_PLUGIN }],
+                  label: ['open shortcuts label', { ns: meta.id }],
                   icon: 'ph--keyboard--regular',
                   keyBinding: {
                     macos: 'meta+ctrl+/',

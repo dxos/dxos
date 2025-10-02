@@ -8,19 +8,17 @@ import { type Node } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
+import { meta } from '../../meta';
+
 import { PlankHeading, type PlankHeadingProps } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
-import { DECK_PLUGIN } from '../../meta';
 
 export const PlankContentError = ({ error }: { error?: Error }) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const errorString = error?.toString() ?? '';
   return (
-    <div role='none' className='overflow-auto p-8 attention-surface grid place-items-center'>
-      <p
-        role='alert'
-        className={mx(descriptionMessage, 'break-words rounded-md p-8', errorString.length < 256 && 'text-lg')}
-      >
+    <div role='none' className='overflow-y-auto p-8 attention-surface grid place-items-center'>
+      <p role='alert' className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
         {error ? errorString : t('error fallback message')}
       </p>
     </div>

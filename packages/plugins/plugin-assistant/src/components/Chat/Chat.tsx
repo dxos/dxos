@@ -4,44 +4,41 @@
 
 import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
+import { useRxValue } from '@effect-rx/rx-react';
 import { createContext } from '@radix-ui/react-context';
-import { dedupeWith } from 'effect/Array';
+import { Array, Option } from 'effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Message } from '@dxos/ai';
-import { CollaborationActions, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Event } from '@dxos/async';
-import { DXN, Obj, Ref } from '@dxos/echo';
-import { log } from '@dxos/log';
+import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Expando, getSpace, useQueue, type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
-import { type ScrollController } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { DataType } from '@dxos/schema';
+import { isTruthy } from '@dxos/util';
 
-import { type ChatProcessor, useContextProvider, useBlueprints } from '../../hooks';
+import { useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
+import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
 import {
   ChatActions,
   type ChatActionsProps,
-  type ChatEvent,
-  ChatOptionsMenu,
+  ChatOptions,
+  type ChatPresetsProps,
   ChatReferences,
-  type ChatReferencesProps,
   ChatStatusIndicator,
 } from '../ChatPrompt';
-import { ChatThread as NativeChatThread, type ChatThreadProps as NativeChatThreadProps } from '../ChatThread';
+import {
+  type ChatThreadController,
+  ChatThread as NaturalChatThread,
+  type ChatThreadProps as NaturalChatThreadProps,
+} from '../ChatThread';
 
-// TODO(burdon): Factor out.
-const Endcap = ({ children }: PropsWithChildren) => {
-  return (
-    <div className='grid w-[var(--rail-action)] h-[var(--rail-action)] items-center justify-center'>{children}</div>
-  );
-};
+import { type ChatEvent } from './events';
 
 //
 // Context
@@ -49,20 +46,16 @@ const Endcap = ({ children }: PropsWithChildren) => {
 // Components outside of this Radix-style group shuld define their own APIs.
 //
 
-// TODO(burdon): Inject via effect layer.
 type ChatContextValue = {
+  debug?: boolean;
   event: Event<ChatEvent>;
   space: Space;
   chat: Assistant.Chat;
-  processor: ChatProcessor;
-  messages: Message[];
-
-  /** @deprecated Remove and replace with context. */
-  artifact?: Expando;
+  messages: DataType.Message[];
+  processor: AiChatProcessor;
 };
 
-// NOTE: Do not export.
-const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
+export const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('Chat');
 
 //
 // Root
@@ -70,72 +63,85 @@ const [ChatContextProvider, useChatContext] = createContext<ChatContextValue>('C
 
 type ChatRootProps = ThemedClassName<
   PropsWithChildren<
-    Pick<ChatContextValue, 'chat' | 'processor' | 'artifact'> & {
+    Pick<ChatContextValue, 'chat' | 'processor'> & {
       onEvent?: (event: ChatEvent) => void;
     }
   >
 >;
 
-const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+  const [debug, setDebug] = useState(false);
   const space = getSpace(chat);
 
   // Messages.
-  const queue = useQueue<Message>(chat?.queue.dxn);
-  const messages = useMemo(
-    () =>
-      dedupeWith(
-        [...(queue?.objects?.filter(Obj.instanceOf(Message)) ?? []), ...(processor?.messages.value ?? [])],
-        (a, b) => a.id === b.id,
-      ),
-    [queue?.objects, processor?.messages.value],
-  );
+  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
+  const pending = useRxValue(processor.messages);
+  const streaming = useRxValue(processor.streaming);
+  const lastPrompt = useRef<string | undefined>(undefined);
 
-  // TODO(burdon): Replace with tool.
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
-  useEffect(() => {
-    if (!processor?.streaming.value && queue?.objects && artifact) {
-      const message = queue.objects[queue.objects.length - 1];
-      if (dispatch && space && chat && message) {
-        void dispatch(
-          createIntent(CollaborationActions.InsertContent, {
-            target: artifact,
-            object: Ref.fromDXN(new DXN(DXN.kind.QUEUE, [...chat.queue.dxn.parts, message.id])),
-            label: 'View proposal',
-          }),
-        );
-      }
-    }
-  }, [queue, processor?.streaming.value]);
+  const messages = useMemo(() => {
+    const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
+    return Array.dedupeWith([...queueMessages, ...pending], (a, b) => a.id === b.id);
+  }, [queue?.objects, pending]);
 
   // Events.
   const event = useMemo(() => new Event<ChatEvent>(), []);
   useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
+    return event.on((ev) => {
+      switch (ev.type) {
+        case 'toggle-debug': {
+          setDebug((current) => !current);
+          break;
+        }
+
         case 'submit': {
-          if (!processor.streaming.value) {
-            void processor.request(event.text);
+          const text = ev.text.trim();
+          if (!streaming && text.length) {
+            lastPrompt.current = ev.text;
+            void processor.request({ message: text });
+          }
+          break;
+        }
+
+        case 'retry': {
+          if (!streaming) {
+            void processor.retry();
           }
           break;
         }
 
         case 'cancel': {
-          void processor.cancel();
+          if (streaming) {
+            void processor.cancel();
+            if (lastPrompt.current) {
+              event.emit({ type: 'update-prompt', text: lastPrompt.current });
+            }
+          }
           break;
         }
-      }
 
-      onEvent?.(event);
+        default: {
+          onEvent?.(ev);
+        }
+      }
     });
-  }, [event, onEvent]);
+  }, [event, processor, streaming, onEvent]);
 
   if (!space) {
     return null;
   }
 
   return (
-    <ChatContextProvider event={event} chat={chat} space={space} processor={processor} messages={messages} {...props}>
-      <div role='none' className={mx('flex flex-col grow', classNames)}>
+    <ChatContextProvider
+      debug={debug}
+      event={event}
+      chat={chat}
+      space={space}
+      messages={messages}
+      processor={processor}
+      {...props}
+    >
+      <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
         {children}
       </div>
     </ChatContextProvider>
@@ -145,108 +151,87 @@ const ChatRoot = ({ classNames, children, chat, processor, artifact, onEvent, ..
 ChatRoot.displayName = 'Chat.Root';
 
 //
-// Thread
-//
-
-type ChatThreadProps = Omit<NativeChatThreadProps, 'identity' | 'space' | 'messages' | 'tools' | 'onPrompt'>;
-
-const ChatThread = (props: ChatThreadProps) => {
-  const { event, space, processor, messages } = useChatContext(ChatThread.displayName);
-  const identity = useIdentity();
-
-  const scrollerRef = useRef<ScrollController>(null);
-  useEffect(() => {
-    return event.on((event) => {
-      switch (event.type) {
-        case 'submit':
-        case 'scroll-to-bottom':
-          scrollerRef.current?.scrollToBottom('smooth');
-          break;
-      }
-    });
-  }, [event]);
-
-  const handlePrompt = useCallback<NonNullable<NativeChatThreadProps['onPrompt']>>(
-    (text) => {
-      if (!processor.streaming.value) {
-        event.emit({ type: 'submit', text });
-        return true;
-      }
-    },
-    [processor, event],
-  );
-
-  if (!identity) {
-    return null;
-  }
-
-  return (
-    <NativeChatThread
-      {...props}
-      ref={scrollerRef}
-      identity={identity}
-      space={space}
-      messages={messages}
-      tools={processor?.tools}
-      onPrompt={handlePrompt}
-    />
-  );
-};
-
-ChatThread.displayName = 'Chat.Thread';
-
-//
 // Prompt
 //
 
-type ChatPromptProps = ThemedClassName<Pick<ChatEditorProps, 'placeholder'> & { expandable?: boolean }>;
+type ChatPromptProps = ThemedClassName<
+  {
+    outline?: boolean;
+  } & Pick<ChatEditorProps, 'placeholder'> &
+    Omit<ChatPresetsProps, 'onChange'> & {
+      expandable?: boolean;
+      online?: boolean;
+      onOnlineChange?: (online: boolean) => void;
+      onPresetChange?: ChatPresetsProps['onChange'];
+    }
+>;
 
-const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) => {
+const ChatPrompt = ({
+  classNames,
+  outline,
+  placeholder,
+  expandable,
+  online,
+  presets,
+  preset,
+  onPresetChange,
+  onOnlineChange,
+}: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
   const { space, event, processor } = useChatContext(ChatPrompt.displayName);
 
-  const [active, setActive] = useState(false);
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+  const streaming = useRxValue(processor.streaming);
+  const active = useRxValue(processor.active);
+  const activeRef = useDynamicRef(active);
+
+  const editorRef = useRef<ChatEditorController>(null);
+  const [recordingState, setRecordingState] = useState(false);
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
+        case 'update-prompt':
+          if (!editorRef.current?.getText()?.length) {
+            editorRef.current?.setText(event.text);
+            editorRef.current?.focus();
+          }
+          break;
         case 'record-start':
-          setActive(true);
+          setRecordingState(true);
           break;
         case 'record-stop':
-          setActive(false);
+          setRecordingState(false);
           break;
       }
     });
   }, [event]);
 
-  const editorRef = useRef<ChatEditorController>(null);
-
   // TODO(burdon): Configure capability in TranscriptionPlugin.
   const { recording } = useVoiceInput({
-    active,
+    active: recordingState,
     onUpdate: (text) => {
       editorRef.current?.setText(text);
       editorRef.current?.focus();
     },
   });
 
-  const [blueprints, handleUpdateBlueprints] = useBlueprints(processor.context);
-
   // TODO(burdon): Reconcile with object tags.
-  const contextProvider = useContextProvider(space);
+  const referencesProvider = useReferencesProvider(space);
   const extensions = useMemo<Extension[]>(() => {
     return [
-      contextProvider &&
-        references({
-          provider: {
-            getReferences: async ({ query }) => contextProvider.query({ query }),
-            resolveReference: async ({ uri }) => contextProvider.resolveMetadata({ uri }),
-          },
-        }),
-      expandable &&
-        Prec.highest(
-          keymap.of([
+      referencesProvider && references({ provider: referencesProvider }),
+      Prec.highest(
+        keymap.of(
+          [
             {
+              key: 'cmd-d',
+              preventDefault: true,
+              run: () => {
+                event.emit({ type: 'toggle-debug' });
+                return true;
+              },
+            },
+            expandable && {
               key: 'cmd-ArrowUp',
               preventDefault: true,
               run: () => {
@@ -254,7 +239,7 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
                 return true;
               },
             },
-            {
+            expandable && {
               key: 'cmd-ArrowDown',
               preventDefault: true,
               run: () => {
@@ -262,19 +247,20 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
                 return true;
               },
             },
-          ]),
+          ].filter(isTruthy),
         ),
-    ].filter(isNotFalsy);
-  }, [event, expandable, contextProvider]);
+      ),
+    ].filter(isTruthy);
+  }, [event, expandable, referencesProvider]);
 
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      if (!processor.streaming.value) {
+      if (!activeRef.current) {
         event.emit({ type: 'submit', text });
         return true;
       }
     },
-    [processor, event],
+    [event],
   );
 
   const handleEvent = useCallback<NonNullable<ChatActionsProps['onEvent']>>(
@@ -284,51 +270,60 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
     [event],
   );
 
-  // TODO(burdon): Update context.
-  const handleUpdateReferences = useCallback<NonNullable<ChatReferencesProps['onUpdate']>>((ids) => {
-    log.info('update', { ids });
-  }, []);
-
   return (
     <div
+      role='group'
       className={mx(
-        'is-full grid grid-cols-[var(--rail-action)_1fr_min-content] grid-rows-[min-content_var(--rail-action)]',
+        'is-full flex flex-col density-fine',
+        outline && [
+          'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
+        ],
         classNames,
       )}
     >
-      <Endcap>
-        <ChatStatusIndicator error={processor.error.value} processing={processor.streaming.value} />
-      </Endcap>
+      <div role='none' className='flex gap-2'>
+        <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
-      <ChatEditor
-        ref={editorRef}
-        autoFocus
-        lineWrapping
-        classNames='col-span-2 pis-1 pbs-2'
-        placeholder={placeholder ?? t('prompt placeholder')}
-        extensions={extensions}
-        onSubmit={handleSubmit}
-      />
+        <ChatEditor
+          ref={editorRef}
+          autoFocus
+          lineWrapping
+          classNames='col-span-2 pbs-0.5'
+          placeholder={placeholder ?? t('prompt placeholder')}
+          extensions={extensions}
+          onSubmit={handleSubmit}
+        />
+      </div>
 
-      <ChatOptionsMenu
-        blueprintRegistry={processor.blueprintRegistry}
-        blueprints={blueprints}
-        onChange={handleUpdateBlueprints}
-      />
+      <div role='none' className='flex pbs-2 items-center'>
+        <ChatOptions
+          space={space}
+          blueprintRegistry={processor.blueprintRegistry}
+          context={processor.context}
+          preset={preset}
+          presets={presets}
+          onPresetChange={onPresetChange}
+        />
 
-      <ChatReferences
-        classNames='flex pis-1 items-center'
-        space={space}
-        context={processor.context}
-        onUpdate={handleUpdateReferences}
-      />
+        <div role='none' className='pli-cardSpacingChrome grow'>
+          <ChatReferences space={space} context={processor.context} />
+        </div>
 
-      <ChatActions
-        microphone={true}
-        recording={recording}
-        processing={processor.streaming.value}
-        onEvent={handleEvent}
-      />
+        <ChatActions
+          classNames='col-span-2'
+          microphone={true}
+          recording={recording}
+          processing={streaming}
+          onEvent={handleEvent}
+        >
+          {online !== undefined && (
+            <Input.Root>
+              <Input.Label srOnly>{t('online switch label')}</Input.Label>
+              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
+            </Input.Root>
+          )}
+        </ChatActions>
+      </div>
     </div>
   );
 };
@@ -336,13 +331,61 @@ const ChatPrompt = ({ classNames, placeholder, expandable }: ChatPromptProps) =>
 ChatPrompt.displayName = 'Chat.Prompt';
 
 //
+// Thread
+//
+
+type ChatThreadProps = Omit<NaturalChatThreadProps, 'identity' | 'messages' | 'tools'>;
+
+const ChatThread = (props: ChatThreadProps) => {
+  const { event, messages, processor } = useChatContext(ChatThread.displayName);
+  const identity = useIdentity();
+  const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
+
+  const scrollerRef = useRef<ChatThreadController | null>(null);
+  useEffect(() => {
+    return event.on((event) => {
+      switch (event.type) {
+        case 'submit':
+        case 'scroll-to-bottom':
+          scrollerRef.current?.scrollToBottom();
+          break;
+      }
+    });
+  }, [event]);
+
+  const handleEvent = useCallback<NonNullable<NaturalChatThreadProps['onEvent']>>(
+    (ev) => {
+      event.emit(ev);
+    },
+    [event],
+  );
+
+  if (!identity) {
+    return null;
+  }
+
+  return (
+    <NaturalChatThread
+      {...props}
+      ref={scrollerRef}
+      identity={identity}
+      messages={messages}
+      error={error}
+      onEvent={handleEvent}
+    />
+  );
+};
+
+ChatThread.displayName = 'Chat.Thread';
+
+//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
-  Thread: ChatThread,
   Prompt: ChatPrompt,
+  Thread: ChatThread,
 };
 
 export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };

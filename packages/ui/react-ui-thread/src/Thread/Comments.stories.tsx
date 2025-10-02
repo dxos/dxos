@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { Check, Trash } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, useThemeContext } from '@dxos/react-ui';
+import { Button, Icon, useThemeContext } from '@dxos/react-ui';
 import {
   type Comment,
   type CommentsOptions,
@@ -30,10 +30,11 @@ import {
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { Thread } from './Thread';
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
 import { translations } from '../translations';
+
+import { Thread } from './Thread';
 
 faker.seed(101);
 
@@ -162,7 +163,7 @@ const StoryThread: FC<{
         <span>id:{thread.id.slice(0, 4)}</span>
         <span>y:{thread.yPos}</span>
         <span className='grow' />
-        {!thread.cursor && <Trash />}
+        {!thread.cursor && <Icon icon='ph--trash--regular' />}
       </div>
 
       <Thread.Header>
@@ -187,7 +188,7 @@ const StoryThread: FC<{
         />
         <Thread.Status />
         <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
-          <Check />
+          <Icon icon='ph--check--regular' />
         </Button>
       </div>
     </Thread.Root>
@@ -232,7 +233,7 @@ type StoryProps = {
   autoCreate?: boolean;
 };
 
-const Story = ({ text, autoCreate }: StoryProps) => {
+const DefaultStory = ({ text, autoCreate }: StoryProps) => {
   const [item] = useState(createObject(live(Expando, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
@@ -349,17 +350,21 @@ const Story = ({ text, autoCreate }: StoryProps) => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Comments',
-  component: StoryThread,
+  component: StoryThread as any,
+  render: DefaultStory,
   decorators: [withTheme],
-  render: (args: StoryProps) => <Story {...args} />,
   parameters: { translations, layout: 'fullscreen' },
-};
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const str = (...lines: string[]) => lines.join('\n');
 
-export const Default = {
+export const Default: Story = {
   args: {
     text: str(
       '# Comments',

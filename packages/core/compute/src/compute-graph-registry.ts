@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { FunctionPluginDefinition } from 'hyperformula';
-import type { ConfigParams } from 'hyperformula/typings/ConfigParams';
-import type { FunctionTranslationsPackage } from 'hyperformula/typings/interpreter';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { type SpaceId, type Space } from '@dxos/client/echo';
+import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
+import { HyperFormula } from '@dxos/vendor-hyperformula';
 
-import { HyperFormula } from '#hyperformula';
 import { ComputeGraph } from './compute-graph';
 import { EdgeFunctionPlugin, EdgeFunctionPluginTranslations, type FunctionContextOptions } from './functions';
 

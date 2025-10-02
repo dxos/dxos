@@ -4,8 +4,8 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
-import React, { type FC, useEffect, useState } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -13,14 +13,16 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-c
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Tree, type TreeComponentProps } from './Tree';
-import { TreeType, Tree as TreeModel } from './types';
+import { Tree as TreeModel, TreeType } from './types';
 
 // TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
 // TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
 
 faker.seed(1);
 
-const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] }> = ({ type }) => {
+type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] };
+
+const Component = ({ type }: ComponentProps) => {
   const client = useClient();
   const space = client.spaces.default;
   const [object, setObject] = useState<TreeType>();
@@ -38,32 +40,38 @@ const Story: FC<ClientRepeatedComponentProps & { type?: TreeComponentProps<any>[
   return <Tree space={space} selected={object?.id} variant={type} />;
 };
 
-export const Tidy = {
+const DefaultStory = () => {
+  return <ClientRepeater component={Component} types={[TreeType]} createSpace />;
+};
+
+const meta = {
+  title: 'plugins/plugin-explorer/Tree',
+  component: Tree as any,
+  render: DefaultStory,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Tidy: Story = {
   args: {
     type: 'tidy',
   },
 };
 
-export const Radial = {
+export const Radial: Story = {
   args: {
     type: 'radial',
   },
 };
 
-export const Edge = {
+export const Edge: Story = {
   args: {
     type: 'edge',
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-explorer/Tree',
-  component: Tree,
-  render: () => <ClientRepeater component={Story} types={[TreeType]} createSpace />,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: {
-    layout: 'fullscreen',
-  },
-};
-
-export default meta;

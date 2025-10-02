@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -12,13 +12,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Stack } from '@dxos/react-ui-stack';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Plank, type PlankProps } from './Plank';
-import DeckStateFactory from '../../capabilities/state'; // TODO(burdon): !!!
+import { DeckStateFactory } from '../../capabilities';
 import { translations } from '../../translations';
 
-const meta: Meta<PlankProps> = {
+import { Plank } from './Plank';
+
+const meta = {
   title: 'plugins/plugin-deck/Plank',
   component: Plank,
   render: (args) => {
@@ -39,11 +40,11 @@ const meta: Meta<PlankProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof Plank>;
 
 export default meta;
 
-type Story = StoryObj<PlankProps>;
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Need to define surface provider?
 export const Default: Story = {

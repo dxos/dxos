@@ -7,8 +7,9 @@ import { describe, expect, test } from 'vitest';
 
 import { Expando, Filter, live } from '@dxos/client/echo';
 
-import { useQuery } from './useQuery';
 import { createClient, createClientContextProvider } from '../testing/util';
+
+import { useQuery } from './useQuery';
 
 describe('useQuery', () => {
   // TODO(dmaretskyi): Fix this test.

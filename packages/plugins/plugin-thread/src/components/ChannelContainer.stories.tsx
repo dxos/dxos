@@ -12,12 +12,13 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
-import { withLayout, ColumnContainer } from '@dxos/storybook-utils';
+import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
-import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
+
+import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const Story = ({ roomId }: ChannelContainerProps) => {
@@ -30,7 +31,7 @@ const Story = ({ roomId }: ChannelContainerProps) => {
   return <ChannelContainer channel={channel} roomId={roomId} />;
 };
 
-const meta: Meta<ChannelContainerProps> = {
+const meta = {
   title: 'plugins/plugin-thread/ChannelContainer',
   component: ChannelContainer,
   render: (args) => <Story {...args} />,
@@ -44,11 +45,11 @@ const meta: Meta<ChannelContainerProps> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ChannelContainer>;
 
 export default meta;
 
-type Story = StoryObj<ChannelContainerProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Client, type Config, type ClientServicesProvider, type LocalClientServices } from '@dxos/client';
+import { type Client, type ClientServicesProvider, type Config, type LocalClientServices } from '@dxos/client';
 import { type ClientServicesHost } from '@dxos/client-services';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';

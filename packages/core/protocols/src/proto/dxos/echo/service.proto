@@ -128,6 +128,17 @@ message SpaceSyncState {
      * Total number of documents on the remote peer.
      */
     int32 remote_document_count = 14;
+
+    /**
+     * Total number of documents across this peer and the remote peer.
+     */
+    int32 total_document_count = 15;
+
+    /**
+    * Total number of documents that are not synced.
+    * Includes documents that are present only locally, only on the remote peer, or whether the peers have different versions.
+    */
+    int32 unsynced_document_count = 16;
   }
 
   repeated PeerState peers = 1;

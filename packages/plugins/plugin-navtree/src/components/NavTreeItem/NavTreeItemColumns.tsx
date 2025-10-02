@@ -5,23 +5,23 @@
 import React, { Fragment, memo } from 'react';
 
 import { isAction } from '@dxos/app-graph';
-import { DensityProvider, Popover, toLocalizedString, Treegrid, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { NavTreeItemAction } from './NavTreeItemAction';
 import { useLoadDescendents } from '../../hooks';
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
-import type { NavTreeItemColumnsProps } from '../types';
+import { type NavTreeItemColumnsProps } from '../types';
+
+import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
-  const { getActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
+  const { t } = useTranslation(meta.id);
+  const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-
-  const { actions: _actions, groupedActions } = getActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, b) =>
+  const { actions: _actions, groupedActions } = useActions(item);
+  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
     a.properties?.disposition === 'list-item-primary' ? -1 : 1,
   );
 

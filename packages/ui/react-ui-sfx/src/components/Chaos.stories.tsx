@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
@@ -12,13 +12,14 @@ import React, { useEffect } from 'react';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './Chaos';
 import { useAudioStream } from '../hooks';
 import { type ShaderOptions } from '../shaders';
 
+import { Chaos, type ChaosProps, defaultShaderOptions, shaderPresets } from './Chaos';
+
 type ControlsOptions = ShaderOptions & { preset: string; audio: boolean };
 
-const DefaultStory = (args: ChaosProps) => {
+const DefaultStory = (props: ChaosProps) => {
   const [{ preset, audio, ...options }, setProps] = useControls<ControlsOptions, () => ControlsOptions, any>(
     () =>
       defaultsDeep(
@@ -59,27 +60,33 @@ const DefaultStory = (args: ChaosProps) => {
       <div className='z-[10] absolute right-2 bottom-2'>
         <Button onClick={() => console.log(JSON.stringify(options, null, 2))}>Snapshot</Button>
       </div>
-      <div className='w-[256px] h-[256px]'>
-        <Chaos {...args} options={options} getValue={getAverage} />
-      </div>
+      <Chaos {...props} options={options} getValue={getAverage} />
     </div>
   );
 };
 
-const meta: Meta<ChaosProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Chaos',
   component: Chaos,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Chaos>;
 
 export default meta;
 
-type Story = StoryObj<ChaosProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     active: true,
     debug: true,
+    classNames: 'is-[256px] bs-[256px]',
+  },
+};
+
+export const Large: Story = {
+  args: {
+    active: true,
+    classNames: 'is-[512px] bs-[512px]',
   },
 };

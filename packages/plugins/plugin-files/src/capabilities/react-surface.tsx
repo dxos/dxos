@@ -3,40 +3,39 @@
 //
 import React from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
 
-import { FileCapabilities } from './capabilities';
 import { ExportStatus, FilesSettings, LocalFileContainer } from '../components';
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FilesSettingsProps, type LocalFile } from '../types';
 import { isLocalFile } from '../util';
+
+import { FileCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${FILES_PLUGIN}/article`,
+      id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { subject: LocalFile } => isLocalFile(data.subject),
       component: ({ data }) => <LocalFileContainer file={data.subject} />,
     }),
     createSurface({
-      id: `${FILES_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<FilesSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === FILES_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => {
         const state = useCapability(FileCapabilities.State);
         return <FilesSettings settings={subject.value} state={state} />;
       },
     }),
     createSurface({
-      id: `${FILES_PLUGIN}/status`,
+      id: `${meta.id}/status`,
       role: 'status',
       filter: (data): data is any => {
-        const settings = context
-          .getCapability(Capabilities.SettingsStore)
-          .getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
+        const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
         return settings.autoExport;
       },
       component: () => {

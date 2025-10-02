@@ -6,16 +6,16 @@ import { EditorView } from '@codemirror/view';
 import { Schema } from 'effect';
 import { useMemo } from 'react';
 
-import { createResolver, LayoutAction, useIntentResolver } from '@dxos/app-framework';
+import { LayoutAction, createResolver, useIntentResolver } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Cursor, setSelection } from '@dxos/react-ui-editor';
 
-import { MARKDOWN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 /**
  * Handle scrolling and selection of the current thread in a markdown editor.
  */
-export const useSelectCurrentThread = (editorView: EditorView | undefined, documentId: string) => {
+export const useSelectCurrentThread = (editorView: EditorView | null, documentId: string) => {
   const scrollIntoViewResolver = useMemo(
     () =>
       createResolver({
@@ -52,5 +52,5 @@ export const useSelectCurrentThread = (editorView: EditorView | undefined, docum
     [documentId, editorView],
   );
 
-  useIntentResolver(MARKDOWN_PLUGIN, scrollIntoViewResolver);
+  useIntentResolver(meta.id, scrollIntoViewResolver);
 };

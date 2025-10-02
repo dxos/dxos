@@ -3,7 +3,7 @@
 //
 
 import { transact } from '@tldraw/state';
-import { createTLStore, defaultShapeUtils, type TLRecord } from '@tldraw/tldraw';
+import { type TLRecord, createTLStore, defaultShapeUtils } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
 import { type Context } from '@dxos/context';

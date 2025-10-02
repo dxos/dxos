@@ -4,12 +4,13 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Order, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 
-import { QueryPlanner } from './query-planner';
 import { TestSchema } from '../testing';
+
+import { QueryPlanner } from './query-planner';
 
 describe('QueryPlanner', () => {
   const planner = new QueryPlanner();
@@ -37,6 +38,53 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
+        ],
+      }
+    `);
+  });
+
+  test('get all people ordered by name', () => {
+    const query = Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc'));
+
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    expect(plan).toMatchInlineSnapshot(`
+      {
+        "steps": [
+          {
+            "_tag": "SelectStep",
+            "selector": {
+              "_tag": "TypeSelector",
+              "inverted": false,
+              "typename": [
+                "dxn:type:dxos.org/type/Person:0.1.0",
+              ],
+            },
+            "spaces": [
+              "B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO",
+            ],
+          },
+          {
+            "_tag": "FilterDeletedStep",
+            "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "direction": "asc",
+                "kind": "property",
+                "property": "name",
+              },
+            ],
           },
         ],
       }
@@ -81,6 +129,14 @@ describe('QueryPlanner', () => {
               "type": "object",
               "typename": null,
             },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -158,6 +214,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -217,6 +281,14 @@ describe('QueryPlanner', () => {
               "type": "object",
               "typename": "dxn:type:dxos.org/type/Task:0.1.0",
             },
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -316,6 +388,14 @@ describe('QueryPlanner', () => {
               "typename": "dxn:type:dxos.org/type/Task:0.1.0",
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -375,6 +455,14 @@ describe('QueryPlanner', () => {
                     "mode": "only-non-deleted",
                   },
                 ],
+              },
+            ],
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
               },
             ],
           },
@@ -487,6 +575,14 @@ describe('QueryPlanner', () => {
               ],
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -543,6 +639,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -579,6 +683,14 @@ describe('QueryPlanner', () => {
               "typename": "dxn:type:dxos.org/type/Person:0.1.0",
             },
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -605,6 +717,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -635,6 +755,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }
@@ -676,6 +804,14 @@ describe('QueryPlanner', () => {
             "_tag": "FilterDeletedStep",
             "mode": "only-non-deleted",
           },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
+          },
         ],
       }
     `);
@@ -704,6 +840,14 @@ describe('QueryPlanner', () => {
           {
             "_tag": "FilterDeletedStep",
             "mode": "only-deleted",
+          },
+          {
+            "_tag": "OrderStep",
+            "order": [
+              {
+                "kind": "natural",
+              },
+            ],
           },
         ],
       }

@@ -6,11 +6,12 @@ import { Schema } from 'effect';
 
 import { DataType } from '@dxos/schema';
 
+import { meta } from '../meta';
+
 import { JournalType, OutlineType } from './schema';
-import { OUTLINER_PLUGIN } from '../meta';
 
 export namespace OutlinerAction {
-  const OUTLINER_ACTION = `${OUTLINER_PLUGIN}/action`;
+  const OUTLINER_ACTION = `${meta.id}/action`;
 
   export class CreateJournal extends Schema.TaggedClass<CreateJournal>()(`${OUTLINER_ACTION}/create-journal`, {
     input: Schema.Struct({

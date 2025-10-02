@@ -5,23 +5,23 @@
 import { Effect, type Schema } from 'effect';
 import React, { useCallback, useRef } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
 import { useInputSurfaceLookup } from '../../hooks';
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
-export const CREATE_SPACE_DIALOG = `${SPACE_PLUGIN}/CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${meta.id}/CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatch } = useIntentDispatcher();
 
   const inputSurfaceLookup = useInputSurfaceLookup();

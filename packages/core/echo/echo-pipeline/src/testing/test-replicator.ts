@@ -163,6 +163,10 @@ export class TestReplicatorConnection implements ReplicatorConnection {
     public readonly writable: WritableStream<AutomergeProtocolMessage>,
   ) {}
 
+  get bundleSyncEnabled(): boolean {
+    return false;
+  }
+
   async shouldAdvertise(params: ShouldAdvertiseParams): Promise<boolean> {
     return true;
   }

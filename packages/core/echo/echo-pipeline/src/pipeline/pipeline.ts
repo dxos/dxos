@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, sleepWithContext, synchronized, Trigger } from '@dxos/async';
+import { Event, Trigger, sleepWithContext, synchronized } from '@dxos/async';
 import { Context, rejectOnDispose } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { FeedSetIterator, type FeedWrapper, type FeedWriter } from '@dxos/feed-store';
@@ -14,9 +14,10 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexMap } from '@dxos/util';
 
-import { createMessageSelector } from './message-selector';
-import { mapFeedIndexesToTimeframe, startAfter, TimeframeClock } from './timeframe-clock';
 import { createMappedFeedWriter } from '../common';
+
+import { createMessageSelector } from './message-selector';
+import { TimeframeClock, mapFeedIndexesToTimeframe, startAfter } from './timeframe-clock';
 
 export type WaitUntilReachedTargetParams = {
   /**
@@ -40,8 +41,10 @@ export class PipelineState {
    */
   _ctx = new Context();
 
-  // TODO(dmaretskyi): Remove?.
-  public readonly timeframeUpdate = this._timeframeClock.update;
+  // TODO(dmaretskyi): Remove?. Avoid accessing `_timeframeClock` before constructor initialization.
+  public get timeframeUpdate() {
+    return this._timeframeClock.update;
+  }
 
   public readonly stalled = new Event();
 

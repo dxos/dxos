@@ -9,10 +9,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withMultiClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Main } from './Main';
 import { Item } from '../data';
 
-const meta: Meta<typeof Main> = {
+import { Main } from './Main';
+
+const meta = {
   title: 'apps/testbench-app/Main',
   component: Main,
   decorators: [
@@ -28,7 +29,7 @@ const meta: Meta<typeof Main> = {
     }),
     withTheme,
   ],
-};
+} satisfies Meta<typeof Main>;
 
 export default meta;
 

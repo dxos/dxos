@@ -8,8 +8,9 @@ import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { SpaceStateMachine } from './space-state-machine';
 import { createCredential, verifyCredential } from '../credentials';
+
+import { SpaceStateMachine } from './space-state-machine';
 
 describe('SpaceStateMachine', () => {
   test('basic space creation', async () => {

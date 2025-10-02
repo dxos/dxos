@@ -6,8 +6,9 @@ import type { Space } from '@dxos/client-protocol';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 
-import { Testing } from './types';
 import { DataType } from '../common';
+
+import { Testing } from './types';
 
 faker.seed(1);
 
@@ -64,7 +65,7 @@ const createTranscriptMessage = (sender: DataType.Person, blocks: string[]) => {
     blocks: blocks.map(
       (block) =>
         ({
-          type: 'transcription',
+          _tag: 'transcript',
           // don't care about timestamps
           started: getDate(0),
           text: block,
@@ -266,7 +267,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Hi Alex, I've reviewed the Q3 financial reports and would like to schedule a meeting to discuss some concerns about the marketing budget allocation. Are you available tomorrow afternoon?",
         },
       ],
@@ -278,7 +279,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Alex, the board is impressed with the latest product metrics. We'd like to discuss expansion plans in our next meeting. Please prepare a presentation on potential market opportunities in Asia.",
         },
       ],
@@ -290,7 +291,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "The engineering team has completed the beta version of our new feature. We're ready for internal testing before the public release next month. I've attached the testing protocol document for your review.",
         },
       ],
@@ -302,7 +303,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: '🚨 URGENT: Your Bitcoin wallet requires immediate verification to prevent account suspension. Click here to verify your credentials and receive a bonus 0.5 BTC for your cooperation.',
         },
       ],
@@ -314,7 +315,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Following up on our conversation at the industry conference last week. I believe there's potential for a strategic partnership between our companies. Would you be interested in scheduling a call to discuss collaboration opportunities?",
         },
       ],
@@ -326,7 +327,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "The HR department has processed the new hire paperwork for the three senior developers. They're scheduled to start next Monday. I'll need your final approval on their equipment budget by EOD tomorrow.",
         },
       ],
@@ -338,7 +339,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Our team has identified a critical security vulnerability in our payment processing system. We've implemented a temporary fix, but we need to discuss a more permanent solution and potential disclosure to affected customers.",
         },
       ],
@@ -350,7 +351,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "I've reviewed the proposed acquisition target and have some concerns about their IP portfolio. Before we proceed further, I recommend a more thorough due diligence process. Let's discuss this in our next meeting.",
         },
       ],
@@ -362,7 +363,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: 'The quarterly tax filings are due next week. I need your signature on several documents before Thursday. Can we schedule a brief meeting tomorrow to go through them?',
         },
       ],
@@ -374,7 +375,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "We've received an offer to speak at the International Tech Summit in Singapore next month. This would be an excellent opportunity to announce our expansion plans. Please let me know if you're interested in attending.",
         },
       ],
@@ -386,7 +387,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: 'ATTENTION: Company-wide policy update requires immediate action. Please download and install the attached software to update your security credentials. This is mandatory for all executives.',
         },
       ],
@@ -398,7 +399,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "The customer satisfaction survey results for Q2 are now available. Overall sentiment has improved by 15% since our UI redesign. I've prepared a detailed report for the executive meeting next week.",
         },
       ],
@@ -410,7 +411,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "I've scheduled the annual company retreat for the first weekend of October. Please confirm your attendance and any dietary restrictions. We'll be discussing the strategic roadmap for the next fiscal year.",
         },
       ],
@@ -422,7 +423,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Our main competitor just announced a significant price reduction for their enterprise plan. We need to discuss our response strategy. I've prepared some initial thoughts for your consideration.",
         },
       ],
@@ -434,7 +435,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "The legal team has completed the review of the new privacy policy. We're ready to implement the changes ahead of the regulatory deadline. Please review the final draft attached to this email.",
         },
       ],
@@ -446,7 +447,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "I'm pleased to inform you that our Series C funding round is oversubscribed. We have multiple VCs competing for allocation. Let's schedule a call to discuss the final investor selection and terms.",
         },
       ],
@@ -458,7 +459,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "The product team has finalized the roadmap for the next 18 months. I'd like to present it to you before sharing it with the broader organization. Are you available for a review session this week?",
         },
       ],
@@ -470,7 +471,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "We've received an acquisition offer from TechGiant Corp. The initial offer is $450M. I've scheduled an emergency board meeting for tomorrow at 3 PM to discuss this unexpected development.",
         },
       ],
@@ -482,7 +483,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: 'The annual audit is scheduled to begin next month. Please ensure all departments have their documentation prepared according to the checklist I sent last week. Let me know if you have any questions.',
         },
       ],
@@ -494,7 +495,7 @@ export const createTestData = () => {
     Obj.make(DataType.Message, {
       blocks: [
         {
-          type: 'text',
+          _tag: 'text',
           text: "Hello, nice to meet you! I'm looking forward to our partnership discussion next week. I've prepared some initial thoughts on how our companies can collaborate effectively.",
         },
       ],

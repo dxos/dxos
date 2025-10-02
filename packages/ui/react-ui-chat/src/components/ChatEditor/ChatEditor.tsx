@@ -3,12 +3,16 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
+import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type AutocompleteOptions,
   type BasicExtensionsOptions,
   type UseTextEditorProps,
+  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   useTextEditor,
@@ -16,13 +20,11 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { autocomplete, type AutocompleteOptions } from './autocomplete';
-import { references as referencesExtension, type ReferencesOptions } from './references';
-
-// TODO(burdon): Handle object references.
+import { type ReferencesOptions, references as referencesExtension } from './references';
 
 export interface ChatEditorController {
   focus(): void;
+  getText(): string;
   setText(text: string): void;
 }
 
@@ -31,7 +33,7 @@ export type ChatEditorProps = ThemedClassName<
     extensions?: Extension;
     references?: ReferencesOptions;
   } & AutocompleteOptions &
-    Pick<UseTextEditorProps, 'autoFocus'> &
+    Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>
 >;
 
@@ -41,8 +43,10 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
+    const { findNextFocusable, findPrevFocusable } = useFocusFinders();
+
     const { parentRef, view } = useTextEditor(
-      {
+      () => ({
         debug: true,
         autoFocus,
         extensions: [
@@ -54,37 +58,54 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             lineWrapping,
             placeholder,
           }),
+          // TODO(thure): Surely this should not be unique to ChatEditor, iirc we have several instances of CM where Tab
+          //  should move focus.
+          keymap.of([
+            {
+              key: 'Tab',
+              preventDefault: true,
+              run: (view) => {
+                findNextFocusable(view.dom)?.focus();
+                return true;
+              },
+            },
+            {
+              key: 'Shift-Tab',
+              preventDefault: true,
+              run: (view) => {
+                findPrevFocusable(view.dom)?.focus();
+                return true;
+              },
+            },
+          ]),
           extensions,
         ].filter(isNonNullable),
-      },
-      [themeMode, extensions, onSubmit, onSuggest],
+      }),
+      [themeMode, extensions, onSubmit, onSuggest, onCancel],
     );
 
     // Expose editor view.
-    useImperativeHandle(
-      forwardRef,
-      () => {
-        return {
-          focus: () => {
-            view?.focus();
-          },
-          setText: (text: string) => {
-            view?.dispatch({
-              changes: {
-                from: 0,
-                to: view.state.doc.length,
-                insert: text,
-              },
-              selection: {
-                anchor: text.length,
-                head: text.length,
-              },
-            });
-          },
-        };
-      },
-      [view, onSubmit],
-    );
+    useImperativeHandle(forwardRef, () => {
+      return {
+        focus: () => {
+          view?.focus();
+        },
+        getText: () => view?.state.doc.toString() ?? '',
+        setText: (text: string) => {
+          view?.dispatch({
+            changes: {
+              from: 0,
+              to: view.state.doc.length,
+              insert: text,
+            },
+            selection: {
+              anchor: text.length,
+              head: text.length,
+            },
+          });
+        },
+      };
+    }, [view, onSubmit]);
 
     return <div ref={parentRef} className={mx('is-full', classNames)} />;
   },

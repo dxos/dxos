@@ -5,17 +5,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { FormatEnum, FormatEnums, formatToType, type EchoSchema } from '@dxos/echo-schema';
+import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {
+  type FieldType,
+  type ProjectionModel,
+  type PropertyType,
+  type SchemaProperty,
   getFormatSchema,
   getSchemaProperties,
   sortProperties,
-  type FieldType,
-  type PropertyType,
-  type ProjectionModel,
-  type SchemaProperty,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
@@ -27,18 +27,26 @@ export type FieldEditorProps = {
   registry?: SchemaRegistry;
   onSave: () => void;
   onCancel?: () => void;
-} & Pick<FormProps<any>, 'outerSpacing'>;
+} & Pick<FormProps<any>, 'outerSpacing' | 'readonly'>;
 
 /**
  * Displays a Form representing the metadata for a given `Field` and `View`.
  */
-export const FieldEditor = ({ projection, field, registry, onSave, onCancel, outerSpacing }: FieldEditorProps) => {
+export const FieldEditor = ({
+  readonly,
+  projection,
+  field,
+  registry,
+  onSave,
+  onCancel,
+  outerSpacing,
+}: FieldEditorProps) => {
   const { t } = useTranslation(translationKey);
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
   const [schemas, setSchemas] = useState<EchoSchema[]>([]);
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!registry) {
       return;
     }
@@ -46,14 +54,10 @@ export const FieldEditor = ({ projection, field, registry, onSave, onCancel, out
     const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
-    const t = setTimeout(async () => {
-      const schemas = await registry.query().run();
-      setSchemas(schemas);
-    });
-    return () => {
-      clearTimeout(t);
-      subscription?.();
-    };
+    const schemas = await registry.query().run();
+    setSchemas(schemas);
+
+    return () => subscription?.();
   }, [registry]);
 
   const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();
@@ -178,6 +182,7 @@ export const FieldEditor = ({ projection, field, registry, onSave, onCancel, out
     <Form<PropertyType>
       key={field.id}
       autoFocus
+      readonly={readonly}
       values={props}
       schema={fieldSchema}
       filter={propIsNotType}

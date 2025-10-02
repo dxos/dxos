@@ -11,9 +11,10 @@ import { log } from '@dxos/log';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
 import { useClient } from '@dxos/react-client';
 
+import { PanelContainer } from '../../../components';
+
 import { AgentStat } from './AgentStat';
 import { DashboardProxy } from './dashboard-proxy';
-import { PanelContainer } from '../../../components';
 
 const RETRY_IN_IF_FAILURE = 1000; // [ms]
 

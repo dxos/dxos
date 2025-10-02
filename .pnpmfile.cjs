@@ -65,13 +65,15 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'eslint-config-semistandard': {
-      packageJson.peerDependencies['eslint-plugin-n'] = '^16.1.0';
+    case 'eslint-plugin-unused-imports': {
+      packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^6.5.0';
       break;
     }
 
-    case 'eslint-plugin-unused-imports': {
-      packageJson.peerDependencies['@typescript-eslint/eslint-plugin'] = '^6.5.0';
+    case 'eslint-plugin-storybook':
+    case 'eslint-plugin-prefer-arrow-functions': {
+      packageJson.dependencies['@typescript-eslint/types'] = '8.39.0';
+      packageJson.dependencies['@typescript-eslint/utils'] = '8.39.0';
       break;
     }
 
@@ -88,47 +90,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '0.25.6';
-      break;
-    }
-
-    case 'ink':
-    case 'ink-select-input':
-    case 'ink-syntax-highlight':
-    case 'ink-text-input':
-    case 'react-reconciler': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @dxos/presenter
-    case '@react-pdf/renderer': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @storybook/react transitive dep
-    case 'react-element-to-jsx-string': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      packageJson.peerDependencies['react-dom'] = '^18.0.0';
-      break;
-    }
-
-    // @storybook/addon-essentials transitive deps
-    case 'react-inspector':
-    case '@mdx-js/react':
-    // https://github.com/FezVrasta/react-resize-aware/issues/59
-    case 'react-resize-aware': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @dxos/devtools
-    case 'react-vis':
-    case 'react-motion': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      packageJson.peerDependencies['react-dom'] = '^18.0.0';
+    case 'detective-typescript': {
+      packageJson.dependencies['@typescript-eslint/typescript-estree'] = '8.39.0';
       break;
     }
 
@@ -137,9 +100,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    // @dxos/devtools-extension
-    case '@crxjs/vite-plugin': {
-      packageJson.peerDependencies['vite'] = '^5.0.0';
+    case 'vite-plugin-glslify': {
+      packageJson.peerDependencies['vite'] = '^7.0.0';
       break;
     }
 
@@ -166,11 +128,6 @@ function readPackage(packageJson, context) {
     // @dxos/apidoc doesn't work with the latest version of typedoc (yet).
     case 'typedoc': {
       packageJson.peerDependencies['typescript'] = '^5.0.0';
-      break;
-    }
-
-    case 'vite-plugin-fonts': {
-      packageJson.peerDependencies['vite'] = '^5.0.0';
       break;
     }
 

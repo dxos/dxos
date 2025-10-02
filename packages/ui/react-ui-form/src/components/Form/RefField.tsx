@@ -3,38 +3,50 @@
 //
 
 import { type SchemaAST } from 'effect';
-import React, { useCallback, useMemo, type FocusEvent } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import {
   Expando,
-  getTypeAnnotation,
   Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
+  type TypeAnnotation,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { DxRefTag } from '@dxos/lit-ui/react';
-import { Input, useTranslation } from '@dxos/react-ui';
-import { TagPicker, type TagPickerMode, type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { type DxTagPickerItemClick } from '@dxos/lit-ui';
+import { DxAnchor } from '@dxos/lit-ui/react';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { TagPickerItem } from '@dxos/react-ui-tag-picker';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
+import { type MaybePromise, isNonNullable } from '@dxos/util';
 
-import { TextInput } from './Defaults';
-import { InputHeader, type InputProps } from './Input';
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 import { translationKey } from '../../translations';
 
-type RefFieldProps = InputProps & {
+import { TextInput } from './Defaults';
+import { InputHeader, type InputProps } from './Input';
+
+export type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
   onQueryRefOptions?: QueryRefOptions;
+  createOptionLabel?: [string, { ns: string }];
+  createOptionIcon?: string;
+  onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
+};
+
+// TODO(thure): Is this a standard that should be better canonized?
+const isRefSnapShot = (val: any): val is { '/': string } => {
+  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
 export const RefField = ({
   type,
   label,
-  disabled,
+  readonly,
   placeholder,
   inputOnly,
   array,
@@ -42,6 +54,9 @@ export const RefField = ({
   getValue,
   onBlur,
   onQueryRefOptions,
+  createOptionLabel,
+  createOptionIcon,
+  onCreateFromQuery,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
@@ -56,17 +71,18 @@ export const RefField = ({
     // If ref type is expando, fall back to taking a DXN in string format.
     return (
       <RefFieldFallback
-        {...{ type, label, placeholder, disabled, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
+        {...{ type, label, placeholder, readonly, inputOnly, getValue, onBlur, onValueChange, ...restInputProps }}
       />
     );
   }
 
-  const handleGetValue = useCallback((): TagPickerItemData[] => {
+  const handleGetValue = useCallback(() => {
     const formValue = getValue();
 
     const unknownToRefOption = (val: unknown) => {
-      if (Ref.isRef(val)) {
-        const dxnString = val.dxn.toString();
+      const isRef = Ref.isRef(val);
+      if (isRef || isRefSnapShot(val)) {
+        const dxnString = isRef ? val.dxn.toString() : val['/'];
         const matchingOption = availableOptions.find((option) => option.id === dxnString);
         if (matchingOption) {
           return matchingOption;
@@ -86,15 +102,6 @@ export const RefField = ({
 
     return [];
   }, [getValue, availableOptions, array]);
-
-  const handleSearch = useCallback(
-    (text: string, ids: string[]): TagPickerItemData[] =>
-      availableOptions
-        .filter((option) => !ids.includes(option.id))
-        .filter((option) => option.label.toLowerCase().includes(text.toLowerCase()))
-        .map((option) => ({ id: option.id, label: option.label, hue: option.hue as any })),
-    [availableOptions],
-  );
 
   const handleUpdate = useCallback(
     (ids: string[]) => {
@@ -123,8 +130,6 @@ export const RefField = ({
     [availableOptions, array, onValueChange],
   );
 
-  const tagPickerMode: TagPickerMode = useMemo(() => (array ? 'multi-select' : 'single-select'), [array]);
-
   if (!refTypeInfo) {
     return null;
   }
@@ -132,32 +137,113 @@ export const RefField = ({
   const { status, error } = restInputProps.getStatus();
 
   const items = handleGetValue();
+  const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
+  const labelById = useMemo(
+    () =>
+      availableOptions.reduce((acc: Record<string, string>, option) => {
+        acc[option.id.toLowerCase()] = option.label.toLowerCase();
+        return acc;
+      }, {}),
+    [availableOptions],
+  );
+  const [query, setQuery] = useState('');
+  const toggleSelect = useCallback(
+    (id: string) => {
+      if (array) {
+        const nextIds = selectedIds.includes(id) ? selectedIds.filter((x) => x !== id) : [...selectedIds, id];
+        handleUpdate(nextIds);
+      } else {
+        if (selectedIds[0] === id) {
+          handleUpdate([]);
+        } else {
+          handleUpdate([id]);
+        }
+      }
+    },
+    [array, selectedIds, handleUpdate],
+  );
 
   // NOTE(thure): I left both predicates in-place in case we decide to add variants which do render readonly but empty values.
-  return disabled && items.length < 1 ? null : (
+  return readonly && items.length < 1 ? null : (
     <Input.Root validationValence={status}>
       {!inputOnly && <InputHeader error={error} label={label} />}
       <div data-no-submit>
-        {disabled ? (
+        {readonly ? (
           items.length < 1 ? (
             <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             items.map((item) => (
-              <DxRefTag key={item.id} refid={item.id} rootclassname='mie-1' style={{ marginInlineEnd: '.25rem' }}>
+              <DxAnchor key={item.id} refid={item.id} rootclassname='mie-1'>
                 {item.label}
-              </DxRefTag>
+              </DxAnchor>
             ))
           )
         ) : (
-          <TagPicker
-            readonly={disabled}
-            items={items}
-            mode={tagPickerMode}
-            onBlur={(event) => onBlur(event as unknown as FocusEvent<HTMLElement>)}
-            onUpdate={handleUpdate}
-            onSearch={handleSearch}
-            classNames='bg-inputSurface p-1.5 rounded-sm'
-          />
+          <PopoverCombobox.Root>
+            <PopoverCombobox.Trigger asChild>
+              <Button variant='ghost' classNames='is-full text-start gap-2'>
+                <div role='none' className='grow'>
+                  {items?.length ? (
+                    items?.map((item) => (
+                      <TagPickerItem
+                        key={item.id}
+                        itemId={item.id}
+                        label={item.label}
+                        {...(item.hue ? { hue: item.hue } : {})}
+                        removeLabel={t('remove item label')}
+                        onItemClick={(event: DxTagPickerItemClick) => {
+                          if (event.action === 'remove') {
+                            toggleSelect(item.id);
+                          }
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <span className='text-description'>
+                      {placeholder ?? t('ref field placeholder', { count: array ? 99 : 1 })}
+                    </span>
+                  )}
+                </div>
+                <Icon size={3} icon='ph--caret-down--bold' />
+              </Button>
+            </PopoverCombobox.Trigger>
+            <PopoverCombobox.Content
+              filter={(value, search) =>
+                value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0
+              }
+            >
+              <PopoverCombobox.Input
+                placeholder={'Search...'}
+                value={query}
+                onValueChange={(v) => setQuery(v)}
+                autoFocus
+              />
+              <PopoverCombobox.List>
+                {availableOptions.map((option) => (
+                  <PopoverCombobox.Item
+                    key={option.id}
+                    value={option.id}
+                    onSelect={() => toggleSelect(option.id)}
+                    classNames='flex items-center gap-2'
+                  >
+                    <span className='grow'>{option.label}</span>
+                    {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
+                  </PopoverCombobox.Item>
+                ))}
+                {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
+                  <PopoverCombobox.Item
+                    value='__create__'
+                    onSelect={() => onCreateFromQuery?.(refTypeInfo, query)}
+                    classNames='flex items-center gap-2'
+                  >
+                    <Icon icon={createOptionIcon} />
+                    {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
+                  </PopoverCombobox.Item>
+                )}
+              </PopoverCombobox.List>
+              <PopoverCombobox.Arrow />
+            </PopoverCombobox.Content>
+          </PopoverCombobox.Root>
         )}
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}
@@ -168,7 +254,7 @@ export const RefField = ({
 const RefFieldFallback = ({
   type,
   label,
-  disabled,
+  readonly,
   placeholder,
   inputOnly,
   getValue,
@@ -202,7 +288,7 @@ const RefFieldFallback = ({
     <TextInput
       type={type}
       label={label}
-      disabled={disabled}
+      readonly={readonly}
       placeholder={placeholder}
       inputOnly={inputOnly}
       getValue={handleGetValue as <V>() => V | undefined}

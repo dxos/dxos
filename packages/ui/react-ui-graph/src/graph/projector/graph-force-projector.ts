@@ -17,9 +17,10 @@ import {
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
+
 import { forcePoint } from './graph-forces';
 import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
 
 /**
  * Return value or invoke function.
@@ -50,7 +51,7 @@ const maybeForce = <Config>(
   cb: (config: Config) => Force<any, any>,
   defaultValue = undefined,
 ) => {
-  const value = typeof options === 'boolean' ? (options ? {} : undefined) : options ?? defaultValue;
+  const value = typeof options === 'boolean' ? (options ? {} : undefined) : (options ?? defaultValue);
   if (value) {
     return cb(value);
   }

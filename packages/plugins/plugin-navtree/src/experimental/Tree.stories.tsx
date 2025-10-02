@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import { House, List, Planet, PlusCircle, Sailboat } from '@phosphor-icons/react';
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { Icon, IconButton } from '@dxos/react-ui';
 import { modalSurface, mx } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -48,7 +48,7 @@ const data: TreeNodeData[] = [
         id: faker.string.uuid(),
         title: 'plugins/Personal Space',
         color: 'text-green-400',
-        Icon: House,
+        iconName: 'ph--house--regular',
         children: [
           {
             id: faker.string.uuid(),
@@ -83,7 +83,7 @@ const data: TreeNodeData[] = [
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: Planet,
+        iconName: 'ph--planet--regular',
         children: [
           {
             id: faker.string.uuid(),
@@ -94,12 +94,12 @@ const data: TreeNodeData[] = [
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: Sailboat,
+        iconName: 'ph--sailboat--regular',
       },
       {
         id: faker.string.uuid(),
         title: faker.commerce.productName(),
-        Icon: Planet,
+        iconName: 'ph--planet--regular',
       },
     ],
   },
@@ -181,7 +181,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
     setItems((items) => {
       items[0].children?.push({
         id: faker.string.uuid(),
-        Icon: Planet,
+        iconName: 'ph--planet--regular',
         title: faker.commerce.productName(),
       });
 
@@ -213,20 +213,22 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       </div>
 
       <div className='flex items-center my-2 px-2 gap-2'>
-        <PlusCircle onClick={handleCreateSpace} />
+        <IconButton icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
         <span className='grow text-sm' onClick={handleCreateSpace}>
           New space
         </span>
-        <List />
+        <Icon icon='ph--list--regular' />
       </div>
     </div>
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
-};
+} satisfies Meta<typeof Tree>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

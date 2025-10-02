@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, CaretUp } from '@phosphor-icons/react';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
@@ -36,14 +35,13 @@ type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValue
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonProps>(
   ({ children, placeholder, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
           <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
-            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
+            <Icon size={3} icon='ph--caret-down--bold' />
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>
@@ -61,6 +59,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
     return (
       <SelectPrimitive.Content
         {...props}
+        data-arrow-keys='up down'
         collisionPadding={safeCollisionPadding}
         className={tx('select.content', 'select__content', { elevation }, classNames)}
         position='popper'
@@ -83,7 +82,7 @@ const SelectScrollUpButton = forwardRef<HTMLDivElement, SelectScrollUpButtonProp
         className={tx('select.scrollButton', 'select__scroll-button--up', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretUp weight='bold' />}
+        {children ?? <Icon size={3} icon='ph--caret-up--bold' />}
       </SelectPrimitive.SelectScrollUpButton>
     );
   },
@@ -100,7 +99,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
         className={tx('select.scrollButton', 'select__scroll-button--down', {}, classNames)}
         ref={forwardedRef}
       >
-        {children ?? <CaretDown weight='bold' />}
+        {children ?? <Icon size={3} icon='ph--caret-down--bold' />}
       </SelectPrimitive.SelectScrollDownButton>
     );
   },
@@ -153,6 +152,7 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
 
 type SelectOptionProps = SelectItemProps;
 
+// TODO(burdon): Option to show icon on left/right.
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (

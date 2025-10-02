@@ -10,10 +10,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/react-ui-theme';
 
+import { useComputeNodeState } from '../hooks';
+
 import { createFunctionAnchors } from './common';
 import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, createShape, type CreateShapeProps } from './defs';
-import { useComputeNodeState } from '../hooks';
+import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
 export const QueueShape = Schema.extend(
   ComputeShape,

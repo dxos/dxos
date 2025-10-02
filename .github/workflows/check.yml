@@ -14,12 +14,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      # TODO(wittjosiah): Requires sudo access.
-      # debug_enabled:
-      #   type: boolean
-      #   description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
-      #   required: false
-      #   default: false
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
       e2e:
         type: boolean
@@ -47,6 +46,12 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
     steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -94,13 +99,14 @@ jobs:
       NODE_VERSION: ${{ matrix.node-version }}
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
-      MOON_CONCURRENCY: 6
+      # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
+      MOON_CONCURRENCY: 4
     steps:
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
-      #   with:
-      #     detached: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -115,13 +121,16 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Install Playwright
+        run: pnpm run install-playwright
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected --remote
+        run: moon run :test --affected --remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :test
+        run: moon run :test -- --no-file-parallelism
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -166,11 +175,11 @@ jobs:
       DX_PWA: false
       NODE_OPTIONS: --max-old-space-size=12288
     steps:
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-      #   with:
-      #     detached: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
 
       - name: Checkout
         uses: actions/checkout@v4

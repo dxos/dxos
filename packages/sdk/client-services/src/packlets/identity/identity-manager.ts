@@ -5,7 +5,7 @@ import platform from 'platform';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { createCredentialSignerWithKey, createDidFromIdentityKey, CredentialGenerator } from '@dxos/credentials';
+import { CredentialGenerator, createCredentialSignerWithKey, createDidFromIdentityKey } from '@dxos/credentials';
 import { type MetadataStore, type SpaceManager, type SwarmIdentity } from '@dxos/echo-pipeline';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type FeedStore } from '@dxos/feed-store';
@@ -20,15 +20,15 @@ import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type IdentityRecord, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
   AdmittedFeed,
+  type Credential,
   type DeviceProfileDocument,
   DeviceType,
   type ProfileDocument,
-  type Credential,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace as Trace } from '@dxos/tracing';
-import { isNode, deferFunction } from '@dxos/util';
+import { deferFunction, isNode } from '@dxos/util';
 
 import { createAuthProvider } from './authenticator';
 import { Identity } from './identity';

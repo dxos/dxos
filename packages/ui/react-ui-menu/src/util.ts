@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ACTION_GROUP_TYPE, ACTION_TYPE, actionGroupSymbol, type ActionLike } from '@dxos/app-graph';
+import { ACTION_GROUP_TYPE, ACTION_TYPE, type ActionLike, actionGroupSymbol } from '@dxos/app-graph';
 import { getHostPlatform } from '@dxos/util';
 
 import {

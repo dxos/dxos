@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { IntentPlugin, Capabilities, useCapabilities, SettingsPlugin } from '@dxos/app-framework';
+import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities } from '@dxos/artifact-testing';
+import { capabilities } from '@dxos/assistant-testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
@@ -17,33 +17,27 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Toolbox, type ToolboxProps } from './Toolbox';
 import { translations } from '../../translations';
 
+import { Toolbox, type ToolboxProps } from './Toolbox';
+
 const DefaultStory = (props: ToolboxProps) => {
-  const artifactDefinitions = useCapabilities(Capabilities.ArtifactDefinition);
-  return (
-    <Toolbox
-      {...props}
-      artifacts={artifactDefinitions}
-      classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1'
-    />
-  );
+  return <Toolbox {...props} classNames='w-[30rem] h-[15rem] rounded-sm border border-separator py-1' />;
 };
 
-const meta: Meta<typeof Toolbox> = {
+const meta = {
   title: 'plugins/plugin-assistant/Toolbox',
-  component: Toolbox,
+  component: Toolbox as any,
   render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
         ChessPlugin(),
@@ -59,10 +53,10 @@ const meta: Meta<typeof Toolbox> = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = Meta<typeof Toolbox>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

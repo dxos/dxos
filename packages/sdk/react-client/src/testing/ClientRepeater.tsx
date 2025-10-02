@@ -2,16 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useState, type FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { type TypedObject } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
+import { useAsyncEffect } from '@dxos/react-hooks';
+
+import { ClientProvider } from '../client';
 
 import { type WithClientProviderProps } from './withClientProvider';
-import { ClientProvider } from '../client';
 
 export type ClientRepeatedComponentProps = { id: number; count: number; spaceKey?: PublicKey };
 
@@ -56,31 +58,25 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
   const [spaceKey, setSpaceKey] = useState<PublicKey>();
 
   const testBuilder = useRef(new TestBuilder());
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map(
-        (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
-      );
+  useAsyncEffect(async () => {
+    const clients = [...Array(count)].map(
+      (_) => new Client({ services: testBuilder.current.createLocalClientServices(), types }),
+    );
 
-      await Promise.all(clients.map((client) => client.initialize()));
-      if (createIdentity || createSpace) {
-        await Promise.all(clients.map((client) => client.halo.createIdentity()));
-      }
+    await Promise.all(clients.map((client) => client.initialize()));
+    if (createIdentity || createSpace) {
+      await Promise.all(clients.map((client) => client.halo.createIdentity()));
+    }
 
-      if (createSpace) {
-        const client = clients[0];
-        const space = await client.spaces.create({ name: faker.commerce.productName() });
-        setSpaceKey(space.key);
-        await onSpaceCreated?.({ client, space }, {});
-        await Promise.all(
-          clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })),
-        );
-      }
+    if (createSpace) {
+      const client = clients[0];
+      const space = await client.spaces.create({ name: faker.commerce.productName() });
+      setSpaceKey(space.key);
+      await onSpaceCreated?.({ client, space }, {});
+      await Promise.all(clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })));
+    }
 
-      setClients(clients);
-    });
-
-    return () => clearTimeout(timeout);
+    setClients(clients);
   }, []);
 
   if (clients.length === 0) {

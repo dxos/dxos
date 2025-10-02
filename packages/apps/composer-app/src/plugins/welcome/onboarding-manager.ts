@@ -4,7 +4,7 @@
 
 import { pipe } from 'effect';
 
-import { chain, createIntent, LayoutAction, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -13,13 +13,14 @@ import { Account, ClientAction } from '@dxos/plugin-client/types';
 import { HelpAction } from '@dxos/plugin-help/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { type Client } from '@dxos/react-client';
-import { DeviceType, type Credential, type Identity } from '@dxos/react-client/halo';
+import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
+
+import { queryAllCredentials, removeQueryParamByValue } from '../../util';
 
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
 import { activateAccount, getProfile, matchServiceCredential, upgradeCredential } from './credentials';
-import { WELCOME_PLUGIN } from './meta';
-import { queryAllCredentials, removeQueryParamByValue } from '../../util';
+import { meta } from './meta';
 
 export type OnboardingManagerParams = {
   dispatch: PromiseIntentDispatcher;
@@ -155,13 +156,13 @@ export class OnboardingManager {
         part: 'toast',
         subject: {
           id: 'passkey-setup-toast',
-          title: ['passkey setup toast title', { ns: WELCOME_PLUGIN }],
-          description: ['passkey setup toast description', { ns: WELCOME_PLUGIN }],
+          title: ['passkey setup toast title', { ns: meta.id }],
+          description: ['passkey setup toast description', { ns: meta.id }],
           duration: Infinity,
           icon: 'ph--key--regular',
           closeLabel: ['close label', { ns: 'os' }],
-          actionLabel: ['passkey setup toast action label', { ns: WELCOME_PLUGIN }],
-          actionAlt: ['passkey setup toast action alt', { ns: WELCOME_PLUGIN }],
+          actionLabel: ['passkey setup toast action label', { ns: meta.id }],
+          actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
           onAction: () => {
             const intent = pipe(
               createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),

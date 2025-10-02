@@ -4,20 +4,20 @@
 
 import React, { useCallback } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type ClientPluginOptions } from '../types';
 
-export const RESET_DIALOG = `${CLIENT_PLUGIN}/ResetDialog`;
+export const RESET_DIALOG = `${meta.id}/ResetDialog`;
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & Pick<ClientPluginOptions, 'onReset'>;
 
 export const ResetDialog = ({ mode, onReset }: ResetDialogProps) => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
 

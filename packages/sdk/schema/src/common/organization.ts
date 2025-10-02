@@ -13,7 +13,7 @@ import {
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 
-import { IconAnnotation } from '../annotations';
+import { IconAnnotation, ItemAnnotation } from '../annotations';
 
 // TODO(burdon): Remove (specific to kanban demo).
 export const OrganizationStatusOptions = [
@@ -29,33 +29,55 @@ export const OrganizationStatusOptions = [
  */
 const OrganizationSchema = Schema.Struct({
   id: Type.ObjectId,
-  name: Schema.optional(
-    Schema.String.pipe(Schema.annotations({ title: 'Name' }), GeneratorAnnotation.set(['company.name', 1])),
+  name: Schema.String.pipe(
+    Schema.annotations({ title: 'Name' }),
+    GeneratorAnnotation.set({
+      generator: 'company.name',
+      probability: 1,
+    }),
+    Schema.optional,
   ),
-  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+  description: Schema.String.pipe(
+    Schema.annotations({ title: 'Description' }),
+    GeneratorAnnotation.set({
+      generator: 'lorem.paragraphs',
+      args: [{ min: 1, max: 3 }],
+    }),
+    Schema.optional,
+  ),
   // TODO(wittjosiah): Remove; 1change to relation.
-  status: Schema.optional(
-    Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject')
-      .pipe(FormatAnnotation.set(FormatEnum.SingleSelect))
-      .annotations({
-        title: 'Status',
-        [PropertyMetaAnnotationId]: {
-          singleSelect: {
-            options: OrganizationStatusOptions,
-          },
+  status: Schema.Literal('prospect', 'qualified', 'active', 'commit', 'reject').pipe(
+    FormatAnnotation.set(FormatEnum.SingleSelect),
+    GeneratorAnnotation.set({
+      generator: 'helpers.arrayElement',
+      args: [['prospect', 'qualified', 'active', 'commit', 'reject']],
+    }),
+    Schema.annotations({
+      title: 'Status',
+      [PropertyMetaAnnotationId]: {
+        singleSelect: {
+          options: OrganizationStatusOptions,
         },
-      }),
+      },
+    }),
+    Schema.optional,
   ),
   // TODO(wittjosiah): Format.URL (currently breaks schema validation). Support ref?
-  image: Schema.optional(Schema.String.annotations({ title: 'Image' })),
-  website: Schema.optional(
-    Type.Format.URL.annotations({
-      title: 'Website',
-    }).pipe(GeneratorAnnotation.set('internet.url')),
+  image: Schema.String.pipe(
+    Schema.annotations({ title: 'Image' }),
+    GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
+  // TODO(wittjosiah): Format.URL (currently breaks schema validation).
+  website: Schema.String.pipe(
+    Schema.annotations({ title: 'Website' }),
+    GeneratorAnnotation.set('internet.url'),
+    Schema.optional,
   ),
 }).pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
+  ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
 );
 

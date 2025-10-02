@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+// ISSUE(burdon): defineArtifact
+// @ts-nocheck
+
 import { Schema } from 'effect';
 
-import { createTool, ToolResult } from '@dxos/ai';
-import { Capabilities, contributes, createIntent, type PromiseIntentDispatcher } from '@dxos/app-framework';
-import { ArtifactId, defineArtifact } from '@dxos/artifact';
-import { createArtifactElement } from '@dxos/assistant';
+import { ToolResult, createTool } from '@dxos/ai';
+import { Capabilities, type PromiseIntentDispatcher, contributes, createIntent } from '@dxos/app-framework';
+import { ArtifactId, createArtifactElement } from '@dxos/assistant';
+import { defineArtifact } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -16,6 +19,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
+
 // TODO(burdon): Factor out.
 declare global {
   interface ToolContextExtensions {
@@ -155,14 +159,7 @@ export default () => {
         execute: async ({ name, code }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const script = Obj.make(ScriptType, {
-            name,
-            source: Ref.make(
-              Obj.make(DataType.Text, {
-                content: code,
-              }),
-            ),
-          });
+          const script = Obj.make(ScriptType, { name, source: Ref.make(DataType.makeText(code)) });
           extensions.space.db.add(script);
           await extensions.space.db.flush();
 

@@ -45,6 +45,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
@@ -66,6 +69,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
@@ -75,7 +81,16 @@
       "path": "../../ui/react-ui-theme"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

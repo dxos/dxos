@@ -9,7 +9,7 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './indexes';
@@ -95,6 +95,10 @@ export class Indexer extends Resource {
 
   get initialized() {
     return this._lifecycleState === LifecycleState.OPEN;
+  }
+
+  get config() {
+    return this._indexConfig;
   }
 
   @synchronized
@@ -215,6 +219,16 @@ export class Indexer extends Resource {
    */
   async updateIndexes(): Promise<void> {
     await this._run.runBlocking();
+    // Note: Indexing task might schedule itself again if it run over indexing budget.
+    let iterations = 0;
+    while (this._run.scheduled) {
+      await this._run.join();
+      iterations++;
+      if (iterations > 25) {
+        log.warn('Indexer: updateIndexes is stuck');
+        break;
+      }
+    }
   }
 
   private async _loadIndexes(): Promise<void> {

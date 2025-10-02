@@ -3,8 +3,8 @@
 //
 //
 
-import { waitForCondition, scheduleTaskInterval } from '@dxos/async';
-import { cancelWithContext, type Context } from '@dxos/context';
+import { scheduleTaskInterval, waitForCondition } from '@dxos/async';
+import { type Context, cancelWithContext } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -30,7 +30,7 @@ export const createBlackCanvasStreamTrack = async ({
     canvasCtx.fillStyle = 'black';
     canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
   };
-  scheduleTaskInterval(ctx, async () => drawFrame(), 1_000);
+  scheduleTaskInterval(ctx, async () => drawFrame(), 200);
 
   const track = canvas.captureStream().getVideoTracks()[0];
   drawFrame();
@@ -39,6 +39,20 @@ export const createBlackCanvasStreamTrack = async ({
 
   return track;
 };
+
+let audioContextStartedPreviously = false;
+const userGestureEvents = [
+  'click',
+  'contextmenu',
+  'auxclick',
+  'dblclick',
+  'mousedown',
+  'mouseup',
+  'pointerup',
+  'touchend',
+  'keydown',
+  'keyup',
+];
 
 /**
  * Creates an inaudible audio stream track.
@@ -53,14 +67,57 @@ export const createInaudibleAudioStreamTrack = async ({ ctx }: { ctx: Context })
 
   const gainNode = audioContext.createGain();
   // even w/ gain at 0 some packets are sent
-  gainNode.gain.setValueAtTime(0.02, audioContext.currentTime);
+  gainNode.gain.setValueAtTime(0, audioContext.currentTime);
   oscillator.connect(gainNode);
 
   const destination = audioContext.createMediaStreamDestination();
   gainNode.connect(destination);
-  oscillator.start();
+
+  let oscillatorStarted = false;
+  const ensureOscillatorStarted = () => {
+    if (oscillatorStarted) return;
+    oscillator.start();
+    oscillatorStarted = true;
+  };
+
+  const stateChangeHandler = () => {
+    if (audioContext.state === 'running') {
+      audioContextStartedPreviously = true;
+      ensureOscillatorStarted();
+    }
+    if (audioContext.state === 'suspended' || (audioContext.state as string) === 'interrupted') {
+      resumeAudioContext();
+    }
+  };
+
+  audioContext.addEventListener('statechange', stateChangeHandler);
+
+  const resumeAudioContext = () => {
+    void audioContext.resume().then(() => {
+      cleanUpUserGestureListeners();
+    });
+  };
+
+  const cleanUpUserGestureListeners = () => {
+    userGestureEvents.forEach((gesture) => {
+      document.removeEventListener(gesture, resumeAudioContext, {
+        capture: true,
+      });
+    });
+  };
+
+  if (audioContextStartedPreviously) {
+    resumeAudioContext();
+  } else {
+    userGestureEvents.forEach((gesture) => {
+      document.addEventListener(gesture, resumeAudioContext, {
+        capture: true,
+      });
+    });
+  }
 
   ctx.onDispose(async () => {
+    cleanUpUserGestureListeners();
     oscillator.disconnect();
     oscillator.stop();
     await audioContext.close();

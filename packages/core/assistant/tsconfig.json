@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {},
   "include": [
+    "../assistant-testing/src/functions/testing",
     "bin",
     "src",
     "src/**/*.json"
@@ -18,6 +19,9 @@
     },
     {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/graph"
@@ -44,7 +48,7 @@
       "path": "../ai"
     },
     {
-      "path": "../artifact"
+      "path": "../blueprints"
     },
     {
       "path": "../echo/echo"

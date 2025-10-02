@@ -6,7 +6,7 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { SequenceDefinition } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { useThemeContext, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorView,
   createBasicExtensions,
@@ -21,7 +21,7 @@ export type SequenceEditorProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Factor out JsonEditor.
-export const SequenceEditor = forwardRef<EditorView | undefined, SequenceEditorProps>(
+export const SequenceEditor = forwardRef<EditorView | null, SequenceEditorProps>(
   ({ classNames, sequence }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const { parentRef, view } = useTextEditor({
@@ -43,7 +43,7 @@ export const SequenceEditor = forwardRef<EditorView | undefined, SequenceEditorP
       ],
     });
 
-    useImperativeHandle(forwardedRef, () => view, [view]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
 
     return <div ref={parentRef} className={mx('overflow-hidden', classNames)} />;
   },

@@ -5,25 +5,26 @@
 import { invertedEffects } from '@codemirror/commands';
 import { type ChangeDesc, type Extension, StateEffect, StateField, type Text } from '@codemirror/state';
 import {
-  hoverTooltip,
-  keymap,
   type Command,
   Decoration,
   EditorView,
-  type Rect,
   type PluginValue,
+  type Rect,
   ViewPlugin,
+  hoverTooltip,
+  keymap,
 } from '@codemirror/view';
 import sortBy from 'lodash.sortby';
 import { useEffect } from 'react';
 
-import { debounce, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, debounce } from '@dxos/async';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
+import { type Comment, type Range, type RenderCallback } from '../types';
+import { Cursor, callbackWrapper, singleValueFacet } from '../util';
+
 import { documentId } from './selection';
-import { type RenderCallback, type Comment, type Range } from '../types';
-import { Cursor, singleValueFacet, callbackWrapper } from '../util';
 
 //
 // State management.
@@ -57,7 +58,11 @@ const setCommentState = StateEffect.define<CommentsState>();
  * The ranges are tracked as Automerge cursors from which the absolute indexed ranges can be computed.
  */
 export const commentsState = StateField.define<CommentsState>({
-  create: (state) => ({ id: state.facet(documentId), comments: [], selection: {} }),
+  create: (state) => ({
+    id: state.facet(documentId),
+    comments: [],
+    selection: {},
+  }),
   update: (value, tr) => {
     for (const effect of tr.effects) {
       // Update selection.
@@ -98,15 +103,15 @@ export const commentsState = StateField.define<CommentsState>({
  */
 const styles = EditorView.theme({
   '.cm-comment, .cm-comment-current': {
-    margin: '0 -3px',
-    padding: '3px',
-    borderRadius: '3px',
+    padding: '3px 0',
+    backgroundColor: 'var(--dx-cmCommentSurface)',
+  },
+  '.cm-comment > span, .cm-comment-current > span': {
+    boxDecorationBreak: 'clone',
+    boxShadow: '0 0 1px 3px var(--dx-cmCommentSurface)',
     backgroundColor: 'var(--dx-cmCommentSurface)',
     color: 'var(--dx-cmComment)',
     cursor: 'pointer',
-  },
-  '.cm-comment:hover, .cm-comment-current': {
-    textDecoration: 'underline',
   },
 });
 

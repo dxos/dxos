@@ -5,19 +5,19 @@
 import { Schema } from 'effect';
 import { type Context, createContext } from 'react';
 
-import { DocumentType } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
-import { PRESENTER_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace PresenterAction {
-  const PRESENTER_ACTION = `${PRESENTER_PLUGIN}/action`;
+  const PRESENTER_ACTION = `${meta.id}/action`;
 
   export class TogglePresentation extends Schema.TaggedClass<TogglePresentation>()(
     `${PRESENTER_ACTION}/toggle-presentation`,
     {
       input: Schema.Struct({
-        object: Schema.Union(DocumentType, DataType.Collection),
+        object: Schema.Union(Markdown.Document, DataType.Collection),
         state: Schema.optional(Schema.Boolean),
       }),
       output: Schema.Void,

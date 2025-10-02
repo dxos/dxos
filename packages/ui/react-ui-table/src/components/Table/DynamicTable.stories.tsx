@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -17,9 +17,10 @@ import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DynamicTable } from './DynamicTable';
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
+
+import { DynamicTable } from './DynamicTable';
 
 faker.seed(0);
 
@@ -56,14 +57,16 @@ const DynamicTableStory = () => {
 // Story definitions.
 //
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
   parameters: { translations },
   decorators: [withLayout({ fullscreen: true }), withTheme],
-};
+} satisfies Meta<typeof DynamicTable>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: StoryObj = {
   render: DynamicTableStory,

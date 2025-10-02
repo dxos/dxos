@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ClientAction } from '@dxos/plugin-client/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -12,12 +12,13 @@ import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 
-import { Welcome, WelcomeState } from './Welcome';
 import { removeQueryParamByValue } from '../../../util';
 import { activateAccount, signup } from '../credentials';
-import { WELCOME_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const WELCOME_SCREEN = `${WELCOME_PLUGIN}/component/WelcomeScreen`;
+import { Welcome, WelcomeState } from './Welcome';
+
+export const WELCOME_SCREEN = `${meta.id}/component/WelcomeScreen`;
 const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {

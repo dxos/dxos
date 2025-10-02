@@ -13,12 +13,12 @@ import {
   log,
 } from '@dxos/log';
 import {
+  type ControlMetricsRequest,
+  type ControlMetricsResponse,
   type LogEntry,
   type LoggingService,
   type Metrics,
   QueryLogsRequest,
-  type ControlMetricsRequest,
-  type ControlMetricsResponse,
   type QueryMetricsRequest,
   type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -112,6 +112,7 @@ export class LoggingServiceImpl implements LoggingService {
 
         const record: LogEntry = {
           ...entry,
+          message: entry.message ?? (entry.error ? (entry.error.message ?? String(entry.error)) : ''),
           context: jsonify(getContextFromEntry(entry)),
           timestamp: new Date(),
           meta: {

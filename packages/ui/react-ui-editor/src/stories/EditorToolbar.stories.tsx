@@ -4,26 +4,26 @@
 
 import '@dxos-theme';
 
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { EditorToolbar, useEditorToolbarState } from '../components';
 import { editorWidth } from '../defaults';
 import {
   InputModeExtensions,
-  createMarkdownExtensions,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
   useFormattingState,
 } from '../extensions';
-import { useTextEditor, type UseTextEditorProps } from '../hooks';
+import { type UseTextEditorProps, useTextEditor } from '../hooks';
 import { translations } from '../translations';
 import { type EditorInputMode, type EditorViewMode } from '../types';
 
@@ -43,8 +43,8 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
       moveToEndOfLine: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly' }),
-        createMarkdownExtensions({ themeMode }),
+        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),
         formattingKeymap(),
@@ -75,12 +75,12 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations, layout: 'fullscreen' },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

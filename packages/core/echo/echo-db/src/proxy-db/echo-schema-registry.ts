@@ -4,23 +4,26 @@
 
 import { Schema } from 'effect';
 
-import { Event, type CleanupFn } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { type CleanupFn, Event } from '@dxos/async';
+import { type Context, Resource } from '@dxos/context';
 import {
-  TypeIdentifierAnnotationId,
   EchoSchema,
-  getTypeIdentifierAnnotation,
-  getTypeAnnotation,
-  TypeAnnotationId,
-  StoredSchema,
-  toJsonSchema,
   type ObjectId,
+  StoredSchema,
+  TypeAnnotationId,
+  TypeIdentifierAnnotationId,
   create,
   createJsonSchema,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
+  toJsonSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+import { getObjectCore } from '../echo-handler';
+import { Filter } from '../query';
 
 import { type EchoDatabase } from './database';
 import type {
@@ -31,8 +34,6 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 
 export type EchoSchemaRegistryOptions = {
   /**
@@ -70,7 +71,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     this._preloadSchemaOnOpen = preloadSchemaOnOpen;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(_ctx: Context): Promise<void> {
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {

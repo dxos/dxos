@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnv } from '../env';
-import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
+import { type Platform, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
 type QueryTestSpec = {

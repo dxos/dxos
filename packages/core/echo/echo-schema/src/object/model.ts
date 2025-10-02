@@ -9,8 +9,10 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type ObjectMeta } from './meta';
 import { EntityKind } from '../ast';
+
+import { type ObjectMeta } from './meta';
+import type { Version } from './version';
 
 //
 // Defines the internal model of the echo object.
@@ -24,12 +26,12 @@ export const EntityKindId = Symbol('@dxos/echo/EntityKind');
 /**
  * DXN to the object itself.
  */
-export const SelfDXNId = Symbol('@dxos/echo/Self');
+export const SelfDXNId = Symbol('@dxos/echo/DXN');
 
 /**
  * Property name for self DXN when object is serialized to JSON.
  */
-export const ATTR_SELF_DXN = '@self';
+export const ATTR_SELF_DXN = '@dxn';
 
 /**
  * DXN to the object type.
@@ -101,6 +103,11 @@ export const RelationSourceId: unique symbol = Symbol('@dxos/echo/RelationSource
 export const RelationTargetId: unique symbol = Symbol('@dxos/echo/RelationTarget');
 
 /**
+ * Getter to get object version.
+ */
+export const ObjectVersionId: unique symbol = Symbol('@dxos/echo/ObjectVersion');
+
+/**
  * Internal runtime representation of an object.
  * The fields are accessed through getter functions.
  */
@@ -122,6 +129,7 @@ export interface InternalObjectProps {
   readonly [RelationTargetDXNId]?: DXN;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
+  readonly [ObjectVersionId]?: Version;
 }
 
 /**
@@ -142,7 +150,7 @@ export interface ObjectMetaJSON {
 }
 
 // NOTE: Keep as `function` to avoid type inference issues.
-// eslint-disable-next-line @stayradiated/prefer-arrow-functions/prefer-arrow-functions
+// eslint-disable-next-line prefer-arrow-functions/prefer-arrow-functions
 export function assertObjectModelShape(obj: unknown): asserts obj is InternalObjectProps {
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);

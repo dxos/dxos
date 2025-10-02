@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { getSpace, Ref, type Queue, type Space } from '@dxos/client/echo';
+import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Key, Obj } from '@dxos/echo';
 import {
   InvocationOutcome,
   InvocationTraceEndEvent,
+  type InvocationTraceEvent,
   InvocationTraceEventType,
   InvocationTraceStartEvent,
   TraceEvent,
-  type InvocationTraceEvent,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';
@@ -39,7 +39,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(InvocationTraceStartEvent, {
             type: InvocationTraceEventType.START,
             invocationId: event.invocationId,
-            timestampMs: Date.now(),
+            timestamp: Date.now(),
             input: {},
             invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
@@ -51,7 +51,7 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(InvocationTraceEndEvent, {
             type: InvocationTraceEventType.END,
             invocationId: event.invocationId,
-            timestampMs: Date.now(),
+            timestamp: Date.now(),
             outcome: InvocationOutcome.SUCCESS,
           }),
         ]);
@@ -62,10 +62,10 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { step: event.step },
@@ -80,10 +80,10 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { message: event.message },
@@ -98,10 +98,10 @@ export class QueueLogger implements SequenceLogger {
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
-            ingestionTimestampMs: Date.now(),
+            ingestionTimestamp: Date.now(),
             logs: [
               {
-                timestampMs: Date.now(),
+                timestamp: Date.now(),
                 level: 'info',
                 message: event.type,
                 context: { block: event.block },

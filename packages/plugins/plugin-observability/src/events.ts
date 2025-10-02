@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineEvent, Events } from '@dxos/app-framework';
+import { Events, defineEvent } from '@dxos/app-framework';
 
-import { OBSERVABILITY_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace ObservabilityEvents {
-  export const StateReady = Events.createStateEvent(OBSERVABILITY_PLUGIN);
+  export const StateReady = Events.createStateEvent(meta.id);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.

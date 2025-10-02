@@ -4,14 +4,14 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { IconButton } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { type TagPickerItemData } from './tag-picker-extension';
 import { TagPicker } from './TagPicker';
-import { type TagPickerItemData } from './extension';
 
 const allItems: TagPickerItemData[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
@@ -23,7 +23,7 @@ const allItems: TagPickerItemData[] = [
   { id: 'socket-supply', label: 'Socket Supply', hue: 'indigo' },
 ];
 
-const meta: Meta<typeof TagPicker> = {
+const meta = {
   title: 'ui/react-ui-tag-picker/TagPicker',
   component: TagPicker,
   render: ({ items: initialItems, mode }) => {
@@ -66,7 +66,7 @@ const meta: Meta<typeof TagPicker> = {
   },
   decorators: [withTheme, withLayout()],
   parameters: { layout: 'centered' },
-};
+} satisfies Meta<typeof TagPicker>;
 
 export default meta;
 

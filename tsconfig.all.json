@@ -28,9 +28,6 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
-      "path": "packages/common/crypto-names/tsconfig.json"
-    },
-    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {
@@ -124,13 +121,13 @@
       "path": "packages/core/ai/tsconfig.json"
     },
     {
-      "path": "packages/core/artifact/tsconfig.json"
-    },
-    {
-      "path": "packages/core/artifact-testing/tsconfig.json"
-    },
-    {
       "path": "packages/core/assistant/tsconfig.json"
+    },
+    {
+      "path": "packages/core/assistant-testing/tsconfig.json"
+    },
+    {
+      "path": "packages/core/blueprints/tsconfig.json"
     },
     {
       "path": "packages/core/compute/tsconfig.json"
@@ -226,10 +223,16 @@
       "path": "packages/devtools/cli-composer/tsconfig.json"
     },
     {
+      "path": "packages/devtools/cli-next/tsconfig.json"
+    },
+    {
       "path": "packages/devtools/devtools/tsconfig.json"
     },
     {
       "path": "packages/devtools/devtools-extension/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/vscode-extension/tsconfig.json"
     },
     {
       "path": "packages/e2e/proto-guard/tsconfig.json"
@@ -329,6 +332,9 @@
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-project/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
@@ -553,6 +559,12 @@
       "path": "tools/dx-compile/tsconfig.json"
     },
     {
+      "path": "tools/dx-tools/tsconfig.json"
+    },
+    {
+      "path": "tools/eslint-plugin-rules/tsconfig.json"
+    },
+    {
       "path": "tools/lit-storybook/tsconfig.json"
     },
     {
@@ -574,7 +586,16 @@
       "path": "tools/vite-plugin-icons/tsconfig.json"
     },
     {
+      "path": "tools/vite-plugin-import-source/tsconfig.json"
+    },
+    {
       "path": "tools/x/tsconfig.json"
+    },
+    {
+      "path": "vendor/hypercore/tsconfig.json"
+    },
+    {
+      "path": "vendor/hyperformula/tsconfig.json"
     }
   ],
   "include": [],

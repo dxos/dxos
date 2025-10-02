@@ -4,20 +4,19 @@
 
 import {
   Capabilities,
+  type PluginContext,
+  type SerializedNode,
+  SettingsAction,
   contributes,
   createIntent,
   createResolver,
-  type SerializedNode,
-  SettingsAction,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
-import { isActionLike, type Node } from '@dxos/plugin-graph';
-import { byPosition, type MaybePromise } from '@dxos/util';
+import { type Node, isActionLike } from '@dxos/plugin-graph';
+import { type MaybePromise, byPosition } from '@dxos/util';
 
-import { FileCapabilities } from './capabilities';
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { LocalFilesAction } from '../types';
 import {
   findFile,
@@ -27,6 +26,8 @@ import {
   handleToLocalFile,
   legacyFileToLocalFile,
 } from '../util';
+
+import { FileCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
   const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
@@ -100,7 +101,7 @@ export default (context: PluginContext) => {
         const { explore } = context.getCapability(Capabilities.AppGraph);
         const state = context.getCapability(FileCapabilities.MutableState);
         if (!state.rootHandle) {
-          return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
+          return { intents: [createIntent(SettingsAction.Open, { plugin: meta.id })] };
         }
 
         const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();

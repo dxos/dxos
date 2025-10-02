@@ -18,10 +18,10 @@ import { ChannelType, ThreadType } from '../types';
 export const createThreadPlugins = async () => [
   ThemePlugin({ tx: defaultTx }),
   ClientPlugin({
-    onClientInitialized: async (_, client) => {
+    onClientInitialized: async ({ client }) => {
       await client.halo.createIdentity({ displayName: 'Test User' });
     },
-    onSpacesReady: async (_, client) => {
+    onSpacesReady: async ({ client }) => {
       await client.spaces.default.waitUntilReady();
       const thread = Obj.make(ThreadType, { messages: [] });
       client.spaces.default.db.add(Obj.make(ChannelType, { defaultThread: Ref.make(thread), threads: [] }));
@@ -46,7 +46,7 @@ export const createThreadPlugins = async () => [
       },
     }),
   }),
-  SpacePlugin(),
+  SpacePlugin({}),
   IntentPlugin(),
   SettingsPlugin(),
   GraphPlugin(),

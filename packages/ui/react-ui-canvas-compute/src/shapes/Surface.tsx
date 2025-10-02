@@ -10,9 +10,10 @@ import { DEFAULT_INPUT } from '@dxos/conductor';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
-import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, createAnchorId, createShape, type CreateShapeProps } from './defs';
 import { useComputeNodeState } from '../hooks';
+
+import { Box, type BoxActionHandler } from './common';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
 
 export const SurfaceShape = Schema.extend(
   ComputeShape,
@@ -41,7 +42,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
 
   return (
     <Box shape={shape} onAction={handleAction}>
-      {value !== null && <Surface role='canvas-node' data={{ value }} limit={1} />}
+      {value !== null && <Surface role='card--extrinsic' data={{ value }} limit={1} />}
     </Box>
   );
 };

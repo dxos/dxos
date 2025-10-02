@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown } from '@phosphor-icons/react';
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
 
 import {
   Button,
   type ButtonProps,
+  Icon,
   type TextInputProps,
   type ThemedClassName,
   useDensityContext,
@@ -18,7 +18,7 @@ import {
   useId,
   useThemeContext,
 } from '@dxos/react-ui';
-import { getSize, mx, staticPlaceholderText } from '@dxos/react-ui-theme';
+import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
 
 type SearchListVariant = 'list' | 'menu' | 'listbox';
 
@@ -121,6 +121,10 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
+const commandItem = 'flex items-center overflow-hidden';
+const searchListItem =
+  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
+
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ children, classNames, onSelect, ...props }, forwardedRef) => {
     const { onValueChange, onOpenChange } = useComboboxContext(SEARCHLIST_ITEM_NAME);
@@ -133,12 +137,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       [onValueChange, onOpenChange, onSelect],
     );
     return (
-      <CommandItem
-        {...props}
-        onSelect={handleSelect}
-        className={mx('p-1 rounded select-none cursor-pointer data-[selected]:bg-hoverOverlay', classNames)}
-        ref={forwardedRef}
-      >
+      <CommandItem {...props} onSelect={handleSelect} className={mx(searchListItem, classNames)} ref={forwardedRef}>
         {children}
       </CommandItem>
     );
@@ -215,7 +214,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
             >
               {value || placeholder}
             </span>
-            <CaretDown weight='bold' className={getSize(3)} />
+            <Icon icon='ph--caret-down--bold' size={3} />
           </>
         )}
       </Button>
@@ -248,3 +247,5 @@ export type {
   ComboboxRootProps,
   ComboboxTriggerProps,
 };
+
+export { commandItem, searchListItem };

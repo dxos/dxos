@@ -17,11 +17,11 @@ export type UseAudioStream = {
  */
 // TODO(burdon): Factor out; reconcile with transcription API.
 export const useAudioStream = (active?: boolean): UseAudioStream => {
-  const audioContextRef = useRef<AudioContext>();
-  const analyserRef = useRef<AnalyserNode>();
-  const dataArrayRef = useRef<Uint8Array>();
-  const tracksRef = useRef<MediaStreamTrack[]>();
-  const sourceRef = useRef<MediaStreamAudioSourceNode>();
+  const audioContextRef = useRef<AudioContext>(undefined);
+  const analyserRef = useRef<AnalyserNode>(undefined);
+  const dataArrayRef = useRef<Uint8Array>(undefined);
+  const tracksRef = useRef<MediaStreamTrack[]>(undefined);
+  const sourceRef = useRef<MediaStreamAudioSourceNode>(undefined);
 
   const close = () => {
     log.info('closing microphone');
@@ -75,7 +75,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
         return undefined;
       }
 
-      analyserRef.current?.getByteFrequencyData(dataArrayRef.current);
+      analyserRef.current?.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
       return dataArrayRef.current;
     },
 
@@ -84,7 +84,7 @@ export const useAudioStream = (active?: boolean): UseAudioStream => {
         return 0;
       }
 
-      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      analyserRef.current.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
       // TODO(burdon): Use https://developer.mozilla.org/en-US/docs/Web/API/AnalyserNode/smoothingTimeConstant
       const average = dataArrayRef.current.reduce((a, b) => a + b) / dataArrayRef.current.length;
       const amplitude = average / 255; // Normalize to 0-1.

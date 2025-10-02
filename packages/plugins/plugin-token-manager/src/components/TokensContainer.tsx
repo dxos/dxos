@@ -10,14 +10,15 @@ import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Separator, useTranslation } from '@dxos/react-ui';
-import { ControlItem, controlItemClasses, ControlPage, ControlSection, Form } from '@dxos/react-ui-form';
+import { ControlItem, ControlPage, ControlSection, Form, controlItemClasses } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
+import { meta } from '../meta';
+import { TokenManagerAction } from '../types';
+
 import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
-import { TOKEN_MANAGER_PLUGIN } from '../meta';
-import { TokenManagerAction } from '../types';
 
 const initialValues = {
   note: '',
@@ -29,7 +30,7 @@ const FormSchema = DataType.AccessToken.pipe(Schema.omit('id'));
 type TokenForm = Schema.Schema.Type<typeof FormSchema>;
 
 export const TokensContainer = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(TOKEN_MANAGER_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [adding, setAdding] = useState(false);
   const tokens = useQuery(space, Filter.type(DataType.AccessToken));
@@ -43,6 +44,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
       const result = await dispatch(
         createIntent(SpaceAction.AddObject, { object: token, target: space, hidden: true }),
       );
+
       if (Obj.instanceOf(DataType.AccessToken, result.data?.object)) {
         void dispatch(createIntent(TokenManagerAction.AccessTokenCreated, { accessToken: result.data?.object }));
       }
@@ -65,8 +67,8 @@ export const TokensContainer = ({ space }: { space: Space }) => {
     <StackItem.Content classNames='block overflow-y-auto'>
       <ControlPage>
         <ControlSection
-          title={t('integrations verbose label', { ns: TOKEN_MANAGER_PLUGIN })}
-          description={t('integrations description', { ns: TOKEN_MANAGER_PLUGIN })}
+          title={t('integrations verbose label', { ns: meta.id })}
+          description={t('integrations description', { ns: meta.id })}
         >
           {adding ? (
             <ControlItem title={t('new integration label')}>

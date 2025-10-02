@@ -6,13 +6,14 @@ import React from 'react';
 
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
-import { ShortcutsList } from './ShortcutsList';
-import { HELP_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
-export const SHORTCUTS_DIALOG = `${HELP_PLUGIN}/ShortcutsDialog`;
+import { ShortcutsList } from './ShortcutsList';
+
+export const SHORTCUTS_DIALOG = `${meta.id}/ShortcutsDialog`;
 
 export const ShortcutsDialogContent = () => {
-  const { t } = useTranslation(HELP_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[25rem] overflow-hidden'>

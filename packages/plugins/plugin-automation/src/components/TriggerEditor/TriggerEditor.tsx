@@ -6,14 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import {
-  FunctionType,
-  FunctionTriggerSchema,
-  type FunctionTriggerType,
-  type FunctionTrigger,
-  ScriptType,
-} from '@dxos/functions';
-import { Filter, Ref, useQuery, type Space } from '@dxos/react-client/echo';
+import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
+import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
@@ -21,13 +15,13 @@ import { SpecSelector } from './SpecSelector';
 
 export type TriggerEditorProps = {
   space: Space;
-  trigger: FunctionTriggerType;
+  trigger: FunctionTrigger;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
 };
 
 export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = (values: FunctionTriggerType) => {
+  const handleSave = (values: FunctionTrigger) => {
     onSave?.(values);
   };
 
@@ -38,7 +32,7 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
     <Form
       outerSpacing={false}
       Custom={Custom}
-      schema={FunctionTriggerSchema}
+      schema={FunctionTrigger}
       values={trigger}
       onSave={handleSave}
       onCancel={onCancel}
@@ -55,7 +49,7 @@ const useCustomInputs = (space: Space, onQueryRefOptions: FunctionInputEditorPro
   return useMemo(
     (): CustomInputMap => ({
       // Function selector.
-      ['function' satisfies keyof FunctionTriggerType]: (props) => {
+      ['function' satisfies keyof FunctionTrigger]: (props) => {
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {

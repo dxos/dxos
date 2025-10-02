@@ -6,7 +6,7 @@
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
-// import { VitePluginFonts } from 'vite-plugin-fonts';
+// import VitePluginFonts from 'unplugin-fonts/vite';
 import { crx as ChromeExtensionPlugin } from '@crxjs/vite-plugin';
 import SourceMapsPlugin from 'rollup-plugin-sourcemaps';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -24,6 +24,7 @@ export default defineConfig({
     keepNames: true,
   },
   build: {
+    outDir: 'out/devtools-extension',
     sourcemap: true,
     target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
     rollupOptions: {
@@ -55,7 +56,9 @@ export default defineConfig({
       manifest: {
         manifest_version: 3,
         version: packageJson.version,
-        author: 'DXOS.org',
+        author: {
+          email: 'hello@dxos.org',
+        },
         name: 'DXOS Client Developer Tools',
         short_name: 'DXOS DevTools',
         description: 'Debugging tools for DXOS Client in the Chrome developer console.',
@@ -106,7 +109,7 @@ export default defineConfig({
     /**
      * Bundle fonts.
      * https://fonts.google.com
-     * https://www.npmjs.com/package/vite-plugin-fonts
+     * https://www.npmjs.com/package/unplugin-fonts
      */
     // VitePluginFonts({
     //   google: {

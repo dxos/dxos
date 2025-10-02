@@ -4,7 +4,7 @@
 
 import { Mutex, Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
+import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
@@ -15,7 +15,7 @@ import {
   valueEncoding,
 } from '@dxos/echo-pipeline';
 import { createChainEdgeIdentity, createEphemeralEdgeIdentity } from '@dxos/edge-client';
-import type { EdgeHttpClient, EdgeConnection, EdgeIdentity } from '@dxos/edge-client';
+import type { EdgeConnection, EdgeHttpClient, EdgeIdentity } from '@dxos/edge-client';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
@@ -36,8 +36,8 @@ import { safeInstanceof } from '@dxos/util';
 
 import { EdgeAgentManager } from '../agents';
 import {
-  IdentityManager,
   type CreateIdentityOptions,
+  IdentityManager,
   type IdentityManagerParams,
   type JoinIdentityParams,
 } from '../identity';
@@ -45,10 +45,10 @@ import { EdgeIdentityRecoveryManager } from '../identity/identity-recovery-manag
 import {
   DeviceInvitationProtocol,
   type InvitationConnectionParams,
+  type InvitationProtocol,
   InvitationsHandler,
   InvitationsManager,
   SpaceInvitationProtocol,
-  type InvitationProtocol,
 } from '../invitations';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
@@ -189,9 +189,10 @@ export class ServiceContext extends Resource {
     if (!this._runtimeParams?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection && this._edgeFeatures?.echoReplicator) {
+    if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
       this._echoEdgeReplicator = new EchoEdgeReplicator({
         edgeConnection: this._edgeConnection,
+        edgeHttpClient: this._edgeHttpClient,
       });
     }
   }
@@ -244,13 +245,13 @@ export class ServiceContext extends Resource {
     await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
-    await this.feedStore.close();
-    await this.metadataStore.close();
-
     await this.echoHost.close(ctx);
+
     await this.networkManager.close();
     await this.signalManager.close();
     await this._edgeConnection?.close();
+    await this.feedStore.close();
+    await this.metadataStore.close();
 
     log('closed');
   }

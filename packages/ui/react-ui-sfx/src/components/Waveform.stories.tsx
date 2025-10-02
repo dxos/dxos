@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, IconButton, Toolbar } from '@dxos/react-ui';
@@ -62,16 +62,16 @@ const DefaultStory = ({ active: _active }: WaveformProps) => {
   );
 };
 
-const meta: Meta<WaveformProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Waveform',
   component: Waveform,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Waveform>;
 
 export default meta;
 
-type Story = StoryObj<WaveformProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

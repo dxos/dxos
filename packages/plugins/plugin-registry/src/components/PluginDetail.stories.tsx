@@ -4,26 +4,27 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { PluginDetail, type PluginDetailProps } from './PluginDetail';
 import { translations } from '../translations';
 
-const meta: Meta<PluginDetailProps> = {
+import { PluginDetail } from './PluginDetail';
+
+const meta = {
   title: 'plugins/plugin-registry/PluginDetail',
   component: PluginDetail,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof PluginDetail>;
 
 export default meta;
 
-type Story = StoryObj<PluginDetailProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

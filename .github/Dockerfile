@@ -6,14 +6,16 @@ RUN apt-get update \
     ca-certificates \
     curl \
     git-lfs \
+    gpg \
     jq \
     libenchant-2-2 \
     libpng++-dev \
     libxtst-dev \
+    sudo \
     xz-utils
 
 # Install Node.js from official binary tarball
-ARG NODE_VERSION=20.12.1
+ARG NODE_VERSION=20.19.5
 RUN ARCH=$(uname -m) \
   && if [ "$ARCH" = "x86_64" ]; then ARCH="x64"; elif [ "$ARCH" = "aarch64" ]; then ARCH="arm64"; else echo "Unsupported architecture: $ARCH"; exit 1; fi \
   && curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$ARCH.tar.xz -o /tmp/node.tar.xz \
@@ -35,10 +37,11 @@ RUN npm install -g pnpm@10.13.1 \
   # Cleanup apt cache.
   && rm -rf /var/lib/apt/lists/*
 
-# TODO(wittjosiah): Allow runner to use sudo.
-# Create a user with a fixed UID:GID.
+# Create a user with a fixed UID:GID and add to sudo group.
 RUN groupadd -g 1001 runner && \
-    useradd -m -u 1001 -g 1001 -s /bin/bash runner
+    useradd -m -u 1001 -g 1001 -s /bin/bash runner && \
+    usermod -aG sudo runner && \
+    echo "runner ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Give the user ownership of expected directories:
 # /__w: Workspace (repo checkout)

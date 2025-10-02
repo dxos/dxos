@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Select, Input } from '@dxos/react-ui';
+import { Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { type KeyHandler, Keyboard } from './keyboard';
@@ -67,10 +68,14 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'common/keyboard/Keyboard',
   decorators: [withTheme],
   render: DefaultStory,
-};
+} satisfies Meta<typeof Input>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

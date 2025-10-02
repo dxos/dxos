@@ -51,16 +51,22 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/assistant-testing"
+    },
+    {
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/conductor"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -112,6 +118,9 @@
     },
     {
       "path": "../../ui/react-ui-theme"
+    },
+    {
+      "path": "../plugin-attention"
     },
     {
       "path": "../plugin-automation"

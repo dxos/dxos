@@ -8,7 +8,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DeckAction, type LayoutMode } from '../../types';
 
 export type PlankControlHandler = (event: DeckAction.PartAdjustment) => void;
@@ -43,7 +43,7 @@ type PlankComplimentControlsProps = {
 
 export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
   ({ primary }, forwardedRef) => {
-    const { t } = useTranslation(DECK_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const handleCloseCompanion = useCallback(() => {
       invariant(primary);
@@ -71,7 +71,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     { children, classNames, variant = 'default', capabilities, layoutMode, pin, close = false, onClick, ...props },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(DECK_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const buttonClassNames =
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 

@@ -18,14 +18,14 @@ describe('HttpClient', () => {
     server = await createTestServer(responseHandler((attempt) => (attempt > 2 ? { value: 100 } : false)));
   });
 
-  // eslint-disable-next-line mocha/no-top-level-hooks
   afterEach(() => {
     server?.close();
     server = undefined;
   });
 
-  // TODO(burdon): Auth headers.
+  // TODO(burdon): Auth headers/API key for admin.
   // TODO(burdon): Add request/response schema type checking.
+  // TODO(burdon): Test swarm.
   it.skipIf(process.env.CI)('should retry', async ({ expect }) => {
     invariant(server);
 

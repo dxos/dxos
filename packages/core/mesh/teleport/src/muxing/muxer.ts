@@ -4,7 +4,7 @@
 
 import { Duplex } from 'node:stream';
 
-import { scheduleTaskInterval, Event, Trigger, asyncTimeout } from '@dxos/async';
+import { Event, Trigger, asyncTimeout, scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

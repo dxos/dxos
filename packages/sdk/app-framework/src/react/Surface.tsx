@@ -2,15 +2,24 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { memo, forwardRef, Suspense, useMemo, Fragment } from 'react';
+import React, {
+  Fragment,
+  type NamedExoticComponent,
+  type RefAttributes,
+  Suspense,
+  forwardRef,
+  memo,
+  useMemo,
+} from 'react';
 
 import { useDefaultValue } from '@dxos/react-hooks';
 import { byPosition } from '@dxos/util';
 
-import { ErrorBoundary } from './ErrorBoundary';
-import { useCapabilities } from './useCapabilities';
 import { Capabilities, type SurfaceDefinition, type SurfaceProps } from '../common';
 import { type PluginContext } from '../core';
+
+import { ErrorBoundary } from './ErrorBoundary';
+import { useCapabilities } from './useCapabilities';
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 
@@ -43,8 +52,8 @@ export const isSurfaceAvailable = (context: PluginContext, { role, data }: Pick<
 /**
  * A surface is a named region of the screen that can be populated by plugins.
  */
-export const Surface = memo(
-  forwardRef<HTMLElement, SurfaceProps>(
+export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElement>> = memo(
+  forwardRef(
     ({ id: _id, role, data: _data, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.

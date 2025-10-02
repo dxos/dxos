@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { type Live, Obj, Type } from '@dxos/echo';
+import { Filter, type Live, Obj, Query, Type } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo-schema';
 
 import { DataType } from '../common';
@@ -51,7 +51,7 @@ export const testSchema: Live<DataType.StoredSchema> = Obj.make(DataType.StoredS
 
 export const testView: Live<DataType.View> = createView({
   name: 'Test',
-  typename: testSchema.typename,
+  query: Query.select(Filter.type(TestSchema)),
   jsonSchema: Type.toJsonSchema(TestSchema),
   presentation: Obj.make(Type.Expando, {}),
 });

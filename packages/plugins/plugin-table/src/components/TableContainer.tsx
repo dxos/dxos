@@ -3,11 +3,13 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
+import { Match } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -17,12 +19,16 @@ import {
   Table,
   type TableController,
   type TableFeatures,
+  type TableModelProps,
   TablePresentation,
+  type TableRowAction,
   TableToolbar,
-  useTableModel,
   useAddRow,
+  useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
+
+import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
@@ -35,7 +41,8 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.query.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -80,27 +87,63 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     return schema ? Type.toJsonSchema(schema) : undefined;
   }, [schema]);
 
+  const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
+    tableRef.current?.update?.(cell);
+  }, []);
+
+  const rowActions = useMemo(
+    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
+    [],
+  );
+  const handleRowAction = useCallback(
+    (actionId: string, data: any) =>
+      Match.value(actionId).pipe(
+        Match.when('open', () => {
+          invariant(typename);
+          void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(data)] }));
+        }),
+        Match.orElseAbsurd,
+      ),
+    [dispatch, typename],
+  );
+
+  const handleRowOrderChange = useCallback(() => {
+    tableRef.current?.update?.();
+  }, []);
+
   const model = useTableModel({
     view,
     schema: jsonSchema,
     features,
     rows: filteredObjects,
+    rowActions,
     onInsertRow: addRow,
     onDeleteRows: handleDeleteRows,
     onDeleteColumn: handleDeleteColumn,
-    onCellUpdate: (cell) => tableRef.current?.update?.(cell),
-    onRowOrderChange: () => tableRef.current?.update?.(),
+    onCellUpdate: handleCellUpdate,
+    onRowAction: handleRowAction,
+    onRowOrderChange: handleRowOrderChange,
   });
 
   const handleInsertRow = useCallback(() => {
-    model?.insertRow();
-  }, [model]);
+    const insertResult = model?.insertRow();
+    tableRef.current?.handleInsertRowResult?.(insertResult);
+  }, [model, tableRef.current]);
 
   const handleSave = useCallback(() => {
     model?.saveView();
   }, [model]);
 
   const presentation = useMemo(() => (model ? new TablePresentation(model) : undefined), [model]);
+
+  const handleRowClick = useCallback(
+    (row: any) => {
+      if (model?.getDraftRowCount() === 0 && ['frozenRowsEnd', 'fixedEndStart', 'fixedEndEnd'].includes(row?.plane)) {
+        handleInsertRow();
+      }
+    },
+    [model],
+  );
 
   return (
     <StackItem.Content toolbar>
@@ -118,6 +161,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
           model={model}
           presentation={presentation}
           schema={schema}
+          onRowClick={handleRowClick}
         />
       </Table.Root>
     </StackItem.Content>

@@ -3,20 +3,22 @@
 //
 
 // @ts-ignore
-import { create, defineFunction, EchoObject, Filter, ObjectId, S } from 'dxos:functions';
+import { EchoObject, Filter, ObjectId, S, create, defineFunction } from 'dxos:functions';
 // @ts-ignore
 import {
+  FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
+} from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { pipe, Chunk, Effect, Ref, Schedule, Stream } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.17.0?bundle=false';
 
 export default defineFunction({
+  key: 'dxos.org/script/gmail',
+  name: 'Gmail',
   inputSchema: S.Struct({
     mailboxId: S.String,
     userId: S.optional(S.String).pipe(S.withDecodingDefault(() => 'me')),
@@ -98,7 +100,7 @@ export default defineFunction({
             sender,
             blocks: [
               {
-                type: 'text',
+                _tag: 'text',
                 text: Buffer.from(content, 'base64').toString('utf-8'),
               },
             ],
@@ -160,7 +162,7 @@ const parseEmailString = (emailString: string): { name?: string; email: string }
 
 //
 // Schemas
-// TODO(wittjosiah): These schemas should be imported from @dxos/S.
+// TODO(wittjosiah): These schemas should be imported from @dxos/schema.
 //
 
 const ActorRoles = ['user', 'assistant'] as const;
@@ -174,57 +176,16 @@ const ActorSchema = S.Struct({
   role: S.optional(ActorRole),
 });
 
-const AbstractContentBlock = S.Struct({
+const Base = S.Struct({
   pending: S.optional(S.Boolean),
 });
-type AbstractContentBlock = S.Schema.Type<typeof AbstractContentBlock>;
-const TextContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('text'),
-    disposition: S.optional(S.String),
-    text: S.String,
-  }),
-).pipe(S.mutable);
-type TextContentBlock = S.Schema.Type<typeof TextContentBlock>;
-const JsonContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('json'),
-    disposition: S.optional(S.String),
-    data: S.String,
-  }),
-).pipe(S.mutable);
-type JsonContentBlock = S.Schema.Type<typeof JsonContentBlock>;
-const Base64ImageSource = S.Struct({
-  type: S.Literal('base64'),
-  mediaType: S.String,
-  data: S.String,
+type Base = S.Schema.Type<typeof Base>;
+const Text = S.TaggedStruct('text', {
+  mimeType: S.optional(S.String),
+  text: S.String,
+  ...Base.fields,
 }).pipe(S.mutable);
-const HttpImageSource = S.Struct({
-  type: S.Literal('http'),
-  url: S.String,
-}).pipe(S.mutable);
-const ImageSource = S.Union(Base64ImageSource, HttpImageSource);
-type ImageSource = S.Schema.Type<typeof ImageSource>;
-const ImageContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('image'),
-    id: S.optional(S.String),
-    source: S.optional(ImageSource),
-  }),
-).pipe(S.mutable);
-type ImageContentBlock = S.Schema.Type<typeof ImageContentBlock>;
-const ReferenceContentBlock = S.extend(
-  AbstractContentBlock,
-  S.Struct({
-    type: S.Literal('reference'),
-    reference: S.Any,
-  }),
-).pipe(S.mutable);
-type ReferenceContentBlock = S.Schema.Type<typeof ReferenceContentBlock>;
-const MessageContentBlock = S.Union(TextContentBlock, JsonContentBlock, ImageContentBlock, ReferenceContentBlock);
+interface Text extends S.Schema.Type<typeof Text> {}
 
 const MessageType = S.Struct({
   id: ObjectId,
@@ -234,7 +195,7 @@ const MessageType = S.Struct({
   sender: ActorSchema.annotations({
     description: 'Identity of the message sender.',
   }),
-  blocks: S.Array(MessageContentBlock).annotations({
+  blocks: S.Array(Text).annotations({
     description: 'Contents of the message.',
   }),
   properties: S.optional(

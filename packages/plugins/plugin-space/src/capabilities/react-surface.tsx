@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   Capabilities,
+  Surface,
   contributes,
   createSurface,
-  Surface,
   useCapabilities,
   useCapability,
   useLayout,
@@ -20,14 +20,14 @@ import { SettingsStore } from '@dxos/local-storage';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
 import {
+  type Space,
+  SpaceState,
   fullyQualifiedId,
   getSpace,
   isLiveObject,
   isSpace,
   parseId,
-  SpaceState,
   useSpace,
-  type Space,
 } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
@@ -35,13 +35,13 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
-import { SpaceCapabilities } from './capabilities';
 import {
-  CollectionMain,
-  CollectionSection,
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  CollectionMain,
+  CollectionSection,
   CreateObjectDialog,
+  type CreateObjectDialogProps,
   CreateSpaceDialog,
   InlineSyncStatus,
   JOIN_DIALOG,
@@ -54,6 +54,7 @@ import {
   POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
+  RecordMain,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
@@ -61,21 +62,22 @@ import {
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
-  type CreateObjectDialogProps,
 } from '../components';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
+
+import { SpaceCapabilities } from './capabilities';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-const OMIT = [DataType.Collection.typename, DataType.QueryCollection.typename];
+const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${SPACE_PLUGIN}/article`,
+      id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { subject: Space } =>
         // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
@@ -92,29 +94,36 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       ),
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/collection-fallback`,
+      id: `${meta.id}/record-article`,
+      role: 'article',
+      position: 'fallback',
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      component: ({ data }) => <RecordMain record={data.subject} />,
+    }),
+    createSurface({
+      id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
       component: ({ data }) => <CollectionMain collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/plugin-settings`,
       role: 'article',
       filter: (data): data is { subject: SettingsStore<SpaceSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === SPACE_PLUGIN,
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <SpacePluginSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/companion/object-settings`,
+      id: `${meta.id}/companion/object-settings`,
       role: 'article',
       filter: (data): data is { companionTo: Obj.Any } => Obj.isObject(data.companionTo) && data.subject === 'settings',
       component: ({ data, role }) => <ObjectSettingsContainer object={data.companionTo} role={role} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings-properties`,
+      id: `${meta.id}/space-settings-properties`,
       role: 'article',
-      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/properties`,
+      filter: (data): data is { subject: string } => data.subject === `${meta.id}/properties`,
       component: () => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
@@ -127,10 +136,10 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings-members`,
+      id: `${meta.id}/space-settings-members`,
       role: 'article',
       position: 'hoist',
-      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/members`,
+      filter: (data): data is { subject: string } => data.subject === `${meta.id}/members`,
       component: () => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
@@ -143,9 +152,9 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/space-settings-schema`,
+      id: `${meta.id}/space-settings-schema`,
       role: 'article',
-      filter: (data): data is { subject: string } => data.subject === `${SPACE_PLUGIN}/schema`,
+      filter: (data): data is { subject: string } => data.subject === `${meta.id}/schema`,
       component: () => {
         const layout = useLayout();
         const { spaceId } = parseId(layout.workspace);
@@ -158,7 +167,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/selected-objects`,
+      id: `${meta.id}/selected-objects`,
       role: 'article',
       filter: (data): data is { companionTo: DataType.View; subject: 'selected-objects' } =>
         Obj.instanceOf(DataType.View, data.companionTo) && data.subject === 'selected-objects',
@@ -189,45 +198,45 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <CreateObjectDialog {...data.props} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/create-initial-space-form-[hue]`,
+      id: `${meta.id}/create-initial-space-form-[hue]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, HueAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>
-            <HuePicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+            <HuePicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/create-initial-space-form-[icon]`,
+      id: `${meta.id}/create-initial-space-form-[icon]`,
       role: 'form-input',
       filter: (data): data is { prop: string; schema: Schema.Schema<any> } => {
         const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, IconAnnotationId);
         return !!annotation;
       },
       component: ({ data: _, ...inputProps }) => {
-        const { label, disabled, type, getValue, onValueChange } = inputProps as any as InputProps;
+        const { label, readonly, type, getValue, onValueChange } = inputProps as any as InputProps;
         const handleChange = useCallback((nextIcon: string) => onValueChange(type, nextIcon), [onValueChange]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange]);
         return (
           <Input.Root>
             <Input.Label>{label}</Input.Label>
-            <IconPicker disabled={disabled} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
+            <IconPicker disabled={!!readonly} value={getValue() ?? ''} onChange={handleChange} onReset={handleReset} />
           </Input.Root>
         );
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/typename-form-input`,
+      id: `${meta.id}/typename-form-input`,
       role: 'form-input',
       filter: (
         data,
@@ -275,14 +284,19 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
             annotation.includes('unused-static') &&
             whitelistedTypenames.has(Type.getTypename(schema)) &&
             !space.properties.staticRecords?.includes(Type.getTypename(schema));
+          const usedStatic =
+            annotation.includes('used-static') &&
+            whitelistedTypenames.has(Type.getTypename(schema)) &&
+            space.properties.staticRecords?.includes(Type.getTypename(schema));
           const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || unusedStatic || objectForm;
+          return annotation.includes('static') || limitedStatic || unusedStatic || usedStatic || objectForm;
         });
         const dynamic = space?.db.schemaRegistry.query().runSync();
         const typenames = Array.from(
           new Set<string>([
             ...(annotation.includes('limited-static') ||
             annotation.includes('unused-static') ||
+            annotation.includes('used-static') ||
             annotation.includes('static') ||
             annotation.includes('object-form')
               ? fixed.map((schema) => Type.getTypename(schema))
@@ -306,32 +320,32 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/object-settings`,
+      id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: DataType.View } => Obj.instanceOf(DataType.View, data.subject),
       component: ({ data }) => <ViewEditor view={data.subject} />,
     }),
     createSurface({
       id: POPOVER_RENAME_SPACE,
-      role: 'popover',
+      role: 'card--popover',
       filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
       component: ({ data }) => <PopoverRenameSpace space={data.props} />,
     }),
     createSurface({
       id: POPOVER_RENAME_OBJECT,
-      role: 'popover',
+      role: 'card--popover',
       filter: (data): data is { props: Obj.Any } =>
         data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
       component: ({ data }) => <PopoverRenameObject object={data.props} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/menu-footer`,
+      id: `${meta.id}/menu-footer`,
       role: 'menu-footer',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => <MenuFooter object={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/navtree-presence`,
+      id: `${meta.id}/navtree-presence`,
       role: 'navtree-item-end',
       filter: (data): data is { id: string; subject: Obj.Any; open?: boolean } =>
         typeof data.id === 'string' && Obj.isObject(data.subject),
@@ -343,7 +357,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     }),
     // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
     createSurface({
-      id: `${SPACE_PLUGIN}/navtree-presence-fallback`,
+      id: `${meta.id}/navtree-presence-fallback`,
       role: 'navtree-item-end',
       position: 'fallback',
       filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
@@ -351,13 +365,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
     }),
     // TODO(wittjosiah): Broken?
     createSurface({
-      id: `${SPACE_PLUGIN}/navtree-sync-status`,
+      id: `${meta.id}/navtree-sync-status`,
       role: 'navtree-item-end',
       filter: (data): data is { subject: Space; open?: boolean } => isSpace(data.subject),
       component: ({ data }) => <InlineSyncStatus space={data.subject} open={data.open} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/navbar-presence`,
+      id: `${meta.id}/navbar-presence`,
       role: 'navbar-end',
       position: 'hoist',
       filter: (data): data is { subject: Space | Obj.Any } => isSpace(data.subject) || Obj.isObject(data.subject),
@@ -373,13 +387,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       },
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/collection-section`,
+      id: `${meta.id}/collection-section`,
       role: 'section',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
       component: ({ data }) => <CollectionSection collection={data.subject} />,
     }),
     createSurface({
-      id: `${SPACE_PLUGIN}/status`,
+      id: `${meta.id}/status`,
       role: 'status',
       component: () => <SyncStatus />,
     }),

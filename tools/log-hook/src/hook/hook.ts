@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname, extname, join, parse } from 'path';
+
+import { SourcemapMap } from '@swc-node/sourcemap-support';
 import { addHook } from 'pirates';
 
 import { ID_BUGCHECK_STRING, preprocess } from './preprocessor';
@@ -58,7 +59,7 @@ export const register = () => {
 
   const getSourceMap = (filename: string): string | undefined => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { retrieveSourceMap } = require('source-map-support');
       const sourceMap = retrieveSourceMap(filename);
       if (sourceMap) {
@@ -67,7 +68,7 @@ export const register = () => {
     } catch (err) {}
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { SourcemapMap } = require('@swc-node/sourcemap-support');
       const sourceMap = SourcemapMap.get(filename);
       if (sourceMap) {

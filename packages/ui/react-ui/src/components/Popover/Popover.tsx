@@ -22,17 +22,17 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { hideOthers } from 'aria-hidden';
 import React, {
   type ComponentPropsWithRef,
-  forwardRef,
-  type ElementRef,
-  type RefObject,
-  type ReactNode,
-  useRef,
-  useCallback,
   type ComponentPropsWithoutRef,
+  type ElementRef,
   type FC,
-  useState,
-  useEffect,
   type MutableRefObject,
+  type ReactNode,
+  type RefObject,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
@@ -182,7 +182,7 @@ PopoverTrigger.displayName = TRIGGER_NAME;
 const VIRTUAL_TRIGGER_NAME = 'PopoverVirtualTrigger';
 
 interface PopoverVirtualTriggerProps {
-  virtualRef: RefObject<PopoverTriggerElement>;
+  virtualRef: RefObject<PopoverTriggerElement | null>;
 }
 
 const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) => {
@@ -194,7 +194,7 @@ const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) =
       context.triggerRef.current = virtualRef.current;
     }
   });
-  return <PopperPrimitive.Anchor {...popperScope} virtualRef={virtualRef} />;
+  return <PopperPrimitive.Anchor {...popperScope} virtualRef={virtualRef as RefObject<PopoverTriggerElement>} />;
 };
 
 PopoverVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;

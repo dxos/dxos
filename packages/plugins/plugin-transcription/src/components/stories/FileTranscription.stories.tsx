@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { scheduleTask } from '@dxos/async';
@@ -25,17 +23,18 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { seedTestData, Testing } from '@dxos/schema/testing';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
+import { MessageNormalizer, getActorId } from '../../segments-normalization';
+import { TestItem } from '../../testing';
+import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { renderByline } from '../Transcript';
 
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
-import { getActorId, MessageNormalizer } from '../../segments-normalization';
-import { TestItem } from '../../testing';
-import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
-import { renderMarkdown } from '../Transcript';
 
 const AudioFile = ({
   detectSpeaking,
@@ -69,7 +68,6 @@ const AudioFile = ({
 
   useEffect(() => {
     if (!audio) {
-      log.warn('no audio');
       return;
     }
 
@@ -85,11 +83,16 @@ const AudioFile = ({
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
 
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const handleSegments = useCallback<TranscriberParams['onSegments']>(
     async (blocks) => {
-      const message = Obj.make(DataType.Message, { sender: actor, created: new Date().toISOString(), blocks });
-      void queue?.append([message]);
+      void queue?.append([
+        Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender: actor,
+          blocks,
+        }),
+      ]);
     },
     [queue],
   );
@@ -108,14 +111,14 @@ const AudioFile = ({
     }
     const executor = new FunctionExecutor(
       new ServiceContainer().setServices({
-        ai: {
-          client: new EdgeAiServiceClient({
-            endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-            defaultGenerationOptions: {
-              model: '@anthropic/claude-3-5-sonnet-20241022',
-            },
-          }),
-        },
+        // ai: {
+        //   client: new Edge AiServiceClient({
+        //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+        //     defaultGenerationOptions: {
+        //       model: '@anthropic/claude-3-5-sonnet-20241022',
+        //     },
+        //   }),
+        // },
       }),
     );
 
@@ -143,10 +146,10 @@ const AudioFile = ({
   }, [normalizer]);
 
   const manageChunkRecording = () => {
-    if (running && isSpeaking) {
+    if (running && isSpeaking && transcriber) {
       log.info('starting transcription');
       transcriber?.startChunksRecording();
-    } else if (!isSpeaking || !running) {
+    } else if ((!isSpeaking || !running) && transcriber) {
       log.info('stopping transcription');
       transcriber?.stopChunksRecording();
     }
@@ -172,39 +175,51 @@ const AudioFile = ({
     manageChunkRecording();
   }, [isSpeaking, stream]);
 
-  return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} audioRef={ref} />;
+  return (
+    <TranscriptionStory
+      disabled={!stream}
+      model={model}
+      running={running}
+      onRunningChange={setRunning}
+      audioRef={ref}
+    />
+  );
 };
 
-const meta: Meta<typeof AudioFile> = {
+const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         SettingsPlugin(),
         PreviewPlugin(),
-        IntentPlugin(),
         TranscriptionPlugin(),
+        StorybookLayoutPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 100,
@@ -228,15 +243,16 @@ export const Default: StoryObj<typeof AudioFile> = {
   },
 };
 
-export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
-  args: {
-    detectSpeaking: true,
-    normalizeSentences: true,
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
-    // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-  },
-};
+// TODO(mykola): Fix sentence normalization.
+// export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
+//   render: AudioFile,
+//   args: {
+//     detectSpeaking: true,
+//     normalizeSentences: true,
+//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+//     audioUrl: 'https://dxos.network/audio-london.m4a',
+//     // textUrl: 'https://dxos.network/audio-london.txt',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//   },
+// };

@@ -4,7 +4,7 @@
 
 import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { useFocusableGroup, type TabsterTypes } from '@fluentui/react-tabster';
+import { type TabsterTypes, useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type DependencyList,
   type KeyboardEventHandler,
@@ -17,9 +17,9 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { getProviderValue, isNotFalsy, type MaybeProvider } from '@dxos/util';
+import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
-import { type EditorSelection, documentId, createEditorStateTransaction, editorInputMode } from '../extensions';
+import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
 
 let instanceCount = 0;
@@ -35,8 +35,8 @@ export type CursorInfo = {
 
 export type UseTextEditor = {
   // TODO(burdon): Rename.
-  parentRef: RefObject<HTMLDivElement>;
-  view?: EditorView;
+  parentRef: RefObject<HTMLDivElement | null>;
+  view: EditorView | null;
   focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
     tabIndex: 0;
     onKeyUp: KeyboardEventHandler<HTMLDivElement>;
@@ -66,11 +66,11 @@ export const useTextEditor = (
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
-  const [view, setView] = useState<EditorView>();
+  const [view, setView] = useState<EditorView | null>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let view: EditorView;
+    let view: EditorView | null = null;
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
@@ -96,19 +96,7 @@ export const useTextEditor = (
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-          // TODO(burdon): Factor out debug inspector.
-          // ViewPlugin.fromClass(
-          //   class {
-          //     constructor(_view: EditorView) {
-          //       log('construct', { id });
-          //     }
-          //
-          //     destroy() {
-          //       log('destroy', { id });
-          //     }
-          //   },
-          // ),
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig

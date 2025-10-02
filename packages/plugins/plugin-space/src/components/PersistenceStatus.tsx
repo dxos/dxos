@@ -2,15 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsCounterClockwise, CheckCircle, Warning } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import { type EchoDatabase } from '@dxos/react-client/echo';
-import { Tooltip, useTranslation } from '@dxos/react-ui';
-import { getSize, mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
+import { Icon, Tooltip, useTranslation } from '@dxos/react-ui';
+import { mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 enum Status {
   PERSISTED_LOCALLY = 0,
@@ -20,7 +19,7 @@ enum Status {
 
 // TODO(zan): This now has no usages. Remove it?
 export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [displayMessage, setDisplayMessage] = useState(false);
   const [status, naturalSetStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
   const [prevStatus, setPrevStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
@@ -54,14 +53,14 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
     case Status.ERROR:
       return (
         <div className='flex items-center'>
-          <Warning className={mx(getSize(4), 'me-1')} />
+          <Icon icon='ph--warning--regular' size={4} classNames='me-1' />
           <span className={mx('text-sm', warningText)}>{t('persistence error label')}</span>
         </div>
       );
     case Status.PENDING:
       return (
         <div className='flex items-center'>
-          <ArrowsCounterClockwise className={mx(getSize(4), 'me-1')} />
+          <Icon icon='ph--arrows-counter-clockwise--regular' size={4} classNames='me-1' />
           <span className={mx('text-sm', staticPlaceholderText)}>{t('persistence pending label')}</span>
         </div>
       );
@@ -74,7 +73,7 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
           content={t('persisted locally message')}
           className='flex items-center'
         >
-          <CheckCircle className={mx(getSize(4), 'me-1')} />
+          <Icon icon='ph--check-circle--regular' size={4} classNames='me-1' />
           {displayMessage && (
             <span className={mx('text-sm', staticPlaceholderText)}>{t('persisted locally label')}</span>
           )}

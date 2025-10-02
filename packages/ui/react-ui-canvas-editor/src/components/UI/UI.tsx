@@ -10,9 +10,9 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useEditorContext } from '../../hooks';
-import { Tools, Toolbar } from '../Toolbar';
 import { type TestId } from '../defs';
 import { eventsAuto, eventsNone } from '../styles';
+import { Toolbar, Tools } from '../Toolbar';
 
 export type UIProps = ThemedClassName<{
   showTools?: boolean;
@@ -54,7 +54,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
             <SyntaxHighlighter
               language='javascript'
               classNames={mx(
-                'w-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs p-2 opacity-70',
+                'is-[300px] bg-baseSurface rounded-md bg-baseSurface border border-separator text-xs opacity-70',
               )}
             >
               {JSON.stringify(info, null, 2)}

@@ -4,7 +4,7 @@
 
 export * from './buffer-patch';
 export * from './codec';
-export * from './common';
+export type * from './common';
 export * from './encoding';
 export * from './mapping';
 export * from './sanitizer';
@@ -14,4 +14,4 @@ export * from './stream';
 export * from './substitutions';
 export * from './compression';
 export * from './util';
-export * from './request-options';
+export type * from './request-options';

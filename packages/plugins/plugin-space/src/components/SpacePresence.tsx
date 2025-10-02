@@ -9,27 +9,27 @@ import { useAppGraph, useCapability } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
 import { type Type } from '@dxos/echo';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
+import { type SpaceMember, fullyQualifiedId, getSpace, useMembers } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
   type AvatarContentProps,
+  type DxAvatar,
+  List,
+  ListItem,
+  Popover,
   type Size,
   type ThemedClassName,
   Tooltip,
-  Popover,
-  useTranslation,
-  List,
-  ListItem,
   useDefaultValue,
-  type DxAvatar,
+  useTranslation,
 } from '@dxos/react-ui';
-import { AttentionGlyph, useAttended, useAttention, type AttentionGlyphProps } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SpaceCapabilities } from '../capabilities';
 import { usePath } from '../hooks';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import type { ObjectViewerProps } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
@@ -254,7 +254,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <Tooltip.Trigger asChild content={t('presence label', { count })} side='bottom'>

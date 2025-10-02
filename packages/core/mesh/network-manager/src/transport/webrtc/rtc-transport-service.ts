@@ -9,23 +9,24 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  type BridgeService,
-  type ConnectionRequest,
-  type SignalRequest,
-  type DataRequest,
   type BridgeEvent,
-  ConnectionState,
+  type BridgeService,
   type CloseRequest,
+  type ConnectionRequest,
+  ConnectionState,
+  type DataRequest,
   type DetailsRequest,
   type DetailsResponse,
+  type SignalRequest,
   type StatsRequest,
   type StatsResponse,
 } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { ComplexMap } from '@dxos/util';
 
-import { createRtcTransportFactory } from './rtc-transport-factory';
 import { type IceProvider } from '../../signal';
 import { type Transport, type TransportFactory } from '../transport';
+
+import { createRtcTransportFactory } from './rtc-transport-factory';
 
 type TransportState = {
   proxyId: PublicKey;

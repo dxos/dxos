@@ -14,6 +14,7 @@ import os from 'os';
 import path from 'path';
 import yargs from 'yargs';
 import { log } from 'console';
+import { execSync } from 'child_process';
 
 // TODO(burdon): Reconcile with tools/x.
 
@@ -79,6 +80,16 @@ const argv = yargs(process.argv.slice(2))
     type: 'boolean',
     default: false,
     description: 'Verbose mode',
+  })
+  .option('verify', {
+    type: 'boolean',
+    default: false,
+    description: 'Verify mode: exit 0 if all OK, 1 if errors, 2 if pending workflows',
+  })
+  .option('porcelain', {
+    type: 'boolean',
+    default: false,
+    description: 'Fail if git has uncommitted or unpushed changes',
   }).argv;
 
 const command = argv._[0];
@@ -86,7 +97,9 @@ const command = argv._[0];
 switch (command) {
   case 'action':
   default: {
-    if (argv.watch) {
+    if (argv.verify) {
+      await verifyWorkflows();
+    } else if (argv.watch) {
       while (true) {
         const done = await checkResults();
         if (done) {
@@ -127,6 +140,380 @@ async function checkResults() {
 }
 
 /**
+ * Check for uncommitted changes in the repository.
+ */
+function hasUncommittedChanges() {
+  try {
+    const status = execSync('git status --porcelain', { encoding: 'utf8', cwd: REPO_ROOT });
+    return status.trim().length > 0;
+  } catch (error) {
+    console.warn(chalk.yellow('Warning: Could not check git status'));
+    return false;
+  }
+}
+
+/**
+ * Check for unpushed changes in the repository.
+ */
+function hasUnpushedChanges() {
+  try {
+    const currentBranch = getCurrentBranch();
+    const unpushed = execSync(`git log origin/${currentBranch}..HEAD --oneline`, { encoding: 'utf8', cwd: REPO_ROOT });
+    return unpushed.trim().length > 0;
+  } catch (error) {
+    // If remote branch doesn't exist or other error, assume no unpushed changes
+    return false;
+  }
+}
+
+/**
+ * Verify workflows and exit with appropriate code.
+ */
+async function verifyWorkflows() {
+  // Check for uncommitted changes
+  if (hasUncommittedChanges()) {
+    console.log(chalk.yellow('⚠️  Warning: You have uncommitted changes in your repository'));
+    if (argv.porcelain) {
+      process.exit(1);
+    }
+  }
+
+  // Check for unpushed changes
+  if (hasUnpushedChanges()) {
+    console.log(chalk.yellow('⚠️  Warning: You have unpushed commits in your repository'));
+    if (argv.porcelain) {
+      process.exit(1);
+    }
+  }
+
+  if (argv.watch) {
+    // Watch mode: wait for workflows to complete
+    while (true) {
+      const result = await checkWorkflowStatus();
+
+      if (result.status === 'pending') {
+        console.log(
+          chalk.yellow(
+            `Workflows still pending: ${result.pendingRuns
+              .map((run) => {
+                const now = new Date(new Date().toISOString());
+                const created = new Date(run.created_at);
+                const diff = now - created;
+                const mm = Math.floor((diff / 1000 / 60) % 60);
+                const ss = Math.floor((diff / 1000) % 60);
+                const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+                return `${run.name} ${humanReadable}`;
+              })
+              .join(', ')}`,
+          ),
+        );
+        await new Promise((resolve) => setTimeout(resolve, argv.interval));
+        continue;
+      } else if (result.status === 'no-workflows') {
+        console.log(chalk.yellow('No workflows found for current branch'));
+        await new Promise((resolve) => setTimeout(resolve, argv.interval));
+        continue;
+      }
+
+      // Workflows completed, check final status
+      if (result.status === 'success') {
+        console.log(chalk.green(`✓ All workflows completed successfully: ${result.successRuns.length}`));
+        process.exit(0);
+      } else if (result.status === 'failure') {
+        console.log(chalk.red('✗ Workflows completed with errors:'));
+        if (result.errors && result.errors.length > 0) {
+          result.errors.forEach((error) => console.log(chalk.red(`  - ${error}`)));
+        }
+
+        // Display logs for failed workflows
+        if (result.failedRuns && result.failedRuns.length > 0) {
+          for (const failedRun of result.failedRuns) {
+            await displayWorkflowLogs(failedRun);
+          }
+        }
+
+        process.exit(1);
+      }
+    }
+  } else {
+    // Single check mode
+    const result = await checkWorkflowStatus();
+
+    if (result.status === 'pending') {
+      console.log(chalk.yellow('⏳ Workflows are still pending'));
+      process.exit(2);
+    } else if (result.status === 'success') {
+      console.log(
+        chalk.green(`✓ All workflows completed successfully: ${result.successRuns.map((run) => run.name).join(', ')}`),
+      );
+      process.exit(0);
+    } else if (result.status === 'failure') {
+      console.log(chalk.red('✗ Workflows completed with errors:'));
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach((error) => console.log(chalk.red(`  - ${error}`)));
+      }
+
+      // Display logs for failed workflows
+      if (result.failedRuns && result.failedRuns.length > 0) {
+        for (const failedRun of result.failedRuns) {
+          await displayWorkflowLogs(failedRun);
+        }
+      }
+
+      process.exit(1);
+    } else if (result.status === 'no-workflows') {
+      console.log(chalk.yellow('No workflows found for current branch'));
+      process.exit(1);
+    }
+  }
+}
+
+/**
+ * Get the current Git branch name.
+ */
+function getCurrentBranch() {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+    return branch;
+  } catch (err) {
+    if (argv.verbose) {
+      console.log(chalk.gray('Could not determine current branch, checking all branches'));
+    }
+    return null;
+  }
+}
+
+/**
+ * Get the current Git commit hash.
+ */
+function getCurrentCommit() {
+  try {
+    const commit = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
+    return commit;
+  } catch (err) {
+    console.log(chalk.gray('Could not determine current commit'));
+    process.exit(1);
+  }
+}
+
+/**
+ * Check workflow status and return summary.
+ */
+async function checkWorkflowStatus() {
+  const runs = await listWorkflowRunsForRepo(false, false); // Don't display table in verify mode
+  if (!runs || runs.length === 0) {
+    return { status: 'no-workflows' };
+  }
+
+  // Get current branch to filter workflows
+  const currentBranch = getCurrentBranch();
+  const currentCommit = getCurrentCommit();
+
+  // Filter runs by current branch if available
+  const filteredRuns = currentBranch
+    ? runs.filter((run) => run.head_branch === currentBranch && run.head_commit.id === currentCommit)
+    : runs;
+
+  if (argv.verbose && currentBranch) {
+    console.log(chalk.gray(`Checking workflows for branch: ${currentBranch}`));
+  }
+
+  if (filteredRuns.length === 0) {
+    if (currentBranch && argv.verbose) {
+      console.log(chalk.gray(`No workflows found for branch: ${currentBranch}`));
+    }
+    return { status: 'no-workflows', errors: [], failedRuns: [] };
+  }
+
+  let hasPending = false;
+  let hasFailures = false;
+  const errors = [];
+  const failedRuns = [];
+
+  for (const run of filteredRuns) {
+    if (run.status === 'queued' || run.status === 'in_progress') {
+      hasPending = true;
+    } else if (run.status === 'completed' && run.conclusion === 'failure') {
+      hasFailures = true;
+      errors.push(`${run.name} (${run.head_branch}): ${run.conclusion}`);
+      failedRuns.push(run);
+    }
+  }
+
+  if (hasPending) {
+    return {
+      status: 'pending',
+      errors,
+      failedRuns: [],
+      pendingRuns: filteredRuns.filter((run) => run.status === 'queued' || run.status === 'in_progress'),
+    };
+  } else if (hasFailures) {
+    return { status: 'failure', errors, failedRuns };
+  } else {
+    return { status: 'success', errors: [], failedRuns: [], successRuns: filteredRuns };
+  }
+}
+
+/**
+ * Parse task logs from GitHub Actions logs.
+ * Extracts task-specific logs and identifies failed tasks.
+ */
+function parseTaskLogs(logs) {
+  const logLines = logs.split('\n').map((line) => line.replace('/__w/dxos/dxos/', ''));
+  const tasks = new Map();
+  const failedTasks = [];
+
+  // Regex to match task log lines: timestamp | task_name | content
+  const taskLogRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s+([^|]+)\s*\|(.*)$/;
+
+  for (const line of logLines) {
+    const match = line.match(taskLogRegex);
+
+    if (match) {
+      const taskName = match[1].trim();
+      const logContent = match[2];
+
+      // Initialize task if not seen before
+      if (!tasks.has(taskName)) {
+        tasks.set(taskName, {
+          name: taskName,
+          logs: [],
+          status: 'running',
+          failed: false,
+        });
+      }
+
+      const task = tasks.get(taskName);
+      // Store only the log content without timestamp and task name prefix
+      task.logs.push(logContent);
+
+      // Check for failure marker
+      if (logContent.includes(`Task ${taskName} failed to run.`)) {
+        task.failed = true;
+        task.status = 'failed';
+      }
+    } else {
+      // Check for generic failure patterns in non-task lines
+      if (line.includes('failed to run.')) {
+        const failureMatch = line.match(/Task ([^\s]+) failed to run\./);
+        if (failureMatch) {
+          const taskName = failureMatch[1];
+          if (tasks.has(taskName)) {
+            const task = tasks.get(taskName);
+            task.failed = true;
+            task.status = 'failed';
+            task.logs.push(line);
+          }
+        }
+      }
+    }
+  }
+
+  // Collect only failed tasks
+  for (const task of tasks.values()) {
+    if (task.failed) {
+      failedTasks.push(task);
+    }
+  }
+
+  return failedTasks;
+}
+
+/**
+ * Fetch and display logs for a failed workflow run.
+ */
+async function displayWorkflowLogs(run) {
+  try {
+    const { octokit, owner, repo } = getOctokit();
+
+    console.log(chalk.yellow(`\n📋 Fetching logs for workflow: ${run.name} (${run.head_branch})...`));
+
+    // Get jobs for the workflow run
+    const {
+      data: { jobs },
+    } = await octokit.actions.listJobsForWorkflowRun({
+      owner,
+      repo,
+      run_id: run.id,
+    });
+
+    for (const job of jobs) {
+      if (job.conclusion === 'failure') {
+        console.log(chalk.red(`\n❌ Failed Job: ${job.name}`));
+        console.log(chalk.gray(`   Started: ${job.started_at}`));
+        console.log(chalk.gray(`   Completed: ${job.completed_at}`));
+        console.log(chalk.gray(`   URL: ${job.html_url}`));
+
+        try {
+          // Get job logs
+          const logsResponse = await octokit.actions.downloadJobLogsForWorkflowRun({
+            owner,
+            repo,
+            job_id: job.id,
+          });
+
+          if (logsResponse.url) {
+            const response = await fetch(logsResponse.url);
+            const logs = await response.text();
+
+            const failedTasks = parseTaskLogs(logs);
+
+            if (failedTasks.length > 0) {
+              console.log(chalk.gray('\n--- Failed Tasks ---'));
+
+              for (const task of failedTasks) {
+                console.log(chalk.red(`\n❌ Task: ${task.name}`));
+                console.log(chalk.gray(`   Status: ${task.status}`));
+                console.log(chalk.gray(`   Log lines: ${task.logs.length}`));
+
+                // Display task logs with color coding
+                task.logs.forEach((line) => {
+                  if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
+                    console.log(chalk.red(line));
+                  } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
+                    console.log(chalk.yellow(line));
+                  } else {
+                    console.log(line);
+                  }
+                });
+              }
+
+              // Summary
+              console.log(chalk.yellow(`\n📊 Summary: ${failedTasks.length} failed task(s)`));
+              failedTasks.forEach((task) => {
+                console.log(chalk.red(`  - ${task.name}: ${task.status}`));
+              });
+            } else {
+              console.log(chalk.gray('\n--- Job Logs ---'));
+              console.log(chalk.yellow('No failed tasks found, showing raw logs...'));
+
+              // Fallback to original log display if no tasks detected
+              // Map paths so they are clickable in VSCode.
+              const logLines = logs.split('\n').map((line) => line.replace('/__w/dxos/dxos/', ''));
+              const displayLines = logLines.slice(-500);
+
+              displayLines.forEach((line) => {
+                if (line.includes('error') || line.includes('Error') || line.includes('ERROR')) {
+                  console.log(chalk.red(line));
+                } else if (line.includes('warning') || line.includes('Warning') || line.includes('WARN')) {
+                  console.log(chalk.yellow(line));
+                } else {
+                  console.log(line);
+                }
+              });
+            }
+          }
+        } catch (logErr) {
+          console.log(chalk.red(`   Failed to fetch logs: ${logErr.message}`));
+        }
+      }
+    }
+  } catch (err) {
+    console.error(chalk.red(`Failed to fetch workflow logs: ${err.message}`));
+  }
+}
+
+/**
  * Get PRs.
  */
 async function getPullRequests() {
@@ -150,7 +537,7 @@ async function getPullRequests() {
 /**
  * List GH actions.
  */
-async function listWorkflowRunsForRepo(watch = false) {
+async function listWorkflowRunsForRepo(watch = false, displayTable = true) {
   try {
     const { octokit, owner, repo } = getOctokit();
     const actor = argv.me ? await getUsername() : argv.username;
@@ -172,48 +559,50 @@ async function listWorkflowRunsForRepo(watch = false) {
       return;
     }
 
-    // Output as cli-table3
-    const table = new Table({
-      head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
-      style: { head: ['gray'], compact: true },
-    });
-
     const rows = workflow_runs
       .filter((run) => (!actor || run.actor?.login === actor) && (!argv.filter || run.name.match(argv.filter)))
       .sort(({ created_at: a }, { created_at: b }) => new Date(b) - new Date(a));
 
-    rows.forEach((run) => {
-      const now = new Date(new Date().toISOString());
-      const created = new Date(run.created_at);
-      const updated = new Date(run.updated_at);
+    if (displayTable) {
+      // Output as cli-table3
+      const table = new Table({
+        head: ['Run', 'Workflow', 'Actor', 'Branch', 'Created', 'Duration', 'Status'],
+        style: { head: ['gray'], compact: true },
+      });
 
-      const diff = (run.status === 'completed' ? updated : now) - created;
-      const mm = Math.floor((diff / 1000 / 60) % 60);
-      const ss = Math.floor((diff / 1000) % 60);
-      const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+      rows.forEach((run) => {
+        const now = new Date(new Date().toISOString());
+        const created = new Date(run.created_at);
+        const updated = new Date(run.updated_at);
 
-      table.push([
-        chalk.blueBright(link(run.html_url, run.id)),
-        run.name,
-        run.actor?.login,
-        chalk.magenta(run.head_branch),
-        run.created_at,
-        { hAlign: 'right', content: humanReadable },
-        run.status === 'completed'
-          ? run.conclusion === 'failure'
-            ? chalk.red(run.conclusion)
-            : run.conclusion === 'success'
-              ? chalk.green(run.conclusion)
-              : chalk.yellow(run.conclusion)
-          : chalk.yellow(run.status),
-      ]);
-    });
+        const diff = (run.status === 'completed' ? updated : now) - created;
+        const mm = Math.floor((diff / 1000 / 60) % 60);
+        const ss = Math.floor((diff / 1000) % 60);
+        const humanReadable = `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
 
-    if (watch && !argv.verbose) {
-      console.clear();
+        table.push([
+          chalk.blueBright(link(run.html_url, run.id)),
+          run.name,
+          run.actor?.login,
+          chalk.magenta(run.head_branch),
+          run.created_at,
+          { hAlign: 'right', content: humanReadable },
+          run.status === 'completed'
+            ? run.conclusion === 'failure'
+              ? chalk.red(run.conclusion)
+              : run.conclusion === 'success'
+                ? chalk.green(run.conclusion)
+                : chalk.yellow(run.conclusion)
+            : chalk.yellow(run.status),
+        ]);
+      });
+
+      if (watch && !argv.verbose) {
+        console.clear();
+      }
+
+      console.log(table.toString());
     }
-
-    console.log(table.toString());
     return rows;
   } catch (err) {
     console.error('Failed to fetch workflow runs:', err);
@@ -421,10 +810,27 @@ async function getUsername() {
  * https://github.com/settings/apps
  */
 function getGithubToken() {
+  // First priority: environment variable
   if (process.env.GITHUB_TOKEN) {
     return process.env.GITHUB_TOKEN;
   }
 
+  // Second priority: GitHub CLI auth status
+  try {
+    execSync('gh auth status', { stdio: 'pipe' });
+    // If gh auth status succeeds, get the token
+    const token = execSync('gh auth token', { encoding: 'utf8' }).trim();
+    if (token) {
+      return token;
+    }
+  } catch (err) {
+    // GitHub CLI is not authenticated, continue to 1Password fallback
+    if (argv.verbose) {
+      console.log(chalk.gray('GitHub CLI not authenticated, trying 1Password...'));
+    }
+  }
+
+  // Third priority: 1Password fallback
   try {
     const token = item.get(OP_GITHUB_ITEM);
     const field = token?.fields.find((f) => f.label === OP_GITHUB_FIELD);

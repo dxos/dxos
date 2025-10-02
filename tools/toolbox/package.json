@@ -10,14 +10,15 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "source": "./dist/src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
     }
   },
   "main": "dist/src/main.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "toolbox": "tsx ./src/main.ts"
+    "toolbox": "vite-node ./src/main.ts"
   },
   "dependencies": {
     "chalk": "^4.1.0",

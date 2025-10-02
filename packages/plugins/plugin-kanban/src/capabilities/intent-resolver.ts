@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
-import { ProjectionModel } from '@dxos/schema';
+import { Kanban } from '@dxos/react-ui-kanban/types';
+import { ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
-import { KANBAN_PLUGIN } from '../meta';
-import { createKanban, KanbanAction } from '../types';
+import { meta } from '../meta';
+import { KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -17,12 +18,12 @@ export default (context: PluginContext) =>
       intent: KanbanAction.Create,
       resolve: async ({ space, name, typename, initialPivotColumn }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await createKanban({
+        const { view } = await Kanban.makeView({
           client,
           space,
           name,
           typename,
-          initialPivotColumn,
+          pivotFieldName: initialPivotColumn,
         });
         return { data: { object: view } };
       },
@@ -30,7 +31,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const schema = getSpace(view)?.db.schemaRegistry.getSchema(view.query.typename!);
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(typenameFromQuery(view.query)!);
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
@@ -38,7 +39,7 @@ export default (context: PluginContext) =>
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -58,7 +59,7 @@ export default (context: PluginContext) =>
           space.db.remove(card);
           return {
             undoable: {
-              message: ['card deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card deleted label', { ns: meta.id }],
               data: { card },
             },
           };

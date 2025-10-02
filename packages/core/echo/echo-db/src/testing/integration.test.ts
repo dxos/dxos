@@ -5,23 +5,25 @@
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
+  TestReplicationNetwork,
+  TestSchema,
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
-  TestReplicationNetwork,
 } from '@dxos/echo-pipeline/testing';
 import {
   Expando,
-  getTypeAnnotation,
-  getSchemaTypename,
-  getTypeReference,
+  type ObjectId,
+  Ref,
   RelationSourceId,
   RelationTargetId,
   TypedObject,
-  type ObjectId,
-  Ref,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeReference,
 } from '@dxos/echo-schema';
 import { getSchema } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
@@ -31,9 +33,10 @@ import { live } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
-import { createDataAssertion, EchoTestBuilder } from './echo-test-builder';
 import { getSource, getTarget } from '../echo-handler/relations';
 import { Filter, Query } from '../query';
+
+import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
 registerSignalsRuntime();
 
@@ -102,6 +105,22 @@ describe('Integration tests', () => {
     await db2.coreDatabase.waitUntilHeadsReplicated(heads);
     await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
+  });
+
+  test('reload peer -- save index before restart', async () => {
+    const NUM_OBJECTS = 500;
+    await using peer = await builder.createPeer({ types: [TestSchema.Person] });
+
+    await using db = await peer.createDatabase();
+    for (let i = 0; i < NUM_OBJECTS; i++) {
+      db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
+    }
+    await db.flush({ indexes: true });
+
+    await peer.reload();
+    await using db2 = await peer.openLastDatabase();
+    const { objects } = await db2.query(Query.select(Filter.type(TestSchema.Person))).run();
+    expect(objects.length).to.eq(NUM_OBJECTS);
   });
 
   test('client restart with open host', async () => {

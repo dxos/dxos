@@ -7,6 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { type Action } from '@dxos/app-graph';
 import { type MenuActionProperties } from '@dxos/react-ui-menu';
 
+import { createComment } from '../comments';
+
 import {
   Inline,
   List,
@@ -25,7 +27,6 @@ import {
   toggleList,
   toggleStyle,
 } from './formatting';
-import { createComment } from '../comments';
 
 export type PayloadType =
   | 'view-mode'

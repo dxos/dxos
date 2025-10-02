@@ -7,12 +7,16 @@ import { useNavigate, useRoutes as useRouterRoutes } from 'react-router-dom';
 
 import { RootContainer } from '../containers';
 import {
+  AutomergePanel,
   ConfigPanel,
   CredentialsPanel,
+  DashboardPanel,
   DeviceListPanel,
   DiagnosticsPanel,
+  EdgeDashboardPanel,
   FeedsPanel,
   IdentityPanel,
+  InvocationTracePanel,
   KeyringPanel,
   LoggingPanel,
   MembersPanel,
@@ -24,13 +28,9 @@ import {
   SpaceListPanel,
   StoragePanel,
   SwarmPanel,
-  TracingPanel,
-  DashboardPanel,
-  EdgeDashboardPanel,
-  AutomergePanel,
-  WorkflowPanel,
-  InvocationTracePanel,
   TestingPanel,
+  TracingPanel,
+  WorkflowPanel,
 } from '../panels';
 
 export const namespace = 'devtools';

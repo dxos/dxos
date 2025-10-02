@@ -4,29 +4,31 @@
 
 import React from 'react';
 
-import { createSurface, contributes, Capabilities, useCapability } from '@dxos/app-framework';
+import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
+import { MarkdownCard, MarkdownContainer, MarkdownSettings } from '../components';
+import { meta } from '../meta';
+import { Markdown } from '../types';
+import { isEditorModel } from '../util';
+
 import { MarkdownCapabilities } from './capabilities';
-import { MarkdownContainer, MarkdownSettings, MarkdownPreview } from '../components';
-import { MARKDOWN_PLUGIN } from '../meta';
-import { DocumentType, isEditorModel, type MarkdownSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/document`,
+      id: `${meta.id}/surface/document`,
       role: ['article', 'section', 'tabpanel'],
-      filter: (data): data is { subject: DocumentType; variant: undefined } =>
-        Obj.instanceOf(DocumentType, data.subject) && !data.variant,
+      filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
+        Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+        const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
         const viewMode = getViewMode(fullyQualifiedId(data.subject));
 
@@ -46,14 +48,14 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/text`,
+      id: `${meta.id}/surface/text`,
       role: ['article', 'section', 'tabpanel'],
       filter: (data): data is { id: string; subject: DataType.Text } =>
         typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+        const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
 
         return (
@@ -72,13 +74,13 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/editor`,
+      id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
       component: ({ data, role }) => {
         const selectionManager = useCapability(AttentionCapabilities.Selection);
         const settingsStore = useCapability(Capabilities.SettingsStore);
-        const settings = settingsStore.getStore<MarkdownSettingsProps>(MARKDOWN_PLUGIN)!.value;
+        const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
 
         return (
@@ -97,17 +99,17 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/plugin-settings`,
+      id: `${meta.id}/surface/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<MarkdownSettingsProps> } =>
-        data.subject instanceof SettingsStore && data.subject.prefix === MARKDOWN_PLUGIN,
+      filter: (data): data is { subject: SettingsStore<Markdown.Settings> } =>
+        data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <MarkdownSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${MARKDOWN_PLUGIN}/preview`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card'],
-      filter: (data): data is { subject: DocumentType | DataType.Text } =>
-        Obj.instanceOf(DocumentType, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
-      component: ({ data, role }) => <MarkdownPreview {...data} role={role} />,
+      id: `${meta.id}/surface/preview`,
+      role: ['card--popover', 'card--intrinsic', 'card--extrinsic', 'card--transclusion', 'card'],
+      filter: (data): data is { subject: Markdown.Document | DataType.Text } =>
+        Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(DataType.Text, data.subject),
+      component: ({ data, role }) => <MarkdownCard {...data} role={role} />,
     }),
   ]);

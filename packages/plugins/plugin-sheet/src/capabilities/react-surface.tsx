@@ -8,15 +8,16 @@ import { Capabilities, contributes, createSurface, useCapability } from '@dxos/a
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { SheetCapabilities } from './capabilities';
 import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../components';
-import { SHEET_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SheetType } from '../types';
+
+import { SheetCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${SHEET_PLUGIN}/sheet`,
+      id: `${meta.id}/sheet`,
       role: ['article', 'section'],
       filter: (data): data is { subject: SheetType } =>
         Obj.instanceOf(SheetType, data.subject) && !!getSpace(data.subject),
@@ -31,7 +32,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${SHEET_PLUGIN}/object-settings`,
+      id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: SheetType } => Obj.instanceOf(SheetType, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,

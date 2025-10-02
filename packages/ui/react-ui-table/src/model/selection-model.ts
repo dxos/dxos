@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { computed, effect, signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, effect, signal } from '@preact/signals-core';
 
 import { Resource } from '@dxos/context';
 
-import { type TableRow } from './table-model';
 import { touch } from '../util';
+
+import { type TableRow } from './table-model';
 
 export type SelectionMode = 'single' | 'multiple';
 
 export class SelectionModel<T extends TableRow> extends Resource {
-  private readonly _selection = signal<Set<string>>(new Set());
+  private readonly _selection: Signal<Set<string>>;
 
   private readonly _validSelectedIds = computed<Set<string>>(() => {
     const rows = this._rows.value;
@@ -38,9 +39,11 @@ export class SelectionModel<T extends TableRow> extends Resource {
   constructor(
     private readonly _rows: ReadonlySignal<T[]>,
     private readonly _selectionMode: SelectionMode,
+    private readonly _initialSelection: string[],
     private readonly _onSelectionChanged?: () => void,
   ) {
     super();
+    this._selection = signal(new Set(this._initialSelection));
   }
 
   protected override async _open(): Promise<void> {

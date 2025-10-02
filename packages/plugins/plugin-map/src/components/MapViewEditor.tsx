@@ -9,11 +9,12 @@ import { Type } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
-import { Form, SelectInput, type CustomInputMap } from '@dxos/react-ui-form';
-import { type DataType } from '@dxos/schema';
+import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 
-import { type MapView } from '../types';
+import { type Map } from '../types';
 
+// TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({
   coordinateSource: Schema.optional(Schema.String.annotations({ title: 'Coordinate source type' })),
   coordinateColumn: Schema.optional(Schema.String.annotations({ title: 'Coordinate column' })),
@@ -24,8 +25,9 @@ type MapViewEditorProps = { view: DataType.View };
 export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace();
-  const map = view.presentation.target as MapView | undefined;
-  const currentSchema = useSchema(client, space, view.query.typename);
+  const map = view.presentation.target as Map.Map | undefined;
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const currentSchema = useSchema(client, space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);
 
@@ -70,15 +72,15 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const onSave = useCallback(
     (values: Partial<{ coordinateColumn: string }>) => {
       if (map && values.coordinateColumn) {
-        map.locationFieldId = values.coordinateColumn;
+        view.projection.pivotFieldId = values.coordinateColumn;
       }
     },
     [map],
   );
 
   const initialValues = useMemo(
-    () => ({ coordinateSource: view.query.typename, coordinateColumn: map?.locationFieldId }),
-    [map],
+    () => ({ coordinateSource: typename, coordinateColumn: view.projection.pivotFieldId }),
+    [view],
   );
 
   const custom: CustomInputMap = useMemo(

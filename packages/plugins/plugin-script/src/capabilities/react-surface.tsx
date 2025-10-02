@@ -13,18 +13,19 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { ScriptCapabilities } from './capabilities';
 import {
   DEPLOYMENT_DIALOG,
   DeploymentDialog,
   ScriptContainer,
-  ScriptPluginSettings,
   ScriptObjectSettings,
+  ScriptPluginSettings,
   ScriptProperties,
   TestContainer,
 } from '../components';
 import { meta } from '../meta';
 import { type ScriptSettingsProps } from '../types';
+
+import { ScriptCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [

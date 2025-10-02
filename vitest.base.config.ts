@@ -2,74 +2,83 @@
 // Copyright 2024 DXOS.org
 //
 
-import { join } from 'node:path';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import react from '@vitejs/plugin-react-swc';
+import path, { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineConfig, type ViteUserConfig } from 'vitest/config';
+import { defineConfig, defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
+import PluginImportSource from '@dxos/vite-plugin-import-source';
 
 const isDebug = !!process.env.VITEST_DEBUG;
-const environment = (process.env.VITEST_ENV ?? 'node').toLowerCase();
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
+export type ConfigOptions = {
+  dirname: string;
+  node?: boolean | NodeOptions;
+  browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
+  storybook?: boolean;
+}
+
+export const createConfig = (options: ConfigOptions): ViteUserConfig => {
+  const { dirname, node, browser, storybook } = options;
+
+  const nodeProject = node ? createNodeProject(typeof node === 'boolean' ? undefined : node) : undefined;
+  const storybookProject = storybook ? createStorybookProject(dirname) : undefined;
+  const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
+
+  return {
+    test: {
+      ...resolveReporterConfig(dirname),
+      projects: [
+        nodeProject,
+        storybookProject,
+        ...browserProjects,
+      ].filter((project): project is UserWorkspaceConfig => project !== undefined),
+    },
+  };
+};
+
+const createStorybookProject = (dirname: string) =>
+  defineProject({
+    test: {
+      name: 'storybook',
+      browser: {
+        enabled: true,
+        headless: true,
+        provider: 'playwright',
+        instances: [{ browser: 'chromium' }],
+      },
+      setupFiles: [new URL('./tools/storybook/.storybook/vitest.setup.ts', import.meta.url).pathname],
+    },
+    optimizeDeps: { include: ['@preact-signals/safe-react/tracking'] },
+    plugins: [
+      storybookTest({
+        configDir: path.join(dirname, '.storybook'),
+        // The --ci flag will skip prompts and not open a browser.
+        storybookScript: 'storybook dev --ci',
+        tags: {
+          include: ['test'],
+          exclude: ['experimental'],
+        },
+      }),
+    ],
+  });
+
 type BrowserOptions = {
-  cwd: string;
   browserName: string;
   nodeExternal?: boolean;
   injectGlobals?: boolean;
 };
 
-export type ConfigOptions = Omit<BrowserOptions, 'browserName'>;
-
-export const baseConfig = (options: ConfigOptions): ViteUserConfig => {
-  switch (environment) {
-    case 'chromium': {
-      return createBrowserConfig({ browserName: environment, ...options });
-    }
-    case 'node':
-    default: {
-      if (environment.length > 0 && environment !== 'node') {
-        console.log("Unrecognized VITEST_ENV value, falling back to 'node': " + environment);
-      }
-
-      return createNodeConfig(options.cwd);
-    }
-  }
-};
-
-const createNodeConfig = (cwd: string) =>
-  defineConfig({
-    esbuild: {
-      target: 'es2020',
-    },
-    server: {
-      fs: {
-        allow: [new URL('./vitest', import.meta.url).pathname],
-      },
-    },
-    test: {
-      ...resolveReporterConfig({ browserMode: false, cwd }),
-      environment: 'node',
-      include: [
-        '**/src/**/*.test.{ts,tsx}',
-        '**/test/**/*.test.{ts,tsx}',
-        '!**/src/**/*.browser.test.{ts,tsx}',
-        '!**/test/**/*.browser.test.{ts,tsx}',
-      ],
-      setupFiles: [new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
-    },
-    // Shows build trace
-    // VITE_INSPECT=1 pnpm vitest --ui
-    // http://localhost:51204/__inspect/#/
-    plugins: [process.env.VITE_INSPECT ? Inspect() : undefined],
-  });
-
-const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
-  defineConfig({
+const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals = true }: BrowserOptions) =>
+  defineProject({
     plugins: [
       nodeStdPlugin(),
       WasmPlugin(),
@@ -79,6 +88,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       include: ['buffer/'],
       esbuildOptions: {
         plugins: [
+          // TODO(burdon): esbuild version mismatch.
           FixGracefulFsPlugin(),
           // TODO(wittjosiah): Compute nodeStd from package.json
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
@@ -89,8 +99,6 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
       target: 'es2020',
     },
     test: {
-      ...resolveReporterConfig({ browserMode: true, cwd }),
-
       env: {
         LOG_CONFIG: 'log-config.yaml',
       },
@@ -102,8 +110,7 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 9999999 : 5000,
-      inspect: isDebug,
+      testTimeout: isDebug ? 3600_000 : 5000,
       isolate: false,
       poolOptions: {
         threads: {
@@ -122,7 +129,94 @@ const createBrowserConfig = ({ browserName, cwd, nodeExternal = false, injectGlo
     },
   });
 
-const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd: string }): ViteUserConfig['test'] => {
+type NodeOptions = {
+  environment?: 'node' | 'jsdom' | 'happy-dom';
+  retry?: number;
+  timeout?: number;
+  setupFiles?: string[];
+  plugins?: Plugin[];
+};
+
+const createNodeProject = ({
+  environment = 'node',
+  retry,
+  timeout,
+  setupFiles = [],
+  plugins = [],
+}: NodeOptions = {}) =>
+  defineProject({
+    esbuild: {
+      target: 'es2020',
+    },
+    server: {
+      fs: {
+        allow: [new URL('./vitest', import.meta.url).pathname],
+      },
+    },
+    test: {
+      name: 'node',
+      environment,
+      retry,
+      testTimeout: timeout,
+      include: [
+        '**/src/**/*.test.{ts,tsx}',
+        '**/test/**/*.test.{ts,tsx}',
+        '!**/src/**/*.browser.test.{ts,tsx}',
+        '!**/test/**/*.browser.test.{ts,tsx}',
+      ],
+      setupFiles: [...setupFiles, new URL('./tools/vitest/setup.ts', import.meta.url).pathname],
+    },
+    // Shows build trace
+    // VITE_INSPECT=1 pnpm vitest --ui
+    // http://localhost:51204/__inspect/#/
+    plugins: [
+      ...plugins,
+
+      PluginImportSource(),
+
+      process.env.VITE_INSPECT ? Inspect() : undefined,
+
+      // We don't care about react but we want the SWC transforers.
+      react({
+        tsDecorators: true,
+        plugins: [
+          [
+            '@dxos/swc-log-plugin',
+            {
+              to_transform: [
+                {
+                  name: 'log',
+                  package: '@dxos/log',
+                  param_index: 2,
+                  include_args: false,
+                  include_call_site: true,
+                  include_scope: true,
+                },
+                {
+                  name: 'invariant',
+                  package: '@dxos/invariant',
+                  param_index: 2,
+                  include_args: true,
+                  include_call_site: false,
+                  include_scope: true,
+                },
+                {
+                  name: 'Context',
+                  package: '@dxos/context',
+                  param_index: 1,
+                  include_args: false,
+                  include_call_site: false,
+                  include_scope: false,
+                },
+              ],
+            },
+          ],
+        ],
+      }),
+    ],
+  });
+
+const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   const packageJson = pkgUp.sync({ cwd });
   const packageDir = packageJson!.split('/').slice(0, -1).join('/');
   const packageDirName = packageDir.split('/').pop();
@@ -157,6 +251,22 @@ const resolveReporterConfig = ({ browserMode, cwd }: { browserMode: boolean; cwd
       reportsDirectory,
     },
   };
+};
+
+const normalizeBrowserOptions = (options?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] })): BrowserOptions[] => {
+  if (!options) {
+    return [];
+  }
+
+  if (typeof options === 'string') {
+    return [{ browserName: options }];
+  }
+
+  if (Array.isArray(options)) {
+    return options.map((browser) => ({ browserName: browser }));
+  }
+
+  return options.browsers.map((browser) => ({ browserName: browser, ...options }));
 };
 
 /**

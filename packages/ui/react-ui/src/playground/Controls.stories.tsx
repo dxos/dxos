@@ -4,11 +4,11 @@
 
 import '@dxos-theme';
 
-import { FileTs, FileJs, ArrowClockwise, Bug, TextUnderline, TextB, TextItalic } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Input, Select, Toggle, Toolbar } from '../components';
-import { withTheme, withSurfaceVariantsLayout } from '../testing';
+import { Icon, Input, Select, Toggle, Toolbar } from '../components';
+import { withSurfaceVariantsLayout, withTheme } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -29,6 +29,7 @@ const DefaultStory = () => {
                 <Select.Option value={'b'}>B</Select.Option>
                 <Select.Option value={'c'}>C</Select.Option>
               </Select.Viewport>
+              <Select.Arrow />
             </Select.Content>
           </Select.Portal>
         </Select.Root>
@@ -37,27 +38,27 @@ const DefaultStory = () => {
         {/* TODO(burdon): Icon sizes should adapt to density. */}
         <Toolbar.ToggleGroup type='multiple'>
           <Toolbar.ToggleGroupItem value='a'>
-            <TextB />
+            <Icon icon='ph--text-b--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='b'>
-            <TextItalic />
+            <Icon icon='ph--text-italic--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='c'>
-            <TextUnderline />
+            <Icon icon='ph--text-underline--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
         {/* TODO(burdon): Highlight isn't shown. */}
         <Toolbar.ToggleGroup type='single' defaultValue='a'>
           <Toolbar.ToggleGroupItem value='a'>
-            <FileTs />
+            <Icon icon='ph--file-ts--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='b'>
-            <FileJs />
+            <Icon icon='ph--file-js--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
         <Toolbar.Button asChild>
           <Toggle>
-            <Bug />
+            <Icon icon='ph--bug--regular' />
           </Toggle>
         </Toolbar.Button>
         {/* TODO(burdon): Should not be 'is-full' by default. */}
@@ -71,7 +72,7 @@ const DefaultStory = () => {
         </Input.Root>
         <Toolbar.Button>Test</Toolbar.Button>
         <Toolbar.Button>
-          <ArrowClockwise />
+          <Icon icon='ph--arrow-clockwise--regular' />
         </Toolbar.Button>
       </Toolbar.Root>
       <Input.Root>
@@ -81,11 +82,15 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
   decorators: [withSurfaceVariantsLayout(), withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof Icon>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

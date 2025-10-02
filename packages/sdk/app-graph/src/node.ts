@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type MaybePromise, type MakeOptional } from '@dxos/util';
+import { type MakeOptional, type MaybePromise } from '@dxos/util';
 
 import { ACTION_GROUP_TYPE, ACTION_TYPE } from './graph';
 

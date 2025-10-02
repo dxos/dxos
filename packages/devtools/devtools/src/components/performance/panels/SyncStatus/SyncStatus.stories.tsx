@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { type Client } from '@dxos/client';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { getSyncSummary, type SpaceSyncStateMap } from '@dxos/react-client/echo';
+import { type SpaceSyncStateMap, getSyncSummary } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -33,6 +33,8 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
         missingOnLocal: 0,
         missingOnRemote: 0,
         differentDocuments: 0,
+        totalDocumentCount: 0,
+        unsyncedDocumentCount: 0,
       };
       return map;
     }
@@ -45,14 +47,16 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
       remoteDocumentCount: haveRemote,
       missingOnLocal: total - haveLocal,
       missingOnRemote: total - haveRemote,
-      differentDocuments: 0,
+      differentDocuments: Math.max(0, total - haveLocal - haveRemote),
+      totalDocumentCount: total,
+      unsyncedDocumentCount: Math.max(0, total - haveLocal - haveRemote),
     };
 
     return map;
   }, {});
 };
 
-const meta: Meta<typeof SyncStatus> = {
+const meta = {
   title: 'devtools/devtools/SyncStatus',
   component: SyncStatus,
   decorators: [withTheme, withClientProvider({ createIdentity: true })],
@@ -62,7 +66,7 @@ const meta: Meta<typeof SyncStatus> = {
   args: {
     classNames: 'w-[16rem] p-1 border border-separator',
   },
-};
+} satisfies Meta<typeof SyncStatus>;
 
 export default meta;
 

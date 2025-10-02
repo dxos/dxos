@@ -4,16 +4,17 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { ChatEditor } from './ChatEditor';
-import { type ReferenceData } from './references';
 import { translations } from '../../translations';
 
-const meta: Meta<typeof ChatEditor> = {
+import { ChatEditor } from './ChatEditor';
+import { type ReferenceData } from './references';
+
+const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
   component: ChatEditor,
   decorators: [withTheme],
@@ -21,13 +22,13 @@ const meta: Meta<typeof ChatEditor> = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof ChatEditor>;
 
 export default meta;
 
 const classNames = 'w-[20rem] p-2 border border-separator';
 
-type Story = StoryObj<typeof ChatEditor>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

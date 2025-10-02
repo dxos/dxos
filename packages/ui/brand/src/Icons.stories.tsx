@@ -4,22 +4,27 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { DXNS, DXOS, ECHO, HALO, KUBE, MESH, Composer } from './icons';
+import { Composer, DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 
 const Icon = () => null;
 
-export default {
+const meta = {
   title: 'ui/brand/Icons',
   component: Icon,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof Icon>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: () => {
     const size = 'w-[128px] h-[128px]';
     return (

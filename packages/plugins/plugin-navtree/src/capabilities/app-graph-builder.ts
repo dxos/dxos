@@ -5,16 +5,16 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext, createIntent, LayoutAction } from '@dxos/app-framework';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
-import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
+import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: NAVTREE_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -36,7 +36,7 @@ export default (context: PluginContext) =>
                   );
                 },
                 properties: {
-                  label: ['open commands label', { ns: NAVTREE_PLUGIN }],
+                  label: ['open commands label', { ns: meta.id }],
                   icon: 'ph--magnifying-glass--regular',
                   keyBinding: {
                     macos: 'meta+k',

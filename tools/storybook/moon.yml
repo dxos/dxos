@@ -4,7 +4,7 @@ tasks:
   bundle:
     command: storybook build
     args:
-      - --output-dir=out/stories
+      - --output-dir=out/storybook
     deps:
       # Ensure that all packages are built to run storybook.
       - '#ts-build:build'
@@ -14,7 +14,7 @@ tasks:
       - static/*
       - $NODE_OPTIONS
     outputs:
-      - out/stories/
+      - out/storybook/
   serve:
     command: storybook dev
     args:

@@ -5,35 +5,36 @@
 import '@dxos-theme';
 
 import { effect } from '@preact/signals-core';
-import { type StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type GraphModel, SelectionModel, type Graph } from '@dxos/graph';
+import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 import { Pulsar } from '../../fx';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
   GraphHierarchicalProjector,
   type GraphHierarchicalProjectorOptions,
+  type GraphLayoutEdge,
+  type GraphLayoutNode,
+  type GraphProjector,
   GraphRadialProjector,
   type GraphRadialProjectorOptions,
   GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
-  type GraphLayoutEdge,
-  type GraphLayoutNode,
-  type GraphProjector,
 } from '../../graph';
 import { type SVGContext } from '../../hooks';
-import { convertTreeToGraph, createGraph, createNode, createTree, TestGraphModel, type TestNode } from '../../testing';
+import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
 import { SVG, type SVGGridProps } from '../SVG';
+
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
 
 import '../../../styles/graph.css';
 
@@ -255,10 +256,10 @@ const DefaultStory = ({
       <Popover.VirtualTrigger virtualRef={popoverAnchorRef} />
       <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
         <Popover.Viewport>
-          <Card.SurfaceRoot role='popover'>
+          <Card.SurfaceRoot role='card--popover'>
             <SyntaxHighlighter
-              classNames='bg-transparent text-xs !mlb-cardSpacingBlock !pli-cardSpacingInline !overflow-visible'
               language='json'
+              classNames='text-xs mlb-cardSpacingBlock pli-cardSpacingInline bg-transparent'
               code={JSON.stringify(popover, null, 2)}
             />
           </Card.SurfaceRoot>
@@ -322,18 +323,18 @@ const Debug = ({
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     controls: { disable: true },
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -449,14 +450,12 @@ export const WithPopover: Story = {
   },
 };
 
-export const Empty: Story = {
-  render: () => (
-    <SVG.Root>
-      <SVG.Markers />
-      <SVG.Grid axis />
-      <SVG.Zoom extent={[1 / 4, 4]}>
-        <GraphComponent />
-      </SVG.Zoom>
-    </SVG.Root>
-  ),
-};
+export const Empty = () => (
+  <SVG.Root>
+    <SVG.Markers />
+    <SVG.Grid axis />
+    <SVG.Zoom extent={[1 / 4, 4]}>
+      <GraphComponent />
+    </SVG.Zoom>
+  </SVG.Root>
+);

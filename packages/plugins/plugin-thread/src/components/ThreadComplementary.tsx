@@ -6,23 +6,25 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   Capabilities,
+  CollaborationActions,
   LayoutAction,
   createIntent,
-  useCapability,
   useCapabilities,
+  useCapability,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { Ref, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { mx } from '@dxos/react-ui-theme';
 import { AnchoredTo } from '@dxos/schema';
 
 import { ThreadCapabilities } from '../capabilities';
-import { CommentsContainer } from '../components';
+import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
 import { ThreadAction, ThreadType } from '../types';
 
@@ -114,6 +116,28 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
     [dispatch, subject],
   );
 
+  const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
+    async (anchor, messageId) => {
+      const thread = Relation.getSource(anchor) as ThreadType;
+      const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
+      const message = thread.messages[messageIndex]?.target;
+      const proposal = message?.blocks.find((block) => block._tag === 'proposal');
+      if (!proposal || !anchor.anchor) {
+        return;
+      }
+
+      await dispatch(
+        createIntent(CollaborationActions.AcceptProposal, {
+          subject,
+          anchor: anchor.anchor,
+          proposal,
+        }),
+      );
+      await dispatch(createIntent(ThreadAction.ToggleResolved, { thread }));
+    },
+    [dispatch, subject],
+  );
+
   const comments = (
     <CommentsContainer
       anchors={anchors}
@@ -124,18 +148,22 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
       onResolve={handleResolve}
       onMessageDelete={handleMessageDelete}
       onThreadDelete={handleThreadDelete}
+      onAcceptProposal={handleAcceptProposal}
     />
   );
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames='overflow-hidden'>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'
-        classNames='contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin'
+        classNames={[
+          'contents [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
+        ]}
         onValueChange={onChangeViewState}
       >
-        <Tabs.Tablist classNames={tx('toolbar.root', 'toolbar', {})}>
+        {/* TODO(burdon): Standardize (like Tollbar). */}
+        <Tabs.Tablist classNames={mx('bg-toolbarSurface border-b border-subduedSeparator')}>
           <Tabs.Tab value='unresolved' classNames='text-sm'>
             {t('show unresolved label')}
           </Tabs.Tab>
@@ -143,8 +171,10 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
             {t('show all label')}
           </Tabs.Tab>
         </Tabs.Tablist>
-        <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-        <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+        <div className='overflow-y-auto'>
+          <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+          <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+        </div>
       </Tabs.Root>
     </StackItem.Content>
   );

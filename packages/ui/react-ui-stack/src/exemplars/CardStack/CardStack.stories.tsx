@@ -6,17 +6,17 @@ import '@dxos-theme';
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CardStack } from './CardStack';
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
 
-// Set a seed for reproducible random values
+import { CardStack } from './CardStack';
+
 faker.seed(0);
 
 type CardItem = {
@@ -130,7 +130,7 @@ const CardStackStory = () => {
                     <Card.Text classNames='line-clamp-2'>{card.description}</Card.Text>
                   </Card.StaticRoot>
                   <StackItem.DragPreview>
-                    {({ item }) => (
+                    {() => (
                       <CardDragPreview.Root>
                         <CardDragPreview.Content>
                           <Card.Toolbar>
@@ -159,11 +159,11 @@ const CardStackStory = () => {
   );
 };
 
-const meta: Meta<typeof CardStackStory> = {
+const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof CardStackStory>;
 
 export default meta;
 

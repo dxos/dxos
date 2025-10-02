@@ -6,25 +6,30 @@ import '@dxos-theme';
 
 import '@fontsource/k2d/100-italic.css';
 
-import { Ghost, Square } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 import { DXOS } from '../../icons';
+
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './ComposerLogo';
 
 // import ident from '../../../assets/sounds/ident-1.mp3';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
-export default {
+const meta = {
   title: 'ui/brand/Logo',
   component: ComposerLogo,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof ComposerLogo>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): Get from theme?
 const colors = {
@@ -35,7 +40,7 @@ const colors = {
   blue: '#539ACD',
 };
 
-export const Default = {
+export const Default: Story = {
   render: () => {
     const controller = useRef<AnimationController>(null);
     const [logo, setLogo] = useState(false);
@@ -76,7 +81,7 @@ export const Default = {
 };
 
 // TODO(burdon): Camo.
-export const Colors = {
+export const Colors: Story = {
   render: () => {
     const colors = [
       ['fill-teal-400', 'fill-teal-500', 'fill-teal-600'],
@@ -104,7 +109,7 @@ export const Colors = {
   },
 };
 
-export const Pacman = {
+export const Pacman: Story = {
   render: () => {
     return (
       <div className='absolute inset-0 flex flex-col justify-center'>
@@ -112,13 +117,13 @@ export const Pacman = {
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-blue-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-purple-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
               </div>
               <div>
-                <Ghost weight='duotone' className='w-[180px] h-[180px] text-red-500' />
+                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
               </div>
             </div>
 
@@ -127,7 +132,7 @@ export const Pacman = {
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Square weight='duotone' className='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>
@@ -179,7 +184,7 @@ const SpinnerContainer = () => {
   );
 };
 
-export const Spinner = {
+export const Spinner: Story = {
   render: () => {
     return (
       <div className='absolute inset-0 flex items-center justify-center'>
@@ -190,7 +195,7 @@ export const Spinner = {
 };
 
 // https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/LoadingBar/LoadingBar.tsx
-export const Linear = {
+export const Linear: Story = {
   render: () => {
     return (
       <div className='absolute flex flex-col inset-0 bg-black'>

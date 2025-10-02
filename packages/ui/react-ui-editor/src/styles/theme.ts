@@ -64,7 +64,7 @@ export const defaultTheme: ThemeStyles = {
     fontFamily: fontBody,
     // NOTE: Base font size (otherwise defined by HTML tag, which might be different for storybook).
     fontSize: '16px',
-    lineHeight: 1.5,
+    lineHeight: '24px',
     color: 'unset',
   },
 
@@ -74,22 +74,21 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-gutters': {
     borderRight: 'none',
-    background: 'transparent',
+    // background: 'transparent',
   },
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
-    borderRight: '1px solid var(--dx-separator)',
+    borderRight: '1px solid var(--dx-subduedSeparator)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
-    alignContent: 'center',
   },
   /**
-   * Height is set to match the corresponding line.
+   * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    alignItems: 'center',
+    lineHeight: '24px',
     fontSize: '12px',
   },
 
@@ -97,6 +96,7 @@ export const defaultTheme: ThemeStyles = {
    * Line.
    */
   '.cm-line': {
+    lineHeight: '24px',
     paddingInline: 0,
   },
   '.cm-activeLine': {
@@ -156,7 +156,7 @@ export const defaultTheme: ThemeStyles = {
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-baseSurface)',
+    background: 'var(--dx-modalSurface)',
   },
   '.cm-tooltip-below': {},
 
@@ -177,7 +177,8 @@ export const defaultTheme: ThemeStyles = {
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-hoverSurface)',
+    background: 'var(--dx-accentSurface)',
+    color: 'var(--dx-accentSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
@@ -233,7 +234,7 @@ export const defaultTheme: ThemeStyles = {
     outline: '1px solid transparent',
   },
   '.cm-panel input, .cm-panel button': {
-    backgroundColor: 'var(--dx-input)',
+    backgroundColor: 'var(--dx-inputSurface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
     outline: '1px solid var(--dx-neutralFocusIndicator)',

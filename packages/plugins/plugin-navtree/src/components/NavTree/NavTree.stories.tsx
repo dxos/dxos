@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -28,7 +28,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { useAttentionAttributes, useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 import { withLayout } from '@dxos/storybook-utils';
@@ -116,7 +116,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof NavTreeContainer> = {
+const meta = {
   title: 'plugins/plugin-navtree/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
@@ -124,12 +124,12 @@ const meta: Meta<typeof NavTreeContainer> = {
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
@@ -152,7 +152,7 @@ const meta: Meta<typeof NavTreeContainer> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof NavTreeContainer>;
 
 export default meta;
 
@@ -165,19 +165,20 @@ export const WithClient: Story = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
+        ClientPlugin({
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+          },
+        }),
+        SpacePlugin({}),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
         AttentionPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         NavTreePlugin(),
-        ClientPlugin({
-          onClientInitialized: async (_, client) => {
-            await client.halo.createIdentity();
-          },
-        }),
-        SpacePlugin(),
-        // Needs to be last so that the dialog and popovers have access to all contexts.
         StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
       ],
       capabilities: (context) => [

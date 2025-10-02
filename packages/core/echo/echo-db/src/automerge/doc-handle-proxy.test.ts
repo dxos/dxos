@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { generateAutomergeUrl, parseAutomergeUrl, Repo } from '@automerge/automerge-repo';
+import { Repo, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

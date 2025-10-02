@@ -2,20 +2,35 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Surface, contributes, createSurface } from '@dxos/app-framework';
-import { getSchema } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
+import {
+  Capabilities,
+  LayoutAction,
+  Surface,
+  contributes,
+  createIntent,
+  createSurface,
+  useIntentDispatcher,
+} from '@dxos/app-framework';
+import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { AttentionAction } from '@dxos/plugin-attention/types';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { useActiveSpace } from '@dxos/plugin-space';
+import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
+import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { DataType, type ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { PREVIEW_PLUGIN } from '../meta';
+import { TaskCard } from '../components/TaskCard';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -23,75 +38,118 @@ export default () =>
     // Specific schema types.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      id: `${meta.id}/schema-popover--contact`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
-        // TODO(wittjosiah): Handle org click.
-        // const { dispatchPromise: dispatch } = useIntentDispatcher();
-        // const handleOrgClick = useCallback(
-        //   async (org: DataType.Organization) => {
-        //     const space = getSpace(org);
-        //     const tablesQuery = await space?.db.query(Filter.type(TableType)).run();
-        //     const currentSpaceOrgTable = tablesQuery?.objects.find((table) => {
-        //       return table.view?.target?.query?.typename === DataType.Organization.typename;
-        //     });
-        //     await dispatch(
-        //       createIntent(LayoutAction.UpdatePopover, {
-        //         part: 'popover',
-        //         options: {
-        //           state: false,
-        //           anchorId: '',
-        //         },
-        //       }),
-        //     );
-        //     if (currentSpaceOrgTable) {
-        //       return dispatch(
-        //         createIntent(LayoutAction.Open, {
-        //           part: 'main',
-        //           subject: [fullyQualifiedId(currentSpaceOrgTable)],
-        //           options: { workspace: space?.id },
-        //         }),
-        //       );
-        //     }
-        //   },
-        //   [dispatch],
-        // );
+        const { dispatch } = useIntentDispatcher();
+        const space = getSpace(data.subject);
+        const defaultSpace = useSpace();
+        const activeSpace = useActiveSpace();
+
+        const currentSpaceOrgs = useQuery(space, Filter.type(DataType.Organization));
+        const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
+        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
+        const currentSpaceOrgTable = currentSpaceViews.find(
+          (view) =>
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
+        );
+        const defaultSpaceOrgTable = defaultSpaceViews.find(
+          (view) =>
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
+        );
+
+        // TODO(wittjosiah): Generalized way of handling related objects navigation.
+        const handleOrgClick = useCallback(
+          (org: DataType.Organization) =>
+            Effect.gen(function* () {
+              const view = currentSpaceOrgs.includes(org) ? currentSpaceOrgTable : defaultSpaceOrgTable;
+              yield* dispatch(
+                createIntent(LayoutAction.UpdatePopover, {
+                  part: 'popover',
+                  options: {
+                    state: false,
+                    anchorId: '',
+                  },
+                }),
+              );
+              if (view) {
+                const id = fullyQualifiedId(view);
+                yield* dispatch(
+                  createIntent(LayoutAction.Open, {
+                    part: 'main',
+                    subject: [id],
+                    options: { workspace: space?.id },
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(DeckAction.ChangeCompanion, {
+                    primary: id,
+                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+                  }),
+                );
+                yield* dispatch(
+                  createIntent(AttentionAction.Select, {
+                    contextId: id,
+                    selection: { mode: 'multi', ids: [org.id] },
+                  }),
+                );
+              }
+            }).pipe(Effect.runPromise),
+          [dispatch, currentSpaceOrgs, currentSpaceOrgTable, defaultSpaceOrgTable],
+        );
+
         return (
-          <ContactCard role={role} subject={data.subject}>
-            {role === 'popover' && <Surface role='related' data={data} />}
+          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onOrgClick={handleOrgClick}>
+            {role === 'card--popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      id: `${meta.id}/schema-popover--organization`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
-      component: ({ data, role }) => (
-        <OrganizationCard role={role} subject={data.subject}>
-          {role === 'popover' && <Surface role='related' data={data} />}
-        </OrganizationCard>
-      ),
+      component: ({ data, role }) => {
+        const activeSpace = useActiveSpace();
+
+        return (
+          <OrganizationCard role={role} subject={data.subject} activeSpace={activeSpace}>
+            {role === 'card--popover' && <Surface role='related' data={data} />}
+          </OrganizationCard>
+        );
+      },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      id: `${meta.id}/schema-popover--project`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
+      component: ({ data, role }) => {
+        const activeSpace = useActiveSpace();
+
+        return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/schema-popover--task`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
+      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
     }),
 
     //
     // Fallback for any object.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/fallback-popover`,
-      role: ['popover', 'card--intrinsic', 'transclusion', 'card--extrinsic', 'card'],
+      id: `${meta.id}/fallback-popover`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
-        const { t } = useTranslation(PREVIEW_PLUGIN);
+        const { t } = useTranslation(meta.id);
         if (!schema) {
           // TODO(burdon): Use Alert.
           return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
@@ -109,8 +167,9 @@ export default () =>
           <Card.SurfaceRoot role={role}>
             <Form
               schema={schema}
+              projection={data.projection}
               values={data.subject}
-              readonly={role === 'popover'}
+              readonly={role === 'card--popover' ? 'static' : false}
               onSave={handleSave}
               autoSave
               {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}

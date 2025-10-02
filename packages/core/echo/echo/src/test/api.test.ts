@@ -6,9 +6,9 @@ import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
 import { raise } from '@dxos/debug';
-import { FormatEnum, FormatAnnotation } from '@dxos/echo-schema';
+import { FormatAnnotation, FormatEnum } from '@dxos/echo-schema';
 
-import { Obj, Ref, Relation, Type, type Live } from '../index';
+import { type Live, Obj, Ref, Relation, Type } from '../index';
 
 namespace Testing {
   export const Organization = Schema.Struct({
@@ -149,6 +149,13 @@ describe('Experimental API review', () => {
     });
     expect(Relation.getSource(worksFor)).to.eq(person);
     expect(Relation.getTarget(worksFor)).to.eq(organization);
+  });
+
+  test('version', ({ expect }) => {
+    const person = Obj.make(Testing.Person, { name: 'Test' });
+    const version = Obj.version(person);
+    expect(Obj.isVersion(version)).to.be.true;
+    expect(Obj.versionValid(version)).to.be.false;
   });
 
   test.skip('type narrowing', () => {

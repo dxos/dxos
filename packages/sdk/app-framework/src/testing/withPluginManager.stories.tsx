@@ -2,14 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme, type Meta } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
-import { withPluginManager } from './withPluginManager';
 import { Capabilities, createSurface } from '../common';
 import { contributes } from '../core';
 import { Surface } from '../react';
+
+import { withPluginManager } from './withPluginManager';
 
 const DefaultStory = () => {
   console.log('Render');
@@ -21,7 +23,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
   decorators: [
@@ -39,8 +41,10 @@ const meta: Meta = {
       ],
     }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

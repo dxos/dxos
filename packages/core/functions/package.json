@@ -6,25 +6,29 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    },
     "./bundler": {
+      "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
       "browser": "./dist/lib/browser/bundler/index.mjs",
       "node": "./dist/lib/node-esm/bundler/index.mjs"
     },
     "./edge": {
+      "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
       "browser": "./dist/lib/browser/edge/index.mjs",
       "node": "./dist/lib/node-esm/edge/index.mjs"
     },
-    ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
-    },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -46,34 +50,37 @@
     "schema",
     "src"
   ],
-  "scripts": {
-    "gen-schema": "ts-node ./tools/schema.ts"
-  },
+  "scripts": {},
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.89.0",
-    "@preact/signals-core": "^1.9.0",
+    "@effect/platform": "0.92.1",
+    "@preact/signals-core": "^1.12.1",
     "cron": "^3.1.6",
     "cron-schedule": "^5.0.4",
-    "effect": "3.17.0",
+    "effect": "3.18.1",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",

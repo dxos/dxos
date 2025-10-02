@@ -2,9 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import { HttpClient, HttpClientRequest } from '@effect/platform';
+import { type Config, Context, Effect, Layer, Redacted } from 'effect';
 
-type CredentialQuery = {
+import { Query } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
+
+import { DatabaseService } from './database';
+
+export type CredentialQuery = {
   service?: string;
 };
 
@@ -17,7 +23,7 @@ export type ServiceCredential = {
   apiKey?: string;
 };
 
-export class CredentialsService extends Context.Tag('CredentialsService')<
+export class CredentialsService extends Context.Tag('@dxos/functions/CredentialsService')<
   CredentialsService,
   {
     /**
@@ -31,7 +37,72 @@ export class CredentialsService extends Context.Tag('CredentialsService')<
      */
     getCredential: (query: CredentialQuery) => Promise<ServiceCredential>;
   }
->() {}
+>() {
+  static getCredential = (query: CredentialQuery): Effect.Effect<ServiceCredential, never, CredentialsService> =>
+    Effect.gen(function* () {
+      const credentials = yield* CredentialsService;
+      return yield* Effect.promise(() => credentials.getCredential(query));
+    });
+
+  static getApiKey = (query: CredentialQuery): Effect.Effect<Redacted.Redacted<string>, never, CredentialsService> =>
+    Effect.gen(function* () {
+      const credential = yield* CredentialsService.getCredential(query);
+      if (!credential.apiKey) {
+        throw new Error(`API key not found for service: ${query.service}`);
+      }
+      return Redacted.make(credential.apiKey);
+    });
+
+  static configuredLayer = (credentials: ServiceCredential[]) =>
+    Layer.succeed(CredentialsService, new ConfiguredCredentialsService(credentials));
+
+  static layerConfig = (credentials: { service: string; apiKey: Config.Config<Redacted.Redacted<string>> }[]) =>
+    Layer.effect(
+      CredentialsService,
+      Effect.gen(function* () {
+        const serviceCredentials = yield* Effect.forEach(credentials, ({ service, apiKey }) =>
+          Effect.gen(function* () {
+            return {
+              service,
+              apiKey: Redacted.value(yield* apiKey),
+            };
+          }),
+        );
+
+        return new ConfiguredCredentialsService(serviceCredentials);
+      }),
+    );
+
+  static layerFromDatabase = () =>
+    Layer.effect(
+      CredentialsService,
+      Effect.gen(function* () {
+        const dbService = yield* DatabaseService;
+        const queryCredentials = async (query: CredentialQuery): Promise<ServiceCredential[]> => {
+          const { objects: accessTokens } = await dbService.db.query(Query.type(DataType.AccessToken)).run();
+          return accessTokens
+            .filter((accessToken) => accessToken.source === query.service)
+            .map((accessToken) => ({
+              service: accessToken.source,
+              apiKey: accessToken.token,
+            }));
+        };
+        return {
+          getCredential: async (query) => {
+            const credentials = await queryCredentials(query);
+            if (credentials.length === 0) {
+              throw new Error(`Credential not found for service: ${query.service}`);
+            }
+
+            return credentials[0];
+          },
+          queryCredentials: async (query) => {
+            return queryCredentials(query);
+          },
+        };
+      }),
+    );
+}
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<CredentialsService> {
   constructor(private readonly credentials: ServiceCredential[] = []) {}
@@ -50,6 +121,19 @@ export class ConfiguredCredentialsService implements Context.Tag.Service<Credent
     if (!credential) {
       throw new Error(`Credential not found for service: ${query.service}`);
     }
+
     return credential;
   }
 }
+
+/**
+ * Maps the request to include the API key from the credential.
+ */
+export const withAuthorization = (query: CredentialQuery, kind?: 'Bearer' | 'Basic') =>
+  HttpClient.mapRequestEffect(
+    Effect.fnUntraced(function* (request) {
+      const key = yield* CredentialsService.getApiKey(query).pipe(Effect.map(Redacted.value));
+      const authorization = kind ? `${kind} ${key}` : key;
+      return HttpClientRequest.setHeader(request, 'Authorization', authorization);
+    }),
+  );

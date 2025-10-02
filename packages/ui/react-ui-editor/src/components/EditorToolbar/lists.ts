@@ -7,8 +7,9 @@ import { type EditorView } from '@codemirror/view';
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
-import { addList, List, removeList } from '../../extensions';
+import { List, addList, removeList } from '../../extensions';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const listStyles = {
   bullet: 'ph--list-bullets--regular',
@@ -26,23 +27,19 @@ const createListGroupAction = (value: string) =>
 const createListActions = (value: string, getView: () => EditorView) =>
   Object.entries(listStyles).map(([listStyle, icon]) => {
     const checked = value === listStyle;
-    return createEditorAction(
-      `list-${listStyle}`,
-      () => {
-        const view = getView();
-        if (!view) {
-          return;
-        }
+    return createEditorAction(`list-${listStyle}`, { checked, icon }, () => {
+      const view = getView();
+      if (!view) {
+        return;
+      }
 
-        const listType = listStyle === 'ordered' ? List.Ordered : listStyle === 'bullet' ? List.Bullet : List.Task;
-        if (checked) {
-          removeList(listType)(view);
-        } else {
-          addList(listType)(view);
-        }
-      },
-      { checked, icon },
-    );
+      const listType = listStyle === 'ordered' ? List.Ordered : listStyle === 'bullet' ? List.Bullet : List.Task;
+      if (checked) {
+        removeList(listType)(view);
+      } else {
+        addList(listType)(view);
+      }
+    });
   });
 
 export const createLists = (state: EditorToolbarState, getView: () => EditorView) => {

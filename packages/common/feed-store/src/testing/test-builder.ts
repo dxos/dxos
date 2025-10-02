@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ValueEncoding } from 'hypercore';
-
 import { Keyring } from '@dxos/keyring';
-import { createStorage, type Directory, type Storage, StorageType } from '@dxos/random-access-storage';
+import { type Directory, type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+import type { ValueEncoding } from '@dxos/vendor-hypercore/hypercore';
 
-import { defaultTestGenerator, defaultValueEncoding, type TestGenerator, type TestItem } from './test-generator';
 import { FeedFactory } from '../feed-factory';
 import { FeedStore } from '../feed-store';
+
+import { type TestGenerator, type TestItem, defaultTestGenerator, defaultValueEncoding } from './test-generator';
 
 export type TestBuilderOptions<T extends {}> = {
   storage?: Storage;

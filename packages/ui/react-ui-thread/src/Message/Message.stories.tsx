@@ -4,16 +4,18 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { MessageRoot } from './Message';
+import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
-import { MessageStoryText, type MessageEntity } from '../testing';
 import { translations } from '../translations';
+
+import { MessageRoot } from './Message';
 
 const DefaultStory = () => {
   const [identityKey] = useState(PublicKey.random());
@@ -35,12 +37,16 @@ const DefaultStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-thread/Message',
-  component: MessageRoot,
+  component: MessageRoot as any,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { translations },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

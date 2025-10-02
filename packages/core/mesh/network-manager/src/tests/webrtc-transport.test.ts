@@ -4,8 +4,9 @@
 
 import { describe } from 'vitest';
 
-import { basicTestSuite } from './basic-test-suite';
 import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
+
+import { basicTestSuite } from './basic-test-suite';
 
 describe('WebRTC transport', { timeout: 10_000 }, () => {
   const testBuilder = new TestBuilder();

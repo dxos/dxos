@@ -4,19 +4,20 @@
 
 import { Effect } from 'effect';
 
-import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
-import { fullyQualifiedId, getSpace, Ref } from '@dxos/react-client/echo';
+import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { ThreadCapabilities } from './capabilities';
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ChannelType, ThreadAction, ThreadType } from '../types';
+
+import { ThreadCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
@@ -95,6 +96,39 @@ export default (context: PluginContext) =>
       },
     }),
     createResolver({
+      intent: ThreadAction.AddProposal,
+      resolve: ({ text, anchor, sender, subject }) => {
+        const space = getSpace(subject);
+        invariant(space, 'Space not found');
+
+        const subjectId = fullyQualifiedId(subject);
+        const proposal = Obj.make(DataType.Message, {
+          created: new Date().toISOString(),
+          sender,
+          blocks: [{ _tag: 'proposal', text }],
+        });
+        const thread = Obj.make(ThreadType, { name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
+
+        return {
+          intents: [
+            createIntent(SpaceAction.AddObject, { object: thread, target: space, hidden: true }),
+            createIntent(SpaceAction.AddRelation, {
+              space,
+              schema: AnchoredTo,
+              source: thread,
+              target: subject,
+              fields: { anchor },
+            }),
+            createIntent(ThreadAction.Select, { current: fullyQualifiedId(thread) }),
+            createIntent(DeckAction.ChangeCompanion, {
+              primary: subjectId,
+              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+            }),
+          ],
+        };
+      },
+    }),
+    createResolver({
       intent: ThreadAction.Select,
       resolve: ({ current }) => {
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
@@ -156,7 +190,7 @@ export default (context: PluginContext) =>
 
           return {
             undoable: {
-              message: ['thread deleted label', { ns: THREAD_PLUGIN }],
+              message: ['thread deleted label', { ns: meta.id }],
               data: { thread, anchor },
             },
             intents: [
@@ -197,17 +231,17 @@ export default (context: PluginContext) =>
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
         invariant(space, 'Space not found');
-        const intents = [];
 
         const message = Obj.make(DataType.Message, {
-          sender,
           created: new Date().toISOString(),
-          blocks: [{ type: 'text', text }],
+          sender,
+          blocks: [{ _tag: 'text', text }],
           // TODO(wittjosiah): Context based on attention.
           // context: context ? Ref.make(context) : undefined,
         });
         thread.messages.push(Ref.make(message));
 
+        const intents = [];
         const draft = state.drafts[subjectId]?.find((a) => a.id === anchor.id);
         if (draft) {
           // Move draft to document.
@@ -276,7 +310,7 @@ export default (context: PluginContext) =>
 
           return {
             undoable: {
-              message: ['message deleted label', { ns: THREAD_PLUGIN }],
+              message: ['message deleted label', { ns: meta.id }],
               data: { message, messageIndex },
             },
             intents: [

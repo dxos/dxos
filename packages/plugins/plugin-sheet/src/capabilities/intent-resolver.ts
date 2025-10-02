@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, Capabilities, createResolver } from '@dxos/app-framework';
+import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 
-import { SHEET_PLUGIN } from '../meta';
-import { createSheet, SheetAction } from '../types';
+import { meta } from '../meta';
+import { SheetAction, createSheet } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
@@ -26,7 +26,7 @@ export default () =>
           const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
           return {
             undoable: {
-              message: [`${axis} dropped label`, { ns: SHEET_PLUGIN }],
+              message: [`${axis} dropped label`, { ns: meta.id }],
               data: { ...undoData, model },
             },
           };

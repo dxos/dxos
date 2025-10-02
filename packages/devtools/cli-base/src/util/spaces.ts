@@ -2,22 +2,23 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { type Table } from '@oclif/core/lib/cli-ux';
-
 import { ux } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
 import { type Space, SpaceMember, SpaceState, type SpaceSyncState } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './keys';
-import { table, type TableOptions } from './table';
 import { SPACE_WAIT_TIMEOUT } from '../defaults';
 import { SpaceTimeoutError } from '../errors';
 
+import { maybeTruncateKey } from './keys';
+import { type TableOptions, table } from './table';
+
+// Use a direct dynamic import to avoid implied eval via Function constructor.
+const asyncImport = (module: string) => import(module);
+
 export const selectSpace = async (spaces: Space[]) => {
-  // eslint-disable-next-line no-eval
-  const inquirer = (await eval('import("inquirer")')).default;
+  const inquirer = (await asyncImport('inquirer')).default;
   const { key } = await inquirer.prompt([
     {
       name: 'key',

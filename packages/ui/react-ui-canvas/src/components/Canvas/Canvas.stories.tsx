@@ -9,11 +9,12 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Canvas } from './Canvas';
 import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
 import { Grid, type GridProps } from '../Grid';
+
+import { Canvas } from './Canvas';
 
 const size = 128;
 
@@ -88,16 +89,16 @@ const Item = (p: Point) => {
   );
 };
 
-const meta: Meta<GridProps> = {
+const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Grid>;
 
 export default meta;
 
-type Story = StoryObj<GridProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: { size: 16 },

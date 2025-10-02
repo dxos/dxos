@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -11,13 +12,14 @@ import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { SpacePanelImpl } from './SpacePanel';
-import { type SpacePanelImplProps } from './SpacePanelProps';
-import { SpaceManagerImpl } from './steps';
-import { InvitationListItemImpl, SpaceMemberListImpl, InvitationList } from '../../components';
+import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
 import { inviteWithState } from '../../testing/fixtures';
+
+import { SpacePanelImpl } from './SpacePanel';
+import { type SpacePanelImplProps } from './SpacePanelProps';
+import { SpaceManagerImpl } from './steps';
 
 const noOpProps: SpacePanelImplProps = {
   titleId: 'storybookSpacePanel__title',
@@ -27,12 +29,16 @@ const noOpProps: SpacePanelImplProps = {
   space: { key: PublicKey.random(), properties: { name: 'Example space' } },
 };
 
-export default {
+const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof SpacePanelImpl>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const SpaceManager = () => {
   return (

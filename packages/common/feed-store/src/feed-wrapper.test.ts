@@ -3,6 +3,7 @@
 //
 
 import { inspect } from 'node:util';
+
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
@@ -12,7 +13,7 @@ import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 
-import { defaultValueEncoding, TestBuilder, TestItemBuilder } from './testing';
+import { TestBuilder, TestItemBuilder, defaultValueEncoding } from './testing';
 
 describe('FeedWrapper', () => {
   const factory = new TestBuilder().createFeedFactory();
@@ -96,7 +97,7 @@ describe('FeedWrapper', () => {
       await feed.append({
         id: String(i + 1),
         value: faker.lorem.sentence(),
-      });
+      } as any);
     }
 
     expect(feed.properties.length).to.eq(numBlocks);
@@ -233,7 +234,7 @@ describe('FeedWrapper', () => {
     // Reader.
     {
       const start = 5;
-      feed2.download({ start, linear: true }, (err: Error) => {
+      feed2.download({ start, linear: true }, (err: Error | null) => {
         if (err) {
           throw err;
         }
@@ -260,7 +261,7 @@ describe('FeedWrapper', () => {
     await feed2.open();
 
     for (const i of range(numBlocks)) {
-      await feed1.append(`block-${i}`);
+      await feed1.append(`block-${i}` as any);
     }
 
     for (const i of range(numBlocks)) {
@@ -282,5 +283,38 @@ describe('FeedWrapper', () => {
     feed2.core.audit((err, valid) => {
       console.log('audit', { err, valid });
     });
+  });
+
+  test('integrates blocks via putBuffer', async () => {
+    const numBlocks = 5;
+    const builder = new TestBuilder();
+    const feedFactory = builder.createFeedFactory();
+
+    const key = await builder.keyring.createKey();
+    const source = await feedFactory.createFeed(key, { writable: true });
+    const target = await feedFactory.createFeed(key);
+
+    await source.open();
+    await target.open();
+
+    // Append to source.
+    for (let i = 0; i < numBlocks; i++) {
+      await source.append(faker.lorem.sentence() as any);
+    }
+
+    // Integrate into target via putBuffer using proofs from source.
+    for (let i = 0; i < numBlocks; i++) {
+      const data = (await source.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      const proof = await source.proof(i);
+      await target.putBuffer(i, data, proof, null);
+    }
+
+    // Verify data and length.
+    expect(target.length).to.eq(numBlocks);
+    for (let i = 0; i < numBlocks; i++) {
+      const src = (await source.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      const dst = (await target.get(i, { valueEncoding: 'binary' })) as Uint8Array;
+      expect(Buffer.from(dst).equals(Buffer.from(src))).to.be.true;
+    }
   });
 });

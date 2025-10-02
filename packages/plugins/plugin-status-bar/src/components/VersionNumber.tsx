@@ -6,10 +6,11 @@ import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Link, Message, Popover, Trans, useTranslation, Icon } from '@dxos/react-ui';
+import { Icon, Link, Message, Popover, Trans, useTranslation } from '@dxos/react-ui';
+
+import { meta } from '../meta';
 
 import { StatusBar } from './StatusBar';
-import { meta } from '../meta';
 
 const repo = 'https://github.com/dxos/dxos';
 

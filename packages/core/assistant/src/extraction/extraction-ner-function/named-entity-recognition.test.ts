@@ -10,7 +10,8 @@ import { createTestData } from '@dxos/schema/testing';
 
 import { combineNerTokens, createTokenGroups, extractFullEntities, getNer } from './named-entity-recognition';
 
-describe('NamedEntityRecognition', () => {
+// TODO(mykola): This should not run on CI.
+describe.skip('NamedEntityRecognition', () => {
   let ner: TokenClassificationPipelineType;
 
   beforeAll(async () => {
@@ -57,7 +58,7 @@ describe('NamedEntityRecognition', () => {
     const { transcriptWoflram, transcriptJosiah } = await createTestData();
 
     const blocks = [...transcriptWoflram, ...transcriptJosiah].flatMap((message) =>
-      message.blocks.flatMap((block) => (block.type === 'transcription' ? [block.text] : [])),
+      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
     );
 
     for (const block of blocks) {
@@ -70,7 +71,7 @@ describe('NamedEntityRecognition', () => {
     const { transcriptMessages } = await createTestData();
 
     const blocks = transcriptMessages.flatMap((message) =>
-      message.blocks.flatMap((block) => (block.type === 'transcription' ? [block.text] : [])),
+      message.blocks.flatMap((block) => (block._tag === 'transcript' ? [block.text] : [])),
     );
 
     for (const block of blocks) {

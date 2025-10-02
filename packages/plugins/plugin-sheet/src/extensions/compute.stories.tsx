@@ -4,9 +4,11 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -19,14 +21,15 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
 
-import { compute, computeGraphFacet } from './compute';
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
 import { SheetType } from '../types';
+
+import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');
 
@@ -51,7 +54,7 @@ const EditorStory = ({ text }: EditorProps) => {
       initialValue: text,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         documentId.of(id.toHex()),
         computeGraph && computeGraphFacet.of(computeGraph),
@@ -98,8 +101,23 @@ const GraphStory = (props: EditorProps) => {
   );
 };
 
+const meta = {
+  title: 'plugins/plugin-sheet/extensions',
+  decorators: [
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [IntentPlugin()] }),
+    withComputeGraphDecorator(),
+    withTheme,
+    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+  ],
+  parameters: { layout: 'fullscreen' },
+} satisfies Meta;
+
+export default meta;
+
 // TODO(burdon): Inline formulae.
-export const Default = {
+export const Default: StoryObj<typeof EditorStory> = {
   render: EditorStory,
   args: {
     text: str(
@@ -123,7 +141,7 @@ export const Default = {
   },
 };
 
-export const Graph = {
+export const Graph: StoryObj<typeof GraphStory> = {
   render: GraphStory,
   args: {
     text: str(
@@ -140,16 +158,3 @@ export const Graph = {
     ),
   },
 };
-
-const meta: Meta = {
-  title: 'plugins/plugin-sheet/extensions',
-  decorators: [
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
-  parameters: { layout: 'fullscreen' },
-};
-
-export default meta;

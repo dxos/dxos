@@ -4,12 +4,12 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -19,16 +19,16 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { Filter, useSpaces, useQuery, useSchema } from '@dxos/react-client/echo';
+import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { Kanban, KanbanView, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
+import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
-import { createKanban } from '../types';
 
 faker.seed(0);
 
@@ -51,7 +51,8 @@ const StorybookKanban = () => {
   const views = useQuery(space, Filter.type(DataType.View));
   const [view, setView] = useState<DataType.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
 
   useEffect(() => {
     if (views.length && !view) {
@@ -97,14 +98,14 @@ const StorybookKanban = () => {
 
   const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
-  const handleTypenameChanged = useCallback(
+  const handleUpdateQuery = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       invariant(view);
 
       schema.updateTypename(typename);
-      view.query.typename = typename;
+      view.query = Query.select(Filter.typename(typename)).ast;
     },
     [view, schema],
   );
@@ -115,18 +116,18 @@ const StorybookKanban = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      {model ? <Kanban model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
+      {model ? <KanbanComponent model={model} onAddCard={handleAddCard} onRemoveCard={handleRemoveCard} /> : <div />}
       <div className='flex flex-col bs-full border-is border-separator overflow-y-auto'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
           schema={schema}
           view={view}
-          onTypenameChanged={handleTypenameChanged}
+          onQueryChanged={handleUpdateQuery}
           onDelete={(fieldId: string) => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
+        <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
@@ -142,7 +143,7 @@ type StoryProps = {
 // Story definitions.
 //
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
@@ -151,18 +152,17 @@ const meta: Meta<StoryProps> = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
-          types: [DataType.Organization, DataType.Person, DataType.View, KanbanView],
-          onClientInitialized: async (_, client) => {
+          types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
-            const { view } = await createKanban({
+            const { view } = await Kanban.makeView({
               client,
               space,
               typename: DataType.Organization.typename,
-              initialPivotColumn: 'status',
+              pivotFieldName: 'status',
             });
             space.db.add(view);
 
@@ -172,18 +172,21 @@ const meta: Meta<StoryProps> = {
             });
           },
         }),
-        StorybookLayoutPlugin(),
-        PreviewPlugin(),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],
-};
+} satisfies Meta<typeof StorybookKanban>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

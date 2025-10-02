@@ -4,12 +4,14 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { Callout } from './Message';
 import { withTheme } from '../../testing';
+
+import { Callout } from './Message';
 
 type StoryProps = {
   valence: MessageValence;
@@ -24,9 +26,9 @@ const DefaultStory = ({ valence, title, body }: StoryProps) => (
   </Callout.Root>
 );
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Callout',
-  component: Callout,
+  component: Callout.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
@@ -36,9 +38,13 @@ export default {
       options: ['success', 'info', 'warning', 'error', 'neutral'],
     },
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     valence: 'neutral',
     title: 'Alert title',

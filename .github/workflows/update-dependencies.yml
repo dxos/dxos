@@ -6,40 +6,74 @@ on:
   workflow_dispatch:
 
 jobs:
-  effect:
-    runs-on: ubuntu-latest
+  update:
+    strategy:
+      fail-fast: false
+      matrix:
+        packages:
+          - name: effect
+            spec: 'effect "@effect/*"'
+          - name: vite
+            spec: 'vite "@vite/*" "vitest*" vitest storybook "@storybook/*"'
+          - name: typescript
+            spec: 'typescript'
+          - name: eslint
+            spec: 'eslint "@eslint/*" "@typescript-eslint/*" prettier "prettier-plugin-*"'
+          - name: react
+            spec: 'react "react-dom" "react-is" "react-test-renderer" "@types/react" "@types/react-dom" "@testing-library/*"'
+          - name: automerge
+            spec: '"@automerge/*"'
+          - name: jsdom
+            spec: '"jsdom/*"'
+          - name: preact
+            spec: '"@preact-signals/*" "@preact/signals*"'
+          - name: tauri
+            spec: '"@tauri-apps/*"'
+          - name: codemirror
+            spec: '"@codemirror/*" "codemirror-lang-*"'
+          - name: esbuild
+            spec: 'esbuild "esbuild-plugin-*"'
+          - name: opentelemetry
+            spec: '"@opentelemetry/*"'
+          - name: swc
+            spec: '"@swc/*" "@swc-node/*"'
+          - name: lit
+            spec: 'lit "@lit/*"'
+          - name: ch-ui
+            spec: '"@ch-ui/*"'
+    runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.12.1
       credentials:
         username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.CREATE_PR_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
+          token: ${{ secrets.CREATE_PR_TOKEN }}
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
 
       - name: Setup
         uses: ./.github/actions/setup
 
       - name: Update manifests
-        run: npx npm-check-updates --deep --upgrade effect "@effect/*"
+        run: npx npm-check-updates --deep --upgrade ${{ matrix.packages.spec }}
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile --strict-peer-dependencies=false
 
       - name: Create Pull Request
         id: cpr
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: bot/update-effect
+          branch: bot/update-${{ matrix.packages.name }}
           delete-branch: true
-          title: 'chore: Update effect dependencies'
+          title: 'chore: Update ${{ matrix.packages.name }} dependencies'
           draft: false
-# effect
-# vite
-# typescript
-# eslint
-# react
-# automerge
+          token: ${{ secrets.CREATE_PR_TOKEN }}

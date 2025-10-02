@@ -23,9 +23,10 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
-import type { SpaceStateManager } from './space-state-manager';
 import { type AutomergeHost } from '../automerge';
 import { QueryExecutor } from '../query';
+
+import type { SpaceStateManager } from './space-state-manager';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -96,6 +97,12 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx }) => {
+      if (this._params.indexer.config?.enabled !== true) {
+        log.error('indexer is disabled', { config: this._params.indexer.config });
+        close();
+        return;
+      }
+
       const queryEntry = this._createQuery(ctx, request, next, close, close);
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();

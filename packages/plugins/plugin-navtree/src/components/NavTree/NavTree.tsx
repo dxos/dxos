@@ -10,11 +10,11 @@ import { Tabs } from '@dxos/react-ui-tabs';
 import { useLoadDescendents } from '../../hooks';
 import { type NavTreeItemGraphNode } from '../../types';
 import { useNavTreeContext } from '../NavTreeContext';
-import { L0Menu, L1Panels, type L1PanelsProps } from '../Sidebar';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1PanelsProps, 'open'>;
+export type NavTreeProps = Pick<TreeProps<NavTreeItemGraphNode>, 'id' | 'root'> & Pick<L1TabsProps, 'open'>;
 
 export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const { tab, useItems, onBack } = useNavTreeContext();
@@ -47,6 +47,10 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const path = useMemo(() => [id], [id]);
 
   return (
+    // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
+    //  it uses RovingFocus and doesn’t support moving focus to an item that is not a tab. Assess whether this situation
+    //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
+    //  not use `react-ui-tabs` at all.
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
       <L0Menu
         menuActions={topLevelActions}
@@ -56,7 +60,7 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
         path={path}
         parent={root}
       />
-      <L1Panels topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
+      <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
     </Tabs.Root>
   );
 };

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const isFunction = <T>(functionToCheck: any): functionToCheck is (value: T) => boolean => {
   return functionToCheck instanceof Function;

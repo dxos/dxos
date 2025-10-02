@@ -4,12 +4,14 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useAttentionAttributes } from './AttentionProvider';
 import { withAttention } from '../testing';
+
+import { useAttentionAttributes } from './AttentionProvider';
 
 const Attendable = ({ id }: { id: string }) => {
   const attentionAttrs = useAttentionAttributes(id);
@@ -32,10 +34,14 @@ const Story = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
   decorators: [withTheme, withAttention],
-};
+} satisfies Meta;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

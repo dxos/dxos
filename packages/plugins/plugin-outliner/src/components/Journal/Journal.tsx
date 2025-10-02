@@ -6,17 +6,17 @@ import { format } from 'date-fns/format';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
-import { IconButton, useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { OUTLINER_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import {
-  createJournalEntry,
-  getJournalEntries,
-  getDateString,
-  parseDateString,
-  type JournalType,
   type JournalEntryType,
+  type JournalType,
+  createJournalEntry,
+  getDateString,
+  getJournalEntries,
+  parseDateString,
 } from '../../types';
 import { Outliner, type OutlinerController, type OutlinerProps } from '../Outliner';
 
@@ -28,7 +28,7 @@ type JournalProps = ThemedClassName<{
 
 // TODO(burdon): Virtualize.
 export const Journal = ({ journal, classNames, ...props }: JournalProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const date = new Date();
 
   const [showAddEntry, setShowAddEntry] = useState(false);
@@ -77,7 +77,7 @@ type JournalEntryProps = ThemedClassName<
 >;
 
 const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
-  const { t } = useTranslation(OUTLINER_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const date = parseDateString(entry.date);
   const isToday = getDateString() === entry.date;
   const isRecent = useMemo(() => Date.now() - new Date(entry.date).getTime() < RECENT, [entry.date]);

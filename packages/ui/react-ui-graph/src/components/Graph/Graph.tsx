@@ -12,12 +12,12 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import {
-  createGraphDrag,
   GraphForceProjector,
   type GraphLayoutNode,
   type GraphProjector,
   GraphRenderer,
   type GraphRendererOptions,
+  createGraphDrag,
 } from '../../graph';
 import { useSvgContext } from '../../hooks';
 
@@ -54,7 +54,7 @@ export const GraphInner = <Node extends BaseGraphNode = any, Edge extends BaseGr
   forwardedRef: Ref<GraphController>,
 ) => {
   const context = useSvgContext();
-  const graphRef = useRef<SVGGElement>();
+  const graphRef = useRef<SVGGElement>(null);
 
   const { projector, renderer } = useMemo(() => {
     let projector = _projector;

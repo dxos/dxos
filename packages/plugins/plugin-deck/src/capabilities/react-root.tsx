@@ -6,13 +6,14 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 
-import { DeckCapabilities } from './capabilities';
 import { DeckLayout } from '../components';
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
+
+import { DeckCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactRoot, {
-    id: DECK_PLUGIN,
+    id: meta.id,
     root: () => {
       const layout = useCapability(DeckCapabilities.MutableDeckState);
 

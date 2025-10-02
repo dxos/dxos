@@ -4,11 +4,13 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Main, useSidebars } from './Main';
 import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
+
+import { Main, useSidebars } from './Main';
 
 type StoryMainArgs = {};
 
@@ -45,15 +47,21 @@ const DefaultStory = (_args: StoryMainArgs) => {
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-};
+  parameters: {
+    chromatic: { disableSnapshot: false },
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
-  layout: 'fullscreen',
 };

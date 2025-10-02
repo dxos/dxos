@@ -2,27 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe, Schema } from 'effect';
+import { Schema, pipe } from 'effect';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { chain, createIntent, LayoutAction, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { SpaceState, type Space } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Button, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import {
-  Form,
-  type InputComponent,
   ControlItem,
   ControlItemInput,
-  ControlSection,
   ControlPage,
+  ControlSection,
+  Form,
+  type InputComponent,
 } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { SPACE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { SpaceAction, SpaceForm } from '../../types';
 
 const FormSchema = SpaceForm.pipe(
@@ -35,7 +35,7 @@ export type SpaceSettingsContainerProps = {
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const archived = useMulticastObservable(space.state) === SpaceState.SPACE_INACTIVE;
@@ -162,11 +162,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto pli-2'>
+    <StackItem.Content classNames='block overflow-y-auto'>
       <ControlPage>
         <ControlSection
-          title={t('space properties settings verbose label', { ns: SPACE_PLUGIN })}
-          description={t('space properties settings description', { ns: SPACE_PLUGIN })}
+          title={t('space properties settings verbose label', { ns: meta.id })}
+          description={t('space properties settings description', { ns: meta.id })}
         >
           <Form
             schema={FormSchema}
@@ -175,7 +175,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             onSave={handleSave}
             Custom={customElements}
             outerSpacing={false}
-            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
           />
         </ControlSection>
       </ControlPage>

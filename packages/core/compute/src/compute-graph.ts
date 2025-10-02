@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Listeners } from 'hyperformula/typings/Emitter';
-
 import { Event } from '@dxos/async';
-import { type Space, Filter, fullyQualifiedId } from '@dxos/client/echo';
+import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
@@ -14,15 +12,16 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
+import { type Listeners } from '@dxos/vendor-hyperformula';
+import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
-import { ExportedCellChange, type HyperFormula } from '#hyperformula';
 import { ComputeNode } from './compute-node';
 import {
-  defaultFunctions,
+  EDGE_FUNCTION_NAME,
   FunctionContext,
   type FunctionContextOptions,
   type FunctionDefinition,
-  EDGE_FUNCTION_NAME,
+  defaultFunctions,
 } from './functions';
 
 // TODO(burdon): Factor out compute-graph.

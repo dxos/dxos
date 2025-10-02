@@ -4,5 +4,5 @@
 
 export * from './data';
 export * from './generator';
-export * from './types';
+export type * from './types';
 export * from './util';

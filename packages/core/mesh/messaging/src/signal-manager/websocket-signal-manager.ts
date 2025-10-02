@@ -13,17 +13,18 @@ import { type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { type JoinRequest, type LeaveRequest, type QueryRequest } from '@dxos/protocols/proto/dxos/edge/signal';
 import { BitField, safeAwaitAll } from '@dxos/util';
 
-import { type SignalManager } from './signal-manager';
-import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 import { SignalClient } from '../signal-client';
 import {
-  type PeerInfo,
   type Message,
+  type PeerInfo,
   type SignalClientMethods,
   type SignalMethods,
   type SignalStatus,
   type SwarmEvent,
 } from '../signal-methods';
+
+import { type SignalManager } from './signal-manager';
+import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;

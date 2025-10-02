@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -15,25 +17,28 @@ import { DataType } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
 import { translations } from '../../translations';
 
-const Story = (args: CreateObjectDialogProps) => {
+import { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
+
+const Story = (props: CreateObjectDialogProps) => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay blockAlign='start'>
-        <CreateObjectDialog {...args} />
+        <CreateObjectDialog {...props} />
       </Dialog.Overlay>
     </Dialog.Root>
   );
 };
 
 // TODO(wittjosiah): Story should be for CreateObjectPanel.
-const meta: Meta<typeof CreateObjectDialog> = {
+const meta = {
   title: 'plugins/plugin-space/CreateObjectDialog',
   component: CreateObjectDialog,
   render: Story,
   decorators: [
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
     withTheme,
     withLayout(),
@@ -42,7 +47,7 @@ const meta: Meta<typeof CreateObjectDialog> = {
     translations: [...translations, ...shellTranslations],
   },
   args: {},
-};
+} satisfies Meta<typeof CreateObjectDialog>;
 
 export default meta;
 

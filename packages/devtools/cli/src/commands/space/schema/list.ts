@@ -4,7 +4,7 @@
 
 import { Flags, ux } from '@oclif/core';
 
-import { FLAG_SPACE_KEYS, table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
+import { FLAG_SPACE_KEYS, TABLE_FLAGS, type TableFlags, table } from '@dxos/cli-base';
 import { getTypeAnnotation } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';

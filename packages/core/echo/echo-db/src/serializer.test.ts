@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Query } from '@dxos/echo';
-import { Expando, getSchema, Ref } from '@dxos/echo-schema';
+import { Expando, Ref, getSchema } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -16,7 +16,7 @@ import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
-import { EchoTestBuilder } from './testing';
+import { EchoTestBuilder, createTmpPath } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -198,15 +198,13 @@ describe('Serializer', () => {
       const totalObjects = 123;
       const serializer = new Serializer();
       let data: SerializedSpace;
+      const tmpPath = createTmpPath();
 
       const spaceKey = PublicKey.random();
 
-      const kv = createTestLevel();
-      await openAndClose(kv);
-
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const root = await peer.host.createSpaceRoot(spaceKey);
 
       {
@@ -218,7 +216,7 @@ describe('Serializer', () => {
         await peer.close();
       }
       {
-        const peer = await builder.createPeer({ kv });
+        const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
         data = await serializer.export(db);
         expect(data.objects.length).to.eq(totalObjects);

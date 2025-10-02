@@ -12,7 +12,7 @@ import { live } from '@dxos/live-object';
 import { type Tracks } from '@dxos/protocols/proto/dxos/edge/calls';
 import { isNonNullable } from '@dxos/util';
 
-import { CallSwarmSynchronizer, type CallState } from './call-swarm-synchronizer';
+import { type CallState, CallSwarmSynchronizer } from './call-swarm-synchronizer';
 import { MediaManager, type MediaState } from './media-manager';
 import { type ActivityState, CALLS_URL, type EncodedTrackName, TrackNameCodec, type UserState } from './types';
 
@@ -210,7 +210,7 @@ export class CallManager extends Resource {
 
   private _onCallStateUpdated(state: CallState): void {
     const tracksToPull = state.users
-      ?.filter((user) => user.joined && user.id !== state.self?.id)
+      ?.filter((user) => user.joined && user.id !== state.self!.id)
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);

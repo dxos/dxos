@@ -4,23 +4,34 @@
 
 import { Effect } from 'effect';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { Capabilities, contributes, createIntent, createResolver, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { CollectionAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
 import { ThreadAction } from '@dxos/plugin-thread/types';
-import { TranscriptionAction } from '@dxos/plugin-transcription/types';
-import { Filter, fullyQualifiedId, getSpace, parseId, Query } from '@dxos/react-client/echo';
+import { TranscriptAction } from '@dxos/plugin-transcription/types';
+import { Filter, Query, fullyQualifiedId, getSpace, parseId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
+import { Meeting, MeetingAction } from '../types';
+
 import { MeetingCapabilities } from './capabilities';
-import { getMeetingContent, summarizeTranscript } from '../summarize';
-import { MeetingAction, MeetingType } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
+    createResolver({
+      intent: MeetingAction.OnSpaceCreated,
+      resolve: ({ rootCollection }) =>
+        Effect.gen(function* () {
+          const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+          const { object: meetingCollection } = yield* dispatch(
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Meeting.Meeting.typename }),
+          );
+          rootCollection.objects.push(Ref.make(meetingCollection));
+        }),
+    }),
     createResolver({
       intent: MeetingAction.Create,
       resolve: ({ name, channel }) =>
@@ -28,17 +39,15 @@ export default (context: PluginContext) =>
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const space = getSpace(channel);
           invariant(space);
-          const { object: transcript } = yield* dispatch(
-            createIntent(TranscriptionAction.Create, { spaceId: space.id }),
-          );
+          const { object: transcript } = yield* dispatch(createIntent(TranscriptAction.Create, { space }));
           const { object: thread } = yield* dispatch(createIntent(ThreadAction.CreateChannelThread, { channel }));
-          const meeting = Obj.make(MeetingType, {
+          const meeting = Obj.make(Meeting.Meeting, {
             name,
             created: new Date().toISOString(),
             participants: [],
             transcript: Ref.make(transcript),
-            notes: Ref.make(Obj.make(DataType.Text, { content: '' })),
-            summary: Ref.make(Obj.make(DataType.Text, { content: '' })),
+            notes: Ref.make(DataType.makeText()),
+            summary: Ref.make(DataType.makeText()),
             thread: Ref.make(thread),
           });
 
@@ -51,7 +60,7 @@ export default (context: PluginContext) =>
         const callManager = context.getCapability(ThreadCapabilities.CallManager);
         const state = context.getCapability(MeetingCapabilities.State);
         state.activeMeeting = object;
-        callManager.setActivity(Type.getTypename(MeetingType)!, { meetingId: fullyQualifiedId(object) });
+        callManager.setActivity(Type.getTypename(Meeting.Meeting)!, { meetingId: fullyQualifiedId(object) });
         return { data: { object } };
       },
     }),
@@ -72,25 +81,27 @@ export default (context: PluginContext) =>
           const queue = space.queues.get<DataType.Message>(Type.DXN.parse(transcriptDxn));
           state.transcriptionManager?.setQueue(queue);
         }
+
         await state.transcriptionManager?.setEnabled(enabled);
       },
     }),
     createResolver({
       intent: MeetingAction.Summarize,
       resolve: async ({ meeting }) => {
-        const client = context.getCapability(ClientCapabilities.Client);
-        const endpoint = client.config.values.runtime?.services?.ai?.server;
-        invariant(endpoint, 'AI service not configured.');
-        // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
-        const ai = new EdgeAiServiceClient({ endpoint });
-        const resolve = (typename: string) =>
-          context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+        throw new Error('Not implemented');
 
-        const text = await meeting.summary.load();
-        text.content = 'Generating summary...';
-        const content = await getMeetingContent(meeting, resolve);
-        const summary = await summarizeTranscript(ai, content);
-        text.content = summary;
+        // const client = context.getCapability(ClientCapabilities.Client);
+        // const endpoint = client.config.values.runtime?.services?.ai?.server;
+        // invariant(endpoint, 'AI service not configured.');
+        // // TODO(wittjosiah): Use capability (but note that this creates a dependency on the assistant plugin being available for summarization to work).
+        // const resolve = (typename: string) =>
+        //   context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
+
+        // const text = await meeting.summary.load();
+        // text.content = 'Generating summary...';
+        // const content = await getMeetingContent(meeting, resolve);
+        // const summary = await summarizeTranscript(ai, content);
+        // text.content = summary;
       },
     }),
   ]);

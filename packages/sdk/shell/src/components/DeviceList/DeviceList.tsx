@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretRight, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
-import { Button, List, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
 import { DeviceListItem } from './DeviceListItem';
@@ -47,10 +46,10 @@ export const DeviceList = ({
         onClick={onClickAdd}
       >
         <div role='img' className={mx(getSize(8), 'm-1 rounded-sm bg-inputSurface grid place-items-center')}>
-          <Plus weight='light' className={getSize(6)} />
+          <Icon icon='ph--plus--light' size={6} />
         </div>
         <span className='grow font-medium text-start'>{t('choose add device label')}</span>
-        <CaretRight weight='bold' className={getSize(4)} />
+        <Icon icon='ph--caret-right--bold' size={4} />
       </Button>
     </div>
   );

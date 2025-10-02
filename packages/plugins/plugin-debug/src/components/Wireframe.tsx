@@ -22,6 +22,7 @@ export type WireframeProps = ThemedClassName<{
 export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
   const attentionAttrs = useAttentionAttributes(fullyQualifiedId(object));
   const { width, height, ref } = useResizeDetector();
+
   return (
     <div ref={ref} className={mx('relative grow min-bs-96', classNames)} {...attentionAttrs}>
       <div className='absolute inset-2 flex flex-col gap-2 overflow-hidden font-mono'>
@@ -30,7 +31,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
           <div>{`[${width}x${height}]`}</div>
         </div>
         {object && (
-          <SyntaxHighlighter language='json' classNames='flex w-full text-xs opacity-75 rounded'>
+          <SyntaxHighlighter language='json' classNames='text-xs opacity-75 rounded'>
             {JSON.stringify(object, undefined, 2)}
           </SyntaxHighlighter>
         )}

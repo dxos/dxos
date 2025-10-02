@@ -7,6 +7,11 @@ import { Schema, SchemaAST } from 'effect';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
+import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../ast';
+import { toEffectSchema, toJsonSchema } from '../json';
+import { type JsonSchemaType } from '../json-schema';
+import { type TypedObject, type TypedObjectPrototype } from '../object';
+
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
@@ -16,10 +21,6 @@ import {
 } from './manipulation';
 import { getSnapshot } from './snapshot';
 import { StoredSchema } from './stored-schema';
-import { getTypeAnnotation, SchemaMetaSymbol, type SchemaMeta, type TypeAnnotation } from '../ast';
-import { toEffectSchema, toJsonSchema } from '../json';
-import { type JsonSchemaType } from '../json-schema';
-import { type TypedObject, type TypedObjectPrototype } from '../object';
 
 /**
  * Base schema type.
@@ -168,7 +169,7 @@ const schemaVariance = {
  *
  * @example
  * ```ts
- * export class TableType extends TypedObject({ typename: 'example.org/type/Table', version: '0.1.0' })({
+ * export class TableType extends Schema.Struct({...}).pipe(Type.Obj({ typename: 'example.org/type/Table', version: '0.1.0' })){
  *   title: Schema.String,
  *   schema: Schema.optional(ref(EchoSchema)),
  *   props: Schema.mutable(S.Array(TablePropSchema)),

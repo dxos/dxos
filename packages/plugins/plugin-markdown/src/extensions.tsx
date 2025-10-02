@@ -7,27 +7,30 @@ import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react
 import { createRoot } from 'react-dom/client';
 
 import {
-  createIntent,
   LayoutAction,
   type PromiseIntentDispatcher,
+  createIntent,
   useCapabilities,
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { debounceAndThrottle } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace, type QueryResult } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
-  type AutocompleteResult,
+  Cursor,
   type EditorStateStore,
+  EditorView,
   type EditorViewMode,
   type Extension,
   InputModeExtensions,
+  type PreviewOptions,
+  type RenderCallback,
   createDataExtensions,
-  autocomplete,
   decorateMarkdown,
+  documentId,
   folding,
   formattingKeymap,
   linkTooltip,
@@ -35,27 +38,21 @@ import {
   preview,
   selectionState,
   typewriter,
-  type RenderCallback,
-  EditorView,
-  documentId,
-  Cursor,
-  type PreviewOptions,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
-import { type DocumentType, type MarkdownSettingsProps } from './types';
+import { type Markdown } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: DocumentType;
+  document?: Markdown.Document;
   id?: string;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
-  query?: QueryResult<DocumentType>;
-  settings: MarkdownSettingsProps;
+  settings: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
@@ -160,7 +157,7 @@ export const useExtensions = ({
           }),
         baseExtensions,
         pluginExtensions,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     [baseExtensions, pluginExtensions, document, document?.content?.target, text, id, space, identity],
   );
 };
@@ -174,7 +171,6 @@ const createBaseExtensions = ({
   dispatch,
   settings,
   selectionManager,
-  query,
   viewMode,
   previewOptions,
 }: ExtensionsOptions): Extension[] => {
@@ -182,7 +178,7 @@ const createBaseExtensions = ({
     selectionManager && selectionChange(selectionManager),
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings.folding && folding(),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 
   //
   // Markdown
@@ -213,30 +209,6 @@ const createBaseExtensions = ({
         linkTooltip(renderLinkTooltip),
         preview(previewOptions),
       ],
-    );
-  }
-
-  //
-  // Autocomplete object links.
-  //
-  if (query) {
-    extensions.push(
-      autocomplete({
-        onSearch: (text: string) => {
-          // TODO(burdon): Specify filter (e.g., stack).
-          return query.objects
-            .map<AutocompleteResult | undefined>((object) =>
-              object.name?.length && object.id !== document?.id
-                ? {
-                    label: object.name,
-                    // TODO(burdon): Factor out URL builder.
-                    apply: `[${object.name}](/${fullyQualifiedId(object)})`,
-                  }
-                : undefined,
-            )
-            .filter(isNotFalsy);
-        },
-      }),
     );
   }
 

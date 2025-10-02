@@ -2,18 +2,19 @@
 // Copyright 2020 DXOS.org
 //
 
-import { afterAll, beforeAll, describe, expect, test, onTestFinished } from 'vitest';
+import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols/proto';
-import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
+import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
 import { ComplexSet, range } from '@dxos/util';
 
-import { SignalClient } from './signal-client';
 import { type Message, type PeerInfo } from '../signal-methods';
+
+import { SignalClient } from './signal-client';
 
 const PAYLOAD: TaggedType<TYPES, 'google.protobuf.Any'> = {
   '@type': 'google.protobuf.Any',

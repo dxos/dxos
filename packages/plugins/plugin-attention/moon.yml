@@ -7,4 +7,5 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/types/index.ts'
       - '--preactSignalTracking'

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type RpcHandle, type ReplicantEnv, type SchedulerEnv } from '../env';
+import { type ReplicantEnv, type RpcHandle, type SchedulerEnv } from '../env';
 
 export const AGENT_LOG_FILE = 'agent.log';
 
@@ -29,6 +29,7 @@ export type GlobalOptions = {
   profile?: boolean;
   debug?: boolean;
   headless?: boolean;
+  shouldBuildBrowser?: boolean;
 };
 
 export type TestParams<S> = {
@@ -80,12 +81,12 @@ export type ReplicantsSummary = { [replicantId: string]: ReplicantParams };
 // plan vs environment
 export interface TestPlan<S, R = void> {
   onError?: (err: Error) => void;
+  defaultSpec(): S;
   /**
    * Run the test.
    * @returns results of the run will be passed to the `analyze` method.
    */
   run(env: SchedulerEnv, params: TestParams<S>): Promise<R>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze(params: TestParams<S>, summary: ReplicantsSummary, result: R): Promise<any>;
-  defaultSpec(): S;
+  analyze?: (params: TestParams<S>, summary: ReplicantsSummary, result: R) => Promise<any>;
 }

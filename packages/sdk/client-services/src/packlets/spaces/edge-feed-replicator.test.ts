@@ -6,10 +6,10 @@ import { decode as decodeCbor, encode as encodeCbor } from 'cbor-x';
 import { getPort } from 'get-port-please';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { sleep, Trigger } from '@dxos/async';
+import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { valueEncoding } from '@dxos/echo-pipeline';
-import { createEphemeralEdgeIdentity, EdgeClient, EdgeIdentityChangedError } from '@dxos/edge-client';
+import { EdgeClient, EdgeIdentityChangedError, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { createTestEdgeWsServer } from '@dxos/edge-client/testing';
 import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';

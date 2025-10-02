@@ -5,7 +5,7 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { fullyQualifiedId, type Space, useMembers } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
@@ -21,12 +21,13 @@ import {
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { MessageContainer } from './MessageContainer';
-import { command } from './command-extension';
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
 import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
+
+import { command } from './command-extension';
+import { MessageContainer } from './MessageContainer';
 
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(meta.id);
@@ -92,9 +93,9 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     thread.messages.push(
       Ref.make(
         Obj.make(DataType.Message, {
-          sender: { identityDid: identity.did },
           created: new Date().toISOString(),
-          blocks: [{ type: 'text', text: messageRef.current }],
+          sender: { identityDid: identity.did },
+          blocks: [{ _tag: 'text', text: messageRef.current }],
           properties: context ? { context: Ref.make(context) } : undefined,
         }),
       ),
@@ -111,7 +112,10 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     <Thread.Root
       current={current}
       id={id}
-      classNames='bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0'
+      classNames={[
+        'bs-full is-full max-is-prose mli-auto grid-rows-[1fr_min-content_min-content] overflow-hidden',
+        'transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0',
+      ]}
     >
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>

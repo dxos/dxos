@@ -7,16 +7,17 @@ import { beforeEach, describe, expect, test } from 'vitest';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { SpaceMember, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { range } from '@dxos/util';
 
-import { InvitationStateMachine } from './invitation-state-machine';
 import {
   createCredential,
   createCredentialSignerWithKey,
   createDelegatedSpaceInvitationCredential,
 } from '../credentials';
+
+import { InvitationStateMachine } from './invitation-state-machine';
 
 describe('InvitationStateMachine', () => {
   const keyring = new Keyring();

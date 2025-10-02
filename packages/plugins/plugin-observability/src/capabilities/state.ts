@@ -6,11 +6,12 @@ import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getObservabilityGroup } from '@dxos/observability';
 
+import { meta } from '../meta';
+
 import { ObservabilityCapabilities } from './capabilities';
-import { OBSERVABILITY_PLUGIN } from '../meta';
 
 export default async ({ namespace }: { namespace: string }) => {
-  const state = new LocalStorageStore<ObservabilityCapabilities.State>(OBSERVABILITY_PLUGIN);
+  const state = new LocalStorageStore<ObservabilityCapabilities.State>(meta.id);
 
   state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
 

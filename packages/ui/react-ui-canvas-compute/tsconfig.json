@@ -45,19 +45,22 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
-    },
-    {
-      "path": "../../core/artifact-testing"
-    },
-    {
       "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-testing"
+    },
+    {
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/compute"
     },
     {
       "path": "../../core/conductor"
+    },
+    {
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-schema"

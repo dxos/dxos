@@ -10,14 +10,25 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
-    "*": {}
+    "*": {
+      "types": [
+        "dist/types/src/types/index.d.ts"
+      ]
+    }
   },
   "files": [
     "dist",
@@ -31,18 +42,18 @@
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.0"
+    "@preact/signals-core": "^1.12.1",
+    "effect": "3.18.1"
   },
   "devDependencies": {
-    "@types/react": "~18.2.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@types/react": "~19.2.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0"
   },
   "peerDependencies": {
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

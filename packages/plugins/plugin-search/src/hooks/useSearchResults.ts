@@ -47,14 +47,14 @@ export const useSearchResults = <T extends Record<string, any>>(
 
   useEffect(() => {
     setPending(!!(objects && queryString));
-    const timeoutId = setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       const nextResults =
         objects && queryString ? await filterObjects(objects, queryStringToMatch(queryString)) : new Map();
       setResults(nextResults);
       setPending(false);
     }, delay);
 
-    return () => clearTimeout(timeoutId);
+    return () => clearTimeout(timeout);
   }, [queryString, objects]);
 
   return [pending, results];

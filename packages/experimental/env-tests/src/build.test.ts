@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { build } from 'esbuild';
 import { writeFile } from 'node:fs/promises';
+
+import { build } from 'esbuild';
 import { describe, test } from 'vitest';
 
 // Checks that packages can be used in different environments.
@@ -28,6 +29,7 @@ describe('build tests', () => {
         //       ...or local file paths: ../../ui/react-ui-table/dist/lib/browser/types/index.mjs
         /sodium-native/,
         /protobufjs/,
+        /@xenova\+transformers/,
       ],
     });
   });
@@ -61,7 +63,9 @@ const runEnvTest = async (config: EnvTestConfig): Promise<void> => {
           build.onLoad({ filter: /^test:entry$/, namespace: 'test-plugin' }, async (args) => {
             return {
               loader: 'ts',
-              contents: config.imports.map((specifier) => `import ${JSON.stringify(specifier)};`).join('\n'),
+              contents: config.imports
+                .map((specifier, idx) => `export * as test${idx} from ${JSON.stringify(specifier)};`)
+                .join('\n'),
               resolveDir: import.meta.dirname,
             };
           });

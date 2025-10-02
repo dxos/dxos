@@ -4,23 +4,24 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { ResponsiveContainer } from './ResponsiveContainer';
 import { translations } from '../../translations';
 import { VideoObject as VideoObjectComponent } from '../Media';
 
-const meta: Meta<typeof ResponsiveContainer> = {
+import { ResponsiveContainer } from './ResponsiveContainer';
+
+const meta = {
   title: 'plugins/plugin-thread/ResponsiveContainer',
   component: ResponsiveContainer,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ResponsiveContainer>;
 
 export default meta;
 

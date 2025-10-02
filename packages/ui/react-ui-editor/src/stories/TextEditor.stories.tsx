@@ -6,24 +6,12 @@ import '@dxos-theme';
 
 import { javascript } from '@codemirror/lang-javascript';
 import { openSearchPanel } from '@codemirror/search';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import {
-  EditorStory,
-  allExtensions,
-  content,
-  defaultExtensions,
-  global,
-  largeWithImages,
-  links,
-  longText,
-  names,
-  renderLinkButton,
-  text,
-} from './components';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
@@ -39,12 +27,26 @@ import {
 } from '../extensions';
 import { str } from '../testing';
 
-const meta: Meta<typeof EditorStory> = {
+import {
+  EditorStory,
+  allExtensions,
+  content,
+  defaultExtensions,
+  global,
+  largeWithImages,
+  links,
+  longText,
+  names,
+  renderLinkButton,
+  text,
+} from './components';
+
+const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen', controls: { disable: true } },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
 
@@ -52,7 +54,9 @@ export default meta;
 // Default
 //
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   render: () => <EditorStory text={text} extensions={defaultExtensions} />,
 };
 
@@ -60,7 +64,7 @@ export const Default = {
 // Everything
 //
 
-export const Everything = {
+export const Everything: Story = {
   render: () => <EditorStory text={text} extensions={allExtensions} selection={{ anchor: 99, head: 110 }} />,
 };
 
@@ -68,7 +72,7 @@ export const Everything = {
 // Empty
 //
 
-export const Empty = {
+export const Empty: Story = {
   render: () => <EditorStory extensions={defaultExtensions} />,
 };
 
@@ -76,7 +80,7 @@ export const Empty = {
 // Readonly
 //
 
-export const Readonly = {
+export const Readonly: Story = {
   render: () => <EditorStory text={text} extensions={defaultExtensions} readOnly />,
 };
 
@@ -84,7 +88,7 @@ export const Readonly = {
 // No Extensions
 //
 
-export const NoExtensions = {
+export const NoExtensions: Story = {
   render: () => <EditorStory text={text} />,
 };
 
@@ -92,7 +96,7 @@ export const NoExtensions = {
 // Vim
 //
 
-export const Vim = {
+export const Vim: Story = {
   render: () => (
     <EditorStory
       text={str('# Vim Mode', '', 'The distant future. The year 2000.', '', content.paragraphs)}
@@ -105,7 +109,7 @@ export const Vim = {
 // Listener
 //
 
-export const Listener = {
+export const Listener: Story = {
   render: () => (
     <EditorStory
       text={str('# Listener', '', content.footer)}
@@ -127,7 +131,7 @@ export const Listener = {
 // Folding
 //
 
-export const Folding = {
+export const Folding: Story = {
   render: () => <EditorStory text={text} extensions={[folding()]} />,
 };
 
@@ -135,7 +139,7 @@ export const Folding = {
 // Scrolling
 //
 
-export const Scrolling = {
+export const Scrolling: Story = {
   render: () => (
     <EditorStory
       text={str('# Large Document', '', longText)}
@@ -147,13 +151,13 @@ export const Scrolling = {
   ),
 };
 
-export const ScrollingWithImages = {
+export const ScrollingWithImages: Story = {
   render: () => (
     <EditorStory text={str('# Large Document', '', largeWithImages)} extensions={[decorateMarkdown(), image()]} />
   ),
 };
 
-export const ScrollTo = {
+export const ScrollTo: Story = {
   render: () => {
     // NOTE: Selection won't appear if text is reformatted.
     const word = 'Scroll to here...';
@@ -174,7 +178,7 @@ export const ScrollTo = {
 // Typescript
 //
 
-export const Typescript = {
+export const Typescript: Story = {
   render: () => (
     <EditorStory
       text={content.typescript}
@@ -188,15 +192,17 @@ export const Typescript = {
 // Autocomplete
 //
 
-export const Autocomplete = {
+export const Autocomplete: Story = {
   render: () => (
     <EditorStory
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
       extensions={[
         decorateMarkdown({ renderLinkButton }),
         autocomplete({
-          onSearch: (text) => {
-            return links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()));
+          onSuggest: (text) => {
+            return links
+              .filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()))
+              .map(({ label }) => label);
           },
         }),
       ]}
@@ -210,7 +216,7 @@ export const Autocomplete = {
 
 const completions = ['type', 'AND', 'OR', 'NOT', 'dxos.org'];
 
-export const Typeahead = {
+export const Typeahead: Story = {
   render: () => (
     <EditorStory
       text={str('# Typeahead', '')}
@@ -228,7 +234,7 @@ export const Typeahead = {
 // Mention
 //
 
-export const Mention = {
+export const Mention: Story = {
   render: () => (
     <EditorStory
       text={str('# Mention', '', 'Type @...', content.footer)}
@@ -245,7 +251,7 @@ export const Mention = {
 // Search
 //
 
-export const Search = {
+export const Search: Story = {
   render: () => (
     <EditorStory
       text={str('# Search', text)}

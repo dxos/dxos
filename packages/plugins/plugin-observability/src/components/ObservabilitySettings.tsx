@@ -7,9 +7,9 @@ import React from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormContainer, DeprecatedFormInput } from '@dxos/react-ui-form';
+import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ObservabilityAction } from '../types';
 
 export const ObservabilitySettingsSchema = Schema.mutable(
@@ -25,24 +25,24 @@ export const ObservabilitySettingsSchema = Schema.mutable(
 export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
 export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
-  const { t } = useTranslation(OBSERVABILITY_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
-    <DeprecatedFormContainer>
-      <DeprecatedFormInput
-        label={t('observability enabled label')}
-        secondary={
-          <Message.Root valence='info'>
-            <Message.Content>{t('observability description')}</Message.Content>
-          </Message.Root>
-        }
-      >
-        <Input.Switch
-          checked={settings.enabled}
-          onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
-        />
-      </DeprecatedFormInput>
-    </DeprecatedFormContainer>
+    <ControlPage>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
+        <Message.Root valence='info' classNames='container-max-width mbe-cardSpacingBlock'>
+          <Message.Content>{t('observability description')}</Message.Content>
+        </Message.Root>
+        <ControlGroup>
+          <ControlItemInput title={t('observability enabled label')}>
+            <Input.Switch
+              checked={settings.enabled}
+              onCheckedChange={(checked) => dispatch(createIntent(ObservabilityAction.Toggle, { state: !!checked }))}
+            />
+          </ControlItemInput>
+        </ControlGroup>
+      </ControlSection>
+    </ControlPage>
   );
 };

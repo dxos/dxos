@@ -3,15 +3,15 @@
 //
 
 import React, {
+  type ForwardedRef,
   type PropsWithChildren,
+  forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  useCallback,
-  type ForwardedRef,
-  forwardRef,
 } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
@@ -24,8 +24,8 @@ import { DragMonitor, type EditingState, EditorContext, type EditorContextType, 
 import { defaultShapes } from '../../shapes';
 import { CanvasGraphModel, type Shape } from '../../types';
 import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
-import { UI } from '../UI';
 import { type TestId } from '../defs';
+import { UI } from '../UI';
 
 export const defaultEditorOptions: EditorOptions = {
   gridSize: 16,
@@ -143,21 +143,17 @@ const EditorRootWithType = <S extends Shape = Shape>(
   };
 
   // Controller.
-  useImperativeHandle(
-    forwardedRef,
-    () => {
-      return {
-        action: actionHandler,
-        zoomToFit: () => {
-          requestAnimationFrame(() => {
-            void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
-          });
-        },
-        update: () => forceUpdate({}),
-      };
-    },
-    [actionHandler],
-  );
+  useImperativeHandle(forwardedRef, () => {
+    return {
+      action: actionHandler,
+      zoomToFit: () => {
+        requestAnimationFrame(() => {
+          void actionHandler?.({ type: 'zoom-to-fit', duration: 0 });
+        });
+      },
+      update: () => forceUpdate({}),
+    };
+  }, [actionHandler]);
 
   // Trigger on graph change.
   useEffect(() => {

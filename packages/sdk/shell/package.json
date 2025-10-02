@@ -13,7 +13,7 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/bundle/shell.js"
     },
-    "./style.css": "./dist/bundle/style.css",
+    "./style.css": "./dist/bundle/shell.css",
     "./react": {
       "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
@@ -82,23 +82,21 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "@vitejs/plugin-react": "^4.2.1",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@types/react": "~19.2.0",
+    "@types/react-dom": "~19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-client": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "optionalDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.1.5"
+    "@dxos/react-ui-theme": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

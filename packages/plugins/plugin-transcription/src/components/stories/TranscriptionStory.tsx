@@ -12,14 +12,15 @@ import { ScrollContainer } from '@dxos/react-ui-components';
 import { type DataType } from '@dxos/schema';
 
 import { type SerializationModel } from '../../model';
-import { Transcript } from '../Transcript';
+import { TranscriptView } from '../Transcript';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<DataType.Message>;
+  disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
-  audioRef?: RefObject<HTMLAudioElement>;
-}> = ({ model, running, onRunningChange, audioRef }) => {
+  audioRef?: RefObject<HTMLAudioElement | null>;
+}> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   const space = useSpace();
 
   return (
@@ -28,14 +29,17 @@ export const TranscriptionStory: FC<{
       <Toolbar.Root>
         <IconButton
           iconOnly
+          disabled={disabled}
           icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
           label={running ? 'Pause' : 'Play'}
           onClick={() => onRunningChange((running) => !running)}
         />
       </Toolbar.Root>
-      <ScrollContainer>
-        <Transcript space={space} model={model} attendableId='story' />
-      </ScrollContainer>
+      <ScrollContainer.Root pin>
+        <ScrollContainer.Content>
+          <TranscriptView space={space} model={model} />
+        </ScrollContainer.Content>
+      </ScrollContainer.Root>
     </div>
   );
 };

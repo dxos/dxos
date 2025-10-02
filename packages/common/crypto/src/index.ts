@@ -2,9 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from '#subtle';
 export * from './keys';
-export * from './signer';
-export * from './subtle';
+export type * from './signer';
+export * from './uuid';
 export * from './validator';
 export * from './verify';
-export * from './uuid';

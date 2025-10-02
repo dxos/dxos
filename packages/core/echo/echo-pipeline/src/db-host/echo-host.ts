@@ -10,9 +10,9 @@ import {
   type Repo,
 } from '@automerge/automerge-repo';
 
-import { LifecycleState, Resource, type Context } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
-import { createIdFromSpaceKey, SpaceDocVersion, type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -20,23 +20,24 @@ import { type LevelDB } from '@dxos/kv-store';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
+import {
+  AutomergeHost,
+  type CreateDocOptions,
+  EchoDataMonitor,
+  type EchoDataStats,
+  type EchoReplicator,
+  FIND_PARAMS,
+  type LoadDocOptions,
+  type PeerIdProvider,
+  type RootDocumentSpaceKeyProvider,
+  deriveCollectionIdFromSpaceId,
+} from '../automerge';
+
 import { DataServiceImpl } from './data-service';
 import { type DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from './query-service';
 import { SpaceStateManager } from './space-state-manager';
-import {
-  AutomergeHost,
-  FIND_PARAMS,
-  EchoDataMonitor,
-  deriveCollectionIdFromSpaceId,
-  type LoadDocOptions,
-  type CreateDocOptions,
-  type EchoReplicator,
-  type EchoDataStats,
-  type PeerIdProvider,
-  type RootDocumentSpaceKeyProvider,
-} from '../automerge';
 
 export interface EchoHostIndexingConfig {
   /**
@@ -197,8 +198,6 @@ export class EchoHost extends Resource {
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
-      // TODO(yaroslav): remove collection without spaceRootId after release (production<->staging interop)
-      void this._automergeHost.updateLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId), e.documentIds);
       void this._automergeHost.updateLocalCollectionState(
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
         e.documentIds,

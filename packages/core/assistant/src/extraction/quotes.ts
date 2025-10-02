@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { Query, Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
@@ -51,7 +51,7 @@ export const insertReferences = (text: string, quotes: ReferencedQuotes) => {
 
     // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}][${DXN.fromLocalObjectId(quote.id).toString()}]`);
+    text = text.replace(regex, `[${quote.quote}](${DXN.fromLocalObjectId(quote.id).toString()})`);
   }
 
   return text;

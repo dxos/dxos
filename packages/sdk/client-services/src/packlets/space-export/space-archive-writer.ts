@@ -4,10 +4,10 @@
 
 import type * as tar from '@obsidize/tar-browserify';
 
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { assertArgument, assertState } from '@dxos/invariant';
 import type { IdentityDid, SpaceId } from '@dxos/keys';
-import { SpaceArchiveFileStructure, SpaceArchiveVersion, type SpaceArchiveMetadata } from '@dxos/protocols';
+import { SpaceArchiveFileStructure, type SpaceArchiveMetadata, SpaceArchiveVersion } from '@dxos/protocols';
 import type { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 export type SpaceArchiveBeginProps = {
@@ -44,14 +44,14 @@ export class SpaceArchiveWriter extends Resource {
   }
 
   async setCurrentRootUrl(url: string): Promise<void> {
-    assertArgument(url.startsWith('automerge:'), 'Invalid root URL');
+    assertArgument(url.startsWith('automerge:'), 'url', 'Invalid root URL');
     assertState(this._tar, 'Not open');
     assertState(this._meta, 'Not started');
     this._currentRootUrl = url;
   }
 
   async writeDocument(documentId: string, data: Uint8Array): Promise<void> {
-    assertArgument(!documentId.startsWith('automerge:'), 'Invalid document ID');
+    assertArgument(!documentId.startsWith('automerge:'), 'documentId', 'Invalid document ID');
     assertState(this._archive, 'Not open');
     this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);
   }

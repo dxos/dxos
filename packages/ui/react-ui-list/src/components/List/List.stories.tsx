@@ -14,17 +14,10 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
-import { createList, TestItemSchema, type TestItemType } from './testing';
+import { TestItemSchema, type TestItemType, createList } from './testing';
 
 // TODO(burdon): var-icon-size.
 const grid = 'grid grid-cols-[32px_1fr_32px] min-bs-[2rem] rounded';
-
-const meta: Meta = {
-  title: 'ui/react-ui-list/List',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export default meta;
 
 const DefaultStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
   const handleSelect = (item: TestItemType) => {
@@ -98,7 +91,15 @@ const SimpleStory = ({ items = [], ...props }: ListRootProps<TestItemType>) => {
 
 const list = live(createList(100));
 
-export const Default: StoryObj<ListRootProps<TestItemType>> = {
+const meta = {
+  title: 'ui/react-ui-list/List',
+  component: List.Root,
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+} satisfies Meta<typeof List.Root>;
+
+export default meta;
+
+export const Default: StoryObj<typeof DefaultStory> = {
   render: DefaultStory,
   args: {
     items: list.items,
@@ -106,7 +107,7 @@ export const Default: StoryObj<ListRootProps<TestItemType>> = {
   },
 };
 
-export const Simple: StoryObj<ListRootProps<TestItemType>> = {
+export const Simple: StoryObj<typeof SimpleStory> = {
   render: SimpleStory,
   args: {
     items: list.items,

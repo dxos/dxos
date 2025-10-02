@@ -17,7 +17,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { defaultOrigin, CanvasContext, ProjectionMapper, type ProjectionState } from '../../hooks';
+import { CanvasContext, ProjectionMapper, type ProjectionState, defaultOrigin } from '../../hooks';
 
 export interface CanvasController {
   setProjection(projection: ProjectionState): Promise<void>;
@@ -64,17 +64,13 @@ export const Canvas = forwardRef<CanvasController, CanvasProps>(
     }, [scale, offset]);
 
     // Controller.
-    useImperativeHandle(
-      forwardedRef,
-      () => {
-        return {
-          setProjection: async (projection: ProjectionState) => {
-            setProjection(projection);
-          },
-        };
-      },
-      [ref],
-    );
+    useImperativeHandle(forwardedRef, () => {
+      return {
+        setProjection: async (projection: ProjectionState) => {
+          setProjection(projection);
+        },
+      };
+    }, [ref]);
 
     return (
       <CanvasContext.Provider

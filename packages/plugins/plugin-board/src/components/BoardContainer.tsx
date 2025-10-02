@@ -2,44 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { effect } from '@preact/signals-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef } from 'react';
 
-import { createIntent, Surface, useIntentDispatcher } from '@dxos/app-framework';
+import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
-import { type Obj, Ref, type Type } from '@dxos/echo';
+import { type Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
+import { useSignalsMemo } from '@dxos/react-ui';
 import { Board, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-// TODO(thure): There is debate about having to rename either the type or the React component. A best practice should be chosen and either Board or Kanban (or both) should be refactored to apply it.
 import { type Board as BoardType } from '../types';
 
 export type BoardContainerProps = {
-  role: string;
+  role?: string;
   board: BoardType.Board;
 };
 
-export const BoardContainer = ({ role, board }: BoardContainerProps) => {
+export const BoardContainer = ({ board }: BoardContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const controller = useRef<BoardController>(null);
-
-  // TODO(burdon): Create effect utility for reactive arrays.
-  const [items, setItems] = useState<Type.Expando[]>([]);
-  useEffect(() => {
-    let t: NodeJS.Timeout;
-    effect(() => {
-      const refs = [...board.items];
-      t = setTimeout(async () => {
-        const items = await Ref.Array.loadAll(refs);
-        setItems(items.filter(isNonNullable));
-      });
-    });
-
-    return () => clearTimeout(t);
-  }, [board.items]);
+  const items = useSignalsMemo(() => board.items.map((ref) => ref.target).filter(isNonNullable), [board]);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (position = { x: 0, y: 0 }) => {
@@ -51,6 +36,7 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
           navigable: false,
           onCreateObject: (object: Obj.Any) => {
             board.items.push(Ref.make(object));
+            console.log(board.items.length);
             board.layout.cells[object.id] = { ...position, width: 1, height: 1 };
             controller.current?.center(position);
           },
@@ -69,7 +55,6 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
         board.items.splice(idx, 1);
       }
       delete board.layout.cells[id];
-      setItems((items) => items.filter((item) => item.id !== id));
     },
     [board],
   );
@@ -84,8 +69,8 @@ export const BoardContainer = ({ role, board }: BoardContainerProps) => {
 
   return (
     <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
-      <StackItem.Content toolbar>
-        <Board.Controls />
+      <StackItem.Content toolbar classNames='overflow-hidden'>
+        <Board.Toolbar />
         <Board.Container>
           <Board.Viewport classNames='border-none'>
             <Board.Backdrop />

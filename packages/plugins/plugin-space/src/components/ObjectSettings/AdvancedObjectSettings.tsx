@@ -9,8 +9,9 @@ import { ForeignKey } from '@dxos/echo-schema';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
+import { meta } from '../../meta';
+
 import { ForeignKeys } from './ForeignKeys';
-import { SPACE_PLUGIN } from '../../meta';
 
 const initialValues = {
   source: '',
@@ -22,7 +23,7 @@ export type AdvancedObjectSettingsProps = {
 };
 
 export const AdvancedObjectSettings = ({ object }: AdvancedObjectSettingsProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const [adding, setAdding] = useState(false);
   const { keys } = Obj.getMeta(object);
 

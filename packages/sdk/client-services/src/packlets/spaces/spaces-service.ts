@@ -19,44 +19,45 @@ import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
-  encodeError,
   ApiError,
   AuthorizationError,
   IdentityNotInitializedError,
   SpaceNotFoundError,
+  encodeError,
 } from '@dxos/protocols';
 import {
-  SpaceMember,
-  SpaceState,
+  type AdmitContactRequest,
+  type ContactAdmission,
   type CreateEpochRequest,
+  type CreateEpochResponse,
+  type ExportSpaceRequest,
+  type ExportSpaceResponse,
+  type ImportSpaceRequest,
+  type ImportSpaceResponse,
+  type JoinBySpaceKeyRequest,
+  type JoinSpaceResponse,
   type PostMessageRequest,
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
+  SpaceMember,
+  SpaceState,
   type SpacesService,
   type SubscribeMessagesRequest,
+  type UpdateMemberRoleRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
-  type UpdateMemberRoleRequest,
-  type AdmitContactRequest,
-  type ContactAdmission,
-  type JoinSpaceResponse,
-  type JoinBySpaceKeyRequest,
-  type CreateEpochResponse,
-  type ExportSpaceResponse,
-  type ExportSpaceRequest,
-  type ImportSpaceRequest,
-  type ImportSpaceResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
+import { type IdentityManager } from '../identity';
+import { SpaceArchiveWriter, extractSpaceArchive } from '../space-export';
+
 import { type DataSpace } from './data-space';
 import { type DataSpaceManager } from './data-space-manager';
-import { type IdentityManager } from '../identity';
-import { extractSpaceArchive, SpaceArchiveWriter } from '../space-export';
 
 export class SpacesServiceImpl implements SpacesService {
   constructor(
@@ -266,7 +267,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
     await using writer = await new SpaceArchiveWriter().open();
-    assertArgument(SpaceId.isValid(request.spaceId), 'Invalid space ID');
+    assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));

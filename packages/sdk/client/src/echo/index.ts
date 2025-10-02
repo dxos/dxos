@@ -3,7 +3,7 @@
 //
 
 export { SpaceId } from '@dxos/keys';
-export { type Echo, type Space, type PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
+export { type Echo, type Space, PropertiesType, type PropertiesTypeProps } from '@dxos/client-protocol';
 export {
   compareForeignKeys,
   createQueueDXN,
@@ -69,10 +69,8 @@ export {
   SPACE_ID_LENGTH,
   EchoObjectSchema,
   ReactiveObjectSchema,
-  SpaceSchema,
   getSpace,
   getSyncSummary,
-  isSpace,
   parseFullyQualifiedId,
   parseId,
   type Progress,
@@ -80,3 +78,4 @@ export {
   type SpaceSyncStateMap,
 } from './util';
 export { importSpace } from './import';
+export { SpaceSchema, isSpace } from './space-proxy';

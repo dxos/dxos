@@ -33,13 +33,16 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/assistant"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/echo/echo"
@@ -51,16 +54,25 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-gameboard"
+    },
+    {
+      "path": "../../ui/react-ui-sfx"
     },
     {
       "path": "../../ui/react-ui-stack"

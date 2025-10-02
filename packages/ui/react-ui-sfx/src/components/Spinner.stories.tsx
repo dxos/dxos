@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -12,36 +12,33 @@ import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Spinner, type SpinnerProps } from './Spinner';
 
-const DefaultStory = ({ active: _active }: SpinnerProps) => {
-  const [active, setActive] = useState(_active);
+const DefaultStory = ({ state: _state }: SpinnerProps) => {
+  const [state, setState] = useState(_state);
 
   return (
     <div className='flex flex-col grow'>
       <Toolbar.Root>
-        <Button onClick={() => setActive((active) => !active)}>Toggle</Button>
+        <Button onClick={() => setState('pulse')}>Pulse</Button>
+        <Button onClick={() => setState('spin')}>Spin</Button>
+        <Button onClick={() => setState('flash')}>Flash</Button>
+        <Button onClick={() => setState('error')}>Error</Button>
       </Toolbar.Root>
       <div className='flex grow items-center justify-center'>
-        <div className='flex w-6 h-6'>
-          <Spinner active={active} />
-        </div>
+        <Spinner state={state} size={6} />
       </div>
     </div>
   );
 };
 
-const meta: Meta<SpinnerProps> = {
+const meta = {
   title: 'ui/react-ui-sfx/Spinner',
   component: Spinner,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Spinner>;
 
 export default meta;
 
-type Story = StoryObj<SpinnerProps>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    active: false,
-  },
-};
+export const Default: Story = {};

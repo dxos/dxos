@@ -7,19 +7,13 @@ import { Effect, type Layer } from 'effect';
 import { SchemaAST } from 'effect';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createTestAiServiceClient } from '@dxos/ai/testing';
-import {
-  type ComputeGraph,
-  createEventLogger,
-  FunctionCallService,
-  ValueBag,
-  type WorkflowLoader,
-} from '@dxos/conductor';
+import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { AiService, DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
+import { RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
+import { DatabaseService, QueueService, ServiceContainer, type Services } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { log, LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Avatar, Icon, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
@@ -80,12 +74,12 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     }
   };
 
-  const controller = useRef<AbortController>();
+  const controller = useRef<AbortController>(null);
   useEffect(() => handleStop(), []);
 
   const handleStop = () => {
     controller.current?.abort('stop');
-    controller.current = undefined;
+    controller.current = null;
   };
 
   const handleClear = () => {
@@ -96,7 +90,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
-    controller.current = undefined;
+    controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setIsExecuting(false);
     handleScroll();
@@ -213,7 +207,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
       )}
 
       {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'px-8 py-2 text-xs')}>
+        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
           {JSON.stringify(data, null, 2)}
         </SyntaxHighlighter>
       )}
@@ -231,10 +225,9 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<Services> => {
   return new ServiceContainer()
     .setServices({
       eventLogger: createEventLogger(LogLevel.INFO),
-      ai: AiService.make(createTestAiServiceClient()),
       database: DatabaseService.make(space.db),
       queues: QueueService.make(space.queues, undefined),
-      functionCallService: FunctionCallService.mock(),
+      functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();
 };

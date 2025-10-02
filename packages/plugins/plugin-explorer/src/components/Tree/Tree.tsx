@@ -10,7 +10,7 @@ import { SVG, type SVGContext } from '@dxos/react-ui-graph';
 import { SpaceGraphModel } from '@dxos/schema';
 
 import { HierarchicalEdgeBundling, RadialTree, TidyTree } from './layout';
-import { mapGraphToTreeData, type TreeNode } from './types';
+import { type TreeNode, mapGraphToTreeData } from './types';
 
 // TODO(burdon): Create dge bundling graph using d3.hierarchy.
 // https://observablehq.com/@d3/hierarchical-edge-bundling?intent=fork
@@ -75,8 +75,8 @@ export const Tree = <N,>({ space, selected, variant = 'tidy', onNodeClick }: Tre
   const context = useRef<SVGContext>(null);
 
   useEffect(() => {
-    if (context.current) {
-      const { width, height } = context.current.size!;
+    if (context.current?.size) {
+      const { width, height } = context.current.size;
       const size = Math.min(width, height);
       const radius = size * 0.4;
       const options = {

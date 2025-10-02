@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { afterEach, onTestFinished, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
 
-import { SpacesServiceImpl } from './spaces-service';
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
+
+import { SpacesServiceImpl } from './spaces-service';
 
 describe('SpacesService', () => {
   let serviceContext: ServiceContext;

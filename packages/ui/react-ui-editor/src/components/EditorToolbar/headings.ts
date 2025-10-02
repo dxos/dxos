@@ -7,9 +7,10 @@ import { type EditorView } from '@codemirror/view';
 import { type NodeArg } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { createEditorAction, createEditorActionGroup, type EditorToolbarState } from './util';
 import { setHeading } from '../../extensions';
 import { translationKey } from '../../translations';
+
+import { type EditorToolbarState, createEditorAction, createEditorActionGroup } from './util';
 
 const createHeadingGroupAction = (value: string) =>
   createEditorActionGroup(
@@ -34,10 +35,14 @@ const createHeadingActions = (getView: () => EditorView) =>
     '6': 'ph--text-h-six--regular',
   }).map(([levelStr, icon]) => {
     const level = parseInt(levelStr);
-    return createEditorAction(`heading--${levelStr}`, () => setHeading(level)(getView()), {
-      label: ['heading level label', { count: level, ns: translationKey }],
-      icon,
-    });
+    return createEditorAction(
+      `heading--${levelStr}`,
+      {
+        label: ['heading level label', { count: level, ns: translationKey }],
+        icon,
+      },
+      () => setHeading(level)(getView()),
+    );
   });
 
 const computeHeadingValue = (state: EditorToolbarState) => {

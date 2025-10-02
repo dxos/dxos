@@ -4,13 +4,15 @@
 
 import '@dxos-theme';
 
-import { ArrowClockwise, Bug, FileJs, FileTs, TextB, TextItalic, TextUnderline } from '@phosphor-icons/react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Toolbar } from './Toolbar';
 import { withTheme } from '../../testing';
 import { Toggle } from '../Buttons';
+import { Icon } from '../Icon';
 import { Select } from '../Select';
+
+import { Toolbar } from './Toolbar';
 
 type StorybookToolbarProps = {};
 
@@ -29,6 +31,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
               <Select.Option value={'b'}>B</Select.Option>
               <Select.Option value={'c'}>C</Select.Option>
             </Select.Viewport>
+            <Select.Arrow />
           </Select.Content>
         </Select.Portal>
       </Select.Root>
@@ -37,46 +40,50 @@ const DefaultStory = (props: StorybookToolbarProps) => {
       {/* TODO(burdon): Icon sizes should adapt to density. */}
       <Toolbar.ToggleGroup type='multiple'>
         <Toolbar.ToggleGroupItem value='a'>
-          <TextB />
+          <Icon icon='ph--text-b--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='b'>
-          <TextItalic />
+          <Icon icon='ph--text-italic--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='c'>
-          <TextUnderline />
+          <Icon icon='ph--text-underline--regular' />
         </Toolbar.ToggleGroupItem>
       </Toolbar.ToggleGroup>
       {/* TODO(burdon): Highlight isn't shown. */}
       <Toolbar.ToggleGroup type='single' defaultValue='a'>
         <Toolbar.ToggleGroupItem value='a'>
-          <FileTs />
+          <Icon icon='ph--file-ts--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='b'>
-          <FileJs />
+          <Icon icon='ph--file-js--regular' />
         </Toolbar.ToggleGroupItem>
       </Toolbar.ToggleGroup>
       <Toolbar.Button asChild>
         <Toggle>
-          <Bug />
+          <Icon icon='ph--bug--regular' />
         </Toggle>
       </Toolbar.Button>
       <Toolbar.Separator />
       <Toolbar.Button>Test</Toolbar.Button>
       <Toolbar.Button>
-        <ArrowClockwise />
+        <Icon icon='ph--arrow-clockwise--regular' />
       </Toolbar.Button>
     </Toolbar.Root>
   );
 };
 
-export default {
+const meta = {
   title: 'ui/react-ui-core/Toolbar',
-  component: Toolbar,
+  component: Toolbar as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

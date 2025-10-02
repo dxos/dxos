@@ -1,0 +1,78 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../assistant"
+    },
+    {
+      "path": "../blueprints"
+    },
+    {
+      "path": "../conductor"
+    },
+    {
+      "path": "../echo/echo"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/echo-protocol"
+    },
+    {
+      "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../functions"
+    },
+    {
+      "path": "../mesh/edge-client"
+    }
+  ]
+}

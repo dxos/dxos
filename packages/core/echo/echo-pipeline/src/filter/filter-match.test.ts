@@ -6,10 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
 import { ObjectStructure } from '@dxos/echo-protocol';
-import { Expando, EXPANDO_TYPENAME, Ref } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME, Expando, Ref } from '@dxos/echo-schema';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
-import { filterMatchObject, type MatchedObject } from './filter-match';
+import { type MatchedObject, filterMatchObject } from './filter-match';
 
 describe('filterMatch', () => {
   test('properties', () => {
@@ -17,6 +17,19 @@ describe('filterMatch', () => {
     expect(filterMatchObject(Filter.type(Expando, { value: 100 }).ast, OBJECT_1)).to.be.true;
     expect(filterMatchObject(Filter.type(Expando, { complete: false }).ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(Filter.type(Expando, { missing: undefined }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Expando, { properties: { subject: 'test' } }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.type(Expando, { array: Filter.contains('two') }).ast, OBJECT_1)).to.be.true;
+  });
+
+  test('contains', () => {
+    expect(filterMatchObject(Filter.type(Expando, { properties: { label: Filter.contains('test') } }).ast, OBJECT_1)).to
+      .be.true;
+    expect(
+      filterMatchObject(
+        Filter.type(Expando, { fields: Filter.contains({ label: 'label', value: 'test' }) }).ast,
+        OBJECT_1,
+      ),
+    ).to.be.true;
   });
 
   test('and', () => {
@@ -78,7 +91,14 @@ const OBJECT_1: MatchedObject = {
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
     type: DXN.fromTypenameAndVersion(EXPANDO_TYPENAME, '0.1.0').toString(),
-    data: { title: 'test', value: 100, complete: true },
+    data: {
+      title: 'test',
+      value: 100,
+      complete: true,
+      array: ['one', 'two', 'three'],
+      properties: { label: ['test'], subject: 'test' },
+      fields: [{ label: 'label', value: 'test' }],
+    },
   }),
 };
 

@@ -5,10 +5,8 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-ui';
-import { ghostHover, groupBorder, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, ghostHover, groupBorder, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-
-import { styles } from '../styles';
 
 export type EventListProps = {
   events?: DataType.Event[];
@@ -23,7 +21,8 @@ export const EventList = ({ events = [], selected, onSelect }: EventListProps) =
         {events.map((event) => (
           <ListItem.Root
             key={event.id}
-            classNames={mx('flex flex-col cursor-pointer', ghostHover, selected === event.id && styles.selected)}
+            // TODO(burdon): Change bg-activeSurface to use data-active
+            classNames={mx('flex flex-col cursor-pointer', ghostHover, selected === event.id && 'bg-activeSurface')}
             onClick={() => onSelect?.(event)}
           >
             {event.name && <ListItem.Heading classNames='p-2'>{event.name}</ListItem.Heading>}

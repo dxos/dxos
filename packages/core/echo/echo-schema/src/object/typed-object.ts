@@ -6,9 +6,10 @@ import { Schema } from 'effect';
 
 import { invariant } from '@dxos/invariant';
 
-import { makeTypedEntityClass, type TypedObjectFields, type TypedObjectOptions } from './common';
-import { type TypeAnnotation, EntityKind, TypeAnnotationId, type TypeMeta, Typename, Version } from '../ast';
+import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type TypeMeta, Typename } from '../ast';
 import { type HasId } from '../types';
+
+import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -38,9 +39,13 @@ export type TypedObjectProps = TypeMeta & {
  * Base class factory for typed objects.
  * @deprecated Use pipe(Type.Obj) instead.
  */
-export const TypedObject = ({ typename: _typename, version: _version, disableValidation }: TypedObjectProps) => {
-  const typename = Typename.make(_typename, { disableValidation });
-  const version = Version.make(_version, { disableValidation });
+export const TypedObject = ({
+  typename: typenameParam,
+  version: versionParam,
+  disableValidation,
+}: TypedObjectProps) => {
+  const typename = Typename.make(typenameParam, { disableValidation });
+  const version = SchemaVersion.make(versionParam, { disableValidation });
 
   /**
    * Return class definition factory.

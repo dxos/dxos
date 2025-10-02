@@ -21,4 +21,10 @@ dx-grid-axis-resize-handle {
     block-size: .5rem;
     cursor: row-resize;
   }
+  &:focus {
+    outline: none;
+  }
+  &:focus-visible {
+    background: var(--dx-grid-resizeHandleFocus, var(--dx-accentSurface));
+  }
 }

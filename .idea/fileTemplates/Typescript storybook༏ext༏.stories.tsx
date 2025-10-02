@@ -6,16 +6,22 @@ import '@dxos-theme';
 
 import React from 'react';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+
 import { withTheme } from '@dxos/storybook-utils';
 
-const Story = () => <div>Test</div>;
+const Component = () => <div>Test</div>;
 
-export default {
+const meta: Meta<typeof Component> = {
   title: 'example/Story',
-  component: Story,
+  component: Component,
   decorators: [withTheme],
 };
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

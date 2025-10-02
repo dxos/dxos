@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { X } from '@phosphor-icons/react';
 import React from 'react';
 
 import { createDocAccessor } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
-import { Button, Input, useThemeContext } from '@dxos/react-ui';
+import { IconButton, Input, useThemeContext } from '@dxos/react-ui';
 import {
   automerge,
   createBasicExtensions,
@@ -98,9 +97,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
       {/* TODO(burdon): Check if mutable. */}
       <div className='flex flex-col shrink-0'>
-        <Button variant='ghost' classNames='p-0' onClick={() => onDelete(object.id)}>
-          <X />
-        </Button>
+        <IconButton icon='ph--x--regular' iconOnly label='Delete' onClick={() => onDelete(object.id)} variant='ghost' />
       </div>
     </div>
   );
@@ -113,7 +110,7 @@ const Editor = ({ object, prop }: { object: Obj.Any; prop: string }) => {
       initialValue: (object as any)[prop],
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, slots: { content: { className: 'p-0' } } }),
         automerge(createDocAccessor(object, [prop])),
       ],
@@ -130,9 +127,7 @@ export const DebugItem = ({ object, onDelete }: Pick<ItemProps<Obj.Any>, 'object
   return (
     <div className='flex w-full px-1.5 py-1 text-sm font-thin font-mono'>
       <pre className='grow'>{JSON.stringify({ id: object.id.slice(0, 8), deleted, ...meta }, undefined, 2)}</pre>
-      <Button variant='ghost' classNames='p-0' onClick={() => onDelete(object.id)}>
-        <X />
-      </Button>
+      <IconButton icon='ph--x--regular' variant='ghost' iconOnly onClick={() => onDelete(object.id)} label='Delete' />
     </div>
   );
 };

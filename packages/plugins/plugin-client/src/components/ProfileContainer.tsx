@@ -10,18 +10,17 @@ import { useClient } from '@dxos/react-client';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { ButtonGroup, Clipboard, Input, useTranslation } from '@dxos/react-ui';
 import {
-  Form,
-  type InputComponent,
   ControlItem,
   ControlItemInput,
-  ControlSection,
   ControlPage,
+  ControlSection,
+  Form,
+  type InputComponent,
 } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
-import { StackItem } from '@dxos/react-ui-stack';
-import { hexToHue, hexToEmoji } from '@dxos/util';
+import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 // TODO(thure): Factor out?
 const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
@@ -30,7 +29,7 @@ const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue 
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayNameDirectly] = useState(identity?.profile?.displayName ?? '');
@@ -58,7 +57,7 @@ export const ProfileContainer = () => {
       setDisplayNameDirectly(profile.displayName);
       setEmojiDirectly(profile.emoji);
       setHueDirectly(profile.hue);
-      updateProfile(profile);
+      void updateProfile(profile);
     },
     [identity],
   );
@@ -143,23 +142,21 @@ export const ProfileContainer = () => {
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
-      <ControlPage>
-        <Clipboard.Provider>
-          <ControlSection title={t('profile label')} description={t('profile description')}>
-            <Form
-              schema={ProfileSchema}
-              values={values}
-              autoSave
-              onSave={handleSave}
-              Custom={customElements}
-              classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content] gap-4'
-              outerSpacing={false}
-            />
-          </ControlSection>
-        </Clipboard.Provider>
-      </ControlPage>
-    </StackItem.Content>
+    <ControlPage>
+      <Clipboard.Provider>
+        <ControlSection title={t('profile label')} description={t('profile description')}>
+          <Form
+            schema={ProfileSchema}
+            values={values}
+            autoSave
+            onSave={handleSave}
+            Custom={customElements}
+            classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
+            outerSpacing={false}
+          />
+        </ControlSection>
+      </Clipboard.Provider>
+    </ControlPage>
   );
 };
 

@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SPACE_PLUGIN = 'dxos.org/plugin/space';
-
 export const meta: PluginMeta = {
-  id: SPACE_PLUGIN,
+  id: 'dxos.org/plugin/space',
   name: 'Spaces',
   icon: 'ph--planet--regular',
 };

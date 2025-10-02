@@ -2,21 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { Fragment, memo, useCallback, useEffect, useMemo, type MouseEvent } from 'react';
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { createIntent, LayoutAction, Surface, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, Surface, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
 
-import { PlankCompanionControls, PlankControls } from './PlankControls';
 import { useBreakpoints } from '../../hooks';
 import { parseEntryId } from '../../layout';
-import { DECK_PLUGIN } from '../../meta';
-import { PLANK_COMPANION_TYPE, DeckAction, type ResolvedPart, type LayoutMode } from '../../types';
+import { meta } from '../../meta';
+import { DeckAction, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { soloInlinePadding } from '../fragments';
+
+import { PlankCompanionControls, PlankControls } from './PlankControls';
 
 const MAX_COMPANIONS = 5;
 
@@ -52,14 +53,14 @@ export const PlankHeading = memo(
     layoutMode,
     actions = [],
   }: PlankHeadingProps) => {
-    const { t } = useTranslation(DECK_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
       ? t('pending heading')
-      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
+      : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: meta.id }], t);
 
     const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
 
@@ -105,7 +106,7 @@ export const PlankHeading = memo(
 
     const handleAction = useCallback(
       (action: StackItemSigilAction) => {
-        typeof action.data === 'function' && action.data?.({ parent: node, caller: DECK_PLUGIN });
+        typeof action.data === 'function' && void action.data?.({ parent: node, caller: meta.id });
       },
       [node],
     );
@@ -134,7 +135,7 @@ export const PlankHeading = memo(
       [dispatch, id, part],
     );
 
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {

@@ -5,7 +5,7 @@
 import { getDebugName, safariCheck } from '@dxos/util';
 
 import { LogLevel } from '../config';
-import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
 const getRelativeFilename = (filename: string) => {
   // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
@@ -66,12 +66,16 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     args.push(`%c${processPrefix}${scopeName}`, 'color:#C026D3;font-weight:bold');
   }
 
-  args.push(entry.message);
+  if (entry.message) {
+    args.push(entry.message);
+  }
 
   const context = getContextFromEntry(entry);
   if (context) {
     if (Object.keys(context).length === 1 && 'error' in context) {
       args.push(context.error);
+    } else if (Object.keys(context).length === 1 && 'err' in context) {
+      args.push(context.err);
     } else {
       args.push(context);
     }

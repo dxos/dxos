@@ -3,19 +3,19 @@
 //
 
 import React, {
-  createContext,
+  type FocusEvent,
+  type PropsWithChildren,
   type RefObject,
+  createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
-  type FocusEvent,
-  type PropsWithChildren,
-  useCallback,
 } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type BaseObject, getValue } from '@dxos/echo-schema';
-import { createJsonPath, type SimpleType } from '@dxos/effect';
+import { type SimpleType, createJsonPath } from '@dxos/effect';
 
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
 
@@ -62,7 +62,7 @@ export const FormProvider = ({
   ...formOptions
 }: PropsWithChildren<
   FormOptions<any> & {
-    formRef?: RefObject<HTMLDivElement>;
+    formRef?: RefObject<HTMLDivElement | null>;
     autoSave?: boolean;
   }
 >) => {

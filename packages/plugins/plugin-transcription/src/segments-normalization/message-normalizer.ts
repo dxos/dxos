@@ -8,7 +8,7 @@
 
 import { effect } from '@preact/signals-core';
 
-import { asyncTimeout, DeferredTask } from '@dxos/async';
+import { DeferredTask, asyncTimeout } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type Queue } from '@dxos/echo-db';
 import { type FunctionExecutor } from '@dxos/functions';

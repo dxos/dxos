@@ -2,37 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
-import { flock } from 'fs-ext';
 import { existsSync } from 'node:fs';
-import { open, type FileHandle, constants } from 'node:fs/promises';
+import { type FileHandle, constants, open } from 'node:fs/promises';
+
+import { LockfileSys } from './sys';
+
+const sys = new LockfileSys();
 
 export class LockFile {
   static async acquire(filename: string): Promise<FileHandle> {
-    const handle = await open(filename, constants.O_CREAT);
-    await new Promise<void>((resolve, reject) => {
-      flock(handle.fd, 'exnb', async (err) => {
-        if (err) {
-          reject(err);
-          await handle.close();
-          return;
-        }
-        resolve();
-      });
-    });
-    return handle;
+    await sys.init();
+
+    const handle = await open(filename, constants.O_CREAT | constants.O_RDWR);
+
+    try {
+      // Try to acquire exclusive non-blocking lock
+      sys.flock(handle.fd, 'exnb');
+      return handle;
+    } catch (err) {
+      // Close the file handle if we can't acquire the lock
+      await handle.close();
+      throw err;
+    }
   }
 
   static async release(handle: FileHandle): Promise<void> {
-    await new Promise<void>((resolve, reject) => {
-      flock(handle.fd, 'un', (err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve();
-      });
-    });
-    await handle.close();
+    try {
+      // Release the lock
+      sys.flock(handle.fd, 'un');
+    } finally {
+      await handle.close();
+    }
   }
 
   static async isLocked(filename: string): Promise<boolean> {
@@ -42,7 +42,6 @@ export class LockFile {
     try {
       const handle = await LockFile.acquire(filename);
       await LockFile.release(handle);
-
       return false;
     } catch (e) {
       return true;

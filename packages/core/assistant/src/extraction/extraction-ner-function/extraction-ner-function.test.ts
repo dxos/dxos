@@ -2,18 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test, beforeAll } from 'vitest';
+import { beforeAll, describe, test } from 'vitest';
 
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-import { createTestData, Testing } from '@dxos/schema/testing';
+import { Testing, createTestData } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
-import { extractionNerFn } from './extraction-ner-function';
 import { processTranscriptMessage } from '../extraction';
+
+import { extractionNerFunction } from './extraction-ner-function';
 
 describe.skip('NER EntityExtraction', () => {
   let builder: EchoTestBuilder;
@@ -27,6 +28,7 @@ describe.skip('NER EntityExtraction', () => {
     contacts: Record<string, DataType.Person>;
     organizations: Record<string, DataType.Organization>;
   };
+
   const TYPES = [DataType.Organization, DataType.Person, Testing.Contact, Testing.DocumentType];
 
   beforeAll(async () => {
@@ -44,8 +46,8 @@ describe.skip('NER EntityExtraction', () => {
       contacts: Object.fromEntries(Object.entries(data.contacts).map(([key, value]) => [key, db.add(value)])),
       organizations: Object.fromEntries(Object.entries(data.organizations).map(([key, value]) => [key, db.add(value)])),
     };
-    await db.flush();
 
+    await db.flush();
     executor = new FunctionExecutor(
       new ServiceContainer().setServices({
         database: { db },
@@ -64,7 +66,7 @@ describe.skip('NER EntityExtraction', () => {
           message,
           objects: [...documents, ...Object.values(contacts)],
         },
-        function: extractionNerFn,
+        function: extractionNerFunction,
         executor,
       });
       log.info('output', enhancedMessage);
@@ -73,7 +75,6 @@ describe.skip('NER EntityExtraction', () => {
 
   test('computational irreducibility', async () => {
     const { transcriptWoflram, documents, contacts } = testData;
-
     log.info('context', { documents, contacts });
     const message = transcriptWoflram[0];
     log.info('input', message);
@@ -85,7 +86,7 @@ describe.skip('NER EntityExtraction', () => {
             message,
             objects: [...documents, ...Object.values(contacts)],
           },
-          function: extractionNerFn,
+          function: extractionNerFunction,
           executor,
         });
         log.info('output', { message: enhancedMessage.blocks[0], timeElapsed });
@@ -95,7 +96,6 @@ describe.skip('NER EntityExtraction', () => {
 
   test('org and document linking', async () => {
     const { transcriptJosiah, documents, contacts, organizations } = testData;
-
     log.info('context', { contacts, organizations, documents });
 
     for (const message of transcriptJosiah) {
@@ -106,7 +106,7 @@ describe.skip('NER EntityExtraction', () => {
           message,
           objects: [...documents, ...Object.values(contacts), ...Object.values(organizations)],
         },
-        function: extractionNerFn,
+        function: extractionNerFunction,
         executor,
       });
       log.info('output', enhancedMessage);

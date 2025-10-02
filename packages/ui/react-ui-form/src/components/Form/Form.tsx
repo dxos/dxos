@@ -2,19 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Schema } from 'effect';
 import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
 
 import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
-import { type SchemaProperty } from '@dxos/schema';
+import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
+
+import { type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
 import { FormProvider } from './FormContext';
-import { type InputProps, type InputComponent } from './Input';
-import { type FormOptions } from '../../hooks';
+import { type InputComponent, type InputProps } from './Input';
 
 export type PropsFilter<T extends BaseObject> = (props: SchemaProperty<T>[]) => SchemaProperty<T>[];
 
@@ -33,6 +35,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<{
   // TODO(burdon): Change to JsonPath includes/excludes.
   filter?: PropsFilter<T>;
   sort?: PropertyKey<T>[];
+  projection?: ProjectionModel;
   autoSave?: boolean;
   outerSpacing?: FormOuterSpacing;
   onCancel?: () => void;
@@ -48,8 +51,8 @@ export const Form = <T extends BaseObject>({
   readonly,
   autoSave,
   outerSpacing = true,
-  onCancel,
   schema,
+  onCancel,
   onValuesChanged,
   onValidate,
   onSave,
@@ -57,18 +60,19 @@ export const Form = <T extends BaseObject>({
 }: FormProps<T>) => {
   const formRef = useRef<HTMLDivElement>(null);
 
-  // TODO(burdon): Rename.
-  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
-
-  // Focus the first input element within this form.
+  // Focus the first focusable element within this form.
+  const { findFirstFocusable } = useFocusFinders();
   useEffect(() => {
     if (autoFocus && formRef.current) {
-      const input = formRef.current.querySelector('input');
-      if (input) {
-        input.focus();
+      const firstFocusable = findFirstFocusable(formRef.current);
+      if (firstFocusable) {
+        firstFocusable.focus();
       }
     }
   }, [autoFocus]);
+
+  // TODO(burdon): Name?
+  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
 
   return (
     <FormProvider
@@ -99,7 +103,7 @@ export const Form = <T extends BaseObject>({
           readonly={readonly}
           schema={schema}
         />
-        {(onCancel || onSave) && !autoSave && (
+        {(onCancel || onSave) && !autoSave && !readonly && (
           <FormActions readonly={readonly} onCancel={onCancel} outerSpacing={outerSpacing} />
         )}
       </div>

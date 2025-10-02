@@ -5,12 +5,12 @@
 import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension } from '@dxos/plugin-graph';
-import { SPACE_PLUGIN } from '@dxos/plugin-space';
+import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../meta';
 
@@ -22,7 +22,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (node.type === `${SPACE_PLUGIN}/settings` ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: `automation-${node.id}`,
@@ -44,7 +44,7 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           pipe(
             get(node),
-            Option.flatMap((node) => (node.type === `${SPACE_PLUGIN}/settings` ? Option.some(node) : Option.none())),
+            Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
                 id: `functions-${node.id}`,

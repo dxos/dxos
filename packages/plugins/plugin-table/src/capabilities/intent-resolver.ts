@@ -5,20 +5,20 @@
 import { Effect } from 'effect';
 
 import {
-  contributes,
   Capabilities,
-  createResolver,
-  type PluginContext,
-  createIntent,
   LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+  createResolver,
 } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { createTable } from '@dxos/react-ui-table';
-import { DataType } from '@dxos/schema';
+import { Table } from '@dxos/react-ui-table/types';
+import { DataType, typenameFromQuery } from '@dxos/schema';
 
 import { TableAction } from '../types';
 
@@ -55,7 +55,7 @@ export default (context: PluginContext) =>
       intent: TableAction.Create,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
-        const { view } = await createTable({ client, space, typename, name });
+        const { view } = await Table.makeView({ client, space, typename, name });
         return { data: { object: view } };
       },
     }),
@@ -64,8 +64,9 @@ export default (context: PluginContext) =>
       resolve: async ({ view, data }) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        const typename = view.query ? typenameFromQuery(view.query) : undefined;
+        invariant(typename);
+        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const object = Obj.make(schema, data);
         return { intents: [createIntent(SpaceAction.AddObject, { target: space, object, hidden: true })] };

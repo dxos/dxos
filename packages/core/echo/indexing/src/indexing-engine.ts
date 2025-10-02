@@ -3,7 +3,7 @@
 //
 
 import { synchronized } from '@dxos/async';
-import { Resource, type Context } from '@dxos/context';
+import { type Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import type { LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
@@ -199,7 +199,12 @@ export class IndexingEngine extends Resource {
       updated = true;
     }
 
-    log('Indexing finished', { time: Date.now() - startTime });
+    log('Indexing finished', {
+      time: Date.now() - startTime,
+      updated,
+      completed,
+      updatedCount: documentsUpdated.length,
+    });
     return { completed, updated };
   }
 

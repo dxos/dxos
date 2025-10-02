@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, SchemaAST, type JSONSchema, pipe } from 'effect';
+import { type JSONSchema, Option, SchemaAST, pipe } from 'effect';
 
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
@@ -102,7 +102,7 @@ export enum FormatEnum {
   // { type: 'object' }
   //
 
-  GeoPoint = 'latlng',
+  GeoPoint = 'lnglat',
 }
 
 export const FormatEnums = Object.values(FormatEnum).sort();

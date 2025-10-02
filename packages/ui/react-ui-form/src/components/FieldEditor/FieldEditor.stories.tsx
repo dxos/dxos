@@ -5,7 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
@@ -13,17 +13,16 @@ import { ProjectionModel } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 import { translations } from '../../translations';
-import { TestLayout, TestPanel, FIELD_EDITOR_DEBUG_SYMBOL } from '../testing';
+import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
+
+import { FieldEditor, type FieldEditorProps } from './FieldEditor';
 
 // Type definition for debug objects exposed to tests.
 export type FieldEditorDebugObjects = {
   props: FieldEditorProps;
   projection: ProjectionModel;
 };
-
-type StoryProps = FieldEditorProps;
 
 const DefaultStory = (props: FieldEditorProps) => {
   const handleComplete: FieldEditorProps['onSave'] = () => {
@@ -55,19 +54,19 @@ const DefaultStory = (props: FieldEditorProps) => {
   );
 };
 
-const meta: Meta<StoryProps> = {
+const meta = {
   title: 'ui/react-ui-form/FieldEditor',
-  component: FieldEditor,
+  component: FieldEditor as any,
   render: DefaultStory,
   decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

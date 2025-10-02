@@ -7,32 +7,26 @@ import { Option, pipe } from 'effect';
 
 import {
   Capabilities,
+  LayoutAction,
+  type PluginContext,
+  type PromiseIntentDispatcher,
   contributes,
   createIntent,
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { PLANK_COMPANION_TYPE, ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
-import { createExtension, ROOT_ID } from '@dxos/plugin-graph';
-import { getActiveSpace, rxFromQuery } from '@dxos/plugin-space';
-import { SPACE_TYPE, SpaceAction } from '@dxos/plugin-space/types';
-import {
-  type Space,
-  Filter,
-  Query,
-  type QueryResult,
-  fullyQualifiedId,
-  getSpace,
-  isSpace,
-} from '@dxos/react-client/echo';
+import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { getActiveSpace } from '@dxos/plugin-space';
+import { SpaceAction } from '@dxos/plugin-space/types';
+import { Query, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../meta';
-import { Assistant, TemplateType } from '../types';
+import { Assistant, AssistantAction } from '../types';
+
+import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
@@ -87,44 +81,36 @@ export default (context: PluginContext) =>
     }),
 
     createExtension({
-      id: `${meta.id}/object-chat-companion`,
+      id: `${meta.id}/companion-chat`,
       connector: (node) => {
-        let query: QueryResult<Assistant.Chat> | undefined;
-        return Rx.make((get) => {
-          const nodeOption = get(node);
-          if (Option.isNone(nodeOption)) {
-            return [];
-          }
+        return Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node.data) : Option.none())),
+            Option.map((object) => {
+              const currentChat = get(
+                rxFromSignal(
+                  () => context.getCapability(AssistantCapabilities.State).currentChat[fullyQualifiedId(object)],
+                ),
+              );
 
-          const object = nodeOption.value.data;
-          if (!Obj.isObject(object)) {
-            return [];
-          }
-
-          const space = getSpace(object);
-          if (!space) {
-            return [];
-          }
-
-          if (!query) {
-            query = space.db.query(Query.select(Filter.ids(object.id)).targetOf(Assistant.CompanionTo).source());
-          }
-
-          const chat = get(rxFromQuery(query))[0];
-          return [
-            {
-              id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
-              type: PLANK_COMPANION_TYPE,
-              data: chat ?? 'assistant-chat',
-              properties: {
-                label: ['assistant chat label', { ns: meta.id }],
-                icon: 'ph--sparkle--regular',
-                position: 'hoist',
-                disposition: 'hidden',
-              },
-            },
-          ];
-        });
+              return [
+                {
+                  id: [fullyQualifiedId(object), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                  type: PLANK_COMPANION_TYPE,
+                  data: currentChat ?? 'assistant-chat',
+                  properties: {
+                    label: ['assistant chat label', { ns: meta.id }],
+                    icon: 'ph--sparkle--regular',
+                    position: 'hoist',
+                    disposition: 'hidden',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        );
       },
     }),
 
@@ -151,81 +137,6 @@ export default (context: PluginContext) =>
           ),
         ),
     }),
-
-    createExtension({
-      id: `${meta.id}/root`,
-      connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(TemplateType));
-              }
-
-              const templates = get(rxFromQuery(query));
-              return templates.length > 0
-                ? [
-                    {
-                      id: `${meta.id}/templates`,
-                      type: `${meta.id}/templates`,
-                      data: null,
-                      properties: {
-                        label: ['templates label', { ns: meta.id }],
-                        icon: 'ph--file-code--regular',
-                        space,
-                      },
-                    },
-                  ]
-                : [];
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
-
-    createExtension({
-      id: `${meta.id}/templates`,
-      connector: (node) => {
-        let query: QueryResult<TemplateType> | undefined;
-        return Rx.make((get) =>
-          pipe(
-            get(node),
-            Option.flatMap((node) =>
-              node.id === `${meta.id}/templates` && isSpace(node.properties.space)
-                ? Option.some(node.properties.space)
-                : Option.none(),
-            ),
-            Option.map((space) => {
-              if (!query) {
-                query = space.db.query(Query.type(TemplateType));
-              }
-              return get(rxFromQuery(query))
-                .toSorted((a, b) => {
-                  const nameA = a.name ?? '';
-                  const nameB = b.name ?? '';
-                  return nameA.localeCompare(nameB);
-                })
-                .map((template) => ({
-                  id: fullyQualifiedId(template),
-                  type: `${meta.id}/template`,
-                  data: template,
-                  properties: {
-                    label: template.name ?? ['object placeholder', { ns: meta.id }],
-                    icon: 'ph--file-code--regular',
-                  },
-                }));
-            }),
-            Option.getOrElse(() => []),
-          ),
-        );
-      },
-    }),
   ]);
 
 // TODO(burdon): Factor out.
@@ -238,14 +149,13 @@ const getOrCreateChat = async (
   const { objects: relatedChats } = await space.db
     .query(Query.type(Assistant.Chat).sourceOf(Assistant.CompanionTo).source())
     .run();
+
   const chats = allChats.filter((chat) => !relatedChats.includes(chat));
-  // console.log('objects', JSON.stringify(objects, null, 2));
   if (chats.length > 0) {
-    // TODO(burdon): Is this the most recent?
-    return chats[chats.length - 1];
+    return chats.at(-1);
   }
 
-  const { data } = await dispatch(createIntent(Assistant.CreateChat, { space }));
+  const { data } = await dispatch(createIntent(AssistantAction.CreateChat, { space }));
   invariant(Obj.instanceOf(Assistant.Chat, data?.object));
   await dispatch(createIntent(SpaceAction.AddObject, { target: space, object: data.object }));
   return data.object;

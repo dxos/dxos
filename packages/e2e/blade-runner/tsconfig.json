@@ -1,8 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist/types",
-    "target": "esnext"
+    "outDir": "dist/types"
   },
   "exclude": [
     "/node_modules/"
@@ -75,7 +74,13 @@
       "path": "../../core/echo/live-object"
     },
     {
+      "path": "../../core/functions"
+    },
+    {
       "path": "../../core/halo/keyring"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/mesh/messaging"
@@ -96,13 +101,16 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../plugins/plugin-script"
+    },
+    {
       "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-services"
+    },
+    {
+      "path": "../../sdk/config"
     }
-  ],
-  "ts-node": {
-    "swc": true
-  }
+  ]
 }

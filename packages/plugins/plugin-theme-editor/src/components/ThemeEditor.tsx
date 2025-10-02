@@ -6,35 +6,36 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo, useState } from 'react';
 
 import {
-  createGapSeparator,
-  createMenuAction,
   MenuProvider,
   ToolbarMenu,
-  useMenuActions,
+  createGapSeparator,
+  createMenuAction,
   rxFromSignal,
+  useMenuActions,
 } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { JsonEditor } from './JsonEditor';
 import { themeEditorId } from '../defs';
-import { THEME_EDITOR_PLUGIN } from '../meta';
-import { saveAndRender, reset } from '../util';
+import { meta } from '../meta';
+import { reset, saveAndRender } from '../util';
+
+import { JsonEditor } from './JsonEditor';
 
 const toolbarCreator = (handleFormat: () => void) =>
   Rx.make((get) =>
     get(
       rxFromSignal(() => {
         const renderAction = createMenuAction('render', () => saveAndRender(), {
-          label: ['render label', { ns: THEME_EDITOR_PLUGIN }],
+          label: ['render label', { ns: meta.id }],
           icon: 'ph--play--regular',
         });
         const formatAction = createMenuAction('format', handleFormat, {
-          label: ['format label', { ns: THEME_EDITOR_PLUGIN }],
+          label: ['format label', { ns: meta.id }],
           icon: 'ph--magic-wand--regular',
         });
         const gap = createGapSeparator();
         const resetAction = createMenuAction('reset', () => reset(), {
-          label: ['reset label', { ns: THEME_EDITOR_PLUGIN }],
+          label: ['reset label', { ns: meta.id }],
           icon: 'ph--broom--regular',
           className: 'text-danger',
         });

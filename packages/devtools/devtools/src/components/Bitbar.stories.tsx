@@ -4,18 +4,17 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 import { BitField } from '@dxos/util';
 
 import { Bitbar } from './Bitbar';
-import { styles } from '../styles';
 
 const length = 80;
 
-const TestStory = () => {
+const DefaultStory = () => {
   const [series] = useState([new Uint8Array(length), new Uint8Array(length)]);
   const [, forceUpdate] = useState({});
 
@@ -41,7 +40,7 @@ const TestStory = () => {
   }, []);
 
   return (
-    <div className={mx('flex flex-col p-4 gap-16', styles.bgPanel)}>
+    <div className='flex flex-col p-4 gap-16'>
       {series.map((series, i) => (
         <div key={i}>
           <div className='flex flex-col gap-4'>
@@ -62,12 +61,16 @@ const TestStory = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'devtools/devtools/Bitbar',
-  component: TestStory,
+  component: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

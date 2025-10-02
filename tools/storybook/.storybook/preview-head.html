@@ -5,9 +5,27 @@
   @layer dx-tokens, user-tokens, tw-base, dx-base, tw-components, dx-components, utilities;
 </style>
 <style>
+  @media (prefers-color-scheme: dark) {
+    html {
+      color-scheme: dark;
+    }
+    /**
+     * Minimizes white flash while story loads.
+     * https://github.com/storybookjs/storybook/discussions/32392
+     */
+    html,
+    body,
+    .sb-preparing-story,
+    .sb-preparing-docs,
+    .sb-previewBlock {
+      background: #181818 !important;
+    }
+  }
+</style>
+<style>
   :root {
     --cube-a: #e2e2e2;
-    --cube-b: #eee;
+    --cube-b: #c26d6d;
     --cube-c: #ddd;
   }
   .dark {
@@ -17,17 +35,25 @@
   }
   .bg-cubes {
     background-color: var(--cube-a);
-    background-image: linear-gradient(
-        30deg,
+    background-image:
+      linear-gradient(30deg, var(--cube-b) 12%, transparent 12.5%, transparent 87%, var(--cube-b) 87.5%, var(--cube-b)),
+      linear-gradient(
+        150deg,
         var(--cube-b) 12%,
         transparent 12.5%,
         transparent 87%,
         var(--cube-b) 87.5%,
         var(--cube-b)
       ),
-      linear-gradient(150deg, var(--cube-b) 12%, transparent 12.5%, transparent 87%, var(--cube-b) 87.5%, var(--cube-b)),
       linear-gradient(30deg, var(--cube-b) 12%, transparent 12.5%, transparent 87%, var(--cube-b) 87.5%, var(--cube-b)),
-      linear-gradient(150deg, var(--cube-b) 12%, transparent 12.5%, transparent 87%, var(--cube-b) 87.5%, var(--cube-b)),
+      linear-gradient(
+        150deg,
+        var(--cube-b) 12%,
+        transparent 12.5%,
+        transparent 87%,
+        var(--cube-b) 87.5%,
+        var(--cube-b)
+      ),
       linear-gradient(60deg, var(--cube-c) 25%, transparent 25.5%, transparent 75%, var(--cube-c) 75%, var(--cube-c)),
       linear-gradient(60deg, var(--cube-c) 25%, transparent 25.5%, transparent 75%, var(--cube-c) 75%, var(--cube-c));
     background-size: 80px 140px;

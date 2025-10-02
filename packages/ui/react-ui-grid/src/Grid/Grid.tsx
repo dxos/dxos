@@ -4,8 +4,8 @@
 
 import '@dxos/lit-grid/dx-grid.pcss';
 
-import { createComponent, type EventName } from '@lit/react';
-import { createContextScope, type Scope } from '@radix-ui/react-context';
+import { type EventName, createComponent } from '@lit/react';
+import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ComponentProps,
@@ -102,12 +102,12 @@ const GridRoot = ({
 
 GridRoot.displayName = GRID_NAME;
 
+const GRID_CONTENT_NAME = 'GridContent';
+
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
 };
-
-const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
@@ -166,7 +166,7 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
+export { GridRoot, GridContent, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd, useGridContext };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
@@ -178,6 +178,7 @@ export {
   toPlaneCellIndex,
   parseCellIndex,
   cellQuery,
+  DxEditRequest,
 } from '@dxos/lit-grid';
 
 export type {

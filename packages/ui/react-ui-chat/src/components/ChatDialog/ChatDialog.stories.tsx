@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../../translations';
 
 import { ChatDialog } from './ChatDialog';
-import { translations } from '../../translations';
 
 const items = Array.from({ length: 100 }, (_, i) => `Item ${i}`);
 
-const meta: Meta<typeof ChatDialog.Root> = {
+const meta = {
   title: 'ui/react-ui-chat/ChatDialog',
   component: ChatDialog.Root,
   render: (args) => {
@@ -56,10 +57,10 @@ const meta: Meta<typeof ChatDialog.Root> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof ChatDialog.Root>;
 
 export default meta;
 
-type Story = StoryObj<typeof ChatDialog.Root>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

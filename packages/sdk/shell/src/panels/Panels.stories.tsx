@@ -4,13 +4,15 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
+import { translations } from '../translations';
+
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
 import * as SpacePanels from './SpacePanel/SpacePanel.stories';
-import { translations } from '../translations';
 
 const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??
@@ -52,7 +54,7 @@ export const Default = (props: any) => {
 
 Default.parameters = { layout: 'fullscreen' };
 
-export default {
+const meta = {
   title: 'sdk/shell/All',
   decorators: [withTheme],
   component: StoryRow,
@@ -62,4 +64,8 @@ export default {
       disableSnapshot: false,
     },
   },
-};
+} satisfies Meta<typeof StoryRow>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;

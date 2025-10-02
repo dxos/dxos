@@ -4,17 +4,17 @@
 
 import { Effect, Option, ParseResult, Schema, SchemaAST } from 'effect';
 
-import { Reference, type EncodedReference } from '@dxos/echo-protocol';
+import { type EncodedReference, Reference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation, ReferenceAnnotationId } from '../ast';
+import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
 /**
- * The `$id` field for an ECHO reference schema.
+ * The `$id` and `$ref` fields for an ECHO reference schema.
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
@@ -34,6 +34,31 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
         $ref: DXN.fromTypename(typename).toString(),
       },
     },
+  };
+};
+
+/**
+ * Runtime type-info for a reference extracted from effect AST.
+ */
+export type RefereneAST = {
+  /**
+   * Typename of linked schema.
+   */
+  typename: string;
+
+  /**
+   * Version of linked schema.
+   */
+  version: string;
+};
+
+export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => {
+  if (ast._tag !== 'Declaration' || !ast.annotations[ReferenceAnnotationId]) {
+    return undefined;
+  }
+  return {
+    typename: (ast.annotations[ReferenceAnnotationId] as any).typename,
+    version: (ast.annotations[ReferenceAnnotationId] as any).version,
   };
 };
 
@@ -83,7 +108,7 @@ export interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): Ref$<Schema.Schema.Type<S>> => {
-  assertArgument(Schema.isSchema(schema), 'Must call with an instance of effect-schema');
+  assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
 
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
@@ -137,8 +162,10 @@ export interface Ref<T> {
    * `{ "/": "dxn:..." }`
    * and
    * `{ "/": "dxn:...", "target": { ... } }`
+   *
+   * Clones the reference object.
    */
-  noInline(): this;
+  noInline(): Ref<T>;
 
   /**
    * Serializes the reference to a JSON object.
@@ -191,6 +218,7 @@ Ref.make = <T extends BaseObject>(obj: T): Ref<T> => {
 };
 
 Ref.fromDXN = (dxn: DXN): Ref<any> => {
+  assertArgument(dxn instanceof DXN, 'dxn', 'Expected DXN');
   return new RefImpl(dxn);
 };
 
@@ -252,7 +280,9 @@ export const createEchoReferenceSchema = (
     },
     {
       jsonSchema: {
+        // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
         $id: JSON_SCHEMA_ECHO_REF_ID,
+        $ref: JSON_SCHEMA_ECHO_REF_ID,
         reference: referenceInfo,
       },
       [ReferenceAnnotationId]: {
@@ -339,6 +369,9 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   async load(): Promise<T> {
+    if (this.#target) {
+      return this.#target;
+    }
     invariant(this.#resolver, 'Resolver is not set');
     const obj = await this.#resolver.resolve(this.#dxn);
     if (obj == null) {
@@ -358,10 +391,12 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * Do not inline the target object in the reference.
    * Makes .target unavailable unless the reference is connected to a database context.
+   * Clones the reference object.
    */
-  noInline(): this {
-    this.#target = undefined;
-    return this;
+  noInline(): RefImpl<T> {
+    const ref = new RefImpl<T>(this.#dxn, undefined);
+    ref.#resolver = this.#resolver;
+    return ref;
   }
 
   encode(): EncodedReference {

@@ -17,7 +17,7 @@ import { type Device, type NetworkService } from '@dxos/protocols/proto/dxos/cli
 import { ConnectionState, type SwarmResponse } from '@dxos/protocols/proto/dxos/edge/messenger';
 import { isNonNullable } from '@dxos/util';
 
-import { codec, type ActivityState, type UserState } from './types';
+import { type ActivityState, type UserState, codec } from './types';
 
 export type CallState = {
   /**

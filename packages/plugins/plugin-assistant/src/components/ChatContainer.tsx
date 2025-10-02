@@ -5,37 +5,43 @@
 import React from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
-import { type AssociatedArtifact } from '@dxos/artifact';
 import { getSpace } from '@dxos/client/echo';
+import { type Obj } from '@dxos/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { Chat } from './Chat';
-import { useChatProcessor, useServiceContainer } from '../hooks';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
+import { Chat } from './Chat';
+import { Toolbar } from './Toolbar';
+
 export type ChatContainerProps = {
-  role: string;
   chat: Assistant.Chat;
-  artifact?: AssociatedArtifact;
+  companionTo?: Obj.Any;
+  role?: string;
 };
 
-export const ChatContainer = ({ role, chat, artifact }: ChatContainerProps) => {
+export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const serviceContainer = useServiceContainer({ space });
-  const processor = useChatProcessor({ part: 'deck', chat, serviceContainer, settings });
+  const services = useChatServices({ space, chat });
+  const [online, setOnline] = useOnline();
+  const { preset, ...chatProps } = usePresets(online);
+  const blueprintRegistry = useBlueprintRegistry();
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
+
   if (!processor) {
     return null;
   }
 
-  // TODO(burdon): Add attention attributes.
   return (
-    <StackItem.Content classNames='container-max-width'>
-      <Chat.Root chat={chat} processor={processor} artifact={artifact}>
+    <StackItem.Content toolbar={!!companionTo} classNames='container-max-width'>
+      {!!companionTo && <Toolbar chat={chat} companionTo={companionTo} />}
+      <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />
-        <div className='pbe-4 pis-2 pie-2'>
-          <Chat.Prompt classNames='border border-subduedSeparator rounded-md' />
+        <div className='p-2'>
+          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
         </div>
       </Chat.Root>
     </StackItem.Content>

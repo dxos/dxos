@@ -9,8 +9,9 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { defaultMap } from '@dxos/util';
 
-import { StoredSchema } from './stored-schema';
 import { getSchemaTypename, getSchemaVersion } from '../ast';
+
+import { StoredSchema } from './stored-schema';
 
 /**
  * Runtime registry of static schema objects (i.e., not Dynamic .
@@ -30,7 +31,8 @@ export class RuntimeSchemaRegistry {
   hasSchema<S extends Schema.Schema.AnyNoContext>(schema: S): boolean {
     const typename = getSchemaTypename(schema);
     const version = getSchemaVersion(schema);
-    invariant(typename);
+    invariant(typename, 'Invalid schema');
+
     const schemas = this._registry.get(typename);
     return schemas?.some((schema) => getSchemaVersion(schema) === version) ?? false;
   }

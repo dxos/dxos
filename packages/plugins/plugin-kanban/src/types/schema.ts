@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 
-import { KANBAN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 /**
  * Kanban data model.
@@ -25,8 +25,8 @@ export const CreateKanbanSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Schema.optional(
     Schema.String.annotations({
-      [TypenameAnnotationId]: ['limited-static', 'dynamic'],
-      title: 'Select card schema (leave empty to start fresh)',
+      [TypenameAnnotationId]: ['used-static', 'dynamic'],
+      title: 'Select card record type (leave empty to start fresh)',
     }),
   ),
   initialPivotColumn: Schema.optional(
@@ -38,7 +38,7 @@ export const CreateKanbanSchema = Schema.Struct({
 });
 
 export namespace KanbanAction {
-  const KANBAN_ACTION = `${KANBAN_PLUGIN}/action`;
+  const KANBAN_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${KANBAN_ACTION}/create`, {
     input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateKanbanSchema),

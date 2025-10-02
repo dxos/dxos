@@ -4,18 +4,19 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { FunctionType, FunctionTrigger } from '@dxos/functions';
+import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { AutomationPanel } from './AutomationPanel';
 import { functions } from '../../testing';
 import { translations } from '../../translations';
+
+import { AutomationPanel } from './AutomationPanel';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -28,9 +29,9 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-automation/AutomationPanel',
-  component: AutomationPanel,
+  component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -50,8 +51,10 @@ const meta: Meta = {
     layout: 'centered',
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

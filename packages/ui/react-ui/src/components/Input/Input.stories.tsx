@@ -4,21 +4,22 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { baseSurface, modalSurface, activeSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
+import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
+
+import { withTheme } from '../../testing';
 
 import {
   type CheckboxProps,
   Input,
   type PinInputProps,
   type SwitchProps,
-  type TextInputProps,
   type TextAreaProps,
+  type TextInputProps,
 } from './Input';
-import { withTheme } from '../../testing';
 
 type VariantMap = {
   text: TextInputProps;
@@ -75,10 +76,10 @@ const Wrapper = ({
 const DefaultStory = (props: BaseProps) => {
   return (
     <div className='space-b-4'>
-      <div className={mx(baseSurface, 'p-4')}>
+      <div className={mx(baseSurface, 'p-4 rounded-md')}>
         <Wrapper {...props} />
       </div>
-      <div className={mx(activeSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
+      <div className={mx('bg-cardSurface', 'p-4 rounded-md', surfaceShadow({ elevation: 'positioned' }))}>
         <Wrapper {...props} />
       </div>
       <div className={mx(modalSurface, 'p-4 rounded-md', surfaceShadow({ elevation: 'dialog' }))}>
@@ -88,13 +89,13 @@ const DefaultStory = (props: BaseProps) => {
   );
 };
 
-const meta: Meta<BaseProps> = {
+const meta = {
   title: 'ui/react-ui-core/Input',
-  component: Input.Root,
+  component: Input.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -221,10 +222,10 @@ export const Checkbox: Story = {
   },
 };
 
-export const Switch = {
+export const Switch: Story = {
   args: {
     kind: 'switch',
     label: 'This is a switch',
-    description: 'It’s either off... or on.',
+    description: "It's either off... or on.",
   },
 };

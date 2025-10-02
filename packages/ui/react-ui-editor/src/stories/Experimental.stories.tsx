@@ -4,33 +4,37 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme, type Meta } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { EditorStory, content } from './components';
-import { typewriter, blast, defaultOptions, dropFile } from '../extensions';
+import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
 import { str } from '../testing';
 
-const meta: Meta<typeof EditorStory> = {
+import { EditorStory, content } from './components';
+
+const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: { layout: 'fullscreen' },
-};
+} satisfies Meta<typeof EditorStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 //
 // Typewriter
 //
 
-const typewriterItems = localStorage.getItem('dxos.org/plugin/markdown/typewriter')?.split(',');
+const typewriterItems = localStorage.getItem('dxos.org/testing/typewriter')?.split(',');
 
-export const Typewriter = {
+export const Typewriter: Story = {
   render: () => (
     <EditorStory
       text={str('# Typewriter', '', content.paragraphs, content.footer)}
@@ -43,7 +47,7 @@ export const Typewriter = {
 // Blast
 //
 
-export const Blast = {
+export const Blast: Story = {
   render: () => (
     <EditorStory
       text={str('# Blast', '', content.paragraphs, content.codeblocks, content.paragraphs)}
@@ -70,7 +74,7 @@ export const Blast = {
 // DND
 //
 
-export const DND = {
+export const DND: Story = {
   render: () => (
     <EditorStory
       text={str('# DND', '')}

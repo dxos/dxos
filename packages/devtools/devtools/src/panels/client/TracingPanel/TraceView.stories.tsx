@@ -4,18 +4,18 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TraceView } from './TraceView';
 import { type State } from './types';
 
-const meta: Meta = {
+const meta = {
   title: 'devtools/devtools/TraceView',
   component: TraceView,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof TraceView>;
 
 export default meta;
 

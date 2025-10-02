@@ -4,7 +4,8 @@
 
 import { Schema, SchemaAST } from 'effect';
 
-import { Expando, OptionsAnnotationId, TypedObject, Ref, RawObject } from '@dxos/echo-schema';
+import { Obj, QueryAST, Type } from '@dxos/echo';
+import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
 import { FunctionType } from './schema';
@@ -14,13 +15,8 @@ import { FunctionType } from './schema';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export enum TriggerKind {
-  Timer = 'timer',
-  Webhook = 'webhook',
-  Subscription = 'subscription',
-  Email = 'email',
-  Queue = 'queue',
-}
+export const TriggerKinds = ['timer', 'webhook', 'subscription', 'email', 'queue'] as const;
+export type TriggerKind = (typeof TriggerKinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
 
@@ -28,7 +24,7 @@ const kindLiteralAnnotations = { title: 'Kind' };
  * Cron timer.
  */
 const TimerTriggerSchema = Schema.Struct({
-  kind: Schema.Literal(TriggerKind.Timer).annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('timer').annotations(kindLiteralAnnotations),
   cron: Schema.String.annotations({
     title: 'Cron',
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
@@ -37,12 +33,14 @@ const TimerTriggerSchema = Schema.Struct({
 export type TimerTrigger = Schema.Schema.Type<typeof TimerTriggerSchema>;
 
 const EmailTriggerSchema = Schema.Struct({
-  kind: Schema.Literal(TriggerKind.Email).annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
 }).pipe(Schema.mutable);
 export type EmailTrigger = Schema.Schema.Type<typeof EmailTriggerSchema>;
 
 const QueueTriggerSchema = Schema.Struct({
-  kind: Schema.Literal(TriggerKind.Queue).annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
+
+  // TODO(dmaretskyi): Change to a reference.
   queue: DXN.Schema,
 }).pipe(Schema.mutable);
 export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
@@ -51,7 +49,7 @@ export type QueueTrigger = Schema.Schema.Type<typeof QueueTriggerSchema>;
  * Webhook.
  */
 const WebhookTriggerSchema = Schema.Struct({
-  kind: Schema.Literal(TriggerKind.Webhook).annotations(kindLiteralAnnotations),
+  kind: Schema.Literal('webhook').annotations(kindLiteralAnnotations),
   method: Schema.optional(
     Schema.String.annotations({
       title: 'Method',
@@ -66,19 +64,12 @@ const WebhookTriggerSchema = Schema.Struct({
 }).pipe(Schema.mutable);
 export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 
-// TODO(burdon): Use ECHO definition (from https://github.com/dxos/dxos/pull/8233).
-const QuerySchema = Schema.Struct({
-  type: Schema.optional(Schema.String.annotations({ title: 'Type' })),
-  props: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-}).annotations({ title: 'Query' });
-
 /**
  * Subscription.
  */
 const SubscriptionTriggerSchema = Schema.Struct({
-  kind: Schema.Literal(TriggerKind.Subscription).annotations(kindLiteralAnnotations),
-  // TODO(burdon): Define query DSL (from ECHO). Reconcile with Table.Query.
-  filter: QuerySchema,
+  kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
+  query: QueryAST.Query.annotations({ title: 'Query' }),
   options: Schema.optional(
     Schema.Struct({
       // Watch changes to object (not just creation).
@@ -142,9 +133,23 @@ export const QueueTriggerOutput = Schema.mutable(
 );
 export type QueueTriggerOutput = Schema.Schema.Type<typeof QueueTriggerOutput>;
 
-export const SubscriptionTriggerOutput = Schema.mutable(
-  Schema.Struct({ type: Schema.String, changedObjectId: Schema.String }),
-);
+export const SubscriptionTriggerOutput = Schema.Struct({
+  /**
+   * Type of the mutation.
+   */
+  // TODO(dmaretskyi): Specify enum.
+  type: Schema.String,
+
+  /**
+   * Reference to the object that was changed or created.
+   */
+  subject: Type.Ref(Obj.Any),
+
+  /**
+   * @deprecated
+   */
+  changedObjectId: Schema.optional(Schema.String),
+}).pipe(Schema.mutable);
 export type SubscriptionTriggerOutput = Schema.Schema.Type<typeof SubscriptionTriggerOutput>;
 
 export const TimerTriggerOutput = Schema.mutable(Schema.Struct({ tick: Schema.Number }));
@@ -155,7 +160,7 @@ export type TimerTriggerOutput = Schema.Schema.Type<typeof TimerTriggerOutput>;
  * Function is invoked with the `payload` passed as input data.
  * The event that triggers the function is available in the function context.
  */
-export const FunctionTriggerSchema = Schema.Struct({
+const FunctionTrigger_ = Schema.Struct({
   /**
    * Function or workflow to invoke.
    */
@@ -185,17 +190,15 @@ export const FunctionTriggerSchema = Schema.Struct({
    * }
    */
   input: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
-});
-
-export type FunctionTriggerType = Schema.Schema.Type<typeof FunctionTriggerSchema>;
-
-/**
- * Function trigger.
- */
-export class FunctionTrigger extends TypedObject({
-  typename: 'dxos.org/type/FunctionTrigger',
-  version: '0.2.0',
-})(FunctionTriggerSchema.fields) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/FunctionTrigger',
+    version: '0.2.0',
+  }),
+);
+export interface FunctionTrigger extends Schema.Schema.Type<typeof FunctionTrigger_> {}
+export interface FunctionTriggerEncoded extends Schema.Schema.Encoded<typeof FunctionTrigger_> {}
+export const FunctionTrigger: Schema.Schema<FunctionTrigger, FunctionTriggerEncoded> = FunctionTrigger_;
 
 // TODO(wittjosiah): Remove?
 

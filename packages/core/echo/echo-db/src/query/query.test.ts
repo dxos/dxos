@@ -6,23 +6,24 @@ import { type AutomergeUrl } from '@automerge/automerge-repo';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { asyncTimeout, sleep, Trigger } from '@dxos/async';
-import { Obj, Type } from '@dxos/echo';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
+import { Obj, Order, Type } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { Expando, RelationSourceId, RelationTargetId, Ref, getMeta } from '@dxos/echo-schema';
+import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { range } from '@dxos/util';
 
-import { Filter, Query } from './api';
 import { getObjectCore } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
-import { EchoTestBuilder, type EchoTestPeer } from '../testing';
+import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
+
+import { Filter, Query } from './api';
 
 const createTestObject = (idx: number, label?: string) => {
   return live(Expando, { idx, title: `Task ${idx}`, label });
@@ -61,6 +62,47 @@ describe('Query', () => {
     test('query everything', async () => {
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(10);
+    });
+
+    test('order by natural', async () => {
+      const { objects } = await db.query(Query.select(Filter.everything())).run();
+      const sortedObjects = objects.sort((a, b) => a.id.localeCompare(b.id));
+      expect(objects.map((o) => o.id)).to.deep.equal(sortedObjects.map((o) => o.id));
+    });
+
+    test('order by property', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'asc')))
+        .run();
+      const sortedObjects = objects.sort((a, b) => a.label?.localeCompare(b.label));
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
+    });
+
+    test('order by property descending', async () => {
+      const { objects } = await db
+        .query(Query.select(Filter.everything()).orderBy(Order.property('label', 'desc')))
+        .run();
+      const sortedObjects = objects.sort((a, b) => b.label?.localeCompare(a.label));
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
+    });
+
+    test('order by multiple properties', async () => {
+      const { objects } = await db
+        .query(
+          Query.select(Filter.everything()).orderBy(Order.property('label', 'asc'), Order.property('title', 'desc')),
+        )
+        .run();
+
+      const sortedObjects = objects.sort((a, b) => {
+        const labelCompare = a.label?.localeCompare(b.label);
+        if (labelCompare !== 0) {
+          return labelCompare;
+        }
+
+        return b.title?.localeCompare(a.title);
+      });
+
+      expect(objects.map((o) => o.label)).to.deep.equal(sortedObjects.map((o) => o.label));
     });
 
     test('filter properties', async () => {
@@ -104,6 +146,15 @@ describe('Query', () => {
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
       await db.flush({ indexes: true });
+
+      const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
+      expect(objects).toEqual([obj]);
+    });
+
+    test('filter by foreign keys without flushing index', async () => {
+      const obj = live(Expando, { label: 'has meta' });
+      getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
+      db.add(obj);
 
       const { objects } = await db.query(Filter.foreignKeys(Expando, [{ id: 'test-id', source: 'test-source' }])).run();
       expect(objects).toEqual([obj]);
@@ -153,7 +204,7 @@ describe('Query', () => {
   });
 
   test('query.run() queries everything after restart', async () => {
-    const kv = createTestLevel();
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -163,23 +214,24 @@ describe('Query', () => {
 
     let root: AutomergeUrl;
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.createDatabase(spaceKey);
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
       root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url;
+      await peer.close();
     }
 
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
       expect((await db.query(Query.select(Filter.everything())).run()).objects.length).to.eq(3);
     }
   });
 
   test('objects with incorrect document urls are ignored', async () => {
-    const kv = createTestLevel();
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
@@ -190,7 +242,7 @@ describe('Query', () => {
     let root: AutomergeUrl;
     let expectedObjectId: string;
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.createDatabase(spaceKey);
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
@@ -202,10 +254,11 @@ describe('Query', () => {
       await db.flush();
       root = rootDocHandle.url;
       expectedObjectId = obj2.id;
+      await peer.close();
     }
 
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root);
       const queryResult = (await db.query(Query.select(Filter.everything())).run()).objects;
       expect(queryResult.length).to.eq(1);
@@ -780,7 +833,6 @@ describe('Query', () => {
       const unsub = db.query(Query.select(Filter.type(Expando))).subscribe(
         (query) => {
           const values = [...query.objects.map((obj) => obj.value)].sort((a, b) => a - b);
-          log.info('update', { values: values.toString() });
           updates.push(values);
         },
         { fire: true },
@@ -799,11 +851,11 @@ describe('Query', () => {
       // TODO(dmaretskyi): Does this ensure queries were re-run?
       await db.flush({ indexes: true, updates: true });
 
-      expect(updates).toEqual([
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // All objects loaded.
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], // Second update for some reason.
-        [], // All items deleted.
-      ]);
+      // NOTE: There might be multiple updates dependending on how database components execute updates.
+      // All objects loaded.
+      expect(updates.at(0)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+      // All objects deleted.
+      expect(updates.at(-1)).toEqual([]);
     });
   });
 

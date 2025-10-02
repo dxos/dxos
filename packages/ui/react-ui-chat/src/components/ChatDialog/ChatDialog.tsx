@@ -5,8 +5,8 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, useControlledState, type ThemedClassName } from '@dxos/react-ui';
-import { resizeAttributes, ResizeHandle, type Size, sizeStyle } from '@dxos/react-ui-dnd';
+import { Dialog, Icon, IconButton, type ThemedClassName, useControlledState } from '@dxos/react-ui';
+import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/react-ui-theme';
 
 const preventDefault = (event: Event) => event.preventDefault();
@@ -48,14 +48,14 @@ type ChatDialogRootProps = PropsWithChildren<{
 const ChatDialogRoot = ({
   children,
   open: _open = false,
-  expanded: _expanded = false,
+  expanded: expandedParam = false,
   onOpenChange,
   onExpandedChange,
   onEscape,
 }: ChatDialogRootProps) => {
   const [size, setSize] = useState<Size>('min-content');
   const [open, setOpen] = useControlledState<boolean>(_open, onOpenChange);
-  const [expanded, setExpanded] = useControlledState<boolean>(_expanded, onExpandedChange);
+  const [expanded, setExpanded] = useControlledState<boolean>(expandedParam, onExpandedChange);
 
   // NOTE: We set the min size to 5rem (80px), and the header and prompt bar to 40px (i.e., the rail-size) each.
   // The dialog has no vertical padding and has box-content so that when closed it collapses to the size of the header and prompt bar.

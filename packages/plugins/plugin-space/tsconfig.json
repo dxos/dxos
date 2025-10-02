@@ -54,7 +54,7 @@
       "path": "../../core/ai"
     },
     {
-      "path": "../../core/artifact"
+      "path": "../../core/blueprints"
     },
     {
       "path": "../../core/echo/echo"
@@ -94,6 +94,9 @@
     },
     {
       "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-editor"

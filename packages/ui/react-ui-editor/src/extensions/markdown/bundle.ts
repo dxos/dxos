@@ -4,20 +4,21 @@
 
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
-import { markdownLanguage, markdown } from '@codemirror/lang-markdown';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
+import { type MarkdownConfig } from '@lezer/markdown';
 
-import { type ThemeMode } from '@dxos/react-ui';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
 export type MarkdownBundleOptions = {
-  themeMode?: ThemeMode;
+  extensions?: MarkdownConfig[];
   indentWithTab?: boolean;
+  setextHeading?: boolean;
 };
 
 /**
@@ -51,6 +52,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       extensions: [
         // GFM provided by default.
         markdownTagsExtensions,
+        ...(options.extensions ?? defaultExtensions()),
       ],
     }),
 
@@ -65,7 +67,27 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
         // https://codemirror.net/docs/ref/#commands.defaultKeymap
         ...defaultKeymap,
         ...completionKeymap,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     ),
   ];
+};
+
+/**
+ * Default customizations.
+ * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
+ */
+export const defaultExtensions = (): MarkdownConfig[] => [noSetExtHeading, noHtml];
+
+/**
+ * Remove SetextHeading (e.g., headings created from "---").
+ */
+const noSetExtHeading: MarkdownConfig = {
+  remove: ['SetextHeading'],
+};
+
+/**
+ * Remove HTML and XML parsing.
+ */
+const noHtml: MarkdownConfig = {
+  remove: ['HTMLBlock', 'HTMLTag'],
 };

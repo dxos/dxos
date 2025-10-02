@@ -9,7 +9,7 @@ import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { useTextEditor, type UseTextEditorProps } from '../../hooks';
+import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 export type EditorProps = ThemedClassName<
   {
@@ -21,19 +21,17 @@ export type EditorProps = ThemedClassName<
 /**
  * Minimal text editor.
  */
-export const Editor = forwardRef<EditorView | undefined, EditorProps>(
-  ({ classNames, id, text, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
-    const { parentRef, focusAttributes, view } = useTextEditor(
-      () => ({
-        id,
-        initialValue: text.content,
-        ...props,
-      }),
-      [id, text, themeMode],
-    );
+export const Editor = forwardRef<EditorView | null, EditorProps>(({ classNames, id, text, ...props }, forwardedRef) => {
+  const { themeMode } = useThemeContext();
+  const { parentRef, focusAttributes, view } = useTextEditor(
+    () => ({
+      id,
+      initialValue: text.content,
+      ...props,
+    }),
+    [id, text, themeMode],
+  );
 
-    useImperativeHandle(forwardedRef, () => view, [view]);
-    return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
-  },
-);
+  useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+  return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
+});

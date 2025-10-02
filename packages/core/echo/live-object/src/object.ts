@@ -5,21 +5,22 @@
 import { type Schema } from 'effect';
 
 import {
-  ObjectId,
-  defineHiddenProperty,
-  getTypeAnnotation,
   type BaseObject,
   type CreationProps,
   EntityKindId,
   Expando,
+  ObjectId,
   type ObjectMeta,
   ObjectMetaSchema,
+  attachTypedJsonSerializer,
+  defineHiddenProperty,
+  getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { MetaId } from '@dxos/echo-schema';
 
 import { type Live } from './live';
 import { createProxy, isValidProxyTarget } from './proxy';
-import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
+import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 
 /**
@@ -73,6 +74,7 @@ const createReactiveObject = <T extends BaseObject>(
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
+    attachTypedJsonSerializer(obj);
     return createProxy<T>(obj, TypedReactiveHandler.instance);
   } else {
     if (options?.expando) {

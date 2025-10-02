@@ -6,11 +6,10 @@ import { it } from '@effect/vitest';
 import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
 import { describe, test } from 'vitest';
 
-import { type GenerationStreamEvent } from '@dxos/ai';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 
-import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
+import { type GptOutput, NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
 import { ComputeGraphModel, ValueBag, type ValueEffect } from '../types';
 
@@ -44,7 +43,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-        const output = yield* runtime
+        const output: ValueBag<GptOutput> = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
             ValueBag.make({
@@ -58,13 +57,9 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
           log.info('token', { token });
         });
 
-        const tokenStream: Stream.Stream<GenerationStreamEvent> = yield* output.values.tokenStream;
+        const tokenStream = yield* output.values.tokenStream;
         const tokens = yield* tokenStream.pipe(
-          Stream.filterMap((ev) =>
-            ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'
-              ? Option.some(ev.delta.text)
-              : Option.none(),
-          ),
+          Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
           Stream.tap((token) => Console.log(token)),
           Stream.runCollect,
           Effect.map(Chunk.toArray),
@@ -150,30 +145,24 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
     await Effect.runPromise(
       Effect.gen(function* () {
         const scope = yield* Scope.make();
-        const {
-          tokenStream,
-          text,
-        }: { tokenStream: Stream.Stream<GenerationStreamEvent>; text: Effect.Effect<string> } = yield* runtime
+        const outputs: ValueBag<GptOutput> = yield* runtime
           .runGraph(
             'dxn:compute:gpt2',
             ValueBag.make({
               prompt: 'What is the meaning of life?',
             }),
           )
-          .pipe(Effect.flatMap(ValueBag.unwrap), Scope.extend(scope));
+          .pipe(Scope.extend(scope));
 
         // log.info('text in test', { text: getDebugName(text) });
 
-        const p = Effect.runPromise(text).then((x) => {
+        const p = Effect.runPromise(outputs.values.text).then((x) => {
           console.log({ x });
         });
 
-        const tokens = yield* tokenStream.pipe(
-          Stream.filterMap((ev) =>
-            ev.type === 'content_block_delta' && ev.delta.type === 'text_delta'
-              ? Option.some(ev.delta.text)
-              : Option.none(),
-          ),
+        const tokens = yield* outputs.values.tokenStream.pipe(
+          Stream.unwrap,
+          Stream.filterMap((part) => (part.type === 'text-delta' ? Option.some(part.delta) : Option.none())),
           Stream.tap((token) => Console.log(token)),
           Stream.runCollect,
           Effect.map(Chunk.toArray),

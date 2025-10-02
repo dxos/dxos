@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
@@ -13,10 +14,11 @@ import { Button } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useCredentials } from './useCredentials';
-import { useIdentity } from './useIdentity';
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
+
+import { useCredentials } from './useCredentials';
+import { useIdentity } from './useIdentity';
 
 const getNewChallenge = () => Math.random().toString(36).substring(2);
 
@@ -43,7 +45,7 @@ const Test = () => {
           challenge: new TextEncoder().encode(challenge),
           rp: { id: location.hostname, name: 'Test' },
           user: {
-            id: lookupKey.asUint8Array(),
+            id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
             name: identity.did,
             displayName: identity.profile?.displayName ?? '',
           },
@@ -125,10 +127,14 @@ const Test = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'sdk/react-client/Passkeys',
   render: Test,
-};
+} satisfies Meta<typeof Config>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const config = new Config({
   runtime: {
@@ -150,6 +156,6 @@ const config = new Config({
   },
 });
 
-export const Default = {
+export const Default: Story = {
   decorators: [withClientProvider({ config }), withTheme],
 };

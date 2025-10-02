@@ -3,9 +3,10 @@
 //
 
 import { inspect } from 'node:util';
+
 import { Writable } from 'streamx';
 
-import { Event, latch, Trigger } from '@dxos/async';
+import { Event, Trigger, latch } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
 import type { ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
@@ -124,10 +125,12 @@ export class FeedQueue<T extends {}> {
     };
 
     const onError = (err?: Error) => {
+      if (!this.isOpen) {
+        return;
+      }
       if (!err) {
         return;
       }
-
       if (err.message === 'Writable stream closed prematurely' || err.message === 'Feed is closed') {
         return;
       }

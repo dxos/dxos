@@ -4,15 +4,13 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { createTestAiServiceClient } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities, localServiceEndpoints } from '@dxos/artifact-testing';
+import { capabilities } from '@dxos/assistant-testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
-import { AiService, ServiceContainer } from '@dxos/functions';
+import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -34,16 +32,16 @@ import { ComputeContext, useComputeGraphController, useGraphMonitor } from './ho
 import { computeShapes } from './registry';
 import { type ComputeShape } from './shapes';
 import {
+  createArtifactCircuit,
+  createAudioCircuit,
+  createBasicCircuit,
+  createComputeGraphController,
   createControlCircuit,
   createGPTRealtimeCircuit,
-  createLogicCircuit,
-  createComputeGraphController,
-  createBasicCircuit,
   createGptCircuit,
-  createAudioCircuit,
-  createTransformCircuit,
+  createLogicCircuit,
   createTemplateCircuit,
-  createArtifactCircuit,
+  createTransformCircuit,
 } from './testing';
 
 // const FormSchema = Schema.omit<any, any, ['subgraph']>('subgraph')(ComputeNode);
@@ -158,6 +156,7 @@ const DefaultStory = ({
                       </Select.Item>
                     ))}
                   </Select.Viewport>
+                  <Select.Arrow />
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
@@ -177,9 +176,9 @@ const DefaultStory = ({
   );
 };
 
-const meta: Meta<RenderProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-compute/compute',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
     withTheme,
@@ -188,11 +187,11 @@ const meta: Meta<RenderProps> = {
     withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -249,16 +248,6 @@ export const Control: Story = {
   },
 };
 
-// export const Ollama: Story = {
-//   args: {
-//     // debug: true,
-//     showGrid: false,
-//     snapToGrid: false,
-//     registry: new ShapeRegistry(computeShapes),
-//     ...createComputeGraphController(createTest3(), createEdgeServices()),
-//   },
-// };
-
 export const Template: Story = {
   args: {
     showGrid: false,
@@ -268,7 +257,7 @@ export const Template: Story = {
     ...createComputeGraphController(
       createTemplateCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -285,7 +274,7 @@ export const GPT: Story = {
     ...createComputeGraphController(
       createGptCircuit({ history: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: localServiceEndpoints.ai })),
       }),
     ),
   },
@@ -301,7 +290,7 @@ export const Plugins: Story = {
     ...createComputeGraphController(
       createGptCircuit({ history: true, image: true, artifact: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
       }),
     ),
   },
@@ -317,7 +306,7 @@ export const Artifact: Story = {
     ...createComputeGraphController(
       createArtifactCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(new EdgeAiServiceClient({ endpoint: localServiceEndpoints.ai })),
+        // ai: AiService.make(new Edge AiServiceClient({ endpoint: SERVICES_CONFIG.local.ai.server })),
       }),
     ),
   },
@@ -334,7 +323,7 @@ export const ImageGen: Story = {
     ...createComputeGraphController(
       createGptCircuit({ image: true, artifact: true }),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -350,7 +339,7 @@ export const Audio: Story = {
     ...createComputeGraphController(
       createAudioCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },
@@ -365,7 +354,7 @@ export const Voice: Story = {
     ...createComputeGraphController(
       createGPTRealtimeCircuit(),
       new ServiceContainer().setServices({
-        ai: AiService.make(createTestAiServiceClient()),
+        // ai: AiService.make(createTestAiServiceClient()),
       }),
     ),
   },

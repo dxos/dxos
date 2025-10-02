@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SimpleCellAddress } from 'hyperformula/typings/Cell';
-import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
-import { type InterpreterValue } from 'hyperformula/typings/interpreter/InterpreterValue';
-import { type ProcedureAst } from 'hyperformula/typings/parser';
 import defaultsDeep from 'lodash.defaultsdeep';
 
-import { debounce, type CleanupFn } from '@dxos/async';
+import { type CleanupFn, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-
-import { CellError, ErrorType, EmptyValue, FunctionPlugin, type HyperFormula } from '#hyperformula';
+import { type RawInterpreterValue, type SimpleCellAddress } from '@dxos/vendor-hyperformula';
+import { type InterpreterState } from '@dxos/vendor-hyperformula';
+import { type InterpreterValue } from '@dxos/vendor-hyperformula';
+import { type ProcedureAst } from '@dxos/vendor-hyperformula';
+import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '@dxos/vendor-hyperformula';
 
 // TODO(burdon): Create API gateways:
 //  https://publicapis.io
@@ -169,7 +168,12 @@ export class AsyncFunctionPlugin extends FunctionPlugin {
   /**
    * Immediately returns cached value then runs the async function.
    */
-  protected runAsyncFunction(ast: ProcedureAst, state: InterpreterState, cb: AsyncFunction, options?: FunctionOptions) {
+  protected runAsyncFunction(
+    ast: ProcedureAst,
+    state: InterpreterState,
+    cb: AsyncFunction,
+    options?: FunctionOptions,
+  ): RawInterpreterValue {
     const { procedureName } = ast;
     const metadata = this.metadata(procedureName);
     return this.runFunction(ast.args, state, metadata, (...args: any) => {

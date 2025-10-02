@@ -10,21 +10,23 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./types": {
-      "types": "./dist/types/src/types.d.ts",
-      "browser": "./dist/lib/browser/types.mjs",
-      "node": "./dist/lib/node-esm/types.mjs"
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "browser": "./dist/lib/browser/types/index.mjs",
+      "node": "./dist/lib/node-esm/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "types": [
-        "dist/types/src/types.d.ts"
+        "dist/types/src/types/index.d.ts"
       ]
     }
   },
@@ -50,19 +52,19 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.0",
+    "@preact/signals-core": "^1.12.1",
+    "effect": "3.18.1",
     "localforage": "^1.10.0"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.89.0",
-    "@types/react": "~18.2.0",
-    "react": "~18.2.0",
-    "vite": "5.4.7"
+    "@effect-rx/rx-react": "0.42.4",
+    "@effect/platform": "0.92.1",
+    "@types/react": "~19.2.0",
+    "react": "~19.2.0",
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -70,8 +72,8 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

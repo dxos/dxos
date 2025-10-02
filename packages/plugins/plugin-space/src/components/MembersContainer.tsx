@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Check, X } from '@phosphor-icons/react';
 import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
-import { fullyQualifiedId, useSpaceInvitations, type Space } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
-import { ControlPage, ControlSection, ControlFrame, ControlFrameItem, ControlItemInput } from '@dxos/react-ui-form';
+import { ControlFrame, ControlFrameItem, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import {
   type ActionMenuItem,
@@ -28,7 +26,7 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK } from '../util';
 
@@ -43,14 +41,13 @@ const handleInvitationEvent = (invitation: Invitation, subscription: ZenObservab
   }
 };
 
-export const MembersContainer = ({
-  space,
-  createInvitationUrl,
-}: {
+export type MembersContainerProps = {
   space: Space;
   createInvitationUrl: (invitationCode: string) => string;
-}) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+};
+
+export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const config = useConfig();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const invitations = useSpaceInvitations(space.key);
@@ -78,7 +75,7 @@ export const MembersContainer = ({
       inviteOne: {
         label: t('invite one label', { ns: 'os' }),
         description: t('invite one description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--user-plus--regular' size={5} />,
+        icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
           const { data: invitation } = await dispatch(
@@ -100,7 +97,7 @@ export const MembersContainer = ({
       inviteMany: {
         label: t('invite many label', { ns: 'os' }),
         description: t('invite many description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--users-three--regular' size={5} />,
+        icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
           const { data: invitation } = await dispatch(
@@ -170,7 +167,7 @@ export const MembersContainer = ({
               )}
             </ControlFrame>
             {/* TODO(wittjosiah): Make ControlItemInput & ControlFrame compatible. */}
-            <div className='justify-center gap-4 p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+            <div className='justify-center p-0 mbs-4 container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
               <ControlItemInput title={t('space locked label')} description={t('space locked description')}>
                 <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
               </ControlItemInput>
@@ -233,7 +230,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: SPACE_PLUGIN })}</p>
+      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
         <div role='none' className='is-full aspect-square relative text-description'>
           <QR
@@ -280,5 +277,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
-  return statusValue > 0 ? <Check className={mx('m-1.5', getSize(6))} /> : <X className={mx('m-1.5', getSize(6))} />;
+  return statusValue > 0 ? (
+    <Icon icon='ph--check--regular' size={6} classNames='m-1.5' />
+  ) : (
+    <Icon icon='ph--x--regular' size={6} classNames='m-1.5' />
+  );
 };

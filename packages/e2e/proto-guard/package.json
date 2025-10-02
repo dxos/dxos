@@ -12,9 +12,9 @@
   "exports": {
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node/index.cjs",
       "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "require": "./dist/lib/node/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -23,7 +23,7 @@
     "src"
   ],
   "scripts": {
-    "snapshot": "moon run proto-guard:build && ts-node ./src/generate-snapshot"
+    "snapshot": "moon run proto-guard:build && vite-node ./src/generate-snapshot.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",

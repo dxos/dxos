@@ -4,24 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { EdgeAiServiceClient, OllamaAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT, EXA_API_KEY } from '@dxos/ai/testing';
+import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
+import { trim } from '@dxos/util';
 
 import { search } from './exa';
-
-const REMOTE_AI = true;
-
-const AiService = REMOTE_AI
-  ? new EdgeAiServiceClient({
-      endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-    })
-  : new OllamaAiServiceClient({
-      overrides: {
-        model: 'llama3.1:8b',
-      },
-    });
 
 describe.skip('Search', () => {
   describe('Query-based', () => {
@@ -29,7 +17,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -40,7 +27,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'top executives at google',
         schema: [Testing.Contact, Testing.Project, Testing.Organization],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -51,7 +37,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'a19z org, projects they invest in and team',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -62,7 +47,6 @@ describe.skip('Search', () => {
       const objects = await search({
         query: 'companies building CRDTs',
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -75,7 +59,6 @@ describe.skip('Search', () => {
       const objects = await search({
         context: COMPOSER_DXOS_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -86,7 +69,6 @@ describe.skip('Search', () => {
       const objects = await search({
         context: EDGE_ARCHITECTURE_DOC,
         schema: [Testing.Project, Testing.Organization, Testing.Contact],
-        AiService,
         exaApiKey: EXA_API_KEY,
       });
 
@@ -96,8 +78,7 @@ describe.skip('Search', () => {
 });
 
 // TODO(dmaretskyi): Import as txt.
-const COMPOSER_DXOS_DOC = `
-
+const COMPOSER_DXOS_DOC = trim`
 ![img](https://dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 
@@ -231,6 +212,4 @@ const EDGE_ARCHITECTURE_DOC = `
 - given the fq id of the deployment object, anyone in the space should be able to invoke the function even if they don't have access to the object itself
 
 ### Service Side
-
-
 `;

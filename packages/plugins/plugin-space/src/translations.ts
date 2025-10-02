@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { StoredSchema } from '@dxos/echo-schema';
 import { type Resource } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
@@ -21,7 +22,7 @@ export const translations = [
         'rename object label': 'Rename collection',
         'delete object label': 'Delete collection',
       },
-      [DataType.QueryCollection.typename]: {
+      [Type.getTypename(DataType.QueryCollection)]: {
         'typename label': 'Smart Collection',
         'typename label_zero': 'Smart Collections',
         'typename label_one': 'Smart Collection',
@@ -39,7 +40,7 @@ export const translations = [
         'rename object label': 'Rename record type',
         'delete object label': 'Delete record type',
       },
-      [DataType.View.typename]: {
+      [Type.getTypename(DataType.View)]: {
         'typename label': 'View',
         'typename label_zero': 'Views',
         'typename label_one': 'View',
@@ -69,7 +70,7 @@ export const translations = [
         'typename label_other': 'People',
         'object name placeholder': 'New person',
       },
-      [DataType.Project.typename]: {
+      [Type.getTypename(DataType.Project)]: {
         'typename label': 'Project',
         'typename label_zero': 'Projects',
         'typename label_one': 'Project',
@@ -214,10 +215,10 @@ export const translations = [
         'space settings properties label': 'General settings',
         'space properties settings verbose label': 'Manage space properties',
         'space properties settings description': 'You can configure how this space is displayed in the app here.',
-        'space settings schema label': 'Schema',
-        'schema verbose label': 'Manage schema',
-        'schema description': 'You can manage all of the schema stored within this space here.',
-        'no schemas found message': 'No schemas found',
+        'space settings schema label': 'Record types',
+        'schema verbose label': 'Manage record types',
+        'schema description': 'You can manage all of the record types stored within this space here.',
+        'no schemas found message': 'No record types found',
         'display name input placeholder': 'Space name',
         'display name description': 'Name of the space as it appears in the app.',
         'icon description': 'Icon used to represent the space in the app.',

@@ -6,9 +6,10 @@ import '@dxos-theme';
 
 import { type Meta } from '@storybook/react-vite';
 
-import { RevealPlayer } from './RevealPlayer';
 import CONTENT from '../../../testing/deck.md?raw';
 import { translations } from '../../translations';
+
+import { RevealPlayer } from './RevealPlayer';
 
 // https://revealjs.com/markdown
 // https://developer.mozilla.org/en-US/docs/Web/CSS/background-position
@@ -18,14 +19,14 @@ import { translations } from '../../translations';
 // https://fontsource.org/fonts
 // https://fonts.google.com
 
-const meta: Meta<typeof RevealPlayer> = {
+const meta = {
   title: 'plugins/plugin-presenter/RevealPlayer',
   component: RevealPlayer,
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof RevealPlayer>;
 
 export default meta;
 

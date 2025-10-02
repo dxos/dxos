@@ -4,7 +4,7 @@
 
 import { Option } from 'effect';
 
-import { contributes, createIntent, Capabilities, LayoutAction, type PluginContext } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { scheduledEffect } from '@dxos/echo-signals/core';
@@ -14,12 +14,13 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { DeckCapabilities } from '@dxos/plugin-deck';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { FQ_ID_LENGTH, parseFullyQualifiedId, SpaceState } from '@dxos/react-client/echo';
+import { FQ_ID_LENGTH, SpaceState, parseFullyQualifiedId } from '@dxos/react-client/echo';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceCapabilities } from './capabilities';
 import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../util';
+
+import { SpaceCapabilities } from './capabilities';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -66,12 +67,14 @@ export default async (context: PluginContext) => {
           return;
         }
 
-        const node = graph.getNode(active[0]).pipe(Option.getOrNull);
-        if (!node && active[0].length === FQ_ID_LENGTH) {
+        const id = active[0];
+        const node = graph.getNode(id).pipe(Option.getOrNull);
+        if (!node && id.length === FQ_ID_LENGTH) {
+          void graph.initialize(id);
           const timeout = setTimeout(async () => {
-            const node = graph.getNode(active[0]).pipe(Option.getOrNull);
+            const node = graph.getNode(id).pipe(Option.getOrNull);
             if (!node) {
-              await dispatch(createIntent(SpaceAction.WaitForObject, { id: active[0] }));
+              await dispatch(createIntent(SpaceAction.WaitForObject, { id }));
             }
           }, WAIT_FOR_OBJECT_TIMEOUT);
 

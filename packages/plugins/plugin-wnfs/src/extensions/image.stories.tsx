@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
 
@@ -19,17 +20,18 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { image } from './image';
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
+
+import { image } from './image';
 
 faker.seed(1);
 const initialValue = faker.lorem.paragraphs(100);
 const instances = {};
 
-const Story = () => {
+const DefaultStory = () => {
   const { themeMode } = useThemeContext();
   const space = useSpace();
   const [blockstore, setBlockstore] = useState<Blockstore>();
@@ -54,7 +56,7 @@ const Story = () => {
       initialValue,
       extensions: [
         createBasicExtensions(),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         blockstore && space ? [image({ blockstore, instances, space })] : [],
         decorateMarkdown(),
@@ -91,10 +93,14 @@ const Story = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'plugins/plugin-wnfs/image',
-  render: Story,
+  render: DefaultStory,
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {};
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

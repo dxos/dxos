@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowsClockwise, CheckCircle } from '@phosphor-icons/react';
 import React from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const ExportStatus = ({ running, lastExport }: { running: boolean; lastExport?: number }) => {
-  const { t } = useTranslation(FILES_PLUGIN);
+  const { t } = useTranslation(meta.id);
   return (
     <StatusBar.Item
       title={
@@ -28,7 +27,11 @@ export const ExportStatus = ({ running, lastExport }: { running: boolean; lastEx
             : t('no previous exports label')
       }
     >
-      {running ? <ArrowsClockwise className={getSize(3)} /> : <CheckCircle className={getSize(3)} />}
+      {running ? (
+        <Icon icon='ph--arrows-clockwise--regular' classNames={getSize(3)} />
+      ) : (
+        <Icon icon='ph--check-circle--regular' classNames={getSize(3)} />
+      )}
     </StatusBar.Item>
   );
 };

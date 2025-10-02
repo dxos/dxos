@@ -4,16 +4,17 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Pulsar } from './pulsar';
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
+
+import { Pulsar } from './pulsar';
 
 import '../../styles/graph.css';
 
@@ -53,7 +54,7 @@ const StoryComponent: FC<StoryProps> = ({ count = 1, ...options }) => {
   const grid = useGrid({ axis: true, grid: false });
   const zoom = useZoom();
 
-  const root = useRef<SVGGElement>();
+  const root = useRef<SVGGElement>(null);
   useEffect(() => {
     select(root.current)
       .selectAll('g')
@@ -92,21 +93,23 @@ const createNode: D3Callable<SVGGElement, Datum> = (group, classNames, options) 
     });
 };
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-graph/fx',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const DefaultPulse = {
+type Story = StoryObj<typeof meta>;
+
+export const DefaultPulse: Story = {
   args: {
     count: 20,
   },
 };
 
-export const RapidPulse = {
+export const RapidPulse: Story = {
   args: {
     count: 20,
     duration: 1_000,

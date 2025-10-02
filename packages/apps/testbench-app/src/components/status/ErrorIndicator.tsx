@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Circle, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { IconButton } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { styles } from './styles';
 
 // TODO(burdon): Reconcile with DebugPlugin.
-export const ErrorIndicator = (props: IconProps) => {
+export const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
-  const errorRef = useRef<Error>();
+  const errorRef = useRef<Error>(null);
   useEffect(() => {
     const errorListener = (event: any) => {
       const error: Error = event.error ?? event.reason;
@@ -37,14 +37,17 @@ export const ErrorIndicator = (props: IconProps) => {
   }, []);
 
   return (
-    <span
-      title={errorRef.current?.message ?? 'No errors.'}
+    <IconButton
+      classNames={mx(errorRef.current ? styles.error : styles.default)}
+      icon='ph--circle--fill'
+      iconOnly
+      label={errorRef.current?.message ?? 'No errors.'}
       onClick={() => {
-        errorRef.current = undefined;
+        errorRef.current = null;
         forceUpdate({});
       }}
-    >
-      <Circle weight='fill' className={mx(errorRef.current ? styles.error : styles.default, getSize(3))} {...props} />
-    </span>
+      size={3}
+      variant='ghost'
+    />
   );
 };

@@ -6,11 +6,11 @@ import { Schema } from 'effect';
 
 import {
   DecimalPrecision,
-  TypeEnum,
   FormatEnum,
   JsonProp,
-  SelectOptionSchema,
   type SelectOption,
+  SelectOptionSchema,
+  TypeEnum,
 } from '@dxos/echo-schema';
 
 /**
@@ -83,8 +83,8 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   [FormatEnum.Boolean]: extend(FormatEnum.Boolean, TypeEnum.Boolean),
   [FormatEnum.Ref]: extend(FormatEnum.Ref, TypeEnum.Ref, {
     referenceSchema: Schema.NonEmptyString.annotations({
-      title: 'Schema',
-      description: 'Schema typename',
+      title: 'Record type',
+      description: 'Name of the record type',
     }),
     referencePath: Schema.optional(
       JsonProp.annotations({
@@ -159,7 +159,8 @@ export const formatToSchema: Record<FormatEnum, Schema.Schema<FormatSchemaCommon
   // Objects
   //
 
-  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Object),
+  // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
+  [FormatEnum.GeoPoint]: extend(FormatEnum.GeoPoint, TypeEnum.Array),
 };
 
 /**

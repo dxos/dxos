@@ -7,17 +7,15 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { EdgeAiServiceClient } from '@dxos/ai';
-import { AI_SERVICE_ENDPOINT } from '@dxos/ai/testing';
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import {
-  extractionAnthropicFn,
   type ExtractionFunction,
-  extractionNerFn,
-  processTranscriptMessage,
+  extractionAnthropicFunction,
+  extractionNerFunction,
   getNer,
-} from '@dxos/assistant';
+  processTranscriptMessage,
+} from '@dxos/assistant/extraction';
 import { Filter, Obj, type Type } from '@dxos/echo';
 import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo-schema';
@@ -32,16 +30,17 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { seedTestData, Testing } from '@dxos/schema/testing';
+import { Testing, seedTestData } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { TranscriptionStory } from './TranscriptionStory';
-import { useIsSpeaking } from './useIsSpeaking';
-import { TranscriptionPlugin } from '../../TranscriptionPlugin';
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
 import { type MediaStreamRecorderParams, type TranscriberParams } from '../../transcriber';
-import { renderMarkdown } from '../Transcript';
+import { TranscriptionPlugin } from '../../TranscriptionPlugin';
+import { renderByline } from '../Transcript';
+
+import { TranscriptionStory } from './TranscriptionStory';
+import { useIsSpeaking } from './useIsSpeaking';
 
 const TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
@@ -79,7 +78,7 @@ const DefaultStory = ({
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => createQueueDXN(), []);
   const queue = useMemo(() => new MemoryQueue<DataType.Message>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderMarkdown([]), queue);
+  const model = useQueueModelAdapter(renderByline([]), queue);
   const space = useSpace();
 
   useEffect(() => {
@@ -102,9 +101,9 @@ const DefaultStory = ({
     if (entityExtraction === 'ner') {
       // Init model loading. Takes time.
       void getNer();
-      extractionFunction = extractionNerFn;
+      extractionFunction = extractionNerFunction;
     } else if (entityExtraction === 'llm') {
-      extractionFunction = extractionAnthropicFn;
+      extractionFunction = extractionAnthropicFunction;
       objects = space.db
         .query(
           Filter.or(
@@ -117,11 +116,15 @@ const DefaultStory = ({
         .then((result) => result.objects);
     }
     if (entityExtraction !== 'none') {
-      const AiService = new EdgeAiServiceClient({
-        endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-      });
       executor = new FunctionExecutor(
-        new ServiceContainer().setServices({ ai: { client: AiService }, database: { db: space!.db } }),
+        new ServiceContainer().setServices({
+          // ai: {
+          //   client: new Edge AiServiceClient({
+          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
+          //   }),
+          // },
+          // database: { db: space!.db },
+        }),
       );
     }
 
@@ -190,17 +193,15 @@ const DefaultStory = ({
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
@@ -220,22 +221,26 @@ const meta: Meta<typeof DefaultStory> = {
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
-        SettingsPlugin(),
-        PreviewPlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
         TranscriptionPlugin(),
+        StorybookLayoutPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),
     withTheme,
     withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
@@ -251,19 +256,21 @@ export const Default: Story = {
   },
 };
 
-export const EntityExtraction: Story = {
-  args: {
-    detectSpeaking: true,
-    entityExtraction: 'ner',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-    audioConstraints: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix hugging face quota issues.
+// export const EntityExtraction: Story = {
+//   args: {
+//     detectSpeaking: true,
+//     entityExtraction: 'ner',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//     audioConstraints: {
+//       echoCancellation: true,
+//       noiseSuppression: true,
+//       autoGainControl: true,
+//     },
+//   },
+// };
 
 export const SpeechDetection: Story = {
   args: {

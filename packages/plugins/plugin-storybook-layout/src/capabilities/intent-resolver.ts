@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { contributes, Capabilities, createResolver, type PluginContext, LayoutAction } from '@dxos/app-framework';
+import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 
 import { LayoutState } from './state';
 
@@ -76,6 +76,17 @@ export default (context: PluginContext) =>
         } else {
           layout.popoverAnchorId = options.anchorId;
         }
+      },
+    }),
+    createResolver({
+      intent: LayoutAction.UpdateLayout,
+      // TODO(wittjosiah): This should be able to just be `Schema.is(LayoutAction.UpdatePopover.fields.input)`
+      //  but the filter is not being applied correctly.
+      filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
+        Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
+      resolve: ({ subject }) => {
+        const layout = context.getCapability(LayoutState);
+        layout.workspace = subject;
       },
     }),
   ]);

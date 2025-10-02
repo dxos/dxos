@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
 import fs from 'fs';
 
-import { debounce, Trigger } from '@dxos/async';
+import { Args, Flags } from '@oclif/core';
+
+import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
+import { Bundler } from '@dxos/functions/bundler';
 import { DataType } from '@dxos/schema';
 
 import { BaseCommand } from '../../base';
-import { bundleScript } from '../../util';
 import { findFunctionByDeploymentId } from '../../util/function/lookup';
 
 const LOCAL_FUNCTIONS_RUNTIME_URL = 'http://127.0.0.1:3123';
@@ -47,8 +48,9 @@ export default class Watch extends BaseCommand<typeof Watch> {
         }
 
         const source = fs.readFileSync(this.args.file, 'utf-8');
-        const bundleResult = await bundleScript(source);
-        if (!bundleResult.bundle) {
+        const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
+        const bundleResult = await bundler.bundle({ source });
+        if ('error' in bundleResult) {
           this._logWithTime('Source bundling failed, waiting for new changes...');
           return;
         }
@@ -70,7 +72,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
         if (event === 'rename') {
           trigger.wake();
         } else {
-          updateSource();
+          void updateSource();
         }
       });
 

@@ -16,7 +16,7 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { createObjectFactory, type ValueGenerator } from '@dxos/schema/testing';
+import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DataType, DataTypes } from '../common';
@@ -96,7 +96,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
@@ -117,10 +117,10 @@ const meta: Meta<typeof DefaultStory> = {
     withTheme,
     withLayout({ fullscreen: true }),
   ],
-};
-
-type Story = StoryObj<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

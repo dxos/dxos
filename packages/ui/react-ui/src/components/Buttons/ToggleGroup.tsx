@@ -3,15 +3,16 @@
 //
 
 import {
+  ToggleGroupItem as ToggleGroupItemPrimitive,
+  type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
+  type ToggleGroupMultipleProps,
   ToggleGroup as ToggleGroupPrimitive,
   type ToggleGroupSingleProps,
-  type ToggleGroupMultipleProps,
-  type ToggleGroupItemProps as ToggleGroupItemPrimitiveProps,
-  ToggleGroupItem as ToggleGroupItemPrimitive,
 } from '@radix-ui/react-toggle-group';
 import React, { forwardRef } from 'react';
 
 import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button';
+import { IconButton, type IconButtonProps } from './IconButton';
 
 type ToggleGroupProps = Omit<ToggleGroupSingleProps, 'className'> | Omit<ToggleGroupMultipleProps, 'className'>;
 
@@ -37,5 +38,17 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
   },
 );
 
-export { ToggleGroup, ToggleGroupItem };
+type ToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
+
+const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemProps>(
+  ({ variant, label, icon, size, elevation, density, classNames, ...props }, forwardedRef) => {
+    return (
+      <ToggleGroupItemPrimitive {...props} asChild>
+        <IconButton {...{ variant, elevation, density, classNames, label, icon, size }} ref={forwardedRef} />
+      </ToggleGroupItemPrimitive>
+    );
+  },
+);
+
+export { ToggleGroup, ToggleGroupItem, ToggleGroupIconItem };
 export type { ToggleGroupProps, ToggleGroupItemProps };

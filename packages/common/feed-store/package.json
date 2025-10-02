@@ -10,11 +10,13 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs"
@@ -48,6 +50,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-hypercore": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
     "race-as-promised": "^0.0.3",
     "streamx": "^2.12.5"

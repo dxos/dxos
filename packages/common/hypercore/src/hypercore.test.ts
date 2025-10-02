@@ -2,8 +2,9 @@
 // Copyright 2019 DXOS.org
 //
 
-import { type AbstractValueEncoding } from 'hypercore';
 import util from 'node:util';
+
+import { type AbstractValueEncoding } from 'hypercore';
 import { describe, expect, test } from 'vitest';
 
 import { type Codec } from '@dxos/codec-protobuf';

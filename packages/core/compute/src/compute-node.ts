@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Listeners } from 'hyperformula/typings/Emitter';
-import { type ExportedCellChange } from 'hyperformula/typings/Exporter';
-
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { type ExportedCellChange, type Listeners } from '@dxos/vendor-hyperformula';
+import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
-import { DetailedCellError } from '#hyperformula';
 import { type ComputeGraph } from './compute-graph';
 import { type CellAddress, type CellScalarValue, isFormula } from './types';
 

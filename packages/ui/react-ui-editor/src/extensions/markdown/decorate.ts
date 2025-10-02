@@ -3,20 +3,21 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { RangeSetBuilder, type EditorState, StateEffect } from '@codemirror/state';
-import { EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { type EditorState, Prec, RangeSetBuilder, StateEffect } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/react-ui-theme';
 
-import { adjustChanges } from './changes';
-import { image } from './image';
-import { formattingStyles, bulletListIndentationWidth, orderedListIndentationWidth } from './styles';
-import { table } from './table';
-import { theme, type HeadingLevel } from '../../styles';
+import { type HeadingLevel, theme } from '../../styles';
 import { type RenderCallback } from '../../types';
 import { wrapWithCatch } from '../../util';
+
+import { adjustChanges } from './changes';
+import { image } from './image';
+import { bulletListIndentationWidth, formattingStyles, orderedListIndentationWidth } from './styles';
+import { table } from './table';
 
 /**
  * Unicode characters.
@@ -233,7 +234,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const mark = node.node.firstChild!;
         if (mark?.name === 'HeaderMark') {
           const { from, to = 6 } = options.numberedHeadings ?? {};
-          const text = view.state.sliceDoc(node.from, node.to);
+          const text = state.sliceDoc(node.from, node.to);
           const len = text.match(/[#\s]+/)![0].length;
           if (!from || level < from || level > to) {
             atomicDeco.add(mark.from, mark.from + len, hide);
@@ -426,6 +427,9 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
         const editing = editingRange(state, node, focus);
         if (urlNode && marks.length >= 2) {
           const url = state.sliceDoc(urlNode.from, urlNode.to);
+          if (options.skip?.({ name: 'Link', url })) {
+            break;
+          }
           if (!editing) {
             atomicDeco.add(node.from, marks[0].to, hide);
           }
@@ -443,6 +447,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               },
             }),
           );
+
           if (!editing) {
             atomicDeco.add(
               marks[1].from,
@@ -493,15 +498,15 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       tree.iterate({
         from,
         to,
-        enter: wrapWithCatch(enterNode),
-        leave: wrapWithCatch(leaveNode),
+        enter: wrapWithCatch(enterNode, 'decorate.enter'),
+        leave: wrapWithCatch(leaveNode, 'decorate.leave'),
       });
     }
   } else {
     // NOTE: If line numbering then we must iterate from the start of document.
     tree.iterate({
-      enter: wrapWithCatch(enterNode),
-      leave: wrapWithCatch(leaveNode),
+      enter: wrapWithCatch(enterNode, 'decorate.enter'),
+      leave: wrapWithCatch(leaveNode, 'decorate.leave'),
     });
   }
 
@@ -513,15 +518,20 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
 const forceUpdate = StateEffect.define<null>();
 
+export type NodeData = { name: 'Link'; url: string } | { name: 'Image'; url: string };
+
 export interface DecorateOptions {
   /**
    * Prevents triggering decorations as the cursor moves through the document.
    */
   selectionChangeDelay?: number;
   numberedHeadings?: { from: number; to?: number };
-  renderLinkButton?: RenderCallback<{ url: string }>;
   // TODO(burdon): Additional padding for each line.
   listPaddingLeft?: number;
+  // TODO(burdon): Use consistently.
+  skip?: (node: NodeData) => boolean;
+  // TODO(burdon): Remove.
+  renderLinkButton?: RenderCallback<{ url: string }>;
 }
 
 export const decorateMarkdown = (options: DecorateOptions = {}) => {
@@ -577,9 +587,9 @@ export const decorateMarkdown = (options: DecorateOptions = {}) => {
       },
       {
         provide: (plugin) => [
-          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
+          Prec.low(EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none)),
           EditorView.decorations.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
-          EditorView.decorations.of((view) => view.plugin(plugin)?.deco ?? Decoration.none),
+          EditorView.atomicRanges.of((view) => view.plugin(plugin)?.atomicDeco ?? Decoration.none),
         ],
       },
     ),

@@ -1,34 +1,13 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { defineConfig, mergeConfig } from 'vitest/config';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { baseConfig } from '../../vitest.base.config';
+import { createConfig } from '../../vitest.base.config';
 
-export default mergeConfig(
-  baseConfig({ cwd: __dirname }),
-  defineConfig({
-    test: {
-      setupFiles: ['./.storybook/vitest.setup.ts'],
-      projects: [
-        {
-          // pnpm -w nx test stories --project=unit
-          test: {
-            name: 'unit',
-            environment: 'node',
-          },
-        },
-        {
-          test: {
-            // https://vitest.dev/guide/browser
-            name: 'browser',
-            browser: {
-              enabled: true,
-            },
-          },
-        },
-      ],
-    },
-  }),
-);
+export default createConfig({
+  dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
+  storybook: true,
+});

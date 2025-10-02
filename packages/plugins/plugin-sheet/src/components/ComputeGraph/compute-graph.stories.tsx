@@ -4,26 +4,27 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { Obj, Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { FunctionType } from '@dxos/functions';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar, Button, Input } from '@dxos/react-ui';
+import { Button, Input, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/storybook-utils';
 
-import { useComputeGraph } from './ComputeGraphContextProvider';
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
-import { createSheet, SheetType } from '../../types';
+import { SheetType, createSheet } from '../../types';
+
+import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';
 
-const Story = () => {
+const DefaultStory = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const [sheet, setSheet] = useState<SheetType>();
@@ -82,16 +83,18 @@ const Story = () => {
   );
 };
 
-export const Default = {};
+export const Default: Story = {};
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-sheet/functions',
+  render: DefaultStory,
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withTheme,
   ],
-  render: (args: any) => <Story {...args} />,
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

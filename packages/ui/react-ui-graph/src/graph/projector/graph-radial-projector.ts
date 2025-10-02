@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { easeCubic, timer, type Timer } from 'd3';
+import { type Timer, easeCubic, timer } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 import { type Point } from '../../util';
 import { type GraphLayoutNode } from '../types';
+
+import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
 
 export type GraphRadialProjectorOptions = GraphProjectorOptions & {
   radius?: number;

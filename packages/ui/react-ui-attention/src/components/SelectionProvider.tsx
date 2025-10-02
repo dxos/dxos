@@ -4,16 +4,16 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { Match } from 'effect';
-import React, { useCallback, useMemo, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';
 
 import {
-  defaultSelection,
-  SelectionManager,
-  type SelectionResult,
   type Selection,
+  SelectionManager,
   type SelectionMode,
+  type SelectionResult,
+  defaultSelection,
 } from '../selection';
 
 const SELECTION_NAME = 'Selection';

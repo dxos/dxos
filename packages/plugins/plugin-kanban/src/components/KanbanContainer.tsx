@@ -9,10 +9,10 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema, type TypedObject } from '@dxos/echo-schema';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
-import { useQuery, getSpace } from '@dxos/react-client/echo';
-import { useKanbanModel, Kanban } from '@dxos/react-ui-kanban';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { Kanban, useKanbanModel } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { ProjectionModel, type DataType } from '@dxos/schema';
+import { type DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -22,6 +22,7 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
   const [projection, setProjection] = useState<ProjectionModel>();
   const space = getSpace(view);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
 
   const jsonSchema = useMemo(() => {
     if (!cardSchema) {
@@ -31,7 +32,6 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
   }, [cardSchema]);
 
   useEffect(() => {
-    const typename = view.query.typename;
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
@@ -49,7 +49,7 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
       );
       return unsubscribe;
     }
-  }, [view.query.typename, space]);
+  }, [typename, space]);
 
   useEffect(() => {
     if (jsonSchema) {

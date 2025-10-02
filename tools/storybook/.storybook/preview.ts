@@ -34,6 +34,7 @@ export const preview: Preview = {
       argTypesRegex: '^on.*',
     },
     backgrounds: {
+      backgrounds: { default: 'dark' },
       options: {},
     },
     controls: {

@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useState, useEffect, useMemo, type ChangeEvent } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type GeoPoint, GeoLocation } from '@dxos/echo-schema';
+import { GeoLocation, type GeoPoint } from '@dxos/echo-schema';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '../../../translations';
 import { InputHeader, type InputProps } from '../Input';
 
-export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
+export const GeoPointInput = ({ type, label, readonly, getStatus, getValue, onValueChange, onBlur }: InputProps) => {
   const { t } = useTranslation(translationKey);
   const { status, error } = getStatus();
   const geoPoint = useMemo<GeoPoint>(() => getValue<GeoPoint>() ?? [0, 0], [getValue]);
@@ -48,24 +48,32 @@ export const GeoPointInput = ({ type, label, disabled, getStatus, getValue, onVa
     <Input.Root validationValence={status}>
       <InputHeader error={error} label={label} />
       <div role='none' className='grid grid-cols-2 gap-2'>
-        <Input.TextInput
-          type='text'
-          pattern='^-?[0-9]*\.?[0-9]*$'
-          disabled={disabled}
-          placeholder={t('placeholder latitude')}
-          value={latitudeText}
-          onChange={handleCoordinateChange('latitude', setLatitudeText)}
-          onBlur={onBlur}
-        />
-        <Input.TextInput
-          type='text'
-          pattern='^-?[0-9]*\.?[0-9]*$'
-          disabled={disabled}
-          placeholder={t('placeholder longitude')}
-          value={longitudeText}
-          onChange={handleCoordinateChange('longitude', setLongitudeText)}
-          onBlur={onBlur}
-        />
+        <div role='none'>
+          <Input.Label>{t('latitude label')}</Input.Label>
+          <Input.TextInput
+            type='number'
+            step='0.00001'
+            min='-90'
+            max='90'
+            disabled={!!readonly}
+            value={latitudeText}
+            onChange={handleCoordinateChange('latitude', setLatitudeText)}
+            onBlur={onBlur}
+          />
+        </div>
+        <div role='none'>
+          <Input.Label>{t('longitude label')}</Input.Label>
+          <Input.TextInput
+            type='number'
+            step='0.00001'
+            min='-180'
+            max='180'
+            disabled={!!readonly}
+            value={longitudeText}
+            onChange={handleCoordinateChange('longitude', setLongitudeText)}
+            onBlur={onBlur}
+          />
+        </div>
       </div>
     </Input.Root>
   );

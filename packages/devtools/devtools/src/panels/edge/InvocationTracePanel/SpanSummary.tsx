@@ -3,13 +3,13 @@
 //
 
 import { formatDate } from 'date-fns/format';
-import React, { type FC, useEffect, useState, useMemo } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { type InvocationSpan, InvocationOutcome } from '@dxos/functions';
+import { InvocationOutcome, type InvocationSpan } from '@dxos/functions';
 import { type Space } from '@dxos/react-client/echo';
 import { type ChromaticPalette, IconButton, Tag } from '@dxos/react-ui';
 
-import { useScriptNameResolver } from './hooks';
+import { useFunctionNameResolver } from './hooks';
 import { formatDuration } from './utils';
 
 const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
@@ -18,7 +18,11 @@ const InvocationColor: Record<InvocationOutcome, ChromaticPalette> = {
   [InvocationOutcome.FAILURE]: 'red',
 };
 
-type SpanSummaryProps = { space?: Space; span: InvocationSpan; onClose: () => void };
+type SpanSummaryProps = {
+  space?: Space;
+  span: InvocationSpan;
+  onClose: () => void;
+};
 
 export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
   const [currentDuration, setCurrentDuration] = useState<number | undefined>(undefined);
@@ -30,20 +34,20 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ space, span, onClose }) => {
 
     const isInProgress = span.outcome === InvocationOutcome.PENDING;
     if (!isInProgress) {
-      setCurrentDuration(span.durationMs);
+      setCurrentDuration(span.duration);
       return;
     }
-    setCurrentDuration(Date.now() - span.timestampMs);
 
-    const interval = setInterval(() => setCurrentDuration(Date.now() - span.timestampMs), 100);
+    setCurrentDuration(Date.now() - span.timestamp);
+    const interval = setInterval(() => setCurrentDuration(Date.now() - span.timestamp), 100);
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget.dxn, [span.invocationTarget]);
-  const resolver = useScriptNameResolver({ space });
+  const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
+  const resolver = useFunctionNameResolver({ space });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
-  const timestamp = useMemo(() => formatDate(span.timestampMs, 'yyyy-MM-dd HH:mm:ss'), [span.timestampMs]);
+  const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
   const outcomeColor = useMemo(() => InvocationColor[span.outcome] ?? 'neutral', [span.outcome]);
   const outcomeLabel = useMemo(() => span.outcome.charAt(0).toUpperCase() + span.outcome.slice(1), [span.outcome]);
 

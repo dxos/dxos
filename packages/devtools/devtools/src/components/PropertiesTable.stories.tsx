@@ -4,16 +4,15 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
-import { styles } from '../styles';
 
-const TestStory = () => {
+const DefaultStory = () => {
   const schema = useMemo<PropertiesSchema>(
     () => ({
       key: PropertySchemaFormat.key(),
@@ -40,18 +39,22 @@ const TestStory = () => {
   });
 
   return (
-    <div className={mx('flex flex-col gap-16 p-4', styles.bgPanel)}>
+    <div className='flex flex-col gap-16 p-4'>
       <PropertiesTable schema={schema} object={properties} />
     </div>
   );
 };
 
-export default {
+const meta = {
   title: 'devtools/devtools/PropertiesTable',
-  component: TestStory,
+  component: DefaultStory,
   decorators: [withTheme],
-};
+} satisfies Meta<typeof DefaultStory>;
 
-export const Default = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {},
 };

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { defineModule, lazy, Events, definePlugin } from '@dxos/app-framework';
+import { Events, defineModule, definePlugin, lazy } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
@@ -11,13 +11,12 @@ import { meta } from './meta';
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/graph`,
-      activatesOn: Events.Startup,
-      activatesBefore: [Events.SetupAppGraph, Events.SetupMetadata],
-      activatesAfter: [Events.AppGraphReady],
-      activate: lazy(() => import('./graph')),
-    }),
-  ]);
+export const GraphPlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/graph`,
+    activatesOn: Events.Startup,
+    activatesBefore: [Events.SetupAppGraph, Events.SetupMetadata],
+    activatesAfter: [Events.AppGraphReady],
+    activate: lazy(() => import('./graph')),
+  }),
+]);

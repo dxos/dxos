@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { Ref, TypedObject, create, foreignKey, getSchema, isInstanceOf, getMeta } from '@dxos/echo-schema';
+import { Ref, TypedObject, create, foreignKey, getMeta, getSchema, isInstanceOf } from '@dxos/echo-schema';
 import { Testing } from '@dxos/echo-schema/testing';
 
 import { live } from './object';
@@ -84,5 +84,19 @@ describe('complex schema validations', () => {
     contactBook.contacts.push(contact2);
     expect(isInstanceOf(Testing.Contact, contactBook.contacts[1])).to.eq(true);
     expect(getSchema(contactBook.contacts[1])).to.eq(Testing.Contact);
+  });
+
+  test('creating an object with data from another object', () => {
+    const contact = live(Testing.Contact, {
+      name: 'Robert Smith',
+      email: 'robert@example.com',
+    });
+    const TestSchema = Schema.Struct({
+      value: Schema.Unknown,
+    });
+    const data = live(TestSchema, {
+      value: contact,
+    });
+    expect((data.value as any).name).to.eq('Robert Smith');
   });
 });

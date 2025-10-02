@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { type Action, type Node } from '@dxos/app-graph';
-import { useTranslation, toLocalizedString, IconButton, useDensityContext } from '@dxos/react-ui';
-import { DropdownMenu, MenuProvider, type MenuItem } from '@dxos/react-ui-menu';
-import { hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
+import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
 
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
@@ -38,7 +38,7 @@ export const NavTreeItemActionDropdownMenu = ({
   menuActions,
   caller,
 }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const density = useDensityContext();
   return (
     <MenuProvider>
@@ -46,7 +46,7 @@ export const NavTreeItemActionDropdownMenu = ({
         <DropdownMenu.Trigger asChild>
           <IconButton
             {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
-            classNames={mx('shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem)}
+            classNames={['shrink-0 pli-2 pointer-fine:pli-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon={icon ?? fallbackIcon}
             iconOnly
@@ -70,12 +70,12 @@ export const NavTreeItemMonolithicAction = ({
     <IconButton
       {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
       variant={variant}
-      classNames={mx(
+      classNames={[
         'shrink-0',
         hoverableControlItem,
         hoverableOpenControlItem,
         iconOnly ? 'pli-2 pointer-fine:pli-1' : 'p-2 pointer-fine:p-2 mie-1',
-      )}
+      ]}
       icon={icon ?? fallbackIcon}
       iconOnly={iconOnly}
       label={baseLabel}
@@ -93,7 +93,7 @@ export const NavTreeItemMonolithicAction = ({
 };
 
 export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);

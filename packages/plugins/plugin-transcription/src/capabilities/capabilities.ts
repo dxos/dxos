@@ -4,13 +4,13 @@
 
 import { defineCapability } from '@dxos/app-framework';
 
-import { TRANSCRIPTION_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import {
-  type TranscriberParams,
-  type Transcriber,
-  type TranscriptionManager,
-  type TranscriptMessageEnricher,
   type MediaStreamRecorderParams,
+  type Transcriber,
+  type TranscriberParams,
+  type TranscriptMessageEnricher,
+  type TranscriptionManager,
 } from '../transcriber';
 
 export namespace TranscriptionCapabilities {
@@ -21,13 +21,13 @@ export namespace TranscriptionCapabilities {
     onSegments: TranscriberParams['onSegments'];
   };
   export type GetTranscriber = (props: GetTranscriberProps) => Transcriber;
-  export const Transcriber = defineCapability<GetTranscriber>(`${TRANSCRIPTION_PLUGIN}/capability/transcriber`);
+  export const Transcriber = defineCapability<GetTranscriber>(`${meta.id}/capability/transcriber`);
 
   export type GetTranscriptionManagerProps = {
     messageEnricher?: TranscriptMessageEnricher;
   };
   export type GetTranscriptionManager = (props: GetTranscriptionManagerProps) => TranscriptionManager;
   export const TranscriptionManager = defineCapability<GetTranscriptionManager>(
-    `${TRANSCRIPTION_PLUGIN}/capability/transcription-manager`,
+    `${meta.id}/capability/transcription-manager`,
   );
 }

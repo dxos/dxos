@@ -6,9 +6,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 
-import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 import { type UserState } from '../../calls';
 import { ResponsiveGrid } from '../ResponsiveGrid';
+
+import { Participant, SCREENSHARE_SUFFIX } from './Participant';
 
 const getId = (user: UserState): string => user.id!;
 

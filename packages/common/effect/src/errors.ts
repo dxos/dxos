@@ -6,14 +6,16 @@ import { Cause, Chunk, Effect, Exit, GlobalValue, Option } from 'effect';
 import type { AnySpan, Span } from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
+const originalSymbol = Symbol.for('effect/OriginalAnnotation');
 const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());
 const locationRegex = /\((.*)\)/g;
 
 /**
  * Adds effect spans.
  * Removes effect internal functions.
+ * Unwraps error proxy.
  */
-const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
+const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
   const span = error[spanSymbol];
 
   const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
@@ -75,12 +77,78 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): void => {
 
   out.push(...appendStacks);
 
+  if (error[originalSymbol]) {
+    error = error[originalSymbol];
+  }
+  if (error.cause) {
+    error.cause = prettyErrorStack(error.cause);
+  }
+
   Object.defineProperty(error, 'stack', {
     value: out.join('\n'),
     writable: true,
     enumerable: false,
     configurable: true,
   });
+
+  return error;
+};
+
+/**
+ * Converts a cause to an error.
+ * Inserts effect spans as stack frames.
+ * The error will have stack frames of where the effect was run (if stack trace limit allows).
+ * Removes effect runtime internal stack frames.
+ *
+ * To be used in place of `Effect.runPromise`.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
+export const causeToError = (cause: Cause.Cause<any>): Error => {
+  if (Cause.isEmpty(cause)) {
+    return new Error('Fiber failed without a cause');
+  } else if (Cause.isInterruptedOnly(cause)) {
+    return new Error('Fiber was interrupted');
+  } else {
+    const errors = [...Chunk.toArray(Cause.failures(cause)), ...Chunk.toArray(Cause.defects(cause))];
+
+    const getStackFrames = (): string[] => {
+      const o: { stack: string } = {} as any;
+      Error.captureStackTrace(o, getStackFrames);
+      return o.stack.split('\n').slice(1);
+    };
+
+    const stackFrames = getStackFrames();
+    const newErrors = errors.map((error) => prettyErrorStack(error, stackFrames));
+
+    if (newErrors.length === 1) {
+      return newErrors[0];
+    } else {
+      return new AggregateError(newErrors);
+    }
+  }
+};
+
+/**
+ * Throws an error based on the cause.
+ * Inserts effect spans as stack frames.
+ * The error will have stack frames of where the effect was run (if stack trace limit allows).
+ * Removes effect runtime internal stack frames.
+ *
+ * To be used in place of `Effect.runPromise`.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
+export const throwCause = (cause: Cause.Cause<any>): never => {
+  throw causeToError(cause);
+};
+
+export const unwrapExit = <A>(exit: Exit.Exit<A, any>): A => {
+  if (Exit.isSuccess(exit)) {
+    return exit.value;
+  }
+
+  return throwCause(exit.cause);
 };
 
 /**
@@ -98,32 +166,21 @@ export const runAndForwardErrors = async <A, E>(
   options?: { signal?: AbortSignal },
 ): Promise<A> => {
   const exit = await Effect.runPromiseExit(effect, options);
-  if (Exit.isSuccess(exit)) {
-    return exit.value;
-  }
-
-  if (Cause.isEmpty(exit.cause)) {
-    throw new Error('Fiber failed without a cause');
-  } else if (Cause.isInterrupted(exit.cause)) {
-    throw new Error('Fiber was interrupted');
-  } else {
-    const errors = [...Chunk.toArray(Cause.failures(exit.cause)), ...Chunk.toArray(Cause.defects(exit.cause))];
-
-    const getStackFrames = (): string[] => {
-      const o: { stack: string } = {} as any;
-      Error.captureStackTrace(o, getStackFrames);
-      return o.stack.split('\n').slice(1);
-    };
-
-    const stackFrames = getStackFrames();
-    for (const error of errors) {
-      prettyErrorStack(error, stackFrames);
-    }
-
-    if (errors.length === 1) {
-      throw errors[0];
-    } else {
-      throw new AggregateError(errors);
-    }
-  }
+  return unwrapExit(exit);
 };
+
+/**
+ * Like `Effect.promise` but also caputes spans for defects.
+ * Workaround for: https://github.com/Effect-TS/effect/issues/5436
+ */
+export const promiseWithCauseCapture: <A>(evaluate: (signal: AbortSignal) => PromiseLike<A>) => Effect.Effect<A> = (
+  evaluate,
+) =>
+  Effect.promise(async (signal) => {
+    try {
+      const result = await evaluate(signal);
+      return Effect.succeed(result);
+    } catch (err) {
+      return Effect.die(err);
+    }
+  }).pipe(Effect.flatten);

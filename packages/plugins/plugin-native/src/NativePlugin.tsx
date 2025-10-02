@@ -2,22 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { PluginContext } from '@dxos/app-framework';
-import { definePlugin, Events, defineModule } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
+import { AssistantEvents } from '@dxos/plugin-assistant';
 
+import { Ollama, Updater, Window } from './capabilities';
 import { meta } from './meta';
+import { translations } from './translations';
 
-// TODO(burdon): Initial url has index.html, which must be caught/redirected.
-
-export const NativePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/startup`,
-      activatesOn: Events.DispatcherReady,
-      activate: async (context: PluginContext) => {
-        const { initializeNativeApp } = await import('./initialize');
-        await initializeNativeApp(context);
-        return [];
-      },
-    }),
-  ]);
+export const NativePlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
+  }),
+  defineModule({
+    id: `${meta.id}/module/updater`,
+    activatesOn: Events.DispatcherReady,
+    activate: Updater,
+  }),
+  defineModule({
+    id: `${meta.id}/module/window`,
+    activatesOn: Events.DispatcherReady,
+    activate: Window,
+  }),
+  defineModule({
+    id: `${meta.id}/module/ollama`,
+    activatesOn: AssistantEvents.SetupAiServiceProviders,
+    activate: Ollama,
+  }),
+]);

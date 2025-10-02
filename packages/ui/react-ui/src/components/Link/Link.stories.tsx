@@ -4,14 +4,21 @@
 
 import '@dxos-theme';
 
-import { Link } from './Link';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+
 import { withTheme } from '../../testing';
 
-export default {
+import { Link } from './Link';
+
+const meta = {
   title: 'ui/react-ui-core/Link',
   component: Link,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-} as any;
+} satisfies Meta<typeof Link>;
 
-export const Default = { args: { children: 'Hello', href: '#' } };
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = { args: { children: 'Hello', href: '#' } };

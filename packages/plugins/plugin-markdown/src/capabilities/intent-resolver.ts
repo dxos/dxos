@@ -3,33 +3,28 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Option, pipe, type Schema } from 'effect';
+import { Option, type Schema } from 'effect';
 
 import {
   Capabilities,
   CollaborationActions,
+  type PluginContext,
   contributes,
   createResolver,
-  type PluginContext,
 } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { createDocAccessor, getRangeFromCursor, Ref } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
+import { createDocAccessor, getRangeFromCursor } from '@dxos/react-client/echo';
+
+import { Markdown, MarkdownAction } from '../types';
 
 import { MarkdownCapabilities } from './capabilities';
-import { DocumentType, MarkdownAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: MarkdownAction.Create,
       resolve: ({ name, content }) => {
-        const doc = Obj.make(DocumentType, {
-          name,
-          content: Ref.make(Obj.make(DataType.Text, { content: content ?? '' })),
-        });
-
-        return { data: { object: doc } };
+        return { data: { object: Markdown.makeDocument({ name, content }) } };
       },
     }),
     createResolver({
@@ -40,23 +35,22 @@ export default (context: PluginContext) =>
       },
     }),
     createResolver({
-      intent: CollaborationActions.InsertContent,
+      intent: CollaborationActions.AcceptProposal,
       filter: (
         data,
-      ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.InsertContent.fields.input>, 'target'> & {
-        target: DocumentType;
-      } => Obj.instanceOf(DocumentType, data.target),
-      resolve: async ({ target, object: objectRef, at, label }) => {
-        const text = await target.content.load();
+      ): data is Omit<Schema.Schema.Type<typeof CollaborationActions.AcceptProposal.fields.input>, 'subject'> & {
+        subject: Markdown.Document;
+      } => Obj.instanceOf(Markdown.Document, data.subject),
+      resolve: async ({ subject, anchor, proposal }) => {
+        const text = await subject.content.load();
         const accessor = createDocAccessor(text, ['content']);
-        const { start, end } = pipe(
-          Option.fromNullable(at),
+        const { start, end } = Option.fromNullable(anchor).pipe(
           Option.flatMap((at) => Option.fromNullable(getRangeFromCursor(accessor, at))),
+          // Fallback to the end of the document.
           Option.getOrElse(() => ({ start: text.content.length - 1, end: text.content.length - 1 })),
         );
         accessor.handle.change((doc) => {
-          const ref = `[${label ?? 'Generated content'}]](${objectRef.dxn.toString()})\n`;
-          A.splice(doc, accessor.path.slice(), start, end - start, ref);
+          A.splice(doc, accessor.path.slice(), start, end - start, proposal.text);
         });
       },
     }),

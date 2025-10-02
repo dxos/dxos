@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, contributes, createIntent, defineModule, definePlugin, Events } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { FunctionTrigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
@@ -15,49 +15,48 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { ConductorAction } from './types';
 
-export const ConductorPlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: CanvasBoardType.typename,
-          metadata: {
-            icon: 'ph--infinity--regular',
-          },
+export const ConductorPlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
+  }),
+  defineModule({
+    id: `${meta.id}/module/metadata`,
+    activatesOn: Events.SetupMetadata,
+    activate: () =>
+      contributes(Capabilities.Metadata, {
+        id: CanvasBoardType.typename,
+        metadata: {
+          icon: 'ph--infinity--regular',
+        },
+      }),
+  }),
+  defineModule({
+    id: `${meta.id}/module/object-form`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () =>
+      contributes(
+        SpaceCapabilities.ObjectForm,
+        defineObjectForm({
+          objectSchema: CanvasBoardType,
+          getIntent: () => createIntent(ConductorAction.Create),
         }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: CanvasBoardType,
-            getIntent: () => createIntent(ConductorAction.Create),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [ComputeGraph, FunctionTrigger]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-  ]);
+      ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [ComputeGraph, FunctionTrigger]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/react-surface`,
+    activatesOn: Events.SetupReactSurface,
+    activate: ReactSurface,
+  }),
+  defineModule({
+    id: `${meta.id}/module/intent-resolver`,
+    activatesOn: Events.SetupIntentResolver,
+    activate: IntentResolver,
+  }),
+]);

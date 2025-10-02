@@ -5,8 +5,9 @@
 import { Schema } from 'effect';
 import { describe, test } from 'vitest';
 
-import { Typename, Version, LabelAnnotation } from './annotations';
 import { EchoObject, getLabel } from '../object';
+
+import { LabelAnnotation, SchemaVersion, Typename } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -44,11 +45,11 @@ describe('annotations', () => {
 
     test('should validate version', ({ expect }) => {
       // Valid.
-      expect(Version.make('0.1.0')).to.exist;
+      expect(SchemaVersion.make('0.1.0')).to.exist;
 
       // Invalid.
-      expect(() => Version.make('0.1.x')).to.throw();
-      expect(() => Version.make('0.1.0-alpha')).to.throw();
+      expect(() => SchemaVersion.make('0.1.x')).to.throw();
+      expect(() => SchemaVersion.make('0.1.0-alpha')).to.throw();
     });
   });
 

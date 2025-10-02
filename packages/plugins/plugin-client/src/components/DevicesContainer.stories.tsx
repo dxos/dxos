@@ -4,25 +4,26 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { DevicesContainer } from './DevicesContainer';
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
 
-const meta: Meta = {
+import { DevicesContainer } from './DevicesContainer';
+
+const meta = {
   title: 'plugins/plugin-client/DevicesContainer',
   component: DevicesContainer,
   decorators: [
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
@@ -36,11 +37,11 @@ const meta: Meta = {
     layout: 'fullscreen',
     translations: [...translations, ...shellTranslations],
   },
-};
+} satisfies Meta<typeof DevicesContainer>;
 
 export default meta;
 
-type Story = StoryObj<typeof DevicesContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

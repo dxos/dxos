@@ -2,50 +2,51 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Schema } from 'effect';
 import isEqualWith from 'lodash.isequalwith';
 
-import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { PropertiesType, type ClientServicesProvider, type Space, type SpaceInternal } from '@dxos/client-protocol';
+import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
+import { type ClientServicesProvider, PropertiesType, type Space, type SpaceInternal } from '@dxos/client-protocol';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { cancelWithContext, Context } from '@dxos/context';
-import { checkCredentialType, type SpecificCredential } from '@dxos/credentials';
+import { Context, cancelWithContext } from '@dxos/context';
+import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
 import {
+  type CustomInspectFunction,
+  type CustomInspectable,
   inspectCustom,
   loadashEqualityFn,
   todo,
   warnAfterTimeout,
-  type CustomInspectable,
-  type CustomInspectFunction,
 } from '@dxos/debug';
 import {
-  Filter,
-  type QueueFactory,
   type AnyLiveObject,
   type EchoClient,
   type EchoDatabase,
   type EchoDatabaseImpl,
+  Filter,
+  type QueueFactory,
 } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
+  type Contact,
   CreateEpochRequest,
   Invitation,
-  SpaceState,
-  type Contact,
   type SpaceArchive,
   type Space as SpaceData,
   type SpaceMember,
+  SpaceState,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
-  SpaceMember as HaloSpaceMember,
   type Credential,
   type Epoch,
+  SpaceMember as HaloSpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
@@ -132,7 +133,6 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
     this._queues = echoClient.constructQueueFactory(this.id);
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
       get data() {
@@ -588,3 +588,10 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
+
+export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
+
+export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
+  Schema.filter((space) => isSpace(space)),
+  Schema.annotations({ title: 'Space' }),
+);

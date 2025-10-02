@@ -4,22 +4,24 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { withClientProvider, type WithClientProviderProps, withMultiClientProvider } from './withClientProvider';
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
+
+import { type WithClientProviderProps, withClientProvider, withMultiClientProvider } from './withClientProvider';
 
 const SpaceInfo = ({ space }: { space: Space }) => {
   const name = space.isOpen ? space.properties.name : '';
   return <SyntaxHighlighter language='json'>{JSON.stringify({ id: space.id, name }, null, 2)}</SyntaxHighlighter>;
 };
 
-const Test = () => {
+const DefaultStory = () => {
   const client = useClient();
   const spaces = useSpaces();
   if (!client) {
@@ -36,10 +38,14 @@ const Test = () => {
   );
 };
 
-export default {
+const meta = {
   title: 'sdk/react-client/withClientProvider',
-  render: Test,
-};
+  render: render(DefaultStory),
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 const clientProps: WithClientProviderProps = {
   createIdentity: true,
@@ -52,11 +58,11 @@ const clientProps: WithClientProviderProps = {
   },
 };
 
-export const Default = {
+export const Default: Story = {
   decorators: [withClientProvider(clientProps), withTheme, withLayout({ classNames: ['flex gap-2'] })],
 };
 
-export const Multiple = {
+export const Multiple: Story = {
   decorators: [
     withMultiClientProvider({ ...clientProps, numClients: 3 }),
     withTheme,

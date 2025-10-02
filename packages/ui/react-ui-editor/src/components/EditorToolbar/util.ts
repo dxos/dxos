@@ -7,7 +7,7 @@ import { type Rx } from '@effect-rx/rx-react';
 import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
-import { live, type Live } from '@dxos/live-object';
+import { type Live, live } from '@dxos/live-object';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
@@ -53,13 +53,24 @@ export type EditorToolbarProps = ThemedClassName<
 
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
-export const createEditorAction = (id: string, invoke: () => void, properties: Partial<MenuActionProperties>) => {
-  const { label = [`${id} label`, { ns: translationKey }], ...rest } = properties;
-  return createMenuAction(id, invoke, { label, ...rest }) as Action<MenuActionProperties>;
+export const createEditorAction = (id: string, props: Partial<MenuActionProperties>, invoke: () => void) => {
+  const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
+  return createMenuAction(id, invoke, {
+    label,
+    ...rest,
+  }) as Action<MenuActionProperties>;
 };
 
 export const createEditorActionGroup = (
   id: string,
   props: Omit<ToolbarMenuActionGroupProperties, 'icon'>,
   icon?: string,
-) => createMenuItemGroup(id, { icon, iconOnly: true, ...props });
+) => {
+  const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
+  return createMenuItemGroup(id, {
+    label,
+    icon,
+    iconOnly: true,
+    ...rest,
+  });
+};

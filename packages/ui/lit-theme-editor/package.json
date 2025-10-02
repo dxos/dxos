@@ -10,6 +10,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./dist/src/index.ts",
       "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
@@ -29,7 +30,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "lit": "^3.2.0"
+    "lit": "^3.3.1"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

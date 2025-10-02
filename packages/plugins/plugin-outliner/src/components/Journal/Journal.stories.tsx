@@ -13,11 +13,12 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Journal } from './Journal';
 import { translations } from '../../translations';
-import { createJournal, createJournalEntry, JournalEntryType, JournalType, OutlineType } from '../../types';
+import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
 
-const meta: Meta<typeof Journal> = {
+import { Journal } from './Journal';
+
+const meta = {
   title: 'plugins/plugin-outliner/Journal',
   component: Journal,
   render: render(({ journal: _journal }) => {
@@ -42,7 +43,7 @@ const meta: Meta<typeof Journal> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof Journal>;
 
 export default meta;
 
@@ -87,7 +88,7 @@ const FocusContainer = ({ id }: { id: string }) => {
   );
 };
 
-export const Test = {
+export const Test: Story = {
   render: () => {
     return (
       <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>

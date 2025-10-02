@@ -12,7 +12,7 @@ runs:
       shell: bash
 
     # TODO(wittjosiah): Install moon in docker image?
-    - uses: 'moonrepo/setup-toolchain@v0'
+    - uses: moonrepo/setup-toolchain@v0
 
     - name: Log out debug info
       run: |

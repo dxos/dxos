@@ -3,11 +3,11 @@
 //
 
 import { CodeInput, getSegmentCssWidth } from 'rci';
-import React, { type ComponentProps, type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef, type RefObject, forwardRef, useCallback } from 'react';
 
 import { useForwardedRef, useIsFocused } from '@dxos/react-hooks';
 
-import { INPUT_NAME, type InputScopedProps, useInputContext, type Valence } from './Root';
+import { INPUT_NAME, type InputScopedProps, type Valence, useInputContext } from './Root';
 
 type PinInputProps = Omit<
   ComponentPropsWithRef<typeof CodeInput>,
@@ -66,7 +66,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
             'aria-invalid': 'true' as const,
             'aria-errormessage': errorMessageId,
           }),
-          inputRef,
+          inputRef: inputRef as RefObject<HTMLInputElement>,
           renderSegment,
           className: inputClassName,
         }}

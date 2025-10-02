@@ -3,6 +3,7 @@
 //
 
 import {
+  next as A,
   type Heads,
   change,
   clone,
@@ -10,7 +11,6 @@ import {
   from,
   getBackend,
   getHeads,
-  next as A,
   save,
   saveSince,
 } from '@automerge/automerge';
@@ -19,14 +19,14 @@ import {
   type DocHandle,
   type DocumentId,
   type HandleState,
-  type StorageAdapterInterface,
   type PeerId,
   Repo,
   type SharePolicy,
+  type StorageAdapterInterface,
   generateAutomergeUrl,
   parseAutomergeUrl,
 } from '@automerge/automerge-repo';
-import { onTestFinished, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
@@ -36,11 +36,12 @@ import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/
 import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
+import { TestAdapter, type TestConnectionStateProvider } from '../testing';
+
 import { FIND_PARAMS } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
-import { TestAdapter, type TestConnectionStateProvider } from '../testing';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
 
@@ -420,13 +421,7 @@ describe('AutomergeRepo', () => {
 
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
-      const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId, FIND_PARAMS);
-        serverHandle.update((doc) => {
-          return A.loadIncremental(doc, blob);
-        });
-      };
-
+      const receiveByServer = (blob: Uint8Array, docId: DocumentId) => repo.import<any>(blob, { docId });
       let clientDoc = A.from<{ field?: string }>({});
       const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
       // Sync handshake.
@@ -434,7 +429,7 @@ describe('AutomergeRepo', () => {
 
       // Sync protocol.
       const sendDoc = async (doc: A.Doc<any>) => {
-        await receiveByServer(saveSince(doc, sentHeads), documentId);
+        receiveByServer(saveSince(doc, sentHeads), documentId);
         sentHeads = getHeads(doc);
       };
 
@@ -456,10 +451,9 @@ describe('AutomergeRepo', () => {
 
       const repo = new Repo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
-        const serverHandle = await repo.find(docId, FIND_PARAMS);
-        serverHandle.update((doc) => {
-          return A.loadIncremental(doc, blob);
-        });
+        repo.import<any>(blob, { docId });
+        // TODO(mykola): This should not be required. Document is not persisted without it.
+        await repo.flush([docId]);
       };
 
       let clientDoc = A.from<{ field?: string }>({ field: 'foo' });
@@ -676,6 +670,63 @@ describe('AutomergeRepo', () => {
       const doc = await peer3.repo.find(document.url, FIND_PARAMS);
       await doc.whenReady();
       expect(doc.doc()).to.deep.eq(document.doc());
+    });
+
+    test('document is passively replicated to connected peers', async () => {
+      const [spaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+
+      const handle = peer1.repo.create();
+      handle.change((doc: any) => (doc.text = 'hello'));
+      await connectPeers(spaceKey, teleportBuilder, peer1, peer2);
+
+      await expect
+        .poll(async () => {
+          const doc = peer2.repo.handles[handle.documentId];
+          await doc.whenReady();
+          return doc.doc()!.text;
+        })
+        .toEqual('hello');
+    });
+
+    test('imported document is passively replicated to connected peers', async () => {
+      let blob: Uint8Array;
+      let documentId: DocumentId;
+      {
+        const repo = new Repo();
+        const handle = repo.create();
+        handle.change((doc: any) => (doc.text = 'hello'));
+        blob = A.save(handle.doc()!);
+        documentId = handle.documentId;
+      }
+
+      const [spaceKey] = PublicKey.randomSequence();
+
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const peer1 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      const peer2 = await createTeleportTestPeer(teleportBuilder, spaceKey);
+      await connectPeers(spaceKey, teleportBuilder, peer1, peer2);
+
+      const handle = peer1.repo.import(blob, { docId: documentId });
+      await handle.whenReady();
+
+      await expect
+        .poll(
+          async () => {
+            const doc = peer2.repo.handles[handle.documentId];
+            await doc.whenReady();
+            return doc.doc()!.text;
+          },
+          { timeout: 1_000 },
+        )
+        .toEqual('hello');
     });
   });
 

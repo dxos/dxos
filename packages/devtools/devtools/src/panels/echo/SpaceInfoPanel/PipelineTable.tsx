@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { type FC, useMemo, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';

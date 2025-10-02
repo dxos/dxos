@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import React, { useEffect, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';

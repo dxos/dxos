@@ -3,9 +3,11 @@
 //
 
 // @ts-ignore
-import { defineFunction, S } from 'dxos:functions';
+import { S, defineFunction } from 'dxos:functions';
 
 export default defineFunction({
+  key: 'dxos.org/script/forex',
+  name: 'Forex',
   description: 'Returns the exchange rate between two currencies.',
 
   inputSchema: S.Struct({

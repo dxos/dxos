@@ -5,16 +5,17 @@
 import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
 import { Effect } from 'effect';
 
-import { defineTool, Message, OllamaAiServiceClient, ToolRegistry, ToolTypes } from '@dxos/ai';
 import { Obj, Ref } from '@dxos/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { ToolResolverService, type ServiceContainer } from '@dxos/functions';
+import { type ServiceContainer } from '@dxos/functions';
 import { createTestServices } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
+import { DataType } from '@dxos/schema';
+
+import { ValueBag } from '../../types';
 
 import { type GptInput, gptNode } from './node';
-import { ValueBag } from '../../types';
 
 const ENABLE_LOGGING = true;
 
@@ -63,9 +64,10 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         const conversation = queues.create();
         yield* Effect.promise(() =>
           conversation.append([
-            Obj.make(Message, {
-              role: 'user',
-              content: [{ type: 'text', text: 'I have 10 apples in my bag' }],
+            Obj.make(DataType.Message, {
+              created: new Date().toISOString(),
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
             }),
           ]),
         );
@@ -83,53 +85,49 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         expect(typeof output.text).toBe('string');
         expect(output.text.length).toBeGreaterThan(10);
 
-        const conversationMessages = yield* Effect.promise(() => queues.get<Message>(conversation.dxn).queryObjects());
+        const conversationMessages = yield* Effect.promise(() =>
+          queues.get<DataType.Message>(conversation.dxn).queryObjects(),
+        );
         log.info('conversationMessages', { conversationMessages });
-        expect(conversationMessages.at(-1)?.role).toEqual('assistant');
+        expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
       }),
       60_000,
     );
   });
 
-  it.skip(
-    'ollama image gen',
-    Effect.fn(function* (ctx) {
-      if (!(yield* Effect.promise(() => OllamaAiServiceClient.isRunning()))) {
-        ctx!.skip();
-        return;
-      }
+  // it.skip(
+  //   'ollama image gen',
+  //   Effect.fn(function* (ctx) {
+  //     const _textToImageTool = defineTool('testing', {
+  //       name: 'text-to-image',
+  //       type: ToolTypes.TextToImage,
+  //       options: {
+  //         model: '@testing/kitten-in-bubble',
+  //       },
+  //     });
 
-      const textToImageTool = defineTool('testing', {
-        name: 'text-to-image',
-        type: ToolTypes.TextToImage,
-        options: {
-          model: '@testing/kitten-in-bubble',
-        },
-      });
-
-      const input: GptInput = {
-        prompt: 'A beautiful sunset over a calm ocean',
-        tools: ['testing/text-to-image'],
-      };
-      const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
-        Effect.flatMap(ValueBag.unwrap),
-        Effect.provide(
-          createTestServices({
-            ai: {
-              provider: 'ollama',
-            },
-            logging: {
-              enabled: ENABLE_LOGGING,
-            },
-            toolResolver: ToolResolverService.make(new ToolRegistry([textToImageTool as any])),
-          }).createLayer(),
-        ),
-        Effect.scoped,
-      );
-      log.info('output', { output });
-      log.info('artifact', { artifact: output.artifact });
-      expect(output.artifact).toBeDefined();
-    }),
-    60_000,
-  );
+  //     const input: GptInput = {
+  //       prompt: 'A beautiful sunset over a calm ocean',
+  //       tools: [ToolId.make('testing/text-to-image')],
+  //     };
+  //     const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
+  //       Effect.flatMap(ValueBag.unwrap),
+  //       Effect.provide(
+  //         createTestServices({
+  //           ai: {
+  //             provider: 'ollama',
+  //           },
+  //           logging: {
+  //             enabled: ENABLE_LOGGING,
+  //           },
+  //         }).createLayer(),
+  //       ),
+  //       Effect.scoped,
+  //     );
+  //     log.info('output', { output });
+  //     log.info('artifact', { artifact: output.artifact });
+  //     expect(output.artifact).toBeDefined();
+  //   }),
+  //   60_000,
+  // );
 });

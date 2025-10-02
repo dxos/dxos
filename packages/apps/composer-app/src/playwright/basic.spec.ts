@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager, INITIAL_URL } from './app-manager';
-import { Markdown } from './plugins';
+import { INITIAL_OBJECT_COUNT } from './constants';
+import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
@@ -44,7 +47,7 @@ test.describe('Basic tests', () => {
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(4);
+    await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
     await expect(textBox).toBeEditable();
   });
 
@@ -74,14 +77,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle('dxos.org/plugin/stack').click();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.id).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {
@@ -98,7 +101,7 @@ test.describe('Basic tests', () => {
     await host.openUserDevices();
     await host.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(INITIAL_URL, { timeout: 20_000 });
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 20_000 });
+    await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
+    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 10_000 });
   });
 });

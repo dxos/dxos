@@ -5,15 +5,17 @@
 // @ts-ignore
 import { S, defineFunction } from 'dxos:functions';
 import {
+  FetchHttpClient,
   HttpClient,
   HttpClientRequest,
-  FetchHttpClient,
   // @ts-ignore
-} from 'https://esm.sh/@effect/platform@0.77.2?deps=effect@3.14.21&bundle=false';
+} from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.14.21?bundle=false';
+import { Effect, Schedule } from 'https://esm.sh/effect@3.17.0?bundle=false';
 
 export default defineFunction({
+  key: 'dxos.org/script/forex-effect',
+  name: 'Forex Effect',
   description: 'Returns the exchange rate between two currencies.',
 
   inputSchema: S.Struct({

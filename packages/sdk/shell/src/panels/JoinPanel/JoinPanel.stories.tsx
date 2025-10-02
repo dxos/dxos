@@ -4,16 +4,18 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
-import { JoinPanelImpl } from './JoinPanel';
-import { type JoinPanelImplProps } from './JoinPanelProps';
-import { IdentityInputImpl } from './steps';
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { ConfirmResetImpl } from '../../steps';
 import { translations } from '../../translations';
+
+import { JoinPanelImpl } from './JoinPanel';
+import { type JoinPanelImplProps } from './JoinPanelProps';
+import { IdentityInputImpl } from './steps';
 
 const noOpProps: JoinPanelImplProps = {
   titleId: 'storybookJoinPanel__title',
@@ -23,13 +25,13 @@ const noOpProps: JoinPanelImplProps = {
   pending: false,
 };
 
-const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
+const JoinDialog = (props: Partial<JoinPanelImplProps>) => (
   <StorybookDialog inOverlayLayout>
-    <JoinPanelImpl {...noOpProps} {...args} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmResetImpl} />
+    <JoinPanelImpl {...noOpProps} {...props} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmResetImpl} />
   </StorybookDialog>
 );
 
-export default {
+const meta = {
   title: 'sdk/shell/JoinPanel',
   component: JoinDialog,
   decorators: [withTheme],
@@ -39,7 +41,11 @@ export default {
       disableSnapshot: false,
     },
   },
-};
+} satisfies Meta<typeof JoinDialog>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const AdditionMethodChooser = () => <JoinDialog mode='halo-only' activeView='addition method chooser' />;
 

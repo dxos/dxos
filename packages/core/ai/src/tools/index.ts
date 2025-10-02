@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './define';
-export * from './message';
+export * from './call';
 export * from './tool';
+export * from './tool-execution-service';
+export * from './tool-resolver-service';
 export * from './util';

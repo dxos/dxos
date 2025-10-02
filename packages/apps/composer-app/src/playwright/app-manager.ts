@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
 import os from 'node:os';
+
+import type { Browser, ConsoleMessage, Locator, Page } from '@playwright/test';
 
 import { Trigger } from '@dxos/async';
 import { ShellManager } from '@dxos/shell/testing';
@@ -166,7 +167,10 @@ export class AppManager {
   }
 
   async waitForSpaceReady(timeout = 30_000): Promise<void> {
-    await this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout });
+    await Promise.all([
+      this.page.getByTestId('treeView.alternateTreeButton').waitFor({ timeout }),
+      this.page.waitForSelector('[data-testid="create-space-form"]', { state: 'detached', timeout }),
+    ]);
   }
 
   getSpacePresenceMembers(): Locator {

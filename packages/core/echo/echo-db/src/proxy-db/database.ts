@@ -5,9 +5,10 @@
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { LifecycleState, Resource, type Context } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { assertObjectModelShape, type AnyEchoObject, type BaseObject, type HasId } from '@dxos/echo-schema';
+import { Ref } from '@dxos/echo';
+import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo-schema';
 import { getSchema, getType } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -17,8 +18,6 @@ import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { defaultMap } from '@dxos/util';
 
-import { EchoSchemaRegistry } from './echo-schema-registry';
-import type { ObjectMigration } from './object-migration';
 import type { SaveStateChangedEvent } from '../automerge';
 import {
   CoreDatabase,
@@ -28,16 +27,19 @@ import {
   type ObjectPlacement,
 } from '../core-db';
 import {
+  type AnyLiveObject,
   EchoReactiveHandler,
   type ProxyTarget,
-  type AnyLiveObject,
   createObject,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { Filter, type QueryFn, type QueryOptions, Query } from '../query';
+import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
+
+import { EchoSchemaRegistry } from './echo-schema-registry';
+import type { ObjectMigration } from './object-migration';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -67,7 +69,22 @@ export interface EchoDatabase {
 
   toJSON(): object;
 
-  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): AnyLiveObject<T> | undefined;
+  /**
+   * @deprecated Use `ref` instead.
+   */
+  getObjectById<T extends BaseObject = any>(id: string, opts?: GetObjectByIdOptions): Live<T> | undefined;
+
+  /**
+   * Creates a reference to an existing object in the database.
+   *
+   * NOTE: The reference may be dangling if the object is not present in the database.
+   *
+   * ## Difference from `Ref.fromDXN`
+   *
+   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `db.ref(dxn)` is preferable in cases with access to the database.
+   */
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T>;
 
   /**
    * Query objects.
@@ -78,13 +95,13 @@ export interface EchoDatabase {
    * Adds object to the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  add<T extends AnyEchoObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
+  add<T extends BaseObject>(obj: Live<T>, opts?: AddOptions): Live<T & HasId>;
 
   /**
    * Removes object from the database.
    */
   // TODO(dmaretskyi): Lock to Obj.Any | Relation.Any.
-  remove<T extends AnyEchoObject>(obj: T): void;
+  remove<T extends BaseObject & HasId>(obj: T): void;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -95,6 +112,11 @@ export interface EchoDatabase {
    * Run migrations.
    */
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
+
+  /**
+   * Get the current sync state.
+   */
+  getSyncState(): Promise<SpaceSyncState>;
 
   /**
    * Get notification about the sync progress with other peers.
@@ -261,6 +283,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return object;
   }
 
+  ref<T extends BaseObject = any>(dxn: DXN): Ref.Ref<T> {
+    const ref = Ref.fromDXN(dxn);
+    setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
+    return ref;
+  }
+
   // Odd way to define methods types from a typedef.
   declare query: QueryFn;
   static {
@@ -279,14 +307,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update objects.
    * @deprecated Mutate the object directly
    */
-  async update(filter: Filter.Any, operation: unknown): Promise<void> {
+  async update(_filter: Filter.Any, _operation: unknown): Promise<void> {
     throw new Error('Not implemented');
   }
 
   /**
    * @deprecated Use `db.add`.
    */
-  async insert(data: unknown): Promise<never> {
+  async insert(_data: unknown): Promise<never> {
     throw new Error('Not implemented');
   }
 
@@ -352,6 +380,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       }
     }
     await this.flush();
+  }
+
+  getSyncState(): Promise<SpaceSyncState> {
+    return this._coreDatabase.getSyncState();
   }
 
   subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {

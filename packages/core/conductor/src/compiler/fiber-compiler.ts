@@ -4,28 +4,21 @@
 
 import { Effect, Layer, Schema, Scope } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';
 import {
-  AiService,
+  ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  FunctionCallService,
   QueueService,
+  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
+import { createDefectLogger } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
-import {
-  type TopologyNodeConnector,
-  createTopology,
-  InputKind,
-  type GraphDiagnostic,
-  type Topology,
-  type TopologyNode,
-} from './topology';
-import { ComputeNodeError, ValueValidationError } from '../errors';
-import { createDefectLogger, EventLogger } from '../services';
+import { ComputeNodeError, InvalidValueError } from '../errors';
 import {
   type ComputeEffect,
   type ComputeGraphModel,
@@ -33,10 +26,19 @@ import {
   type ComputeNode,
   type ComputeRequirements,
   type Executable,
-  isNotExecuted,
   NotExecuted,
   ValueBag,
+  isNotExecuted,
 } from '../types';
+
+import {
+  type GraphDiagnostic,
+  InputKind,
+  type Topology,
+  type TopologyNode,
+  type TopologyNodeConnector,
+  createTopology,
+} from './topology';
 
 export type ValidateParams = {
   graph: ComputeGraphModel;
@@ -126,7 +128,7 @@ export const compile = async ({
           invariant(ValueBag.isValueBag(input));
 
           const instance = executor.clone();
-          const logger = yield* EventLogger;
+          const logger = yield* ComputeEventLogger;
 
           // TODO(dmaretskyi): At the start we log a synthetic end-compute event for the input node to capture it's inputs.
           logger.log({ type: 'end-compute', nodeId: inputNodeId, outputs: Object.keys(input.values) });
@@ -306,7 +308,7 @@ export class GraphExecutor {
       yield* Schema.decode(input.schema)(value).pipe(
         Effect.mapError(
           (error) =>
-            new ValueValidationError('Invalid input value', {
+            new InvalidValueError({
               context: {
                 nodeId,
                 property: input.name,
@@ -317,7 +319,7 @@ export class GraphExecutor {
         ),
       );
 
-      const logger = yield* EventLogger;
+      const logger = yield* ComputeEventLogger;
       logger.log({
         type: 'compute-input',
         nodeId,
@@ -335,25 +337,32 @@ export class GraphExecutor {
   computeInputs(nodeId: string): ComputeEffect<ValueBag<any>> {
     return Effect.gen(this, function* () {
       invariant(this._topology, 'Graph not loaded');
-      const node = this._topology!.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
-
-      // TODO(dmaretskyi): There's a generic way to copy all requirements in Effect but I don't remember how to do it.
-      const layer = Layer.mergeAll(
-        Layer.succeed(Scope.Scope, yield* Scope.Scope),
-        Layer.succeed(EventLogger, yield* EventLogger),
-        Layer.succeed(AiService, yield* AiService),
-        Layer.succeed(CredentialsService, yield* CredentialsService),
-        Layer.succeed(DatabaseService, yield* DatabaseService),
-        Layer.succeed(FunctionCallService, yield* FunctionCallService),
-        Layer.succeed(TracingService, yield* TracingService),
-        Layer.succeed(QueueService, yield* QueueService),
-      );
-
+      const node = this._topology.nodes.find((node) => node.id === nodeId) ?? failedInvariant();
+      const layer = yield* this._createServiceLayer();
       const entries = node.inputs.map(
         (input) => [input.name, this.computeInput(nodeId, input.name).pipe(Effect.provide(layer))] as const,
       );
+
       return ValueBag.make(Object.fromEntries(entries));
     }).pipe(Effect.withSpan('compute-inputs', { attributes: { nodeId } }));
+  }
+
+  /**
+   * Creates a layer with all required services from the current context.
+   */
+  private _createServiceLayer() {
+    return Effect.gen(this, function* () {
+      return Layer.mergeAll(
+        Layer.succeed(AiService.AiService, yield* AiService.AiService),
+        Layer.succeed(Scope.Scope, yield* Scope.Scope),
+        Layer.succeed(ComputeEventLogger, yield* ComputeEventLogger),
+        Layer.succeed(CredentialsService, yield* CredentialsService),
+        Layer.succeed(DatabaseService, yield* DatabaseService),
+        Layer.succeed(QueueService, yield* QueueService),
+        Layer.succeed(RemoteFunctionExecutionService, yield* RemoteFunctionExecutionService),
+        Layer.succeed(TracingService, yield* TracingService),
+      );
+    });
   }
 
   computeOutput(nodeId: string, prop: string): Effect.Effect<unknown, Error | NotExecuted, ComputeRequirements> {
@@ -370,7 +379,7 @@ export class GraphExecutor {
       const value = yield* ValueBag.get(output, prop);
       invariant(!Effect.isEffect(value));
 
-      const logger = yield* EventLogger;
+      const logger = yield* ComputeEventLogger;
       logger.log({
         type: 'compute-output',
         nodeId,
@@ -406,7 +415,7 @@ export class GraphExecutor {
           throw new Error(`No compute function for node type: ${node.graphNode.type}`);
         }
 
-        const logger = yield* EventLogger;
+        const logger = yield* ComputeEventLogger;
         logger.log({
           type: 'begin-compute',
           nodeId: node.id,
@@ -418,12 +427,12 @@ export class GraphExecutor {
         invariant(ValueBag.isValueBag(inputValues), 'Input must be a value bag');
         let outputBag = yield* nodeSpec.exec(inputValues, node.graphNode).pipe(
           Effect.mapError((cause) =>
-            ComputeNodeError.is(cause) || ValueValidationError.is(cause)
+            ComputeNodeError.is(cause) || InvalidValueError.is(cause)
               ? cause
-              : new ComputeNodeError('Compute node failed', { cause, context: { nodeId } }),
+              : new ComputeNodeError({ cause, context: { nodeId } }),
           ),
           Effect.withSpan('call-node'),
-          Effect.provideService(EventLogger, {
+          Effect.provideService(ComputeEventLogger, {
             log: logger.log,
             nodeId: node.id,
           }),
@@ -440,7 +449,7 @@ export class GraphExecutor {
             yield* Schema.decode(outputTopology.schema)(value).pipe(
               Effect.mapError(
                 (error) =>
-                  new ValueValidationError('Invalid output value', {
+                  new InvalidValueError({
                     context: {
                       nodeId,
                       property: key,

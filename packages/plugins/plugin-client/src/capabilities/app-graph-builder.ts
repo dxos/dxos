@@ -6,19 +6,20 @@ import { Rx } from '@effect-rx/rx-react';
 import { Option, pipe } from 'effect';
 
 import { createIntent } from '@dxos/app-framework';
-import { Capabilities, contributes, type PluginContext } from '@dxos/app-framework';
-import { createExtension, rxFromObservable, ROOT_ID } from '@dxos/plugin-graph';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
+import { ROOT_ID, createExtension, rxFromObservable } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
-import { ClientCapabilities } from './capabilities';
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { Account, ClientAction } from '../types';
+
+import { ClientCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: CLIENT_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -27,13 +28,13 @@ export default (context: PluginContext) =>
             Option.map(() => {
               return [
                 {
-                  id: `${CLIENT_PLUGIN}/open-user-account`,
+                  id: `${meta.id}/open-user-account`,
                   data: async () => {
                     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                     await dispatch(createIntent(ClientAction.ShareIdentity));
                   },
                   properties: {
-                    label: ['open user account label', { ns: CLIENT_PLUGIN }],
+                    label: ['open user account label', { ns: meta.id }],
                     icon: 'ph--user--regular',
                     disposition: 'menu',
                     keyBinding: {
@@ -62,9 +63,9 @@ export default (context: PluginContext) =>
               return [
                 {
                   id: Account.id,
-                  type: CLIENT_PLUGIN,
+                  type: meta.id,
                   properties: {
-                    label: ['account label', { ns: CLIENT_PLUGIN }],
+                    label: ['account label', { ns: meta.id }],
                     icon: 'ph--user--regular',
                     disposition: 'user-account',
                     // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
@@ -77,18 +78,18 @@ export default (context: PluginContext) =>
                     {
                       id: Account.Profile,
                       data: Account.Profile,
-                      type: CLIENT_PLUGIN,
+                      type: meta.id,
                       properties: {
-                        label: ['profile label', { ns: CLIENT_PLUGIN }],
+                        label: ['profile label', { ns: meta.id }],
                         icon: 'ph--user--regular',
                       },
                     },
                     {
                       id: Account.Devices,
                       data: Account.Devices,
-                      type: CLIENT_PLUGIN,
+                      type: meta.id,
                       properties: {
-                        label: ['devices label', { ns: CLIENT_PLUGIN }],
+                        label: ['devices label', { ns: meta.id }],
                         icon: 'ph--devices--regular',
                         testId: 'clientPlugin.devices',
                       },
@@ -96,9 +97,9 @@ export default (context: PluginContext) =>
                     {
                       id: Account.Security,
                       data: Account.Security,
-                      type: CLIENT_PLUGIN,
+                      type: meta.id,
                       properties: {
-                        label: ['security label', { ns: CLIENT_PLUGIN }],
+                        label: ['security label', { ns: meta.id }],
                         icon: 'ph--key--regular',
                       },
                     },

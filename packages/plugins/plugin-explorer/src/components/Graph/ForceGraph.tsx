@@ -7,7 +7,7 @@ import NativeForceGraph from 'force-graph';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { filterObjectsSync, type SearchResult } from '@dxos/plugin-search';
+import { type SearchResult, filterObjectsSync } from '@dxos/plugin-search';
 import { type SpaceGraphModel } from '@dxos/schema';
 
 import { GraphAdapter } from './adapter';
@@ -20,9 +20,9 @@ export type ForceGraphProps = {
 export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const rootRef = useRef<HTMLDivElement>(null);
-  const forceGraph = useRef<NativeForceGraph>();
+  const forceGraph = useRef<NativeForceGraph>(null);
 
-  const filteredRef = useRef<SearchResult[]>();
+  const filteredRef = useRef<SearchResult[]>([]);
   filteredRef.current = filterObjectsSync(model?.objects ?? [], match);
 
   const [data, setData] = useState<GraphAdapter>();
@@ -39,7 +39,7 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
       forceGraph.current = new NativeForceGraph(rootRef.current)
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#node-styling
         .nodeRelSize(6)
-        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : node.data.label ?? node.id))
+        .nodeLabel((node: any) => (node.type === 'schema' ? node.data.typename : (node.data.label ?? node.id)))
         .nodeAutoColorBy((node: any) => (node.type === 'schema' ? 'schema' : node.data.typename))
 
         // https://github.com/vasturiano/force-graph?tab=readme-ov-file#link-styling
@@ -48,7 +48,7 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
 
     return () => {
       forceGraph.current?.pauseAnimation().graphData({ nodes: [], links: [] });
-      forceGraph.current = undefined;
+      forceGraph.current = null;
     };
   }, []);
 

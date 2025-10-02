@@ -4,24 +4,25 @@
 
 import '@dxos-theme';
 
-import { type StoryObj, type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme, withLayout } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
 
-const meta: Meta = {
+import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
+
+const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
     withPluginManager({
       plugins: [
         ClientPlugin({
-          onClientInitialized: async (_, client) => {
+          onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
@@ -35,10 +36,10 @@ const meta: Meta = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof RecoveryCredentialsContainer>;
 
 export default meta;
 
-type Story = StoryObj<typeof RecoveryCredentialsContainer>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};

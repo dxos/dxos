@@ -18,7 +18,7 @@ export const EXPECTED_CONFIG_VERSION = 1;
 export const defaultConfig: ConfigProto = { version: 1 };
 
 // TODO(burdon): Allow override via env? Generalize since currently NodeJS only.
-const HOME = typeof process !== 'undefined' ? process?.env?.HOME ?? '' : '';
+const HOME = typeof process !== 'undefined' ? (process?.env?.HOME ?? '') : '';
 
 // Base directories.
 // TODO(burdon): Consider Windows, Linux, OSX.

@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export type BaseErrorOptions = {
+/**
+ * Options for creating a BaseError.
+ */
+export type BaseErrorOptions = ErrorOptions & {
   /**
-   * The cause of the error.
-   * An instance of Error.
+   * Override base message.
    */
-  cause?: unknown;
+  message?: string;
 
   /**
    * Structured details about the error.
@@ -15,26 +17,39 @@ export type BaseErrorOptions = {
   context?: Record<string, unknown>;
 };
 
-export class BaseError extends Error {
-  static extend(code: string) {
-    return class extends BaseError {
+/**
+ * Base class for all DXOS errors.
+ */
+export class BaseError<Code extends string = string> extends Error {
+  /**
+   * Primary way of defining new error classes.
+   * Extended class may specialize constructor for required context params.
+   * @param code - Error code.
+   * @param message - Default error message.
+   */
+  static extend<Code extends string = string>(code: Code, message?: string) {
+    return class extends BaseError<Code> {
       static code = code;
 
       static is(error: unknown): error is BaseError {
         return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
       }
 
-      constructor(message: string, options?: BaseErrorOptions) {
-        super(code, message, options);
+      static wrap(options?: Omit<BaseErrorOptions, 'cause'>) {
+        return (error: unknown) => new this({ message, ...options, cause: error });
+      }
+
+      constructor(options?: BaseErrorOptions) {
+        super(code, { message: options?.message ?? message, ...options });
       }
     };
   }
 
-  #code: string;
+  #code: Code;
   #context: Record<string, unknown>;
 
-  constructor(code: string, message: string, options?: BaseErrorOptions) {
-    super(message, options);
+  constructor(code: Code, options?: BaseErrorOptions) {
+    super(options?.message, { cause: options?.cause });
 
     this.#code = code;
     this.#context = options?.context ?? {};
@@ -45,7 +60,17 @@ export class BaseError extends Error {
     return this.#code;
   }
 
-  get code() {
+  /** Fallback message. */
+  override get message() {
+    return this.constructor.name;
+  }
+
+  get code(): Code {
+    return this.#code;
+  }
+
+  // For effect error matching.
+  get _tag(): Code {
     return this.#code;
   }
 

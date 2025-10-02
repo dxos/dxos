@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { InspectOptionsStylized, inspect } from 'util';
+
 import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
-import type { InspectOptionsStylized, inspect } from 'util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
 import {
+  type DatabaseDirectory,
+  type ObjectStructure,
   Reference,
   decodeReference,
   encodeReference,
   isEncodedReference,
-  type DatabaseDirectory,
-  type ObjectStructure,
 } from '@dxos/echo-protocol';
 import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -23,10 +24,11 @@ import { isLiveObject } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
+import { type DocHandleProxy } from '../automerge';
+
 import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
-import { isValidKeyPath, type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath } from './types';
-import { type DocHandleProxy } from '../automerge';
+import { type DecodedAutomergePrimaryValue, type DocAccessor, type KeyPath, isValidKeyPath } from './types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.

@@ -3,41 +3,42 @@
 //
 
 import React, {
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type WheelEvent,
   useCallback,
   useMemo,
   useRef,
   useState,
-  type FocusEvent,
-  type KeyboardEvent,
-  type WheelEvent,
-  type MouseEvent,
 } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { rangeToA1Notation, type CellRange } from '@dxos/compute';
+import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridCellIndex,
+  type DxGridElement,
+  type DxGridPosition,
+  type EditorBlurHandler,
+  type EditorKeyHandler,
+  Grid,
+  GridCellEditor,
+  type GridContentProps,
   closestCell,
   editorKeys,
   parseCellIndex,
-  Grid,
-  GridCellEditor,
-  type DxGridElement,
-  type DxGridPosition,
-  type DxGridCellIndex,
-  type EditorKeyHandler,
-  type EditorBlurHandler,
-  type GridContentProps,
 } from '@dxos/react-ui-grid';
 
-import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
-import { rangeExtension, sheetExtension, type RangeController } from '../../extensions';
+import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
+
+import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
 
@@ -59,16 +60,16 @@ const frozen = {
 };
 
 const sheetColDefault = {
-  frozenColsStart: { size: 48, readonly: true },
+  frozenColsStart: { size: 48, readonly: true, focusUnfurl: false },
   grid: { size: defaultColSize, resizeable: true },
 };
 const sheetRowDefault = {
-  frozenRowsStart: { size: defaultRowSize, readonly: true },
+  frozenRowsStart: { size: defaultRowSize, readonly: true, focusUnfurl: false },
   grid: { size: defaultRowSize, resizeable: true },
 };
 
 export const GridSheet = () => {
-  const { t } = useTranslation(SHEET_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
@@ -76,7 +77,7 @@ export const GridSheet = () => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const rangeController = useRef<RangeController>();
+  const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
@@ -278,7 +279,7 @@ export const GridSheet = () => {
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
 
-  const extension = useMemo(
+  const extensions = useMemo(
     () => [
       editorKeys({ onClose: handleClose, ...(editing?.initialContent && { onNav: handleClose }) }),
       sheetExtension({ functions: model.graph.getFunctions() }),
@@ -308,7 +309,7 @@ export const GridSheet = () => {
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
     <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
-      <GridCellEditor getCellContent={getCellContent} extension={extension} onBlur={handleBlur} />
+      <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}
         limitColumns={DEFAULT_COLS}

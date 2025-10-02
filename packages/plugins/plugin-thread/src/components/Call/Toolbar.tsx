@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';
-import { useNode, useActions } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import {
   Icon,
   IconButton,
   type IconButtonProps,
+  Toolbar as NaturalToolbar,
   type ThemedClassName,
-  Toolbar as NativeToolbar,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -56,7 +56,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NativeToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
+      <NaturalToolbar.Root classNames={['p-2 bg-modalSurface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={call.media.audioEnabled}
           state={{
@@ -95,7 +95,7 @@ export const Toolbar = ({
             <Icon icon='ph--users--regular' size={4} />
             <div>{participants}</div>
           </div>
-        )) || <NativeToolbar.Separator variant='gap' />}
+        )) || <NaturalToolbar.Separator variant='gap' />}
 
         {call.joined && (
           <>
@@ -151,7 +151,7 @@ export const Toolbar = ({
         ) : (
           <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
         )}
-      </NativeToolbar.Root>
+      </NaturalToolbar.Root>
     </div>
   );
 };
@@ -174,7 +174,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
   <IconButton
     {...defaultButtonProps}
-    classNames={[active ? state.on.classNames ?? 'bg-callActive' : state.off.classNames]}
+    classNames={[active ? (state.on.classNames ?? 'bg-callActive') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}
     onClick={active ? state.on.onClick : state.off.onClick}

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { computed, signal, type Signal, type ReadonlySignal } from '@preact/signals-core';
+import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 
 import { type DataType } from '@dxos/schema';
 import { intersectBy } from '@dxos/util';
@@ -12,17 +12,22 @@ import { intersectBy } from '@dxos/util';
  */
 export type SortDirection = 'asc' | 'desc';
 
-// TODO(ZaymonFC): Switch to generalized object tag pattern when that's available.
 /**
  * Tag structure within a message
  */
-export type Tag = { label: string; hue: string };
+// TODO(ZaymonFC): Switch to generalized object tag pattern when that's available.
+export type Tag = {
+  label: string;
+  hue: string;
+};
+
+export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
 
 /**
  * Sort by date comparison function.
  * @param direction The direction to sort (1 for ascending, -1 for descending).
  */
-const sortByDate =
+export const sortMessagesByDate =
   (direction = -1) =>
   ({ created: a = '' }: DataType.Message, { created: b = '' }: DataType.Message) =>
     a < b ? -direction : a > b ? direction : 0;
@@ -33,7 +38,6 @@ const sortByDate =
  */
 const createTagToMessageIndex = (messages: DataType.Message[]): Map<string, DataType.Message[]> => {
   const tagToMessagesMap = new Map<string, DataType.Message[]>();
-
   for (const message of messages) {
     const messageTags = message.properties?.tags || [];
     for (const tag of messageTags) {
@@ -54,7 +58,6 @@ const createTagToMessageIndex = (messages: DataType.Message[]): Map<string, Data
  */
 const createTagIndex = (messages: DataType.Message[]): Map<string, Tag> => {
   const tagIndex = new Map<string, Tag>();
-
   for (const message of messages) {
     const messageTags = message.properties?.tags || [];
     for (const tag of messageTags) {
@@ -98,19 +101,18 @@ export class MailboxModel {
 
     this._filteredMessages = computed(() => {
       const selectedTagLabels = this._selectedTagLabels.value;
-      const tagToMessagesIndex = this._tagToMessagesIndex.value;
-
       if (selectedTagLabels.length === 0) {
         return this._messages.value;
       }
 
+      const tagToMessagesIndex = this._tagToMessagesIndex.value;
       const messagesForSelectedTags = selectedTagLabels.map((label) => tagToMessagesIndex.get(label) ?? []);
       return intersectBy(messagesForSelectedTags, (message) => message.id);
     });
 
     this._sortedFilteredMessages = computed(() => {
       const directionValue = this._sortDirection.value === 'asc' ? 1 : -1;
-      return [...this._filteredMessages.value].sort(sortByDate(directionValue));
+      return [...this._filteredMessages.value].sort(sortMessagesByDate(directionValue));
     });
   }
 

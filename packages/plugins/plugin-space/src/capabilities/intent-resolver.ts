@@ -12,31 +12,32 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ObservabilityAction } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { isSpace, getSpace, SpaceState, fullyQualifiedId } from '@dxos/react-client/echo';
+import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
-import { SpaceCapabilities } from './capabilities';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  type CreateObjectDialogProps,
   JOIN_DIALOG,
+  type JoinDialogProps,
   POPOVER_RENAME_OBJECT,
   POPOVER_RENAME_SPACE,
-  type CreateObjectDialogProps,
-  type JoinDialogProps,
 } from '../components';
 import { SpaceEvents } from '../events';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
-import { cloneObject, COMPOSER_SPACE_LOCK, getNestedObjects } from '../util';
+import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
+
+import { SpaceCapabilities } from './capabilities';
 
 // TODO(wittjosiah): Remove.
 const SPACE_MAX_OBJECTS = 500;
@@ -87,7 +88,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create records smart collection.
         const records = Obj.make(DataType.QueryCollection, {
-          query: { typename: DataType.StoredSchema.typename },
+          query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
         });
         collection.objects.push(Ref.make(records));
 
@@ -360,10 +361,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, schema: schemaInput }) => {
+      resolve: async ({ space, name, typename, version, schema: schemaInput }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
+        }
+        if (typename) {
+          schema.storedSchema.typename = typename;
+        }
+        if (version) {
+          schema.storedSchema.version = version;
         }
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
@@ -399,15 +406,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        const typename = typenameFromQuery(view.query);
+        invariant(typename);
+        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['field deleted label', { ns: SPACE_PLUGIN }],
+              message: ['field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -419,7 +427,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.OpenCreateObject,
-      resolve: ({ target, typename, navigable = true, onCreateObject }) => {
+      resolve: ({ target, views, typename, initialFormValues, navigable = true, onCreateObject }) => {
         const state = context.getCapability(SpaceCapabilities.State);
 
         return {
@@ -431,7 +439,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
                 blockAlign: 'start',
                 props: {
                   target,
+                  views,
                   typename,
+                  initialFormValues,
                   onCreateObject,
                   shouldNavigate: navigable
                     ? (object: Obj.Any) => {
@@ -460,13 +470,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               createIntent(LayoutAction.AddToast, {
                 part: 'toast',
                 subject: {
-                  id: `${SPACE_PLUGIN}/space-limit`,
-                  title: ['space limit label', { ns: SPACE_PLUGIN }],
-                  description: ['space limit description', { ns: SPACE_PLUGIN }],
+                  id: `${meta.id}/space-limit`,
+                  title: ['space limit label', { ns: meta.id }],
+                  description: ['space limit description', { ns: meta.id }],
                   duration: 5_000,
                   icon: 'ph--warning--regular',
-                  actionLabel: ['remove deleted objects label', { ns: SPACE_PLUGIN }],
-                  actionAlt: ['remove deleted objects alt', { ns: SPACE_PLUGIN }],
+                  actionLabel: ['remove deleted objects label', { ns: meta.id }],
+                  actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
                   onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
                 },
@@ -595,7 +605,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: SPACE_PLUGIN }],
+              message: [undoMessageKey, { ns: meta.id }],
               data: { deletionData },
             },
             intents:
@@ -687,7 +697,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.CreateQueryCollection,
       resolve: async ({ name, typename }) => ({
-        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
+        data: {
+          object: Obj.make(DataType.QueryCollection, { name, query: Query.select(Filter.typename(typename)).ast }),
+        },
       }),
     }),
   ]);

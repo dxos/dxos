@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { tailwindConfig, type TailwindConfig } from './config';
-
-const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+import { type TailwindConfig, tailwindConfig } from './config';
 
 export * from './styles';
 export * from './types';
 export * from './util';
 
 export { userDefaultTokenSet, hues } from './config/tokens';
-
 export { tokens };
+
+const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;

@@ -8,7 +8,6 @@ import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
-import { type RenderCallback } from '@dxos/react-ui-editor';
 import { type DataType } from '@dxos/schema';
 
 import { DocumentAdapter, type SerializationModel } from '../../model';
@@ -19,13 +18,12 @@ import { DocumentAdapter, type SerializationModel } from '../../model';
 export type TranscriptOptions = {
   model: SerializationModel<DataType.Message>;
   started?: Date;
-  renderButton?: RenderCallback<{ onClick: () => void }>;
 };
 
 /**
  * Scrolling transcript with timestamps.
  */
-export const transcript = ({ model, started, renderButton }: TranscriptOptions): Extension => {
+export const transcript = ({ model, started }: TranscriptOptions): Extension => {
   return [
     // Show timestamps in the gutter.
     gutter({
@@ -38,7 +36,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
             const block = model.getChunkAtLine(line.number)?.blocks[0];
-            const timestamp = block?.type === 'transcription' && block.started;
+            const timestamp = block?._tag === 'transcript' && block.started;
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));
             }
@@ -90,22 +88,6 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
             });
           };
 
-          // Scroll button.
-          if (renderButton) {
-            this._controls = document.createElement('div');
-            this._controls.classList.add('cm-controls', 'transition-opacity', 'duration-300', 'opacity-0');
-            view.dom.appendChild(this._controls);
-            renderButton(
-              this._controls,
-              {
-                onClick: () => {
-                  scrollToBottom(false);
-                },
-              },
-              view,
-            );
-          }
-
           // Event listeners.
           this._cleanup = combine(
             addEventListener(view.scrollDOM, 'scroll', () => {
@@ -131,7 +113,7 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
           );
         }
 
-        update(update: ViewUpdate) {
+        update(_update: ViewUpdate) {
           // Initial sync.
           if (!this._initialized) {
             this._initialized = true;
@@ -149,25 +131,6 @@ export const transcript = ({ model, started, renderButton }: TranscriptOptions):
     ),
 
     EditorView.theme({
-      '.cm-scroller': {
-        overflowY: 'scroll',
-      },
-      '.cm-hide-scrollbar': {
-        scrollbarWidth: 'none',
-        '-ms-overflow-style': 'none',
-      },
-      '.cm-hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
-      '.cm-controls': {
-        position: 'absolute',
-        bottom: '0.5rem',
-        right: '0.5rem',
-        zIndex: 1000,
-      },
-      '.cm-line': {
-        paddingRight: '1rem',
-      },
       '.cm-timestamp-gutter': {
         width: '6rem',
         paddingRight: '1rem',
@@ -218,7 +181,7 @@ const getStartTime = (started?: Date, message?: DataType.Message): Date | undefi
     return started;
   }
 
-  if (message?.blocks[0]?.type === 'transcription' && message.blocks[0].started) {
+  if (message?.blocks[0]?._tag === 'transcript' && message.blocks[0].started) {
     return new Date(message.blocks[0].started);
   }
 

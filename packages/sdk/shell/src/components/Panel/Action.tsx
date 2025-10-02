@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, Check, type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type FC, forwardRef, type SetStateAction } from 'react';
+import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 
-import { type ButtonProps, Button, DropdownMenu, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { Button, type ButtonProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
@@ -16,7 +15,7 @@ export type LargeButtonProps = ButtonProps & {
 export type ActionMenuItem = {
   label: string;
   description: string;
-  icon: FC<IconProps>;
+  icon: string;
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
@@ -32,7 +31,7 @@ const defaultActions = {
   noopAction: {
     label: 'No-op',
     description: '',
-    icon: Placeholder,
+    icon: 'ph--placeholder--regular',
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
@@ -72,14 +71,14 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <activeAction.icon className={getSize(5)} />}
+        {activeAction.icon && <Icon icon={activeAction.icon} size={5} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button classNames={['bs-11 flex-none rounded-is-none', classNames]} data-testid={dropdownTestId}>
             <span className='sr-only'>{t('invite options label')}</span>
-            <CaretDown className={getSize(4)} />
+            <Icon icon='ph--caret-down--regular' size={4} />
           </Button>
         </DropdownMenu.Trigger>
         {/* TODO(thure): Putting `DropdownMenu.Portal` here breaks highlighting and focus. Why? */}
@@ -97,7 +96,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <action.icon className={getSize(5)} />}
+                    {action.icon && <Icon icon={action.icon} size={5} />}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
@@ -107,7 +106,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                       )}
                     </div>
                     <DropdownMenu.ItemIndicator asChild>
-                      <Check weight='bold' className={getSize(4)} />
+                      <Icon icon='ph--check--regular' size={4} />
                     </DropdownMenu.ItemIndicator>
                   </DropdownMenu.CheckboxItem>
                 );

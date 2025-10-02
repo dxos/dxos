@@ -10,8 +10,9 @@ import React from 'react';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Chart } from './Chart';
 import CitiesData from '../../../data/cities.js';
+
+import { Chart } from './Chart';
 
 // TODO(burdon): Generate data with geo lat/lng.
 // TODO(burdon): How to provide geo service via agent?
@@ -32,10 +33,10 @@ const Story = () => {
 // TODO(burdon): Change to decorator.
 export const Default = () => <ClientRepeater component={Story} />;
 
-const meta: Meta<typeof Chart> = {
+const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof Chart>;
 
 export default meta;

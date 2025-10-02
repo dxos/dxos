@@ -12,7 +12,7 @@ import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
 import { SpaceSelector } from '../../../containers';
-import { useDevtoolsState, useCredentials } from '../../../hooks';
+import { useCredentials, useDevtoolsState } from '../../../hooks';
 
 export const CredentialsPanel = (props: { space?: Space }) => {
   const state = useDevtoolsState();
@@ -44,7 +44,7 @@ export const CredentialsPanel = (props: { space?: Space }) => {
   return (
     <PanelContainer
       toolbar={
-        !props.space && (
+        props.space ? undefined : (
           <Toolbar.Root>
             <SpaceSelector />
           </Toolbar.Root>

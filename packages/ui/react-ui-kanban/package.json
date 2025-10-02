@@ -10,19 +10,16 @@
   "type": "module",
   "exports": {
     "./types": {
+      "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
       "node": "./dist/lib/node-esm/types/index.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./testing": {
-      "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -30,9 +27,6 @@
     "*": {
       "types": [
         "dist/types/src/types/kanban.d.ts"
-      ],
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
       ]
     }
   },
@@ -57,7 +51,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0"
+    "@preact/signals-core": "^1.12.1"
   },
   "devDependencies": {
     "@dxos/invariant": "workspace:*",
@@ -68,20 +62,20 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "5.4.7"
+    "@types/react": "~19.2.0",
+    "@types/react-dom": "~19.2.0",
+    "effect": "3.18.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.7"
   },
   "peerDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

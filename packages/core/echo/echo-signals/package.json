@@ -10,21 +10,25 @@
   "type": "module",
   "exports": {
     "./core": {
+      "source": "./src/core.ts",
       "types": "./dist/types/src/core.d.ts",
       "browser": "./dist/lib/browser/core.mjs",
       "node": "./dist/lib/node-esm/core.mjs"
     },
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
     "./react": {
+      "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
       "browser": "./dist/lib/browser/react.mjs",
       "node": "./dist/lib/node-esm/react.mjs"
     },
     "./runtime": {
+      "source": "./src/runtime/index.ts",
       "types": "./dist/types/src/runtime/index.d.ts",
       "browser": "./dist/lib/browser/runtime/index.mjs",
       "node": "./dist/lib/node-esm/runtime/index.mjs"
@@ -49,17 +53,17 @@
     "src"
   ],
   "dependencies": {
-    "@preact/signals": "^2.2.1",
-    "@preact/signals-core": "^1.11.0",
-    "@preact/signals-react": "^3.2.1"
+    "@preact/signals": "^2.3.1",
+    "@preact/signals-core": "^1.12.1",
+    "@preact/signals-react": "^3.3.0"
   },
   "devDependencies": {
     "preact": "^10.26.9",
-    "react": "~18.2.0"
+    "react": "~19.2.0"
   },
   "optionalDependencies": {
     "preact": "^10.26.9",
-    "react": "~18.2.0"
+    "react": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

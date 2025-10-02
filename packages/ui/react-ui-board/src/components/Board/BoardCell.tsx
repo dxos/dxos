@@ -6,14 +6,15 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { useTranslation, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 
+import { translationKey } from '../../translations';
+
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
-import { type Position, type HasId, type CellLayout } from './types';
-import { translationKey } from '../../translations';
+import { type CellLayout, type HasId, type Position } from './types';
 
 type DragState = 'idle' | 'dragging';
 
@@ -61,7 +62,11 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
     <Card.StaticRoot
       ref={rootRef}
       // TODO(burdon): Common fragment for placeholder opacity?
-      classNames={mx('absolute p-0', dragState === 'dragging' && 'opacity-50', classNames)}
+      classNames={mx(
+        'absolute p-0 grid grid-rows-[min-content_1fr]',
+        dragState === 'dragging' && 'opacity-50',
+        classNames,
+      )}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
     >
@@ -78,7 +83,9 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      {children}
+      <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
+        {children}
+      </div>
     </Card.StaticRoot>
   );
 };

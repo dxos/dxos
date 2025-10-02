@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { contributes, type PluginContext } from '@dxos/app-framework';
+import { type PluginContext, contributes } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { ThreadCapabilities } from './capabilities';
 import { CallManager } from '../calls';
+
+import { ThreadCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);

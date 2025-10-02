@@ -5,26 +5,27 @@
 import { Option, Schema, SchemaAST } from 'effect';
 import { describe, expect, test } from 'vitest';
 
-import { findAnnotation, type JsonProp } from '@dxos/effect';
+import { type JsonProp, findAnnotation } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { toEffectSchema, toJsonSchema } from './json-schema';
 import {
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
+  EntityKind,
   FieldLookupAnnotationId,
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMeta,
-  EntityKind,
+  getTypeAnnotation,
+  getTypeIdentifierAnnotation,
 } from '../ast';
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
-import { getNormalizedEchoAnnotations, getSchemaProperty, JsonSchemaType, setSchemaProperty } from '../json-schema';
+import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { EchoObject, TypedObject } from '../object';
-import { createSchemaReference, getSchemaReference, Ref } from '../ref';
+import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
-import { prepareAstForCompare, Testing } from '../testing';
+import { Testing, prepareAstForCompare } from '../testing';
+
+import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
 
@@ -65,7 +66,6 @@ describe('effect-to-json', () => {
   });
 
   // TODO(ZaymonFC): @dmaretskyi we still need to fix this.
-  // eslint-disable-next-line mocha/no-skipped-tests
   // TODO(dmaretskyi): Remove FieldLookupAnnotationId.
   test.skip('reference annotation with lookup property', () => {
     class Nested extends TypedObject({ typename: 'example.com/type/TestNested', version: '0.1.0' })({
@@ -181,14 +181,19 @@ describe('effect-to-json', () => {
           type: 'string',
         },
         organization: {
-          $id: '/schemas/echo/ref',
-          description: 'Contact organization',
-          reference: {
-            schema: {
-              $ref: 'dxn:type:example.com/type/Organization',
+          allOf: [
+            {
+              $id: '/schemas/echo/ref',
+              $ref: '/schemas/echo/ref',
+              reference: {
+                schema: {
+                  $ref: 'dxn:type:example.com/type/Organization',
+                },
+                schemaVersion: '0.1.0',
+              },
             },
-            schemaVersion: '0.1.0',
-          },
+          ],
+          description: 'Contact organization',
         },
       },
       required: ['name', 'organization', 'id'],
@@ -314,7 +319,7 @@ describe('effect-to-json', () => {
         id: {
           type: 'string',
           pattern: '^[0-7][0-9A-HJKMNP-TV-Z]{25}$',
-          description: 'a Universally Unique Lexicographically Sortable Identifier',
+          description: 'A Universally Unique Lexicographically Sortable Identifier',
         },
         name: {
           type: 'string',
@@ -601,6 +606,39 @@ describe('json-to-effect', () => {
       }
     `);
   });
+
+  test('schema with optional referece', () => {
+    const TestSchema = Schema.Struct({
+      contact: Schema.optional(Ref(Testing.Contact)),
+    });
+    const jsonSchema = toJsonSchema(TestSchema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "contact": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:type:example.com/type/Contact",
+              },
+              "schemaVersion": "0.1.0",
+            },
+          },
+        },
+        "propertyOrder": [
+          "contact",
+        ],
+        "required": [],
+        "type": "object",
+      }
+    `);
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
+  });
 });
 
 describe('reference', () => {
@@ -609,6 +647,7 @@ describe('reference', () => {
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
@@ -623,14 +662,19 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       title: 'My custom title',
     });
   });
@@ -639,15 +683,34 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       description: 'My custom description',
+    });
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+
+  test('serialize and deserialize', () => {
+    const schema = Ref(Testing.Contact);
+    const jsonSchema = toJsonSchema(schema);
+    const deserializedSchema = toEffectSchema(jsonSchema);
+    const refAst = getReferenceAst(deserializedSchema.ast);
+    expect(refAst).toEqual({
+      typename: Testing.Contact.typename,
+      version: Testing.Contact.version,
     });
   });
 });

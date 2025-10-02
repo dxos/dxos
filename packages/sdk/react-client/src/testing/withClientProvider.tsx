@@ -2,19 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type StoryContext, type Decorator } from '@storybook/react';
-import React, { createContext, type PropsWithChildren, useContext, useEffect, useRef, useState } from 'react';
-import { type FallbackProps, ErrorBoundary as NativeErrorBoundary } from 'react-error-boundary';
+import { type Decorator, type StoryContext } from '@storybook/react';
+import React, { type PropsWithChildren, createContext, useContext, useEffect, useRef, useState } from 'react';
+import { type FallbackProps, ErrorBoundary as NaturalErrorBoundary } from 'react-error-boundary';
 
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
-import { ClientStory } from './context';
 import { ClientProvider, type ClientProviderProps } from '../client';
+
+import { ClientStory } from './context';
 
 type InitializeProps = {
   createIdentity?: boolean;
@@ -120,7 +121,7 @@ export const withMultiClientProvider = ({
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
     const builder = useRef(new TestBuilder());
-    const hostRef = useRef<Client>();
+    const hostRef = useRef<Client>(null);
     const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.
@@ -188,7 +189,7 @@ const ErrorBoundary = ({ children }: PropsWithChildren) => {
     return <ErrorFallback error={error} resetErrorBoundary={() => setError(undefined)} />;
   }
 
-  return <NativeErrorBoundary FallbackComponent={ErrorFallback}>{children}</NativeErrorBoundary>;
+  return <NaturalErrorBoundary FallbackComponent={ErrorFallback}>{children}</NaturalErrorBoundary>;
 };
 
 const ErrorFallback = ({ error }: FallbackProps) => {

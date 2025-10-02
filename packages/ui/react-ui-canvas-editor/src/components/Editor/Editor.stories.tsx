@@ -4,26 +4,28 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React, { type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useRef, useState } from 'react';
 
 import { Filter } from '@dxos/echo';
 import { getSchemaTypename, getTypename } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
-import { createObjectFactory, Testing, type TypeSpec, type ValueGenerator } from '@dxos/schema/testing';
+import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { Editor, type EditorController, type EditorRootProps } from './Editor';
 import { doLayout } from '../../layout';
-import { useSelection, Container, DragTest } from '../../testing';
+import { Container, DragTest, useSelection } from '../../testing';
 import { type CanvasGraphModel, RectangleShape } from '../../types';
+
+import { Editor, type EditorController, type EditorRootProps } from './Editor';
 
 const generator: ValueGenerator = faker as any;
 
@@ -45,22 +47,17 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [graph, setGraph] = useState<CanvasGraphModel | undefined>();
 
   // Layout.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!space || !init) {
       return;
     }
 
     // Load objects.
-    const t = setTimeout(async () => {
-      const { objects } = await space.db.query(Filter.everything()).run();
-
-      const model = await doLayout(
-        createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
-      );
-      setGraph(model);
-    });
-
-    return () => clearTimeout(t);
+    const { objects } = await space.db.query(Filter.everything()).run();
+    const model = await doLayout(
+      createGraph(objects.filter((object: Live<any>) => types.some((type) => type.typename === getTypename(object)))),
+    );
+    setGraph(model);
   }, [space, init]);
 
   // Selection.
@@ -101,9 +98,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   );
 };
 
-const meta: Meta<EditorRootProps> = {
+const meta = {
   title: 'ui/react-ui-canvas-editor/Editor',
-  component: Editor.Root,
+  component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
@@ -135,11 +132,11 @@ const meta: Meta<EditorRootProps> = {
     withAttention,
     withLayout({ fullscreen: true }),
   ],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<RenderProps & { spec?: TypeSpec[]; registerSchema?: boolean }>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

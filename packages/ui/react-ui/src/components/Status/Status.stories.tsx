@@ -4,17 +4,23 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Status } from './Status';
 import { withTheme } from '../../testing';
 
-export default {
+import { Status } from './Status';
+
+const meta = {
   title: 'ui/react-ui-core/Status',
   component: Status,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-};
+} satisfies Meta<typeof Status>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Normal = (props: any) => {
   return (

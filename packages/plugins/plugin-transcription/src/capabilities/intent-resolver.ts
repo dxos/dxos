@@ -2,22 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver, type PluginContext } from '@dxos/app-framework';
-import { type Key, Obj, Ref } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo-schema';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 
-import { TranscriptionAction, TranscriptType } from '../types';
+import { Transcript, TranscriptAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: TranscriptionAction.Create,
-      resolve: ({ name, spaceId }) => {
-        const transcript = Obj.make(TranscriptType, {
-          // TODO(dmaretskyi): Use space.queues.create() instead.
-          queue: Ref.fromDXN(createQueueDXN(spaceId as Key.SpaceId)),
-        });
-
+      intent: TranscriptAction.Create,
+      resolve: ({ name, space }) => {
+        const transcript = Transcript.makeTranscript(space.queues.create().dxn);
         return { data: { object: transcript } };
       },
     }),
