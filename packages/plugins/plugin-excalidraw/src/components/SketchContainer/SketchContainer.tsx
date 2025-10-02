@@ -3,7 +3,7 @@
 //
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
-import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types/types';
+import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type DiagramType } from '@dxos/plugin-sketch/types';
