@@ -24,7 +24,7 @@ interface InvitationReducerState {
   status: Invitation.State; // TODO(burdon): Rename state.
   haltedAt?: Invitation.State;
   result: InvitationResult;
-  error?: number;
+  error?: Error;
   id?: string;
   multiUse?: boolean;
   shareable?: boolean;
@@ -73,7 +73,7 @@ export type InvitationStatus = {
   multiUse?: boolean;
   shareable?: boolean;
   result: InvitationResult;
-  error?: number;
+  error?: Error;
   cancel(): void;
   // TODO(wittjosiah): Remove?
   connect(observable: CancellableInvitationObservable): void;
@@ -109,7 +109,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
         // `invitationObservable`, `secret`, and `result` is persisted between the status-actions that set them.
         result: action.status === Invitation.State.SUCCESS ? action.result : prev.result,
         // `error` gets set each time we enter the error state
-        ...(action.status === Invitation.State.ERROR && { error: action.error ? 1 : undefined }),
+        ...(action.status === Invitation.State.ERROR && { error: action.error }),
         // `haltedAt` gets set on only the first error/cancelled/timeout action and reset on any others.
         ...((action.status === Invitation.State.ERROR ||
           action.status === Invitation.State.CANCELLED ||
