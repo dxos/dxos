@@ -35,40 +35,40 @@ export const itemIsText = (item: Record<string, string>): item is QueryText => {
  * Anchor elements are converted to QueryTag objects.
  */
 export const parseQueryItems = (state: EditorState): QueryItem[] => {
-  const items: QueryItem[] = [];
   const tree = syntaxTree(state);
   const doc = state.doc;
 
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
-    // If no tree or empty, treat entire content as text
+    // If no tree or empty, treat entire content as text.
     const content = doc.toString().trim();
     if (content) {
-      items.push({ content });
+      return [{ content }];
     }
-    return items;
+    return [];
   }
 
-  // Track processed ranges to avoid duplicating text
+  // Collect all items with their positions for proper ordering.
+  const itemsWithPositions: Array<{ position: number; item: QueryItem }> = [];
   const processedRanges: Array<{ from: number; to: number }> = [];
 
-  // First pass: find all anchor elements
+  // First pass: find all anchor elements and collect them with positions.
   tree.iterate({
     enter: (node) => {
       if (node.type.name === 'Element') {
         try {
-          // Parse the element to check if it's an anchor
+          // Parse the element to check if it's an anchor.
           const openTag = node.node.getChild('OpenTag') || node.node.getChild('SelfClosingTag');
           if (openTag) {
             const tagName = openTag.getChild('TagName');
             if (tagName) {
               const tagNameText = doc.sliceString(tagName.from, tagName.to);
               if (tagNameText === 'anchor') {
-                // Extract anchor attributes
+                // Extract anchor attributes.
                 let refid = '';
                 let hue: ChromaticPalette | undefined;
                 let label = '';
 
-                // Extract attributes
+                // Extract attributes.
                 let attributeNode = openTag.getChild('Attribute');
                 while (attributeNode) {
                   const attrName = attributeNode.getChild('AttributeName');
@@ -77,7 +77,7 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
                     const attr = doc.sliceString(attrName.from, attrName.to);
                     if (attrValue) {
                       let value = doc.sliceString(attrValue.from, attrValue.to);
-                      // Remove quotes
+                      // Remove quotes.
                       if (
                         (value.startsWith('"') && value.endsWith('"')) ||
                         (value.startsWith("'") && value.endsWith("'"))
@@ -94,7 +94,7 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
                   attributeNode = attributeNode.nextSibling;
                 }
 
-                // Extract text content (label)
+                // Extract text content (label).
                 if (node.type.name === 'Element' && openTag.type.name !== 'SelfClosingTag') {
                   let child = node.node.firstChild;
                   while (child) {
@@ -114,53 +114,56 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
                   if (hue) {
                     queryTag.hue = hue;
                   }
-                  items.push(queryTag);
+                  // Store the anchor with its position.
+                  itemsWithPositions.push({ position: node.node.from, item: queryTag });
                   processedRanges.push({ from: node.node.from, to: node.node.to });
                 }
               }
             }
           }
         } catch (err) {
-          // Ignore parsing errors
+          // Ignore parsing errors.
         }
-        return false; // Don't descend into children
+        return false; // Don't descend into children.
       }
     },
   });
 
-  // Second pass: extract text content not covered by anchor elements
+  // Second pass: extract text content not covered by anchor elements.
   let currentPos = 0;
   const docLength = doc.length;
 
-  // Sort processed ranges by position
+  // Sort processed ranges by position.
   processedRanges.sort((a, b) => a.from - b.from);
 
   for (const range of processedRanges) {
-    // Add text before this anchor
+    // Add text before this anchor.
     if (currentPos < range.from) {
       const textContent = doc.sliceString(currentPos, range.from).trim();
       if (textContent) {
-        items.push({ content: textContent });
+        itemsWithPositions.push({ position: currentPos, item: { content: textContent } });
       }
     }
     currentPos = range.to;
   }
 
-  // If no anchors were found, treat entire content as text
+  // If no anchors were found, treat entire content as text.
   if (processedRanges.length === 0) {
     const content = doc.toString().trim();
     if (content) {
-      items.push({ content });
+      return [{ content }];
     }
   } else if (currentPos < docLength) {
-    // Add remaining text after the last anchor
+    // Add remaining text after the last anchor.
     const textContent = doc.sliceString(currentPos, docLength).trim();
     if (textContent) {
-      items.push({ content: textContent });
+      itemsWithPositions.push({ position: currentPos, item: { content: textContent } });
     }
   }
 
-  return items;
+  // Sort all items by position and return just the items.
+  itemsWithPositions.sort((a, b) => a.position - b.position);
+  return itemsWithPositions.map(({ item }) => item);
 };
 
 export const renderTag = (tag: QueryTag) =>
