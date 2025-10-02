@@ -23,6 +23,7 @@
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
     "lint": "moon run :lint -- --fix",
+    "lint-changed": "moon :lint --affected --remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
