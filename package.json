@@ -27,7 +27,7 @@
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
-    "test": "moon run :test",
+    "test": "MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism",
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
