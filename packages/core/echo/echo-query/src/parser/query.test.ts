@@ -7,7 +7,7 @@ import { describe, it } from 'vitest';
 
 import { Filter } from '@dxos/echo';
 
-import { parser } from './gen';
+import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
 
 // TODO(burdon): Generate query + test.
@@ -16,7 +16,7 @@ import { QueryBuilder } from './query-builder';
 
 describe('query', () => {
   it('should parse a simple query', ({ expect }) => {
-    const queryParser = parser.configure({ strict: true });
+    const queryParser = QueryDSL.Parser.configure({ strict: true });
 
     type Test = { query: string; expected: string[] };
     const tests: Test[] = [

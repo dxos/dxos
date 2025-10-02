@@ -23,12 +23,5 @@ export const QueryEditor = ({ classNames, text }: QueryEditorProps) => {
     [],
   );
 
-  return (
-    <Editor
-      id='query-editor'
-      classNames={['p-2 border border-separator', classNames]}
-      initialValue={text}
-      extensions={extensions}
-    />
-  );
+  return <Editor id='query-editor' classNames={['p-2', classNames]} initialValue={text} extensions={extensions} />;
 };

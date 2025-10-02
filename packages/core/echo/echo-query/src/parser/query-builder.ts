@@ -6,13 +6,13 @@ import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
 import { Filter } from '@dxos/echo';
 
-import { parser } from './gen';
+import { QueryDSL } from './gen';
 
 /**
  * Stateless query builder that parses DSL trees into filters.
  */
 export class QueryBuilder {
-  constructor(private readonly _parser: Parser = parser.configure({ strict: true })) {}
+  constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
 
   /**
    * Check valid input.
