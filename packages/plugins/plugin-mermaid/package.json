@@ -26,14 +26,13 @@
   "dependencies": {
     "@codemirror/language": "^6.11.3",
     "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.2",
+    "@codemirror/view": "^6.38.4",
     "@dxos/app-framework": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "effect": "3.18.1",
-    "mermaid": "^10.6.1"
+    "mermaid": "^10.9.4"
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",
@@ -42,6 +41,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
+    "effect": "3.18.1",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "vite": "7.1.7"
