@@ -11737,6 +11737,9 @@ importers:
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
+      posthog-js:
+        specifier: ^1.261.6
+        version: 1.270.1
       uuid:
         specifier: ^9.0.0
         version: 9.0.1
@@ -11750,6 +11753,9 @@ importers:
       '@types/js-yaml':
         specifier: ^4.0.5
         version: 4.0.9
+      effect:
+        specifier: 3.18.1
+        version: 3.18.1
       sentry-testkit:
         specifier: ^5.0.5
         version: 5.0.5
@@ -19854,6 +19860,9 @@ packages:
   '@poppinss/exception@1.2.2':
     resolution: {integrity: sha512-m7bpKCD4QMlFCjA/nKTs23fuvoVFoA83brRKmObCUNmi/9tVu8Ve3w4YQAnJu4q3Tjf5fr685HYIC/IA2zHRSg==}
 
+  '@posthog/core@1.2.2':
+    resolution: {integrity: sha512-f16Ozx6LIigRG+HsJdt+7kgSxZTHeX5f1JlCGKI1lXcvlZgfsCR338FuMI2QRYXGl+jg/vYFzGOTQBxl90lnBg==}
+
   '@preact-signals/safe-react@0.9.0':
     resolution: {integrity: sha512-pNGrxqUSUDsptJufqpQMpxdT2kLy3vOF6sFkOf42Xhc9nYbIBCoggHDCCfz+e3RXPDkJqyFszqDiBNzMs5rbwA==}
     peerDependencies:
@@ -24933,6 +24942,9 @@ packages:
   core-js@3.37.1:
     resolution: {integrity: sha512-Xn6qmxrQZyB0FFY8E3bgRXei3lWDJHhvI+u0q9TKIYM49G8pAr0FgnnrFRAmsbptZL1yxRADVXn+x5AGsbBfyw==}
 
+  core-js@3.45.1:
+    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
+
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -26478,6 +26490,9 @@ packages:
     peerDependenciesMeta:
       node-fetch:
         optional: true
+
+  fflate@0.4.8:
+    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
 
   fflate@0.6.10:
     resolution: {integrity: sha512-IQrh3lEPM93wVCEczc9SaAOvkmcoQn/G8Bo1e8ZPlY3X3bnAxWaBdvTdvM1hP62iZp0BXWDy4vTAy4fF0+Dlpg==}
@@ -30538,6 +30553,17 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
+  posthog-js@1.270.1:
+    resolution: {integrity: sha512-HP7+vr19gE8Qx7n88ElJxkI/BwL8S5lH8D1OKp91YnAlcJuc0Vze0M9TMmFAgC2oUVGrvSgH5++sNg8qGlm9tg==}
+    peerDependencies:
+      '@rrweb/types': 2.0.0-alpha.17
+      rrweb-snapshot: 2.0.0-alpha.17
+    peerDependenciesMeta:
+      '@rrweb/types':
+        optional: true
+      rrweb-snapshot:
+        optional: true
+
   potpack@1.0.2:
     resolution: {integrity: sha512-choctRBIV9EMT9WGAZHn3V7t0Z2pMQyl0EZE6pFc/6ml3ssw7Dlf/oAOvFwjm1HVsqfQN8GfeFyJ+d8tRzqueQ==}
 
@@ -33689,6 +33715,9 @@ packages:
   web-streams-polyfill@3.2.1:
     resolution: {integrity: sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==}
     engines: {node: '>= 8'}
+
+  web-vitals@4.2.4:
+    resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
 
   web-worker@1.2.0:
     resolution: {integrity: sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==}
@@ -39743,6 +39772,8 @@ snapshots:
 
   '@poppinss/exception@1.2.2': {}
 
+  '@posthog/core@1.2.2': {}
+
   '@preact-signals/safe-react@0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)':
     dependencies:
       '@babel/core': 7.28.0
@@ -45614,6 +45645,8 @@ snapshots:
 
   core-js@3.37.1: {}
 
+  core-js@3.45.1: {}
+
   core-util-is@1.0.3: {}
 
   cose-base@1.0.3:
@@ -47509,6 +47542,8 @@ snapshots:
       regexparam: 3.0.0
     optionalDependencies:
       node-fetch: 2.7.0(encoding@0.1.13)
+
+  fflate@0.4.8: {}
 
   fflate@0.6.10: {}
 
@@ -52588,6 +52623,14 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
+  posthog-js@1.270.1:
+    dependencies:
+      '@posthog/core': 1.2.2
+      core-js: 3.45.1
+      fflate: 0.4.8
+      preact: 10.26.9
+      web-vitals: 4.2.4
+
   potpack@1.0.2: {}
 
   preact@10.11.2: {}
@@ -56419,6 +56462,8 @@ snapshots:
   web-namespaces@2.0.1: {}
 
   web-streams-polyfill@3.2.1: {}
+
+  web-vitals@4.2.4: {}
 
   web-worker@1.2.0: {}
 

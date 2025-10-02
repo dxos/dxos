@@ -51,8 +51,8 @@ export const addEventListener = <T extends EventTarget, K extends keyof EventMap
 export class SubscriptionList {
   private readonly _cleanups: CleanupFn[] = [];
 
-  add(cb: CleanupFn): this {
-    this._cleanups.push(cb);
+  add(...cb: CleanupFn[]): this {
+    this._cleanups.push(...cb);
     return this;
   }
 

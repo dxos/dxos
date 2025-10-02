@@ -4,7 +4,7 @@
 
 import { defineCapability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { type Observability } from '@dxos/observability';
+import { type Observability } from '@dxos/observability/next';
 
 import { meta } from '../meta';
 
@@ -15,7 +15,7 @@ export namespace ObservabilityCapabilities {
   };
   export const State = defineCapability<State>(`${meta.id}/capability/state`);
 
-  export const Observability = defineCapability<Observability>(`${meta.id}/capability/observability`);
+  export const Observability = defineCapability<Observability.Observability>(`${meta.id}/capability/observability`);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.

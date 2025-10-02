@@ -69,12 +69,6 @@ export namespace ObservabilityAction {
         }),
       }),
       Schema.Struct({
-        name: Schema.Literal('page.load'),
-        properties: Schema.Struct({
-          loadDuration: Schema.Number,
-        }),
-      }),
-      Schema.Struct({
         name: Schema.Literal('plugins.toggle'),
         properties: Schema.Struct({
           plugin: Schema.String,

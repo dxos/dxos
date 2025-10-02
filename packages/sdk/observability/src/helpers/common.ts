@@ -10,8 +10,8 @@ export type IPData = {
   city: string;
   region: string;
   country: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number;
+  longitude?: number;
 };
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers.
