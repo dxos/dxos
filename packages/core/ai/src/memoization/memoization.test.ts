@@ -45,7 +45,7 @@ describe('memoization', () => {
   it.effect(
     'generate a poem',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const result = yield* LanguageModel.generateText({
           prompt: 'Write me a poem!',
         });
@@ -59,7 +59,7 @@ describe('memoization', () => {
   it.effect(
     'tools',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const chat = yield* Chat.fromPrompt('Add 47 + 23');
 
         while (true) {
@@ -90,7 +90,7 @@ describe('memoization', () => {
   it.effect(
     'tools with encoding',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const chat = yield* Chat.fromPrompt('What is the current date?');
 
         while (true) {
