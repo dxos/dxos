@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -13,14 +14,16 @@ import { translations } from '../../translations';
 
 import { SequenceEditor } from './SequenceEditor';
 
-const meta: Meta<typeof SequenceEditor> = {
+const meta = {
   title: 'plugins/plugin-assistant/SequenceEditor',
   component: SequenceEditor,
+  // TODO(wittjosiah): Fix story.
+  render: () => <>TODO</>,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'mli-auto max-is-[50rem] justify-center' })],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof SequenceEditor>;
 
 export default meta;
 

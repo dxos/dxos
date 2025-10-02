@@ -25,7 +25,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
 import { NavTreeCapabilities } from '../capabilities';
-import { NAVTREE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
@@ -41,7 +41,9 @@ const renderItemEnd = ({ node, open }: { node: Node; open: boolean }) => (
 );
 
 const getChildrenFilter = (node: Node): node is Node =>
-  untracked(() => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE);
+  untracked(
+    () => !isActionLike(node) && node.type !== PLANK_COMPANION_TYPE && node.properties.disposition !== 'hidden',
+  );
 
 const filterItems = (node: Node, disposition?: string) => {
   if (!disposition && (node.properties.disposition === 'hidden' || node.properties.disposition === 'alternate-tree')) {
@@ -101,7 +103,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
   const layout = useLayout();
-  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarState } = useSidebars(meta.id);
 
   const getProps = useCallback(
     (node: Node, path: string[]): TreeItemDataProps => {

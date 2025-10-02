@@ -4,22 +4,23 @@
 
 import { Schema } from 'effect';
 
-import type { Obj, Relation } from '@dxos/echo';
+import { type Obj, type Relation } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
 import { type DXN, type ObjectId } from '@dxos/keys';
+
+import type { QueryFn } from '../query';
+
+// TODO(dmaretskyi): Move the interface into @dxos/echo package.
 
 /**
  * Client-side view onto an EDGE queue.
  */
 export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any> {
   readonly dxn: DXN;
-  readonly isLoading: boolean;
-  readonly error: Error | null;
-
-  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  readonly objects: T[];
 
   toJSON(): any;
+
+  query: QueryFn;
 
   /**
    * Appends objects to the queue.
@@ -33,18 +34,37 @@ export interface Queue<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
 
   /**
    * Query all objects in the queue.
+   * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
   queryObjects(): Promise<T[]>;
 
   /**
    * Queries objects by id.
+   * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
-  getObjectsById(ids: ObjectId[]): Promise<(T | null)[]>;
+  getObjectsById(ids: ObjectId[]): Promise<(T | undefined)[]>;
+
+  /**
+   * @deprecated Use query() API instead.
+   */
+  readonly isLoading: boolean;
+
+  /**
+   * @deprecated Use query() API instead.
+   */
+  readonly error: Error | null;
+
+  /**
+   * @deprecated Use query() API instead.
+   */
+  // TODO(dmaretskyi): Replace with unified query(query) => QueryResult<T> API.
+  readonly objects: T[];
 
   /**
    * Refreshes the queue from the server.
+   * @deprecated Use query() API instead.
    */
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;

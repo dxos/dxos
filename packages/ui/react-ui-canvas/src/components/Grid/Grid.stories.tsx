@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -24,16 +24,16 @@ const DefaultStory = (props: GridProps) => {
   );
 };
 
-const meta: Meta<GridProps> = {
+const meta = {
   title: 'ui/react-ui-canvas/Grid',
   component: GridComponent,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof GridComponent>;
 
 export default meta;
 
-type Story = StoryObj<GridProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

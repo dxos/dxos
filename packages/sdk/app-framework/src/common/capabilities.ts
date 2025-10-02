@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Tool, type Toolkit } from '@effect/ai';
 import { type Registry } from '@effect-rx/rx-react';
-import { type Schema } from 'effect';
+import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type ExecutableTool } from '@dxos/ai';
+import { type AiService, type AiServiceRouter } from '@dxos/ai';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';
@@ -154,17 +155,37 @@ export namespace Capabilities {
    */
   export const Metadata = defineCapability<Metadata>('dxos.org/app-framework/capability/metadata');
 
+  // TODO(dmaretskyi): Consider combining Toolkit and ToolkitHandler for type-safe context.
+
   /**
    * @category Capability
-   * @deprecated
    */
-  export const Tools = defineCapability<ExecutableTool[]>('dxos.org/app-framework/capability/tools');
+  export const Toolkit = defineCapability<Toolkit.Any>('dxos.org/app-framework/capability/ai-toolkit');
+
+  /**
+   * @category Capability
+   */
+  export const ToolkitHandler = defineCapability<Layer.Layer<Tool.Handler<any>, never, never>>(
+    'dxos.org/app-framework/capability/ai-toolkit-handler',
+  );
 
   /**
    * @category Capability
    */
   export const BlueprintDefinition = defineCapability<Blueprint.Blueprint>(
     'dxos.org/app-framework/capability/blueprint-definition',
+  );
+
+  export type AiServiceLayer = Layer.Layer<AiService.AiService>;
+  export const AiServiceLayer = defineCapability<AiServiceLayer>(
+    'dxos.org/app-framework/capability/ai-service-factory',
+  );
+
+  /**
+   * Plugins can contribute them to provide model resolvers.
+   */
+  export const AiModelResolver = defineCapability<Layer.Layer<AiServiceRouter.AiModelResolver>>(
+    'dxos.org/app-framework/capability/ai-model-resolver',
   );
 
   /**

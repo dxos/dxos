@@ -2,22 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
+import importSource from '@dxos/vite-plugin-import-source';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { defineConfig, searchForWorkspaceRoot, type Plugin } from 'vite';
+import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
+import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import wasm from 'vite-plugin-wasm';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 import { APP_KEY } from './src/constants';
 
@@ -25,14 +29,20 @@ const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
-const phosphorIconsCore = join(rootDir, '/node_modules/@phosphor-icons/core/assets');
-const dxosIcons = join(rootDir, '/packages/ui/brand/assets/icons');
+const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+// Shared plugins for worker that are using in prod build.
+// In dev vite uses root plugins for both worker and page.
+const sharedPlugins = (env: ConfigEnv): PluginOption[] => [wasm(), sourcemaps()];
 
 /**
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
-  root: __dirname,
+  root: dirname,
   server: {
     host: true,
     https:
@@ -64,10 +74,10 @@ export default defineConfig((env) => ({
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
       input: {
-        internal: resolve(__dirname, './internal.html'),
-        main: resolve(__dirname, './index.html'),
-        devtools: resolve(__dirname, './devtools.html'),
-        'script-frame': resolve(__dirname, './script-frame/index.html'),
+        internal: path.resolve(dirname, './internal.html'),
+        main: path.resolve(dirname, './index.html'),
+        devtools: path.resolve(dirname, './devtools.html'),
+        'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {
         chunkFileNames,
@@ -81,23 +91,40 @@ export default defineConfig((env) => ({
     alias: {
       'node-fetch': 'isomorphic-fetch',
       'node:util': '@dxos/node-std/util',
-      'tiktoken/lite': resolve(__dirname, 'stub.mjs'),
+      'tiktoken/lite': path.resolve(dirname, 'stub.mjs'),
     },
   },
   worker: {
     format: 'es' as const,
-    plugins: () => [wasm(), sourcemaps()],
+
+    plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
-    sourcemaps(),
+    ...sharedPlugins(env),
 
-    // TODO(wittjosiah): Causing issues with bundle.
+    // https://github.com/antfu-collective/vite-plugin-inspect#readme
+    // Open: http://localhost:5173/__inspect
+    isTrue(process.env.DX_INSPECT) && inspect(),
+
+    env.command === 'serve' && devtoolsJson(),
+
+    // Building from dist when creating a prod bundle.
     env.command === 'serve' &&
-      tsconfigPaths({
-        projects: [join(rootDir, './tsconfig.paths.json')],
+      importSource({
+        exclude: [
+          '**/node_modules/**',
+          '**/common/random-access-storage/**',
+          '**/common/lock-file/**',
+          '**/mesh/network-manager/**',
+          '**/mesh/teleport/**',
+          '**/sdk/config/**',
+          '**/sdk/client-services/**',
+          '**/sdk/observability/**',
+          // TODO(dmaretskyi): Decorators break in lit.
+          '**/ui/lit-*/**',
+        ],
       }),
 
-    wasm(),
     react({
       tsDecorators: true,
       plugins: [
@@ -235,7 +262,7 @@ export default defineConfig((env) => ({
     // Open: http://localhost:5173/__inspect
     isTrue(process.env.DX_INSPECT) && inspect(),
 
-    process.env.DX_STATS && [
+    isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,
         filename: 'stats.html',
@@ -257,11 +284,11 @@ export default defineConfig((env) => ({
             }
           }
 
-          const outDir = join(__dirname, 'out');
+          const outDir = path.join(dirname, 'out');
           if (!existsSync(outDir)) {
             mkdirSync(outDir);
           }
-          writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+          writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
         },
       },
     ],
@@ -271,7 +298,7 @@ export default defineConfig((env) => ({
     //
 
     ConfigPlugin({
-      root: __dirname,
+      root: dirname,
     }),
 
     IconsPlugin({
@@ -286,27 +313,29 @@ export default defineConfig((env) => ({
       },
       spriteFile: 'icons.svg',
       contentPaths: [
-        join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
-        join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
+        path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
+        path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
       ],
       // verbose: true,
     }),
 
     ThemePlugin({
-      root: __dirname,
+      root: dirname,
       content: [
-        join(__dirname, './index.html'),
-        join(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
-        join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, './index.html'),
+        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/devtools/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/experimental/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/sdk/*/src/**/*.{js,ts,jsx,tsx}'),
+        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
     }),
   ]
     .filter(isNonNullable)
     .flat(), // Plugins
+
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
 
 /**

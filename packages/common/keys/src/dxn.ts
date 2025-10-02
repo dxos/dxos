@@ -19,6 +19,8 @@ import { SpaceId } from './space-id';
 // TODO(dmaretskyi): "@" is a separator character in the URI spec.
 export const LOCAL_SPACE_TAG = '@';
 
+export const DXN_ECHO_REGEXP = /@(dxn:[a-zA-Z0-p:@]+)/;
+
 // TODO(burdon): Namespace for.
 export const QueueSubspaceTags = Object.freeze({
   DATA: 'data',
@@ -26,6 +28,12 @@ export const QueueSubspaceTags = Object.freeze({
 });
 
 export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
+
+// TODO(burdon): Refactor.
+// Consider: https://github.com/multiformats/multiaddr
+// dxn:echo:[<space-id>:[<queue-id>:]]<object-id>
+// dxn:echo:[S/<space-id>:[Q/<queue-id>:]]<object-id>
+// dxn:type:dxos.org/markdown/Contact
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -66,16 +74,16 @@ export class DXN {
    */
   static kind = Object.freeze({
     /**
-     * dxn:type:<type name>[:<version>]
+     * dxn:type:<type_name>[:<version>]
      */
     TYPE: 'type',
 
     /**
-     * dxn:echo:<space id>:<echo id>
-     * dxn:echo:@:<echo id>
+     * dxn:echo:<space_id>:<echo_id>
+     * dxn:echo:@:<echo_id>
      */
-    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE).
-    // TODO(burdon): Add separate Kind for space.
+    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE to update "echo").
+    // TODO(burdon): Add separate Kind for space?
     ECHO: 'echo',
 
     /**
@@ -87,12 +95,17 @@ export class DXN {
     QUEUE: 'queue',
   });
 
-  get kind() {
-    return this.#kind;
-  }
-
+  /**
+   * Exactly equals.
+   */
   static equals(a: DXN, b: DXN): boolean {
     return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
+  }
+
+  static equalsEchoId(a: DXN, b: DXN): boolean {
+    const a1 = a.asEchoDXN();
+    const b1 = b.asEchoDXN();
+    return !!a1 && !!b1 && a1.echoId === b1.echoId;
   }
 
   // TODO(burdon): Rename isValid.
@@ -142,17 +155,26 @@ export class DXN {
   }
 
   /**
+   * @example `dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6`
+   */
+  static fromSpaceAndObjectId(spaceId: SpaceId, objectId: ObjectId): DXN {
+    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
+    assertArgument(ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
+    return new DXN(DXN.kind.ECHO, [spaceId, objectId]);
+  }
+
+  /**
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
   static fromLocalObjectId(id: string): DXN {
-    assertArgument(ObjectId.isValid(id), `Invalid object ID: ${id}`);
+    assertArgument(ObjectId.isValid(id), 'id', `Invalid object ID: ${id}`);
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 
   static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
-    invariant(SpaceId.isValid(spaceId));
-    invariant(ObjectId.isValid(queueId));
-    invariant(!objectId || ObjectId.isValid(objectId));
+    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
+    assertArgument(ObjectId.isValid(queueId), 'queueId', `Invalid queue ID: ${queueId}`);
+    assertArgument(!objectId || ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
 
     return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
@@ -161,19 +183,23 @@ export class DXN {
   #parts: string[];
 
   constructor(kind: string, parts: string[]) {
-    invariant(parts.length > 0);
-    invariant(parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1));
+    assertArgument(parts.length > 0, 'parts', `Invalid DXN: ${parts}`);
+    assertArgument(
+      parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1),
+      'parts',
+      `Invalid DXN: ${parts}`,
+    );
 
     // Per-type validation.
     switch (kind) {
       case DXN.kind.TYPE:
         if (parts.length > 2) {
-          throw new Error('Invalid "type" DXN');
+          throw new Error('Invalid DXN.kind.TYPE');
         }
         break;
       case DXN.kind.ECHO:
         if (parts.length !== 2) {
-          throw new Error('Invalid "echo" DXN');
+          throw new Error('Invalid DXN.kind.ECHO');
         }
         break;
     }
@@ -211,6 +237,10 @@ export class DXN {
     };
   }
 
+  get kind() {
+    return this.#kind;
+  }
+
   get parts() {
     return this.#parts;
   }
@@ -219,6 +249,10 @@ export class DXN {
   get typename() {
     invariant(this.#kind === DXN.kind.TYPE);
     return this.#parts[0];
+  }
+
+  equals(other: DXN): boolean {
+    return DXN.equals(this, other);
   }
 
   hasTypenameOf(typename: string): boolean {
@@ -250,6 +284,7 @@ export class DXN {
     const [spaceId, echoId] = this.#parts;
     return {
       spaceId: spaceId === LOCAL_SPACE_TAG ? undefined : (spaceId as SpaceId | undefined),
+      // TODO(burdon): objectId.
       echoId,
     };
   }
@@ -271,35 +306,27 @@ export class DXN {
       objectId: objectId as string | undefined,
     };
   }
-}
 
-// TODO(dmaretskyi): Fluent API:
-/*
-class DXN {
-  ...
-isEchoDXN(): this is EchoDXN {
-  return this.#kind === DXN.kind.ECHO;
+  /**
+   * Produces a new DXN with the given parts appended.
+   */
+  extend(parts: string[]): DXN {
+    return new DXN(this.#kind, [...this.#parts, ...parts]);
+  }
 }
-...
-}
-
-interface EchoDXN extends DXN {
-  objectId: ObjectId;
-}
-
-declare const dxn: DXN;
-
-dxn.objectId
-
-if(dxn.isEchoDXN()) {
-  dxn.objectId
-}
-  ```
 
 /**
  * API namespace.
  */
 export declare namespace DXN {
+  /**
+   * DXN represented as a javascript string.
+   */
+  // TODO(burdon): Use Effect branded string?
+  // export const String = S.String.pipe(S.brand('DXN'));
+  // export type String = S.To(typoeof String);
+  export type String = string & { __DXNString: never };
+
   export type TypeDXN = {
     type: string;
     version?: string;
@@ -307,8 +334,7 @@ export declare namespace DXN {
 
   export type EchoDXN = {
     spaceId?: SpaceId;
-    // TODO(burdon): Rename objectId.
-    echoId: string; // TODO(dmaretskyi): ObjectId.
+    echoId: string; // TODO(dmaretskyi): Rename to `objectId` and use `ObjectId` for the type.
   };
 
   export type QueueDXN = {
@@ -317,12 +343,4 @@ export declare namespace DXN {
     queueId: string; // TODO(dmaretskyi): ObjectId.
     objectId?: string; // TODO(dmaretskyi): ObjectId.
   };
-
-  /**
-   * DXN represented as a javascript string.
-   */
-  export type String = string & { __DXNString: never };
-  // TODO(burdon): Make brand.
-  // export const String = S.String.pipe(S.brand('DXN'));
-  // export type String = S.To(typoeof String);
 }

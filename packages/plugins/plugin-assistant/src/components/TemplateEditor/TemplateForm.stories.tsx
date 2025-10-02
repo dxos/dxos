@@ -32,7 +32,11 @@ const DefaultStory = () => {
   const [blueprint] = useState(() => {
     const space = client.spaces.default;
     return space.db.add(
-      Blueprint.make({ key: 'example.com/blueprint/test', name: 'Test', instructions: { source: TEMPLATE } }),
+      Blueprint.make({
+        key: 'example.com/blueprint/test',
+        name: 'Test',
+        instructions: Template.make({ source: TEMPLATE }),
+      }),
     );
   });
 
@@ -43,15 +47,15 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof TemplateForm> = {
+const meta = {
   title: 'plugins/plugin-assistant/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
   decorators: [
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
     }),
     withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
     withTheme,
@@ -59,7 +63,7 @@ const meta: Meta<typeof TemplateForm> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof TemplateForm>;
 
 export default meta;
 

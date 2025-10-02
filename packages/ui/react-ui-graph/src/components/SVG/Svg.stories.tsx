@@ -4,9 +4,10 @@
 
 import '@dxos-theme';
 
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
-import { type Meta, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type SVGContext, useGrid, useZoom } from '../../hooks';
 
@@ -17,16 +18,6 @@ import '../../../styles/graph.css';
 type ComponentProps = {
   grid?: boolean;
   zoom?: boolean;
-};
-
-const DefaultStory = (props: ComponentProps) => {
-  const context = useRef<SVGContext>(null);
-
-  return (
-    <SVG.Root ref={context}>
-      <Component {...props} />
-    </SVG.Root>
-  );
 };
 
 const Component = (options: ComponentProps) => {
@@ -43,15 +34,27 @@ const Component = (options: ComponentProps) => {
   );
 };
 
-const meta: Meta<typeof Component> = {
+const DefaultStory = (props: ComponentProps) => {
+  const context = useRef<SVGContext>(null);
+
+  return (
+    <SVG.Root ref={context}>
+      <Component {...props} />
+    </SVG.Root>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-graph/SVGRoot',
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true })],
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default = {
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   args: {
     grid: true,
   },

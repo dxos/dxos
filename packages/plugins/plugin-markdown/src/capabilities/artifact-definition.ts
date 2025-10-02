@@ -8,33 +8,25 @@
 import { Schema, pipe } from 'effect';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, chain, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Filter, type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 import { Markdown, MarkdownAction } from '../types';
-
-// TODO(burdon): Factor out.
-declare global {
-  interface ToolContextExtensions {
-    space?: Space;
-    dispatch?: PromiseIntentDispatcher;
-  }
-}
 
 export default () => {
   const definition = defineArtifact({
     id: `artifact:${meta.id}`, // TODO(burdon): meta.id/artifact?
     name: meta.name,
     instructions: `
-      - The markdown plugin allows you to work with text documents in the current space.
-      - Use these tools to interact with documents, including listing available documents and retrieving their content.
-      - Documents are stored in Markdown format.
+      The markdown plugin allows you to work with text documents in the current space.
+      Use these tools to interact with documents, including listing available documents and retrieving their content.
+      Documents are stored in Markdown format.
     `,
     schema: Markdown.Document,
     tools: [
@@ -102,7 +94,7 @@ export default () => {
         execute: async ({ id }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           const document = await extensions.space.db.query(Filter.ids(ArtifactId.toDXN(id).toString())).first();
-          assertArgument(Obj.instanceOf(Markdown.Document, document), 'Invalid type');
+          assertArgument(Obj.instanceOf(Markdown.Document, document), 'document', 'Invalid type');
 
           const { content } = await document.content?.load();
           return ToolResult.Success({

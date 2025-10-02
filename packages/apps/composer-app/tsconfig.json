@@ -31,6 +31,9 @@
       "path": "../../../tools/vite-plugin-icons"
     },
     {
+      "path": "../../../tools/vite-plugin-import-source"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -152,6 +155,9 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-project"
     },
     {
       "path": "../../plugins/plugin-pwa"

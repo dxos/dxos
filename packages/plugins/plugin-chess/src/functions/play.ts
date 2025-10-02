@@ -6,40 +6,49 @@ import { Chess as ChessJS } from 'chess.js';
 import { Effect, Schema } from 'effect';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 
 import { Chess } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/chess/play',
-  description: 'Plays the chess game.',
+  key: 'dxos.org/function/chess/play',
+  name: 'Play',
+  description: 'Uses the chess engine to play the next move.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
       description: 'The ID of the chess object.',
     }),
-    pgn: Schema.String.annotations({
-      description: 'The PGN of the chess object.',
+    side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotations({
+      description: 'The side to play.',
+      defaultValue: 'any',
     }),
   }),
   outputSchema: Schema.Struct({
-    move: Schema.optional(Schema.String),
+    pgn: Schema.String.annotations({
+      description: 'The PGN of the game after the move was played.',
+    }),
+    move: Schema.optional(Schema.String).annotations({
+      description: 'The move that was played.',
+    }),
   }),
-  handler: Effect.fn(function* ({ data: { id, pgn } }) {
-    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!object || !Obj.instanceOf(Chess.Game, object)) {
-      throw new Error('Object not found.');
+  handler: Effect.fn(function* ({ data: { id, side = 'any' } }) {
+    const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Chess.Game);
+    const chess = new ChessJS();
+    if (object.pgn) {
+      chess.loadPgn(object.pgn);
+    } else if (object.fen) {
+      chess.load(object.fen);
     }
 
-    // Select the next move.
-    const chess = new ChessJS();
-    chess.loadPgn(pgn);
+    if (!(side === 'any' || (chess.turn() === 'w' && side === 'white') || (chess.turn() === 'b' && side === 'black'))) {
+      return { move: undefined, pgn: object.pgn! };
+    }
+
     const moves = chess.moves();
-    const move = moves[moves.length - 1];
+    const move = moves[Math.floor(Math.random() * moves.length)];
 
-    // Update the game.
+    chess.move(move, { strict: false });
     object.pgn = chess.pgn();
-
-    return { move };
+    return { move, pgn: object.pgn };
   }),
 });

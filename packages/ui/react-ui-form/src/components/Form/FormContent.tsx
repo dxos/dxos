@@ -9,8 +9,8 @@ import React, { forwardRef, useMemo } from 'react';
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type SchemaProperty, getSchemaProperties } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { type ProjectionModel, type SchemaProperty, getSchemaProperties } from '@dxos/schema';
+import { isTruthy } from '@dxos/util';
 
 import { type QueryRefOptions } from '../../hooks';
 import { getRefProps } from '../../util';
@@ -21,25 +21,31 @@ import { getInputComponent } from './factory';
 import { type ComponentLookup } from './Form';
 import { useFormValues, useInputProps } from './FormContext';
 import { type InputComponent } from './Input';
-import { RefField } from './RefField';
+import { RefField, type RefFieldProps } from './RefField';
 
 export type FormFieldProps = {
   property: SchemaProperty<any>;
   path?: (string | number)[];
-  readonly?: boolean;
   /** Used to indicate if input should be presented inline (e.g. for array items). */
   inline?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
+  projection?: ProjectionModel;
   lookupComponent?: ComponentLookup;
   Custom?: Partial<Record<string, InputComponent>>;
-};
+} & Pick<
+  RefFieldProps,
+  'readonly' | 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'
+>;
 
 export const FormField = ({
   property,
   path,
   readonly,
   inline,
+  projection,
   onQueryRefOptions,
+  createOptionLabel,
+  createOptionIcon,
+  onCreateFromQuery,
   lookupComponent,
   Custom,
 }: FormFieldProps) => {
@@ -63,7 +69,7 @@ export const FormField = ({
       type,
       format,
       label,
-      disabled: readonly,
+      readonly,
       placeholder,
       ...inputProps,
     },
@@ -83,7 +89,7 @@ export const FormField = ({
         label={label}
         inputOnly={inline}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         {...inputProps}
       />
     );
@@ -103,9 +109,12 @@ export const FormField = ({
         format={format}
         label={label}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         inputOnly={inline}
         onQueryRefOptions={onQueryRefOptions}
+        createOptionLabel={createOptionLabel}
+        createOptionIcon={createOptionIcon}
+        onCreateFromQuery={onCreateFromQuery}
         {...inputProps}
       />
     );
@@ -132,7 +141,7 @@ export const FormField = ({
         label={label}
         inputOnly={inline}
         placeholder={placeholder}
-        disabled={readonly}
+        readonly={readonly}
         {...inputProps}
       />
     );
@@ -147,7 +156,7 @@ export const FormField = ({
       <SelectInput
         type={type}
         format={format}
-        disabled={readonly}
+        readonly={readonly}
         inputOnly={inline}
         label={label}
         options={options.map((option) => ({ value: option, label: String(option) }))}
@@ -175,7 +184,11 @@ export const FormField = ({
             schema={Schema.make(typeLiteral)}
             path={path}
             readonly={readonly}
+            projection={projection}
             onQueryRefOptions={onQueryRefOptions}
+            createOptionLabel={createOptionLabel}
+            createOptionIcon={createOptionIcon}
+            onCreateFromQuery={onCreateFromQuery}
             Custom={Custom}
             lookupComponent={lookupComponent}
           />
@@ -187,36 +200,82 @@ export const FormField = ({
   return null;
 };
 
-export type FormFieldsProps = ThemedClassName<{
-  testId?: string;
-  readonly?: boolean;
-  schema: Schema.Schema.All;
-  /**
-   * Path to the current object from the root. Used with nested forms.
-   */
-  path?: (string | number)[];
-  filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
-  sort?: string[];
-  lookupComponent?: ComponentLookup;
-  /**
-   * Map of custom renderers for specific properties.
-   * Prefer lookupComponent for plugin specific input surfaces.
-   */
-  Custom?: Partial<Record<string, InputComponent>>;
-  onQueryRefOptions?: QueryRefOptions;
-}>;
+export type FormFieldsProps = ThemedClassName<
+  {
+    testId?: string;
+    schema: Schema.Schema.All;
+    /**
+     * Path to the current object from the root. Used with nested forms.
+     */
+    path?: (string | number)[];
+    filter?: (props: SchemaProperty<any>[]) => SchemaProperty<any>[];
+    sort?: string[];
+    /**
+     * Optional projection for projection-based field management
+     */
+    projection?: ProjectionModel;
+    lookupComponent?: ComponentLookup;
+    /**
+     * Map of custom renderers for specific properties.
+     * Prefer lookupComponent for plugin specific input surfaces.
+     */
+    Custom?: Partial<Record<string, InputComponent>>;
+    onQueryRefOptions?: QueryRefOptions;
+  } & Pick<FormFieldProps, 'readonly'> &
+    Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>
+>;
 
 export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
   (
-    { classNames, testId, schema, path, filter, sort, readonly, lookupComponent, Custom, onQueryRefOptions },
+    {
+      classNames,
+      schema,
+      path,
+      filter,
+      sort,
+      projection,
+      readonly,
+      lookupComponent,
+      Custom,
+      onQueryRefOptions,
+      ...props
+    },
     forwardRef,
   ) => {
     const values = useFormValues(path);
     const properties = useMemo(() => {
       const props = getSchemaProperties(schema.ast, values);
+
+      // Use projection-based field management when view and projection are available
+      if (projection) {
+        const fieldProjections = projection.getFieldProjections();
+        const hiddenProperties = new Set(projection.getHiddenProperties());
+
+        // Filter properties to only include visible ones and order by projection
+        const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name));
+        const orderedProps: SchemaProperty<any>[] = [];
+
+        // Add properties in projection field order
+        for (const fieldProjection of fieldProjections) {
+          const fieldPath = String(fieldProjection.field.path);
+          const prop = visibleProps.find((p) => p.name === fieldPath);
+          if (prop) {
+            orderedProps.push(prop);
+          }
+        }
+
+        // Add any remaining properties not in projection
+        const projectionPaths = new Set(fieldProjections.map((fp) => String(fp.field.path)));
+        const remainingProps = visibleProps.filter((prop) => !projectionPaths.has(prop.name));
+        orderedProps.push(...remainingProps);
+
+        return orderedProps;
+      }
+
+      // Fallback to legacy filter/sort behavior
       const filtered = filter ? filter(props) : props;
       return sort ? filtered.sort((a, b) => sort.indexOf(a.name) - sort.indexOf(b.name)) : filtered;
-    }, [schema, values, filter, sort]);
+    }, [schema, values, filter, sort, projection?.fields]);
 
     return (
       <div role='form' className={mx('is-full', classNames)} ref={forwardRef}>
@@ -228,13 +287,15 @@ export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(
                 property={property}
                 path={[...(path ?? []), property.name]}
                 readonly={readonly}
+                projection={projection}
                 onQueryRefOptions={onQueryRefOptions}
                 lookupComponent={lookupComponent}
                 Custom={Custom}
+                {...props}
               />
             );
           })
-          .filter(isNotFalsy)}
+          .filter(isTruthy)}
       </div>
     );
   },

@@ -16,7 +16,7 @@ TRACE_PROCESSOR.setInstanceTag('shared-worker');
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
 const lockAcquired = new Trigger();
-void navigator.locks.request(LOCK_KEY, (lock) => {
+void navigator.locks.request(LOCK_KEY, (lock: Lock | null) => {
   lockAcquired.wake();
   return lockPromise;
 });

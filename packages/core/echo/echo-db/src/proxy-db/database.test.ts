@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Query } from '@dxos/echo';
+import { Obj, Query } from '@dxos/echo';
 import { type BaseObject, Expando, Ref, getSchema, getTypename } from '@dxos/echo-schema';
 import { getMeta, getType } from '@dxos/echo-schema';
 import { Testing, updateCounter } from '@dxos/echo-schema/testing';
@@ -20,7 +20,7 @@ import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -57,7 +57,7 @@ describe('Database', () => {
   });
 
   test('db is persisted to storage without a flush', { timeout: 100000 }, async () => {
-    const level = createTestLevel();
+    const tmpPath = createTmpPath();
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
 
@@ -65,7 +65,7 @@ describe('Database', () => {
     let spaceKey: PublicKey;
     let rootUrl: string;
     {
-      const testPeer = await testBuilder.createPeer({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
       rootUrl = db.rootUrl!;
@@ -74,17 +74,17 @@ describe('Database', () => {
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
       await sleep(500); // Wait for the object to be saved.
-      await db.close();
+      await testPeer.close();
     }
 
     // Load database.
     {
-      const testPeer = await testBuilder.createPeer({ kv: level });
+      const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await asyncTimeout(testPeer.openDatabase(spaceKey, rootUrl), 1000);
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
-      await db.close();
+      await testPeer.close();
     }
   });
 
@@ -386,6 +386,26 @@ describe('Database', () => {
 
     expect(getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
     expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:example.com/type/Task:0.1.0');
+  });
+
+  test('versions', async () => {
+    const { db } = await createDbWithTypes();
+    const task = db.add(Obj.make(Testing.Task, { title: 'Main task' }));
+    const version1 = Obj.version(task as any);
+    expect(Obj.isVersion(version1)).to.be.true;
+    expect(Obj.versionValid(version1)).to.be.true;
+
+    const version2 = Obj.version(task as any);
+    expect(Obj.isVersion(version2)).to.be.true;
+    expect(Obj.versionValid(version2)).to.be.true;
+    expect(Obj.compareVersions(version1, version2)).to.eq('equal');
+
+    task.title = 'Main task 2';
+    const version3 = Obj.version(task as any);
+    expect(Obj.isVersion(version3)).to.be.true;
+    expect(Obj.versionValid(version3)).to.be.true;
+    expect(Obj.compareVersions(version1, version3)).to.eq('different');
+    expect(Obj.compareVersions(version2, version3)).to.eq('different');
   });
 
   describe('object collections', () => {

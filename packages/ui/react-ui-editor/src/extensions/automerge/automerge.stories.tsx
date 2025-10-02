@@ -8,6 +8,7 @@ import '@preact/signals-react';
 
 import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -15,7 +16,7 @@ import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace }
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { render, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
@@ -41,7 +42,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
     () => ({
       initialValue: DocAccessor.getValue(source),
       extensions: [
-        createBasicExtensions({ placeholder: 'Type here...' }),
+        createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: editorSlots }),
         createDataExtensions({ id: 'test', text: source, space, identity }),
       ],
@@ -53,7 +54,7 @@ const Editor = ({ source, autoFocus, space, identity }: EditorProps) => {
   return <div ref={parentRef} className='flex w-full' />;
 };
 
-const Story = () => {
+const DefaultStory = () => {
   const [object1, setObject1] = useState<DocAccessor<TestObject>>();
   const [object2, setObject2] = useState<DocAccessor<TestObject>>();
 
@@ -88,16 +89,6 @@ const Story = () => {
   );
 };
 
-export default {
-  title: 'ui/react-ui-editor/Automerge',
-  component: Editor,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  render: () => <Story />,
-  parameters: {
-    translations,
-  },
-};
-
 const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const identity = useIdentity();
   const space = useSpace(spaceKey);
@@ -105,8 +96,9 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   const objects = useQuery(space, Query.type(Type.Expando, { type: 'test' }));
 
   useEffect(() => {
-    if (!source && objects.length) {
-      const source = createDocAccessor(objects[0].content, ['content']);
+    const content = objects[0]?.content.target;
+    if (!source && content) {
+      const source = createDocAccessor(content, ['content']);
       setSource(source);
     }
   }, [objects, source]);
@@ -118,9 +110,25 @@ const EchoStory = ({ spaceKey }: ClientRepeatedComponentProps) => {
   return <Editor source={source} space={space} identity={identity ?? undefined} />;
 };
 
-export const Default = {};
+const meta = {
+  title: 'ui/react-ui-editor/Automerge',
+  component: Editor as any,
+  render: render(DefaultStory),
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
 
-export const WithEcho = {
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {},
+};
+
+export const WithEcho: Story = {
   decorators: [withTheme],
   render: () => {
     return (

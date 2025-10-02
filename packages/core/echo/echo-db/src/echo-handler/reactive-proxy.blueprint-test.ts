@@ -271,8 +271,10 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         const expected = JSON.parse(JSON.stringify(TEST_OBJECT));
         const actual = JSON.parse(JSON.stringify(obj));
 
-        if (!objectsHaveId) {
+        if (!objectsHaveId && !schema) {
           expect(actual).to.deep.eq(expected);
+        } else if (!objectsHaveId && !!schema) {
+          expect(actual).to.deep.contain({ '@meta': { keys: [] }, ...expected });
         } else {
           expect(actual).to.deep.contain({ id: (obj as any).id, ...expected });
         }

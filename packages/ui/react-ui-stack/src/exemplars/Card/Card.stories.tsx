@@ -12,7 +12,6 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
 
-// Set a seed for reproducible random values
 faker.seed(0);
 
 type CardStoryProps = {
@@ -23,9 +22,31 @@ type CardStoryProps = {
   showIcon: boolean;
 };
 
-const meta: Meta<CardStoryProps> = {
+const DefaultStory = ({ title, description, image, showImage, showIcon }: CardStoryProps) => {
+  return (
+    <div className='max-is-md'>
+      <Card.StaticRoot>
+        <Card.Toolbar>
+          <Card.DragHandle toolbarItem />
+          <Card.ToolbarSeparator variant='gap' />
+          <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
+        </Card.Toolbar>
+        {showImage && <Card.Poster alt={title} image={image} />}
+        {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
+        <Card.Heading>{title}</Card.Heading>
+        {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+      </Card.StaticRoot>
+    </div>
+  );
+};
+
+const meta = {
   title: 'ui/react-ui-stack/Card',
+  render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
   argTypes: {
     title: {
       control: 'text',
@@ -48,31 +69,20 @@ const meta: Meta<CardStoryProps> = {
       description: 'Whether to show an icon (when image is not shown)',
     },
   },
-  args: {
-    title: faker.commerce.productName(),
-    description: faker.lorem.paragraph(),
-    image: faker.image.url(),
-    showImage: true,
-    showIcon: true,
-  },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default: StoryObj<CardStoryProps> = {
-  render: ({ title, description, image, showImage, showIcon }: CardStoryProps) => (
-    <div className='max-is-md'>
-      <Card.StaticRoot>
-        <Card.Toolbar>
-          <Card.DragHandle toolbarItem />
-          <Card.ToolbarSeparator variant='gap' />
-          <Card.ToolbarIconButton iconOnly variant='ghost' icon='ph--x--regular' label={'remove card label'} />
-        </Card.Toolbar>
-        {showImage && <Card.Poster alt={title} image={image} />}
-        {!showImage && showIcon && <Card.Poster alt={title} icon='ph--building-office--regular' />}
-        <Card.Heading>{title}</Card.Heading>
-        {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
-      </Card.StaticRoot>
-    </div>
-  ),
+type Story = StoryObj<typeof meta>;
+
+const image = faker.image.url();
+
+export const Default: Story = {
+  args: {
+    title: faker.commerce.productName(),
+    description: faker.lorem.paragraph(),
+    image,
+    showImage: true,
+    showIcon: true,
+  },
 };

@@ -2,7 +2,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "build",
+      "label": "build (tsc)",
       "type": "typescript",
       "tsconfig": "tsconfig.all.json",
       "problemMatcher": ["$tsc-watch"],
@@ -19,7 +19,7 @@
       }
     },
     {
-      "label": "build current tsconfig",
+      "label": "build current tsconfig (tsc)",
       "type": "typescript",
       "tsconfig": "${relativeFile}",
       "problemMatcher": ["$tsc-watch"],
@@ -99,6 +99,23 @@
       "presentation": {
         "echo": true,
         "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "group": {
+        "kind": "build"
+      }
+    },
+    {
+      "label": "compile vscode-extension",
+      "type": "shell",
+      "command": "pnpm run compile",
+      "options": {
+        "cwd": "${workspaceFolder}/packages/devtools/vscode-extension"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
         "focus": false,
         "panel": "shared"
       },

@@ -2,7 +2,9 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -11,8 +13,11 @@ tasks:
     deps:
       - gen-pieces
   gen-pieces:
-    command: pnpm run gen:pieces
+    command: pnpm run --silent gen:pieces
     inputs:
       - assets/*.*
     outputs:
       - src/gen
+  test:
+    inputs:
+      - .storybook/*

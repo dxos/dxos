@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Decorator, type Meta, type StoryFn } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -36,15 +36,15 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
   );
 };
 
-const SearchContextDecorator = (): Decorator => {
-  return (Story: StoryFn) => (
+const searchContextDecorator = (): Decorator => {
+  return (Story) => (
     <SearchContextProvider>
       <Story />
     </SearchContextProvider>
   );
 };
 
-export const Default = {
+export const Default: Story = {
   args: {
     objects: Array.from({ length: 8 }).map(() => ({
       id: faker.string.uuid(),
@@ -54,14 +54,22 @@ export const Default = {
   },
 };
 
-const meta: Meta<typeof Searchbar> = {
+const meta = {
   title: 'plugins/plugin-search/Search',
   component: Searchbar,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true }), SearchContextDecorator()],
+  decorators: [
+    withTheme,
+    withLayout({
+      fullscreen: true,
+    }),
+    searchContextDecorator(),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof Searchbar>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

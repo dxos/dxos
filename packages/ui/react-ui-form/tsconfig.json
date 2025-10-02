@@ -66,10 +66,19 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-list"
     },
     {
       "path": "../react-ui-pickers"
+    },
+    {
+      "path": "../react-ui-searchlist"
     },
     {
       "path": "../react-ui-stack"

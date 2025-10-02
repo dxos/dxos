@@ -3,19 +3,27 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, Option, Stream } from 'effect';
+import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
+  type ContextBinding,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
+import { TestHelpers } from '@dxos/effect';
+import {
+  ComputeEventLogger,
+  DatabaseService,
+  FunctionImplementationResolver,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -23,45 +31,27 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readTasks, updateTasks } from '../../functions';
-import { type TestStep, runSteps } from '../testing';
+import { type TestStep, runSteps, testToolkit } from '../testing';
 
 import blueprint from './planning';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { timeout: 120_000 }, () => {
-  it.effect.only(
+describe('Planning Blueprint', { timeout: 120_000 }, () => {
+  it.effect(
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const session = new AiSession();
-        const printer = new ConsolePrinter({ mode: 'json' });
-        const messageQueue = session.messageQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
-        );
-        const blockQueue = session.blockQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((block) =>
-            Effect.sync(() =>
-              Option.match(block, {
-                onSome: (block) => printer.printContentBlock(block),
-                onNone: () => Effect.void,
-              }),
-            ),
-          ),
+        yield* DatabaseService.add(blueprint);
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(blueprint)],
+          }),
         );
 
-        db.add(blueprint);
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
-
-        const artifact = db.add(Markdown.makeDocument());
-
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument());
         let prevContent = artifact.content;
         const matchList =
           ({ includes = [], excludes = [] }: { includes: RegExp[]; excludes?: RegExp[] }) =>
@@ -113,20 +103,27 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Planning Blueprint', { ti
           },
         ];
 
-        const run = runSteps({ conversation, steps });
-        yield* Effect.all([run, messageQueue, blockQueue]);
+        yield* runSteps(conversation, steps);
       },
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readTasks, updateTasks]),
-          makeToolExecutionServiceFromFunctions([readTasks, updateTasks]),
+          makeToolResolverFromFunctions([readTasks, updateTasks], testToolkit),
+          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
+          Layer.provideMerge(
+            FunctionInvocationService.layerTest({ functions: [readTasks, updateTasks] }).pipe(
+              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+              Layer.provideMerge(TracingService.layerNoop),
+            ),
+          ),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [readTasks, updateTasks] })),
+          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(LocalFunctionExecutionService.layer),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });

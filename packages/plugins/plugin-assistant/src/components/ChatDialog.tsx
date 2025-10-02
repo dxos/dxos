@@ -7,9 +7,9 @@ import React, { useCallback, useState } from 'react';
 import { Capabilities, useCapability } from '@dxos/app-framework';
 import { getSpace } from '@dxos/client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { ChatDialog as NativeChatDialog } from '@dxos/react-ui-chat';
+import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
 
-import { useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
+import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../hooks';
 import { meta } from '../meta';
 import { type Assistant } from '../types';
 
@@ -24,10 +24,11 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   const space = getSpace(chat);
   const settings = useCapability(Capabilities.SettingsStore).getStore<Assistant.Settings>(meta.id)?.value;
-  const services = useChatServices({ space });
+  const services = useChatServices({ space, chat });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
-  const processor = useChatProcessor({ chat, preset, services, settings });
+  const blueprintRegistry = useBlueprintRegistry();
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry, settings });
 
   // TODO(burdon): Refocus when open.
   const [open, setOpen] = useState(true);
@@ -51,15 +52,15 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
-      <NativeChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
-        <NativeChatDialog.Header title={t('assistant dialog title')} />
-        <NativeChatDialog.Content>
+      <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
+        <NaturalChatDialog.Header title={t('assistant dialog title')} />
+        <NaturalChatDialog.Content>
           <Chat.Thread />
-        </NativeChatDialog.Content>
-        <NativeChatDialog.Footer>
-          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onChangeOnline={setOnline} expandable />
-        </NativeChatDialog.Footer>
-      </NativeChatDialog.Root>
+        </NaturalChatDialog.Content>
+        <NaturalChatDialog.Footer classNames='p-1.5'>
+          <Chat.Prompt {...chatProps} preset={preset?.id} online={online} onOnlineChange={setOnline} expandable />
+        </NaturalChatDialog.Footer>
+      </NaturalChatDialog.Root>
     </Chat.Root>
   );
 };

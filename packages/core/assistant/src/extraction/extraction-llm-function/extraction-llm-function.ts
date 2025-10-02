@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { AiService, ToolRegistry } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { create } from '@dxos/echo-schema';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
@@ -17,7 +17,9 @@ import { ReferencedQuotes, insertReferences } from '../quotes';
 
 import PROMPT from './instructions.tpl?raw';
 
-export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
+export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
+  key: 'dxos.org/function/extraction/extract-entities',
+  name: 'Extract Entities',
   description: 'Extract entities from the transcript message and add them to the message.',
   inputSchema: ExtractionInput,
   outputSchema: ExtractionOutput,
@@ -50,13 +52,13 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
       artifacts: [],
       prompt: '',
       tools: [],
-      toolResolver: new ToolRegistry([]),
     } as any); // TODO(burdon): Rewrite test.
 
     return {
+      timeElapsed: performance.now() - startTime,
       message: create(DataType.Message, {
         ...message,
-        blocks: message.blocks.map((block, i) =>
+        blocks: message.blocks.map((block) =>
           block._tag !== 'transcript'
             ? block
             : {
@@ -65,7 +67,6 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
               },
         ),
       }),
-      timeElapsed: performance.now() - startTime,
     };
   },
 });

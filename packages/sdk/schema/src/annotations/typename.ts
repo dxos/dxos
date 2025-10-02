@@ -18,4 +18,5 @@ export const TypenameAnnotation = Schema.Literal(
   'used-static',
   'dynamic',
 );
+
 export type TypenameAnnotation = Schema.Schema.Type<typeof TypenameAnnotation>;

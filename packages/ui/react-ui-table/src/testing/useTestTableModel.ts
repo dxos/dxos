@@ -10,7 +10,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider } from '@dxos/react-client/testing';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { type TableController } from '../components';
 import { useAddRow, useTableModel } from '../hooks';
@@ -28,7 +28,8 @@ export const useTestTableModel = () => {
 
   const views = useQuery(space, Filter.type(DataType.View));
   const view = useMemo(() => views.at(0), [views]);
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
 
   const projection = useMemo(() => {
@@ -92,8 +93,9 @@ export const useTestTableModel = () => {
   });
 
   const handleInsertRow = useCallback(() => {
-    model?.insertRow();
-  }, [model]);
+    const insertResult = model?.insertRow();
+    tableRef.current?.handleInsertRowResult?.(insertResult);
+  }, [model, tableRef.current]);
 
   const handleSaveView = useCallback(() => {
     model?.saveView();

@@ -20,10 +20,7 @@ import { type ThreadType } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
-import { MessageContainer } from './MessageContainer';
-
-// TODO(burdon): Remove need for p-1.
-export const commentControlClassNames = '!p-1 transition-opacity';
+import { MessageContainer, buttonClassNames, buttonGroupClassNames } from './MessageContainer';
 
 export type CommentsThreadContainerProps = {
   anchor: AnchoredTo;
@@ -32,6 +29,7 @@ export type CommentsThreadContainerProps = {
   onResolve?: (anchor: AnchoredTo) => void;
   onMessageDelete?: (anchor: AnchoredTo, messageId: string) => void;
   onThreadDelete?: (anchor: AnchoredTo) => void;
+  onAcceptProposal?: (anchor: AnchoredTo, messageId: string) => void;
 } & Pick<ThreadRootProps, 'current'>;
 
 export const CommentsThreadContainer = ({
@@ -42,6 +40,7 @@ export const CommentsThreadContainer = ({
   onResolve,
   onMessageDelete,
   onThreadDelete,
+  onAcceptProposal,
 }: CommentsThreadContainerProps) => {
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
@@ -76,6 +75,7 @@ export const CommentsThreadContainer = ({
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback((id: string) => onMessageDelete?.(anchor, id), [onMessageDelete, anchor]);
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
+  const handleAcceptProposal = useCallback((id: string) => onAcceptProposal?.(anchor, id), [onAcceptProposal, anchor]);
 
   const handleComment: MessageTextboxProps['onSend'] = useCallback(() => {
     if (!messageRef.current) {
@@ -113,7 +113,7 @@ export const CommentsThreadContainer = ({
         ) : (
           <Thread.Header>{thread.name}</Thread.Header>
         )}
-        <div className='flex flex-row items-center gap-0.5'>
+        <div role='none' className={buttonGroupClassNames}>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <IconButton
@@ -122,7 +122,7 @@ export const CommentsThreadContainer = ({
               icon={thread?.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
               iconOnly
               label={t('resolve thread label')}
-              classNames={[commentControlClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
+              classNames={[buttonClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
               onClick={handleResolve}
             />
           )}
@@ -133,7 +133,7 @@ export const CommentsThreadContainer = ({
               icon='ph--x--regular'
               iconOnly
               label={t('delete thread label')}
-              classNames={[commentControlClassNames, hoverableControlItem]}
+              classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleThreadDelete}
             />
           )}
@@ -148,6 +148,7 @@ export const CommentsThreadContainer = ({
           message={message}
           members={members}
           onDelete={handleMessageDelete}
+          onAcceptProposal={handleAcceptProposal}
         />
       ))}
 

@@ -12,19 +12,21 @@ import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } 
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { THREAD_PLUGIN, meta } from '../meta';
+import { meta } from '../meta';
 import { ChannelType, ThreadAction } from '../types';
 import { getAnchor } from '../util';
 
 import { ThreadCapabilities } from './capabilities';
 
+// TODO(wittjosiah): Highlight active calls in L1.
+//  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default (context: PluginContext) => {
   const resolve = (typename: string) =>
     context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   return contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${THREAD_PLUGIN}/active-call`,
+      id: `${meta.id}/active-call`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -41,7 +43,7 @@ export default (context: PluginContext) => {
                           type: DECK_COMPANION_TYPE,
                           data: null,
                           properties: {
-                            label: ['call panel label', { ns: THREAD_PLUGIN }],
+                            label: ['call panel label', { ns: meta.id }],
                             icon: 'ph--video-conference--regular',
                             position: 'hoist',
                             disposition: 'hidden',
@@ -59,7 +61,7 @@ export default (context: PluginContext) => {
     // TODO(wittjosiah): The channel shouldn't become the companion during a call.
     //   Alternative: the call/meeting/thread should be a child node of the channel and that should be opened.
     createExtension({
-      id: `${THREAD_PLUGIN}/channel-chat-companion`,
+      id: `${meta.id}/channel-chat-companion`,
       connector: (node) => {
         return Rx.make((get) => {
           return pipe(
@@ -80,7 +82,7 @@ export default (context: PluginContext) => {
                   type: PLANK_COMPANION_TYPE,
                   data: 'chat',
                   properties: {
-                    label: ['channel companion label', { ns: THREAD_PLUGIN }],
+                    label: ['channel companion label', { ns: meta.id }],
                     icon: 'ph--hash--regular',
                     position: 'hoist',
                     disposition: 'hidden',

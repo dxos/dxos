@@ -3,12 +3,14 @@
 //
 
 import { EditorSelection } from '@codemirror/state';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  RefDropdownMenu,
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  CommandMenuProvider,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -22,7 +24,7 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { OUTLINER_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 export type OutlinerController = {
   focus: () => void;
@@ -39,7 +41,7 @@ export type OutlinerProps = ThemedClassName<
 
 export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
   ({ classNames, text, id, autoFocus, scrollable = true, showSelected = true }, forwardedRef) => {
-    const { t } = useTranslation(OUTLINER_PLUGIN);
+    const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -49,8 +51,8 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
         initialValue: text.content,
         extensions: [
           createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
-          createBasicExtensions({ readOnly: false }),
-          createMarkdownExtensions({ themeMode }),
+          createBasicExtensions({ readOnly: false, search: true }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, slots: { scroll: { className: scrollable ? '' : '!overflow-hidden' } } }),
           outliner({ showSelected }),
           hashtag(),
@@ -67,29 +69,41 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       [view],
     );
 
-    const handleDeleteRow = () => {
-      // TODO(burdon): Timeout hack since menu steals focus.
-      setTimeout(() => {
-        if (view) {
-          deleteItem(view);
-          view.focus();
+    const commandGroups: CommandMenuGroup[] = useMemo(
+      () => [
+        {
+          id: 'outliner-actions',
+          items: [
+            {
+              id: 'delete-row',
+              label: t('delete row'),
+              onSelect: (view) => {
+                // TODO(burdon): Timeout hack since menu steals focus.
+                setTimeout(() => {
+                  deleteItem(view);
+                  view.focus();
+                }, 100);
+              },
+            },
+          ],
+        },
+      ],
+      [t],
+    );
+
+    const handleSelect = useCallback(
+      (item: CommandMenuItem) => {
+        if (view && item.onSelect) {
+          return item.onSelect(view, view.state.selection.main.head);
         }
-      }, 100);
-    };
+      },
+      [view],
+    );
 
     return (
-      // TODO(burdon): Use global modal provider?
-      <RefDropdownMenu.Provider>
+      <CommandMenuProvider groups={commandGroups} onSelect={handleSelect}>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content>
-            <DropdownMenu.Viewport>
-              <DropdownMenu.Item onClick={handleDeleteRow}>{t('delete row')}</DropdownMenu.Item>
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </RefDropdownMenu.Provider>
+      </CommandMenuProvider>
     );
   },
 );

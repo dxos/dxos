@@ -101,9 +101,9 @@ export const systemSememes = {
   textInputSurfaceGroup: contrastCadence(0, 0.5),
   textInputSurfaceModal: contrastCadence(0, 1),
 
-  inputSurfaceBase: contrastCadence(1, 0.5),
-  inputSurfaceGroup: contrastCadence(1, 1),
-  inputSurfaceModal: contrastCadence(1, 1.5),
+  inputSurfaceBase: contrastCadence(0.8, 0.33),
+  inputSurfaceGroup: contrastCadence(0.8, 0.66),
+  inputSurfaceModal: contrastCadence(0.8, 1),
 
   hoverSurfaceBase: contrastCadence(2, 1.5),
   hoverSurfaceGroup: contrastCadence(2, 2),
@@ -178,8 +178,8 @@ export const systemSememes = {
     dark: ['neutral', 1000],
   },
   description: {
-    light: ['neutral', 500],
-    dark: ['neutral', 400],
+    light: ['neutral', 550],
+    dark: ['neutral', 350],
   },
   subdued: {
     light: ['neutral', 700],
@@ -220,10 +220,12 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // The background color appearing in overscroll and between planks when Deck is enabled.
   deckSurface: { root: 'groupSurface' },
 
-  // Secondary aliases
+  // Secondary aliases.
   textInputSurface: { root: 'textInputSurfaceBase', group: 'textInputSurfaceGroup', modal: 'textInputSurfaceModal' },
   inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
   hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
+
+  // Borders and dividers.
   separator: { root: 'separatorBase', group: 'separatorGroup', modal: 'separatorModal' },
 
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
@@ -241,7 +243,7 @@ const aliasDefs: Record<string, Record<string, SememeName>> = {
   // Toolbars, table/sheet headers, etc.
   toolbarSurface: { root: 'groupSurface' },
 
-  // TODO: rename uses of this token to `focusSurface` and remove this alias.
+  // TODO(thure): rename uses of this token to `focusSurface` and remove this alias.
   attention: { root: 'focusSurface' },
 
   // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.

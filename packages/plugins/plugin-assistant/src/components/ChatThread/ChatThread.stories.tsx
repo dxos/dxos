@@ -5,111 +5,107 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import { Effect, Fiber, Layer } from 'effect';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { faker } from '@dxos/random';
+import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { type ContentBlock, DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { Popover } from '@dxos/react-ui';
+import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
+import { Card } from '@dxos/react-ui-stack';
+import { DataType } from '@dxos/schema';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
 
-import { ChatThread } from './ChatThread';
+import { ChatThread, type ChatThreadController, type ChatThreadProps } from './ChatThread';
 
 faker.seed(1);
 
-const createMessage = (role: DataType.ActorRole, blocks: ContentBlock.Any[]): DataType.Message => {
-  return Obj.make(DataType.Message, {
-    created: new Date().toISOString(),
-    sender: { role },
-    blocks,
-  });
+type MessageGenerator = Effect.Effect<void, never, DatabaseService | ContextQueueService>;
+
+type StoryProps = ChatThreadProps & { generator?: MessageGenerator[]; delay?: number };
+
+const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
+  const space = useSpace();
+  const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
+  const queue = useQueue<DataType.Message>(queueDxn);
+
+  // Generate messages.
+  useEffect(() => {
+    if (!space || !queue) {
+      return;
+    }
+
+    const fiber = Effect.runFork(
+      Effect.gen(function* () {
+        for (const step of generator) {
+          yield* step;
+          if (delay) {
+            yield* Effect.sleep(delay);
+          }
+        }
+      }).pipe(Effect.provide(Layer.mergeAll(DatabaseService.layer(space.db), ContextQueueService.layer(queue)))),
+    );
+
+    return () => {
+      void Effect.runPromise(Fiber.interrupt(fiber));
+    };
+  }, [space, queue, generator]);
+
+  // Set context.
+  const [controller, setController] = useState<ChatThreadController | null>(null);
+  useEffect(() => {
+    // controller?.setContext({ timestamp: Date.now() });
+  }, [controller]);
+
+  // TODO(burdon): Elsewhere PreviewProvider is implemented via the plugin-preview.
+  return (
+    <PreviewPopoverProvider
+      onLookup={async ({ label, ref }) => {
+        return { label, text: ref };
+      }}
+    >
+      <ChatThread {...props} messages={queue?.objects ?? []} ref={setController} />
+      <PreviewCard />
+    </PreviewPopoverProvider>
+  );
 };
 
-const TEST_MESSAGES: DataType.Message[] = [
-  createMessage('user', [
-    {
-      _tag: 'text',
-      text: faker.lorem.sentence(5),
-    } satisfies ContentBlock.Text,
-  ]),
+// TODO(burdon): Factor out.
+// TODO(burdon): Provide renderer for preview extension.
+const PreviewCard = () => {
+  const { target } = usePreviewPopover('PreviewCard');
 
-  createMessage('assistant', [
-    {
-      _tag: 'text',
-      disposition: 'cot',
-      text: Array.from({ length: faker.number.int({ min: 3, max: 5 }) })
-        .map((_, idx) => `${idx + 1}. ${faker.lorem.paragraph()}`)
-        .join('\n'),
-    },
-    {
-      _tag: 'text',
-      text: Array.from({ length: faker.number.int({ min: 2, max: 5 }) })
-        .map(() => faker.lorem.paragraphs())
-        .join('\n\n'),
-    },
-    {
-      _tag: 'toolCall',
-      toolCallId: '1234',
-      name: 'search',
-      input: {},
-    } satisfies ContentBlock.ToolCall,
-  ]),
-
-  createMessage('user', [
-    {
-      _tag: 'toolResult',
-      toolCallId: '1234',
-      name: 'search',
-      result: 'This is a tool result.',
-    } satisfies ContentBlock.ToolResult,
-  ]),
-
-  createMessage('assistant', [
-    {
-      _tag: 'toolCall',
-      toolCallId: '4567',
-      name: 'create',
-      input: {},
-    } satisfies ContentBlock.ToolCall,
-  ]),
-
-  createMessage('user', [
-    {
-      _tag: 'toolResult',
-      toolCallId: '4567',
-      name: 'create',
-      result: 'This is a tool result.',
-    } satisfies ContentBlock.ToolResult,
-  ]),
-
-  createMessage('assistant', [
-    {
-      _tag: 'text',
-      text: faker.lorem.paragraphs(1),
-    } satisfies ContentBlock.Text,
-  ]),
-
-  createMessage('assistant', [
-    {
-      _tag: 'json',
-      disposition: 'suggest',
-      data: JSON.stringify({ text: 'Search...' }),
-    },
-    {
-      _tag: 'json',
-      disposition: 'suggest',
-      data: JSON.stringify({ text: faker.lorem.paragraphs(1) }),
-    } satisfies ContentBlock.Json,
-  ]),
-];
+  return (
+    <Popover.Portal>
+      <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
+        <Popover.Viewport>
+          <Card.SurfaceRoot role='card--popover'>
+            <Card.Heading>{target?.label}</Card.Heading>
+            {target && <Card.Text classNames='truncate line-clamp-3'>{target.text}</Card.Text>}
+          </Card.SurfaceRoot>
+        </Popover.Viewport>
+        <Popover.Arrow />
+      </Popover.Content>
+    </Popover.Portal>
+  );
+};
 
 const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ Container: ColumnContainer })],
+  render: DefaultStory,
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
+    withLayout({ fullscreen: true }),
+    withTheme,
+  ],
   parameters: {
+    layout: 'fullscreen', // TODO(burdon): Replace withLayout.
     translations,
   },
 } satisfies Meta<typeof ChatThread>;
@@ -118,27 +114,17 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {
+export const Default: Story = {
   args: {
-    messages: TEST_MESSAGES,
+    generator: createMessageGenerator(),
   },
-} satisfies Story;
+};
 
-export const Incremental = {
-  render: () => {
-    const [messages, setMessages] = useState<DataType.Message[]>([]);
-    useEffect(() => {
-      let i = 0;
-      const interval = setInterval(() => {
-        setMessages((messages) => [...messages, TEST_MESSAGES[i++]]);
-        if (i >= TEST_MESSAGES.length) {
-          clearInterval(interval);
-        }
-      }, 2_000);
-
-      return () => clearInterval(interval);
-    }, []);
-
-    return <ChatThread messages={messages} collapse />;
+export const Delayed: Story = {
+  args: {
+    generator: createMessageGenerator(),
+    delay: 3_000,
+    fadeIn: true,
+    cursor: false,
   },
-} satisfies Story;
+};

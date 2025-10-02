@@ -2,64 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Layer } from 'effect';
+import { Effect, type Runtime } from 'effect';
 import { useMemo } from 'react';
-import { useDeepCompareMemoize } from 'use-deep-compare-effect';
 
-import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { Capabilities, useCapabilities } from '@dxos/app-framework';
-import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { useCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  DatabaseService,
-  LocalFunctionExecutionService,
-  QueueService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { useClient } from '@dxos/react-client';
 
-import { AssistantCapabilities } from '../capabilities';
-
-// TODO(burdon): Deconstruct into separate layers?
-export type AiChatServices =
-  | AiService.AiService
-  | CredentialsService
-  | DatabaseService
-  | QueueService
-  | RemoteFunctionExecutionService
-  | ToolResolverService
-  | ToolExecutionService
-  | TracingService;
+import { type AiChatServices } from '../processor';
+import { type Assistant } from '../types';
 
 export type UseChatServicesProps = {
   space?: Space;
+  chat?: Assistant.Chat;
 };
 
 /**
  * Construct service layer.
  */
-export const useChatServices = ({ space }: UseChatServicesProps): Layer.Layer<AiChatServices> | undefined => {
-  const aiServiceLayer =
-    useCapabilities(AssistantCapabilities.AiServiceLayer).at(0) ?? Layer.die('AiService not found');
-  const functions = useCapabilities(Capabilities.Functions).flat();
+// TODO(dmaretskyi): Better return type.
+export const useChatServices = ({
+  space,
+  chat,
+}: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
+  const client = useClient();
+  space ??= client.spaces.default;
+
+  const computeRuntimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
 
   return useMemo(() => {
-    return Layer.mergeAll(
-      aiServiceLayer,
-      makeToolResolverFromFunctions(functions),
-      makeToolExecutionServiceFromFunctions(functions),
-
-      CredentialsService.configuredLayer([]),
-      space ? DatabaseService.makeLayer(space.db) : DatabaseService.notAvailable,
-      space ? QueueService.makeLayer(space.queues) : QueueService.notAvailable,
-
-      ComputeEventLogger.layerFromTracing,
-    ).pipe(
-      Layer.provideMerge(TracingService.layerNoop),
-      Layer.provideMerge(LocalFunctionExecutionService.layer),
-      Layer.provideMerge(RemoteFunctionExecutionService.mockLayer),
-    );
-  }, [space, useDeepCompareMemoize(functions.map((f) => f.name))]);
+    const runtime = computeRuntimeResolver.getRuntime(space.id);
+    return () =>
+      runtime.runPromise(
+        Effect.gen(function* () {
+          return yield* Effect.runtime<AiChatServices>().pipe(
+            Effect.provide(
+              chat?.traceQueue?.target ? TracingService.layerQueue(chat.traceQueue?.target) : TracingService.layerNoop,
+            ),
+          );
+        }),
+      );
+  }, [space, chat?.traceQueue?.target]);
 };

@@ -34,7 +34,7 @@ import {
 } from '../../testing';
 import { translations } from '../../translations';
 
-import { Transcript, type TranscriptProps, renderMarkdown } from './Transcript';
+import { TranscriptView, type TranscriptViewProps, renderByline } from './Transcript';
 
 faker.seed(1);
 
@@ -42,7 +42,7 @@ faker.seed(1);
  * Story wrapper with test controls.
  */
 const TranscriptContainer: FC<
-  TranscriptProps & {
+  TranscriptViewProps & {
     running: boolean;
     onRunningChange: (running: boolean) => void;
     onReset?: () => void;
@@ -50,7 +50,7 @@ const TranscriptContainer: FC<
 > = ({ space, model, running, onRunningChange, onReset }) => {
   return (
     <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <Transcript space={space} model={model} />
+      <TranscriptView space={space} model={model} />
       <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
         <div className='flex items-center'>
           <SyntaxHighlighter language='json' className='text-sm'>
@@ -70,7 +70,7 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptProps, 'ignoreAttention' | 'attendableId'>;
+type StoryProps = { messages?: DataType.Message[] } & Pick<TranscriptViewProps, 'ignoreAttention' | 'attendableId'>;
 
 /**
  * Basic story mutates array of messages.
@@ -79,7 +79,7 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) =>
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
-    () => new SerializationModel<DataType.Message>(renderMarkdown([]), initialMessages),
+    () => new SerializationModel<DataType.Message>(renderByline([]), initialMessages),
     [initialMessages, reset],
   );
   const [running, setRunning] = useState(true);
@@ -141,7 +141,7 @@ const QueueStory = ({
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown(members), queue, initialMessages);
+  const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
 
   return (
     <TranscriptContainer
@@ -161,7 +161,7 @@ const EntityExtractionQueueStory = () => {
   const space = useSpace();
   const members = useMembers(space?.key).map((member) => member.identity);
   const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
-  const model = useQueueModelAdapter(renderMarkdown(members), queue, []);
+  const model = useQueueModelAdapter(renderByline(members), queue, []);
 
   return <TranscriptContainer space={space} model={model} running={running} onRunningChange={setRunning} />;
 };
@@ -179,23 +179,25 @@ const QueueStoryWrapper = () => {
   return <QueueStory key={key} queueId={queueId} onReset={handleReset} />;
 };
 
-const meta: Meta<typeof QueueStory> = {
+const meta = {
   title: 'plugins/plugin-transcription/Transcript',
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        PreviewPlugin(),
-        SpacePlugin(),
-        SettingsPlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
+        SettingsPlugin(),
+
+        // UI
+        PreviewPlugin(),
+        ThemePlugin({ tx: defaultTx }),
+        StorybookLayoutPlugin({}),
       ],
     }),
     withLayout({ fullscreen: true }),
@@ -203,13 +205,11 @@ const meta: Meta<typeof QueueStory> = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof QueueStory>;
-
-export const Default: Story = {
+export const Default: StoryObj<typeof BasicStory> = {
   render: BasicStory,
   args: {
     ignoreAttention: true,
@@ -218,7 +218,7 @@ export const Default: Story = {
   },
 };
 
-export const Empty: Story = {
+export const Empty: StoryObj<typeof BasicStory> = {
   render: BasicStory,
   args: {
     ignoreAttention: true,
@@ -226,7 +226,7 @@ export const Empty: Story = {
   },
 };
 
-export const WithQueue: Story = {
+export const WithQueue: StoryObj<typeof QueueStoryWrapper> = {
   render: QueueStoryWrapper,
   args: {
     ignoreAttention: true,
@@ -234,10 +234,13 @@ export const WithQueue: Story = {
   },
 };
 
-export const WithEntityExtractionQueue: Story = {
-  render: EntityExtractionQueueStory,
-  args: {
-    ignoreAttention: true,
-    attendableId: 'story',
-  },
-};
+// NOTE: We are running out of free quota on hugging face entity extraction.
+// TODO(mykola): Fix AI service in entity extraction function.
+// TODO(mykola): Fix hugging face quota issues.
+// export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
+//   render: EntityExtractionQueueStory,
+//   args: {
+//     ignoreAttention: true,
+//     attendableId: 'story',
+//   },
+// };

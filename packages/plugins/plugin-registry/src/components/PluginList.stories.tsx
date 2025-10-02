@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Plugin, definePlugin } from '@dxos/app-framework';
@@ -31,21 +31,20 @@ const icons = [
 const DefaultStory = ({ classNames }: ThemedClassName<{}>) => {
   const [plugins] = useState<Plugin[]>(
     faker.helpers.multiple(
-      () =>
-        definePlugin(
-          {
-            id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
-            name: `${faker.commerce.productName()}`,
-            description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
-            tags: faker.datatype.boolean({ probability: 0.6 })
-              ? [faker.helpers.arrayElement(['labs', 'beta', 'alpha', 'stable', 'new', '新発売'])]
-              : undefined,
-            icon: faker.helpers.arrayElement(icons),
-            homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
-            source: faker.internet.url(),
-          },
-          [],
-        ),
+      definePlugin(
+        {
+          id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+          name: `${faker.commerce.productName()}`,
+          description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
+          tags: faker.datatype.boolean({ probability: 0.6 })
+            ? [faker.helpers.arrayElement(['labs', 'beta', 'alpha', 'stable', 'new', '新発売'])]
+            : undefined,
+          icon: faker.helpers.arrayElement(icons),
+          homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
+          source: faker.internet.url(),
+        },
+        () => [],
+      ),
       { count: 16 },
     ),
   );
@@ -62,7 +61,7 @@ const DefaultStory = ({ classNames }: ThemedClassName<{}>) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
@@ -70,13 +69,15 @@ const meta: Meta = {
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof PluginList>;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
 
-export const Column = {
+export const Default: Story = {};
+
+export const Column: Story = {
   args: {
     classNames: 'w-[30rem]',
   },

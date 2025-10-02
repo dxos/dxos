@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const DECK_PLUGIN = 'dxos.org/plugin/deck' as const;
-
 export const meta: PluginMeta = {
-  id: DECK_PLUGIN,
+  id: 'dxos.org/plugin/deck',
   name: 'Layout',
   icon: 'ph--layout--regular',
 };

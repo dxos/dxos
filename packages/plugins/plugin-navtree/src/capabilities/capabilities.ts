@@ -5,7 +5,7 @@
 import { defineCapability } from '@dxos/app-framework';
 import { type Live } from '@dxos/live-object';
 
-import { NAVTREE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type NavTreeItemGraphNode } from '../types';
 
 export namespace NavTreeCapabilities {
@@ -16,5 +16,5 @@ export namespace NavTreeCapabilities {
     isOpen: (path: string[], item: NavTreeItemGraphNode) => boolean;
     isCurrent: (path: string[], item: NavTreeItemGraphNode) => boolean;
     isAlternateTree: (path: string[], item: NavTreeItemGraphNode) => boolean;
-  }>(`${NAVTREE_PLUGIN}/capability/state`);
+  }>(`${meta.id}/capability/state`);
 }

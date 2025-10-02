@@ -14,10 +14,11 @@ import { SpaceTimeoutError } from '../errors';
 import { maybeTruncateKey } from './keys';
 import { type TableOptions, table } from './table';
 
+// Use a direct dynamic import to avoid implied eval via Function constructor.
+const asyncImport = (module: string) => import(module);
+
 export const selectSpace = async (spaces: Space[]) => {
-  // TODO(burdon): https://esbuild.github.io/content-types/#direct-eval
-  // eslint-disable-next-line no-eval
-  const inquirer = (await eval('import("inquirer")')).default;
+  const inquirer = (await asyncImport('inquirer')).default;
   const { key } = await inquirer.prompt([
     {
       name: 'key',

@@ -5,7 +5,7 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type AnyEchoObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -18,15 +18,12 @@ import { prohibitSignalActions } from '../guarded-scope';
 import { type Query } from './api';
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends AnyEchoObject> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends BaseObject> = (a: T, b: T) => -1 | 0 | 1;
 
-export type QueryResultEntry<T extends AnyEchoObject = AnyEchoObject> = {
+export type QueryResultEntry<T extends BaseObject = BaseObject> = {
   id: string;
 
   spaceId: SpaceId;
-
-  /** @deprecated Use spaceId */
-  spaceKey: PublicKey;
 
   /**
    * May not be present for remote results.
@@ -55,14 +52,17 @@ export type QueryResultEntry<T extends AnyEchoObject = AnyEchoObject> = {
      */
     time: number;
   };
+
+  /** @deprecated Use spaceId */
+  spaceKey?: PublicKey;
 };
 
-export type OneShotQueryResult<T extends AnyEchoObject = AnyEchoObject> = {
+export type OneShotQueryResult<T extends BaseObject = BaseObject> = {
   results: QueryResultEntry<T>[];
   objects: T[];
 };
 
-export interface QueryContext<T extends AnyEchoObject = AnyEchoObject> {
+export interface QueryContext<T extends BaseObject = BaseObject> {
   getResults(): QueryResultEntry<T>[];
 
   // TODO(dmaretskyi): Update info?
@@ -109,7 +109,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
-export class QueryResult<T extends AnyEchoObject = AnyEchoObject> {
+export class QueryResult<T extends BaseObject = BaseObject> {
   private readonly _query: Query<T>;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();

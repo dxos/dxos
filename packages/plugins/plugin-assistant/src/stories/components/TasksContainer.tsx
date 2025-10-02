@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import React from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
@@ -41,7 +39,7 @@ export const TasksContainer = ({ space }: ComponentProps) => {
           // TODO(burdon): Create util.
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
           createBasicExtensions({ readOnly: false }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode }),
           outliner(),
         ]}

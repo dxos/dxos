@@ -5,14 +5,14 @@
 import { Effect, Schema } from 'effect';
 
 import { ArtifactId } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { MarkdownTasks, type TaskOperation } from './task-list';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/update-tasks',
+  key: 'dxos.org/function/markdown/update-tasks',
+  name: 'Update markdown',
   description: 'Creates and updates tasks in markdown documents.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
@@ -33,10 +33,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fn(function* ({ data: { id, operations = [] } }) {
-    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    if (!doc || !Obj.instanceOf(Markdown.Document, doc)) {
-      throw new Error('Document not found.');
-    }
+    const doc = yield* DatabaseService.resolve(ArtifactId.toDXN(id), Markdown.Document);
 
     // Create task manager and apply operations if provided.
     const { content } = yield* DatabaseService.load(doc.content);

@@ -4,11 +4,12 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { BaseError, type BaseErrorOptions } from './base';
 import { SystemError } from './errors';
 
 describe('errors', () => {
   test('error code and message, cause', () => {
-    const error = new SystemError('Test message', { cause: new Error('Test cause'), context: { a: 1, b: 2 } });
+    const error = new SystemError({ message: 'Test message', cause: new Error('Test cause'), context: { a: 1, b: 2 } });
     expect(error).toBeInstanceOf(SystemError);
     expect(error).toBeInstanceOf(SystemError);
     expect(error.code).toBe(SystemError.code);
@@ -24,19 +25,37 @@ describe('errors', () => {
       expect.fail('Expected error to be thrown');
     } catch (error: any) {
       expect(error).toBeInstanceOf(SystemError);
-      expect(String(error)).toEqual('SYSTEM_ERROR: Test message');
+      expect(String(error)).toEqual('SYSTEM: Test message');
       const stackLines = error.stack!.split('\n');
-      expect(stackLines?.[0]).toEqual('SYSTEM_ERROR: Test message');
+      expect(stackLines?.[0]).toEqual('SYSTEM: Test message');
       expect(stackLines?.[1]).toMatch(/^ {4}at two \(.*$/);
       expect(stackLines?.[2]).toMatch(/^ {4}at one \(.*$/);
     }
+  });
+
+  test('custom message', () => {
+    class CustomError extends BaseError.extend('CUSTOM', 'Custom message') {
+      constructor(value: number, options?: Omit<BaseErrorOptions, 'context'>) {
+        super({ context: { value }, ...options });
+      }
+    }
+
+    const error = new CustomError(1);
+    expect(error).toBeInstanceOf(CustomError);
+    expect(error.message).toBe('Custom message');
+    expect(error.context).toEqual({ value: 1 });
+  });
+
+  test('is', () => {
+    const error = new SystemError({ message: 'Test message' });
+    expect(SystemError.is(error)).toBe(true);
   });
 });
 
 const throwError = () => {
   const one = () => {
     const two = () => {
-      throw new SystemError('Test message');
+      throw new SystemError({ message: 'Test message' });
     };
     two();
   };

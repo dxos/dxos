@@ -197,7 +197,7 @@ export const createDispatcher = (
         .filter((resolver) => !resolver.filter || resolver.filter(intent.data))
         .toSorted(byPosition);
       if (candidates.length === 0) {
-        yield* Effect.fail(new NoResolversError(intent.id));
+        return yield* Effect.fail(new NoResolversError(intent.id));
       }
 
       const effect = candidates[0].resolve(intent.data, intent.undo ?? false);
@@ -208,7 +208,7 @@ export const createDispatcher = (
   const dispatch: IntentDispatcher = (intentChain, depth = 0) => {
     return Effect.gen(function* () {
       if (depth > executionLimit) {
-        yield* Effect.fail(new CycleDetectedError());
+        return yield* Effect.fail(new CycleDetectedError());
       }
 
       const resultsRef = yield* Ref.make<AnyIntentResult[]>([]);
@@ -231,7 +231,7 @@ export const createDispatcher = (
           //     error: result.error.message,
           //   }),
           // );
-          yield* Effect.fail(result.error);
+          return yield* Effect.fail(result.error);
         }
       }
 

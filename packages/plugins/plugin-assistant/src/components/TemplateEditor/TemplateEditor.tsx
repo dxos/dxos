@@ -2,9 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HighlightStyle, LanguageSupport, syntaxHighlighting } from '@codemirror/language';
-import { styleTags, tags } from '@lezer/highlight';
-import { handlebarsLanguage } from '@xiechao/codemirror-lang-handlebars';
 import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
@@ -13,21 +10,17 @@ import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/rea
 import {
   createBasicExtensions,
   createDataExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { meta } from '../../meta';
 
-handlebarsLanguage.configure({
-  props: [
-    styleTags({
-      '---': tags.lineComment,
-    }),
-  ],
-});
+import { handlebars } from './handlebars-extension';
 
 export type TemplateEditorProps = ThemedClassName<{
   id: string;
@@ -39,53 +32,27 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     const text = template.source?.target;
+    if (!text) {
+      return {};
+    }
+
     return {
-      initialValue: text?.content ?? '',
+      initialValue: text.content ?? '',
       extensions: [
-        text &&
-          createDataExtensions({
-            id,
-            text: createDocAccessor(text, ['content']),
-          }),
+        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
         createBasicExtensions({
           bracketMatching: false,
           lineNumbers: true,
           lineWrapping: true,
-          monospace: true,
           placeholder: t('template placeholder'),
         }),
-        createThemeExtensions({
-          themeMode,
-        }),
-
-        // https://github.com/xiechao/lang-handlebars
-        new LanguageSupport(handlebarsLanguage, syntaxHighlighting(handlebarsHighlightStyle)),
-      ].filter(isNotFalsy),
+        createThemeExtensions({ themeMode }),
+        createMarkdownExtensions(),
+        decorateMarkdown(),
+        handlebars(),
+      ].filter(isTruthy),
     };
   }, [themeMode, template.source?.target]);
 
-  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
+  return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
 };
-
-/**
- * https://github.com/xiechao/lang-handlebars/blob/direct/src/highlight.js
- */
-export const handlebarsHighlightStyle = HighlightStyle.define([
-  {
-    // Braces.
-    tag: tags.tagName,
-    class: 'text-redText',
-  },
-  {
-    tag: tags.variableName,
-    class: 'text-blueText',
-  },
-  {
-    tag: tags.keyword,
-    class: 'text-greenText',
-  },
-  {
-    tag: tags.comment,
-    class: 'text-subdued',
-  },
-]);

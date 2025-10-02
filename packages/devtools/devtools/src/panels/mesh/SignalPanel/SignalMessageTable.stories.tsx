@@ -11,14 +11,14 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { SignalMessageTable } from './SignalMessageTable';
 
-const meta: Meta<typeof SignalMessageTable> = {
+const meta = {
   title: 'devtools/devtools/SignalMessageTable',
   component: SignalMessageTable,
   decorators: [withClientProvider(), withTheme],
   parameters: {
     layout: 'fullscreen',
   },
-};
+} satisfies Meta<typeof SignalMessageTable>;
 
 export default meta;
 

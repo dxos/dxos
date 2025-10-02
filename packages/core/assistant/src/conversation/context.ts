@@ -3,18 +3,18 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Schema } from 'effect';
+import { Context, Schema } from 'effect';
 import { Array, pipe } from 'effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
 /**
  * Thread message that binds or unbinds contextual objects to a conversation.
  */
-// TODO(burdon): Move to @dxos/schema ContentBlock.
+// TODO(burdon): Move to @dxos/schema ContentBlock?
 export const ContextBinding = Schema.Struct({
   blueprints: Schema.Struct({
     added: Schema.Array(Type.Ref(Blueprint.Blueprint)),
@@ -42,7 +42,8 @@ export type BindingProps = Partial<{
 
 export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
-  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.toString());
+  // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
+  readonly objects = new ComplexSet<Ref.Ref<Type.Expando>>((ref) => ref.dxn.asEchoDXN()?.echoId);
 
   toJSON() {
     return {
@@ -55,9 +56,8 @@ export class Bindings {
 /**
  * Manages bindings of blueprints and objects to a conversation.
  */
+// TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
 export class AiContextBinder {
-  constructor(private readonly _queue: Queue) {}
-
   /**
    * Reactive query of all bindings.
    */
@@ -69,6 +69,8 @@ export class AiContextBinder {
   ]);
 
   readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
+
+  constructor(private readonly _queue: Queue) {}
 
   /**
    * Asynchronous query of all bindings.
@@ -84,14 +86,20 @@ export class AiContextBinder {
       return;
     }
 
+    const blueprints =
+      props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
+      [];
+    const objects =
+      props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
     await this._queue.append([
       Obj.make(ContextBinding, {
         blueprints: {
-          added: props.blueprints ?? [],
+          added: blueprints,
           removed: [],
         },
         objects: {
-          added: props.objects ?? [],
+          added: objects,
           removed: [],
         },
       }),
@@ -122,12 +130,25 @@ export class AiContextBinder {
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),
       Array.reduce(new Bindings(), (context, item) => {
-        item.blueprints.removed.forEach((item) => context.blueprints.delete(item));
-        item.blueprints.added.forEach((item) => context.blueprints.add(item));
-        item.objects.removed.forEach((item) => context.objects.delete(item));
-        item.objects.added.forEach((item) => context.objects.add(item));
+        item.blueprints.removed.forEach((ref) => context.blueprints.delete(ref));
+        item.blueprints.added.forEach((ref) => context.blueprints.add(ref));
+        item.objects.removed.forEach((ref) => {
+          for (const obj of context.objects) {
+            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+              context.objects.delete(obj);
+            }
+          }
+        });
+        item.objects.added.forEach((ref) => context.objects.add(ref));
         return context;
       }),
     );
   }
 }
+
+export class AiContextService extends Context.Tag('@dxos/assistant/AiContextService')<
+  AiContextService,
+  {
+    binder: AiContextBinder;
+  }
+>() {}

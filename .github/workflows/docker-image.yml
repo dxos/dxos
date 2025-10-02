@@ -16,14 +16,14 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/dxos/gh-actions
-  DEFAULT_NODE_VERSION: 20.19.0
+  DEFAULT_NODE_VERSION: 20.19.5
   IMAGE_TAG_SUFFIX: ''
 
 jobs:
   build-and-push:
     strategy:
       matrix:
-        node_version: ['20.12.1', '22.17.1', '24.4.1']
+        node_version: ['20.12.1', '20.19.5', '22.17.1', '24.4.1', '24.5.0']
     runs-on: ubuntu-latest
 
     steps:

@@ -4,10 +4,8 @@
 
 import { type EditorView } from '@codemirror/view';
 import JSON5 from 'json5';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ToolRegistry } from '@dxos/ai';
-import { getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceDefinition } from '@dxos/conductor';
 import { Key } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
@@ -42,32 +40,32 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     });
   }, [sequence]);
 
-  const editorRef = useRef<EditorView | undefined>(undefined);
+  const editorRef = useRef<EditorView>(null);
 
   // TODO(burdon): Factor out.
-  const toolRegistry = useMemo(() => {
-    const space = getSpace(sequence);
-    if (!space) {
-      return;
-    }
+  // const toolRegistry = useMemo(() => {
+  //   const space = getSpace(sequence);
+  //   if (!space) {
+  //     return;
+  //   }
 
-    // TODO(burdon): How should the queue be created?
-    // eslint-disable-next-line no-unused-vars
-    const _queue = space.queues.create();
+  //   // TODO(burdon): How should the queue be created?
+  //   // eslint-disable-next-line no-unused-vars
+  //   const _queue = space.queues.create();
 
-    return new ToolRegistry([
-      // createExaTool({ apiKey: EXA_API_KEY }),
-      // createLocalSearchTool(space.db, queue),
-      // createGraphWriterTool({
-      //   db: space.db,
-      //   queue,
-      //   schema: [], // TODO(burdon): Get schema from client/sequence?
-      //   onDone: async (objects) => {
-      //     await queue.append(objects);
-      //   },
-      // }),
-    ]);
-  }, [sequence]);
+  //   return new ToolRegistry([
+  //     // createExaTool({ apiKey: EXA_API_KEY }),
+  //     // createLocalSearchTool(space.db, queue),
+  //     // createGraphWriterTool({
+  //     //   db: space.db,
+  //     //   queue,
+  //     //   schema: [], // TODO(burdon): Get schema from client/sequence?
+  //     //   onDone: async (objects) => {
+  //     //     await queue.append(objects);
+  //     //   },
+  //     // }),
+  //   ]);
+  // }, [sequence]);
 
   const formatAndSave = useCallback((): SequenceDefinition | undefined => {
     if (!sequence) {
@@ -117,7 +115,7 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     // }
     // const machine = new SequenceMachine(toolRegistry, sequence).setLogger(new QueueLogger(sequence));
     // await machine.runToCompletion({ aiClient: aiClient.value, input });
-  }, [sequence, formatAndSave, selectionManager, toolRegistry]);
+  }, [sequence, formatAndSave, selectionManager]);
 
   return (
     <StackItem.Content toolbar>

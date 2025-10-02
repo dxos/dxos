@@ -72,18 +72,23 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
   );
   const focusableGroupAttrs = window ? {} : { tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } };
 
-  return { onKeyDown: handleKeyDown, [landmarkAttr]: landmark, tabIndex: 0, ...focusableGroupAttrs };
+  return {
+    onKeyDown: handleKeyDown,
+    [landmarkAttr]: landmark,
+    tabIndex: 0,
+    ...focusableGroupAttrs,
+  };
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   resizing: false,
   navigationSidebarState: 'closed',
-  setNavigationSidebarState: (nextState) => {
+  setNavigationSidebarState: (_nextState) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
     log.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
   complementarySidebarState: 'closed',
-  setComplementarySidebarState: (nextState) => {
+  setComplementarySidebarState: (_nextState) => {
     // TODO(burdon): Standardize with other context missing errors using raise.
     log.warn('Attempt to set sidebar state without initializing `MainRoot`');
   },
@@ -235,7 +240,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           onKeyDown={handleKeyDown}
-          {...(state === 'closed' && { inert: 'true' })}
+          {...(state === 'closed' && { inert: true })}
           ref={ref}
         >
           {children}

@@ -1,0 +1,18 @@
+# For vendored deps.
+# I.e. external deps that we pre-build in our monorepo to eliminate tooling inconsistencies.
+
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  compile:
+    command: dx-compile
+    args:
+      - --outputPath=dist/lib
+    deps:
+      - dx-compile:compile
+      - ^:compile
+    inputs:
+      - '@group(production)'
+    outputs:
+      - dist/lib/
+    options:
+      timeout: 10

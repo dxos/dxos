@@ -127,7 +127,7 @@ async function main() {
       console.log(chalk.yellow('Current branch is main. Skipping merge step.'));
     }
   } catch (error) {
-    console.error(chalk.red('Error fetching or identifying branch:'), error);
+    console.error(chalk.red('Error fetching or identifying branch:'), error.message);
     process.exit(1);
   }
 
@@ -142,7 +142,7 @@ async function main() {
       console.log(chalk.green('No changes after pnpm install.'));
     }
   } catch (error) {
-    console.error(chalk.red('Error during pnpm install:'), error);
+    console.error(chalk.red('Error during pnpm install:'), error.message);
     process.exit(1);
   }
 
@@ -157,7 +157,7 @@ async function main() {
       console.log(chalk.green('No linting issues to fix.'));
     }
   } catch (error) {
-    console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error);
+    console.error(chalk.red('Linting failed with errors that could not be auto-fixed:'), error.message);
     process.exit(1);
   }
 
@@ -167,7 +167,7 @@ async function main() {
     await $`git push`;
     console.log(chalk.green('Successfully pushed changes.'));
   } catch (error) {
-    console.error(chalk.red('Failed to push changes:'), error);
+    console.error(chalk.red('Failed to push changes:'), error.message);
     process.exit(1);
   }
 
@@ -178,7 +178,7 @@ async function main() {
     await $`moon run :test --no-bail -- --no-file-parallelism`;
     console.log(chalk.green('Build and tests completed successfully.'));
   } catch (error) {
-    console.error(chalk.red('Build or tests failed:'), error);
+    console.error(chalk.red('Build or tests failed:'), error.message);
     process.exit(1);
   }
 

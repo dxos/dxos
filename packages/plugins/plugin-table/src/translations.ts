@@ -3,14 +3,14 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [TableView.typename]: {
+      [Table.Table.typename]: {
         'typename label': 'Table',
         'typename label_zero': 'Tables',
         'typename label_one': 'Table',
@@ -35,6 +35,7 @@ export const translations = [
         'column action delete': 'Delete Column',
         'delete row label': 'Delete row',
         'new column button label': 'Create column',
+        'open record label': 'Open record',
       },
     },
   },

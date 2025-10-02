@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta, StoryObj } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -35,7 +35,7 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: DefaultStory
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={() => model.initialize()}>Reset</Button>
+        <Button onClick={() => model.update()}>Reset</Button>
         <Button onClick={() => model.makeRandomMove()}>Move</Button>
         <div className='grow'></div>
         <Button
@@ -78,34 +78,34 @@ const GridStory = () => {
   );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: '' })],
-};
+} satisfies Meta<typeof Chessboard>;
 
 export default meta;
 
-type Story = StoryObj<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
-export const Default = {} satisfies Story;
+export const Default: Story = {};
 
-export const Promotion = {
+export const Promotion: Story = {
   args: {
     pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 14. d5 Qg5 15. dxe6 Kf8 16. e7+ Kg8 *',
   },
-} satisfies Story;
+};
 
-export const Debug = {
+export const Debug: Story = {
   args: {
     pgn: '1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Nc3 d5 8. exd5 Nxd5 9. O-O Be6 10. Qb3 Na5 11. Qa4+ c6 12. Bxd5 Bxc3 13. Bxe6 fxe6 *',
     orientation: 'black',
     showLabels: true,
     debug: true,
   },
-} satisfies Story;
+};
 
 export const Grid = {
   render: GridStory,
-} satisfies Story;
+};

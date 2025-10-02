@@ -210,7 +210,7 @@ export class CallManager extends Resource {
 
   private _onCallStateUpdated(state: CallState): void {
     const tracksToPull = state.users
-      ?.filter((user) => user.joined && user.id !== state.self?.id)
+      ?.filter((user) => user.joined && user.id !== state.self!.id)
       ?.flatMap((user) => [user.tracks?.video, user.tracks?.audio, user.tracks?.screenshare])
       .filter(isNonNullable);
     this._mediaManager._schedulePullTracks(tracksToPull as EncodedTrackName[]);

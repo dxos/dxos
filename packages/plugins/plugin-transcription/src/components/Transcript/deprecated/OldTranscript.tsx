@@ -21,7 +21,7 @@ import {
 } from '@dxos/react-ui-grid';
 import { mx } from '@dxos/react-ui-theme';
 
-import { TRANSCRIPTION_PLUGIN } from '../../../meta';
+import { meta } from '../../../meta';
 
 /**
  * Transcription fragment.
@@ -115,7 +115,7 @@ const measureRows = async (
   return result;
 };
 
-export type TranscriptProps = ThemedClassName<{
+export type TranscriptViewProps = ThemedClassName<{
   blocks?: TranscriptBlock[];
   attendableId?: string;
   ignoreAttention?: boolean;
@@ -124,8 +124,8 @@ export type TranscriptProps = ThemedClassName<{
 /**
  * @@deprecated
  */
-export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
-  const { t } = useTranslation(TRANSCRIPTION_PLUGIN);
+export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attendableId, ignoreAttention }) => {
+  const { t } = useTranslation(meta.id);
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [rows, setRows] = useState<DxGridAxisMeta | undefined>(undefined);
   const [columns, setColumns] = useState<DxGridAxisMeta | undefined>(undefined);
@@ -144,7 +144,7 @@ export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendable
     [hasAttention, ignoreAttention],
   );
 
-  const abortControllerRef = useRef<AbortController>();
+  const abortControllerRef = useRef<AbortController>(null);
 
   const handleResize = useCallback(
     async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
@@ -242,7 +242,7 @@ export const Transcript: FC<TranscriptProps> = ({ classNames, blocks, attendable
           ref={setDxGrid}
         />
       </Grid.Root>
-      <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
+      <div role='none' {...{ inert: true }} aria-hidden className={measureClasses} ref={measureRef} />
       <IconButton
         icon='ph--arrow-line-down--regular'
         iconOnly

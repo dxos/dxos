@@ -112,7 +112,7 @@ export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) 
         <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
 
         <div>
-          <SyntaxHighlighter classNames='flex text-xs' language='json'>
+          <SyntaxHighlighter language='json' classNames='text-xs'>
             {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
           </SyntaxHighlighter>
         </div>

@@ -19,25 +19,25 @@ export type Import = {
 
 export type BundleOptions = {
   /**
-   * Path to the source file on the local file system.
-   * If provided, the path will be used instead of the `source` code.
-   */
-  path?: string;
-
-  /**
    * Source code to bundle.
-   * Required if `path` is not provided.
    */
-  source?: string;
+  source: string;
 };
 
-export type BundleResult = {
-  timestamp: number;
-  sourceHash?: Buffer;
-  imports?: Import[];
-  bundle?: string;
-  error?: any;
-};
+export type BundleResult =
+  | {
+      timestamp: number;
+      sourceHash: Buffer;
+      error: unknown;
+    }
+  | {
+      timestamp: number;
+      sourceHash: Buffer;
+      imports: Import[];
+      entryPoint: string;
+      asset: Uint8Array;
+      bundle: string;
+    };
 
 export type BundlerOptions = {
   platform: BuildOptions['platform'];
@@ -58,16 +58,9 @@ export const initializeBundler = async (options: { wasmUrl: string }) => {
 export class Bundler {
   constructor(private readonly _options: BundlerOptions) {}
 
-  async bundle({ path, source }: BundleOptions): Promise<BundleResult> {
+  async bundle({ source }: BundleOptions): Promise<BundleResult> {
     const { sandboxedModules: providedModules, ...options } = this._options;
-
-    const createResult = async (result?: Partial<BundleResult>) => {
-      return {
-        timestamp: Date.now(),
-        sourceHash: source ? Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))) : undefined,
-        ...result,
-      };
-    };
+    const sourceHash = Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source)));
 
     if (this._options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
@@ -83,7 +76,10 @@ export class Bundler {
         conditions: ['workerd', 'browser'],
         metafile: true,
         write: false,
-        entryPoints: [path ?? 'memory:main.tsx'],
+        entryPoints: {
+          // Gets mapped to `userFunc.js` by esbuild.
+          userFunc: 'memory:main.tsx',
+        },
         bundle: true,
         format: 'esm',
         plugins: [
@@ -136,12 +132,17 @@ export class Bundler {
 
       log('compile complete', result.metafile);
 
-      return await createResult({
+      const entryPoint = 'userFunc.js';
+      return {
+        timestamp: Date.now(),
+        sourceHash,
         imports: this.analyzeImports(result),
+        entryPoint,
+        asset: result.outputFiles![0].contents,
         bundle: result.outputFiles![0].text,
-      });
+      };
     } catch (err) {
-      return await createResult({ error: err });
+      return { timestamp: Date.now(), sourceHash, error: err };
     }
   }
 
@@ -153,7 +154,6 @@ export class Bundler {
     const parsedImports = allMatches(IMPORT_REGEX, result.outputFiles[0].text);
     return Object.values(result.metafile!.outputs)[0].imports.map((entry): Import => {
       const namedImports: string[] = [];
-
       const parsedImport = parsedImports.find((capture) => capture?.[4] === entry.path);
       if (parsedImport?.[2]) {
         NAMED_IMPORTS_REGEX.lastIndex = 0;
@@ -207,10 +207,9 @@ const IMPORT_REGEX =
 const NAMED_IMPORTS_REGEX = /[ \n\t]*{((?:[ \n\t]*[^ \n\t"'{}]+[ \n\t]*,?)+)}[ \n\t]*/gm;
 
 const allMatches = (regex: RegExp, str: string) => {
-  regex.lastIndex = 0;
-
   let match;
   const matches = [];
+  regex.lastIndex = 0;
   while ((match = regex.exec(str))) {
     matches.push(match);
   }

@@ -7,6 +7,8 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -104,11 +106,12 @@ export const Default: StoryObj<typeof WelcomeTour> = {
 /**
  * IMPORTANT: Run in separate tab.
  */
-const meta: Meta<typeof WelcomeTour> = {
+const meta = {
   title: 'plugins/plugin-help/WelcomeTour',
   component: WelcomeTour,
   render: DefaultStory,
-  decorators: [withTheme],
-};
+  // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin({})] }), withTheme],
+} satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

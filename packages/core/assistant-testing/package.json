@@ -32,8 +32,11 @@
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -41,27 +44,26 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect/ai": "0.29.1",
+    "@effect/ai-anthropic": "0.19.0",
+    "@effect/experimental": "0.56.0",
+    "@effect/platform": "^0.92.1",
+    "dfx": "^0.126.0",
+    "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "@effect/ai": "0.23.0",
-    "@effect/ai-anthropic": "0.13.0",
-    "@effect/ai-openai": "0.26.1",
-    "@effect/cluster": "0.44.0",
-    "@effect/experimental": "0.53.0",
-    "@effect/platform": "0.89.0",
-    "@effect/platform-node": "0.92.0",
-    "@effect/rpc": "0.66.0",
-    "@effect/sql": "0.43.0",
-    "@effect/workflow": "0.6.0",
-    "effect": "3.17.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@effect/ai-openai": "0.32.0",
+    "@effect/sql": "0.46.0",
+    "@effect/workflow": "0.11.2",
+    "effect": "3.18.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0"
   },
   "peerDependencies": {
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

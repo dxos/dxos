@@ -2,56 +2,92 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type CSSProperties, forwardRef, useMemo } from 'react';
+import React, {
+  type CSSProperties,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { ScrollContainer, type ScrollController } from '@dxos/react-ui-components';
+import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-components';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { keyToFallback } from '@dxos/util';
 
-import { ChatMessage, type ChatMessageProps } from './ChatMessage';
-import { messageReducer } from './reducer';
+import { type ChatEvent } from '../Chat';
+
+import { blockToMarkdown, componentRegistry } from './registry';
+import { MessageSyncer } from './sync';
+
+export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
 
 export type ChatThreadProps = ThemedClassName<
   {
     identity?: Identity;
     messages?: DataType.Message[];
-    collapse?: boolean;
-  } & Pick<ChatMessageProps, 'debug' | 'space' | 'processor' | 'tools' | 'onEvent'>
+    error?: Error;
+    onEvent?: (event: ChatEvent) => void;
+  } & Pick<MarkdownStreamProps, 'cursor' | 'fadeIn'>
 >;
 
-export const ChatThread = forwardRef<ScrollController, ChatThreadProps>(
-  ({ classNames, identity, messages, collapse = true, ...props }, forwardedRef) => {
+export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProps>(
+  ({ classNames, identity, messages = [], error, cursor = false, fadeIn = true, onEvent }, forwardedRef) => {
     const userHue = useMemo(() => {
       return identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue;
     }, [identity]);
 
-    // TODO(dmaretskyi): This needs to be a separate type: `id` is not a valid ObjectId, this needs to accommodate messageId for deletion.
-    const { messages: filteredMessages = [] } = useMemo(() => {
-      if (collapse) {
-        return (messages ?? []).reduce<{ messages: DataType.Message[]; current?: DataType.Message }>(messageReducer, {
-          messages: [],
-        });
-      } else {
-        return { messages: messages ?? [] };
-      }
-    }, [messages, collapse]);
+    // Expose controller.
+    const [controller, setController] = useState<MarkdownStreamController | null>(null);
+    useImperativeHandle(forwardedRef, () => (controller ? controller : (null as any)), [controller]);
+
+    // Show error.
+    useEffect(() => {
+      controller?.scrollToBottom();
+    }, [controller, error]);
+
+    // Update document.
+    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    useEffect(() => {
+      syncer?.sync(messages);
+    }, [syncer, messages]);
+
+    // Event handler.
+    const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(
+      (ev) => {
+        switch (ev.type) {
+          case 'submit': {
+            ev.value &&
+              onEvent?.({
+                type: 'submit',
+                text: ev.value,
+              });
+            break;
+          }
+        }
+      },
+      [onEvent],
+    );
 
     return (
-      <ScrollContainer ref={forwardedRef} classNames={classNames} fade>
-        <div
-          role='none'
-          className={mx(filteredMessages.length > 0 && 'pbs-4 pbe-4')}
-          style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
-        >
-          {filteredMessages.map((message) => (
-            <ChatMessage key={message.id} message={message} {...props} />
-          ))}
-        </div>
-      </ScrollContainer>
+      <div
+        className={mx('flex bs-full is-full justify-center overflow-hidden', classNames)}
+        style={{ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties}
+      >
+        <MarkdownStream
+          ref={setController}
+          classNames='bs-full max-is-prose overflow-hidden'
+          registry={componentRegistry}
+          cursor={cursor}
+          fadeIn={fadeIn}
+          onEvent={handleEvent}
+        />
+      </div>
     );
   },
 );

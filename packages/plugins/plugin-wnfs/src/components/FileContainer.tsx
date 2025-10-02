@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { WnfsCapabilities } from '../capabilities';
@@ -25,17 +26,13 @@ export const FileContainer = ({ file }: FileContainerProps) => {
   const instances = useCapability(WnfsCapabilities.Instances);
   const [blobUrl, setBlobUrl] = useState<string>();
 
-  useEffect(() => {
-    const timeout = setTimeout(async () => {
-      const space = getSpace(file);
-      invariant(space);
-      const { directory, forest } = await loadWnfs({ blockstore, instances, space });
-      const path = filePath(file.cid.toString(), space);
-      const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
-      setBlobUrl(url);
-    });
-
-    return () => clearTimeout(timeout);
+  useAsyncEffect(async () => {
+    const space = getSpace(file);
+    invariant(space);
+    const { directory, forest } = await loadWnfs({ blockstore, instances, space });
+    const path = filePath(file.cid.toString(), space);
+    const url = await getBlobUrl({ wnfsUrl: wnfsUrl(path), blockstore, directory, forest, type: file.type });
+    setBlobUrl(url);
   }, [file]);
 
   if (!blobUrl) {

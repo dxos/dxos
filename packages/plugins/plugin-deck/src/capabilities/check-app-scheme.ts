@@ -4,7 +4,7 @@
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DeckSettingsProps } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
@@ -31,7 +31,7 @@ const checkAppScheme = (url: string) => {
 };
 
 export default async (context: PluginContext) => {
-  const settings = context.getCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(DECK_PLUGIN)?.value;
+  const settings = context.getCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
   if (!isSocket && settings?.enableNativeRedirect) {
     checkAppScheme(appScheme);
   }

@@ -10,20 +10,19 @@
   "type": "module",
   "exports": {
     ".": {
-      "source": "./dist/src/index.ts",
+      "source": "./src/index.ts",
       "types": "./dist/src/index.d.ts",
       "browser": "./dist/src/index.js",
       "node": "./dist/src/index.js"
     },
     "./react": {
-      "source": "./dist/src/react.ts",
+      "source": "./src/react.ts",
       "types": "./dist/src/react.d.ts",
       "browser": "./dist/src/react.js",
       "node": "./dist/src/react.js"
     },
     "./dx-avatar.pcss": "./src/dx-avatar/dx-avatar.pcss",
-    "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss",
-    "./dx-ref-tag.pcss": "./src/dx-ref-tag/dx-ref-tag.pcss"
+    "./dx-tag-picker.pcss": "./src/dx-tag-picker/dx-tag-picker.pcss"
   },
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -40,9 +39,10 @@
   ],
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@lit/react": "^1.0.5",
-    "lit": "^3.2.0"
+    "@lit/react": "^1.0.8",
+    "lit": "^3.3.1"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*"

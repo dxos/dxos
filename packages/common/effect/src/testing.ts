@@ -6,7 +6,10 @@ import { Effect } from 'effect';
 import type { TestContext } from 'vitest';
 
 // TODO(dmaretskyi): Add all different test tags here.
-export type TestTag = 'flaky' | 'llm';
+export type TestTag =
+  | 'flaky' // Flaky tests.
+  | 'llm' // Tests with AI.
+  | 'sync'; // Sync with external services.
 
 export namespace TestHelpers {
   /**

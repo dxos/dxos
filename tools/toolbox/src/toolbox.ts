@@ -204,12 +204,12 @@ export class Toolbox {
           'bump-patch-for-minor-pre-major': true,
           'include-component-in-tag': false,
           'include-v-in-tag': true,
-          // eslint-disable-next-line no-template-curly-in-string
           'pull-request-title-pattern': 'chore: release v${version}',
           'extra-files': [
             // TODO(wittjosiah): Move extra files to toolbox config.
             'packages/sdk/client/src/version.ts',
             'packages/sdk/client-services/src/version.ts',
+            'packages/devtools/cli-next/src/version.ts',
             {
               type: 'json',
               path: 'packages/apps/composer-app/src-tauri/tauri.conf.json',

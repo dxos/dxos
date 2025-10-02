@@ -68,6 +68,9 @@ export class TablePresentation<T extends TableRow = TableRow> {
       case 'frozenRowsEnd':
         cells = this.getDraftRowCells(range);
         break;
+      case 'fixedEndStart':
+        cells = this.getDraftIconCells(range);
+        break;
       case 'fixedEndEnd':
         cells = this.getDraftActionCells(range);
         break;
@@ -138,20 +141,22 @@ export class TablePresentation<T extends TableRow = TableRow> {
     };
 
     const classes = [];
-    const formatClasses = cellClassesForFieldType({ type: props.type, format: props.format });
+    const formatClasses = cellClassesForFieldType(props);
+
     if (formatClasses) {
       classes.push(formatClasses);
     }
+
     const rowSelectionClasses = cellClassesForRowSelection(
       this.model.selection.isObjectSelected(obj),
       this.model.selection.selectionMode,
     );
+
     if (rowSelectionClasses) {
       classes.push(rowSelectionClasses);
     }
-    if (classes.length > 0) {
-      cell.className = mx(classes.flat());
-    }
+
+    cell.className = mx(classes);
 
     // Arrays.
     if (props.type === TypeEnum.Array) {
@@ -200,7 +205,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-2 block-start-[.2rem]" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
+        cell.accessoryHtml = `<dx-anchor refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-2 block-start-[.2rem]" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor>`;
       }
     }
 
@@ -276,23 +281,34 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const fields = this.model.projection?.fields ?? [];
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
       for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
-        const field = fields[col];
-        if (!field) {
-          continue;
-        }
-
-        this.createDataCell(cells, draftRow.data, field, col, row);
-
-        if (this.model.hasDraftRowValidationError(row, field.path)) {
+        cells[toPlaneCellIndex({ col, row: 0 })] = {
+          value: '',
+          readonly: true,
+          className: 'dx-grid__row--cta__cell',
+        };
+      }
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        for (let col = range.start.col; col <= range.end.col && col < fields.length; col++) {
           const cellIndex = toPlaneCellIndex({ col, row });
-          const cellValue = cells[cellIndex];
-          if (cellValue) {
-            const existingClasses = cellValue.className || '';
-            const draftClasses = 'dx-grid__cell--flagged';
-            cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+          const field = fields[col];
+          if (!field) {
+            continue;
+          }
+
+          this.createDataCell(cells, draftRow.data, field, col, row);
+
+          if (this.model.hasDraftRowValidationError(row, field.path)) {
+            const cellValue = cells[cellIndex];
+            if (cellValue) {
+              const existingClasses = cellValue.className || '';
+              const draftClasses = 'dx-grid__cell--flagged';
+              cellValue.className = existingClasses ? `${existingClasses} ${draftClasses}` : draftClasses;
+            }
           }
         }
       }
@@ -311,14 +327,14 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
       cells[toPlaneCellIndex({ col, row: 0 })] = {
         // TODO(burdon): Use same logic as form for fallback title.
-        value: props.title ?? field.path,
-        readonly: true,
+        value: '',
         resizeHandle: 'col',
         accessoryHtml: `
+          <span class="grow min-is-0 truncate">${props.title ?? field.path}</span>
           ${direction !== undefined ? tableButtons.sort.render({ fieldId: field.id, direction }) : ''}
           ${tableButtons.columnSettings.render({ fieldId: field.id })}
         `,
-        className: '!bg-toolbarSurface',
+        className: '!bg-toolbarSurface !text-description [&>div]:flex [&>div]:items-stretch',
       };
     }
 
@@ -401,14 +417,39 @@ export class TablePresentation<T extends TableRow = TableRow> {
     const cells: DxGridPlaneCells = {};
     const draftRows = this.model.draftRows.value;
 
-    for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
-      const draftRow = draftRows[row];
-      const disabled = !draftRow.valid;
+    // Return cells of the CTA row if no draft row is active
+    if (draftRows.length === 0) {
+      cells[toPlaneCellIndex({ col: 0, row: 0 })] = {
+        value: '',
+        className: 'dx-grid__row--cta__cell',
+        readonly: true,
+      };
+    } else {
+      for (let row = range.start.row; row <= range.end.row && row < draftRows.length; row++) {
+        const draftRow = draftRows[row];
+        const disabled = !draftRow.valid;
 
+        cells[toPlaneCellIndex({ col: 0, row })] = {
+          value: '',
+          readonly: true,
+          accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+        };
+      }
+    }
+
+    return cells;
+  }
+
+  private getDraftIconCells(range: DxGridPlaneRange): DxGridPlaneCells {
+    const cells: DxGridPlaneCells = {};
+    const draftRows = this.model.draftRows.value;
+
+    for (let row = range.start.row; row <= range.end.row; row++) {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        accessoryHtml: tableButtons.saveDraftRow.render({ rowIndex: row, disabled }),
+        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
+        className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
       };
     }
 

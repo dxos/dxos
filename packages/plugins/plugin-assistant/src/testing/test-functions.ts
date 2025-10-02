@@ -5,12 +5,12 @@
 import { DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { createSystemPrompt } from '@dxos/assistant';
 
-import { type AiChatProcessorOptions } from '../hooks';
+import { type AiChatProcessorOptions } from '../processor';
 
 /**
  * @deprecated
  */
-export const createProcessorOptions = (blueprints: string[]): Pick<AiChatProcessorOptions, 'model' | 'system'> => ({
+export const createProcessorOptions = (): Pick<AiChatProcessorOptions, 'model' | 'system'> => ({
   model: DEFAULT_EDGE_MODEL,
-  system: createSystemPrompt({ blueprints }),
+  system: createSystemPrompt({}),
 });

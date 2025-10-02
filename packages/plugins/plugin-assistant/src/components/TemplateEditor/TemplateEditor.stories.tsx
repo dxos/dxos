@@ -4,14 +4,14 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -22,7 +22,7 @@ const TEMPLATE = trim`
   {{! System Prompt }}
   
   You are a machine that is an expert chess player.
-  The move history of the current game is: {{history}}
+  The move history of the current game is: {{history}}.
   If asked to suggest a move explain why it is a good move.
 
   {{#each artifacts}}
@@ -38,33 +38,45 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   const client = useClient();
   const [blueprint] = useState(() => {
     const space = client.spaces.default;
-    return space.db.add(Blueprint.make({ key: 'example.com/blueprint/test', name: 'Test', instructions: { source } }));
+    return space.db.add(
+      Blueprint.make({
+        key: 'example.com/blueprint/test',
+        name: 'Test',
+        instructions: Template.make({ source }),
+      }),
+    );
   });
 
-  return <TemplateEditor id={blueprint.id} template={blueprint.instructions} />;
+  return (
+    <TemplateEditor
+      classNames='bg-baseSurface max-is-prose is-full'
+      id={blueprint.id}
+      template={blueprint.instructions}
+    />
+  );
 };
 
-const meta: Meta<typeof DefaultStory> = {
+const meta = {
   title: 'plugins/plugin-assistant/TemplateEditor',
-  component: TemplateEditor,
+  component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [
     withClientProvider({
+      types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
-      types: [Template.Template],
     }),
-    withLayout({ fullscreen: true, Container: ColumnContainer }),
+    withLayout({ fullscreen: true, classNames: 'justify-center bg-deckSurface' }),
     withTheme,
   ],
   parameters: {
     translations,
   },
-};
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = Meta<typeof DefaultStory>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {

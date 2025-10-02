@@ -2,79 +2,73 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
+import React, { useCallback } from 'react';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
+import { IconButton, Popover } from '@dxos/react-ui';
+import { StackItem } from '@dxos/react-ui-stack';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
-
-import { Chat } from '../../components';
+import { Chat, Toolbar } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
 import { useOnline, usePresets } from '../../hooks';
-import { meta } from '../../meta';
 import { Assistant } from '../../types';
 
+import { ExecutionGraphContainer } from './ExecutionGraphContainer';
 import { type ComponentProps } from './types';
 
-export const ChatContainer = ({ space }: ComponentProps) => {
-  const { t } = useTranslation(meta.id);
+export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
-  const [chat, setChat] = useState<Assistant.Chat>();
-  useEffect(() => {
-    const results = space?.db.query(Filter.type(Assistant.Chat)).runSync();
-    if (results?.length) {
-      setChat(results[0].object);
-    }
-  }, [space]);
+  const chats = useQuery(space, Filter.type(Assistant.Chat));
+  const chat = chats.at(-1);
 
   const blueprintRegistry = useBlueprintRegistry();
-  const services = useChatServices({ space });
-  const processor = useChatProcessor({ space, chat, preset, services, blueprintRegistry });
+  const services = useChatServices({ space, chat });
+  const processor = useChatProcessor({ chat, preset, services, blueprintRegistry });
 
-  const handleNewChat = useCallback(() => {
-    invariant(space);
-    const chat = space.db.add(
-      Obj.make(Assistant.Chat, {
-        queue: Ref.fromDXN(space.queues.create().dxn),
-      }),
-    );
-    setChat(chat);
-  }, [space]);
+  const handleUpdateName = useCallback(() => {
+    if (chat) {
+      void processor?.updateName(chat);
+    }
+  }, [processor, chat]);
 
-  const handleBranchChat = useCallback(() => {}, [space]);
-
-  if (!chat || !processor) {
-    return null;
-  }
-
-  return (
-    <Chat.Root chat={chat} processor={processor} onEvent={(event) => log.info('event', { event })}>
-      <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-        {/* <Toolbar.Button>sss</Toolbar.Button> */}
-        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button new thread')} onClick={handleNewChat} />
-        <Toolbar.IconButton
-          disabled
-          icon='ph--git-branch--regular'
-          iconOnly
-          label={t('button branch thread')}
-          onClick={handleBranchChat}
-        />
-      </Toolbar.Root>
-      <Chat.Thread />
-      <div className='p-4'>
-        <Chat.Prompt
-          {...chatProps}
-          classNames='p-2 border border-subduedSeparator rounded focus-within:outline focus-within:border-transparent outline-primary-500'
-          preset={preset?.id}
-          online={online}
-          onChangeOnline={setOnline}
-        />
+  return !chat || !processor ? null : (
+    <StackItem.Content toolbar>
+      <div role='none' className='flex items-center gap-2 pie-2'>
+        <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content>
+              <ExecutionGraphContainer space={space} />
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+        <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
+        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
       </div>
-    </Chat.Root>
+
+      <div role='none' className='relative'>
+        <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
+          <Chat.Thread />
+          {/* <ChatProgress chat={chat} /> */}
+          <div className='flex justify-center p-4'>
+            <Chat.Prompt
+              {...chatProps}
+              outline
+              classNames='max-is-prose'
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
+          </div>
+        </Chat.Root>
+      </div>
+    </StackItem.Content>
   );
 };

@@ -22,7 +22,23 @@ declare module '@peermetrics/webrtc-stats' {
     connectionId: string;
   }
 
-  export class WebRTCStats extends EventEmitter {
+  type TrackStats = {
+    id: string;
+    kind: 'audio' | 'video';
+    codecId: string;
+    mid: string;
+    bytesSent: number;
+    bytesReceived: number;
+  };
+
+  export type WebRTCStatsEvent = {
+    data: {
+      audio: { inbound: TrackStats[]; outbound: TrackStats[] };
+      video: { inbound: TrackStats[]; outbound: TrackStats[] };
+    };
+  };
+
+  export class WebRTCStats extends EventEmitter<{ stats: WebRTCStatsEvent }> {
     constructor(options: WebRTCStatsConstructorOptions);
     addConnection(info: ConnectionInfo): void;
     removeConnection(info: Pick<ConnectionInfo, 'pc'>): void;

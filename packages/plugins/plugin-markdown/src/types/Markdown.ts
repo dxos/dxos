@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
-import { DataType } from '@dxos/schema';
+import { DataType, ItemAnnotation } from '@dxos/schema';
 
 /**
  * Document Item type.
@@ -22,6 +22,7 @@ export const Document = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name', 'fallbackName']),
+  ItemAnnotation.set(true),
 );
 
 export type Document = Schema.Schema.Type<typeof Document>;

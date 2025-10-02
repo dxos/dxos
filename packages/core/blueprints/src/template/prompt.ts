@@ -3,17 +3,17 @@
 //
 
 import handlebars from 'handlebars';
-import defaultsDeep from 'lodash.defaultsdeep';
 
 import { invariant } from '@dxos/invariant';
 
 /**
  * Process Handlebars template.
  */
-export const createPrompt = <Options extends {}>(source: string, options: Options = {} as Options): string => {
-  invariant(source);
+export const process = <Options extends {}>(source: string, variables: Partial<Options> = {}): string => {
+  invariant(typeof source === 'string');
   let section = 0;
   handlebars.registerHelper('section', () => String(++section));
-  const template = handlebars.compile(source);
-  return template(defaultsDeep({}, options, { suggestions: true })).trim();
+  const template = handlebars.compile(source.trim());
+  const output = template(variables);
+  return output.trim().replace(/(\n\s*){3,}/g, '\n\n');
 };

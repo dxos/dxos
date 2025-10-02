@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { IconButton, Tag, useTranslation } from '@dxos/react-ui';
@@ -18,8 +18,8 @@ import {
   cardStackHeading,
 } from '@dxos/react-ui-stack';
 
+import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../model';
 import { translationKey } from '../translations';
-import { type BaseKanbanItem, type KanbanModel, UNCATEGORIZED_VALUE } from '../types';
 
 export type KanbanProps<T extends BaseKanbanItem = { id: string }> = {
   model: KanbanModel;
@@ -31,16 +31,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
   const { t } = useTranslation(translationKey);
   const { multiSelect, clear } = useSelectionActions([model.id]);
   const selected = useSelected(model.id, 'multi');
-  const [_focusedCardId, setFocusedCardId] = useState<string | undefined>(undefined);
   useEffect(() => () => clear(), []);
 
   const handleAddCard = useCallback(
-    (columnValue: string | undefined) => {
-      if (onAddCard) {
-        const newCardId = onAddCard(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue);
-        setFocusedCardId(newCardId);
-      }
-    },
+    (columnValue: string | undefined) => onAddCard?.(columnValue === UNCATEGORIZED_VALUE ? undefined : columnValue),
     [onAddCard],
   );
 
@@ -59,11 +53,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
         const uncategorized = columnValue === UNCATEGORIZED_VALUE;
         const prevSiblingId = index > 0 ? array[index - 1].columnValue : undefined;
         const nextSiblingId = index < array.length - 1 ? array[index + 1].columnValue : undefined;
-        const columnItem = useMemo(() => ({ id: columnValue }), [columnValue]);
         return (
           <CardStack.Root asChild key={columnValue}>
             <StackItem.Root
-              item={columnItem}
+              item={{ id: columnValue }}
               size={20}
               disableRearrange={uncategorized}
               focusIndicatorVariant='group'
@@ -82,10 +75,10 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <CardStack.Item asChild key={card.id}>
                       <StackItem.Root
                         item={card}
-                        focusIndicatorVariant='group'
-                        onClick={() => multiSelect([card.id])}
+                        focusIndicatorVariant='group-always'
                         prevSiblingId={cardIndex > 0 ? cardsArray[cardIndex - 1].id : undefined}
                         nextSiblingId={cardIndex < cardsArray.length - 1 ? cardsArray[cardIndex + 1].id : undefined}
+                        onClick={() => multiSelect([card.id])}
                       >
                         <Card.StaticRoot>
                           <Card.Toolbar>
@@ -106,7 +99,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                               </>
                             )}
                           </Card.Toolbar>
-                          <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
+                          <Surface
+                            role='card--intrinsic'
+                            limit={1}
+                            data={{ subject: card, projection: model.projection }}
+                          />
                         </Card.StaticRoot>
                         <StackItem.DragPreview>
                           {({ item }) => (
@@ -115,7 +112,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                                 <Card.Toolbar>
                                   <Card.DragHandle toolbarItem />
                                 </Card.Toolbar>
-                                <Surface role='card--intrinsic' limit={1} data={{ subject: item }} />
+                                <Surface
+                                  role='card--intrinsic'
+                                  limit={1}
+                                  data={{ subject: item, projection: model.projection }}
+                                />
                               </CardDragPreview.Content>
                             </CardDragPreview.Root>
                           )}
@@ -130,8 +131,8 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                     <IconButton
                       icon='ph--plus--regular'
                       label={t('add card label')}
-                      onClick={() => handleAddCard(columnValue)}
                       classNames='is-full'
+                      onClick={() => handleAddCard(columnValue)}
                     />
                   </CardStack.Footer>
                 )}
@@ -151,7 +152,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
               </CardStack.Content>
               <StackItem.DragPreview>
                 {({ item }) => {
-                  // Find the column data for this item
+                  // Find the column data for this item.
                   const columnData = model.arrangedCards.find((col) => col.columnValue === item.id);
                   if (!columnData) {
                     return null;
@@ -160,7 +161,6 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                   const { cards, columnValue } = columnData;
                   const { color, title } = model.getPivotAttributes(columnValue);
                   const uncategorized = columnValue === UNCATEGORIZED_VALUE;
-
                   return (
                     <CardStackDragPreview.Root>
                       {/* Column Header */}
@@ -178,7 +178,11 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
                       <CardStackDragPreview.Content itemsCount={cards.length}>
                         {cards.map((card) => (
                           <Card.StaticRoot key={card.id}>
-                            <Surface role='card--intrinsic' limit={1} data={{ subject: card }} />
+                            <Surface
+                              role='card--intrinsic'
+                              limit={1}
+                              data={{ subject: card, projection: model.projection }}
+                            />
                           </Card.StaticRoot>
                         ))}
                       </CardStackDragPreview.Content>

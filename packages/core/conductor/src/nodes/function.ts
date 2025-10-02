@@ -5,23 +5,24 @@
 import { Effect, Schema } from 'effect';
 
 import { Obj, type Ref } from '@dxos/echo';
-import { type FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { type FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { RemoteFunctionExecutionService } from '@dxos/functions';
 
 import { type ComputeRequirements } from '../types';
 
+// TODO(wittjosiah): Reconcile with getInvocationUrl.
 export const resolveFunctionPath = async (fnRef?: Ref.Ref<FunctionType>): Promise<{ path: string }> => {
   const fn = await fnRef?.load();
   if (!fn) {
     throw new Error(`Function loading failed: ${fnRef?.dxn.toString()}`);
   }
 
-  const path = getUserFunctionUrlInMetadata(Obj.getMeta(fn));
-  if (!path) {
+  const id = getUserFunctionIdInMetadata(Obj.getMeta(fn));
+  if (!id) {
     throw new Error(`Function not resolved: ${fnRef?.dxn.toString()}`);
   }
 
-  return { path };
+  return { path: `/${id}` };
 };
 
 export const executeFunction = (
@@ -32,10 +33,7 @@ export const executeFunction = (
   return Effect.gen(function* () {
     const functionCallService = yield* RemoteFunctionExecutionService;
 
-    const result = yield* Effect.tryPromise({
-      try: () => functionCallService.callFunction(path, input),
-      catch: (e) => e,
-    });
+    const result = yield* functionCallService.callFunction(path, input).pipe(Effect.catchAll((e) => Effect.succeed(e)));
 
     return yield* Schema.decodeUnknown(outputSchema)(result);
   });

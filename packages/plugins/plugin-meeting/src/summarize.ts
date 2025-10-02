@@ -6,26 +6,30 @@ import { type AiError } from '@effect/ai';
 import { Effect, Layer } from 'effect';
 
 import {
-  type AiInputPreprocessingError,
   type AiModelNotAvailableError,
   AiService,
   type AiToolNotFoundError,
+  type PromptPreprocessingError,
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
 import { type AiAssistantError, AiSession } from '@dxos/assistant';
 import { Type } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { TranscriptType } from '@dxos/plugin-transcription/types';
+import { Transcript } from '@dxos/plugin-transcription/types';
 import { trim } from '@dxos/util';
 
-import { type MeetingType } from './types';
+import { type Meeting } from './types';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
-export const getMeetingContent = async (meeting: MeetingType, resolve: (typename: string) => Record<string, any>) => {
+export const getMeetingContent = async (
+  meeting: Meeting.Meeting,
+  resolve: (typename: string) => Record<string, any>,
+) => {
   const notes = await meeting.notes.load();
-  const { getTextContent } = resolve(Type.getTypename(TranscriptType)!);
+  const { getTextContent } = resolve(Type.getTypename(Transcript.Transcript)!);
   const transcript = await meeting.transcript.load();
   const content = `${await getTextContent(transcript)}\n\n${notes.content}`;
   return content;
@@ -34,7 +38,7 @@ export const getMeetingContent = async (meeting: MeetingType, resolve: (typename
 export const summarizeTranscript: (content: string) => Effect.Effect<
   string,
   // TODO(dmaretskyi): There should be a clear re-export for all AI-related errors.
-  AiAssistantError | AiInputPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
+  AiAssistantError | PromptPreprocessingError | AiModelNotAvailableError | AiToolNotFoundError | AiError.AiError,
   AiService.AiService
 > = Effect.fn('summarizeTranscript')(
   function* (content) {
@@ -54,6 +58,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
       AiService.model('@anthropic/claude-3-5-haiku-latest'),
       ToolResolverService.layerEmpty,
       ToolExecutionService.layerEmpty,
+      TracingService.layerNoop,
     ),
   ),
 );

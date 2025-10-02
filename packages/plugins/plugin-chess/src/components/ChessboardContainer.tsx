@@ -36,7 +36,7 @@ export const ChessboardContainer = ({ game, role }: ChessboardContainerProps) =>
     }
 
     default: {
-      return <ChessboardArticle game={game} />;
+      return <ChessboardArticle game={game} role={role} />;
     }
   }
 };

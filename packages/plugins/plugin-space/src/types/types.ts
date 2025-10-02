@@ -14,9 +14,10 @@ import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/
 import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
+
 export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {
@@ -114,7 +115,7 @@ export type ObjectForm<T extends BaseObject = BaseObject> = {
 
 export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
 
-export const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
+export const SPACE_ACTION = `${meta.id}/action`;
 
 export namespace SpaceAction {
   export class OpenCreateSpace extends Schema.TaggedClass<OpenCreateSpace>()(`${SPACE_ACTION}/open-create-space`, {
@@ -238,6 +239,9 @@ export namespace SpaceAction {
     input: Schema.Struct({
       space: SpaceSchema,
       name: Schema.optional(Schema.String),
+      typename: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Semantic version format.
+      version: Schema.optional(Schema.String),
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
     }),
@@ -270,7 +274,9 @@ export namespace SpaceAction {
   export class OpenCreateObject extends Schema.TaggedClass<OpenCreateObject>()(`${SPACE_ACTION}/open-create-object`, {
     input: Schema.Struct({
       target: Schema.Union(SpaceSchema, DataType.Collection),
+      views: Schema.optional(Schema.Boolean),
       typename: Schema.optional(Schema.String),
+      initialFormValues: Schema.optional(Schema.Any),
       navigable: Schema.optional(Schema.Boolean),
       // TODO(wittjosiah): This is a function, is there a better way to handle this?
       onCreateObject: Schema.optional(Schema.Any),
@@ -362,11 +368,9 @@ export namespace CollectionAction {
 
   export const QueryCollectionForm = Schema.Struct({
     name: Schema.optional(Schema.String),
-    typename: Schema.optional(
-      Schema.String.annotations({
-        [TypenameAnnotationId]: ['object-form'],
-      }),
-    ),
+    typename: Schema.String.annotations({
+      [TypenameAnnotationId]: ['object-form'],
+    }),
   });
 
   export class CreateQueryCollection extends Schema.TaggedClass<CreateQueryCollection>()(
@@ -374,7 +378,8 @@ export namespace CollectionAction {
     {
       input: QueryCollectionForm,
       output: Schema.Struct({
-        object: DataType.QueryCollection,
+        // TODO(wittjosiah): Remove cast.
+        object: EchoObjectSchema, // DataType.QueryCollection,
       }),
     },
   ) {}

@@ -4,14 +4,13 @@
 
 import React from 'react';
 
-// import { useTranslation } from '@dxos/react-ui';
-import { DeprecatedFormContainer } from '@dxos/react-ui-form';
+import { useTranslation } from '@dxos/react-ui';
+import { ControlPage } from '@dxos/react-ui-form';
 
-// import { meta } from '../meta';
+import { meta } from '../meta';
 import type { ThreadSettingsProps } from '../types';
 
-export const ThreadSettings = ({ settings }: { settings: ThreadSettingsProps }) => {
-  // const { t } = useTranslation(meta.id);
-
-  return <DeprecatedFormContainer></DeprecatedFormContainer>;
+export const ThreadSettings = ({ settings: _settings }: { settings: ThreadSettingsProps }) => {
+  const { t: _t } = useTranslation(meta.id);
+  return <ControlPage></ControlPage>;
 };

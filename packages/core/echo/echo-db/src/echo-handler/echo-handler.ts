@@ -4,10 +4,11 @@
 
 import { type InspectOptionsStylized } from 'node:util';
 
-import type * as A from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { Schema } from 'effect';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { DATA_NAMESPACE, type ObjectStructure, PROPERTY_ID, Reference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_DELETED,
@@ -15,16 +16,17 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
-  type BaseEchoObject,
   type BaseObject,
   DeletedId,
   EchoSchema,
   EntityKind,
   EntityKindId,
+  type HasId,
   MetaId,
   type ObjectJSON,
   type ObjectMeta,
   ObjectMetaSchema,
+  ObjectVersionId,
   Ref,
   RefImpl,
   RelationSourceDXNId,
@@ -34,6 +36,7 @@ import {
   SchemaId,
   SchemaMetaSymbol,
   SchemaValidator,
+  SelfDXNId,
   StoredSchema,
   TypeId,
   assertObjectModelShape,
@@ -159,6 +162,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case 'id': {
           return target[symbolInternals].core.id;
         }
+        case SelfDXNId: {
+          if (target[symbolInternals].database) {
+            return new DXN(DXN.kind.ECHO, [target[symbolInternals].database.spaceId, target[symbolInternals].core.id]);
+          } else {
+            return DXN.fromLocalObjectId(target[symbolInternals].core.id);
+          }
+        }
         case EntityKindId: {
           return target[symbolInternals].core.getKind();
         }
@@ -180,6 +190,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.getMeta(target);
         case DeletedId:
           return this.isDeleted(target);
+        case ObjectVersionId:
+          return this._getVersion(target);
       }
     } else {
       switch (prop) {
@@ -397,6 +409,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
     invariant(path.length > 0);
+    if (typeof path.at(-1) === 'symbol') {
+      throw new Error('Invalid path');
+    }
+    if (path.length === 1 && path[0] === 'id') {
+      throw new Error('Object Id is readonly');
+    }
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
@@ -763,6 +781,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     )}`;
   };
 
+  private _getVersion(target: ProxyTarget): Obj.Version {
+    const accessor = target[symbolInternals].core.getDocAccessor();
+    const doc = accessor.handle.doc();
+    invariant(doc);
+    const heads = A.getHeads(doc);
+    return {
+      [Obj.VersionTypeId]: Obj.VersionTypeId,
+      versioned: true,
+      automergeHeads: heads,
+    };
+  }
+
   // TODO(dmaretskyi): Re-use existing json serializer
   private _toJSON(target: ProxyTarget): ObjectJSON {
     target[symbolInternals].signal.notifyRead();
@@ -905,7 +935,7 @@ interface DecodedValueAtPath {
 
 /** @deprecated Use {@link @dxos/echo#AnyLiveObject} instead. */
 // TODO(burdon): Any shouldn't be generic (use namespace).
-export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseEchoObject;
+export type AnyLiveObject<T extends BaseObject = any> = Live<T> & BaseObject & HasId;
 
 /**
  * @returns True if `value` is a reactive object with an EchoHandler backend.
@@ -949,7 +979,7 @@ export const isTypedObjectProxy = (value: any): value is Live<any> => {
  */
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => {
-  assertArgument(!isEchoObject(obj), 'Object is already an ECHO object');
+  assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const schema = getSchema(obj);
   if (schema != null) {
     validateSchema(schema);
@@ -996,7 +1026,6 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
       ...(obj as any),
     };
     target[symbolInternals].rootSchema = schema;
-
     target[symbolInternals].subscriptions.push(core.updates.on(() => target[symbolInternals].signal.notifyWrite()));
 
     initCore(core, target);

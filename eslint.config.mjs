@@ -30,6 +30,7 @@ export default tseslint.config(
       'packages/core/protocols/proto/**/*',
       'packages/sdk/client/src/version.ts',
       'packages/sdk/client-services/src/version.ts',
+      'packages/devtools/cli-next/src/version.ts',
 
       // Config
       '**/eslint.config.mjs',
@@ -45,6 +46,8 @@ export default tseslint.config(
       '**/postcss.config.cjs',
       '**/tailwind.ts',
       '**/esbuild-server.config.js',
+      '**/.storybook/main.mts',
+      '**/.storybook/preview.mts',
 
       // Dependencies
       'node_modules',
@@ -58,6 +61,7 @@ export default tseslint.config(
       'packages/plugins/plugin-assistant/deprecated',
 
       // Other
+      '**/*.tpl',
       '**/bin',
       '**/scripts',
       '**/vendor',

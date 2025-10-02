@@ -4,17 +4,17 @@
 
 import { Schema } from 'effect';
 
+import { SpaceSchema } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
-import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { INBOX_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-import { CalendarType } from './calendar';
-import { MailboxType } from './mail';
+import { Calendar } from './calendar';
+import { Mailbox } from './mailbox';
 
 export namespace InboxAction {
-  const INBOX_ACTION = `${INBOX_PLUGIN}/action`;
+  const INBOX_ACTION = `${meta.id}/action`;
 
   export class CreateMailbox extends Schema.TaggedClass<CreateMailbox>()(`${INBOX_ACTION}/create-mailbox`, {
     input: Schema.Struct({
@@ -22,7 +22,7 @@ export namespace InboxAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: MailboxType,
+      object: Mailbox,
     }),
   }) {}
 
@@ -31,7 +31,7 @@ export namespace InboxAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: CalendarType,
+      object: Calendar,
     }),
   }) {}
 
@@ -54,7 +54,7 @@ export namespace InboxAction {
   export class RunAssistant extends Schema.TaggedClass<RunAssistant>()(`${INBOX_ACTION}/run-assistant`, {
     input: Schema.Struct({
       // TODO(dmaretskyi): Consider making this a ref so it is serializable.
-      mailbox: MailboxType,
+      mailbox: Mailbox,
     }),
     output: Schema.Void,
   }) {}

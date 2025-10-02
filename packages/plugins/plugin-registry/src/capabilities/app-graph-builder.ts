@@ -8,12 +8,12 @@ import { Option, pipe } from 'effect';
 import { Capabilities, type PluginContext, SettingsAction, contributes, createIntent } from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
 
-import { REGISTRY_ID, REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
+import { REGISTRY_ID, REGISTRY_KEY, meta } from '../meta';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: REGISTRY_PLUGIN,
+      id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -21,13 +21,13 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
             Option.map((node) => [
               {
-                id: REGISTRY_PLUGIN,
+                id: meta.id,
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   await dispatch(createIntent(SettingsAction.OpenPluginRegistry));
                 },
                 properties: {
-                  label: ['open plugin registry label', { ns: REGISTRY_PLUGIN }],
+                  label: ['open plugin registry label', { ns: meta.id }],
                   icon: 'ph--squares-four--regular',
                   disposition: 'menu',
                 },
@@ -38,7 +38,7 @@ export default (context: PluginContext) =>
         ),
     }),
     createExtension({
-      id: REGISTRY_PLUGIN,
+      id: meta.id,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -47,9 +47,9 @@ export default (context: PluginContext) =>
             Option.map((node) => [
               {
                 id: REGISTRY_ID,
-                type: REGISTRY_PLUGIN,
+                type: meta.id,
                 properties: {
-                  label: ['plugin registry label', { ns: REGISTRY_PLUGIN }],
+                  label: ['plugin registry label', { ns: meta.id }],
                   icon: 'ph--squares-four--regular',
                   disposition: 'pin-end',
                   testId: 'treeView.pluginRegistry',
@@ -60,7 +60,7 @@ export default (context: PluginContext) =>
                     type: 'category',
                     data: `${REGISTRY_KEY}+all`,
                     properties: {
-                      label: ['all plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['all plugins label', { ns: meta.id }],
                       icon: 'ph--squares-four--regular',
                       key: REGISTRY_KEY,
                       testId: 'pluginRegistry.all',
@@ -71,7 +71,7 @@ export default (context: PluginContext) =>
                     type: 'category',
                     data: `${REGISTRY_KEY}+installed`,
                     properties: {
-                      label: ['installed plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['installed plugins label', { ns: meta.id }],
                       icon: 'ph--check--regular',
                       key: REGISTRY_KEY,
                       testId: 'pluginRegistry.installed',
@@ -82,7 +82,7 @@ export default (context: PluginContext) =>
                     type: 'category',
                     data: `${REGISTRY_KEY}+recommended`,
                     properties: {
-                      label: ['recommended plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['recommended plugins label', { ns: meta.id }],
                       icon: 'ph--star--regular',
                       key: REGISTRY_KEY,
                       testId: 'pluginRegistry.recommended',
@@ -93,7 +93,7 @@ export default (context: PluginContext) =>
                     type: 'category',
                     data: `${REGISTRY_KEY}+labs`,
                     properties: {
-                      label: ['labs plugins label', { ns: REGISTRY_PLUGIN }],
+                      label: ['labs plugins label', { ns: meta.id }],
                       icon: 'ph--flask--regular',
                       key: REGISTRY_KEY,
                       testId: 'pluginRegistry.labs',
@@ -107,7 +107,7 @@ export default (context: PluginContext) =>
         ),
     }),
     createExtension({
-      id: `${REGISTRY_PLUGIN}/actions`,
+      id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -115,10 +115,10 @@ export default (context: PluginContext) =>
             Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
               {
-                id: `${REGISTRY_PLUGIN}/load-by-url`,
+                id: `${meta.id}/load-by-url`,
                 data: async () => {},
                 properties: {
-                  label: ['load by url label', { ns: REGISTRY_PLUGIN }],
+                  label: ['load by url label', { ns: meta.id }],
                   icon: 'ph--cloud-arrow-down--regular',
                   disabled: true,
                 },
@@ -129,7 +129,7 @@ export default (context: PluginContext) =>
         ),
     }),
     createExtension({
-      id: `${REGISTRY_PLUGIN}/plugins`,
+      id: `${meta.id}/plugins`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(

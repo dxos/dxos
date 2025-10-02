@@ -21,6 +21,7 @@ export const translations = [
       },
       [meta.id]: {
         'plugin name': 'Sketch',
+        'settings title': 'Sketch plugin settings',
         'settings hover tools label': 'Auto hide controls',
         'settings grid': 'Show grid',
         'settings grid type label': 'Dotted grid',

@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AnthropicClient } from '@effect/ai-anthropic';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { Config, type ConfigError, Layer } from 'effect';
 
 import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
+
+import { tapHttpErrors } from './tap';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
 
@@ -21,6 +23,7 @@ export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRou
   Layer.provide(
     AnthropicClient.layerConfig({
       apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+      transformClient: tapHttpErrors,
     }),
   ),
   Layer.provide(FetchHttpClient.layer),

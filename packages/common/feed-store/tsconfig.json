@@ -1,6 +1,7 @@
 {
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
     "types": [
       "@dxos/typings",
       "node"
@@ -10,6 +11,9 @@
     "src"
   ],
   "references": [
+    {
+      "path": "../../../vendor/hypercore"
+    },
     {
       "path": "../../core/halo/keyring"
     },

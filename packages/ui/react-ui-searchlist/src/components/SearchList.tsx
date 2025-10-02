@@ -121,6 +121,10 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
+const commandItem = 'flex items-center overflow-hidden';
+const searchListItem =
+  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
+
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ children, classNames, onSelect, ...props }, forwardedRef) => {
     const { onValueChange, onOpenChange } = useComboboxContext(SEARCHLIST_ITEM_NAME);
@@ -133,12 +137,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       [onValueChange, onOpenChange, onSelect],
     );
     return (
-      <CommandItem
-        {...props}
-        onSelect={handleSelect}
-        className={mx('p-1 rounded select-none cursor-pointer data-[selected]:bg-hoverOverlay', classNames)}
-        ref={forwardedRef}
-      >
+      <CommandItem {...props} onSelect={handleSelect} className={mx(searchListItem, classNames)} ref={forwardedRef}>
         {children}
       </CommandItem>
     );
@@ -248,3 +247,5 @@ export type {
   ComboboxRootProps,
   ComboboxTriggerProps,
 };
+
+export { commandItem, searchListItem };

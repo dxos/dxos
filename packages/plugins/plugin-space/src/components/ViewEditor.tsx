@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Type } from '@dxos/echo';
+import { Filter, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
-import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
-import { ViewEditor as NativeViewEditor } from '@dxos/react-ui-form';
-import { DataType } from '@dxos/schema';
+import { getSpace, useSchema } from '@dxos/react-client/echo';
+import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 
 import { SpaceAction } from '../types';
 
@@ -20,24 +20,19 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.query.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
 
-  const views = useQuery(space, Filter.type(DataType.View));
-  const currentTypename = useMemo(() => view.query?.typename, [view.query?.typename]);
-
-  const handleUpdateTypename = useCallback(
+  const handleUpdateQuery = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
 
-      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
-      for (const view of matchingViews) {
-        view.query.typename = typename;
-      }
-
+      const newQuery = Query.select(Filter.typename(typename));
+      view.query = newQuery.ast;
       schema.updateTypename(typename);
     },
-    [views, schema],
+    [view, schema],
   );
 
   const handleDelete = useCallback(
@@ -52,11 +47,11 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   }
 
   return (
-    <NativeViewEditor
+    <NaturalViewEditor
       registry={space.db.schemaRegistry}
       schema={schema}
       view={view}
-      onTypenameChanged={Type.isMutable(schema) ? handleUpdateTypename : undefined}
+      onQueryChanged={Type.isMutable(schema) ? handleUpdateQuery : undefined}
       onDelete={Type.isMutable(schema) ? handleDelete : undefined}
       outerSpacing={false}
     />

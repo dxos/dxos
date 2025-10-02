@@ -3,7 +3,7 @@
 //
 
 import { isNotNullable } from 'effect/Predicate';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
@@ -11,7 +11,8 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
 
@@ -25,53 +26,47 @@ export type MapContainerProps = {
   role?: string;
   type?: MapControlType;
   view?: DataType.View;
+  map?: Map.Map;
 } & GeoControlProps &
   Pick<MapRootProps, 'onChange'>;
 
-export const MapContainer = ({ role, type: _type = 'map', view, ...props }: MapContainerProps) => {
+export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...props }: MapContainerProps) => {
   const [type, setType] = useControlledState(_type);
-  const [markers, setMarkers] = useState<GeoMarker[]>([]);
   const client = useClient();
   const space = getSpace(view);
-  const map = view?.presentation.target as Map.Map | undefined;
+  const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 
-  useEffect(() => {
-    if (!map) {
-      return;
-    }
+  const markers = objects
+    .map((row) => {
+      if (!view?.projection.pivotFieldId) {
+        return undefined;
+      }
 
-    const newMarkers: GeoMarker[] = (objects ?? [])
-      .map((row) => {
-        if (!map.locationFieldId) {
-          return undefined;
-        }
+      const field = view.projection.fields?.find((f) => f.id === view.projection.pivotFieldId);
+      const geopoint = field?.path && getDeep(row, field.path.split('.'));
+      if (!geopoint) {
+        return undefined;
+      }
 
-        const geopoint = row[map.locationFieldId];
-        if (!geopoint) {
-          return undefined;
-        }
+      if (!Array.isArray(geopoint) || geopoint.length < 2) {
+        return undefined;
+      }
 
-        if (!Array.isArray(geopoint) || geopoint.length < 2) {
-          return undefined;
-        }
+      const [lng, lat] = geopoint;
+      if (typeof lng !== 'number' || typeof lat !== 'number') {
+        return undefined;
+      }
 
-        const [lng, lat] = geopoint;
-        if (typeof lng !== 'number' || typeof lat !== 'number') {
-          return undefined;
-        }
-
-        return { id: row.id, location: { lat, lng } };
-      })
-      .filter(isNotNullable);
-
-    setMarkers(newMarkers);
-  }, [objects, map?.locationFieldId]);
+      return { id: row.id, location: { lat, lng } } as GeoMarker;
+    })
+    .filter(isNotNullable);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
-  const selected = useSelected(view?.query.typename, 'multi');
+  const selected = useSelected(typename, 'multi');
 
   return (
     <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>

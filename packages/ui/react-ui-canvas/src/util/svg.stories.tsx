@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import type { Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
@@ -31,15 +31,17 @@ const DefaultStory = () => (
   </svg>
 );
 
-const meta: Meta = {
+const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta;
 
 export default meta;
 
-export const Default = {};
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

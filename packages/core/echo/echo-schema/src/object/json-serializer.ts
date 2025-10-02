@@ -31,6 +31,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  SelfDXNId,
   TypeId,
   assertObjectModelShape,
 } from './model';
@@ -59,12 +60,12 @@ export const objectToJSON = <T extends AnyEchoObject>(obj: T): SerializedObject<
  */
 export const objectFromJSON = async (
   jsonData: unknown,
-  { refResolver }: { refResolver?: RefResolver } = {},
+  { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
 ): Promise<AnyEchoObject> => {
   assumeType<ObjectJSON>(jsonData);
-  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'expect object');
-  assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'expected object to have a type');
-  assertArgument(typeof jsonData.id === 'string', 'expected object to have an id');
+  assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
+  assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
+  assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
   const type = DXN.parse(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
@@ -115,6 +116,10 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, MetaId, meta);
   }
 
+  if (dxn) {
+    defineHiddenProperty(obj, SelfDXNId, dxn);
+  }
+
   assertObjectModelShape(obj);
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
@@ -156,9 +161,6 @@ export const setRefResolverOnData = (obj: AnyEchoObject, refResolver: RefResolve
   go(obj);
 };
 
-/**
- * @internal
- */
 export const attachTypedJsonSerializer = (obj: any) => {
   const descriptor = Object.getOwnPropertyDescriptor(obj, 'toJSON');
   if (descriptor) {
@@ -169,17 +171,25 @@ export const attachTypedJsonSerializer = (obj: any) => {
     value: typedJsonSerializer,
     writable: false,
     enumerable: false,
-    configurable: false,
+    // Setting `configurable` to false breaks proxy invariants, should be fixable.
+    configurable: true,
   });
 };
 
 // NOTE: KEEP as function.
 const typedJsonSerializer = function (this: any) {
-  const { id, [TypeId]: typename, [MetaId]: meta, ...rest } = this;
+  const { id, ...rest } = this;
   const result: any = {
     id,
-    [ATTR_TYPE]: typename.toString(),
   };
+
+  if (this[TypeId]) {
+    result[ATTR_TYPE] = this[TypeId].toString();
+  }
+
+  if (this[SelfDXNId]) {
+    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
+  }
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
@@ -192,8 +202,8 @@ const typedJsonSerializer = function (this: any) {
     result[ATTR_RELATION_TARGET] = targetDXN.toString();
   }
 
-  if (meta) {
-    result[ATTR_META] = serializeMeta(meta);
+  if (this[MetaId]) {
+    result[ATTR_META] = serializeMeta(this[MetaId]);
   }
 
   Object.assign(result, serializeData(rest));

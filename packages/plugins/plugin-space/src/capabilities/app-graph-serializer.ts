@@ -7,7 +7,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { translations } from '../translations';
 import { SPACE_TYPE, SpaceAction } from '../types';
 import { SPACES } from '../util';
@@ -23,8 +23,8 @@ export default (context: PluginContext) =>
       inputType: SPACES,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'] ?? 'Spaces',
-        data: translations[0]['en-US'][SPACE_PLUGIN]['spaces label'] ?? 'Spaces',
+        name: translations[0]['en-US'][meta.id]['spaces label'] ?? 'Spaces',
+        data: translations[0]['en-US'][meta.id]['spaces label'] ?? 'Spaces',
         type: DIRECTORY_TYPE,
       }),
       deserialize: () => {
@@ -35,8 +35,8 @@ export default (context: PluginContext) =>
       inputType: SPACE_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
-        data: node.data.properties.name ?? translations[0]['en-US'][SPACE_PLUGIN]['unnamed space label'],
+        name: node.data.properties.name ?? translations[0]['en-US'][meta.id]['unnamed space label'],
+        data: node.data.properties.name ?? translations[0]['en-US'][meta.id]['unnamed space label'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data) => {
@@ -49,8 +49,8 @@ export default (context: PluginContext) =>
       inputType: COLLECTION_TYPE,
       outputType: DIRECTORY_TYPE,
       serialize: (node) => ({
-        name: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
-        data: node.data.name ?? translations[0]['en-US'][SPACE_PLUGIN]['object name placeholder'],
+        name: node.data.name ?? translations[0]['en-US'][meta.id]['object name placeholder'],
+        data: node.data.name ?? translations[0]['en-US'][meta.id]['object name placeholder'],
         type: DIRECTORY_TYPE,
       }),
       deserialize: async (data, ancestors) => {

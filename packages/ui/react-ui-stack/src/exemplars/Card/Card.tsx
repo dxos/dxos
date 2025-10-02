@@ -15,7 +15,7 @@ import React, {
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { hoverableControls, mx } from '@dxos/react-ui-theme';
 
-import { StackItem } from '../../components';
+import { Image, StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
@@ -63,7 +63,7 @@ const CardSurfaceRoot = ({
     return (
       <CardStaticRoot
         classNames={[
-          role === 'card--transclusion' && 'mlb-[1em]',
+          role === 'card--transclusion' && 'mlb-1',
           role === 'card--transclusion' && hoverableControls,
           classNames,
         ]}
@@ -126,15 +126,14 @@ type CardPosterProps = {
 const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
-    return (
-      <img className={`dx-card__poster ${aspect} object-cover is-full bs-auto`} src={props.image} alt={props.alt} />
-    );
+    return <Image classNames={[`dx-card__poster is-full __bs-auto`, aspect]} src={props.image} alt={props.alt} />;
   }
+
   if (props.icon) {
     return (
       <div
         role='image'
-        className={`dx-card__poster grid ${aspect} place-items-center bg-inputSurface text-subdued`}
+        className={mx(`dx-card__poster grid place-items-center bg-inputSurface text-subdued`, aspect)}
         aria-label={props.alt}
       >
         <Icon icon={props.icon} size={10} />
@@ -157,9 +156,9 @@ const CardChrome = forwardRef<HTMLDivElement, SharedCardProps>(
   },
 );
 
-const CardText = forwardRef<HTMLParagraphElement, SharedCardProps>(
+const CardText = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'p';
+    const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardText, classNames] } : { className: mx(cardText, classNames), role };
     return (
       <Root {...props} {...rootProps} ref={forwardedRef}>

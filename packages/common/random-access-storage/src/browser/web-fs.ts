@@ -302,7 +302,7 @@ export class WebFile extends EventEmitter implements File {
 
     const fileHandle = await this._fileHandle;
     const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.write({ type: 'write', data: this._buffer, position: 0 });
+    await writable.write({ type: 'write', data: this._buffer as Uint8Array<ArrayBuffer>, position: 0 });
     await writable.close();
   }
 

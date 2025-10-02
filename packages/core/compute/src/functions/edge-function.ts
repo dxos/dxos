@@ -4,16 +4,15 @@
 
 import { effect } from '@preact/signals-core';
 import { SchemaAST } from 'effect';
-import { type InterpreterState } from 'hyperformula/typings/interpreter/InterpreterState';
-import { type ProcedureAst } from 'hyperformula/typings/parser';
 
 import { Filter, getMeta } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { FunctionType, getUserFunctionUrlInMetadata } from '@dxos/functions';
+import { FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
-
-import { CellError, ErrorType, FunctionArgumentType } from '#hyperformula';
+import { type ProcedureAst } from '@dxos/vendor-hyperformula';
+import { type InterpreterState } from '@dxos/vendor-hyperformula';
+import { CellError, ErrorType, FunctionArgumentType } from '@dxos/vendor-hyperformula';
 
 import { type AsyncFunction, AsyncFunctionPlugin } from './async-function';
 
@@ -65,8 +64,8 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         } else {
           body.args = args.filter(isNonNullable);
         }
-        const path = getUserFunctionUrlInMetadata(getMeta(fn));
-        const response = await fetch(`${this.context.remoteFunctionUrl}${path}`, {
+        const id = getUserFunctionIdInMetadata(getMeta(fn));
+        const response = await fetch(`${this.context.remoteFunctionUrl}/${id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),

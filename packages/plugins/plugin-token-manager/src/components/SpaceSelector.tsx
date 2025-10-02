@@ -38,6 +38,7 @@ export const SpaceSelector = ({ placeholder, spaces, value, getLabel, onChange }
               </Select.Option>
             ))}
           </Select.Viewport>
+          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

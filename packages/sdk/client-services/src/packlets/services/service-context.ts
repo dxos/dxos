@@ -189,9 +189,10 @@ export class ServiceContext extends Resource {
     if (!this._runtimeParams?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection && this._edgeFeatures?.echoReplicator) {
+    if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
       this._echoEdgeReplicator = new EchoEdgeReplicator({
         edgeConnection: this._edgeConnection,
+        edgeHttpClient: this._edgeHttpClient,
       });
     }
   }
@@ -244,13 +245,13 @@ export class ServiceContext extends Resource {
     await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
-    await this.feedStore.close();
-    await this.metadataStore.close();
-
     await this.echoHost.close(ctx);
+
     await this.networkManager.close();
     await this.signalManager.close();
     await this._edgeConnection?.close();
+    await this.feedStore.close();
+    await this.metadataStore.close();
 
     log('closed');
   }

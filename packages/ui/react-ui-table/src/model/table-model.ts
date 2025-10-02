@@ -7,20 +7,19 @@ import { type ReadonlySignal, computed, effect, signal } from '@preact/signals-c
 import { Resource } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import {
-  type FieldSortType,
   FormatEnum,
   type JsonProp,
   type JsonSchemaType,
   getSchema,
-  getSnapshot,
   getValue,
   setValue,
   toEffectSchema,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
-import { isLiveObject } from '@dxos/live-object';
+import { getSnapshot, isLiveObject } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { type Label } from '@dxos/react-ui';
 import { formatForEditing, parseValue } from '@dxos/react-ui-form';
 import {
   type DxGridAxisMeta,
@@ -28,9 +27,16 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type DataType, ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
+import {
+  type DataType,
+  type FieldSortType,
+  ProjectionModel,
+  type PropertyType,
+  type ValidationError,
+  validateSchema,
+} from '@dxos/schema';
 
-import { TableView } from '../types';
+import { Table } from '../types';
 import { touch } from '../util';
 import { extractTagIds } from '../util/tag';
 
@@ -54,7 +60,7 @@ export type TableRow = Record<JsonProp, any> & { id: string };
 
 export type TableRowAction = {
   id: string;
-  translationKey: string;
+  label: Label;
 };
 
 export type TableFeatures = {
@@ -69,6 +75,8 @@ const defaultFeatures: TableFeatures = {
   schemaEditable: false,
 };
 
+export type InsertRowResult = 'draft' | 'final';
+
 export type TableModelProps<T extends TableRow = TableRow> = {
   view: DataType.View;
   schema: JsonSchemaType;
@@ -79,7 +87,7 @@ export type TableModelProps<T extends TableRow = TableRow> = {
   pinnedRows?: { top: number[]; bottom: number[] };
   rowActions?: TableRowAction[];
   onResolveSchema?: (typename: string) => Promise<JsonSchemaType>;
-  onInsertRow?: (data?: any) => boolean;
+  onInsertRow?: (data?: any) => InsertRowResult;
   onDeleteRows?: (index: number, obj: T[]) => void;
   onDeleteColumn?: (fieldId: string) => void;
   onCellUpdate?: (cell: DxGridPosition) => void;
@@ -90,14 +98,14 @@ export type TableModelProps<T extends TableRow = TableRow> = {
 export class TableModel<T extends TableRow = TableRow> extends Resource {
   private readonly _view: DataType.View;
   private readonly _projection: ProjectionModel;
-  private _table?: TableView;
+  private _table?: Table.Table;
 
   private readonly _visibleRange = signal<DxGridPlaneRange>({
     start: { row: 0, col: 0 },
     end: { row: 0, col: 0 },
   });
 
-  private readonly _onInsertRow?: (data?: any) => boolean;
+  private readonly _onInsertRow?: (data?: any) => InsertRowResult;
   private readonly _onDeleteRows?: TableModelProps<T>['onDeleteRows'];
   private readonly _onDeleteColumn?: TableModelProps<T>['onDeleteColumn'];
   private readonly _onCellUpdate?: TableModelProps<T>['onCellUpdate'];
@@ -174,7 +182,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     return this._view;
   }
 
-  public get table(): TableView {
+  public get table(): Table.Table {
     invariant(this._table, 'Model not initialized');
     return this._table;
   }
@@ -237,7 +245,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   protected override async _open(): Promise<void> {
     const presentation = this._view.presentation.target ?? (await this._view.presentation.load());
-    invariant(Obj.instanceOf(TableView, presentation));
+    invariant(Obj.instanceOf(Table.Table, presentation));
     this._table = presentation;
 
     this.initializeColumnMeta();
@@ -255,7 +263,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return {
         grid: meta,
         frozenColsStart: { 0: { size: 30, resizeable: false } },
-        frozenColsEnd: { 0: { size: 40, resizeable: false } },
+        frozenColsEnd: { 0: { size: 32, resizeable: false } },
       };
     });
   }
@@ -335,11 +343,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
 
   public getColumnCount = (): number => this._projection?.fields.length ?? 0;
 
-  public insertRow = (): void => {
+  public insertRow = (): InsertRowResult => {
     const result = this._onInsertRow?.();
-    if (result === false && this._draftRows.value.length === 0) {
+    if (result === 'draft' && this._draftRows.value.length === 0) {
       this.createDraftRow();
     }
+    return result ?? 'final';
   };
 
   private createDraftRow(): void {
@@ -394,14 +403,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return false;
     }
 
-    const success = this._onInsertRow?.(draftRow.data);
+    const insertRowResult = this._onInsertRow?.(draftRow.data);
 
-    if (success) {
+    if (insertRowResult === 'final') {
       const newDraftRows = this._draftRows.value.filter((_, index) => index !== draftRowIndex);
       this._draftRows.value = newDraftRows;
     }
 
-    return success ?? false;
+    return insertRowResult === 'final';
   };
 
   public deleteRow = (rowIndex: number): void => {
@@ -498,6 +507,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       setValue(snapshot, field.path, transformedValue);
 
       const validationErrors = this.validateDraftRowData(snapshot);
+      // TODO(thure): These errors sometimes result in a useless message like “is missing” (what is missing?)
       if (validationErrors.length > 0) {
         const error = validationErrors.find((err) => err.path === field.path);
         if (error) {

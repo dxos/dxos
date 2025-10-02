@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { FILES_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace LocalFilesAction {
-  const FILES_ACTION = `${FILES_PLUGIN}/action`;
+  const FILES_ACTION = `${meta.id}/action`;
 
   export class SelectRoot extends Schema.TaggedClass<SelectRoot>()(`${FILES_ACTION}/select-root`, {
     input: Schema.Void,

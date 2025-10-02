@@ -11,7 +11,7 @@ import { assumeType } from '@dxos/util';
 
 import { LabelAnnotation } from '../ast';
 
-import { type InternalObjectProps, SchemaId } from './model';
+import { type InternalObjectProps, SchemaId, SelfDXNId } from './model';
 
 //
 // Accessors based on model.
@@ -23,10 +23,13 @@ import { type InternalObjectProps, SchemaId } from './model';
  */
 export const getObjectDXN = (object: any): DXN | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
-  assertArgument(typeof object === 'object' && object != null, 'expected object');
+  assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);
 
-  // TODO(dmaretskyi): Use SelfDXNId.
+  if (object[SelfDXNId]) {
+    invariant(object[SelfDXNId] instanceof DXN, 'Invalid object model: invalid self dxn');
+    return object[SelfDXNId];
+  }
 
   if (!ObjectId.isValid(object.id)) {
     throw new TypeError('Object id is not valid.');
@@ -76,7 +79,11 @@ export const getLabelForObject = (obj: unknown | undefined): string | undefined 
 export const getLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.Schema.Type<S>): string | undefined => {
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
-    assertArgument(typeof accessor === 'string', 'Label annotation must be a string or an array of strings');
+    assertArgument(
+      typeof accessor === 'string',
+      'accessor',
+      'Label annotation must be a string or an array of strings',
+    );
     const value = getField(object, accessor as JsonPath);
     switch (typeof value) {
       case 'string':

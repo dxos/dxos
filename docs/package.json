@@ -29,6 +29,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@preact/signals-core": "^1.9.0"
+    "@preact/signals-core": "^1.12.1"
   }
 }

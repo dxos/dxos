@@ -21,27 +21,12 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { type AnyLiveObject, getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
 import { Query } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { type CoreDatabase } from './core-database';
 
 describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
-    // TODO(mykola): Delete after space fragmentation flag is removed from AutomergeContext.
-    // Skipped because it is the only place where space fragmentation is disabled.
-    // And default behavior in prod is to have space fragmentation enabled.
-    test.skip('objects are created inline if space fragmentation is disabled', async () => {
-      const testBuilder = new EchoTestBuilder();
-      await openAndClose(testBuilder);
-      const { db } = await testBuilder.createDatabase();
-      const object = createTextObject();
-      db.add(object);
-      const docHandles = getDocHandles(db);
-      expect(docHandles.linkedDocHandles.length).to.eq(0);
-      const rootDoc = docHandles.spaceRootHandle.doc();
-      expect(rootDoc?.objects?.[object.id]).not.to.be.undefined;
-    });
-
     test('objects are created in separate docs', async () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
@@ -159,6 +144,11 @@ describe('CoreDatabase', () => {
         loadedDocument: Ref.make(createTextObject('text2')),
         partiallyLoadedDocument: Ref.make(createTextObject('text3')),
       });
+
+      const partiallyLoadedDocumentId = stack.partiallyLoadedDocument.target?.id;
+      const loadedDocumentId = stack.loadedDocument.target?.id;
+      const notLoadedDocumentId = stack.notLoadedDocument.target?.id;
+
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
       newRootDocHandle.change((newDoc: any) => {
@@ -166,15 +156,15 @@ describe('CoreDatabase', () => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
       });
 
-      await db.query(Query.type(Expando, { id: stack.loadedDocument.target?.id })).run({ timeout: 1000 });
+      await db.query(Query.type(Expando, { id: loadedDocumentId })).run({ timeout: 1000 });
 
       // trigger loading but don't wait for it to finish
-      db.getObjectById(stack.partiallyLoadedDocument.target?.id);
+      db.getObjectById(partiallyLoadedDocumentId);
 
       await db.setSpaceRoot(newRootDocHandle.url);
-      db.getObjectById(stack.partiallyLoadedDocument.target?.id);
-      expect(db.getObjectById(stack.loadedDocument.target?.id)).not.to.be.undefined;
-      expect(db.getObjectById(stack.notLoadedDocument.target?.id)).to.be.undefined;
+      db.getObjectById(loadedDocumentId);
+      expect(db.getObjectById(loadedDocumentId)).not.to.be.undefined;
+      expect(db.getObjectById(notLoadedDocumentId)).to.be.undefined;
     });
 
     test('linked objects can be remapped', async () => {
@@ -183,35 +173,33 @@ describe('CoreDatabase', () => {
         text2: Ref.make(createTextObject('text2')),
         text3: Ref.make(createTextObject('text3')),
       });
+      const ids = [stack.text1.target?.id, stack.text2.target?.id, stack.text3.target?.id];
+      const contents = [stack.text1.target?.content, stack.text2.target?.content, stack.text3.target?.content];
       const db = await createClientDbInSpaceWithObject(stack);
       const newRootDocHandle = createTestRootDoc(db.coreDatabase._repo);
 
-      for (const obj of [stack.text1.target, stack.text2.target, stack.text3.target]) {
-        await db.query(Query.type(Expando, { id: obj.id })).run();
+      for (const id of ids) {
+        await db.query(Query.type(Expando, { id })).run();
       }
 
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(db).spaceRootHandle.doc().links;
-        newDoc.links[stack.text2.target?.id] = newDoc.links[stack.text1.target?.id];
-        newDoc.links[stack.text3.target?.id] = newDoc.links[stack.text1.target?.id];
+        newDoc.links[ids[1]] = newDoc.links[ids[0]];
+        newDoc.links[ids[2]] = newDoc.links[ids[0]];
       });
 
-      getObjectDocHandle(db.getObjectById(stack.text1.target?.id)).change((newDoc: any) => {
-        newDoc.objects[stack.text2.target?.id] = getObjectDocHandle(stack.text2.target).doc()?.objects?.[
-          stack.text2.target?.id
-        ];
-        newDoc.objects[stack.text3.target?.id] = getObjectDocHandle(stack.text3.target).doc()?.objects?.[
-          stack.text3.target?.id
-        ];
+      getObjectDocHandle(db.getObjectById(ids[0])).change((newDoc: any) => {
+        newDoc.objects[ids[1]] = getObjectDocHandle(db.getObjectById(ids[1])).doc()?.objects?.[ids[1]];
+        newDoc.objects[ids[2]] = getObjectDocHandle(db.getObjectById(ids[2])).doc()?.objects?.[ids[2]];
       });
 
       await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
 
-      expect((db.getObjectById(stack.text1.target?.id) as any).content).to.eq(stack.text1.target?.content);
-      for (const obj of [stack.text1.target, stack.text2.target, stack.text3.target]) {
-        const dbObject: any = db.getObjectById(obj.id);
-        expect(dbObject.content).to.eq(obj.content);
-        expect(getObjectDocHandle(dbObject).url).to.eq(getObjectDocHandle(stack.text1.target).url);
+      expect((db.getObjectById(ids[0]) as any).content).to.eq(contents[0]);
+      for (const id of ids) {
+        const dbObject: any = db.getObjectById(id);
+        expect(dbObject.content).to.eq(contents[ids.indexOf(id)]);
+        expect(getObjectDocHandle(dbObject).url).to.eq(getObjectDocHandle(db.getObjectById(ids[0])).url);
       }
     });
 
@@ -304,10 +292,12 @@ describe('CoreDatabase', () => {
     });
 
     test('reload objects', async () => {
-      const kv = createTestLevel();
+      const tmpPath = createTmpPath();
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
-      const { db } = await testBuilder.createDatabase({ kv });
+      const kv = createTestLevel(tmpPath);
+      const peer = await testBuilder.createPeer({ kv });
+      const db = await peer.createDatabase();
       const object = createExpando({ title: 'first object' });
       db.add(object);
 
@@ -315,9 +305,10 @@ describe('CoreDatabase', () => {
       const rootUrl = db.rootUrl!;
       const objectId = object.id;
       await db.flush();
-      await db.close();
+      await peer.close();
 
       {
+        const kv = createTestLevel(tmpPath);
         const testPeer = await testBuilder.createPeer({ kv });
         const db = await testPeer.openDatabase(spaceKey, rootUrl);
         await db.query(Filter.ids(objectId)).first();
@@ -391,19 +382,19 @@ const createClientDbInSpaceWithObject = async (
   object: AnyLiveObject<any>,
   onDocumentSavedInSpace?: (handles: DocumentHandles) => void,
 ): Promise<EchoDatabaseImpl> => {
-  const kv = createTestLevel();
+  const tmpPath = createTmpPath();
 
   const testBuilder = new EchoTestBuilder();
   await openAndClose(testBuilder);
-  const peer1 = await testBuilder.createPeer({ kv });
+  const peer1 = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
   const spaceKey = PublicKey.random();
   const db1 = await peer1.createDatabase(spaceKey);
   db1.add(object);
   onDocumentSavedInSpace?.(getDocHandles(db1));
   await db1.flush();
-  // await peer1.close(); Causes the tests to fail since tests access objects after closing the peer.
+  await peer1.close();
 
-  const peer2 = await testBuilder.createPeer({ kv });
+  const peer2 = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
   return peer2.openDatabase(spaceKey, db1.rootUrl!);
 };
 

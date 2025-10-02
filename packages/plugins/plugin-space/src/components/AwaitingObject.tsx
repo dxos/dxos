@@ -9,7 +9,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SpaceAction } from '../types';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
@@ -19,7 +19,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useLayout();
 

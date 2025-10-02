@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import type { Obj, Relation } from '@dxos/echo';
+import { type Obj, type Relation } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
 import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
 
@@ -35,8 +35,8 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T> {
-    assertArgument(dxn instanceof DXN, 'dxn must be a DXN');
+  get<T extends Obj.Any | Relation.Any>(dxn: DXN): Queue<T> {
+    assertArgument(dxn instanceof DXN, 'dxn', 'dxn must be a DXN');
     assertState(this._service, 'Service not set');
 
     const stringDxn = dxn.toString();
@@ -54,7 +54,7 @@ export class QueueFactory extends Resource implements QueueAPI {
     return newQueue as Queue<T>;
   }
 
-  create<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>({
+  create<T extends Obj.Any | Relation.Any>({
     subspaceTag = QueueSubspaceTags.DATA,
   }: { subspaceTag?: QueueSubspaceTag } = {}): Queue<T> {
     const dxn = DXN.fromQueue(subspaceTag, this._spaceId, ObjectId.random());

@@ -81,13 +81,13 @@ const ExtendedStory = () => {
   return <div ref={containerRef} className='grow p-8' />;
 };
 
+const meta = {
+  title: 'plugins/plugin-explorer/Globe',
+  decorators: [withTheme, withLayout({ fullscreen: true })],
+} satisfies Meta;
+
+export default meta;
+
 export const Default = () => <ClientRepeater component={DefaultStory} createSpace />;
 
 export const Extended = () => <ClientRepeater component={ExtendedStory} createSpace />;
-
-const meta: Meta = {
-  title: 'plugins/plugin-explorer/Globe',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-};
-
-export default meta;

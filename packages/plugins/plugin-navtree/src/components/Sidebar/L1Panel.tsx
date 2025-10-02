@@ -56,7 +56,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       ]}
       tabIndex={-1}
       aria-label={title}
-      {...(!open && { inert: 'true' })}
+      {...(!open && { inert: true })}
     >
       {item.id === currentItemId && (
         <>
@@ -123,31 +123,29 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
     <div className='flex is-full items-center border-be border-subduedSeparator app-drag density-coarse'>
       <div className='is-6' />
       <h2 className='flex-1 truncate min-is-0'>{title}</h2>
-      <div>
-        {(backCapable && (
+      {(backCapable && (
+        <IconButton
+          variant='ghost'
+          icon='ph--arrow-u-down-left--regular'
+          iconOnly
+          size={5}
+          label={t('button back')}
+          classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
+          onClick={handleBack}
+        />
+      )) ||
+        (alternateTree && !isAlternate && (
           <IconButton
+            data-testid='treeView.alternateTreeButton'
             variant='ghost'
-            icon='ph--arrow-u-down-left--regular'
+            icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
             iconOnly
             size={5}
-            label={t('button back')}
+            label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
             classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
-            onClick={handleBack}
+            onClick={handleOpen}
           />
-        )) ||
-          (alternateTree && !isAlternate && (
-            <IconButton
-              data-testid='treeView.alternateTreeButton'
-              variant='ghost'
-              icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
-              iconOnly
-              size={5}
-              label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
-              classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
-              onClick={handleOpen}
-            />
-          )) || <div />}
-      </div>
+        ))}
       <NavTreeItemColumns open path={path} item={item} density='coarse' />
     </div>
   );

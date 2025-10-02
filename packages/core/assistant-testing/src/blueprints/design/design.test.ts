@@ -2,20 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer, Option, Stream } from 'effect';
+import { describe, it } from '@effect/vitest';
+import { Effect, Layer } from 'effect';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
-  AiSession,
+  type ContextBinding,
+  GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, QueueService } from '@dxos/functions';
+import { TestHelpers } from '@dxos/effect';
+import {
+  ComputeEventLogger,
+  DatabaseService,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -23,85 +31,78 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { readDocument, updateDocument } from '../../functions';
+import { testToolkit } from '../testing';
 
 import blueprint from './design';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Design Blueprint', { timeout: 120_000 }, () => {
+describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.effect(
     'design blueprint',
     Effect.fn(
-      function* () {
-        const { queues } = yield* QueueService;
-        const { db } = yield* DatabaseService;
-
+      function* ({ expect }) {
+        const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         const conversation = new AiConversation({
-          queue: queues.create(),
+          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const session = new AiSession();
-        const printer = new ConsolePrinter();
-        const messageQueue = session.messageQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((message) => Effect.sync(() => printer.printMessage(message))),
-        );
-        const blockQueue = session.blockQueue.pipe(
-          Stream.fromQueue,
-          Stream.runForEach((block) =>
-            Effect.sync(() =>
-              Option.match(block, {
-                onSome: (block) => printer.printContentBlock(block),
-                onNone: () => Effect.void,
-              }),
-            ),
-          ),
+        yield* DatabaseService.add(blueprint);
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: [Ref.make(blueprint)],
+          }),
         );
 
-        db.add(blueprint);
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
-
-        const artifact = db.add(Markdown.makeDocument({ content: 'Hello, world!' }));
+        const artifact = yield* DatabaseService.add(Markdown.makeDocument({ content: 'Hello, world!' }));
         let prevContent = artifact.content;
 
-        const run = conversation.run({
-          session,
-          prompt: trim`
-            Let's design a new feature for our product. We need to add a user profile system with the following requirements:
+        {
+          const prompt = trim`
+            I want to design a new feature for our product. 
 
+            We need to add a user profile system with the following requirements:
             1. Users should be able to create and edit their profiles
             2. Profile should include basic info like name, bio, avatar
             3. Users can control privacy settings for their profile
             4. Profile should show user's activity history
             5. Need to consider data storage and security implications
 
-            What do you think about this approach? Let's capture the key design decisions in our spec.
+            Let's capture the key design decisions in our spec in ${Obj.getDXN(artifact)}
+          `;
 
-            The store spec in ${Obj.getDXN(artifact)}
-          `,
-        });
-        yield* Effect.all([run, messageQueue, blockQueue]);
-        log.info('spec', { doc: artifact });
-        expect(artifact.content).not.toBe(prevContent);
-        prevContent = artifact.content;
+          yield* conversation.createRequest({ prompt, observer });
+          log.info('spec', { doc: artifact });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
 
-        yield* conversation.run({
-          prompt: trim`
-            I want this to be built on top of Durable Objects and SQLite database. Let's adjust the spec to reflect this.
-          `,
-        });
-        log.info('spec', { doc: artifact });
-        expect(artifact.content).not.toBe(prevContent);
+        {
+          const prompt = trim`
+            I want this to be built on top of Durable Objects and SQLite database. 
+            Adjust the spec to reflect this.
+          `;
+
+          yield* conversation.createRequest({ observer, prompt });
+          expect(artifact.content).not.toBe(prevContent);
+          prevContent = artifact.content;
+        }
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readDocument, updateDocument]),
-          makeToolExecutionServiceFromFunctions([readDocument, updateDocument]),
+          makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
+          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
+          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(LocalFunctionExecutionService.layer),
+          Layer.provideMerge(
+            FunctionInvocationService.layerTest({ functions: [readDocument, updateDocument] }).pipe(
+              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+              Layer.provideMerge(TracingService.layerNoop),
+            ),
+          ),
         ),
       ),
+      TestHelpers.taggedTest('llm'),
     ),
   );
 });

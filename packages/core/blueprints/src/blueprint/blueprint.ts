@@ -5,9 +5,9 @@
 import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo-schema';
-import { DataType } from '@dxos/schema';
+import { type FunctionDefinition } from '@dxos/functions';
 
 import { Template } from '../template';
 
@@ -73,23 +73,16 @@ export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 /**
  * Create a new Blueprint.
  */
-export const make = ({
-  key,
-  name,
-  description,
-  instructions = { source: '' },
+export const make = ({ tools = [], ...props }: Pick<Blueprint, 'key' | 'name' | 'instructions'> & Partial<Blueprint>) =>
+  Obj.make(Blueprint, { tools, ...props });
+
+/**
+ * Util to create tool definitions for a blueprint.
+ */
+export const toolDefinitions = ({
   tools = [],
-}: Pick<Blueprint, 'key' | 'name'> &
-  Omit<Partial<Blueprint>, 'key' | 'name' | 'instructions'> & {
-    instructions?: Omit<Partial<Template>, 'source'> & { source: string };
-  }) =>
-  Obj.make(Blueprint, {
-    key,
-    name,
-    description,
-    instructions: {
-      source: Ref.make(DataType.makeText(instructions.source)),
-      inputs: instructions.inputs,
-    },
-    tools,
-  });
+  functions = [],
+}: {
+  tools?: string[];
+  functions?: FunctionDefinition[];
+}) => [...functions.map((fn) => ToolId.make(fn.key)), ...tools.map((tool) => ToolId.make(tool))];

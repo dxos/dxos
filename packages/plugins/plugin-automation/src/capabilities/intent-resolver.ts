@@ -11,7 +11,7 @@ import {
   createResolver,
 } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, ScriptType, TriggerKind } from '@dxos/functions';
+import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -43,11 +43,11 @@ export default (context: PluginContext) =>
 
         switch (template.type) {
           case 'timer': {
-            trigger.spec = { kind: TriggerKind.Timer, cron: template.cron };
+            trigger.spec = { kind: 'timer', cron: template.cron };
             break;
           }
           case 'queue': {
-            trigger.spec = { kind: TriggerKind.Queue, queue: (template.queueDXN as DXN).toString() };
+            trigger.spec = { kind: 'queue', queue: (template.queueDXN as DXN).toString() };
             break;
           }
           default: {
@@ -57,7 +57,7 @@ export default (context: PluginContext) =>
 
         return {
           intents: [
-            createIntent(SpaceAction.AddObject, { object: trigger, target: space }),
+            createIntent(SpaceAction.AddObject, { object: trigger, target: space, hidden: true }),
             createIntent(LayoutAction.Open, {
               part: 'main',
               subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`],

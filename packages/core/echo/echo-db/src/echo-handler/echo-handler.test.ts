@@ -8,7 +8,7 @@ import { effect } from '@preact/signals-core';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -24,7 +24,7 @@ import {
 import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo-schema';
 import { Testing, prepareAstForCompare } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
@@ -32,7 +32,7 @@ import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
 import { Filter } from '../query';
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
@@ -216,13 +216,12 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('instantiating reactive objects after a restart', async () => {
-    const kv = createTestLevel();
-    await openAndClose(kv);
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
 
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv });
+    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
     const root = await peer.host.createSpaceRoot(spaceKey);
     peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
 
@@ -237,7 +236,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       peer.client.graph.schemaRegistry.addSchema([Testing.TestType]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
@@ -251,13 +250,12 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('restart with static schema and schema is registered later', async () => {
-    const kv = createTestLevel();
-    await openAndClose(kv);
-
+    const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
+
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
-    const peer = await builder.createPeer({ kv });
+    const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
     const root = await peer.host.createSpaceRoot(spaceKey);
 
     let id: string;
@@ -273,7 +271,7 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<Testing.TestSchema>;
@@ -374,8 +372,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData: any = Obj.toJSON(manager as any);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: Obj.getDXN(alice as any).toString(),
-      [ATTR_RELATION_TARGET]: Obj.getDXN(bob as any).toString(),
+      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(alice.id).toString(),
+      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(bob.id).toString(),
     });
   });
 
@@ -436,7 +434,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.nested.target.field).to.eq(obj1.nested?.target?.field);
+        expect(obj.nested['/']).to.eq(DXN.fromLocalObjectId(obj1.nested!.target!.id).toString());
       }
 
       const obj2 = db.add(obj1);
@@ -646,13 +644,12 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta persistence', async () => {
       const metaKey = { source: 'example.com', id: '123' };
-      const kv = createTestLevel();
-      await openAndClose(kv);
+      const tmpPath = createTmpPath();
 
       const spaceKey = PublicKey.random();
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
-      const peer = await builder.createPeer({ kv });
+      const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const root = await peer.host.createSpaceRoot(spaceKey);
 
       let id: string;
@@ -666,7 +663,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const peer = await builder.createPeer({ kv });
+        const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
         const obj = (await db.query(Filter.ids(id)).first()) as AnyLiveObject<Testing.TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
@@ -800,5 +797,48 @@ describe('Reactive Object with ECHO database', () => {
     const obj = live({ queue: Ref.fromDXN(dxn) });
     const dbObj = db.add(obj);
     expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());
+  });
+
+  test('Obj.getDXN returns full DXN', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
+  });
+
+  test('set id throws', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(Obj.make(Type.Expando, { string: 'Object 1' }));
+    expect(() => {
+      (obj as any).id = '123';
+    }).to.throw();
+  });
+
+  test('foreign key copying from new object to existing object', async () => {
+    const { db } = await builder.createDatabase();
+
+    // Create an object in the database
+    const existing = db.add(Obj.make(Type.Expando, { title: 'Existing object' }));
+    expect(Obj.getMeta(existing).keys).to.deep.eq([]);
+
+    // Create a new object with foreign keys
+    const newObj = Obj.make(Type.Expando, { title: 'New object' });
+    const foreignKey1 = { source: 'example.com', id: 'key-1' };
+    const foreignKey2 = { source: 'another.com', id: 'key-2' };
+    Obj.getMeta(newObj).keys.push(foreignKey1);
+    Obj.getMeta(newObj).keys.push(foreignKey2);
+
+    // Copy foreign keys from new object to existing object
+    for (const foreignKey of Obj.getMeta(newObj).keys) {
+      Obj.deleteKeys(existing, foreignKey.source);
+      // Using spread operator to copy the foreign key object
+      Obj.getMeta(existing).keys.push({ ...foreignKey });
+    }
+
+    // Verify foreign keys were copied
+    expect(Obj.getMeta(existing).keys).to.have.length(2);
+    expect(Obj.getMeta(existing).keys).to.deep.eq([foreignKey1, foreignKey2]);
+
+    // Verify the original object still has its keys
+    expect(getMeta(newObj).keys).to.have.length(2);
   });
 });

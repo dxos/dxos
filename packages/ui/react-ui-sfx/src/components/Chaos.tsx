@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(wittjosiah): Typing here broke when upgrading to React 19.
+// @ts-nocheck
+
 import { OrbitControls, PerspectiveCamera, Stats, useFBO } from '@react-three/drei';
 import { Canvas, createPortal, extend, useFrame } from '@react-three/fiber';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -9,6 +12,7 @@ import * as THREE from 'three';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Specialize } from '@dxos/util';
 
@@ -79,15 +83,15 @@ export const shaderPresets: Record<string, ShaderOptions> = {
 
 export const defaultShaderOptions = Object.values(shaderPresets)[0];
 
-export type ChaosProps = {
+export type ChaosProps = ThemedClassName<{
   active?: boolean;
   getValue?: () => number;
   options?: ShaderOptions;
   debug?: boolean;
-};
+}>;
 
 // TODO(burdon): Memoize so isn't reset on stat change?
-export const Chaos = ({ active, options = defaultShaderOptions, debug, ...props }: ChaosProps) => {
+export const Chaos = ({ classNames, active, options = defaultShaderOptions, debug, ...props }: ChaosProps) => {
   const [init, setInit] = useState(false);
   useEffect(() => {
     setInit(true);
@@ -95,28 +99,30 @@ export const Chaos = ({ active, options = defaultShaderOptions, debug, ...props 
 
   // https://docs.pmnd.rs/react-three-fiber/api/canvas#render-props
   return (
-    <Canvas
-      className={mx('transition-opacity opacity-0 duration-[1s]', init && 'opacity-100')}
-      linear={true}
-      gl={(canvas) =>
-        new THREE.WebGLRenderer({
-          canvas,
-          alpha: true,
-          antialias: false,
-        })
-      }
-    >
-      {debug && (
-        <>
-          <Stats />
-          <OrbitControls makeDefault enablePan autoRotate autoRotateSpeed={options.rotation} zoomSpeed={0.05} />
-        </>
-      )}
+    <div className={mx('grid grow', classNames)}>
+      <Canvas
+        className={mx('transition-opacity opacity-0 duration-[1s]', init && 'opacity-100')}
+        linear={true}
+        gl={({ canvas }) =>
+          new THREE.WebGLRenderer({
+            canvas,
+            alpha: true,
+            antialias: false,
+          })
+        }
+      >
+        {debug && (
+          <>
+            <Stats />
+            <OrbitControls makeDefault enablePan autoRotate autoRotateSpeed={options.rotation} zoomSpeed={0.05} />
+          </>
+        )}
 
-      {/* NOTE: Object is at origin. */}
-      <PerspectiveCamera makeDefault fov={options.fov} position={[0, 0, options.distance]} zoom={options.zoom} />
-      <Particles active={active} options={options} {...props} />
-    </Canvas>
+        {/* NOTE: Object is at origin. */}
+        <PerspectiveCamera makeDefault fov={options.fov} position={[0, 0, options.distance]} zoom={options.zoom} />
+        <Particles active={active} options={options} {...props} />
+      </Canvas>
+    </div>
   );
 };
 
@@ -150,8 +156,8 @@ const Particles = ({
     return particles;
   }, [size]);
 
-  const renderRef = useRef<any>();
-  const simRef = useRef<any>();
+  const renderRef = useRef<any>(undefined);
+  const simRef = useRef<any>(undefined);
 
   // Pause if options changed.
   // TODO(burdon): Pause if re-rendering (e.g., due to dragging). Memoize?

@@ -19,16 +19,18 @@ import { Filter, Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo-schema';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { useActiveSpace } from '@dxos/plugin-space';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { TableView } from '@dxos/react-ui-table/types';
+import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType } from '@dxos/schema';
+import { DataType, type ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { PREVIEW_PLUGIN } from '../meta';
+import { TaskCard } from '../components/TaskCard';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -36,26 +38,27 @@ export default () =>
     // Specific schema types.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
+      id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
         const { dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
         const defaultSpace = useSpace();
+        const activeSpace = useActiveSpace();
 
         const currentSpaceOrgs = useQuery(space, Filter.type(DataType.Organization));
         const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
-            view.query.typename === DataType.Organization.typename &&
-            Obj.instanceOf(TableView, view.presentation.target),
+            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.
@@ -99,40 +102,54 @@ export default () =>
         );
 
         return (
-          <ContactCard role={role} subject={data.subject} onOrgClick={handleOrgClick}>
+          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onOrgClick={handleOrgClick}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
+      id: `${meta.id}/schema-popover--organization`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
-      component: ({ data, role }) => (
-        <OrganizationCard role={role} subject={data.subject}>
-          {role === 'card--popover' && <Surface role='related' data={data} />}
-        </OrganizationCard>
-      ),
+      component: ({ data, role }) => {
+        const activeSpace = useActiveSpace();
+
+        return (
+          <OrganizationCard role={role} subject={data.subject} activeSpace={activeSpace}>
+            {role === 'card--popover' && <Surface role='related' data={data} />}
+          </OrganizationCard>
+        );
+      },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
+      id: `${meta.id}/schema-popover--project`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
-      component: ({ data, role }) => <ProjectCard subject={data.subject} role={role} />,
+      component: ({ data, role }) => {
+        const activeSpace = useActiveSpace();
+
+        return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/schema-popover--task`,
+      role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
+      filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
+      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
     }),
 
     //
     // Fallback for any object.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/fallback-popover`,
+      id: `${meta.id}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
-      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
-        const { t } = useTranslation(PREVIEW_PLUGIN);
+        const { t } = useTranslation(meta.id);
         if (!schema) {
           // TODO(burdon): Use Alert.
           return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
@@ -150,8 +167,9 @@ export default () =>
           <Card.SurfaceRoot role={role}>
             <Form
               schema={schema}
+              projection={data.projection}
               values={data.subject}
-              readonly={role === 'card--popover'}
+              readonly={role === 'card--popover' ? 'static' : false}
               onSave={handleSave}
               autoSave
               {...(role === 'card--intrinsic' && { outerSpacing: 'blockStart-0' })}

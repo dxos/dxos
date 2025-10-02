@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Meta } from '@storybook/react-vite';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -223,10 +223,12 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   );
 };
 
-const meta: Meta = {
+const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
   decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
-};
+} satisfies Meta<typeof Tree>;
 
 export default meta;
+
+type Story = StoryObj<typeof meta>;

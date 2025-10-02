@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export type BaseErrorOptions = {
+/**
+ * Options for creating a BaseError.
+ */
+export type BaseErrorOptions = ErrorOptions & {
   /**
-   * The cause of the error.
-   * An instance of Error.
+   * Override base message.
    */
-  cause?: unknown;
+  message?: string;
 
   /**
    * Structured details about the error.
@@ -21,14 +23,11 @@ export type BaseErrorOptions = {
 export class BaseError<Code extends string = string> extends Error {
   /**
    * Primary way of defining new error classes.
-   *
-   * Expample:
-   *
-   * ```ts
-   * export class AiInputPreprocessingError extends BaseError.extend('AI_INPUT_PREPROCESSING_ERROR') {}
-   * ```
+   * Extended class may specialize constructor for required context params.
+   * @param code - Error code.
+   * @param message - Default error message.
    */
-  static extend<Code extends string>(code: Code) {
+  static extend<Code extends string = string>(code: Code, message?: string) {
     return class extends BaseError<Code> {
       static code = code;
 
@@ -36,12 +35,12 @@ export class BaseError<Code extends string = string> extends Error {
         return typeof error === 'object' && error !== null && 'code' in error && error.code === code;
       }
 
-      static wrap(message: string, options?: Omit<BaseErrorOptions, 'cause'>) {
-        return (error: unknown) => new this(message, { ...options, cause: error });
+      static wrap(options?: Omit<BaseErrorOptions, 'cause'>) {
+        return (error: unknown) => new this({ message, ...options, cause: error });
       }
 
-      constructor(message: string, options?: BaseErrorOptions) {
-        super(code, message, options);
+      constructor(options?: BaseErrorOptions) {
+        super(code, { message: options?.message ?? message, ...options });
       }
     };
   }
@@ -49,8 +48,8 @@ export class BaseError<Code extends string = string> extends Error {
   #code: Code;
   #context: Record<string, unknown>;
 
-  constructor(code: Code, message: string, options?: BaseErrorOptions) {
-    super(message, options);
+  constructor(code: Code, options?: BaseErrorOptions) {
+    super(options?.message, { cause: options?.cause });
 
     this.#code = code;
     this.#context = options?.context ?? {};
@@ -59,6 +58,11 @@ export class BaseError<Code extends string = string> extends Error {
 
   override get name() {
     return this.#code;
+  }
+
+  /** Fallback message. */
+  override get message() {
+    return this.constructor.name;
   }
 
   get code(): Code {

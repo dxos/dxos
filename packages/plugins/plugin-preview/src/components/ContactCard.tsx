@@ -11,22 +11,27 @@ import { type DataType } from '@dxos/schema';
 
 import { type PreviewProps } from '../types';
 
+import { CardSubjectMenu } from './CardSubjectMenu';
+
 export const ContactCard = ({
   children,
-  subject: { fullName, image, organization, emails },
+  subject,
+  activeSpace,
   onOrgClick,
   role,
 }: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
+  const { fullName, image, organization, emails } = subject;
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <Card.SurfaceRoot role={role}>
       <Avatar.Root>
         <Card.Text role='group' classNames='grid gap-3 grid-cols-[min-content_1fr]'>
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />
-          <div role='none' className='bs-min self-center'>
+          <div role='none' className='bs-min self-center flex items-center'>
             <Avatar.Label asChild>
-              <h2 className={cardHeading}>{fullName}</h2>
+              <h2 className={mx(cardHeading, 'grow')}>{fullName}</h2>
             </Avatar.Label>
+            <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
           </div>
         </Card.Text>
       </Avatar.Root>
@@ -57,6 +62,7 @@ export const ContactCard = ({
             emails.map(({ label, value }) => (
               <Fragment key={value}>
                 <dt>
+                  <span className='sr-only'>{label}</span>
                   <Icon icon='ph--at--regular' size={5} />
                 </dt>
                 <dd key={value} className='break-words'>

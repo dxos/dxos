@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwa
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
-import { hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
+import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageMetadata } from '../types';
@@ -20,6 +20,7 @@ export type MessageRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> &
   MessageMetadata &
   Partial<{ continues: boolean }>;
 
+// TODO(burdon): Show authorName on tooltip.
 export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     { authorImgSrc, authorId, authorName, authorAvatarProps, continues = true, children, classNames, ...rootProps },
@@ -35,7 +36,7 @@ export const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           className={mx('grid grid-cols-subgrid col-span-2', classNames)}
           ref={forwardedRef}
         >
-          <div role='none' className='flex flex-col items-center gap-2 pbs-2'>
+          <div role='none' className='flex flex-col items-center gap-2 pbs-1'>
             <Avatar.Content
               size={avatarSize}
               hue={authorAvatarProps?.hue || hexToHue(authorId ?? '0')}
@@ -155,7 +156,7 @@ export const MessageTextbox = ({
           },
         }),
         extensions,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
       ...editorProps,
     }),
     [id, extensions],

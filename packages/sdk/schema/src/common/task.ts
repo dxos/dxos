@@ -13,7 +13,10 @@ import {
   PropertyMetaAnnotationId,
 } from '@dxos/echo-schema';
 
+import { ItemAnnotation } from '../annotations';
+
 import { Person } from './person';
+import { Project } from './project';
 
 /**
  * Task schema.
@@ -80,11 +83,12 @@ const TaskSchema = Schema.Struct({
       }),
     ),
   ),
+  project: Schema.optional(Type.Ref(Project).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
-}).pipe(LabelAnnotation.set(['title']));
+}).pipe(LabelAnnotation.set(['title']), ItemAnnotation.set(true));
 
 export const Task = TaskSchema.pipe(
   Type.Obj({
