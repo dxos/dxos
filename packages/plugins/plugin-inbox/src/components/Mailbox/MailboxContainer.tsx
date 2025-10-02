@@ -83,7 +83,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     [id, dispatch, model.messages, model, filterDispatch],
   );
 
-  const onQueryEditorUpdate = useCallback(
+  const _onQueryEditorUpdate = useCallback(
     (ids: string[]) => {
       model.clearSelectedTags();
       for (const id of ids) {
@@ -123,7 +123,6 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           <QueryEditor
             ref={queryEditorFocusRef}
             items={queryEditorCurrentItems}
-            onUpdate={onQueryEditorUpdate}
             onSearch={(text, ids) =>
               model.availableTags
                 .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
