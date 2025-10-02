@@ -5,6 +5,7 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { expect, fn, userEvent, within } from '@storybook/test';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
@@ -40,7 +41,7 @@ const meta = {
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
               )
             }
-            onChange={(items) => console.log('[items]', items)}
+            onChange={fn()}
           />
         </div>
         <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
@@ -60,5 +61,46 @@ type Story = StoryObj<typeof QueryEditor>;
 export const Default: Story = {
   args: {
     items: [allTags[0], { content: 'Junie' }, allTags[1]],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Find the editor element
+    const editorContainer = canvas.getByRole('textbox');
+
+    // Wait a bit for the editor to initialize
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Get the editor content
+    const editorContent = editorContainer.textContent || '';
+
+    // Confirm initial content: should have anchor + text + anchor pattern
+    // The content should be something like "Cloudflare Junie Cursor"
+    await expect(editorContent).toContain('Cloudflare');
+    await expect(editorContent).toContain('Junie');
+    await expect(editorContent).toContain('Cursor');
+
+    // Check that we have anchor elements (dx-anchor tags in DOM)
+    const anchors = canvasElement.querySelectorAll('dx-anchor');
+    await expect(anchors.length).toBe(2);
+    await expect(anchors[0].textContent).toBe('Cloudflare');
+    await expect(anchors[1].textContent).toBe('Cursor');
+
+    // Click on the editor to focus it
+    await userEvent.click(editorContainer);
+
+    // Move cursor to the end
+    await userEvent.keyboard('{End}');
+
+    // Press backspace to remove the last anchor
+    await userEvent.keyboard('{Backspace}');
+
+    // Wait for the change to be processed
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // Confirm the last anchor was removed - should now only have 1 anchor
+    const anchorsAfter = canvasElement.querySelectorAll('dx-anchor');
+    await expect(anchorsAfter.length).toBe(1);
+    await expect(anchorsAfter[0].textContent).toBe('Cloudflare');
   },
 };
