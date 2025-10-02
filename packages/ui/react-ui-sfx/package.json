@@ -42,7 +42,7 @@
     "glsl-curl-noise2": "^0.0.4",
     "glsl-noise": "^0.0.0",
     "glslify": "^7.1.1",
-    "leva": "^0.9.35",
+    "leva": "^0.10.0",
     "motion": "^12.0.6",
     "ogl": "^1.0.11",
     "react-resize-detector": "^11.0.1",

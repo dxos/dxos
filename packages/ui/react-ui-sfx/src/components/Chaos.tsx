@@ -103,7 +103,7 @@ export const Chaos = ({ classNames, active, options = defaultShaderOptions, debu
       <Canvas
         className={mx('transition-opacity opacity-0 duration-[1s]', init && 'opacity-100')}
         linear={true}
-        gl={(canvas) =>
+        gl={({ canvas }) =>
           new THREE.WebGLRenderer({
             canvas,
             alpha: true,
