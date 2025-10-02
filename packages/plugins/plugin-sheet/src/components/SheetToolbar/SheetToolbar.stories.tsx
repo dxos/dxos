@@ -14,7 +14,9 @@ import { translations } from '../../translations';
 import { SheetToolbar } from './SheetToolbar';
 
 const DefaultStory = () => {
-  return <SheetToolbar id='test' />;
+  // TODO(wittjosiah): Depends on SheetProvider.
+  // return <SheetToolbar id='test' />;
+  return <>TODO</>;
 };
 
 const meta = {

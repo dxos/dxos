@@ -79,6 +79,7 @@
     "date-fns": "^3.3.1"
   },
   "devDependencies": {
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

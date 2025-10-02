@@ -116,6 +116,10 @@ export const useApp = ({
   }, [cacheEnabled, manager]);
 
   useEffect(() => {
+    setupDevtools(manager);
+  }, [manager]);
+
+  useAsyncEffect(async () => {
     manager.context.contributeCapability({
       interface: Capabilities.PluginManager,
       implementation: manager,
@@ -128,22 +132,16 @@ export const useApp = ({
       module: 'dxos.org/app-framework/rx-registry',
     });
 
-    return () => {
-      manager.context.removeCapability(Capabilities.PluginManager, manager);
-      manager.context.removeCapability(Capabilities.RxRegistry, manager.registry);
-    };
-  }, [manager]);
-
-  useEffect(() => {
-    setupDevtools(manager);
-  }, [manager]);
-
-  useAsyncEffect(async () => {
     await Promise.all([
       // TODO(wittjosiah): Factor out such that this could be called per surface role when attempting to render.
       manager.activate(Events.SetupReactSurface),
       manager.activate(Events.Startup),
     ]);
+
+    return () => {
+      manager.context.removeCapability(Capabilities.PluginManager, manager);
+      manager.context.removeCapability(Capabilities.RxRegistry, manager.registry);
+    };
   }, [manager]);
 
   return useCallback(

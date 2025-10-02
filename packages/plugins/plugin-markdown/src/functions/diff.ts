@@ -13,7 +13,8 @@ import { Markdown } from '../types';
 
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 export default defineFunction({
-  name: 'dxos.org/function/markdown/diff',
+  key: 'dxos.org/function/markdown/diff',
+  name: 'Diff',
   description: trim`
     Applies a set of diffs to the markdown document.
   `,
