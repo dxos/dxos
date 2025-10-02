@@ -33,7 +33,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "effect": "3.18.1",
-    "mermaid": "^10.6.1"
+    "mermaid": "^10.9.4"
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",
