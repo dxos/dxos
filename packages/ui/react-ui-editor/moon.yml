@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -13,3 +14,6 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

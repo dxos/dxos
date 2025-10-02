@@ -5,23 +5,16 @@
 import React, { type FC, useMemo } from 'react';
 
 import { FormatEnum } from '@dxos/echo-schema';
-import { type InvocationSpan, type TraceEvent } from '@dxos/functions';
-import { useQueue } from '@dxos/react-client/echo';
+import { TraceEvent } from '@dxos/functions';
+import { Filter, type Queue, useQuery } from '@dxos/react-client/echo';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
-import { mx } from '@dxos/react-ui-theme';
 
 type LogPanelProps = {
-  span?: InvocationSpan;
+  queue?: Queue;
 };
 
-export const LogPanel: FC<LogPanelProps> = ({ span }) => {
-  // Get the trace queue for this invocation
-  const traceQueueDxn = useMemo(() => {
-    return span?.invocationTraceQueue ? span.invocationTraceQueue.dxn : undefined;
-  }, [span?.invocationTraceQueue]);
-
-  // Fetch all trace events from the queue
-  const eventQueue = useQueue<TraceEvent>(traceQueueDxn, { pollInterval: 2000 });
+export const LogPanel: FC<LogPanelProps> = ({ queue }) => {
+  const objects = useQuery(queue, Filter.type(TraceEvent));
 
   // Define properties for the DynamicTable
   const properties: TablePropertyDefinition[] = useMemo(
@@ -49,11 +42,11 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
   );
 
   const rows = useMemo(() => {
-    if (!eventQueue?.objects?.length) {
+    if (!objects?.length) {
       return [];
     }
 
-    return eventQueue.objects.flatMap((event) => {
+    return objects.flatMap((event) => {
       return event.logs.map((log) => ({
         id: `${event.id}-${log.timestamp}`,
         timestamp: new Date(log.timestamp).toLocaleString(),
@@ -63,11 +56,7 @@ export const LogPanel: FC<LogPanelProps> = ({ span }) => {
         _original: { ...log, eventId: event.id },
       }));
     });
-  }, [eventQueue?.objects]);
-
-  if (traceQueueDxn && eventQueue?.isLoading) {
-    return <div className={mx('flex items-center justify-center')}>Loading trace data...</div>;
-  }
+  }, [objects]);
 
   return <DynamicTable properties={properties} rows={rows} />;
 };

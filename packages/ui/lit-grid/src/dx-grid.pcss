@@ -4,10 +4,10 @@
 @layer dx-tokens {
   :root {
     --dx-grid-cell-padding-block: 0.2rem;
-    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - 1px);
+    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - var(--dx-gridFocusIndicatorWidth));
     --dx-grid-cell-editor-padding-block: var(--dx-grid-cell-content-padding-block);
     --dx-grid-cell-padding-inline: 0.25rem;
-    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - 1px);
+    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - var(--dx-gridFocusIndicatorWidth));
     --dx-grid-cell-editor-padding-inline: var(--dx-grid-cell-content-padding-inline);
   }
 }
@@ -54,7 +54,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: 1px solid var(--dx-accentSurface);
+      border: var(--dx-gridFocusIndicatorWidth) solid var(--dx-gridFocusIndicatorColor);
     }
   }
 
@@ -98,7 +98,7 @@
         white-space: nowrap;
         block-size: 100%;
         position: relative;
-        border: 1px solid transparent;
+        border: var(--dx-gridFocusIndicatorWidth) solid transparent;
         border-radius: 2px;
 
         &:has(.dx-tag), &:has(dx-tag-picker-item) {
@@ -175,13 +175,13 @@
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
-            border-color: var(--dx-accentSurface);
+            border-color: var(--dx-gridFocusIndicatorColor);
           }
         }
       }
 
       &:focus-visible > .dx-grid__cell__content {
-        border-color: var(--dx-accentSurface);
+        border-color: var(--dx-gridFocusIndicatorColor);
       }
     }
   }
@@ -193,7 +193,7 @@
     overflow-wrap: break-word;
 
     background: var(--dx-grid-base, var(--dx-baseSurface));
-    border: 1px solid var(--dx-accentSurface);
+    border: var(--dx-gridFocusIndicatorWidth) solid var(--dx-gridFocusIndicatorColor);
     border-radius: 2px;
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
@@ -218,7 +218,7 @@
     [role='columnheader'],
     [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
-        border-color: var(--dx-accentSurface);
+        border-color: var(--dx-gridFocusIndicatorColor);
       }
     }
   }

@@ -182,6 +182,7 @@ describe('ProjectionModel', () => {
     // Note: `referencePath` is stripped from schema.
     expect(jsonSchema.properties?.['organization' as const]).to.deep.eq({
       $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       reference: {
         schema: {
           $ref: 'dxn:type:dxos.org/type/Organization',

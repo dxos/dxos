@@ -35,7 +35,8 @@ export const modules = [
   'ui/primitives/*/src/**',
 ];
 
-export const stories = modules.map((dir) => join(packages, dir, storyFiles));
+// NOTE: Storybook test depends on relative paths.
+export const stories = modules.map((dir) => join('../../../packages', dir, storyFiles));
 export const content = modules.map((dir) => join(packages, dir, contentFiles));
 
 if (isTrue(process.env.DX_DEBUG)) {
@@ -91,98 +92,110 @@ export const createConfig = ({
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
 
-    return mergeConfig(config, {
-      publicDir: staticDir,
-      resolve: {
-        alias: {
-          'tiktoken/lite': resolve(__dirname, './stub.mjs'),
-          'node:util': '@dxos/node-std/util',
-        },
+    const finalConfig = mergeConfig(
+      {
+        ...config,
+        // Prevent duplicate react-swc plugin.
+        plugins: config.plugins.filter((plugin) =>
+          Array.isArray(plugin) ? plugin.findIndex((p) => p.name === 'vite:react-swc') === -1 : true,
+        ),
       },
-      build: {
-        assetsInlineLimit: 0,
-        rollupOptions: {
-          output: {
-            assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
+      {
+        publicDir: staticDir,
+        resolve: {
+          alias: {
+            'node-fetch': 'isomorphic-fetch',
+            'tiktoken/lite': resolve(__dirname, './stub.mjs'),
+            'node:util': '@dxos/node-std/util',
           },
         },
-      },
-      server: {
-        headers: {
-          // Prevent caching icon sprite.
-          'Cache-Control': 'no-store',
+        build: {
+          assetsInlineLimit: 0,
+          rollupOptions: {
+            output: {
+              assetFileNames: 'assets/[name].[hash][extname]', // Unique asset names
+            },
+          },
         },
-        hmr: {
-          // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
-          overlay: false,
+        server: {
+          headers: {
+            // Prevent caching icon sprite.
+            'Cache-Control': 'no-store',
+          },
+          hmr: {
+            // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
+            overlay: false,
+          },
         },
+        worker: {
+          format: 'es',
+          plugins: () => [wasm(), topLevelAwait()],
+        },
+        plugins: [
+          //
+          // NOTE: Order matters.
+          //
+
+          importSource({
+            exclude: [
+              '**/node_modules/**',
+              '**/common/random-access-storage/**',
+              '**/common/lock-file/**',
+              '**/mesh/network-manager/**',
+              '**/mesh/teleport/**',
+              '**/sdk/config/**',
+              '**/sdk/client-services/**',
+              '**/sdk/observability/**',
+              // TODO(dmaretskyi): Decorators break in lit.
+              '**/ui/lit-*/**',
+            ],
+          }),
+
+          // https://www.npmjs.com/package/vite-plugin-wasm
+          wasm(),
+
+          // https://www.npmjs.com/package/vite-plugin-top-level-await
+          topLevelAwait(),
+
+          // https://www.npmjs.com/package/@vitejs/plugin-react-swc
+          react({
+            tsDecorators: true,
+            plugins: [
+              // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
+              ['@preact-signals/safe-react/swc', { mode: 'all' }],
+            ],
+          }),
+
+          // https://www.npmjs.com/package/vite-plugin-turbosnap
+          turbosnap({
+            rootDir: config.root ?? __dirname,
+          }),
+
+          // https://www.npmjs.com/package/vite-plugin-inspect
+          // Open: http://localhost:5173/__inspect
+          isTrue(process.env.DX_INSPECT) && inspect(),
+
+          //
+          // Custom DXOS plugins.
+          //
+
+          IconsPlugin({
+            assetPath: (name, variant) =>
+              `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
+            contentPaths: content,
+            spriteFile: 'icons.svg',
+            symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
+          }),
+
+          ThemePlugin({
+            root: __dirname,
+            content,
+          }),
+        ],
       },
-      worker: {
-        format: 'es',
-        plugins: () => [wasm(), topLevelAwait()],
-      },
-      plugins: [
-        //
-        // NOTE: Order matters.
-        //
+    ) as InlineConfig;
 
-        importSource({
-          exclude: [
-            '**/node_modules/**',
-            '**/common/random-access-storage/**',
-            '**/common/lock-file/**',
-            '**/mesh/network-manager/**',
-            '**/mesh/teleport/**',
-            '**/sdk/config/**',
-            '**/sdk/client-services/**',
-            '**/sdk/observability/**',
-            // TODO(dmaretskyi): Decorators break in lit.
-            '**/ui/lit-*/**',
-          ],
-        }),
-
-        // https://www.npmjs.com/package/vite-plugin-wasm
-        wasm(),
-
-        // https://www.npmjs.com/package/vite-plugin-top-level-await
-        topLevelAwait(),
-
-        // https://www.npmjs.com/package/@vitejs/plugin-react-swc
-        react({
-          tsDecorators: true,
-          plugins: [
-            // https://github.com/XantreDev/preact-signals/tree/main/packages/react#how-parser-plugins-works
-            ['@preact-signals/safe-react/swc', { mode: 'all' }],
-          ],
-        }),
-
-        // https://www.npmjs.com/package/vite-plugin-turbosnap
-        turbosnap({
-          rootDir: config.root ?? __dirname,
-        }),
-
-        // https://www.npmjs.com/package/vite-plugin-inspect
-        // Open: http://localhost:5173/__inspect
-        isTrue(process.env.DX_INSPECT) && inspect(),
-
-        //
-        // Custom DXOS plugins.
-        //
-
-        IconsPlugin({
-          assetPath: (name, variant) =>
-            `${iconsDir}/${variant}/${name}${variant === 'regular' ? '' : `-${variant}`}.svg`,
-          contentPaths: content,
-          spriteFile: 'icons.svg',
-          symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
-        }),
-
-        ThemePlugin({
-          root: __dirname,
-          content,
-        }),
-      ],
-    }) as InlineConfig;
+    return finalConfig;
   },
 });
 

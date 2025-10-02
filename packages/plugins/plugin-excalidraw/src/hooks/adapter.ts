@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types';
+import { type ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 
 import { log } from '@dxos/log';
 import { AbstractAutomergeStoreAdapter, type Batch } from '@dxos/plugin-sketch/sdk';

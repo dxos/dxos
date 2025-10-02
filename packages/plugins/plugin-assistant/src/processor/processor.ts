@@ -27,8 +27,8 @@ import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type DatabaseService,
+  type FunctionInvocationService,
   type QueueService,
-  type RemoteFunctionExecutionService,
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -41,7 +41,7 @@ export type AiChatServices =
   | CredentialsService
   | DatabaseService
   | QueueService
-  | RemoteFunctionExecutionService
+  | FunctionInvocationService
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService
@@ -166,10 +166,6 @@ export class AiChatProcessor {
         Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
 
         Effect.asVoid,
-        Effect.tapErrorCause((cause) => {
-          log.error('request failed', { cause });
-          return Effect.void;
-        }),
         Runtime.runFork(runtime), // Runs in the background.
       );
 
@@ -182,9 +178,9 @@ export class AiChatProcessor {
       this._rx.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
-    } catch (err) {
-      log.error('request failed', { err });
-      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+    } catch (error) {
+      log.error('request failed', { error });
+      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: error })));
     } finally {
       this._fiber = undefined;
       this._rx.set(this.active, false);

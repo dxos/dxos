@@ -12,7 +12,8 @@ import { DatabaseService, TracingService, defineFunction } from '@dxos/functions
 import { log } from '@dxos/log';
 
 export default defineFunction({
-  name: 'dxos.org/function/agent',
+  key: 'dxos.org/function/agent',
+  name: 'Agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
     prompt: Type.Ref(Prompt.Prompt),

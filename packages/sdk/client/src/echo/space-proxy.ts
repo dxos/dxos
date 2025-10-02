@@ -2,6 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
+import { Schema } from 'effect';
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';
@@ -132,7 +133,6 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
     this._queues = echoClient.constructQueueFactory(this.id);
 
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
       get data() {
@@ -588,3 +588,10 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
+
+export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
+
+export const SpaceSchema: Schema.Schema<Space> = Schema.Any.pipe(
+  Schema.filter((space) => isSpace(space)),
+  Schema.annotations({ title: 'Space' }),
+);

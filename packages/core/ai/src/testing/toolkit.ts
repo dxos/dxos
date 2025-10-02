@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Console, Effect, Schema } from 'effect';
 
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
 // Tool definitions.
-export class TestingToolkit extends AiToolkit.make(
-  AiTool.make('Calculator', {
+export class TestingToolkit extends Toolkit.make(
+  Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
       input: Schema.String.annotations({
@@ -23,7 +23,7 @@ export class TestingToolkit extends AiToolkit.make(
     failure: Schema.Never,
   }),
 
-  AiTool.make('Markdown', {
+  Tool.make('Markdown', {
     description: 'Load markdown document',
     parameters: {
       name: Schema.String.annotations({

@@ -21,7 +21,7 @@ type NewTokenSelectorProps = {
   onCustomToken?: () => void;
 };
 
-export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: NewTokenSelectorProps) => {
+export const NewTokenSelector = ({ space, onAddAccessToken, onCustomToken }: NewTokenSelectorProps) => {
   const { t } = useTranslation(meta.id);
   const edgeClient = useEdgeClient();
   const [tokenMap] = useState(new Map<string, DataType.AccessToken>());
@@ -63,6 +63,7 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
       note: preset.note,
       token: '',
     });
+
     tokenMap.set(token.id, token);
 
     const { authUrl } = await edgeClient.initiateOAuthFlow({
@@ -73,7 +74,6 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
     });
 
     log.info('open', { authUrl });
-
     window.open(authUrl, 'oauthPopup', 'width=500,height=600');
   };
 
@@ -91,7 +91,6 @@ export const NewTokenSelector = ({ space, onCustomToken, onAddAccessToken }: New
             ))}
             <TokenMenuItem onSelect={createOauthPreset} />
           </DropdownMenu.Viewport>
-
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

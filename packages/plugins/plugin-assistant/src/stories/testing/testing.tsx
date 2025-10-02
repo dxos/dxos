@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -50,7 +50,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Config } from '@dxos/react-client';
+import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
@@ -83,8 +83,8 @@ export const config = {
   }),
 };
 
-class TestingToolkit extends AiToolkit.make(
-  AiTool.make('open-item', {
+class TestingToolkit extends Toolkit.make(
+  Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
     `,
@@ -105,7 +105,7 @@ type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpac
   Pick<StoryPluginOptions, 'onChatCreated'> & {
     plugins?: Plugin[];
     accessTokens?: DataType.AccessToken[];
-    onInit?: (props: { space: Space }) => Promise<void>;
+    onInit?: (props: { client: Client; space: Space }) => Promise<void>;
   };
 
 /**
@@ -161,7 +161,7 @@ export const getDecorators = ({
           }
 
           await space.db.flush({ indexes: true });
-          await onInit?.({ space });
+          await onInit?.({ client, space });
           await space.db.flush({ indexes: true });
         },
         ...props,

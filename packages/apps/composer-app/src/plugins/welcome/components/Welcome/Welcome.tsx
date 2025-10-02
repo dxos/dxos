@@ -70,7 +70,7 @@ export const Welcome = ({
           passkey: {
             label: t('redeem passkey button label'),
             description: t('redeem passkey button description'),
-            icon: (props: any) => <Icon icon='ph--key--regular' {...props} />,
+            icon: 'ph--key--regular',
             onClick: onPasskey,
           },
         }),
@@ -78,7 +78,7 @@ export const Welcome = ({
         deviceInvitation: {
           label: t('join device button label'),
           description: t('join device button description'),
-          icon: (props: any) => <Icon icon='ph--qr-code--regular' {...props} />,
+          icon: 'ph--qr-code--regular',
           onClick: onJoinIdentity,
         },
       }),
@@ -86,7 +86,7 @@ export const Welcome = ({
         recoveryCode: {
           label: t('recover identity button label'),
           description: t('recover identity button description'),
-          icon: (props: any) => <Icon icon='ph--receipt--regular' {...props} />,
+          icon: 'ph--receipt--regular',
           onClick: onRecoverIdentity,
         },
       }),
