@@ -4,9 +4,7 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const GRAPH_PLUGIN = 'dxos.org/plugin/graph';
-
 export const meta: PluginMeta = {
-  id: GRAPH_PLUGIN,
+  id: 'dxos.org/plugin/graph',
   name: 'Graph',
 };

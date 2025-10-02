@@ -49,7 +49,7 @@ const VIDEO_WIDTH = 1280;
 const VIDEO_HEIGHT = 720;
 const MAX_WEB_CAM_FRAMERATE = 24;
 const MAX_WEB_CAM_BITRATE = 120_0000;
-const RETRY_INTERVAL = 500;
+const RETRY_INTERVAL = 100;
 
 export type MediaManagerParams = {
   serviceConfig: CallsServiceConfig;
@@ -262,7 +262,7 @@ export class MediaManager extends Resource {
 
     if (pullResults.some(({ shouldRetry }) => shouldRetry)) {
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.verbose('retrying pull tracks', { tracksToPull });
+      log.info('retrying pull tracks', { tracksToPull });
       invariant(this._pullTracksTask);
       this._pullTracksTask.schedule();
     }
@@ -303,7 +303,7 @@ export class MediaManager extends Resource {
 
     if (shouldRetry) {
       await cancelWithContext(this._ctx, sleep(RETRY_INTERVAL));
-      log.verbose('retrying push tracks', { pushVideoResult, pushAudioResult, pushScreenshareResult });
+      log.info('retrying push tracks', { pushVideoResult, pushAudioResult, pushScreenshareResult });
       invariant(this._pushTracksTask);
       this._pushTracksTask.schedule();
     }
@@ -313,7 +313,8 @@ export class MediaManager extends Resource {
     const ctx = this._ctx.derive();
     try {
       const trackData = TrackNameCodec.decode(name);
-      const track = await this._state.peer!.pullTrack({ trackData, ctx });
+      // We need to set mid here to `undefined`, because mid is peer specific.
+      const track = await this._state.peer!.pullTrack({ trackData: { ...trackData, mid: undefined }, ctx });
       if (track?.readyState === 'ended') {
         throw new Error('Pulled track ended immediately');
       }
@@ -339,7 +340,7 @@ export class MediaManager extends Resource {
           throw new Error(`Invalid track kind: ${track?.kind}`);
       }
     } catch (err) {
-      log.verbose('failed to pull track', { err, name });
+      log.info('failed to pull track', { err, name });
       void ctx.dispose();
       return { shouldRetry: true };
     }
@@ -366,7 +367,7 @@ export class MediaManager extends Resource {
         }),
       };
     } catch (err) {
-      log.verbose('failed to push track', { err, track, previousTrack, encodings });
+      log.info('failed to push track', { err, track, previousTrack, encodings });
       void ctx.dispose();
       return { shouldRetry: true };
     }

@@ -3,18 +3,19 @@
 //
 
 import { inspect } from 'node:util';
+import { promisify } from 'node:util';
 
-import type { Proof } from 'hypercore';
 import { Readable, Transform } from 'streamx';
 
 import { Trigger } from '@dxos/async';
 import { StackTrace, inspectObject } from '@dxos/debug';
 import type { Hypercore, HypercoreProperties, ReadStreamOptions } from '@dxos/hypercore';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Directory } from '@dxos/random-access-storage';
-import { arrayToBuffer, createBinder, rangeFromTo } from '@dxos/util';
+import { arrayToBuffer, rangeFromTo } from '@dxos/util';
+import type { GetOptions, Proof } from '@dxos/vendor-hypercore/hypercore';
 
 import { type FeedWriter, type WriteReceipt } from './feed-writer';
 
@@ -22,8 +23,8 @@ import { type FeedWriter, type WriteReceipt } from './feed-writer';
  * Async feed wrapper.
  */
 export class FeedWrapper<T extends {}> {
+  private _hypercore: Hypercore<T>;
   private readonly _pendingWrites = new Set<StackTrace>();
-  private readonly _binder = createBinder(this._hypercore);
 
   // Pending while writes are happening. Resolves when there are no pending writes.
   private readonly _writeLock = new Trigger();
@@ -31,11 +32,12 @@ export class FeedWrapper<T extends {}> {
   private _closed = false;
 
   constructor(
-    private _hypercore: Hypercore<T>,
+    hypercore: Hypercore<T>,
     private _key: PublicKey, // TODO(burdon): Required since currently patching the key inside factory.
     private _storageDirectory: Directory,
   ) {
-    invariant(this._hypercore);
+    assertArgument(hypercore, 'hypercore');
+    this._hypercore = hypercore;
     invariant(this._key);
     this._writeLock.wake();
   }
@@ -144,31 +146,42 @@ export class FeedWrapper<T extends {}> {
     await this._storageDirectory.flush();
   }
 
-  get opened() {
+  get opened(): boolean {
     return this._hypercore.opened;
   }
 
-  get closed() {
+  get closed(): boolean {
     return this._hypercore.closed;
   }
 
-  get readable() {
+  get readable(): boolean {
     return this._hypercore.readable;
   }
 
-  get length() {
+  get length(): number {
     return this._hypercore.length;
   }
 
-  get byteLength() {
+  get byteLength(): number {
     return this._hypercore.byteLength;
   }
 
-  on = this._binder.fn(this._hypercore.on);
-  off = this._binder.fn(this._hypercore.off);
+  on(...args: any[]) {
+    return (this._hypercore as any).on(...args);
+  }
 
-  open = this._binder.async(this._hypercore.open);
-  private _close = this._binder.async(this._hypercore.close);
+  off(...args: any[]) {
+    return (this._hypercore as any).off(...args);
+  }
+
+  open(...args: Parameters<Hypercore<T>['open']>) {
+    return promisify(this._hypercore.open.bind(this._hypercore) as any)(...args);
+  }
+
+  _close(...args: Parameters<Hypercore<T>['close']>) {
+    return promisify(this._hypercore.close.bind(this._hypercore) as any)(...args);
+  }
+
   close = async () => {
     if (this._pendingWrites.size) {
       log.warn('Closing feed with pending writes', {
@@ -182,27 +195,53 @@ export class FeedWrapper<T extends {}> {
     await this._close();
   };
 
-  has = this._binder.fn(this._hypercore.has) as (start: number, end?: number) => boolean;
-  get = this._binder.async(this._hypercore.get);
-  append = this._binder.async(this._hypercore.append);
+  has(start: number, end?: number) {
+    return this._hypercore.has(start, end);
+  }
+
+  get(index: number, options?: GetOptions) {
+    return promisify(this._hypercore.get.bind(this._hypercore) as any)(index, options);
+  }
+
+  // TODO(dmaretskyi): Type better
+  append(data: any | any[]): Promise<number> {
+    return promisify(this._hypercore.append.bind(this._hypercore))(data);
+  }
 
   /**
    * Will not resolve if `end` parameter is not specified and the feed is not closed.
    */
-  download = this._binder.fn(this._hypercore.download);
-  undownload = this._binder.fn(this._hypercore.undownload);
-  setDownloading = this._binder.fn(this._hypercore.setDownloading);
-  replicate: Hypercore<T>['replicate'] = this._binder.fn(this._hypercore.replicate);
-  clear = this._binder.async(this._hypercore.clear) as (start: number, end?: number) => Promise<void>;
+  download(...args: Parameters<Hypercore<T>['download']>) {
+    return this._hypercore.download(...args);
+  }
 
-  proof = this._binder.async(this._hypercore.proof) as (index: number) => Promise<Proof>;
-  put = this._binder.async(this._hypercore.put) as (index: number, data: T, proof: Proof) => Promise<void>;
-  putBuffer = this._binder.async((this._hypercore as any)._putBuffer) as (
-    index: number,
-    data: Buffer,
-    proof: Proof,
-    from: null,
-  ) => Promise<void>;
+  undownload(...args: Parameters<Hypercore<T>['undownload']>) {
+    return this._hypercore.undownload(...args);
+  }
+
+  setDownloading(...args: Parameters<Hypercore<T>['setDownloading']>) {
+    return this._hypercore.setDownloading(...args);
+  }
+
+  replicate(...args: Parameters<Hypercore<T>['replicate']>) {
+    return this._hypercore.replicate(...args);
+  }
+
+  clear(start: number, end?: number) {
+    return promisify(this._hypercore.clear.bind(this._hypercore))(start, end);
+  }
+
+  proof(index: number, options?: any) {
+    return promisify(this._hypercore.proof.bind(this._hypercore))(index);
+  }
+
+  put(index: number, data: T, proof: Proof) {
+    return promisify(this._hypercore.put.bind(this._hypercore))(index, data, proof);
+  }
+
+  putBuffer(index: number, data: Buffer | Uint8Array, proof: Proof, peer: null): Promise<void> {
+    return promisify((this._hypercore as any)._putBuffer.bind(this._hypercore) as any)(index, data, proof, peer);
+  }
 
   /**
    * Clear and check for integrity.
@@ -217,7 +256,7 @@ export class FeedWrapper<T extends {}> {
     const messagesBefore = await Promise.all(
       rangeFromTo(checkBegin, checkEnd).map((idx) =>
         this.get(idx, {
-          valueEncoding: { decode: (x: Uint8Array) => x },
+          valueEncoding: { decode: (x: Uint8Array) => x } as any,
         }),
       ),
     );
@@ -227,7 +266,7 @@ export class FeedWrapper<T extends {}> {
     const messagesAfter = await Promise.all(
       rangeFromTo(checkBegin, checkEnd).map((idx) =>
         this.get(idx, {
-          valueEncoding: { decode: (x: Uint8Array) => x },
+          valueEncoding: { decode: (x: Uint8Array) => x } as any,
         }),
       ),
     );

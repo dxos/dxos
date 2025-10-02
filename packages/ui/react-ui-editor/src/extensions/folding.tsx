@@ -9,7 +9,7 @@ import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
 
-import { createElement, renderRoot } from '../util';
+import { Domino, renderRoot } from '../util';
 
 export type FoldingOptions = {};
 
@@ -26,7 +26,7 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
   foldGutter({
     markerDOM: (open) => {
       // TODO(burdon): Use sprite directly.
-      const el = createElement('div', { className: 'flex h-full items-center' });
+      const el = Domino.of('div').classNames('flex h-full items-center').build();
       return renderRoot(
         el,
         <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,

@@ -57,4 +57,6 @@ export const sheetSememes = {
 
 export const sheetAliases = {
   activeSurface: { root: ['gridLine'] },
+  accentFocusIndicator: { root: ['gridFocusIndicatorColor'] },
+  neutralFocusIndicator: { gridFocusStack: ['gridFocusIndicatorColor'] },
 } satisfies ColorAliases;

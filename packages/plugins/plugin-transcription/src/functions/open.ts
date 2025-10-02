@@ -9,11 +9,12 @@ import { Obj } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import { renderMarkdown } from '../components';
+import { renderByline } from '../components';
 import { Transcript } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/transcription/open',
+  key: 'dxos.org/function/transcription/open',
+  name: 'Open',
   description: 'Opens and reads the contents of a transcription object.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({
@@ -30,7 +31,7 @@ export default defineFunction({
     yield* Effect.promise(() => queue?.queryObjects());
     const content = queue?.objects
       .filter((message) => Obj.instanceOf(DataType.Message, message))
-      .flatMap((message, index) => renderMarkdown([])(message, index))
+      .flatMap((message, index) => renderByline([])(message, index))
       .join('\n\n');
     return { content };
   }),

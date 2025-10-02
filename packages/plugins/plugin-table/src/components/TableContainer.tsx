@@ -26,9 +26,9 @@ import {
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType } from '@dxos/schema';
+import { type DataType, typenameFromQuery } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
@@ -41,7 +41,8 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const schema = useSchema(client, space, view.query.typename);
+  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
@@ -91,19 +92,19 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   }, []);
 
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: TABLE_PLUGIN }] }],
+    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
     [],
   );
   const handleRowAction = useCallback(
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
         Match.when('open', () => {
-          invariant(view.query.typename);
+          invariant(typename);
           void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(data)] }));
         }),
         Match.orElseAbsurd,
       ),
-    [dispatch, view.query.typename],
+    [dispatch, typename],
   );
 
   const handleRowOrderChange = useCallback(() => {

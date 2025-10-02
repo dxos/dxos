@@ -6,27 +6,27 @@ import React from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
-import { IconButton, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  autoScroll,
   createBasicExtensions,
   createMarkdownExtensions,
-  createRenderer,
   createThemeExtensions,
   decorateMarkdown,
-  editorWidth,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type SerializationModel } from '../../model';
 import { type Transcript } from '../../types';
 
 import { transcript } from './transcript-extension';
 
-export const renderMarkdown =
+// TODO(thure): Move this?
+export const renderByline =
   (identities: Identity[]) =>
   (message: DataType.Message, index: number, debug = false): string[] => {
     if (message.sender.role === 'assistant') {
@@ -45,6 +45,7 @@ export const renderMarkdown =
       message.sender.identityDid;
     const blocks = message.blocks.filter((block) => block._tag === 'transcript');
     return [
+      // TODO(thure): Use an XML tag with the bits needed here.
       `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
       blocks.map((block) => block.text.trim()).join(' '),
       '',
@@ -52,10 +53,10 @@ export const renderMarkdown =
   };
 
 export type TranscriptViewProps = ThemedClassName<{
-  transcript?: Transcript.Transcript;
   space?: Space;
+  transcript?: Transcript.Transcript;
   model: SerializationModel<DataType.Message>;
-  // TODO(wittjosiah): Move to container.
+  // TODO(burdon): Are these still in use?
   attendableId?: string;
   ignoreAttention?: boolean;
 }>;
@@ -63,39 +64,30 @@ export type TranscriptViewProps = ThemedClassName<{
 /**
  * Transcript component implemented using the editor.
  */
-export const TranscriptView = ({
-  classNames,
-  transcript: object,
-  space,
-  model,
-  attendableId,
-  ignoreAttention,
-}: TranscriptViewProps) => {
+export const TranscriptView = ({ classNames, space, transcript: object, model }: TranscriptViewProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
     return {
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
-        createMarkdownExtensions({ themeMode }),
+        createMarkdownExtensions(),
         createThemeExtensions({ themeMode }),
         decorateMarkdown(),
-        space && preview(),
+        preview(),
         transcript({
           model,
           started: object?.started ? new Date(object.started) : undefined,
-          renderButton: createRenderer(({ onClick }) => (
-            <IconButton icon='ph--arrow-line-down--regular' iconOnly label='Scroll to bottom' onClick={onClick} />
-          )),
         }),
-      ].filter(isNotFalsy),
+        autoScroll(),
+      ].filter(isTruthy),
     };
   }, [space, model]);
 
   return (
     <div
       ref={parentRef}
-      className={mx('flex grow overflow-hidden', editorWidth, classNames)}
-      data-popover-collision-boundary={true}
+      className={mx('flex grow overflow-hidden container-max-width', classNames)}
+      data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
     />
   );
 };

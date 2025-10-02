@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool, type AiToolkit } from '@effect/ai';
+import { type Toolkit } from '@effect/ai';
 import { Array, Effect, Option } from 'effect';
 
 import { Obj } from '@dxos/echo';
@@ -20,10 +20,6 @@ import {
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
-
-export type AiConversationRunRequirements<Tools extends AiTool.Any> =
-  | AiSessionRunRequirements
-  | AiTool.ToHandler<Tools>;
 
 export interface AiConversationRunParams {
   prompt: string;
@@ -53,7 +49,7 @@ export class AiConversation {
   /**
    * Toolkit from the current session request.
    */
-  private _toolkit: AiToolkit.ToHandler<AiTool.Any> | undefined;
+  private _toolkit: Toolkit.WithHandler<any> | undefined;
 
   public constructor(options: AiConversationOptions) {
     this._queue = options.queue;
@@ -76,9 +72,9 @@ export class AiConversation {
   /**
    * Creates a new cancelable request effect.
    */
-  createRequest<Tools extends AiTool.Any>(
+  createRequest(
     params: AiConversationRunParams,
-  ): Effect.Effect<DataType.Message[], AiSessionRunError, AiConversationRunRequirements<Tools>> {
+  ): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> {
     return Effect.gen(this, function* () {
       const session = new AiSession();
       const history = yield* Effect.promise(() => this.getHistory());
@@ -95,11 +91,11 @@ export class AiConversation {
       );
 
       // Create toolkit.
-      const toolkit = yield* createToolkit<Tools>({ blueprints });
+      const toolkit = yield* createToolkit({ blueprints });
       this._toolkit = toolkit;
 
       const start = Date.now();
-      log.info('run', {
+      log('run', {
         history: history.length,
         blueprints: blueprints.length,
         objects: objects.length,
@@ -107,13 +103,13 @@ export class AiConversation {
       });
 
       // Process request.
-      const messages = yield* session.run<Tools>({ history, blueprints, objects, toolkit, ...params }).pipe(
+      const messages = yield* session.run({ history, blueprints, objects, toolkit, ...params }).pipe(
         Effect.provideService(AiContextService, {
           binder: this.context,
         }),
       );
 
-      log.info('result', { messages: messages.length, duration: Date.now() - start });
+      log('result', { messages: messages.length, duration: Date.now() - start });
 
       // Append to queue.
       yield* Effect.promise(() => this._queue.append(messages));

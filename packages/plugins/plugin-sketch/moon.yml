@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -13,3 +14,16 @@ tasks:
       - '--platform=browser'
       - '--platform=node'
       - '--preactSignalTracking'
+    deps:
+      - prebuild
+  prebuild:
+    script: pnpm run copy:assets
+    inputs:
+      - scripts/copy_assets.sh
+      - package.json
+      - moon.yml
+    outputs:
+      - dist/assets
+  test:
+    inputs:
+      - .storybook/*

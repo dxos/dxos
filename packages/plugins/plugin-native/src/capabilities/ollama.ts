@@ -7,9 +7,8 @@ import { Command } from '@tauri-apps/plugin-shell';
 import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { type Capability, type PluginContext, contributes } from '@dxos/app-framework';
+import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
 
 // Running ollama on non-standard port.
 const OLLAMA_HOST = 'http://localhost:21434';
@@ -23,7 +22,7 @@ export default (_context: PluginContext): Capability<any> => {
   );
 
   return contributes(
-    AssistantCapabilities.AiModelResolver,
+    Capabilities.AiModelResolver,
     OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
     async () => {
       await runtime.dispose();

@@ -3,12 +3,16 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
+import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { forwardRef, useImperativeHandle } from 'react';
 
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type AutocompleteOptions,
   type BasicExtensionsOptions,
   type UseTextEditorProps,
+  autocomplete,
   createBasicExtensions,
   createThemeExtensions,
   useTextEditor,
@@ -16,7 +20,6 @@ import {
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { type AutocompleteOptions, autocomplete } from './autocomplete';
 import { type ReferencesOptions, references as referencesExtension } from './references';
 
 export interface ChatEditorController {
@@ -40,6 +43,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
     forwardRef,
   ) => {
     const { themeMode } = useThemeContext();
+    const { findNextFocusable, findPrevFocusable } = useFocusFinders();
 
     const { parentRef, view } = useTextEditor(
       () => ({
@@ -54,6 +58,26 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             lineWrapping,
             placeholder,
           }),
+          // TODO(thure): Surely this should not be unique to ChatEditor, iirc we have several instances of CM where Tab
+          //  should move focus.
+          keymap.of([
+            {
+              key: 'Tab',
+              preventDefault: true,
+              run: (view) => {
+                findNextFocusable(view.dom)?.focus();
+                return true;
+              },
+            },
+            {
+              key: 'Shift-Tab',
+              preventDefault: true,
+              run: (view) => {
+                findPrevFocusable(view.dom)?.focus();
+                return true;
+              },
+            },
+          ]),
           extensions,
         ].filter(isNonNullable),
       }),

@@ -25,7 +25,7 @@ import {
   TimeSeries,
 } from './panels';
 
-const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
+const LOCAL_STORAGE_KEY = 'dxos.org/plugin/debug/panels';
 
 const PANEL_KEYS = [
   'ts',

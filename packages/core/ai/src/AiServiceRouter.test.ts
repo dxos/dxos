@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import { LanguageModel } from '@effect/ai';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
@@ -60,7 +62,7 @@ describe('AiServiceRouter', () => {
     'claude',
     Effect.fn(
       function* () {
-        const model = yield* AiLanguageModel.AiLanguageModel;
+        const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
       Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(Layer.provide(TestRouter))),
@@ -71,7 +73,7 @@ describe('AiServiceRouter', () => {
     'gemini',
     Effect.fn(
       function* () {
-        const model = yield* AiLanguageModel.AiLanguageModel;
+        const model = yield* LanguageModel.LanguageModel;
         expect(model).toBeDefined();
       },
       Effect.provide(AiService.model('@google/gemma-3-27b').pipe(Layer.provide(TestRouter))),

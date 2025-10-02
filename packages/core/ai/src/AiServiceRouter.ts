@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiLanguageModel } from '@effect/ai';
-import { AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import { type LanguageModel } from '@effect/ai';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { type HttpClient } from '@effect/platform';
 import { Context, Effect, Layer, Option } from 'effect';
 
@@ -22,7 +23,7 @@ import { type ModelName as ModelName } from './model';
 export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
   AiModelResolver,
   {
-    readonly model: (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>;
+    readonly model: (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>;
   }
 >() {
   static buildAiService: Layer.Layer<AiService, never, AiModelResolver> = Layer.effect(
@@ -37,7 +38,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
 
   static resolver = <R>(
     impl: Effect.Effect<
-      (model: ModelName) => Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>,
+      (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
       R
     >,
@@ -64,7 +65,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<
 
   static fromModelMap = <R>(
     models: Effect.Effect<
-      Partial<Record<ModelName, Layer.Layer<AiLanguageModel.AiLanguageModel, AiModelNotAvailableError, never>>>,
+      Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
       never,
       R
     >,

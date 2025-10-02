@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiChat, AiInput, AiLanguageModel, AiTool, AiToolkit } from '@effect/ai';
-import { AnthropicClient, AnthropicLanguageModel } from '@effect/ai-anthropic';
-import { OpenAiClient, OpenAiLanguageModel } from '@effect/ai-openai';
+import { Chat, LanguageModel, Prompt, Tool, Toolkit } from '@effect/ai';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { NodeHttpClient } from '@effect/platform-node';
 import { describe, it } from '@effect/vitest';
 import { Chunk, Config, Console, Effect, Layer, Schedule, Schema, Stream, pipe } from 'effect';
@@ -29,7 +32,7 @@ const AnthropicLayer = AnthropicClient.layerConfig({
 }).pipe(Layer.provide(NodeHttpClient.layerUndici));
 
 const createChat = Effect.fn(function* (prompt: string) {
-  const chat = yield* AiChat.empty;
+  const chat = yield* Chat.empty;
   const toolkit = yield* TestToolkit;
 
   // Initial request.
@@ -38,9 +41,9 @@ const createChat = Effect.fn(function* (prompt: string) {
 
   // Agentic loop.
   // TODO(burdon): Explain how this works?
-  while (output.results.size > 0) {
-    log.info('results', { results: output.results.size });
-    output = yield* chat.generateText({ toolkit, prompt: AiInput.empty });
+  while (output.toolCalls.length > 0) {
+    log.info('results', { results: output.toolCalls.length });
+    output = yield* chat.generateText({ toolkit, prompt: Prompt.empty });
   }
 
   // Done.
@@ -48,8 +51,8 @@ const createChat = Effect.fn(function* (prompt: string) {
 });
 
 // Tool definitions.
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('Calculator', {
+class TestToolkit extends Toolkit.make(
+  Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
       input: Schema.String.annotations({
@@ -91,14 +94,14 @@ const toolkitLayer = TestToolkit.toLayer({
  * - Simple API for plugins/artifacts.
  * - Ecosystem and design partner.
  */
-describe('AiLanguageModel', () => {
+describe('LanguageModel', () => {
   // Sanity test.
   it.effect(
     'Debug: Verify API configuration',
     Effect.fn(
       function* ({ expect }) {
         yield* Console.log('Testing API connectivity...');
-        const { text } = yield* AiLanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
+        const { text } = yield* LanguageModel.generateText({ prompt: 'Hello, respond with "API is working"' });
         yield* Console.log('API Response received:', text);
         expect(text).to.contain('API is working');
       },
@@ -116,7 +119,7 @@ describe('AiLanguageModel', () => {
     Effect.fn(
       function* ({ expect }) {
         const createProgram = (prompt: string) =>
-          AiLanguageModel.generateText({
+          LanguageModel.generateText({
             toolkit: TestToolkit,
             prompt,
           }).pipe(
@@ -179,13 +182,33 @@ describe('AiLanguageModel', () => {
     'streaming',
     Effect.fn(
       function* ({ expect: _ }) {
-        const chat = yield* AiChat.empty;
+        const stream = LanguageModel.streamText({ prompt: 'What is six times seven?' });
+        yield* Stream.runForEach(
+          stream,
+          Effect.fnUntraced(function* (item) {
+            log.info('item', { item, time: new Date().toISOString() });
+          }),
+        );
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-3-5-sonnet-latest')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  );
+
+  it.effect(
+    'streaming with tools',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = 'What is six times seven?';
+        let prompt: Prompt.RawInput = 'What is six times seven?';
         do {
           const stream = chat.streamText({ toolkit, prompt });
-          prompt = AiInput.empty;
+          prompt = Prompt.empty;
 
           yield* Stream.runForEach(
             stream,
@@ -206,7 +229,7 @@ describe('AiLanguageModel', () => {
       TestHelpers.taggedTest('llm'),
     ),
     { timeout: 120_000 },
-  );
+  ); //
 
   it.effect(
     'with parser',
@@ -217,20 +240,17 @@ describe('AiLanguageModel', () => {
           After your answer emit your suggestions for follow-up user prompts inside <suggestion></suggestion> XML tags.
         `;
 
-        const chat = yield* AiChat.empty;
+        const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
-        let prompt: AiInput.Raw = trim`
-          <instructions>
-            ${system}
-          </instructions>
-          
-          What is six times seven?
-        `;
+        let prompt: Prompt.RawInput = Prompt.fromMessages([
+          Prompt.makeMessage('system', { content: system }),
+          Prompt.makeMessage('user', { content: [Prompt.makePart('text', { text: 'What is six times seven?' })] }),
+        ]);
 
         do {
-          const stream = chat.streamText({ system, prompt, toolkit }).pipe(AiParser.parseResponse());
-          prompt = AiInput.empty;
+          const stream = chat.streamText({ prompt, toolkit }).pipe(AiParser.parseResponse());
+          prompt = Prompt.empty;
 
           const result = yield* Stream.runCollect(stream).pipe(Effect.map(Chunk.toArray));
           log.info('result', { result });
@@ -247,4 +267,29 @@ describe('AiLanguageModel', () => {
     ),
     { timeout: 120_000 },
   );
+
+  it.effect(
+    'built-in search',
+    Effect.fn(
+      function* ({ expect: _ }) {
+        const toolkit = Toolkit.make(
+          AnthropicTool.WebSearch_20250305({
+            // ..
+          }),
+        );
+
+        const prompt = Prompt.fromMessages([
+          Prompt.makeMessage('user', { content: [Prompt.makePart('text', { text: 'What is DXOS?' })] }),
+        ]);
+
+        const result = yield* LanguageModel.generateText({ toolkit, prompt });
+        log.info('result', { result });
+      },
+      Effect.provide(AnthropicLanguageModel.model('claude-opus-4-0')),
+      Effect.provide(AnthropicLayer),
+      TestHelpers.runIf(process.env.ANTHROPIC_API_KEY),
+      TestHelpers.taggedTest('llm'),
+    ),
+    { timeout: 120_000 },
+  ); //
 });

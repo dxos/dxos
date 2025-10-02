@@ -20,7 +20,7 @@ import {
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 // TODO(thure): Factor out?
 const getDefaultHueValue = (identity: Identity | null) => hexToHue(identity?.identityKey.toHex() ?? '0');
@@ -29,7 +29,7 @@ const getHueValue = (identity: Identity | null) => identity?.profile?.data?.hue 
 const getEmojiValue = (identity: Identity | null) => identity?.profile?.data?.emoji || getDefaultEmojiValue(identity);
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const identity = useIdentity();
   const [displayName, setDisplayNameDirectly] = useState(identity?.profile?.displayName ?? '');

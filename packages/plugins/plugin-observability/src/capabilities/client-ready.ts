@@ -12,7 +12,7 @@ import {
 } from '@dxos/app-framework';
 import { type Observability, setupTelemetryListeners } from '@dxos/observability';
 
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ObservabilityAction } from '../types';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
@@ -38,15 +38,15 @@ export default async ({ context, namespace, observability }: ClientReadyOptions)
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
-            id: `${OBSERVABILITY_PLUGIN}/notice`,
-            title: ['observability toast label', { ns: OBSERVABILITY_PLUGIN }],
-            description: ['observability toast description', { ns: OBSERVABILITY_PLUGIN }],
+            id: `${meta.id}/notice`,
+            title: ['observability toast label', { ns: meta.id }],
+            description: ['observability toast description', { ns: meta.id }],
             duration: Infinity,
             icon: 'ph--info--regular',
-            actionLabel: ['observability toast action label', { ns: OBSERVABILITY_PLUGIN }],
-            actionAlt: ['observability toast action alt', { ns: OBSERVABILITY_PLUGIN }],
-            closeLabel: ['observability toast close label', { ns: OBSERVABILITY_PLUGIN }],
-            onAction: () => dispatch(createIntent(SettingsAction.Open, { plugin: OBSERVABILITY_PLUGIN })),
+            actionLabel: ['observability toast action label', { ns: meta.id }],
+            actionAlt: ['observability toast action alt', { ns: meta.id }],
+            closeLabel: ['observability toast close label', { ns: meta.id }],
+            onAction: () => dispatch(createIntent(SettingsAction.Open, { plugin: meta.id })),
           },
         }),
       );

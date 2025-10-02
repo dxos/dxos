@@ -2,18 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AnthropicClient } from '@effect/ai-anthropic';
+import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { Layer } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { type Capability, contributes } from '@dxos/app-framework';
-
-import { AssistantCapabilities } from './capabilities';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 export default (): Capability<any>[] => [
   contributes(
-    AssistantCapabilities.AiModelResolver,
+    Capabilities.AiModelResolver,
     AiServiceRouter.AnthropicResolver.pipe(
       Layer.provide(
         AnthropicClient.layer({

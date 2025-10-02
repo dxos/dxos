@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import { Match, Schema } from 'effect';
 
 import { DXN, ObjectId } from '@dxos/keys';
 
@@ -61,6 +61,17 @@ const FilterIn_ = Schema.Struct({
 export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
+const FilterContains_ = Schema.Struct({
+  type: Schema.Literal('contains'),
+  value: Schema.Any,
+});
+export interface FilterContains extends Schema.Schema.Type<typeof FilterContains_> {}
+/**
+ * Predicate for an array property to contain the provided value.
+ * Nested objects are matched using strict structural matching.
+ */
+export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
+
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
@@ -103,6 +114,7 @@ export const Filter = Schema.Union(
   FilterTextSearch,
   FilterCompare,
   FilterIn,
+  FilterContains,
   FilterRange,
   FilterNot,
   FilterAnd,
@@ -205,6 +217,35 @@ const QuerySetDifferenceClause_ = Schema.Struct({
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
 
+export const OrderDirection = Schema.Literal('asc', 'desc');
+export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
+
+const Order_ = Schema.Union(
+  Schema.Struct({
+    // How database wants to order them (in practice - by id).
+    kind: Schema.Literal('natural'),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('property'),
+    property: Schema.String,
+    direction: OrderDirection,
+  }),
+);
+export type Order = Schema.Schema.Type<typeof Order_>;
+export const Order: Schema.Schema<Order> = Order_;
+
+/**
+ * Order the query results.
+ * Left-to-right the orders dominate.
+ */
+const QueryOrderClause_ = Schema.Struct({
+  type: Schema.Literal('order'),
+  query: Schema.suspend(() => Query),
+  order: Schema.Array(Order),
+});
+export interface QueryOrderClause extends Schema.Schema.Type<typeof QueryOrderClause_> {}
+export const QueryOrderClause: Schema.Schema<QueryOrderClause> = QueryOrderClause_;
+
 /**
  * Add options to a query.
  */
@@ -225,6 +266,7 @@ const Query_ = Schema.Union(
   QueryRelationTraversalClause,
   QueryUnionClause,
   QuerySetDifferenceClause,
+  QueryOrderClause,
   QueryOptionsClause,
 );
 
@@ -232,37 +274,63 @@ export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
+  /**
+   * The nested select statemets will select from the given spaces.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * The nested select statemets will select from the given queues.
+   *
+   * NOTE: Spaces and queues are unioned together if both are specified.
+   */
+  queues: Schema.optional(Schema.Array(DXN.Schema)),
+
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
   deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
 export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
-  switch (query.type) {
-    case 'filter':
-      visit(query.selection, visitor);
-      break;
-    case 'reference-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'incoming-references':
-      visit(query.anchor, visitor);
-      break;
-    case 'relation':
-      visit(query.anchor, visitor);
-      break;
-    case 'options':
-      visit(query.query, visitor);
-      break;
-    case 'relation-traversal':
-      visit(query.anchor, visitor);
-      break;
-    case 'union':
-      query.queries.forEach((q) => visit(q, visitor));
-      break;
-    case 'set-difference':
-      visit(query.source, visitor);
-      visit(query.exclude, visitor);
-      break;
-  }
+  visitor(query);
+
+  Match.value(query).pipe(
+    Match.when({ type: 'filter' }, ({ selection }) => visit(selection, visitor)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
+      visit(source, visitor);
+      visit(exclude, visitor);
+    }),
+    Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'select' }, () => {}),
+    Match.exhaustive,
+  );
+};
+
+export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
+  return Match.value(query).pipe(
+    Match.withReturnType<T[]>(),
+    Match.when({ type: 'filter' }, ({ selection }) => fold(selection, reducer)),
+    Match.when({ type: 'reference-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'incoming-references' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'relation' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'options' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'relation-traversal' }, ({ anchor }) => fold(anchor, reducer)),
+    Match.when({ type: 'union' }, ({ queries }) => queries.flatMap((q) => fold(q, reducer))),
+    Match.when({ type: 'set-difference' }, ({ source, exclude }) =>
+      fold(source, reducer).concat(fold(exclude, reducer)),
+    ),
+    Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'select' }, () => []),
+    Match.exhaustive,
+  );
 };

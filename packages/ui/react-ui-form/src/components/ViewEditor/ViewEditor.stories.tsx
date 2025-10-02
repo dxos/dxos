@@ -8,12 +8,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, Type } from '@dxos/echo';
-import { type EchoSchema, Format, TypedObject, toJsonSchema } from '@dxos/echo-schema';
-import { Filter, useQuery, useSpace } from '@dxos/react-client/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
+import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { DataType, ProjectionModel, createView } from '@dxos/schema';
+import { QueryParser, createFilter } from '@dxos/react-ui-components';
+import { type DataType, ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -28,7 +29,7 @@ export type ViewEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type StoryProps = Pick<ViewEditorProps, 'readonly'>;
+type StoryProps = Pick<ViewEditorProps, 'readonly' | 'kind'>;
 
 const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
@@ -37,16 +38,21 @@ const DefaultStory = (props: StoryProps) => {
   const [projection, setProjection] = useState<ProjectionModel>();
   useAsyncEffect(async () => {
     if (space) {
-      class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      const TestSchema = Schema.Struct({
         name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
-      }) {}
+      }).pipe(
+        Type.Obj({
+          typename: 'example.com/type/Test',
+          version: '0.1.0',
+        }),
+      );
 
       const [schema] = await space.db.schemaRegistry.register([TestSchema]);
       const view = createView({
         name: 'Test',
-        typename: schema.typename,
+        query: Query.select(Filter.type(TestSchema)),
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
@@ -58,20 +64,32 @@ const DefaultStory = (props: StoryProps) => {
     }
   }, [space]);
 
-  const views = useQuery(space, Filter.type(DataType.View));
-  const currentTypename = useMemo(() => view?.query?.typename, [view]);
-  const updateViewTypename = useCallback(
-    (newTypename: string) => {
-      if (!schema) {
+  const updateViewQuery = useCallback(
+    (newQueryString: string) => {
+      if (!schema || !view) {
         return;
       }
-      const matchingViews = views.filter((view) => view.query.typename === currentTypename);
-      for (const view of matchingViews) {
-        view.query.typename = newTypename;
+
+      if (props.kind === 'advanced') {
+        try {
+          const parser = new QueryParser(newQueryString);
+          // TODO(wittjosiah): When this fails it should show validation errors in the UI.
+          const newQuery = Query.select(createFilter(parser.parse()));
+          view.query = newQuery.ast;
+
+          const typename = typenameFromQuery(newQuery.ast);
+          if (typename) {
+            schema.updateTypename(typename);
+          }
+        } catch {}
+      } else {
+        const typename = newQueryString;
+        const newQuery = Query.select(Filter.typename(typename));
+        view.query = newQuery.ast;
+        schema.updateTypename(typename);
       }
-      schema.updateTypename(newTypename);
     },
-    [views, schema],
+    [view, schema],
   );
 
   const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
@@ -100,8 +118,9 @@ const DefaultStory = (props: StoryProps) => {
           schema={schema}
           view={view}
           registry={space?.db.schemaRegistry}
+          kind={props.kind}
           readonly={props.readonly}
-          onTypenameChanged={updateViewTypename}
+          onQueryChanged={updateViewQuery}
           onDelete={handleDelete}
         />
       </TestPanel>
@@ -132,4 +151,8 @@ export const Default: Story = {};
 
 export const Readonly: Story = {
   args: { readonly: true },
+};
+
+export const Advanced: Story = {
+  args: { kind: 'advanced' },
 };

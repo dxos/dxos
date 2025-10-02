@@ -22,7 +22,7 @@ export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
  * @deprecated
  */
 export const createRenderer =
-  <Props extends object>(Component: FC<Props>): RenderCallback<Props> =>
+  <TProps extends object>(Component: FC<TProps>): RenderCallback<TProps> =>
   (el, props) => {
     renderRoot(
       el,

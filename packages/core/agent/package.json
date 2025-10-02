@@ -30,7 +30,7 @@
     "/templates"
   ],
   "scripts": {
-    "echo-proxy": "ts-node --esm ./src/proxy/proxy.ts"
+    "echo-proxy": "vite-node ./src/proxy/proxy.ts"
   },
   "dependencies": {
     "@dxos/async": "workspace:*",
@@ -55,7 +55,6 @@
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^3.3.1",
     "express": "^4.19.2",
-    "hnswlib-node": "^1.4.2",
     "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
@@ -69,8 +68,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "date-fns": "^3.3.1",
-    "nodemon": "^2.0.22",
-    "ts-node": "10.9.1"
+    "nodemon": "^2.0.22"
   },
   "engines": {
     "node": ">=12.0.0"

@@ -8,7 +8,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { REGISTRY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type PluginDetailProps = {
   plugin: Plugin;
@@ -17,7 +17,7 @@ export type PluginDetailProps = {
 };
 
 export const PluginDetail = ({ plugin, enabled, onEnable }: PluginDetailProps) => {
-  const { t } = useTranslation(REGISTRY_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, name, description, homePage, source, screenshots } = plugin.meta;
 
   return (

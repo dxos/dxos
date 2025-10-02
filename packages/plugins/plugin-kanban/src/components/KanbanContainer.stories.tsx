@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -25,7 +25,7 @@ import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
@@ -51,7 +51,8 @@ const StorybookKanban = () => {
   const views = useQuery(space, Filter.type(DataType.View));
   const [view, setView] = useState<DataType.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
-  const schema = useSchema(client, space, view?.query.typename);
+  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const schema = useSchema(client, space, typename);
 
   useEffect(() => {
     if (views.length && !view) {
@@ -97,14 +98,14 @@ const StorybookKanban = () => {
 
   const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
-  const handleTypenameChanged = useCallback(
+  const handleUpdateQuery = useCallback(
     (typename: string) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       invariant(view);
 
       schema.updateTypename(typename);
-      view.query.typename = typename;
+      view.query = Query.select(Filter.typename(typename)).ast;
     },
     [view, schema],
   );
@@ -121,12 +122,12 @@ const StorybookKanban = () => {
           registry={space?.db.schemaRegistry}
           schema={schema}
           view={view}
-          onTypenameChanged={handleTypenameChanged}
+          onQueryChanged={handleUpdateQuery}
           onDelete={(fieldId: string) => {
             console.log('[ViewEditor]', 'onDelete', fieldId);
           }}
         />
-        <SyntaxHighlighter language='json' className='w-full text-xs'>
+        <SyntaxHighlighter language='json' className='text-xs'>
           {JSON.stringify({ view, schema }, null, 2)}
         </SyntaxHighlighter>
       </div>
@@ -151,7 +152,6 @@ const meta = {
     withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],
           onClientInitialized: async ({ client }) => {
@@ -172,11 +172,14 @@ const meta = {
             });
           },
         }),
-        StorybookLayoutPlugin(),
-        PreviewPlugin(),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        PreviewPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
   ],

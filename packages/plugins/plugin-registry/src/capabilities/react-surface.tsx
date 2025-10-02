@@ -7,12 +7,12 @@ import React, { useCallback, useMemo } from 'react';
 import { Capabilities, Plugin, contributes, createSurface, usePluginManager } from '@dxos/app-framework';
 
 import { PluginDetail, RegistryContainer } from '../components';
-import { REGISTRY_KEY, REGISTRY_PLUGIN } from '../meta';
+import { REGISTRY_KEY, meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${REGISTRY_PLUGIN}/all`,
+      id: `${meta.id}/all`,
       role: 'article',
       filter: (data): data is any => data.subject === `${REGISTRY_KEY}+all`,
       component: () => {
@@ -23,7 +23,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${REGISTRY_PLUGIN}/installed`,
+      id: `${meta.id}/installed`,
       role: 'article',
       filter: (data): data is any => data.subject === `${REGISTRY_KEY}+installed`,
       component: () => {
@@ -40,7 +40,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${REGISTRY_PLUGIN}/recommended`,
+      id: `${meta.id}/recommended`,
       role: 'article',
       filter: (data): data is any => data.subject === `${REGISTRY_KEY}+recommended`,
       component: () => {
@@ -57,7 +57,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${REGISTRY_PLUGIN}/labs`,
+      id: `${meta.id}/labs`,
       role: 'article',
       filter: (data): data is any => data.subject === `${REGISTRY_KEY}+labs`,
       component: () => {
@@ -68,7 +68,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${REGISTRY_PLUGIN}/plugin-details`,
+      id: `${meta.id}/plugin-details`,
       role: 'article',
       filter: (data): data is { subject: Plugin } => data.subject instanceof Plugin,
       component: ({ data: { subject } }) => {

@@ -74,12 +74,12 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     }
   };
 
-  const controller = useRef<AbortController>();
+  const controller = useRef<AbortController>(null);
   useEffect(() => handleStop(), []);
 
   const handleStop = () => {
     controller.current?.abort('stop');
-    controller.current = undefined;
+    controller.current = null;
   };
 
   const handleClear = () => {
@@ -90,7 +90,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
-    controller.current = undefined;
+    controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setIsExecuting(false);
     handleScroll();
@@ -207,7 +207,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
       )}
 
       {data && (
-        <SyntaxHighlighter language='json' className={mx(wrapper, 'px-8 py-2 text-xs')}>
+        <SyntaxHighlighter language='json' className={mx(wrapper, 'text-xs')}>
           {JSON.stringify(data, null, 2)}
         </SyntaxHighlighter>
       )}

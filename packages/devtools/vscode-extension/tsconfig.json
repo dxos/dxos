@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": [
+      "ES2020"
+    ],
+    "module": "commonjs",
+    "outDir": "out",
+    "rootDir": "src",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2020"
+  },
+  "exclude": [
+    ".vscode-test",
+    "node_modules"
+  ],
+  "references": []
+}

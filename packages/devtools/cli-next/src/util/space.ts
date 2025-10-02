@@ -6,7 +6,7 @@ import { Console, Effect, Fiber, Logger, Option, Schedule, type Schema } from 'e
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';
-import { BaseError } from '@dxos/errors';
+import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { DatabaseService } from '@dxos/functions';
 import { EdgeService } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -18,7 +18,7 @@ export const getSpace = (rawSpaceId: string) =>
     const client = yield* ClientService;
     const spaceId = yield* SpaceId.isValid(rawSpaceId) ? Option.some(rawSpaceId) : Option.none();
     return yield* Option.fromNullable(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError())));
+  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(rawSpaceId))));
 
 export const withDatabase: (
   rawSpaceId: string,
@@ -99,9 +99,9 @@ export const waitForSync = Effect.fn(function* (space: Space) {
   yield* Fiber.interrupt(fiber);
 });
 
-// TODO(burdon): Move to echo/errors.
-class SpaceNotFoundError extends BaseError.extend('SPACE_NOT_FOUND') {
-  constructor(context?: Record<string, unknown>) {
-    super('Space not found', { context });
+// TODO(burdon): Reconcile with @dxos/protocols
+export class SpaceNotFoundError extends BaseError.extend('SPACE_NOT_FOUND', 'Space not found') {
+  constructor(spaceId: string, options?: Omit<BaseErrorOptions, 'context'>) {
+    super({ context: { spaceId }, ...options });
   }
 }

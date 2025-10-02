@@ -205,7 +205,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
         const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<dx-ref-tag refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-2 block-start-[.2rem]" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-ref-tag>`;
+        cell.accessoryHtml = `<dx-anchor refId=${dxn} class="dx-button is-6 pli-[3px] pbe-[2px] min-bs-0 absolute inline-end-2 block-start-[.2rem]" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor>`;
       }
     }
 
@@ -448,8 +448,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
       cells[toPlaneCellIndex({ col: 0, row })] = {
         value: '',
         readonly: true,
-        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="block m-1"></dx-icon>',
-        ...(draftRows.length < 1 && { className: 'dx-grid__row--cta__cell' }),
+        accessoryHtml: '<dx-icon icon="ph--plus--regular" class="contents"></dx-icon>',
+        className: mx('[&>div]:grid [&>div]:place-content-center', draftRows.length < 1 && 'dx-grid__row--cta__cell'),
       };
     }
 

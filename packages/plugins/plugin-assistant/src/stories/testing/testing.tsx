@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Console, Schema } from 'effect';
 
+import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   Capabilities,
   Events,
@@ -24,22 +25,22 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
   DESIGN_BLUEPRINT,
-  LINEAR_BLUEPRINT,
   PLANNING_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
+  agent,
+  createResearchNote,
   readDocument,
   readTasks,
-  remoteServiceEndpoints,
   research,
-  syncLinearIssues,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-testing';
-import { Blueprint } from '@dxos/blueprints';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
+import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { AttentionPlugin } from '@dxos/plugin-attention';
+import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
 import { DeckAction } from '@dxos/plugin-deck/types';
@@ -49,28 +50,20 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { Config } from '@dxos/react-client';
+import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { withLayout } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
-import { Assistant } from '../../types';
+import { Assistant, AssistantAction } from '../../types';
 
 // TODO(burdon): Factor out.
 export const config = {
   remote: new Config({
     runtime: {
-      services: {
-        ai: {
-          // TODO(burdon): Normalize props ('url'?)
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
     },
   }),
   persistent: new Config({
@@ -80,20 +73,18 @@ export const config = {
           persistent: true,
         },
       },
-      services: {
-        ai: {
-          server: remoteServiceEndpoints.ai,
-        },
-        edge: {
-          url: remoteServiceEndpoints.edge,
-        },
-      },
+      services: SERVICES_CONFIG.REMOTE,
+    },
+  }),
+  local: new Config({
+    runtime: {
+      services: SERVICES_CONFIG.LOCAL,
     },
   }),
 };
 
-class TestingToolkit extends AiToolkit.make(
-  AiTool.make('open-item', {
+class TestingToolkit extends Toolkit.make(
+  Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
     `,
@@ -110,26 +101,44 @@ class TestingToolkit extends AiToolkit.make(
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & {
-  plugins?: Plugin[];
-  accessTokens?: DataType.AccessToken[];
-  onInit?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
-};
+type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+  Pick<StoryPluginOptions, 'onChatCreated'> & {
+    plugins?: Plugin[];
+    accessTokens?: DataType.AccessToken[];
+    onInit?: (props: { client: Client; space: Space }) => Promise<void>;
+  };
 
 /**
  * Create storybook decorators.
  */
-export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onInit, ...props }: DecoratorsProps) => [
+export const getDecorators = ({
+  types = [],
+  plugins = [],
+  accessTokens = [],
+  onInit,
+  onChatCreated,
+  ...props
+}: DecoratorsProps) => [
   withPluginManager({
     plugins: [
       // System plugins.
       AttentionPlugin(),
+      AutomationPlugin(),
       GraphPlugin(),
       IntentPlugin(),
       SettingsPlugin(),
-      SpacePlugin(),
+      SpacePlugin({}),
       ClientPlugin({
-        types: [Markdown.Document, Assistant.Chat, Blueprint.Blueprint, DataType.AccessToken, ...types],
+        types: [
+          Markdown.Document,
+          Assistant.Chat,
+          Blueprint.Blueprint,
+          Prompt.Prompt,
+          DataType.AccessToken,
+          FunctionTrigger,
+          FunctionType,
+          ...types,
+        ],
         onClientInitialized: async ({ client }) => {
           log('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
@@ -151,16 +160,8 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
             space.db.add(Obj.clone(accessToken));
           }
 
-          // Create chat and queue.
-          const chat = space.db.add(
-            Obj.make(Assistant.Chat, {
-              queue: Ref.fromDXN(space.queues.create().dxn),
-              traceQueue: Ref.fromDXN(space.queues.create().dxn),
-            }),
-          );
-
           await space.db.flush({ indexes: true });
-          await onInit?.({ space, chat, binder: new AiContextBinder(await chat.queue.load()) });
+          await onInit?.({ client, space });
           await space.db.flush({ indexes: true });
         },
         ...props,
@@ -168,60 +169,12 @@ export const getDecorators = ({ types = [], plugins = [], accessTokens = [], onI
 
       // Cards
       ThemePlugin({ tx: defaultTx }),
-      StorybookLayoutPlugin(),
+      StorybookLayoutPlugin({}),
       PreviewPlugin(),
 
       // User plugins.
       AssistantPlugin(),
-
-      // Custom.
-      definePlugin({ id: 'example.com/plugin/testing', name: 'Testing' }, [
-        defineModule({
-          id: 'example.com/plugin/testing/module/testing',
-          activatesOn: Events.SetupArtifactDefinition,
-          activate: () => [
-            contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-            contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
-            contributes(Capabilities.Functions, [readDocument, updateDocument]),
-            contributes(Capabilities.Functions, [readTasks, updateTasks]),
-            contributes(Capabilities.Functions, [research]),
-            contributes(Capabilities.Functions, [syncLinearIssues]),
-          ],
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/toolkit',
-          activatesOn: Events.Startup,
-          activate: (context) => [
-            contributes(Capabilities.Toolkit, TestingToolkit),
-            contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
-          ],
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/set-workspace',
-          activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
-          activate: async (context) => {
-            const client = context.getCapability(ClientCapabilities.Client);
-            const space = client.spaces.default;
-            const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
-            await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-            return [];
-          },
-        }),
-        defineModule({
-          id: 'example.com/plugin/testing/module/intent-resolver',
-          activatesOn: Events.SetupIntentResolver,
-          activate: () => [
-            contributes(Capabilities.IntentResolver, [
-              createResolver({
-                intent: DeckAction.ChangeCompanion,
-                resolve: () => ({}),
-              }),
-            ]),
-          ],
-        }),
-      ]),
+      StoryPlugin({ onChatCreated }),
 
       // Test-specific.
       ...plugins,
@@ -252,3 +205,90 @@ export const accessTokensFromEnv = (tokens: Record<string, string | undefined>) 
     .filter(([, token]) => !!token)
     .map(([source, token]) => Obj.make(DataType.AccessToken, { source, token: token! }));
 };
+
+type StoryPluginOptions = {
+  onChatCreated?: (props: { space: Space; chat: Assistant.Chat; binder: AiContextBinder }) => Promise<void>;
+};
+
+const StoryPlugin = definePlugin<StoryPluginOptions>(
+  {
+    id: 'example.com/plugin/testing',
+    name: 'Testing',
+  },
+  ({ onChatCreated }) => [
+    defineModule({
+      id: 'example.com/plugin/testing/module/testing',
+      activatesOn: Events.SetupArtifactDefinition,
+      activate: () => [
+        // TODO(burdon): Move into assistnat?
+        contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
+        contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
+        contributes(Capabilities.Functions, [agent]),
+        contributes(Capabilities.Functions, [readDocument, updateDocument]),
+        contributes(Capabilities.Functions, [readTasks, updateTasks]),
+        contributes(Capabilities.Functions, [research, createResearchNote]),
+        contributes(Capabilities.Functions, [exampleFunctions.reply]),
+      ],
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/toolkit',
+      activatesOn: Events.Startup,
+      activate: (context) => [
+        contributes(Capabilities.Toolkit, TestingToolkit),
+        contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+      ],
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/setup',
+      activatesOn: allOf(Events.DispatcherReady, ClientEvents.SpacesReady),
+      activate: async (context) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const space = client.spaces.default;
+        const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+
+        // Ensure workspace is set.
+        await dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
+
+        // Create initial chat.
+        await dispatch(createIntent(AssistantAction.CreateChat, { space }));
+
+        return [];
+      },
+    }),
+    defineModule({
+      id: 'example.com/plugin/testing/module/intent-resolver',
+      activatesOn: Events.SetupIntentResolver,
+      activate: () => [
+        contributes(Capabilities.IntentResolver, [
+          createResolver({
+            intent: DeckAction.ChangeCompanion,
+            resolve: () => ({}),
+          }),
+          createResolver({
+            intent: AssistantAction.CreateChat,
+            position: 'hoist',
+            resolve: async ({ space, name }) => {
+              const queue = space.queues.create();
+              const traceQueue = space.queues.create();
+              const chat = Obj.make(Assistant.Chat, {
+                name,
+                queue: Ref.fromDXN(queue.dxn),
+                traceQueue: Ref.fromDXN(traceQueue.dxn),
+              });
+              const binder = new AiContextBinder(queue);
+
+              // Story-specific behaviour to allow chat creation to be extended.
+              space.db.add(chat);
+              await space.db.flush({ indexes: true });
+              await onChatCreated?.({ space, chat, binder });
+
+              return {
+                data: { object: chat },
+              };
+            },
+          }),
+        ]),
+      ],
+    }),
+  ],
+);

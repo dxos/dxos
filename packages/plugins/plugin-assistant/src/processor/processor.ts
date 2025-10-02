@@ -3,7 +3,7 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Cause, Effect, Exit, Fiber, Layer, Option } from 'effect';
+import { Cause, Effect, Exit, Fiber, Option, Runtime } from 'effect';
 
 import {
   AiService,
@@ -27,8 +27,8 @@ import { throwCause } from '@dxos/effect';
 import {
   type CredentialsService,
   type DatabaseService,
+  type FunctionInvocationService,
   type QueueService,
-  type RemoteFunctionExecutionService,
   type TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -41,7 +41,7 @@ export type AiChatServices =
   | CredentialsService
   | DatabaseService
   | QueueService
-  | RemoteFunctionExecutionService
+  | FunctionInvocationService
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService
@@ -83,24 +83,19 @@ export class AiChatProcessor {
   /** Last request (for retries). */
   private _lastRequest: AiRequest | undefined;
 
-  /**
-   * Pending messages (incl. the current user request).
-   */
+  /** Pending messages (incl. the current user request). */
   private readonly _pending = Rx.make<DataType.Message[]>([]);
 
-  /**
-   * Currently streaming message (from the AI service).
-   */
+  /** Currently streaming message (from the AI service). */
   private readonly _streaming = Rx.make<Option.Option<DataType.Message>>(Option.none());
 
-  /**
-   * Streaming state.
-   */
+  /** Streaming state. */
   public readonly streaming = Rx.make<boolean>((get) => Option.isSome(get(this._streaming)));
 
-  /**
-   * Array of Messages (incl. the current message being streamed).
-   */
+  /** Active state. */
+  public readonly active = Rx.make(false);
+
+  /** Array of Messages (incl. the current message being streamed). */
   public readonly messages = Rx.make<DataType.Message[]>((get) =>
     Option.match(get(this._streaming), {
       onNone: () => get(this._pending),
@@ -114,7 +109,7 @@ export class AiChatProcessor {
   constructor(
     private readonly _conversation: AiConversation,
     // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
-    private readonly _services: Layer.Layer<AiChatServices>,
+    private readonly _services: () => Promise<Runtime.Runtime<AiChatServices>>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     // Initialize registries and defaults before using in other logic.
@@ -127,10 +122,6 @@ export class AiChatProcessor {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
     }
-  }
-
-  get isRunning() {
-    return !!this._fiber;
   }
 
   get context() {
@@ -156,6 +147,7 @@ export class AiChatProcessor {
     try {
       this._lastRequest = requestParam;
       this._rx.set(this.error, Option.none());
+      this._rx.set(this.active, true);
 
       // Create request.
       const request = this._conversation.createRequest({
@@ -164,19 +156,17 @@ export class AiChatProcessor {
         observer: this._observer,
       });
 
+      const runtime = await this._services();
+
       // Create fiber.
       this._fiber = request.pipe(
-        Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
+        Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
 
         // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
         Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
 
         Effect.asVoid,
-        Effect.tapErrorCause((cause) => {
-          log.error('request failed', { cause });
-          return Effect.void;
-        }),
-        Effect.runFork, // Runs in the background.
+        Runtime.runFork(runtime), // Runs in the background.
       );
 
       // Execute request.
@@ -188,11 +178,12 @@ export class AiChatProcessor {
       this._rx.set(this.error, Option.none());
       this._lastRequest = undefined;
       this._fiber = undefined;
-    } catch (err) {
-      log.error('request failed', { err });
-      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+    } catch (error) {
+      log.error('request failed', { error });
+      this._rx.set(this.error, Option.some(new Error('AI service error', { cause: error })));
     } finally {
       this._fiber = undefined;
+      this._rx.set(this.active, false);
     }
   }
 
@@ -209,6 +200,7 @@ export class AiChatProcessor {
     );
 
     this._fiber = undefined;
+    this._rx.set(this.active, false);
   }
 
   /**
@@ -224,6 +216,8 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
+    const runtime = await this._services();
+
     const system = trim`
       It is extremely important that you respond only with the title and nothing else.
       If you cannot do this effectively respond with "New Chat".
@@ -235,7 +229,7 @@ export class AiChatProcessor {
       return yield* session.run({ system, prompt: 'Suggest a name for this chat', history });
     }).pipe(
       // TODO(burdon): Use simpler model.
-      Effect.provide(Layer.provideMerge(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL), this._services)),
+      Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
       Effect.tap((messages) => {
         const message = messages.find((message) => message.sender.role === 'assistant');
         const title = message?.blocks.find((b) => b._tag === 'text')?.text;
@@ -243,7 +237,7 @@ export class AiChatProcessor {
           chat.name = title;
         }
       }),
-      Effect.runFork, // Run in the background.
+      Runtime.runFork(runtime), // Run in the background.
     );
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);

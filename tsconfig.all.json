@@ -28,9 +28,6 @@
       "path": "packages/common/crypto/tsconfig.json"
     },
     {
-      "path": "packages/common/crypto-names/tsconfig.json"
-    },
-    {
       "path": "packages/common/debug/tsconfig.json"
     },
     {
@@ -235,6 +232,9 @@
       "path": "packages/devtools/devtools-extension/tsconfig.json"
     },
     {
+      "path": "packages/devtools/vscode-extension/tsconfig.json"
+    },
+    {
       "path": "packages/e2e/proto-guard/tsconfig.json"
     },
     {
@@ -332,6 +332,9 @@
     },
     {
       "path": "packages/plugins/plugin-preview/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-project/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-pwa/tsconfig.json"
@@ -587,6 +590,12 @@
     },
     {
       "path": "tools/x/tsconfig.json"
+    },
+    {
+      "path": "vendor/hypercore/tsconfig.json"
+    },
+    {
+      "path": "vendor/hyperformula/tsconfig.json"
     }
   ],
   "include": [],

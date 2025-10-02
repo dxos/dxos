@@ -7,9 +7,7 @@ import { FetchHttpClient } from '@effect/platform';
 import { Layer } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { type Capability, contributes } from '@dxos/app-framework';
-
-import { AssistantCapabilities } from './capabilities';
+import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 /**
  * To start LM Studio server:
@@ -19,7 +17,7 @@ import { AssistantCapabilities } from './capabilities';
  */
 export default (): Capability<any>[] => [
   contributes(
-    AssistantCapabilities.AiModelResolver,
+    Capabilities.AiModelResolver,
     AiServiceRouter.LMStudioResolver.pipe(
       Layer.provide(
         OpenAiClient.layer({

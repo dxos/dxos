@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ObservabilityAction, type UserFeedback } from '../types';
 
 import { FeedbackForm } from './FeedbackForm';
@@ -24,11 +24,11 @@ export const HelpContainer = () => {
           chain(LayoutAction.AddToast, {
             part: 'toast',
             subject: {
-              id: `${OBSERVABILITY_PLUGIN}/feedback-success`,
+              id: `${meta.id}/feedback-success`,
               icon: 'ph--paper-plane-tilt--regular',
               duration: 3000,
-              title: ['feedback toast label', { ns: OBSERVABILITY_PLUGIN }],
-              description: ['feedback toast description', { ns: OBSERVABILITY_PLUGIN }],
+              title: ['feedback toast label', { ns: meta.id }],
+              description: ['feedback toast description', { ns: meta.id }],
               closeLabel: ['close label', { ns: 'os' }],
             },
           }),

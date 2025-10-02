@@ -10,22 +10,21 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  CommandMenu,
   type CommandMenuGroup,
+  CommandMenuProvider,
   type DNDOptions,
+  Domino,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  RefPopover,
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
   coreSlashCommands,
   createBasicExtensions,
-  createElement,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
@@ -41,7 +40,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNonNullable, isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';
@@ -70,13 +69,13 @@ export type MarkdownEditorProps = {
  * This allows it to be used as a common editor for markdown content on arbitrary backends (e.g. files).
  */
 export const MarkdownEditor = ({
-  extensions: _extensions,
+  extensions: extensionsParam,
   slashCommandGroups,
   onLinkQuery,
   ...props
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
 
   const getMenu = useCallback(
     (trigger: string, query?: string) => {
@@ -100,36 +99,34 @@ export const MarkdownEditor = ({
       trigger,
       placeholder: {
         delay: 3_000,
-        content: () => {
-          return createElement('div', undefined, [
-            createElement('span', { text: 'Press' }),
-            ...trigger.map((text) =>
-              createElement('span', {
-                className: 'border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]',
-                text,
-              }),
-            ),
-            createElement('span', { text: 'for commands.' }),
-          ]);
-        },
+        content: () =>
+          Domino.of('div')
+            .child(
+              Domino.of('span').text('Press'),
+              ...trigger.map((text) =>
+                Domino.of('span')
+                  .classNames('border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]')
+                  .text(text),
+              ),
+              Domino.of('span').text('for commands.'),
+            )
+            .build(),
       },
       getMenu,
     };
   }, [getMenu]);
 
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
-
-  const extensions = useMemo(() => [_extensions, commandMenu].filter(isNotFalsy), [_extensions, commandMenu]);
+  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
-    <RefPopover modal={false} {...refPopoverProps}>
+    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    </CommandMenuProvider>
   );
 };
 
-const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProps>(
+const MarkdownEditorImpl = forwardRef<EditorView | null, MarkdownEditorProps>(
   (
     {
       id,
@@ -187,13 +184,13 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
             search: true,
           }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
           editorGutter,
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
           providerExtensions,
           extensions,
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
         ...(role !== 'section' && {
           id,
           scrollTo,
@@ -206,7 +203,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
     );
 
-    useImperativeHandle(forwardedRef, () => editorView, [editorView]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
     useTest(editorView);
     useSelectCurrentThread(editorView, id);
 
@@ -285,7 +282,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
+const useTest = (view: EditorView | null) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {

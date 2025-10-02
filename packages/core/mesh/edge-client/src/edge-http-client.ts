@@ -259,8 +259,26 @@ export class EdgeHttpClient {
     body: UploadFunctionRequest,
     args?: EdgeHttpGetArgs,
   ): Promise<UploadFunctionResponseBody> {
+    const formData = new FormData();
+    formData.append('name', body.name ?? '');
+    formData.append('version', body.version);
+    formData.append('ownerPublicKey', body.ownerPublicKey);
+    formData.append('entryPoint', body.entryPoint);
+    for (const [filename, content] of Object.entries(body.assets)) {
+      formData.append(
+        'assets',
+        new Blob([content as Uint8Array<ArrayBuffer>], { type: getFileMimeType(filename) }),
+        filename,
+      );
+    }
+
     const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
-    return this._call(new URL(path, this.baseUrl), { ...args, body, method: 'PUT' });
+    return this._call(new URL(path, this.baseUrl), {
+      ...args,
+      body: formData,
+      method: 'PUT',
+      json: false,
+    });
   }
 
   public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
@@ -436,12 +454,14 @@ const createRequest = (
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
   const headers: HeadersInit = {};
-  if (!json) {
-    throw new Error('Not implemented');
-  } else {
+
+  if (json) {
     requestBody = body && JSON.stringify(body);
     headers['Content-Type'] = 'application/json';
+  } else {
+    requestBody = body;
   }
+
   if (typeof requestBody === 'string' && requestBody.length > WARNING_BODY_SIZE) {
     log.warn('Request with large body', { bodySize: requestBody.length });
   }
@@ -484,3 +504,10 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
     return true;
   };
 };
+
+const getFileMimeType = (filename: string) =>
+  ['.js', '.mjs'].some((codeExtension) => filename.endsWith(codeExtension))
+    ? 'application/javascript+module'
+    : filename.endsWith('.wasm')
+      ? 'application/wasm'
+      : 'application/octet-stream';

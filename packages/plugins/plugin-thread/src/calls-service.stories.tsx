@@ -17,7 +17,7 @@ import { Button } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import testVideo from '../testing/video.mp4?raw';
+const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStreamTrack } from './hooks';
@@ -37,16 +37,18 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const [pulledTrack, setPulledTrack] = useState<MediaStreamTrack | undefined>(undefined);
   const hadRun = useRef(false);
 
+  const deps: any[] = [];
   // Push/pull video stream track to cloudflare.
   useEffect(() => {
     if (hadRun.current || !mediaStreamTrack || !peerPush || !peerPull) {
-      log.info('not running', { hadRun: hadRun.current, mediaStreamTrack, peerPush, peerPull });
       return;
     }
     hadRun.current = true;
     const ctx = Context.default();
+    log.info('setting up ctx', { ctx, mediaStreamTrack, peerPush, peerPull });
+    deps.push([ctx, mediaStreamTrack, peerPush, peerPull]);
     ctx.onDispose(() => {
-      log.info('disposing ctx', { ctx });
+      log.info('disposing ctx', {});
     });
     scheduleTask(
       ctx,
@@ -125,6 +127,8 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
     pulledTrack,
     rePullTrack,
     metrics,
+    pushService: peerPush,
+    pullService: peerPull,
   };
 };
 
@@ -160,15 +164,7 @@ const DefaultStory = ({ source }: StoryProps) => {
       <video ref={pushVideoElement} muted autoPlay loop />
       <div className='flex flex-col gap-4'>
         <video ref={pullVideoElement} muted />
-        <Button
-          disabled={
-            !(
-              pullVideoElement?.current?.srcObject instanceof MediaStream &&
-              pullVideoElement.current.srcObject.getTracks()[0]
-            )
-          }
-          onClick={rePullTrack}
-        >
+        <Button disabled={!pulledTrack} onClick={rePullTrack}>
           Re-pull video
         </Button>
       </div>

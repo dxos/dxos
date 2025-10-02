@@ -9,13 +9,13 @@ import { PublicKey } from '@dxos/keys';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { ComplexMap } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type PluginState } from '../types';
 
 import { SpaceCapabilities } from './capabilities';
 
 export default (context: PluginContext) => {
-  const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
+  const state = new LocalStorageStore<PluginState>(meta.id, {
     awaiting: undefined,
     spaceNames: {},
     viewersByObject: {},

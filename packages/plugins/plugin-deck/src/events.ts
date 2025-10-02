@@ -4,8 +4,8 @@
 
 import { Events } from '@dxos/app-framework';
 
-import { DECK_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace DeckEvents {
-  export const StateReady = Events.createStateEvent(`${DECK_PLUGIN}/state-ready`);
+  export const StateReady = Events.createStateEvent(`${meta.id}/state-ready`);
 }

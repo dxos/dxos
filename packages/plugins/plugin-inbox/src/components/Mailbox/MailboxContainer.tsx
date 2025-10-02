@@ -13,7 +13,7 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { TagPicker } from '@dxos/react-ui-tag-picker';
 
-import { InboxCapabilities } from '../../capabilities/capabilities';
+import { InboxCapabilities } from '../../capabilities';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
@@ -23,9 +23,10 @@ import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef 
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
+  role?: string;
 };
 
-export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
+export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const id = fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -51,10 +52,6 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
-        case 'select': {
-          log.debug(`[select message] ${action.messageId}`);
-          break;
-        }
         case 'current': {
           const message = model.messages.find((message) => message.id === action.messageId);
           void dispatch(
@@ -71,7 +68,12 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           );
           break;
         }
-        case 'tag-select': {
+        case 'select': {
+          log.info('select', { messageId: action.messageId });
+          break;
+        }
+        case 'select-tag': {
+          log.info('select-tag', { label: action.label });
           filterDispatch('tag_selected_from_message');
           model.selectTag(action.label);
           break;
@@ -138,6 +140,7 @@ export const MailboxContainer = ({ mailbox }: MailboxContainerProps) => {
           id={id}
           onAction={handleAction}
           currentMessageId={currentMessageId}
+          role={role}
         />
       ) : (
         <EmptyMailboxContent mailbox={mailbox} />

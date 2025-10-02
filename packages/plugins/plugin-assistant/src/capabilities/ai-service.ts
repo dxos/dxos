@@ -5,12 +5,10 @@
 import { Effect, Layer } from 'effect';
 
 import { AiServiceRouter } from '@dxos/ai';
-import { type PluginContext, contributes } from '@dxos/app-framework';
-
-import { AssistantCapabilities } from './capabilities';
+import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 
 export default (context: PluginContext) => {
-  const resolvers = context.getCapabilities(AssistantCapabilities.AiModelResolver);
+  const resolvers = context.getCapabilities(Capabilities.AiModelResolver);
 
   // TODO(dmaretskyi): Extract function to reduce them.
   const combinedLayer = resolvers.reduce(
@@ -21,7 +19,7 @@ export default (context: PluginContext) => {
   return [
     // TODO(dmaretskyi): Read config from settings.
     contributes(
-      AssistantCapabilities.AiServiceLayer,
+      Capabilities.AiServiceLayer,
       AiServiceRouter.AiModelResolver.buildAiService.pipe(Layer.provide(combinedLayer)),
     ),
   ];

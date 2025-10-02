@@ -4,15 +4,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Cause, Effect, Exit, Layer, Logger } from 'effect';
 
 import { unrefTimeout } from '@dxos/async';
 import { LogLevel, levels, log } from '@dxos/log';
 
-import { dx } from './commands';
-import { DXOS_VERSION } from './version';
+import { run } from './commands';
 
 let filter = LogLevel.ERROR;
 const level = process.env.DX_DEBUG;
@@ -26,11 +24,6 @@ if (process.env.DX_TRACK_LEAKS) {
   const wtf = await import('wtfnode');
   leaksTracker = wtf;
 }
-
-const run = Command.run(dx, {
-  name: 'DXOS CLI',
-  version: DXOS_VERSION,
-});
 
 const EXIT_GRACE_PERIOD = 1_000;
 const FORCE_EXIT = true;

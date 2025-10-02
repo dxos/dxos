@@ -11,6 +11,8 @@ import { isNonNullable } from '@dxos/util';
 // Relevant info:
 // https://github.com/Minahil-official/GPT-4.1-Promting-Guide?tab=readme-ov-file#-apply-patch-tool-format-v4a-diff
 
+// TOOD(burdon): Support append to end (no "-").
+
 export type Diff = {
   match: string;
   replace: string;
