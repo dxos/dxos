@@ -115,7 +115,7 @@ describe('memoization', () => {
   it.effect.only(
     'provider-defined tool',
     Effect.fnUntraced(
-      function* ({}) {
+      function* (_) {
         const chat = yield* Chat.fromPrompt('Who is the current pope?');
 
         while (true) {
