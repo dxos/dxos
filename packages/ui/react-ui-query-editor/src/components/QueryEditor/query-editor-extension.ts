@@ -17,7 +17,7 @@ export type QueryEditorText = {
   content: string;
 };
 
-export type QueryEditorItem = QueryEditorText | QueryEditorTag;
+export type QueryItem = QueryEditorText | QueryEditorTag;
 
 export const renderTag = (tag: QueryEditorTag) =>
   `<anchor${tag.hue ? ` hue="${tag.hue}"` : ''} refid="${tag.id}">${tag.label}</anchor> `;
