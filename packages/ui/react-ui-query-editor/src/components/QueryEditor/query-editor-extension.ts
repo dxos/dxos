@@ -146,19 +146,17 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
     currentPos = range.to;
   }
 
-  // Add remaining text after the last anchor
-  if (currentPos < docLength) {
-    const textContent = doc.sliceString(currentPos, docLength).trim();
-    if (textContent) {
-      items.push({ content: textContent });
-    }
-  }
-
   // If no anchors were found, treat entire content as text
   if (processedRanges.length === 0) {
     const content = doc.toString().trim();
     if (content) {
       items.push({ content });
+    }
+  } else if (currentPos < docLength) {
+    // Add remaining text after the last anchor
+    const textContent = doc.sliceString(currentPos, docLength).trim();
+    if (textContent) {
+      items.push({ content: textContent });
     }
   }
 
