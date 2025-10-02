@@ -87,7 +87,6 @@
     "react-resize-detector": "^11.0.1",
     "react-router-dom": "^6.4.0",
     "react-syntax-highlighter": "^15.6.1",
-    "react-vis": "^1.12.1",
     "use-resize-observer": "^9.1.0",
     "ws": "^8.14.2"
   },
@@ -103,7 +102,6 @@
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/react-vis": "^1.11.15",
     "@vitejs/plugin-react": "^5.0.0",
     "postcss": "^8.4.41",
     "tailwindcss": "~3.4.1",
