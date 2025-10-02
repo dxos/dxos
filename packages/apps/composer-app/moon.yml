@@ -6,3 +6,27 @@ tags:
   - typecheck
   - vite
   - ts-test
+  - storybook
+tasks:
+  bundle:
+    deps:
+      - prebuild
+  compile:
+    deps:
+      - prebuild
+  prebuild:
+    script: pnpm run copy:assets
+    deps:
+      - ^:prebuild
+    inputs:
+      - package.json
+      - moon.yml
+    outputs:
+      - public/assets/plugin-sketch
+  serve:
+    deps:
+      - prebuild
+  test:
+    inputs:
+      - .storybook/*
+      - vite.config.ts

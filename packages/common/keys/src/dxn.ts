@@ -159,7 +159,7 @@ export class DXN {
    */
   static fromSpaceAndObjectId(spaceId: SpaceId, objectId: ObjectId): DXN {
     assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
-    assertArgument(ObjectId.isValid(objectId), `Invalid object ID: ${objectId}`);
+    assertArgument(ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
     return new DXN(DXN.kind.ECHO, [spaceId, objectId]);
   }
 
@@ -167,14 +167,14 @@ export class DXN {
    * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
    */
   static fromLocalObjectId(id: string): DXN {
-    assertArgument(ObjectId.isValid(id), `Invalid object ID: ${id}`);
+    assertArgument(ObjectId.isValid(id), 'id', `Invalid object ID: ${id}`);
     return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
   }
 
   static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
     assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
-    assertArgument(ObjectId.isValid(queueId), `Invalid queue ID: ${queueId}`);
-    assertArgument(!objectId || ObjectId.isValid(objectId), `Invalid object ID: ${objectId}`);
+    assertArgument(ObjectId.isValid(queueId), 'queueId', `Invalid queue ID: ${queueId}`);
+    assertArgument(!objectId || ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
 
     return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
   }
@@ -183,9 +183,10 @@ export class DXN {
   #parts: string[];
 
   constructor(kind: string, parts: string[]) {
-    assertArgument(parts.length > 0, `Invalid DXN: ${parts}`);
+    assertArgument(parts.length > 0, 'parts', `Invalid DXN: ${parts}`);
     assertArgument(
       parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1),
+      'parts',
       `Invalid DXN: ${parts}`,
     );
 

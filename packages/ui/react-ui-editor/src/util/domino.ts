@@ -22,7 +22,6 @@ export class Domino<T extends HTMLElement> {
     return this;
   }
   text(value: string): this {
-    console.log('[set text content]', value);
     this._el.textContent = value;
     return this;
   }

@@ -20,6 +20,7 @@ import {
   type GameboardRootProps,
   Chessboard as NaturalChessboard,
   type ChessboardProps as NaturalChessboardProps,
+  getRawPgn,
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -59,9 +60,15 @@ const Root = forwardRef<ChessboardController, RootProps>(({ game, children }, fo
   }, [model]);
 
   // External change.
+  // NOTE: Warning if user has not interacted with the board.
   useEffect(() => {
-    model.update(game.pgn);
-    void click.play();
+    if (model.pgn !== getRawPgn(game.pgn ?? '')) {
+      const silent = model.pgn === '*';
+      model.update(game.pgn);
+      if (!silent) {
+        void click.play();
+      }
+    }
   }, [game.pgn]);
 
   // Move.
@@ -120,6 +127,9 @@ const Board = (props: BoardProps) => {
     if (!ref.current) {
       return;
     }
+
+    // Participate in keyboard navigation (set tabIndex={0})
+    ref.current.setAttribute('data-arrow-keys', 'all');
 
     return addEventListener(ref.current, 'keydown', (ev) => {
       switch (ev.key) {

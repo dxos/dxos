@@ -4,38 +4,58 @@
 
 import { Context, Effect, Layer, Schema } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
+import { log } from '@dxos/log';
 
 import { FunctionError, FunctionNotFoundError } from '../errors';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 
+import { CredentialsService } from './credentials';
+import { DatabaseService } from './database';
+import { type ComputeEventLogger } from './event-logger';
+import { QueueService } from './queues';
+import { RemoteFunctionExecutionService } from './remote-function-execution-service';
 import type { Services } from './service-container';
+import { type TracingService } from './tracing';
+
+export type InvocationServices = TracingService | ComputeEventLogger;
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
   {
     // TODO(dmaretskyi): This should take function id instead of the definition object.
     // TODO(dmaretskyi): Services should be satisfied from environment rather then bubbled up.
-    invokeFunction(functionDef: FunctionDefinition<any, any>, input: unknown): Effect.Effect<unknown, never, Services>;
+    invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
   }
 >() {
-  /**
-   * @deprecated Use layerLive instead.
-   */
-  static layer = Layer.succeed(LocalFunctionExecutionService, {
-    invokeFunction: (functionDef, input) => invokeFunction(functionDef, input),
-  });
-
   static layerLive = Layer.effect(
     LocalFunctionExecutionService,
     Effect.gen(function* () {
       const resolver = yield* FunctionImplementationResolver;
+      const ai = yield* AiService.AiService;
+      const credentials = yield* CredentialsService;
+      const database = yield* DatabaseService;
+      const queues = yield* QueueService;
+      // TODO(mykola): Delete, should not be required for local execution.
+      const functionCallService = yield* RemoteFunctionExecutionService;
       return {
-        invokeFunction: Effect.fn('invokeFunction')(function* (functionDef, input) {
-          // TODO(dmaretskyi): Better error types
-          const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
-          return yield* invokeFunction(resolved, input);
-        }),
+        // TODO(dmaretskyi): Better error types.
+        invokeFunction: <I, O>(
+          functionDef: FunctionDefinition<I, O>,
+          input: I,
+        ): Effect.Effect<O, never, InvocationServices> =>
+          Effect.gen(function* () {
+            const resolved = yield* resolver.resolveFunctionImplementation(functionDef).pipe(Effect.orDie);
+            const output = yield* invokeFunction(resolved, input);
+            return output as O;
+          }).pipe(
+            Effect.provideService(AiService.AiService, ai),
+            Effect.provideService(CredentialsService, credentials),
+            Effect.provideService(DatabaseService, database),
+            Effect.provideService(QueueService, queues),
+            Effect.provideService(RemoteFunctionExecutionService, functionCallService),
+          ),
       };
     }),
   );
@@ -53,8 +73,12 @@ const invokeFunction = (
 ): Effect.Effect<unknown, never, Services> =>
   Effect.gen(function* () {
     // Assert input matches schema
-    const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
-    (assertInput as any)(input);
+    try {
+      const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
+      (assertInput as any)(input);
+    } catch (e) {
+      throw new FunctionError({ message: 'Invalid function input', context: { name: functionDef.name }, cause: e });
+    }
 
     const context: FunctionContext = {
       space: undefined,
@@ -63,6 +87,8 @@ const invokeFunction = (
         throw new Error('Not available. Use the database service instead.');
       },
     };
+
+    log.info('Invoking function', { name: functionDef.name, input });
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
@@ -82,13 +108,19 @@ const invokeFunction = (
     }).pipe(
       Effect.orDie,
       Effect.catchAllDefect((defect) =>
-        Effect.die(new FunctionError('Error running function', { context: { name: functionDef.name }, cause: defect })),
+        Effect.die(new FunctionError({ context: { name: functionDef.name }, cause: defect })),
       ),
     );
 
+    log.info('Function completed', { name: functionDef.name, input, data });
+
     // Assert output matches schema
-    const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
-    (assertOutput as any)(data);
+    try {
+      const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
+      (assertOutput as any)(data);
+    } catch (e) {
+      throw new FunctionError({ message: 'Invalid function output', context: { name: functionDef.name }, cause: e });
+    }
 
     return data;
   }).pipe(Effect.withSpan('invokeFunction', { attributes: { name: functionDef.name } }));
@@ -96,15 +128,15 @@ const invokeFunction = (
 export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
   FunctionImplementationResolver,
   {
-    resolveFunctionImplementation(
-      functionDef: FunctionDefinition<any, any>,
-    ): Effect.Effect<FunctionDefinition<any, any>, FunctionNotFoundError>;
+    resolveFunctionImplementation<I, O>(
+      functionDef: FunctionDefinition<I, O>,
+    ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
   }
 >() {
   static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
-      resolveFunctionImplementation: (functionDef) => {
-        const resolved = functions.find((f) => f.name === functionDef.name);
+      resolveFunctionImplementation: <I, O>(functionDef: FunctionDefinition<I, O>) => {
+        const resolved = functions.find((f) => f.key === functionDef.key);
         if (!resolved) {
           return Effect.fail(new FunctionNotFoundError(functionDef.name));
         }

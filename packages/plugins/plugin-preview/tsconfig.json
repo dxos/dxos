@@ -88,6 +88,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

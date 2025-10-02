@@ -7,10 +7,10 @@ import React from 'react';
 import { Capabilities, contributes } from '@dxos/app-framework';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
-import { DEBUG_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactContext, {
-    id: DEBUG_PLUGIN,
+    id: meta.id,
     context: ({ children }) => <DevtoolsContextProvider>{children}</DevtoolsContextProvider>,
   });

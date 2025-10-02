@@ -4,7 +4,7 @@
 
 import '@dxos-theme';
 
-import { type Decorator, type Meta, type StoryFn, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -36,8 +36,8 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
   );
 };
 
-const SearchContextDecorator = (): Decorator => {
-  return (Story: StoryFn) => (
+const searchContextDecorator = (): Decorator => {
+  return (Story) => (
     <SearchContextProvider>
       <Story />
     </SearchContextProvider>
@@ -63,7 +63,7 @@ const meta = {
     withLayout({
       fullscreen: true,
     }),
-    SearchContextDecorator(),
+    searchContextDecorator(),
   ],
   parameters: {
     layout: 'fullscreen',

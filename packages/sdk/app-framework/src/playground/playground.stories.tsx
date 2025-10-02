@@ -9,7 +9,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { useApp } from '../App';
+import { useApp } from '../components';
 import { IntentPlugin } from '../plugin-intent';
 
 import { DebugPlugin } from './debug';
@@ -17,7 +17,8 @@ import { GeneratorPlugin, createNumberPlugin } from './generator';
 import { LayoutPlugin } from './layout';
 import { LoggerPlugin } from './logger';
 
-const plugins = [IntentPlugin(), LayoutPlugin(), DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
+const pluginFactories = [IntentPlugin, LayoutPlugin, DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
+const plugins = pluginFactories.map((factory) => (typeof factory === 'function' ? factory() : factory));
 
 const Placeholder = () => {
   return <div>Loading...</div>;
@@ -25,7 +26,7 @@ const Placeholder = () => {
 
 const DefaultStory = () => {
   const App = useApp({
-    pluginLoader: (id) => createNumberPlugin(id),
+    pluginLoader: (id) => createNumberPlugin(id)(),
     plugins,
     core: plugins.map((plugin) => plugin.meta.id),
     placeholder: Placeholder,

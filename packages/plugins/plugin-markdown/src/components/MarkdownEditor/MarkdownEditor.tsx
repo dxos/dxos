@@ -10,8 +10,8 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  CommandMenu,
   type CommandMenuGroup,
+  CommandMenuProvider,
   type DNDOptions,
   Domino,
   type EditorInputMode,
@@ -20,7 +20,6 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  RefPopover,
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
@@ -41,7 +40,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNonNullable, isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';
@@ -76,7 +75,7 @@ export const MarkdownEditor = ({
   ...props
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
 
   const getMenu = useCallback(
     (trigger: string, query?: string) => {
@@ -117,18 +116,17 @@ export const MarkdownEditor = ({
     };
   }, [getMenu]);
 
-  const { commandMenu, groupsRef, currentItem, onSelect, ...refPopoverProps } = useCommandMenu(options);
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
+  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
-    <RefPopover modal={false} {...refPopoverProps}>
+    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-      <CommandMenu groups={groupsRef.current} currentItem={currentItem} onSelect={onSelect} />
-    </RefPopover>
+    </CommandMenuProvider>
   );
 };
 
-const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProps>(
+const MarkdownEditorImpl = forwardRef<EditorView | null, MarkdownEditorProps>(
   (
     {
       id,
@@ -186,13 +184,13 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
             scrollPastEnd: role === 'section' ? false : scrollPastEnd,
             search: true,
           }),
-          createMarkdownExtensions({ themeMode }),
+          createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
           editorGutter,
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
           providerExtensions,
           extensions,
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
         ...(role !== 'section' && {
           id,
           scrollTo,
@@ -205,7 +203,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
     );
 
-    useImperativeHandle(forwardedRef, () => editorView, [editorView]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
     useTest(editorView);
     useSelectCurrentThread(editorView, id);
 
@@ -284,7 +282,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
+const useTest = (view: EditorView | null) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {

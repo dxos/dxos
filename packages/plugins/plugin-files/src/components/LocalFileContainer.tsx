@@ -10,7 +10,7 @@ import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type LocalEntity, type LocalFile, LocalFilesAction } from '../types';
 
 const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
@@ -32,7 +32,7 @@ const LocalFileContainer: FC<{ file: LocalFile }> = ({ file }) => {
 };
 
 const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
-  const { t } = useTranslation(FILES_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const node = graph.getNode(entity.id).pipe(Option.getOrNull);
   const action =

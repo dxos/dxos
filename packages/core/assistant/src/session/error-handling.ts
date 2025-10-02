@@ -6,7 +6,7 @@ import { AiError } from '@effect/ai';
 import { HttpClientError } from '@effect/platform';
 import { Effect, Schema } from 'effect';
 
-import { AnthropicError } from '../errors';
+import { AiModelError } from '../errors';
 
 const AnthropicErrorResponse = Schema.Struct({
   type: Schema.Literal('error'),
@@ -16,6 +16,7 @@ const AnthropicErrorResponse = Schema.Struct({
   }),
 });
 
+// TODO(dmaretskyi): Needs rework
 export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError> =>
   Effect.gen(function* () {
     const cause = err.cause;
@@ -24,8 +25,11 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
         Effect.flatMap(Schema.decodeUnknown(AnthropicErrorResponse, { exact: false })),
       );
 
-      const parsedCause = new AnthropicError(`${body.error.type}: ${body.error.message}`);
-      return new AiError.AiError({
+      const parsedCause = new AiModelError({
+        message: body.error.message,
+        context: { model: 'anthropic', type: body.error.type },
+      });
+      return AiError.UnknownError.make({
         description: body.error.message,
         module: err.module,
         method: err.method,

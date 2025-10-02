@@ -2,18 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Toolkit } from '@effect/ai';
 import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
+import {
+  LocalSearchHandler,
+  LocalSearchToolkit,
+  contextQueueLayerFromResearchGraph,
+  makeGraphWriterHandler,
+  makeGraphWriterToolkit,
+} from '@dxos/assistant-testing';
 import { TracingService, defineFunction } from '@dxos/functions';
+import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 /**
  * Summarize a mailbox.
  */
 export default defineFunction({
-  name: 'dxos.org/function/inbox/summarize',
+  key: 'dxos.org/function/inbox/email-summarize',
+  name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({
     messages: Schema.String.annotations({
@@ -27,10 +37,26 @@ export default defineFunction({
   }),
   handler: Effect.fnUntraced(
     function* ({ data: { messages } }) {
+      const GraphWriterToolkit = makeGraphWriterToolkit({
+        schema: [DataType.Person, DataType.Project, DataType.Organization],
+      });
+      const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
+
+      const toolkit = yield* Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            //
+            GraphWriterHandler,
+            LocalSearchHandler,
+          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
+        ),
+      );
+
       const result = yield* new AiSession().run({
         prompt: messages,
         history: [],
         system: systemPrompt,
+        toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
       });
 
@@ -60,8 +86,25 @@ export default defineFunction({
   ),
 });
 
+const researchPrompt = trim`
+  # Research
+  As the first step perform research:
+    - Identify people, companies, projects, etc.
+    - Search local database for existing entitities.
+    - If the local entities don't exist, add new ones with graph-write tool.
+    - In your summary include references to objects instead of their names in the following format:
+
+    <example>
+      We need to talk about @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+    </example>
+`;
+
+// TODO(wittjosiah): Research is causing summaries to include a bunch of unreadable dxn references.
+const includeResearch = false;
 const systemPrompt = trim`
   You are a helpful assistant that summarizes mailboxes.
+
+  ${includeResearch ? researchPrompt : ''}
 
   # Goal
   Create a markdown summary of the mailbox with text notes provided.

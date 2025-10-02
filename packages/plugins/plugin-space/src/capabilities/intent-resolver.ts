@@ -12,7 +12,7 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType, ProjectionModel } from '@dxos/schema';
+import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -33,7 +33,7 @@ import {
   POPOVER_RENAME_SPACE,
 } from '../components';
 import { SpaceEvents } from '../events';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 
@@ -88,7 +88,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create records smart collection.
         const records = Obj.make(DataType.QueryCollection, {
-          query: { typename: DataType.StoredSchema.typename },
+          query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
         });
         collection.objects.push(Ref.make(records));
 
@@ -406,15 +406,16 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        invariant(view.query.typename);
-        const schema = await space.db.schemaRegistry.query({ typename: view.query.typename }).firstOrUndefined();
+        const typename = typenameFromQuery(view.query);
+        invariant(typename);
+        const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
         if (!undo) {
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['field deleted label', { ns: SPACE_PLUGIN }],
+              message: ['field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -469,13 +470,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               createIntent(LayoutAction.AddToast, {
                 part: 'toast',
                 subject: {
-                  id: `${SPACE_PLUGIN}/space-limit`,
-                  title: ['space limit label', { ns: SPACE_PLUGIN }],
-                  description: ['space limit description', { ns: SPACE_PLUGIN }],
+                  id: `${meta.id}/space-limit`,
+                  title: ['space limit label', { ns: meta.id }],
+                  description: ['space limit description', { ns: meta.id }],
                   duration: 5_000,
                   icon: 'ph--warning--regular',
-                  actionLabel: ['remove deleted objects label', { ns: SPACE_PLUGIN }],
-                  actionAlt: ['remove deleted objects alt', { ns: SPACE_PLUGIN }],
+                  actionLabel: ['remove deleted objects label', { ns: meta.id }],
+                  actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
                   onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
                 },
@@ -604,7 +605,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: SPACE_PLUGIN }],
+              message: [undoMessageKey, { ns: meta.id }],
               data: { deletionData },
             },
             intents:
@@ -696,7 +697,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     createResolver({
       intent: CollectionAction.CreateQueryCollection,
       resolve: async ({ name, typename }) => ({
-        data: { object: Obj.make(DataType.QueryCollection, { name, query: { typename } }) },
+        data: {
+          object: Obj.make(DataType.QueryCollection, { name, query: Query.select(Filter.typename(typename)).ast }),
+        },
       }),
     }),
   ]);

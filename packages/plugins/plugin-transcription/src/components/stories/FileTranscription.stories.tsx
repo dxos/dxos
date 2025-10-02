@@ -191,8 +191,6 @@ const meta = {
   decorators: [
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
@@ -202,11 +200,15 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         SettingsPlugin(),
         PreviewPlugin(),
-        IntentPlugin(),
         TranscriptionPlugin(),
+        StorybookLayoutPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),
@@ -241,15 +243,16 @@ export const Default: StoryObj<typeof AudioFile> = {
   },
 };
 
-export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
-  args: {
-    detectSpeaking: true,
-    normalizeSentences: true,
-    // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
-    audioUrl: 'https://dxos.network/audio-london.m4a',
-    // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
-  },
-};
+// TODO(mykola): Fix sentence normalization.
+// export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
+//   render: AudioFile,
+//   args: {
+//     detectSpeaking: true,
+//     normalizeSentences: true,
+//     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
+//     audioUrl: 'https://dxos.network/audio-london.m4a',
+//     // textUrl: 'https://dxos.network/audio-london.txt',
+//     transcriberConfig: TRANSCRIBER_CONFIG,
+//     recorderConfig: RECORDER_CONFIG,
+//   },
+// };

@@ -4,13 +4,14 @@
 
 import { type Schema } from 'effect';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { getTypename, toJsonSchema } from '@dxos/echo-schema';
-import type { JsonSchemaType, SortDirectionType } from '@dxos/echo-schema';
+import type { JsonSchemaType } from '@dxos/echo-schema';
 import {
   type DataType,
   ProjectionModel,
   type SchemaPropertyDefinition,
+  type SortDirectionType,
   createView,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
@@ -54,17 +55,15 @@ export const getBaseSchema = ({
 };
 
 export const makeDynamicTable = ({
-  typename,
   jsonSchema,
   properties,
 }: {
-  typename: string;
   jsonSchema: JsonSchemaType;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; view: DataType.View } => {
   const table = Obj.make(Table.Table, { sizes: {} });
   const view = createView({
-    typename,
+    query: Query.select(Filter.everything()),
     jsonSchema,
     presentation: table,
     ...(properties && { fields: properties.map((property) => property.name) }),
@@ -101,7 +100,7 @@ const setProperties = (
 
       if (property.sort) {
         const fieldId = field.id;
-        view.query.sort = [{ fieldId, direction: property.sort }];
+        view.sort = [{ fieldId, direction: property.sort }];
       }
     }
   }

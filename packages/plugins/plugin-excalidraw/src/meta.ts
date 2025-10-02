@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const EXCALIDRAW_PLUGIN = 'dxos.org/plugin/excalidraw';
-
 export const meta: PluginMeta = {
-  id: EXCALIDRAW_PLUGIN,
+  id: 'dxos.org/plugin/excalidraw',
   name: 'Excalidraw',
   description: 'Excalidraw is a popular diagraming tool powered by Excalidraw’s open source graph editor.',
   icon: 'ph--compass-tool--regular',

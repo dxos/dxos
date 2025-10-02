@@ -7,9 +7,9 @@ import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, parseId } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';
-import { type DxRefTagActivate } from '@dxos/lit-ui';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/react-ui-editor';
 
 const customEventOptions = { capture: true, passive: false };
@@ -29,7 +29,7 @@ const handlePreviewLookup = async (
 
 export default (context: PluginContext) => {
   // TODO(wittjosiah): Factor out lookup handlers to other plugins to make not ECHO-specific.
-  const handleDxRefTagActivate = async ({ refId, label, trigger }: DxRefTagActivate) => {
+  const handleDxAnchorActivate = async ({ refId, label, trigger }: DxAnchorActivate) => {
     const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
     const client = context.getCapability(ClientCapabilities.Client);
     const [layout] = context.getCapabilities(Capabilities.Layout);
@@ -57,8 +57,8 @@ export default (context: PluginContext) => {
   if (document.defaultView) {
     cleanup = addEventListener(
       document.defaultView,
-      'dx-ref-tag-activate' as any,
-      handleDxRefTagActivate,
+      DX_ANCHOR_ACTIVATE as any,
+      handleDxAnchorActivate,
       customEventOptions,
     );
   } else {

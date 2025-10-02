@@ -26,7 +26,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
             <Clipboard.IconButton value={dxn} />
           </Input.Root>
         </Toolbar.Root>
-        <SyntaxHighlighter classNames='flex text-xs' language='json'>
+        <SyntaxHighlighter language='json' classNames='text-xs'>
           {JSON.stringify(object, null, 2)}
         </SyntaxHighlighter>
       </StackItem.Content>

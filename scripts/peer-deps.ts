@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env pnpm --silent vite-node
 
 //
 // Copyright 2024 DXOS.org

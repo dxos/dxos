@@ -17,7 +17,9 @@ import { ReferencedQuotes, insertReferences } from '../quotes';
 
 import PROMPT from './instructions.tpl?raw';
 
-export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
+export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
+  key: 'dxos.org/function/extraction/extract-entities',
+  name: 'Extract Entities',
   description: 'Extract entities from the transcript message and add them to the message.',
   inputSchema: ExtractionInput,
   outputSchema: ExtractionOutput,
@@ -53,9 +55,10 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
     } as any); // TODO(burdon): Rewrite test.
 
     return {
+      timeElapsed: performance.now() - startTime,
       message: create(DataType.Message, {
         ...message,
-        blocks: message.blocks.map((block, i) =>
+        blocks: message.blocks.map((block) =>
           block._tag !== 'transcript'
             ? block
             : {
@@ -64,7 +67,6 @@ export const extractionAnthropicFn: FunctionDefinition<ExtractionInput, Extracti
               },
         ),
       }),
-      timeElapsed: performance.now() - startTime,
     };
   },
 });

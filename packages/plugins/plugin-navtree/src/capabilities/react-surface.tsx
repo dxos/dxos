@@ -8,7 +8,7 @@ import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { isGraphNode } from '@dxos/plugin-graph';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '../components';
-import { COMMANDS_DIALOG, NAVTREE_PLUGIN } from '../meta';
+import { COMMANDS_DIALOG, meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -19,7 +19,7 @@ export default () =>
       component: ({ data }) => <CommandsDialogContent {...data.props} />,
     }),
     createSurface({
-      id: `${NAVTREE_PLUGIN}/navigation`,
+      id: `${meta.id}/navigation`,
       role: 'navigation',
       filter: (data): data is { popoverAnchorId?: string; topbar: boolean; current: string } =>
         typeof data.current === 'string',
@@ -32,12 +32,12 @@ export default () =>
       ),
     }),
     createSurface({
-      id: `${NAVTREE_PLUGIN}/document-title`,
+      id: `${meta.id}/document-title`,
       role: 'document-title',
       component: ({ data }) => <NavTreeDocumentTitle node={isGraphNode(data.subject) ? data.subject : undefined} />,
     }),
     createSurface({
-      id: `${NAVTREE_PLUGIN}/search-input`,
+      id: `${meta.id}/search-input`,
       role: 'search-input',
       position: 'fallback',
       component: () => <CommandsTrigger />,

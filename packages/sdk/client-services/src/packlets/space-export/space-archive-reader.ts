@@ -18,7 +18,7 @@ export const extractSpaceArchive = async (archive: SpaceArchive): Promise<Extrac
   const { Archive } = await import('@obsidize/tar-browserify');
   const { entries } = await Archive.extract(archive.contents);
   const metadataEntry = entries.find((entry) => entry.fileName === SpaceArchiveFileStructure.metadata);
-  assertArgument(metadataEntry, 'Metadata entry not found');
+  assertArgument(metadataEntry, 'metadataEntry', 'Metadata entry not found');
   const metadata = JSON.parse(metadataEntry.getContentAsText());
   const documents: Record<DocumentId, Uint8Array> = {};
   for (const entry of entries.filter((entry) => entry.fileName.startsWith(`${SpaceArchiveFileStructure.documents}/`))) {

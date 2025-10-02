@@ -5,9 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { Flex, ProgressBar, type ProgressBarProps, TextCrawl } from '@dxos/react-ui-components';
+import { Flex, ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { useExecutionGraph } from '../../hooks';
 import { type Assistant } from '../../types';
 
 // TODO(burdon): Reset after each session.
@@ -28,7 +27,7 @@ export type ChatProgressProps = {
 };
 
 export const ChatProgress = ({ chat }: ChatProgressProps) => {
-  const { commits } = useExecutionGraph(chat.traceQueue, true);
+  const { commits } = useExecutionGraph(chat.traceQueue?.target, true);
   const nodes = useMemo(() => commits.map((commit) => ({ id: commit.id, message: commit.message })), [commits]);
   const lines = useMemo(() => commits.map((commit) => commit.message), [commits]);
 

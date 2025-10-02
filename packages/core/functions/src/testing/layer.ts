@@ -26,9 +26,10 @@ export type TestDatabaseOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
   types?: Schema.Schema.AnyNoContext[];
   storagePath?: string;
+  onInit?: () => Effect.Effect<void, never, DatabaseService | QueueService>;
 };
 
-export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabaseOptions = {}) =>
+export const TestDatabaseLayer = ({ indexing, types, storagePath, onInit }: TestDatabaseOptions = {}) =>
   Layer.scopedContext(
     Effect.gen(function* () {
       const builder = yield* testBuilder;
@@ -65,6 +66,13 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabase
           yield* Effect.promise(() =>
             kv!.put('test-metadata', { key: key.toHex(), rootUrl: db!.rootUrl }, { valueEncoding: 'json' }),
           );
+
+          if (onInit) {
+            yield* onInit().pipe(
+              Effect.provideService(DatabaseService, DatabaseService.make(db)),
+              Effect.provideService(QueueService, QueueService.make(queues, undefined)),
+            );
+          }
         } else {
           const key = PublicKey.from((testMetadata as any).key);
           const rootUrl = (testMetadata as any).rootUrl;
@@ -74,6 +82,12 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath }: TestDatabase
       } else {
         db = yield* Effect.promise(() => peer.createDatabase());
         queues = peer.client.constructQueueFactory(db.spaceId);
+        if (onInit) {
+          yield* onInit().pipe(
+            Effect.provideService(DatabaseService, DatabaseService.make(db)),
+            Effect.provideService(QueueService, QueueService.make(queues, undefined)),
+          );
+        }
       }
 
       yield* Effect.addFinalizer(() =>

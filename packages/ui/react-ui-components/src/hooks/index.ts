@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useStreamingText';
+export * from './useExecutionGraph';
+export * from './useMatcherExtension';

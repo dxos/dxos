@@ -4,13 +4,12 @@
 
 import { callbackify } from 'node:util';
 
-import { type AbstractValueEncoding, type Crypto } from 'hypercore';
-
 import { type Codec, type EncodingOptions } from '@dxos/codec-protobuf';
 import { type Signer, verifySignature } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { arrayToBuffer } from '@dxos/util';
+import { type AbstractValueEncoding, type Crypto } from '@dxos/vendor-hypercore/hypercore';
 
 /**
  * Create encoding (e.g., from protobuf codec).
