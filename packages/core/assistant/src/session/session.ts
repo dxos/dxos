@@ -108,15 +108,7 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        console.log('--- HIST ---');
-        console.log(JSON.stringify([...this._history, ...this._pending]));
-        console.log('--- HIST END ---');
-
         const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
-
-        console.log('--- PROMPT ---');
-        console.log(Prompt.FromJson.pipe(Schema.encodeSync)(prompt));
-        console.log('--- PROMPT END ---');
 
         // Execute the stream request.
         const blocks = yield* LanguageModel.streamText({
