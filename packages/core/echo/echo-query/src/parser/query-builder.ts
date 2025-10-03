@@ -242,6 +242,10 @@ export class QueryBuilder {
         result = this._parsePropertyFilter(cursor, input);
         break;
 
+      case 'TagFilter':
+        result = this._parseTagFilter(cursor, input);
+        break;
+
       default:
         result = Filter.nothing();
     }
@@ -365,6 +369,20 @@ export class QueryBuilder {
     }
 
     return parts.join('.');
+  }
+
+  /**
+   * Parse a TagFilter node (#tag).
+   */
+  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
+    // Skip Tag token (#)
+    cursor.firstChild();
+    cursor.nextSibling(); // Move to Identifier
+
+    const tag = this._getNodeText(cursor, input);
+    cursor.parent();
+
+    return Filter.tag(tag);
   }
 
   /**

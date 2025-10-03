@@ -241,6 +241,11 @@ interface FilterAPI {
   typeDXN(dxn: DXN): Filter<any>;
 
   /**
+   * Filter by tag.
+   */
+  tag(tag: string): Filter<any>;
+
+  /**
    * Filter by properties.
    */
   props<T>(props: Filter.Props<T>): Filter<T>;
@@ -425,6 +430,14 @@ class FilterClass implements Filter<any> {
       type: 'object',
       typename: dxn.toString(),
       props: {},
+    });
+  }
+
+  // TODO(burdon): Implement.
+  static tag(tag: string): Filter<any> {
+    return new FilterClass({
+      type: 'tag',
+      tag,
     });
   }
 

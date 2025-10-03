@@ -240,6 +240,10 @@ describe('query', () => {
         expected: Filter.typename('dxos.org/type/Person'),
       },
       {
+        input: '#test',
+        expected: Filter.tag('test'),
+      },
+      {
         input: '{ name: "DXOS" }',
         expected: Filter.props({ name: 'DXOS' }),
       },
