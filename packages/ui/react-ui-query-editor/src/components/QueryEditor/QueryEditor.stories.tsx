@@ -5,13 +5,13 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from '@storybook/test';
 import React, { useState } from 'react';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type QueryTag } from './query-editor-extension';
 import { QueryEditor } from './QueryEditor';
+import { type QueryTag } from './types';
 
 const allTags: QueryTag[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },

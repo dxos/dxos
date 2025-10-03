@@ -9,7 +9,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { QueryBuilder } from '@dxos/echo-query';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
+// TODO(burdon): Move.
+// import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -25,15 +26,15 @@ import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
 
-const GraphStory = ({ query: queryParam }: QueryEditorProps) => {
+const DefaultStory = ({ query: queryParam }: QueryEditorProps) => {
   const [query, setQuery] = useState(queryParam);
   const [space] = useSpaces();
   const viewRef = useRef<EditorView>(null);
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
-  // TODO(burdon): Catch invalid filter.
+  // TODO(burdon): Catch invalid filter error.
   const objects = useQuery(space, filter);
-  const model = useGraphModel(space, filter);
+  // const model = useGraphModel(space, filter);
 
   useEffect(() => {
     if (query) {
@@ -55,15 +56,23 @@ const GraphStory = ({ query: queryParam }: QueryEditorProps) => {
           onQueryUpdate={setQuery}
         />
       </div>
-      <D3ForceGraph model={model} />
+      {/* <D3ForceGraph model={model} /> */}
+      <div className='bs-full overflow-y-auto'>
+        {objects.map((object) => (
+          <div key={object.id} className='p-2 border-b border-subduedSeparator'>
+            {object.id}
+          </div>
+        ))}
+      </div>
       <div className='p-2 text-right text-infoText text-xs'>{objects.length}</div>
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/QueryEditor',
+  title: 'ui/react-ui-components/QueryPlayground',
   component: QueryEditor,
+  render: render(DefaultStory),
   decorators: [
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
@@ -92,13 +101,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 }',
-  },
-};
-
-export const Relation: Story = {
-  render: render(GraphStory),
   args: {
     query: '(type:dxos.org/type/Person => type:dxos.org/type/Organization)',
   },
