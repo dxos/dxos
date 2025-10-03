@@ -15,6 +15,7 @@ export const focusField = StateField.define<boolean>({
         return effect.value;
       }
     }
+
     return value;
   },
 });
@@ -25,11 +26,11 @@ export const focusField = StateField.define<boolean>({
 export const focus = [
   focusField,
   EditorView.domEventHandlers({
-    focus: (event, view) => {
-      setTimeout(() => view.dispatch({ effects: focusEffect.of(true) }));
+    focus: (_event, view) => {
+      requestAnimationFrame(() => view.dispatch({ effects: focusEffect.of(true) }));
     },
-    blur: (event, view) => {
-      setTimeout(() => view.dispatch({ effects: focusEffect.of(false) }));
+    blur: (_event, view) => {
+      requestAnimationFrame(() => view.dispatch({ effects: focusEffect.of(false) }));
     },
   }),
 ];

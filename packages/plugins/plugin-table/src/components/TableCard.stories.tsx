@@ -50,7 +50,7 @@ const meta = {
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
