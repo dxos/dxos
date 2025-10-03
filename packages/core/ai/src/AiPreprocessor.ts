@@ -188,6 +188,13 @@ const convertAssistantMessagePart: (
           params: JSON.parse(block.input),
           providerExecuted: block.providerExecuted,
         });
+      case 'toolResult':
+        return Prompt.makePart('tool-result', {
+          id: block.toolCallId,
+          name: block.name,
+          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
+        });
+
       case 'reference':
         // TODO(dmaretskyi): Consider inlining content.
         return Prompt.makePart('text', {
@@ -223,12 +230,6 @@ const convertAssistantMessagePart: (
       case 'json':
         return Prompt.makePart('text', {
           text: block.data,
-        });
-      case 'toolResult':
-        return Prompt.makePart('tool-result', {
-          id: block.toolCallId,
-          name: block.name,
-          result: block.error ?? (block.result ? JSON.parse(block.result) : {}),
         });
       case 'image':
       case 'file':
