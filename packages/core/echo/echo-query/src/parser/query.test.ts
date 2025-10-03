@@ -146,7 +146,7 @@ describe('query', () => {
           ':',
           'Identifier',
           'Relation',
-          '=>',
+          'ArrowRight',
           // type:dxos.org/type/Organization
           'Filter',
           'TypeFilter',
@@ -166,7 +166,7 @@ describe('query', () => {
           ':',
           'Identifier',
           'Relation',
-          '<=',
+          'ArrowLeft',
           // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
@@ -201,7 +201,7 @@ describe('query', () => {
           '}',
           ')',
           'Relation',
-          '=>',
+          'ArrowRight',
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -260,9 +260,9 @@ describe('query', () => {
       },
     ];
 
-    for (const { input, expected } of tests) {
+    tests.forEach(({ input, expected }) => {
       const query = queryBuilder.build(input);
       expect(query).toEqual(expected);
-    }
+    });
   });
 });
