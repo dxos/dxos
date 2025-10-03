@@ -18,7 +18,7 @@ import {
   useElevationContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { QueryEditor, QuerySerializer, createExpression } from '@dxos/react-ui-components';
+import { QueryEditor } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTheme } from '@dxos/react-ui-theme';
@@ -85,12 +85,11 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const serializedQuery = Match.value(mode).pipe(
       Match.when('schema', () => typenameFromQuery(view.query)),
       Match.when('query', () => {
-        if (view.query.type !== 'select') {
-          return '';
+        if (typeof view.query === 'string') {
+          return view.query;
+        } else {
+          return 'Serializing query AST is not currently supported.';
         }
-
-        const serializer = new QuerySerializer();
-        return serializer.serialize(createExpression(view.query.filter));
       }),
       Match.exhaustive,
     );

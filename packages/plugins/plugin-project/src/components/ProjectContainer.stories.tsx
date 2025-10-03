@@ -8,7 +8,7 @@ import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Query, Ref } from '@dxos/client/echo';
+import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -80,7 +80,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Contacts
             const personView = createView({
               name: 'Contacts',
-              query: Query.select(Filter.type(DataType.Person)),
+              query: 'type:dxos.org/type/Person',
               jsonSchema: Type.toJsonSchema(DataType.Person),
               presentation: project,
             });
@@ -88,7 +88,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Organizations
             const organizationView = createView({
               name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization)),
+              query: 'type:dxos.org/type/Organization',
               jsonSchema: Type.toJsonSchema(DataType.Organization),
               presentation: project,
             });
@@ -96,7 +96,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Tasks
             const taskView = createView({
               name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task)),
+              query: 'type:dxos.org/type/Task',
               jsonSchema: Type.toJsonSchema(DataType.Task),
               presentation: project,
             });
@@ -104,7 +104,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Project-Projects
             const projectView = createView({
               name: 'Projects (not the UI component)',
-              query: Query.select(Filter.type(DataType.Project)),
+              query: 'type:dxos.org/type/Project',
               jsonSchema: Type.toJsonSchema(DataType.Project),
               presentation: project,
             });
@@ -112,7 +112,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Messages
             const messageView = createView({
               name: 'Messages',
-              query: Query.select(Filter.type(DataType.Message)),
+              query: 'type:dxos.org/type/Message',
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,
             });

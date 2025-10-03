@@ -5,7 +5,8 @@
 import { type Schema } from 'effect';
 import React, { useMemo, useState } from 'react';
 
-import { Obj, Query, Type } from '@dxos/echo';
+import { type Obj, Query, Type } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -30,7 +31,17 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
-  const query = view?.query ? Query.fromAst(Obj.getSnapshot(view).query) : Query.select(Filter.nothing());
+  const query = useMemo(() => {
+    if (!view) {
+      return Query.select(Filter.nothing());
+    } else if (typeof view.query === 'string') {
+      const builder = new QueryBuilder();
+      const filter = builder.build(view.query) ?? Filter.nothing();
+      return Query.select(filter);
+    } else {
+      return Query.fromAst(view.query);
+    }
+  }, [view?.query]);
 
   useAsyncEffect(async () => {
     if (!query || !space) {
@@ -48,7 +59,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     [schema, view.projection],
   );
 
-  if (!schema || !view || !view.query) {
+  if (!view) {
     return null;
   }
 

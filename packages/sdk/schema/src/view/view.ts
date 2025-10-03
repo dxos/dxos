@@ -8,6 +8,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { type EchoSchemaRegistry } from '@dxos/echo-db';
+import { QueryBuilder } from '@dxos/echo-query';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -68,10 +69,9 @@ const View_ = Schema.Struct({
 
   /**
    * Query used to retrieve data.
-   * This includes the base type that the view schema (above) references.
-   * It may include predicates that represent a persistent "drill-down" query.
+   * Can be a user-provided query grammar string or a query AST.
    */
-  query: QueryAST.Query,
+  query: Schema.Union(Schema.String, QueryAST.Query),
 
   /**
    * @deprecated Prefer ordering in query.
@@ -96,14 +96,28 @@ export const View: Schema.Schema<View, ViewEncoded> = View_;
 
 /** @deprecated */
 // TODO(wittjosiah): Try to remove. Use full query instead.
-export const typenameFromQuery = (query: QueryAST.Query) =>
-  query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
+export const typenameFromQuery = (query: string | QueryAST.Query) => {
+  let queryAST: QueryAST.Query;
+  if (typeof query === 'string') {
+    const builder = new QueryBuilder();
+    const filter = builder.build(query) ?? Filter.nothing();
+    queryAST = Query.select(filter).ast;
+  } else {
+    queryAST = query;
+  }
+
+  return queryAST.type === 'select'
+    ? queryAST.filter.type === 'object'
+      ? (queryAST.filter.typename?.slice(9) ?? '')
+      : ''
+    : '';
+};
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   name?: string;
-  query: Query.Any;
+  query: string | Query.Any;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -127,7 +141,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: query.ast,
+    query: typeof query === 'string' ? query : query.ast,
     projection: {
       schema: overrideSchema,
       fields: [],

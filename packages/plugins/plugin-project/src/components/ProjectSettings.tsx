@@ -5,12 +5,11 @@
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { log } from '@dxos/log';
+import { Filter, Obj, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
@@ -46,7 +45,16 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
       return;
     }
 
-    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query);
+    let query: QueryAST.Query;
+    if (typeof view.query === 'string') {
+      const builder = new QueryBuilder();
+      const filter = builder.build(view.query) ?? Filter.nothing();
+      query = Query.select(filter).ast;
+    } else {
+      query = view.query;
+    }
+
+    const foundSchema = await resolveSchemaWithClientAndSpace(client, space, query);
     if (foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
@@ -63,27 +71,23 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
         return;
       }
 
-      try {
-        const parser = new QueryParser(newQueryString);
-        // TODO(wittjosiah): When this fails it should show validation errors in the UI.
-        const newQuery = Query.select(createFilter(parser.parse()));
-        view.query = newQuery.ast;
+      view.query = newQueryString;
 
-        const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
-        if (!newSchema) {
-          return;
-        }
-
-        const newView = createView({
-          query: newQuery,
-          jsonSchema: Type.toJsonSchema(newSchema),
-          presentation: Obj.make(Type.Expando, {}),
-        });
-        view.projection = Obj.getSnapshot(newView).projection;
-        setSchema(() => newSchema);
-      } catch (err) {
-        log('Failed to parse query', { err });
+      const builder = new QueryBuilder();
+      const filter = builder.build(newQueryString) ?? Filter.nothing();
+      const newQuery = Query.select(filter);
+      const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
+      if (!newSchema) {
+        return;
       }
+
+      const newView = createView({
+        query: newQueryString,
+        jsonSchema: Type.toJsonSchema(newSchema),
+        presentation: Obj.make(Type.Expando, {}),
+      });
+      view.projection = Obj.getSnapshot(newView).projection;
+      setSchema(() => newSchema);
     },
     [view, schema],
   );
