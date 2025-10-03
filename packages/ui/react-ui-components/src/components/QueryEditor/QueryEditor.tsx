@@ -31,9 +31,16 @@ export type QueryEditorProps = {
   onCancel?: () => void;
 };
 
+<<<<<<< Updated upstream
 /**
  * @param param0 @deprecated
  */
+||||||| Stash base
+// TODO(wittjosiah): Factor out.
+// TODO(thure): Reconcile with `react-ui-query-editor`.
+
+=======
+>>>>>>> Stashed changes
 export const QueryEditor = ({
   space,
   classNames,
