@@ -30,16 +30,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 import {
   type QueryEditorExtensionProps,
-  type QueryItem,
-  type QueryTag,
-  itemIsTag,
-  itemIsText,
   parseQueryItems,
   queryEditor,
   renderItems,
   renderTag,
 } from './query-editor-extension';
 import { QueryEditorItem } from './QueryEditorItem';
+import { type QueryItem, type QueryTag, itemIsTag, itemIsText } from './types';
 
 export type QueryEditorProps = ThemedClassName<{
   initialItems?: QueryItem[];
