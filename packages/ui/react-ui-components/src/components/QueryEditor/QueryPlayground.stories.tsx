@@ -8,8 +8,8 @@ import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-// TODO(burdon): Move.
 // import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';
@@ -49,8 +49,8 @@ const DefaultStory = ({ query: queryParam }: QueryEditorProps) => {
     <div role='none' className='flex flex-col bs-full'>
       <div className='p-4'>
         <QueryEditor
-          classNames='p-2 is-full border border-subduedSeparator rounded-sm'
           ref={viewRef}
+          classNames='p-2 is-full border border-subduedSeparator rounded-sm'
           space={space}
           query={query}
           onQueryUpdate={setQuery}
@@ -59,8 +59,13 @@ const DefaultStory = ({ query: queryParam }: QueryEditorProps) => {
       {/* <D3ForceGraph model={model} /> */}
       <div className='bs-full overflow-y-auto'>
         {objects.map((object) => (
-          <div key={object.id} className='p-2 border-b border-subduedSeparator'>
-            {object.id}
+          <div
+            key={object.id}
+            className='grid grid-cols-3 gap-2 text-sm p-2 border-b border-subduedSeparator overflow-hidden'
+          >
+            <span className='truncate text-xs font-mono'>{object.id}</span>
+            <span className='truncate text-xs font-mono'>{Obj.getTypename(object)}</span>
+            <span className='truncate'>{Obj.getLabel(object)}</span>
           </div>
         ))}
       </div>

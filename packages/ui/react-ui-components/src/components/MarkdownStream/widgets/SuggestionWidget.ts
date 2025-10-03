@@ -19,13 +19,13 @@ export class SuggestionWidget extends WidgetType {
       Domino.of('span')
         // NOTW: Scroll container must have `size-container`.
         .classNames('inline-flex max-is-[100cqi] pie-2')
-        .child(
+        .children(
           Domino.of('button')
             .data('action', 'submit')
             .data('value', this.text)
             .data('density', 'fine')
             .classNames('dx-button max-is-[100cqi] mbs-2 mbe-2 gap-2')
-            .child(
+            .children(
               Domino.of<any>('dx-icon').attr('icon', 'ph--lightning--regular'),
               Domino.of('span').classNames('truncate').text(this.text),
             ),

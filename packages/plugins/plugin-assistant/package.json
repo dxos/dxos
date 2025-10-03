@@ -37,8 +37,6 @@
   ],
   "dependencies": {
     "@codemirror/autocomplete": "^6.19.0",
-    "@codemirror/language": "^6.11.3",
-    "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.4",
     "@dxos/ai": "workspace:*",
@@ -110,8 +108,6 @@
     "@effect/ai-openai": "^0.32.0",
     "@effect/experimental": "0.56.0",
     "@effect/platform-browser": "0.72.0",
-    "@lezer/common": "^1.2.2",
-    "@lezer/highlight": "^1.2.1",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
     "@preact/signals-react": "^3.3.0",

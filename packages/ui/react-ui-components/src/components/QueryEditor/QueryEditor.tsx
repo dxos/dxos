@@ -19,11 +19,6 @@ import { translationKey } from '../../translations';
 
 import { query } from './query-extension';
 
-// TODO(burdon): Reconcile all QueryEditor variants.
-// TODO(burdon): Adjust grammar to support simple queries (e.g., tags).
-//  - Pipeline query editor
-//  - Mailbox search
-
 export type QueryEditorProps = ThemedClassName<
   {
     space?: Space;

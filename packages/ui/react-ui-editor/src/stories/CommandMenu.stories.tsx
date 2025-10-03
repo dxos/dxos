@@ -83,9 +83,11 @@ export const Slash: Story = {
     placeholder: {
       content: () =>
         Domino.of('div')
-          .child(Domino.of('span').text('Press'))
-          .child(Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'))
-          .child(Domino.of('span').text('for commands'))
+          .children(
+            Domino.of('span').text('Press'),
+            Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'),
+            Domino.of('span').text('for commands'),
+          )
           .build(),
     },
     getMenu: (text) => {

@@ -101,7 +101,7 @@ export const MarkdownEditor = ({
         delay: 3_000,
         content: () =>
           Domino.of('div')
-            .child(
+            .children(
               Domino.of('span').text('Press'),
               ...trigger.map((text) =>
                 Domino.of('span')

@@ -51,13 +51,13 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         extensions: [
           createThemeExtensions({ themeMode }),
           createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
-          autocomplete({ onSubmit, onSuggest, onCancel }),
-          references ? referencesExtension({ provider: references.provider }) : [],
           createBasicExtensions({
             bracketMatching: false,
             lineWrapping,
             placeholder,
           }),
+          autocomplete({ onSubmit, onSuggest, onCancel }),
+          references ? referencesExtension({ provider: references.provider }) : [],
           // TODO(thure): Surely this should not be unique to ChatEditor, iirc we have several instances of CM where Tab
           //  should move focus.
           keymap.of([
