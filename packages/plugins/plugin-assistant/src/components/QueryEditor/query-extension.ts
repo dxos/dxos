@@ -324,7 +324,7 @@ const queryHighlightStyle = HighlightStyle.define([
   { tag: t.brace, class: 'text-subdued' },
   { tag: t.squareBracket, class: 'text-subdued' },
   { tag: t.operator, class: 'text-subdued' },
-  { tag: t.paren, class: 'text-yellow-500' },
+  { tag: t.paren, class: 'text-amberText' },
 ]);
 
 type Range = { from: number; to: number };

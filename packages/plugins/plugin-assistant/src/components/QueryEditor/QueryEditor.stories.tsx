@@ -69,9 +69,7 @@ const meta = {
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
-        // TODO(burdon): Clean-up.
-        await client.spaces.waitUntilReady();
-        const space = await client.spaces.default.waitUntilReady();
+        const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([
           { type: DataType.Organization, count: 30 },

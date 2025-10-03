@@ -24,9 +24,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "build:parser": "lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts"
-  },
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/node-std": "workspace:*",

@@ -39,6 +39,8 @@ const initializeClient = async (
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
+      await client.spaces.waitUntilReady();
+      await client.spaces.default.waitUntilReady();
       await onCreateIdentity?.({ client }, context);
     }
   }
@@ -46,6 +48,7 @@ const initializeClient = async (
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
+    await space.waitUntilReady(); // Is this required?
     await onCreateSpace?.({ client, space }, context);
   }
 
