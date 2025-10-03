@@ -28,11 +28,11 @@ const testBuilder = new TestBuilder();
 type PeersInSpaceProps = {
   count?: number;
   types?: TypedObject<any>[];
-  onSpaceCreated?: (props: { space: Space }) => MaybePromise<void>;
+  onCreateSpace?: (props: { space: Space }) => MaybePromise<void>;
 };
 
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
-  const { count = 1, types, onSpaceCreated } = options;
+  const { count = 1, types, onCreateSpace } = options;
   registerSignalsRuntime();
   const clients = [...Array(count)].map(
     (_) => new Client({ services: testBuilder.createLocalClientServices(), types }),
@@ -40,7 +40,7 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
-  await onSpaceCreated?.({ space });
+  await onCreateSpace?.({ space });
   await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
   return { spaceKey: space.key, clients };
 };
@@ -50,7 +50,7 @@ const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
     types: [Markdown.Document, DataType.Text],
-    onSpaceCreated: ({ space }) => {
+    onCreateSpace: ({ space }) => {
       space.db.add(
         Markdown.makeDocument({
           content: '## Type here...\n\ntry the airplane mode switch.',

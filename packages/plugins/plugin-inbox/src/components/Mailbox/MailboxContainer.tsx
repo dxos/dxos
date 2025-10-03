@@ -33,7 +33,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const model = useMailboxModel(mailbox.queue.dxn);
-  // Use the new hook for tag filter visibility management
+  // Use the new hook for tag filter visibility management.
   const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
 
   const setTagFilterVisible = useCallback(

@@ -41,8 +41,8 @@ export const useTagFilterVisibility = () => {
           return;
 
         case 'tag_selected_from_message':
-          // Always set to 'display' when a tag is selected regardless of current state
-          // This fixes the issue where filter doesn't appear after being toggled off
+          // Always set to 'display' when a tag is selected regardless of current state.
+          // This fixes the issue where filter doesn't appear after being toggled off.
           tagFilterVisibility.value = 'display';
           return;
 
