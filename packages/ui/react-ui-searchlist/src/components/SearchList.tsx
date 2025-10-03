@@ -63,10 +63,10 @@ type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
 
 // TODO: Harmonize with other inputs’ `onChange` prop.
 type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onChange'> &
-  Pick<CommandInputPrimitiveProps, 'value' | 'onValueChange' | 'defaultValue'>;
+  Pick<CommandInputPrimitiveProps, 'value' | 'defaultValue' | 'onValueChange'>;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  ({ children, classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+  ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
     // CHORE(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
