@@ -8,13 +8,7 @@ import { Context, Effect, Layer, Record, Schema } from 'effect';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import {
-  DatabaseService,
-  FunctionDefinition,
-  type FunctionImplementationResolver,
-  FunctionInvocationService,
-  FunctionType,
-} from '@dxos/functions';
+import { DatabaseService, FunctionDefinition, FunctionInvocationService, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 /**
