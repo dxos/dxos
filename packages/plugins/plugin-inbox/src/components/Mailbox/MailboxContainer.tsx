@@ -10,8 +10,8 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { QueryEditor, type QueryEditorProps, type QueryItem, itemIsTag } from '@dxos/react-ui-query-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { TagPicker } from '@dxos/react-ui-tag-picker';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxAction, type Mailbox } from '../../types';
@@ -19,7 +19,7 @@ import { InboxAction, type Mailbox } from '../../types';
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { useMailboxModel } from './model';
-import { useMailboxToolbarActions, useTagFilterVisibility, useTagPickerFocusRef } from './toolbar';
+import { useMailboxToolbarActions, useQueryEditorFocusRef, useTagFilterVisibility } from './toolbar';
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
@@ -47,7 +47,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   );
   const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
 
-  const tagPickerFocusRef = useTagPickerFocusRef(tagFilterState);
+  const queryEditorFocusRef = useQueryEditorFocusRef(tagFilterState);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -83,23 +83,27 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     [id, dispatch, model.messages, model, filterDispatch],
   );
 
-  const onTagPickerUpdate = useCallback(
-    (ids: string[]) => {
+  const handleQueryEditorChange = useCallback(
+    (items: QueryItem[]) => {
       model.clearSelectedTags();
-      for (const id of ids) {
-        model.selectTag(id);
-      }
+      const labels = items.filter(itemIsTag).map(({ label }) => label);
+      labels.forEach((label) => model.selectTag(label));
 
-      if (ids.length === 0) {
+      if (labels.length === 0) {
         filterDispatch('all_tags_cleared');
       }
     },
-    [model, filterDispatch],
+    [model.selectTag, filterDispatch],
   );
 
-  const tagPickerCurrentItems = useMemo(() => {
-    return model.selectedTags.map((tag) => ({ ...tag, id: tag.label, hue: tag.hue }) as any);
-  }, [model.selectedTags]);
+  const handleSearch = useCallback<NonNullable<QueryEditorProps['onSearch']>>(
+    (text, ids) =>
+      model.availableTags
+        .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
+        .filter((tag) => !ids.includes(tag.label))
+        .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any })),
+    [model.availableTags],
+  );
 
   const gridLayout = useMemo(
     () =>
@@ -120,17 +124,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       {tagFilterVisible.value && (
         <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
           <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
-          <TagPicker
-            ref={tagPickerFocusRef}
-            items={tagPickerCurrentItems}
-            onUpdate={onTagPickerUpdate}
-            onSearch={(text, ids) =>
-              model.availableTags
-                .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
-                .filter((tag) => !ids.includes(tag.label))
-                .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any }))
-            }
-          />
+          <QueryEditor ref={queryEditorFocusRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
         </div>
       )}
 

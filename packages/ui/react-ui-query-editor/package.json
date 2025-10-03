@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-tag-picker",
+  "name": "@dxos/react-ui-query-editor",
   "version": "0.8.3",
   "description": "A tag picker component.",
   "homepage": "https://dxos.org",
@@ -36,6 +36,7 @@
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-compose-refs": "1.1.1",
+    "@storybook/test": "^8.6.14",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
