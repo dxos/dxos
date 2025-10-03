@@ -71,7 +71,7 @@ export const makeToolExecutionServiceFromFunctions = (
       return {
         handlersFor: (toolkit) => {
           const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
-            return Effect.fn('toolFunctionHandler')(function* (input: any) {
+            return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: any) {
               if (toolkitHandler.tools[tool.name]) {
                 if (Tool.isProviderDefined(tool)) {
                   throw new Error('Attempted to call a provider-defined tool');

@@ -68,7 +68,7 @@ export const getSchemaProperties = <T extends BaseObject>(
     const name = prop.name.toString() as PropertyKey<T>;
     // TODO(burdon): Handle special case?
     const identifier = SchemaAST.getAnnotation(prop.type, SchemaAST.IdentifierAnnotationId).pipe(Option.getOrUndefined);
-    if (name === 'id' && identifier !== false && !includeId) {
+    if (name === 'id' && identifier !== 'false' && !includeId) {
       return props;
     }
 
