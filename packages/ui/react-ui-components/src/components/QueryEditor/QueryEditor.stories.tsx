@@ -40,15 +40,24 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const classNames = 'is-[50rem] p-2 border border-subduedSeparator rounded-sm';
+
 export const Default: Story = {
   args: {
-    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
-    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 }',
+    classNames,
+    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 } AND #foo',
+  },
+};
+
+export const Tags: Story = {
+  args: {
+    classNames,
+    query: '#foo #bar',
   },
 };
 
 export const Empty: Story = {
   args: {
-    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
+    classNames,
   },
 };
