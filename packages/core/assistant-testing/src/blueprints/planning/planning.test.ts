@@ -113,7 +113,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationService.layerTest({ functions: [readTasks, updateTasks] }).pipe(
+            FunctionInvocationService.layerTestMocked({ functions: [readTasks, updateTasks] }).pipe(
               Layer.provideMerge(ComputeEventLogger.layerFromTracing),
               Layer.provideMerge(TracingService.layerNoop),
             ),

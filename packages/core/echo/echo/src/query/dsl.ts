@@ -242,10 +242,8 @@ interface FilterAPI {
 
   /**
    * Filter by properties.
-   *
-   * INTERNAL API: Do not use.
    */
-  _props<T>(props: Filter.Props<T>): Filter<T>;
+  props<T>(props: Filter.Props<T>): Filter<T>;
 
   /**
    * Full-text or vector search.
@@ -430,10 +428,7 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  /**
-   * @internal
-   */
-  static _props<T>(props: Filter.Props<T>): Filter<T> {
+  static props<T>(props: Filter.Props<T>): Filter<T> {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -675,7 +670,7 @@ class QueryClass implements Query<any> {
       return new QueryClass({
         type: 'filter',
         selection: this.ast,
-        filter: FilterClass._props(filter).ast,
+        filter: FilterClass.props(filter).ast,
       });
     }
   }

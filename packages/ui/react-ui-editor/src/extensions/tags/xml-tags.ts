@@ -3,7 +3,14 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import {
+  type EditorState,
+  type Extension,
+  RangeSetBuilder,
+  StateEffect,
+  StateField,
+  Transaction,
+} from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type ComponentType, type FC } from 'react';
 
@@ -51,6 +58,11 @@ export type XmlWidgetDef = {
 };
 
 export type XmlWidgetRegistry = Record<string, XmlWidgetDef>;
+
+export const getXmlTextChild = (children: any[]): string | null => {
+  const child = children?.[0];
+  return typeof child === 'string' ? child : null;
+};
 
 /**
  * Update context.
@@ -149,6 +161,52 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
         if (effect.is(xmlTagResetEffect)) {
           return { from: 0, decorations: Decoration.none };
         }
+      }
+
+      // Check if user pressed Backspace or Delete and remove adjacent decorations if present.
+      const userEvent = tr.annotation(Transaction.userEvent);
+      if (userEvent === 'delete.backward' || userEvent === 'delete.forward') {
+        const { state } = tr;
+        const decorationArray = decorationSetToArray(decorations);
+        const filteredDecorations = [];
+
+        // Get cursor position after the change.
+        const cursorPos = state.selection.main.head;
+
+        for (const range of decorationArray) {
+          let shouldKeep = true;
+
+          // For Backspace (delete.backward), check if decoration is immediately after cursor.
+          if (userEvent === 'delete.backward' && range.from === cursorPos) {
+            shouldKeep = false;
+          }
+
+          // For Delete (delete.forward), check if decoration is immediately before cursor.
+          if (userEvent === 'delete.forward' && range.to === cursorPos) {
+            shouldKeep = false;
+          }
+
+          if (shouldKeep) {
+            // Map the decoration position through the transaction changes.
+            const mappedFrom = tr.changes.mapPos(range.from, -1);
+            const mappedTo = tr.changes.mapPos(range.to, 1);
+
+            // Only keep the decoration if mapping was successful and positions are valid.
+            if (mappedFrom >= 0 && mappedTo >= mappedFrom && mappedTo <= state.doc.length) {
+              filteredDecorations.push({
+                from: mappedFrom,
+                to: mappedTo,
+                value: range.value,
+              });
+            }
+          }
+        }
+
+        // Return updated decorations with adjacent ones removed and positions mapped.
+        return {
+          from,
+          decorations: Decoration.set(filteredDecorations),
+        };
       }
 
       if (tr.docChanged) {

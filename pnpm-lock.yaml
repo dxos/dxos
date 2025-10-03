@@ -144,7 +144,7 @@ importers:
         specifier: ^10.4.1
         version: 10.4.1
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
       '@testing-library/react':
         specifier: ^16.3.0
@@ -445,16 +445,16 @@ importers:
     dependencies:
       '@astrojs/starlight':
         specifier: ^0.32.5
-        version: 0.32.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+        version: 0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       astro:
-        specifier: ^5.5.3
-        version: 5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+        specifier: ^5.13.1
+        version: 5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       sharp:
         specifier: ^0.32.5
         version: 0.32.6
       starlight-links-validator:
         specifier: ^0.14.3
-        version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)))
+        version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)))
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -478,8 +478,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/sdk/react-client
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
 
   packages/apps/composer-app:
     dependencies:
@@ -755,7 +755,7 @@ importers:
         specifier: ^4.0.2
         version: 4.3.0(encoding@0.1.13)
       '@tauri-apps/cli':
-        specifier: ^2.8.3
+        specifier: ^2.8.4
         version: 2.8.4
       '@types/jsdom':
         specifier: ^21.1.7
@@ -1410,8 +1410,8 @@ importers:
         specifier: ^4.6.1
         version: 4.6.1
       race-as-promised:
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       streamx:
         specifier: ^2.12.5
         version: 2.15.6
@@ -1454,8 +1454,8 @@ importers:
         specifier: workspace:*
         version: link:../util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -1653,8 +1653,8 @@ importers:
         specifier: workspace:*
         version: link:../util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -2227,8 +2227,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-openai':
         specifier: 0.32.0
         version: 0.32.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -2239,11 +2239,17 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: ^0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
+      json-stable-stringify:
+        specifier: ^1.3.0
+        version: 1.3.0
       parjs:
         specifier: ^1.3.9
         version: 1.3.9
@@ -2327,8 +2333,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/experimental':
         specifier: 0.56.0
         version: 0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)
@@ -2336,11 +2342,11 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: ^0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
@@ -2433,8 +2439,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: 0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/experimental':
         specifier: 0.56.0
         version: 0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)
@@ -2455,8 +2461,8 @@ importers:
         specifier: 0.46.0
         version: 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/workflow':
-        specifier: 0.11.2
-        version: 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.11.3
+        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -2561,8 +2567,8 @@ importers:
         specifier: workspace:*
         version: link:../../../vendor/hyperformula
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -2652,8 +2658,8 @@ importers:
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.1)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -2706,8 +2712,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -2800,8 +2806,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/test-utils
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@types/lodash.isequal':
         specifier: ^4.5.0
         version: 4.5.6
@@ -3002,12 +3008,24 @@ importers:
 
   packages/core/echo/echo-query:
     dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@lezer/common':
+        specifier: ^1.2.2
+        version: 1.2.2
+      '@lezer/lezer':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@lezer/lr':
+        specifier: ^1.4.2
+        version: 1.4.2
       '@orama/orama':
         specifier: ^3.1.7
         version: 3.1.7
@@ -3018,6 +3036,9 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
+      '@lezer/generator':
+        specifier: ^1.7.1
+        version: 1.7.1
 
   packages/core/echo/echo-schema:
     dependencies:
@@ -3049,8 +3070,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -3058,14 +3079,14 @@ importers:
   packages/core/echo/echo-signals:
     dependencies:
       '@preact/signals':
-        specifier: ^2.2.1
-        version: 2.2.1(preact@10.26.9)
+        specifier: ^2.3.1
+        version: 2.3.1(preact@10.26.9)
       '@preact/signals-core':
-        specifier: ^1.11.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.2.1
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
     optionalDependencies:
       preact:
         specifier: ^10.26.9
@@ -3183,8 +3204,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -3267,8 +3288,8 @@ importers:
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.1)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       cron:
         specifier: ^3.1.6
         version: 3.1.6
@@ -3346,12 +3367,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       json-stable-stringify:
-        specifier: ^1.0.1
-        version: 1.0.1
-    devDependencies:
-      '@types/json-stable-stringify':
-        specifier: ^1.0.32
-        version: 1.0.34
+        specifier: ^1.3.0
+        version: 1.3.0
 
   packages/core/halo/keyring:
     dependencies:
@@ -4534,14 +4551,14 @@ importers:
         specifier: 0.71.0
         version: 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/cluster':
-        specifier: 0.50.2
-        version: 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.50.3
+        version: 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: 0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/printer':
         specifier: 0.46.0
         version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1)
@@ -4558,8 +4575,8 @@ importers:
         specifier: 0.37.0
         version: 0.37.0(effect@3.18.1)
       '@effect/workflow':
-        specifier: 0.11.2
-        version: 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.11.3
+        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -5410,8 +5427,8 @@ importers:
   packages/plugins/plugin-assistant:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/language':
         specifier: ^6.11.3
         version: 6.11.3
@@ -5422,8 +5439,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -5472,6 +5489,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -5589,6 +5609,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../../ui/react-ui-searchlist
@@ -5604,9 +5627,6 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tag-picker
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -5617,8 +5637,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-openai':
         specifier: ^0.32.0
         version: 0.32.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -5628,21 +5648,21 @@ importers:
       '@effect/platform-browser':
         specifier: 0.72.0
         version: 0.72.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+      '@lezer/common':
+        specifier: ^1.2.2
+        version: 1.2.2
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
-      '@lezer/markdown':
-        specifier: ^1.3.1
-        version: 1.3.1
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -5759,8 +5779,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -5856,8 +5876,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -5968,11 +5988,11 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -6080,8 +6100,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       chess.js:
         specifier: ^1.0.0
         version: 1.2.0
@@ -6174,8 +6194,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       react-qr-rounded:
         specifier: ^1.0.0
         version: 1.0.0(react@19.2.0)
@@ -6458,8 +6478,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@tldraw/tldraw':
         specifier: ^3.0.0
         version: 3.0.0(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -6600,8 +6620,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -6712,8 +6732,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -6824,8 +6844,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -6951,8 +6971,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7238,15 +7258,15 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-query-editor
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-tag-picker
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -7263,11 +7283,11 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -7399,8 +7419,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -7517,8 +7537,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -7563,8 +7583,8 @@ importers:
         specifier: ^6.5.11
         version: 6.5.11
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -7665,8 +7685,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       react-dropzone:
         specifier: ^14.2.3
         version: 14.2.3(react@19.2.0)
@@ -7840,8 +7860,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -7904,8 +7924,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7921,12 +7941,9 @@ importers:
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
-      effect:
-        specifier: 3.18.1
-        version: 3.18.1
       mermaid:
-        specifier: ^10.6.1
-        version: 10.6.1
+        specifier: ^10.9.4
+        version: 10.9.4
     devDependencies:
       '@dxos/echo-schema':
         specifier: workspace:*
@@ -7946,6 +7963,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.0
         version: 19.2.0(@types/react@19.2.0)
+      effect:
+        specifier: 3.18.1
+        version: 3.18.1
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7983,17 +8003,17 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       '@tauri-apps/api':
-        specifier: ^2.3.0
-        version: 2.7.0
+        specifier: ^2.8.0
+        version: 2.8.0
       '@tauri-apps/plugin-os':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.3.1
+        version: 2.3.1
       '@tauri-apps/plugin-process':
         specifier: ^2.3.0
         version: 2.3.0
       '@tauri-apps/plugin-shell':
-        specifier: ^2.3.0
-        version: 2.3.0
+        specifier: ^2.3.1
+        version: 2.3.1
       '@tauri-apps/plugin-updater':
         specifier: ^2.9.0
         version: 2.9.0
@@ -8092,8 +8112,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-dismissable-layer':
         specifier: 1.1.5
         version: 1.1.5(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -8213,8 +8233,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -8253,8 +8273,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -8319,8 +8339,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -8416,8 +8436,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       hastscript:
         specifier: ^7.1.0
         version: 7.1.0
@@ -8646,8 +8666,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -8826,8 +8846,8 @@ importers:
   packages/plugins/plugin-script:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/lang-javascript':
         specifier: ^6.2.4
         version: 6.2.4
@@ -8844,8 +8864,8 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -8985,17 +9005,17 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@typescript/vfs':
         specifier: ^1.6.0
         version: 1.6.0(typescript@5.9.3)
       '@valtown/codemirror-continue':
         specifier: ^2.3.1
-        version: 2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)(@lezer/common@1.2.2)
+        version: 2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)(@lezer/common@1.2.2)
       '@valtown/codemirror-ts':
         specifier: ^2.2.0
-        version: 2.2.0(@codemirror/autocomplete@6.18.7)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.2)
+        version: 2.2.0(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.4)
       codemirror:
         specifier: ^6.0.1
         version: 6.0.1
@@ -9167,8 +9187,8 @@ importers:
   packages/plugins/plugin-sheet:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/language':
         specifier: ^6.11.3
         version: 6.11.3
@@ -9176,8 +9196,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dnd-kit/core':
         specifier: ^6.0.5
         version: 6.0.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -9311,8 +9331,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -9468,8 +9488,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@tldraw/assets':
         specifier: ^3.0.0
         version: 3.0.0
@@ -9658,8 +9678,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       jszip:
         specifier: ^3.10.1
         version: 3.10.1
@@ -9776,8 +9796,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-collapsible':
         specifier: 1.1.3
         version: 1.1.3(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -9852,8 +9872,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-slot':
         specifier: 1.1.2
         version: 1.1.2(@types/react@19.2.0)(react@19.2.0)
@@ -10074,8 +10094,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -10233,8 +10253,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10356,8 +10376,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -10514,8 +10534,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -10634,8 +10654,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -10767,8 +10787,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -10816,8 +10836,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10994,8 +11014,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
     devDependencies:
       '@dxos/echo-signals':
         specifier: workspace:*
@@ -11061,8 +11081,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       main-thread-scheduling:
         specifier: ^14.1.1
         version: 14.2.0
@@ -11680,8 +11700,8 @@ importers:
         specifier: ^1.25.1
         version: 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions':
-        specifier: ^1.25.0
-        version: 1.34.0
+        specifier: ^1.36.0
+        version: 1.37.0
       '@segment/analytics-node':
         specifier: ^2.1.0
         version: 2.1.0(encoding@0.1.13)
@@ -11900,8 +11920,8 @@ importers:
         specifier: ^0.75.5
         version: 0.75.5(effect@3.18.1)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -12487,8 +12507,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/primitive':
         specifier: 1.1.1
         version: 1.1.1
@@ -12593,8 +12613,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -12663,8 +12683,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -12893,8 +12913,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
@@ -12938,8 +12958,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -13005,8 +13025,8 @@ importers:
   packages/ui/react-ui-chat:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/language':
         specifier: ^6.11.3
         version: 6.11.3
@@ -13017,8 +13037,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13074,8 +13094,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-accordion':
         specifier: 1.2.3
         version: 1.2.3(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -13120,8 +13140,8 @@ importers:
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -13183,8 +13203,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: ^1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -13278,8 +13298,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/commands':
         specifier: ^6.8.1
         version: 6.8.1
@@ -13314,8 +13334,8 @@ importers:
         specifier: ^6.1.3
         version: 6.1.3
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -13383,8 +13403,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -13393,10 +13413,10 @@ importers:
         version: 1.1.0(@types/react@19.2.0)(react@19.2.0)
       '@replit/codemirror-vim':
         specifier: ^6.2.1
-        version: 6.2.1(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)
+        version: 6.2.1(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)
       '@replit/codemirror-vscode-keymap':
         specifier: ^6.0.2
-        version: 6.0.2(@codemirror/autocomplete@6.18.7)(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)
+        version: 6.0.2(@codemirror/autocomplete@6.19.0)(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -13584,15 +13604,15 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../react-ui-tag-picker
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -13691,8 +13711,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -13882,8 +13902,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       d3:
         specifier: ^7.9.0
         version: 7.9.0
@@ -13959,14 +13979,14 @@ importers:
   packages/ui/react-ui-grid:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/lit-grid':
         specifier: workspace:*
         version: link:../lit-grid
@@ -14074,8 +14094,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
     devDependencies:
       '@dxos/plugin-search':
         specifier: workspace:*
@@ -14159,8 +14179,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-accordion':
         specifier: 1.2.3
         version: 1.2.3(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -14214,8 +14234,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.2.1(react@19.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -14286,6 +14306,76 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: 1.1.0
         version: 1.1.0(@types/react@19.2.0)(react@19.2.0)
+      react-resize-detector:
+        specifier: ^11.0.1
+        version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.0
+        version: 19.2.0
+      '@types/react-dom':
+        specifier: ~19.2.0
+        version: 19.2.0(@types/react@19.2.0)
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+      vite:
+        specifier: 7.1.7
+        version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
+
+  packages/ui/react-ui-query-editor:
+    dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.19.0
+        version: 6.19.0
+      '@codemirror/lang-markdown':
+        specifier: ^6.3.4
+        version: 6.3.4
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
+      '@codemirror/search':
+        specifier: ^6.5.11
+        version: 6.5.11
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
+      '@codemirror/view':
+        specifier: ^6.38.4
+        version: 6.38.4
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../react-ui-editor
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
+      '@radix-ui/react-compose-refs':
+        specifier: 1.1.1
+        version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
+      '@storybook/test':
+        specifier: ^8.6.14
+        version: 8.6.14(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -14604,14 +14694,14 @@ importers:
   packages/ui/react-ui-table:
     dependencies:
       '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
+        specifier: ^6.19.0
+        version: 6.19.0
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
       '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
+        specifier: ^6.38.4
+        version: 6.38.4
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -14672,6 +14762,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
+      '@dxos/react-ui-query-editor':
+        specifier: workspace:*
+        version: link:../react-ui-query-editor
       '@dxos/react-ui-searchlist':
         specifier: workspace:*
         version: link:../react-ui-searchlist
@@ -14681,9 +14774,6 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
-      '@dxos/react-ui-tag-picker':
-        specifier: workspace:*
-        version: link:../react-ui-tag-picker
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -14700,8 +14790,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-core':
-        specifier: ^1.9.0
-        version: 1.11.0
+        specifier: ^1.12.1
+        version: 1.12.1
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
@@ -14803,73 +14893,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@types/react':
-        specifier: ~19.2.0
-        version: 19.2.0
-      '@types/react-dom':
-        specifier: ~19.2.0
-        version: 19.2.0(@types/react@19.2.0)
-      react:
-        specifier: ~19.2.0
-        version: 19.2.0
-      react-dom:
-        specifier: ~19.2.0
-        version: 19.2.0(react@19.2.0)
-      vite:
-        specifier: 7.1.7
-        version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
-
-  packages/ui/react-ui-tag-picker:
-    dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.7
-        version: 6.18.7
-      '@codemirror/lang-markdown':
-        specifier: ^6.3.4
-        version: 6.3.4
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
-      '@codemirror/search':
-        specifier: ^6.5.11
-        version: 6.5.11
-      '@codemirror/state':
-        specifier: ^6.5.2
-        version: 6.5.2
-      '@codemirror/view':
-        specifier: ^6.38.2
-        version: 6.38.2
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../lit-ui
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../react-ui-editor
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@preact-signals/safe-react':
-        specifier: ^0.9.0
-        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
-      '@radix-ui/react-compose-refs':
-        specifier: 1.1.1
-        version: 1.1.1(@types/react@19.2.0)(react@19.2.0)
-      react-resize-detector:
-        specifier: ^11.0.1
-        version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-    devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
@@ -15585,14 +15608,20 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@astrojs/compiler@2.12.0':
-    resolution: {integrity: sha512-7bCjW6tVDpUurQLeKBUN9tZ5kSv5qYrGmcn0sG0IwacL7isR2ZbyyA3AdZ4uxsuUFOS2SlgReTH7wkxO6zpqWA==}
+  '@astrojs/compiler@2.13.0':
+    resolution: {integrity: sha512-mqVORhUJViA28fwHYaWmsXSzLO9osbdZ5ImUfxBarqsYdMlPbqAqGJCxsNzvppp1BEzc1mJNjOVvQqeDN8Vspw==}
 
   '@astrojs/internal-helpers@0.6.1':
     resolution: {integrity: sha512-l5Pqf6uZu31aG+3Lv8nl/3s4DbUzdlxTWDof4pEpto6GUJNhhCbelVi9dEyurOVyqaelwmS9oSyOWOENSfgo9A==}
 
+  '@astrojs/internal-helpers@0.7.3':
+    resolution: {integrity: sha512-6Pl0bQEIChuW5wqN7jdKrzWfCscW2rG/Cz+fzt4PhSQX2ivBpnhXgFUCs0M3DCYvjYHnPVG2W36X5rmFjZ62sw==}
+
   '@astrojs/markdown-remark@6.3.1':
     resolution: {integrity: sha512-c5F5gGrkczUaTVgmMW9g1YMJGzOtRvjjhw6IfGuxarM6ct09MpwysP10US729dy07gg8y+ofVifezvP3BNsWZg==}
+
+  '@astrojs/markdown-remark@6.3.7':
+    resolution: {integrity: sha512-KXGdq6/BC18doBCYXp08alHlWChH0hdD2B1qv9wIyOHbvwI5K6I7FhSta8dq1hBQNdun8YkKPR013D/Hm8xd0g==}
 
   '@astrojs/mdx@4.2.6':
     resolution: {integrity: sha512-0i/GmOm6d0qq1/SCfcUgY/IjDc/bS0i42u7h85TkPFBmlFOcBZfkYhR5iyz6hZLwidvJOEq5yGfzt9B1Azku4w==}
@@ -15604,6 +15633,10 @@ packages:
     resolution: {integrity: sha512-GilTHKGCW6HMq7y3BUv9Ac7GMe/MO9gi9GW62GzKtth0SwukCu/qp2wLiGpEujhY+VVhaG9v7kv/5vFzvf4NYw==}
     engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
 
+  '@astrojs/prism@3.3.0':
+    resolution: {integrity: sha512-q8VwfU/fDZNoDOf+r7jUnMC2//H2l0TuQ6FkGJL8vD8nw/q5KiL3DS1KKBI3QhI9UQhpJ5dc7AtqfbXWuOgLCQ==}
+    engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
+
   '@astrojs/sitemap@3.4.0':
     resolution: {integrity: sha512-C5m/xsKvRSILKM3hy47n5wKtTQtJXn8epoYuUmCCstaE9XBt20yInym3Bz2uNbEiNfv11bokoW0MqeXPIvjFIQ==}
 
@@ -15612,9 +15645,9 @@ packages:
     peerDependencies:
       astro: ^5.1.5
 
-  '@astrojs/telemetry@3.2.1':
-    resolution: {integrity: sha512-SSVM820Jqc6wjsn7qYfV9qfeQvePtVc1nSofhyap7l0/iakUKywj3hfy3UJAOV4sGV4Q/u450RD4AaCaFvNPlg==}
-    engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0}
+  '@astrojs/telemetry@3.3.0':
+    resolution: {integrity: sha512-UFBgfeldP06qu6khs/yY+q1cDAaArM2/7AEIqQ9Cuvf7B1hNLq0xDrZkct+QoIGyjq56y8IaE2I3CTvG99mlhQ==}
+    engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
 
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll@2.1.0':
     resolution: {integrity: sha512-E52y8/0BTTf4ai6BJyFYgdVHFgQ1AES33KvAVQpZ41jMkoukLIq6UoCudOXku7xs3qoPygQdpC+vitVUuEFJXw==}
@@ -16746,8 +16779,8 @@ packages:
   '@cloudflare/workers-types@4.20250909.0':
     resolution: {integrity: sha512-3WvDDOvFGOAlBUZpWe2N+9BxB1kRt9eHo3AhIKg1fihNdqrGxyh9cJe1MpYs5BI8gXSRxjkDvzPVebRED8iwOQ==}
 
-  '@codemirror/autocomplete@6.18.7':
-    resolution: {integrity: sha512-8EzdeIoWPJDsMBwz3zdzwXnUpCzMiCyz5/A3FIPpriaclFCGDkAzK13sMcnsu5rowqiyeQN2Vs2TsOcoDPZirQ==}
+  '@codemirror/autocomplete@6.19.0':
+    resolution: {integrity: sha512-61Hfv3cF07XvUxNeC3E7jhG8XNi1Yom1G0lRC936oLnlF+jrbrv8rc/J98XlYzcsAoTVupfsf5fLej1aI8kyIg==}
 
   '@codemirror/commands@6.6.2':
     resolution: {integrity: sha512-Fq7eWOl1Rcbrfn6jD8FPCj9Auaxdm5nIK5RYOeW7ughnd/rY5AmPg6b+CfsG39ZHdwiwe8lde3q8uR7CF5S0yQ==}
@@ -16836,8 +16869,8 @@ packages:
   '@codemirror/theme-one-dark@6.1.3':
     resolution: {integrity: sha512-NzBdIvEJmx6fjeremiGp3t/okrLPYT0d9orIc7AFun8oZcRk58aejkqhv6spnz4MLAevrKNPMQYXEWMg4s+sKA==}
 
-  '@codemirror/view@6.38.2':
-    resolution: {integrity: sha512-bTWAJxL6EOFLPzTx+O5P5xAO3gTqpatQ2b/ARQ8itfU/v2LlpS3pH2fkL0A3E/Fx8Y2St2KES7ZEV0sHTsSW/A==}
+  '@codemirror/view@6.38.4':
+    resolution: {integrity: sha512-hduz0suCcUSC/kM8Fq3A9iLwInJDl8fD1xLpTIk+5xkNm8z/FT7UsIa9sOXrkpChh+XXc18RzswE8QqELsVl+g==}
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -16961,13 +16994,13 @@ packages:
       '@effect/platform': '*'
       effect: ^3.17.0
 
-  '@effect/ai-anthropic@0.19.0':
-    resolution: {integrity: sha512-RoxaDcuu/a0F54mHXllDbblxNJJc2A8ebGh07xt91Rr19xPZ61D2cKUG43H8dccCzv02JDp0ibZp/AzkJRuLPw==}
+  '@effect/ai-anthropic@0.19.1':
+    resolution: {integrity: sha512-2D2XMyKJyaPARrJggeE7rUDpxMlEQh9qP1rTK1ErrHmwrKh/xQfDx3yAoULEXLFx3bbxXL7jlkBlfbH74fk8IQ==}
     peerDependencies:
-      '@effect/ai': ^0.29.0
+      '@effect/ai': ^0.29.1
       '@effect/experimental': ^0.56.0
-      '@effect/platform': ^0.92.0
-      effect: ^3.18.0
+      '@effect/platform': ^0.92.1
+      effect: ^3.18.1
 
   '@effect/ai-openai@0.32.0':
     resolution: {integrity: sha512-o+U7arjXrcLByZ+P2vbCfr7ldCs5xYTPUw8mAwXXXKy9EaqXh348Wh26rmrld/+zaHhzd1+oePZmtYlpLjio2g==}
@@ -16993,13 +17026,13 @@ packages:
       '@effect/printer-ansi': ^0.46.0
       effect: ^3.18.0
 
-  '@effect/cluster@0.50.2':
-    resolution: {integrity: sha512-SYo60OFAQujP+JvpR5vOvXOKZDsTh90nKhSpa0wz++zLFYGszYpbHQQWqep+6h4gtZyNZUM9zOWzt886lNx6kQ==}
+  '@effect/cluster@0.50.3':
+    resolution: {integrity: sha512-xh6okxbkvVzjJXnDEsL/byEsVEYiOhqKUAEugwCnH6yNKnT6VWK8GMyHuL9Tlbex2X9soiMxUSWbreqErrzlqQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
-      '@effect/workflow': ^0.11.2
+      '@effect/workflow': ^0.11.3
       effect: ^3.18.1
 
   '@effect/experimental@0.56.0':
@@ -17025,19 +17058,19 @@ packages:
       '@effect/platform': ^0.92.0
       effect: ^3.18.0
 
-  '@effect/platform-node-shared@0.51.2':
-    resolution: {integrity: sha512-PoAFWnjYAC4w8Enuc5aWgqk7ZQXmUxKjRhhLynqwxTtmEG4ZZmHq7aB7iZ63VcqB0wWA/h5pXizT3jz+qhELGw==}
+  '@effect/platform-node-shared@0.51.3':
+    resolution: {integrity: sha512-1NtCP06RFAnqTgBUF5YXuVGwoW396DKhaZutaWfiZMRlODda0t/iTRYq2CHUlvOGG8x/ZvLtJrC+EQXJEywDWQ==}
     peerDependencies:
-      '@effect/cluster': ^0.50.2
+      '@effect/cluster': ^0.50.3
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
       effect: ^3.18.1
 
-  '@effect/platform-node@0.98.2':
-    resolution: {integrity: sha512-CCPdb8vU427L+HZTlE7Spr8+QIJzVT4vwCRSMJlYvEPwdHaq5xtN0CBPuodG/nxgvWO1vzX9DCzn93m1a1rBtg==}
+  '@effect/platform-node@0.98.3':
+    resolution: {integrity: sha512-90eMWmFSVHrUEreICCd2qLPiw7qcaAv9XTx9OJ+LLv7igQgt4qkisRSK0oxAr5hqU9TdUrsgFDohqe7q7h3ZRg==}
     peerDependencies:
-      '@effect/cluster': ^0.50.2
+      '@effect/cluster': ^0.50.3
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
@@ -17090,8 +17123,8 @@ packages:
       effect: ^3.18.0
       vitest: ^3.2.0
 
-  '@effect/workflow@0.11.2':
-    resolution: {integrity: sha512-/21L7HTc5fFxtBBvmTSEx2toWDvtqMORYkpAKxVwZkzTdUuVHwggzGWY4n2obWrgBnYMhCvvIf18KeSa1GVA5A==}
+  '@effect/workflow@0.11.3':
+    resolution: {integrity: sha512-3uyj0yOc2QRtQVOw6NEJVEMOhN/F7khhnf3QSU+2T3wvuDag9iBUzJFvSls8PgNCO3j/GgeaWzbcXwxqpFQYOQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
@@ -17170,12 +17203,6 @@ packages:
     cpu: [ppc64]
     os: [aix]
 
-  '@esbuild/aix-ppc64@0.25.6':
-    resolution: {integrity: sha512-ShbM/3XxwuxjFiuVBHA+d3j5dyac0aEVVq1oluIDf71hUw0aRF59dV/efUsIwFnR6m8JNM2FjZOzmaZ8yG61kw==}
-    engines: {node: '>=18'}
-    cpu: [ppc64]
-    os: [aix]
-
   '@esbuild/android-arm64@0.17.19':
     resolution: {integrity: sha512-KBMWvEZooR7+kzY0BtbTQn0OAYY7CsiydT63pVEaPtVYF0hXbUaOyZog37DKxK7NF3XacBJOpYT4adIJh+avxA==}
     engines: {node: '>=12'}
@@ -17196,12 +17223,6 @@ packages:
 
   '@esbuild/android-arm64@0.25.4':
     resolution: {integrity: sha512-bBy69pgfhMGtCnwpC/x5QhfxAz/cBgQ9enbtwjf6V9lnPI/hMyT9iWpR1arm0l3kttTr4L0KSLpKmLp/ilKS9A==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [android]
-
-  '@esbuild/android-arm64@0.25.6':
-    resolution: {integrity: sha512-hd5zdUarsK6strW+3Wxi5qWws+rJhCCbMiC9QZyzoxfk5uHRIE8T287giQxzVpEvCwuJ9Qjg6bEjcRJcgfLqoA==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [android]
@@ -17230,12 +17251,6 @@ packages:
     cpu: [arm]
     os: [android]
 
-  '@esbuild/android-arm@0.25.6':
-    resolution: {integrity: sha512-S8ToEOVfg++AU/bHwdksHNnyLyVM+eMVAOf6yRKFitnwnbwwPNqKr3srzFRe7nzV69RQKb5DgchIX5pt3L53xg==}
-    engines: {node: '>=18'}
-    cpu: [arm]
-    os: [android]
-
   '@esbuild/android-x64@0.17.19':
     resolution: {integrity: sha512-uUTTc4xGNDT7YSArp/zbtmbhO0uEEK9/ETW29Wk1thYUJBz3IVnvgEiEwEa9IeLyvnpKrWK64Utw2bgUmDveww==}
     engines: {node: '>=12'}
@@ -17256,12 +17271,6 @@ packages:
 
   '@esbuild/android-x64@0.25.4':
     resolution: {integrity: sha512-TVhdVtQIFuVpIIR282btcGC2oGQoSfZfmBdTip2anCaVYcqWlZXGcdcKIUklfX2wj0JklNYgz39OBqh2cqXvcQ==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [android]
-
-  '@esbuild/android-x64@0.25.6':
-    resolution: {integrity: sha512-0Z7KpHSr3VBIO9A/1wcT3NTy7EB4oNC4upJ5ye3R7taCc2GUdeynSLArnon5G8scPwaU866d3H4BCrE5xLW25A==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [android]
@@ -17290,12 +17299,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@esbuild/darwin-arm64@0.25.6':
-    resolution: {integrity: sha512-FFCssz3XBavjxcFxKsGy2DYK5VSvJqa6y5HXljKzhRZ87LvEi13brPrf/wdyl/BbpbMKJNOr1Sd0jtW4Ge1pAA==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [darwin]
-
   '@esbuild/darwin-x64@0.17.19':
     resolution: {integrity: sha512-IJM4JJsLhRYr9xdtLytPLSH9k/oxR3boaUIYiHkAawtwNOXKE8KoU8tMvryogdcT8AU+Bflmh81Xn6Q0vTZbQw==}
     engines: {node: '>=12'}
@@ -17316,12 +17319,6 @@ packages:
 
   '@esbuild/darwin-x64@0.25.4':
     resolution: {integrity: sha512-CJsry8ZGM5VFVeyUYB3cdKpd/H69PYez4eJh1W/t38vzutdjEjtP7hB6eLKBoOdxcAlCtEYHzQ/PJ/oU9I4u0A==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@esbuild/darwin-x64@0.25.6':
-    resolution: {integrity: sha512-GfXs5kry/TkGM2vKqK2oyiLFygJRqKVhawu3+DOCk7OxLy/6jYkWXhlHwOoTb0WqGnWGAS7sooxbZowy+pK9Yg==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [darwin]
@@ -17350,12 +17347,6 @@ packages:
     cpu: [arm64]
     os: [freebsd]
 
-  '@esbuild/freebsd-arm64@0.25.6':
-    resolution: {integrity: sha512-aoLF2c3OvDn2XDTRvn8hN6DRzVVpDlj2B/F66clWd/FHLiHaG3aVZjxQX2DYphA5y/evbdGvC6Us13tvyt4pWg==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [freebsd]
-
   '@esbuild/freebsd-x64@0.17.19':
     resolution: {integrity: sha512-4lu+n8Wk0XlajEhbEffdy2xy53dpR06SlzvhGByyg36qJw6Kpfk7cp45DR/62aPH9mtJRmIyrXAS5UWBrJT6TQ==}
     engines: {node: '>=12'}
@@ -17376,12 +17367,6 @@ packages:
 
   '@esbuild/freebsd-x64@0.25.4':
     resolution: {integrity: sha512-0FgvOJ6UUMflsHSPLzdfDnnBBVoCDtBTVyn/MrWloUNvq/5SFmh13l3dvgRPkDihRxb77Y17MbqbCAa2strMQQ==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [freebsd]
-
-  '@esbuild/freebsd-x64@0.25.6':
-    resolution: {integrity: sha512-2SkqTjTSo2dYi/jzFbU9Plt1vk0+nNg8YC8rOXXea+iA3hfNJWebKYPs3xnOUf9+ZWhKAaxnQNUf2X9LOpeiMQ==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [freebsd]
@@ -17410,12 +17395,6 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@esbuild/linux-arm64@0.25.6':
-    resolution: {integrity: sha512-b967hU0gqKd9Drsh/UuAm21Khpoh6mPBSgz8mKRq4P5mVK8bpA+hQzmm/ZwGVULSNBzKdZPQBRT3+WuVavcWsQ==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [linux]
-
   '@esbuild/linux-arm@0.17.19':
     resolution: {integrity: sha512-cdmT3KxjlOQ/gZ2cjfrQOtmhG4HJs6hhvm3mWSRDPtZ/lP5oe8FWceS10JaSJC13GBd4eH/haHnqf7hhGNLerA==}
     engines: {node: '>=12'}
@@ -17436,12 +17415,6 @@ packages:
 
   '@esbuild/linux-arm@0.25.4':
     resolution: {integrity: sha512-kro4c0P85GMfFYqW4TWOpvmF8rFShbWGnrLqlzp4X1TNWjRY3JMYUfDCtOxPKOIY8B0WC8HN51hGP4I4hz4AaQ==}
-    engines: {node: '>=18'}
-    cpu: [arm]
-    os: [linux]
-
-  '@esbuild/linux-arm@0.25.6':
-    resolution: {integrity: sha512-SZHQlzvqv4Du5PrKE2faN0qlbsaW/3QQfUUc6yO2EjFcA83xnwm91UbEEVx4ApZ9Z5oG8Bxz4qPE+HFwtVcfyw==}
     engines: {node: '>=18'}
     cpu: [arm]
     os: [linux]
@@ -17470,12 +17443,6 @@ packages:
     cpu: [ia32]
     os: [linux]
 
-  '@esbuild/linux-ia32@0.25.6':
-    resolution: {integrity: sha512-aHWdQ2AAltRkLPOsKdi3xv0mZ8fUGPdlKEjIEhxCPm5yKEThcUjHpWB1idN74lfXGnZ5SULQSgtr5Qos5B0bPw==}
-    engines: {node: '>=18'}
-    cpu: [ia32]
-    os: [linux]
-
   '@esbuild/linux-loong64@0.17.19':
     resolution: {integrity: sha512-2iAngUbBPMq439a+z//gE+9WBldoMp1s5GWsUSgqHLzLJ9WoZLZhpwWuym0u0u/4XmZ3gpHmzV84PonE+9IIdQ==}
     engines: {node: '>=12'}
@@ -17496,12 +17463,6 @@ packages:
 
   '@esbuild/linux-loong64@0.25.4':
     resolution: {integrity: sha512-NeqqYkrcGzFwi6CGRGNMOjWGGSYOpqwCjS9fvaUlX5s3zwOtn1qwg1s2iE2svBe4Q/YOG1q6875lcAoQK/F4VA==}
-    engines: {node: '>=18'}
-    cpu: [loong64]
-    os: [linux]
-
-  '@esbuild/linux-loong64@0.25.6':
-    resolution: {integrity: sha512-VgKCsHdXRSQ7E1+QXGdRPlQ/e08bN6WMQb27/TMfV+vPjjTImuT9PmLXupRlC90S1JeNNW5lzkAEO/McKeJ2yg==}
     engines: {node: '>=18'}
     cpu: [loong64]
     os: [linux]
@@ -17530,12 +17491,6 @@ packages:
     cpu: [mips64el]
     os: [linux]
 
-  '@esbuild/linux-mips64el@0.25.6':
-    resolution: {integrity: sha512-WViNlpivRKT9/py3kCmkHnn44GkGXVdXfdc4drNmRl15zVQ2+D2uFwdlGh6IuK5AAnGTo2qPB1Djppj+t78rzw==}
-    engines: {node: '>=18'}
-    cpu: [mips64el]
-    os: [linux]
-
   '@esbuild/linux-ppc64@0.17.19':
     resolution: {integrity: sha512-/c/DGybs95WXNS8y3Ti/ytqETiW7EU44MEKuCAcpPto3YjQbyK3IQVKfF6nbghD7EcLUGl0NbiL5Rt5DMhn5tg==}
     engines: {node: '>=12'}
@@ -17556,12 +17511,6 @@ packages:
 
   '@esbuild/linux-ppc64@0.25.4':
     resolution: {integrity: sha512-HOy0aLTJTVtoTeGZh4HSXaO6M95qu4k5lJcH4gxv56iaycfz1S8GO/5Jh6X4Y1YiI0h7cRyLi+HixMR+88swag==}
-    engines: {node: '>=18'}
-    cpu: [ppc64]
-    os: [linux]
-
-  '@esbuild/linux-ppc64@0.25.6':
-    resolution: {integrity: sha512-wyYKZ9NTdmAMb5730I38lBqVu6cKl4ZfYXIs31Baf8aoOtB4xSGi3THmDYt4BTFHk7/EcVixkOV2uZfwU3Q2Jw==}
     engines: {node: '>=18'}
     cpu: [ppc64]
     os: [linux]
@@ -17590,12 +17539,6 @@ packages:
     cpu: [riscv64]
     os: [linux]
 
-  '@esbuild/linux-riscv64@0.25.6':
-    resolution: {integrity: sha512-KZh7bAGGcrinEj4qzilJ4hqTY3Dg2U82c8bv+e1xqNqZCrCyc+TL9AUEn5WGKDzm3CfC5RODE/qc96OcbIe33w==}
-    engines: {node: '>=18'}
-    cpu: [riscv64]
-    os: [linux]
-
   '@esbuild/linux-s390x@0.17.19':
     resolution: {integrity: sha512-IbFsFbxMWLuKEbH+7sTkKzL6NJmG2vRyy6K7JJo55w+8xDk7RElYn6xvXtDW8HCfoKBFK69f3pgBJSUSQPr+4Q==}
     engines: {node: '>=12'}
@@ -17616,12 +17559,6 @@ packages:
 
   '@esbuild/linux-s390x@0.25.4':
     resolution: {integrity: sha512-jFnu+6UbLlzIjPQpWCNh5QtrcNfMLjgIavnwPQAfoGx4q17ocOU9MsQ2QVvFxwQoWpZT8DvTLooTvmOQXkO51g==}
-    engines: {node: '>=18'}
-    cpu: [s390x]
-    os: [linux]
-
-  '@esbuild/linux-s390x@0.25.6':
-    resolution: {integrity: sha512-9N1LsTwAuE9oj6lHMyyAM+ucxGiVnEqUdp4v7IaMmrwb06ZTEVCIs3oPPplVsnjPfyjmxwHxHMF8b6vzUVAUGw==}
     engines: {node: '>=18'}
     cpu: [s390x]
     os: [linux]
@@ -17650,12 +17587,6 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@esbuild/linux-x64@0.25.6':
-    resolution: {integrity: sha512-A6bJB41b4lKFWRKNrWoP2LHsjVzNiaurf7wyj/XtFNTsnPuxwEBWHLty+ZE0dWBKuSK1fvKgrKaNjBS7qbFKig==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [linux]
-
   '@esbuild/netbsd-arm64@0.25.10':
     resolution: {integrity: sha512-AKQM3gfYfSW8XRk8DdMCzaLUFB15dTrZfnX8WXQoOUpUBQ+NaAFCP1kPS/ykbbGYz7rxn0WS48/81l9hFl3u4A==}
     engines: {node: '>=18'}
@@ -17664,12 +17595,6 @@ packages:
 
   '@esbuild/netbsd-arm64@0.25.4':
     resolution: {integrity: sha512-vUnkBYxZW4hL/ie91hSqaSNjulOnYXE1VSLusnvHg2u3jewJBz3YzB9+oCw8DABeVqZGg94t9tyZFoHma8gWZQ==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [netbsd]
-
-  '@esbuild/netbsd-arm64@0.25.6':
-    resolution: {integrity: sha512-IjA+DcwoVpjEvyxZddDqBY+uJ2Snc6duLpjmkXm/v4xuS3H+3FkLZlDm9ZsAbF9rsfP3zeA0/ArNDORZgrxR/Q==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [netbsd]
@@ -17698,12 +17623,6 @@ packages:
     cpu: [x64]
     os: [netbsd]
 
-  '@esbuild/netbsd-x64@0.25.6':
-    resolution: {integrity: sha512-dUXuZr5WenIDlMHdMkvDc1FAu4xdWixTCRgP7RQLBOkkGgwuuzaGSYcOpW4jFxzpzL1ejb8yF620UxAqnBrR9g==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [netbsd]
-
   '@esbuild/openbsd-arm64@0.25.10':
     resolution: {integrity: sha512-5Se0VM9Wtq797YFn+dLimf2Zx6McttsH2olUBsDml+lm0GOCRVebRWUvDtkY4BWYv/3NgzS8b/UM3jQNh5hYyw==}
     engines: {node: '>=18'}
@@ -17712,12 +17631,6 @@ packages:
 
   '@esbuild/openbsd-arm64@0.25.4':
     resolution: {integrity: sha512-Ct2WcFEANlFDtp1nVAXSNBPDxyU+j7+tId//iHXU2f/lN5AmO4zLyhDcpR5Cz1r08mVxzt3Jpyt4PmXQ1O6+7A==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [openbsd]
-
-  '@esbuild/openbsd-arm64@0.25.6':
-    resolution: {integrity: sha512-l8ZCvXP0tbTJ3iaqdNf3pjaOSd5ex/e6/omLIQCVBLmHTlfXW3zAxQ4fnDmPLOB1x9xrcSi/xtCWFwCZRIaEwg==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [openbsd]
@@ -17746,20 +17659,8 @@ packages:
     cpu: [x64]
     os: [openbsd]
 
-  '@esbuild/openbsd-x64@0.25.6':
-    resolution: {integrity: sha512-hKrmDa0aOFOr71KQ/19JC7az1P0GWtCN1t2ahYAf4O007DHZt/dW8ym5+CUdJhQ/qkZmI1HAF8KkJbEFtCL7gw==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [openbsd]
-
   '@esbuild/openharmony-arm64@0.25.10':
     resolution: {integrity: sha512-AVTSBhTX8Y/Fz6OmIVBip9tJzZEUcY8WLh7I59+upa5/GPhh2/aM6bvOMQySspnCCHvFi79kMtdJS1w0DXAeag==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [openharmony]
-
-  '@esbuild/openharmony-arm64@0.25.6':
-    resolution: {integrity: sha512-+SqBcAWoB1fYKmpWoQP4pGtx+pUUC//RNYhFdbcSA16617cchuryuhOCRpPsjCblKukAckWsV+aQ3UKT/RMPcA==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [openharmony]
@@ -17788,12 +17689,6 @@ packages:
     cpu: [x64]
     os: [sunos]
 
-  '@esbuild/sunos-x64@0.25.6':
-    resolution: {integrity: sha512-dyCGxv1/Br7MiSC42qinGL8KkG4kX0pEsdb0+TKhmJZgCUDBGmyo1/ArCjNGiOLiIAgdbWgmWgib4HoCi5t7kA==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [sunos]
-
   '@esbuild/win32-arm64@0.17.19':
     resolution: {integrity: sha512-yYx+8jwowUstVdorcMdNlzklLYhPxjniHWFKgRqH7IFlUEa0Umu3KuYplf1HUZZ422e3NU9F4LGb+4O0Kdcaag==}
     engines: {node: '>=12'}
@@ -17814,12 +17709,6 @@ packages:
 
   '@esbuild/win32-arm64@0.25.4':
     resolution: {integrity: sha512-AVUP428VQTSddguz9dO9ngb+E5aScyg7nOeJDrF1HPYu555gmza3bDGMPhmVXL8svDSoqPCsCPjb265yG/kLKQ==}
-    engines: {node: '>=18'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@esbuild/win32-arm64@0.25.6':
-    resolution: {integrity: sha512-42QOgcZeZOvXfsCBJF5Afw73t4veOId//XD3i+/9gSkhSV6Gk3VPlWncctI+JcOyERv85FUo7RxuxGy+z8A43Q==}
     engines: {node: '>=18'}
     cpu: [arm64]
     os: [win32]
@@ -17848,12 +17737,6 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@esbuild/win32-ia32@0.25.6':
-    resolution: {integrity: sha512-4AWhgXmDuYN7rJI6ORB+uU9DHLq/erBbuMoAuB4VWJTu5KtCgcKYPynF0YI1VkBNuEfjNlLrFr9KZPJzrtLkrQ==}
-    engines: {node: '>=18'}
-    cpu: [ia32]
-    os: [win32]
-
   '@esbuild/win32-x64@0.17.19':
     resolution: {integrity: sha512-lAhycmKnVOuRYNtRtatQR1LPQf2oYCkRGkSFnseDAKPl8lu5SOsK/e1sXe5a0Pc5kHIHe6P2I/ilntNv2xf3cA==}
     engines: {node: '>=12'}
@@ -17874,12 +17757,6 @@ packages:
 
   '@esbuild/win32-x64@0.25.4':
     resolution: {integrity: sha512-nOT2vZNw6hJ+z43oP1SPea/G/6AbN6X+bGNhNuq8NtRHy4wsMhw765IKLNmnjek7GvjWBYQ8Q5VBoYTFg9y1UQ==}
-    engines: {node: '>=18'}
-    cpu: [x64]
-    os: [win32]
-
-  '@esbuild/win32-x64@0.25.6':
-    resolution: {integrity: sha512-NgJPHHbEpLQgDH2MjQu90pzW/5vvXIZ7KOnPyNBm92A6WgZ/7b6fJyUBjoumLqeOQQGqY2QjQxRo97ah4Sj0cA==}
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
@@ -18486,6 +18363,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
+
+  '@jridgewell/sourcemap-codec@1.5.5':
+    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
@@ -19400,8 +19280,8 @@ packages:
     resolution: {integrity: sha512-ZDjMJJQRlyk8A1KZFCc+bCbsyrn1wTwdNt56F7twdfUfnHUZUq77/WfONCj8p72NZOyP7pNTdUWSTYC3GTbuuQ==}
     engines: {node: '>=14'}
 
-  '@opentelemetry/semantic-conventions@1.34.0':
-    resolution: {integrity: sha512-aKcOkyrorBGlajjRdVoJWHTxfxO1vCNHLJVlSDaRHDIdjU+pX8IYQPvPDkYiujKLbRnWU+1TBwEt0QRgSm4SGA==}
+  '@opentelemetry/semantic-conventions@1.37.0':
+    resolution: {integrity: sha512-JD6DerIKdJGmRp4jQyX5FlrQjA4tjOw1cvfsPAZXfOOEErMUHjPcPSICS+6WnM0nB0efSFARh0KAZss+bvExOA==}
     engines: {node: '>=14'}
 
   '@opentelemetry/sql-common@0.40.1':
@@ -19774,18 +19654,23 @@ packages:
       '@babel/core': ^7.0.0
       react: ~19.2.0
 
-  '@preact/signals-core@1.11.0':
-    resolution: {integrity: sha512-jglbibeWHuFRzEWVFY/TT7wB1PppJxmcSfUHcK+2J9vBRtiooMfw6tAPttojNYrrpdGViqAYCbPpmWYlMm+eMQ==}
+  '@preact/signals-core@1.12.1':
+    resolution: {integrity: sha512-BwbTXpj+9QutoZLQvbttRg5x3l5468qaV2kufh+51yha1c53ep5dY4kTuZR35+3pAZxpfQerGJiQqg34ZNZ6uA==}
 
   '@preact/signals-react@3.2.1':
     resolution: {integrity: sha512-kRaWeKpT4tUKfcvUB0QldqQ1p/Xjg6cXDN3ubdVwnRrCie+95IXcaOaRHSLiAPgxwdOQYrgEjHe6ms46FtzQhQ==}
     peerDependencies:
       react: ~19.2.0
 
-  '@preact/signals@2.2.1':
-    resolution: {integrity: sha512-cX3mijdjHbbz3dBoJ6z687CGYEOp9ifj3uFnm4UKW+DxXKPMvE2y/VSdm0PXhXmHnr6F0iSnDJ+dLwmV7CYT5A==}
+  '@preact/signals-react@3.3.0':
+    resolution: {integrity: sha512-Hxb7jQVuEA5y6EzlENcjpJLoxMf2rwUYU3KdJMHS+nYbA69+8elRbu6upiAOWtleXV4K7GZGQAD3KxB3Wk43KQ==}
     peerDependencies:
-      preact: '>= 10.25.0'
+      react: ~19.2.0
+
+  '@preact/signals@2.3.1':
+    resolution: {integrity: sha512-nyuRIGmcwM/HjvFHhN2xUWfyla9D4llHt+prWoxjQfD6b5prO7CFPlG/xjJkP31Oic4KQXfH9SIhJFP9cy4lmg==}
+    peerDependencies:
+      preact: '>= 10.25.0 || >=11.0.0-0'
 
   '@prisma/instrumentation@5.17.0':
     resolution: {integrity: sha512-c1Sle4ji8aasMcYfBBHFM56We4ljfenVtRmS8aY06BllS7SoU6SmJBwG7vil+GHiR0Yrh+t9iBwt4AY0Jr4KNQ==}
@@ -21163,19 +21048,18 @@ packages:
       rollup:
         optional: true
 
-  '@rollup/rollup-android-arm-eabi@4.40.2':
-    resolution: {integrity: sha512-JkdNEq+DFxZfUwxvB58tHMHBHVgX23ew41g1OQinthJ+ryhdRk67O31S7sYw8u2lTjHUPFxwar07BBt1KHp/hg==}
-    cpu: [arm]
-    os: [android]
+  '@rollup/pluginutils@5.3.0':
+    resolution: {integrity: sha512-5EdhGZtnu3V88ces7s53hhfK5KSASnJZv8Lulpc04cWO3REESroJXg73DFsOmgbU2BhwV0E20bu2IDZb3VKW4Q==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
 
   '@rollup/rollup-android-arm-eabi@4.50.1':
     resolution: {integrity: sha512-HJXwzoZN4eYTdD8bVV22DN8gsPCAj3V20NHKOs8ezfXanGpmVPR7kalUHd+Y31IJp9stdB87VKPFbsGY3H/2ag==}
     cpu: [arm]
-    os: [android]
-
-  '@rollup/rollup-android-arm64@4.40.2':
-    resolution: {integrity: sha512-13unNoZ8NzUmnndhPTkWPWbX3vtHodYmy+I9kuLxN+F+l+x3LdVF7UCu8TWVMt1POHLh6oDHhnOA04n8oJZhBw==}
-    cpu: [arm64]
     os: [android]
 
   '@rollup/rollup-android-arm64@4.50.1':
@@ -21183,19 +21067,9 @@ packages:
     cpu: [arm64]
     os: [android]
 
-  '@rollup/rollup-darwin-arm64@4.40.2':
-    resolution: {integrity: sha512-Gzf1Hn2Aoe8VZzevHostPX23U7N5+4D36WJNHK88NZHCJr7aVMG4fadqkIf72eqVPGjGc0HJHNuUaUcxiR+N/w==}
-    cpu: [arm64]
-    os: [darwin]
-
   '@rollup/rollup-darwin-arm64@4.50.1':
     resolution: {integrity: sha512-xc6i2AuWh++oGi4ylOFPmzJOEeAa2lJeGUGb4MudOtgfyyjr4UPNK+eEWTPLvmPJIY/pgw6ssFIox23SyrkkJw==}
     cpu: [arm64]
-    os: [darwin]
-
-  '@rollup/rollup-darwin-x64@4.40.2':
-    resolution: {integrity: sha512-47N4hxa01a4x6XnJoskMKTS8XZ0CZMd8YTbINbi+w03A2w4j1RTlnGHOz/P0+Bg1LaVL6ufZyNprSg+fW5nYQQ==}
-    cpu: [x64]
     os: [darwin]
 
   '@rollup/rollup-darwin-x64@4.50.1':
@@ -21203,19 +21077,9 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@rollup/rollup-freebsd-arm64@4.40.2':
-    resolution: {integrity: sha512-8t6aL4MD+rXSHHZUR1z19+9OFJ2rl1wGKvckN47XFRVO+QL/dUSpKA2SLRo4vMg7ELA8pzGpC+W9OEd1Z/ZqoQ==}
-    cpu: [arm64]
-    os: [freebsd]
-
   '@rollup/rollup-freebsd-arm64@4.50.1':
     resolution: {integrity: sha512-wOsE6H2u6PxsHY/BeFHA4VGQN3KUJFZp7QJBmDYI983fgxq5Th8FDkVuERb2l9vDMs1D5XhOrhBrnqcEY6l8ZA==}
     cpu: [arm64]
-    os: [freebsd]
-
-  '@rollup/rollup-freebsd-x64@4.40.2':
-    resolution: {integrity: sha512-C+AyHBzfpsOEYRFjztcYUFsH4S7UsE9cDtHCtma5BK8+ydOZYgMmWg1d/4KBytQspJCld8ZIujFMAdKG1xyr4Q==}
-    cpu: [x64]
     os: [freebsd]
 
   '@rollup/rollup-freebsd-x64@4.50.1':
@@ -21223,18 +21087,8 @@ packages:
     cpu: [x64]
     os: [freebsd]
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.40.2':
-    resolution: {integrity: sha512-de6TFZYIvJwRNjmW3+gaXiZ2DaWL5D5yGmSYzkdzjBDS3W+B9JQ48oZEsmMvemqjtAFzE16DIBLqd6IQQRuG9Q==}
-    cpu: [arm]
-    os: [linux]
-
   '@rollup/rollup-linux-arm-gnueabihf@4.50.1':
     resolution: {integrity: sha512-54v4okehwl5TaSIkpp97rAHGp7t3ghinRd/vyC1iXqXMfjYUTm7TfYmCzXDoHUPTTf36L8pr0E7YsD3CfB3ZDg==}
-    cpu: [arm]
-    os: [linux]
-
-  '@rollup/rollup-linux-arm-musleabihf@4.40.2':
-    resolution: {integrity: sha512-urjaEZubdIkacKc930hUDOfQPysezKla/O9qV+O89enqsqUmQm8Xj8O/vh0gHg4LYfv7Y7UsE3QjzLQzDYN1qg==}
     cpu: [arm]
     os: [linux]
 
@@ -21243,18 +21097,8 @@ packages:
     cpu: [arm]
     os: [linux]
 
-  '@rollup/rollup-linux-arm64-gnu@4.40.2':
-    resolution: {integrity: sha512-KlE8IC0HFOC33taNt1zR8qNlBYHj31qGT1UqWqtvR/+NuCVhfufAq9fxO8BMFC22Wu0rxOwGVWxtCMvZVLmhQg==}
-    cpu: [arm64]
-    os: [linux]
-
   '@rollup/rollup-linux-arm64-gnu@4.50.1':
     resolution: {integrity: sha512-2AbMhFFkTo6Ptna1zO7kAXXDLi7H9fGTbVaIq2AAYO7yzcAsuTNWPHhb2aTA6GPiP+JXh85Y8CiS54iZoj4opw==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@rollup/rollup-linux-arm64-musl@4.40.2':
-    resolution: {integrity: sha512-j8CgxvfM0kbnhu4XgjnCWJQyyBOeBI1Zq91Z850aUddUmPeQvuAy6OiMdPS46gNFgy8gN1xkYyLgwLYZG3rBOg==}
     cpu: [arm64]
     os: [linux]
 
@@ -21263,19 +21107,9 @@ packages:
     cpu: [arm64]
     os: [linux]
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.40.2':
-    resolution: {integrity: sha512-Ybc/1qUampKuRF4tQXc7G7QY9YRyeVSykfK36Y5Qc5dmrIxwFhrOzqaVTNoZygqZ1ZieSWTibfFhQ5qK8jpWxw==}
-    cpu: [loong64]
-    os: [linux]
-
   '@rollup/rollup-linux-loongarch64-gnu@4.50.1':
     resolution: {integrity: sha512-RPhTwWMzpYYrHrJAS7CmpdtHNKtt2Ueo+BlLBjfZEhYBhK00OsEqM08/7f+eohiF6poe0YRDDd8nAvwtE/Y62Q==}
     cpu: [loong64]
-    os: [linux]
-
-  '@rollup/rollup-linux-powerpc64le-gnu@4.40.2':
-    resolution: {integrity: sha512-3FCIrnrt03CCsZqSYAOW/k9n625pjpuMzVfeI+ZBUSDT3MVIFDSPfSUgIl9FqUftxcUXInvFah79hE1c9abD+Q==}
-    cpu: [ppc64]
     os: [linux]
 
   '@rollup/rollup-linux-ppc64-gnu@4.50.1':
@@ -21283,29 +21117,14 @@ packages:
     cpu: [ppc64]
     os: [linux]
 
-  '@rollup/rollup-linux-riscv64-gnu@4.40.2':
-    resolution: {integrity: sha512-QNU7BFHEvHMp2ESSY3SozIkBPaPBDTsfVNGx3Xhv+TdvWXFGOSH2NJvhD1zKAT6AyuuErJgbdvaJhYVhVqrWTg==}
-    cpu: [riscv64]
-    os: [linux]
-
   '@rollup/rollup-linux-riscv64-gnu@4.50.1':
     resolution: {integrity: sha512-S208ojx8a4ciIPrLgazF6AgdcNJzQE4+S9rsmOmDJkusvctii+ZvEuIC4v/xFqzbuP8yDjn73oBlNDgF6YGSXQ==}
-    cpu: [riscv64]
-    os: [linux]
-
-  '@rollup/rollup-linux-riscv64-musl@4.40.2':
-    resolution: {integrity: sha512-5W6vNYkhgfh7URiXTO1E9a0cy4fSgfE4+Hl5agb/U1sa0kjOLMLC1wObxwKxecE17j0URxuTrYZZME4/VH57Hg==}
     cpu: [riscv64]
     os: [linux]
 
   '@rollup/rollup-linux-riscv64-musl@4.50.1':
     resolution: {integrity: sha512-3Ag8Ls1ggqkGUvSZWYcdgFwriy2lWo+0QlYgEFra/5JGtAd6C5Hw59oojx1DeqcA2Wds2ayRgvJ4qxVTzCHgzg==}
     cpu: [riscv64]
-    os: [linux]
-
-  '@rollup/rollup-linux-s390x-gnu@4.40.2':
-    resolution: {integrity: sha512-B7LKIz+0+p348JoAL4X/YxGx9zOx3sR+o6Hj15Y3aaApNfAshK8+mWZEf759DXfRLeL2vg5LYJBB7DdcleYCoQ==}
-    cpu: [s390x]
     os: [linux]
 
   '@rollup/rollup-linux-s390x-gnu@4.50.1':
@@ -21318,18 +21137,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@rollup/rollup-linux-x64-gnu@4.40.2':
-    resolution: {integrity: sha512-lG7Xa+BmBNwpjmVUbmyKxdQJ3Q6whHjMjzQplOs5Z+Gj7mxPtWakGHqzMqNER68G67kmCX9qX57aRsW5V0VOng==}
-    cpu: [x64]
-    os: [linux]
-
   '@rollup/rollup-linux-x64-gnu@4.50.1':
     resolution: {integrity: sha512-MCgtFB2+SVNuQmmjHf+wfI4CMxy3Tk8XjA5Z//A0AKD7QXUYFMQcns91K6dEHBvZPCnhJSyDWLApk40Iq/H3tA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@rollup/rollup-linux-x64-musl@4.40.2':
-    resolution: {integrity: sha512-tD46wKHd+KJvsmije4bUskNuvWKFcTOIM9tZ/RrmIvcXnbi0YK/cKS9FzFtAm7Oxi2EhV5N2OpfFB348vSQRXA==}
     cpu: [x64]
     os: [linux]
 
@@ -21343,29 +21152,14 @@ packages:
     cpu: [arm64]
     os: [openharmony]
 
-  '@rollup/rollup-win32-arm64-msvc@4.40.2':
-    resolution: {integrity: sha512-Bjv/HG8RRWLNkXwQQemdsWw4Mg+IJ29LK+bJPW2SCzPKOUaMmPEppQlu/Fqk1d7+DX3V7JbFdbkh/NMmurT6Pg==}
-    cpu: [arm64]
-    os: [win32]
-
   '@rollup/rollup-win32-arm64-msvc@4.50.1':
     resolution: {integrity: sha512-hpZB/TImk2FlAFAIsoElM3tLzq57uxnGYwplg6WDyAxbYczSi8O2eQ+H2Lx74504rwKtZ3N2g4bCUkiamzS6TQ==}
     cpu: [arm64]
     os: [win32]
 
-  '@rollup/rollup-win32-ia32-msvc@4.40.2':
-    resolution: {integrity: sha512-dt1llVSGEsGKvzeIO76HToiYPNPYPkmjhMHhP00T9S4rDern8P2ZWvWAQUEJ+R1UdMWJ/42i/QqJ2WV765GZcA==}
-    cpu: [ia32]
-    os: [win32]
-
   '@rollup/rollup-win32-ia32-msvc@4.50.1':
     resolution: {integrity: sha512-SXjv8JlbzKM0fTJidX4eVsH+Wmnp0/WcD8gJxIZyR6Gay5Qcsmdbi9zVtnbkGPG8v2vMR1AD06lGWy5FLMcG7A==}
     cpu: [ia32]
-    os: [win32]
-
-  '@rollup/rollup-win32-x64-msvc@4.40.2':
-    resolution: {integrity: sha512-bwspbWB04XJpeElvsp+DCylKfF4trJDa2Y9Go8O6A7YLX2LIKGcNK/CYImJN6ZP4DcuOHB4Utl3iCbnR62DudA==}
-    cpu: [x64]
     os: [win32]
 
   '@rollup/rollup-win32-x64-msvc@4.50.1':
@@ -21552,11 +21346,17 @@ packages:
   '@shikijs/core@1.29.2':
     resolution: {integrity: sha512-vju0lY9r27jJfOY4Z7+Rt/nIOjzJpZ3y+nYpqtUZInVoXQ/TJZcfGnNOGnKjFdVZb8qexiCuSlZRKcGfhhTTZQ==}
 
+  '@shikijs/core@3.13.0':
+    resolution: {integrity: sha512-3P8rGsg2Eh2qIHekwuQjzWhKI4jV97PhvYjYUzGqjvJfqdQPz+nMlfWahU24GZAyW1FxFI1sYjyhfh5CoLmIUA==}
+
   '@shikijs/core@3.4.0':
     resolution: {integrity: sha512-0YOzTSRDn/IAfQWtK791gs1u8v87HNGToU6IwcA3K7nPoVOrS2Dh6X6A6YfXgPTSkTwR5y6myk0MnI0htjnwrA==}
 
   '@shikijs/engine-javascript@1.29.2':
     resolution: {integrity: sha512-iNEZv4IrLYPv64Q6k7EPpOCE/nuvGiKl7zxdq0WFuRPF5PAE9PRo2JGq/d8crLusM59BRemJ4eOqrFrC4wiQ+A==}
+
+  '@shikijs/engine-javascript@3.13.0':
+    resolution: {integrity: sha512-Ty7xv32XCp8u0eQt8rItpMs6rU9Ki6LJ1dQOW3V/56PKDcpvfHPnYFbsx5FFUP2Yim34m/UkazidamMNVR4vKg==}
 
   '@shikijs/engine-javascript@3.4.0':
     resolution: {integrity: sha512-1ywDoe+z/TPQKj9Jw0eU61B003J9DqUFRfH+DVSzdwPUFhR7yOmfyLzUrFz0yw8JxFg/NgzXoQyyykXgO21n5Q==}
@@ -21564,11 +21364,17 @@ packages:
   '@shikijs/engine-oniguruma@1.29.2':
     resolution: {integrity: sha512-7iiOx3SG8+g1MnlzZVDYiaeHe7Ez2Kf2HrJzdmGwkRisT7r4rak0e655AcM/tF9JG/kg5fMNYlLLKglbN7gBqA==}
 
+  '@shikijs/engine-oniguruma@3.13.0':
+    resolution: {integrity: sha512-O42rBGr4UDSlhT2ZFMxqM7QzIU+IcpoTMzb3W7AlziI1ZF7R8eS2M0yt5Ry35nnnTX/LTLXFPUjRFCIW+Operg==}
+
   '@shikijs/engine-oniguruma@3.4.0':
     resolution: {integrity: sha512-zwcWlZ4OQuJ/+1t32ClTtyTU1AiDkK1lhtviRWoq/hFqPjCNyLj22bIg9rB7BfoZKOEOfrsGz7No33BPCf+WlQ==}
 
   '@shikijs/langs@1.29.2':
     resolution: {integrity: sha512-FIBA7N3LZ+223U7cJDUYd5shmciFQlYkFXlkKVaHsCPgfVLiO+e12FmQE6Tf9vuyEsFe3dIl8qGWKXgEHL9wmQ==}
+
+  '@shikijs/langs@3.13.0':
+    resolution: {integrity: sha512-672c3WAETDYHwrRP0yLy3W1QYB89Hbpj+pO4KhxK6FzIrDI2FoEXNiNCut6BQmEApYLfuYfpgOZaqbY+E9b8wQ==}
 
   '@shikijs/langs@3.4.0':
     resolution: {integrity: sha512-bQkR+8LllaM2duU9BBRQU0GqFTx7TuF5kKlw/7uiGKoK140n1xlLAwCgXwSxAjJ7Htk9tXTFwnnsJTCU5nDPXQ==}
@@ -21576,11 +21382,17 @@ packages:
   '@shikijs/themes@1.29.2':
     resolution: {integrity: sha512-i9TNZlsq4uoyqSbluIcZkmPL9Bfi3djVxRnofUHwvx/h6SRW3cwgBC5SML7vsDcWyukY0eCzVN980rqP6qNl9g==}
 
+  '@shikijs/themes@3.13.0':
+    resolution: {integrity: sha512-Vxw1Nm1/Od8jyA7QuAenaV78BG2nSr3/gCGdBkLpfLscddCkzkL36Q5b67SrLLfvAJTOUzW39x4FHVCFriPVgg==}
+
   '@shikijs/themes@3.4.0':
     resolution: {integrity: sha512-YPP4PKNFcFGLxItpbU0ZW1Osyuk8AyZ24YEFaq04CFsuCbcqydMvMUTi40V2dkc0qs1U2uZFrnU6s5zI6IH+uA==}
 
   '@shikijs/types@1.29.2':
     resolution: {integrity: sha512-VJjK0eIijTZf0QSTODEXCqinjBn0joAHQ+aPSBzrv4O2d/QSbsMw+ZeSRx03kV34Hy7NzUvV/7NqfYGRLrASmw==}
+
+  '@shikijs/types@3.13.0':
+    resolution: {integrity: sha512-oM9P+NCFri/mmQ8LoFGVfVyemm5Hi27330zuOBp0annwJdKH1kOLndw3zCtAVDehPLg9fKqoEx3Ht/wNZxolfw==}
 
   '@shikijs/types@3.4.0':
     resolution: {integrity: sha512-EUT/0lGiE//7j5N/yTMNMT3eCWNcHJLrRKxT0NDXWIfdfSmFJKfPX7nMmRBrQnWboAzIsUziCThrYMMhjbMS1A==}
@@ -21897,6 +21709,11 @@ packages:
       react: ~19.2.0
       react-dom: ~19.2.0
 
+  '@storybook/instrumenter@8.6.14':
+    resolution: {integrity: sha512-iG4MlWCcz1L7Yu8AwgsnfVAmMbvyRSk700Mfy2g4c8y5O+Cv1ejshE1LBBsCwHgkuqU0H4R0qu4g23+6UnUemQ==}
+    peerDependencies:
+      storybook: ^8.6.14
+
   '@storybook/mdx2-csf@1.1.0':
     resolution: {integrity: sha512-TXJJd5RAKakWx4BtpwvSNdgTDkKM6RkXU8GK34S/LhidQ5Pjz3wcnqb0TxEkfhK/ztbP8nKHqXFwLfa2CYkvQw==}
 
@@ -21927,6 +21744,11 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  '@storybook/test@8.6.14':
+    resolution: {integrity: sha512-GkPNBbbZmz+XRdrhMtkxPotCLOQ1BaGNp/gFZYdGDk2KmUWBKmvc5JxxOhtoXM2703IzNFlQHSSNnhrDZYuLlw==}
+    peerDependencies:
+      storybook: ^8.6.14
 
   '@storybook/web-components-vite@9.1.10':
     resolution: {integrity: sha512-YGy0S+ccEpRjXyBHxzKzBVisdaZYIJuosL5z0i3OmN18vSdUx0tet6WaneWV1b1EVJvEyfll/D1NBpysUQFuqQ==}
@@ -22213,8 +22035,8 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || >= 3.0.0-alpha.1'
 
-  '@tauri-apps/api@2.7.0':
-    resolution: {integrity: sha512-v7fVE8jqBl8xJFOcBafDzXFc8FnicoH3j8o8DNNs0tHuEBmXUDqrCOAzMRX0UkfpwqZLqvrvK0GNQ45DfnoVDg==}
+  '@tauri-apps/api@2.8.0':
+    resolution: {integrity: sha512-ga7zdhbS2GXOMTIZRT0mYjKJtR9fivsXzsyq5U3vjDL0s6DTMwYRm0UHNjzTY5dh4+LSC68Sm/7WEiimbQNYlw==}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     resolution: {integrity: sha512-BKu8HRkYV01SMTa7r4fLx+wjgtRK8Vep7lmBdHDioP6b8XH3q2KgsAyPWfEZaZIkZ2LY4SqqGARaE9oilNe0oA==}
@@ -22287,21 +22109,29 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-os@2.3.0':
-    resolution: {integrity: sha512-dm3bDsMuUngpIQdJ1jaMkMfyQpHyDcaTIKTFaAMHoKeUd+Is3UHO2uzhElr6ZZkfytIIyQtSVnCWdW2Kc58f3g==}
+  '@tauri-apps/plugin-os@2.3.1':
+    resolution: {integrity: sha512-ty5V8XDUIFbSnrk3zsFoP3kzN+vAufYzalJSlmrVhQTImIZa1aL1a03bOaP2vuBvfR+WDRC6NgV2xBl8G07d+w==}
 
   '@tauri-apps/plugin-process@2.3.0':
     resolution: {integrity: sha512-0DNj6u+9csODiV4seSxxRbnLpeGYdojlcctCuLOCgpH9X3+ckVZIEj6H7tRQ7zqWr7kSTEWnrxtAdBb0FbtrmQ==}
 
-  '@tauri-apps/plugin-shell@2.3.0':
-    resolution: {integrity: sha512-6GIRxO2z64uxPX4CCTuhQzefvCC0ew7HjdBhMALiGw74vFBDY95VWueAHOHgNOMV4UOUAFupyidN9YulTe5xlA==}
+  '@tauri-apps/plugin-shell@2.3.1':
+    resolution: {integrity: sha512-jjs2WGDO/9z2pjNlydY/F5yYhNsscv99K5lCmU5uKjsVvQ3dRlDhhtVYoa4OLDmktLtQvgvbQjCFibMl6tgGfw==}
 
   '@tauri-apps/plugin-updater@2.9.0':
     resolution: {integrity: sha512-j++sgY8XpeDvzImTrzWA08OqqGqgkNyxczLD7FjNJJx/uXxMZFz5nDcfkyoI/rCjYuj2101Tci/r/HFmOmoxCg==}
 
+  '@testing-library/dom@10.4.0':
+    resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
+    engines: {node: '>=18'}
+
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
     engines: {node: '>=18'}
+
+  '@testing-library/jest-dom@6.5.0':
+    resolution: {integrity: sha512-xGGHpBXYSHUUr6XsKBfs85TWlYKpTc37cSBBVrXcib2MkHLboWlkClhWF37JKlDb9KEq3dHs+f2xR7XJEWGBxA==}
+    engines: {node: '>=14', npm: '>=6', yarn: '>=1'}
 
   '@testing-library/jest-dom@6.9.1':
     resolution: {integrity: sha512-zIcONa+hVtVSSep9UT3jZ5rizo2BsxgyDYU7WFD5eICBE7no3881HGeb/QkGfsJs6JTkY1aQhT7rIPC7e+0nnA==}
@@ -22321,6 +22151,12 @@ packages:
         optional: true
       '@types/react-dom':
         optional: true
+
+  '@testing-library/user-event@14.5.2':
+    resolution: {integrity: sha512-YAh82Wh4TIrxYLmfGcixwD18oIjyC1pFQC2Y01F2lzV2HTMiYrI0nze0FD0ocB//CKS/7jIUgae+adPqxK5yCQ==}
+    engines: {node: '>=12', npm: '>=6'}
+    peerDependencies:
+      '@testing-library/dom': '>=7.21.4'
 
   '@testing-library/user-event@14.6.1':
     resolution: {integrity: sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==}
@@ -22730,9 +22566,6 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-
-  '@types/json-stable-stringify@1.0.34':
-    resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
 
   '@types/json-stringify-safe@5.0.0':
     resolution: {integrity: sha512-UUA1sH0RSRROdInuDOA1yoRzbi5xVFD1RHCoOvNRPTNwR8zBkJ/84PZ6NhKVDtKp0FTeIccJCdQz1X2aJPr4uw==}
@@ -23342,6 +23175,9 @@ packages:
       '@vitest/browser':
         optional: true
 
+  '@vitest/expect@2.0.5':
+    resolution: {integrity: sha512-yHZtwuP7JZivj65Gxoi8upUN2OzHTi3zVfjwdpu2WrvCZPLwsJ2Ey5ILIPccoW23dd/zQBlJ4/dhi7DWNyXCpA==}
+
   '@vitest/expect@3.2.4':
     resolution: {integrity: sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig==}
 
@@ -23356,6 +23192,12 @@ packages:
       vite:
         optional: true
 
+  '@vitest/pretty-format@2.0.5':
+    resolution: {integrity: sha512-h8k+1oWHfwTkyTkb9egzwNMfJAEx4veaPSnMeKbVSjp4euqGSbQlm5+6VHwTr7u4FJslVVsUG5nopCaAYdOmSQ==}
+
+  '@vitest/pretty-format@2.1.9':
+    resolution: {integrity: sha512-KhRIdGV2U9HOUzxfiHmY8IFHTdqtOhIzCpd8WRdJiE7D/HUcZVD0EgQCVjm+Q9gkUXWgBvMmTtZgIG48wq7sOQ==}
+
   '@vitest/pretty-format@3.2.4':
     resolution: {integrity: sha512-IVNZik8IVRJRTr9fxlitMKeJeXFFFN0JaB9PHPGQ8NKQbGpfjlTx9zO4RefN8gp7eqjNy8nyK3NZmBzOPeIxtA==}
 
@@ -23365,6 +23207,9 @@ packages:
   '@vitest/snapshot@3.2.4':
     resolution: {integrity: sha512-dEYtS7qQP2CjU27QBC5oUOxLE/v5eLkGqPE0ZKEIDGMs4vKWe7IjgLOeauHsR0D5YuuycGRO5oSRXnwnmA78fQ==}
 
+  '@vitest/spy@2.0.5':
+    resolution: {integrity: sha512-c/jdthAhvJdpfVuaexSrnawxZz6pywlTPe84LUB2m/4t3rl2fTo9NFGBG4oWgaD+FTgDDV8hJ/nibT7IfH3JfA==}
+
   '@vitest/spy@3.2.4':
     resolution: {integrity: sha512-vAfasCOe6AIK70iP5UD11Ac4siNUNJ9i/9PZ3NKx07sG6sUxeag1LWdNrMWeKKYBLlzuK+Gn65Yd5nyL6ds+nw==}
 
@@ -23372,6 +23217,12 @@ packages:
     resolution: {integrity: sha512-hGISOaP18plkzbWEcP/QvtRW1xDXF2+96HbEX6byqQhAUbiS5oH6/9JwW+QsQCIYON2bI6QZBF+2PvOmrRZ9wA==}
     peerDependencies:
       vitest: 3.2.4
+
+  '@vitest/utils@2.0.5':
+    resolution: {integrity: sha512-d8HKbqIcya+GR67mkZbrzhS5kKhtp8dQLcmRZLGTscGVg7yImT82cIrhtn2L8+VujWcy6KZweApgNmPsTAO/UQ==}
+
+  '@vitest/utils@2.1.9':
+    resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==}
 
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
@@ -23856,9 +23707,9 @@ packages:
     peerDependencies:
       astro: ^4.0.0-beta || ^5.0.0-beta || ^3.3.0
 
-  astro@5.7.12:
-    resolution: {integrity: sha512-UQOItiZz2hcv9PlHTQ6dNqFDIVNPnmwk6eyAjJqPE9O8EDHZK2JKtTRD0CBFN2Uqr0RE0TWP2gqDpLfsa5dJEA==}
-    engines: {node: ^18.17.1 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
+  astro@5.14.1:
+    resolution: {integrity: sha512-gPa8NY7/lP8j8g81iy8UwANF3+aukKRWS68IlthZQNgykpg80ne6lbHOp6FErYycxQ1TUhgEfkXVDQZAoJx8Bg==}
+    engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0, npm: '>=9.6.5', pnpm: '>=7.1.0'}
     hasBin: true
 
   async-array-reduce@0.2.1:
@@ -24381,6 +24232,10 @@ packages:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
     engines: {node: '>=4'}
 
+  chalk@3.0.0:
+    resolution: {integrity: sha512-4D3B6Wf41KOYRFdszmDqMCGq5VV/uMAB273JILmO+3jAlh8X4qDtdtgCR3fxtbLEMzSx22QdhnDcJvu2u1fVwg==}
+    engines: {node: '>=8'}
+
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
     engines: {node: '>=10'}
@@ -24517,8 +24372,8 @@ packages:
     peerDependencies:
       devtools-protocol: '*'
 
-  ci-info@4.2.0:
-    resolution: {integrity: sha512-cYY9mypksY8NRqgDB1XD1RiJL338v/551niynFTGkZOO2LHuB2OmOYxDIe/ttN9AHwrqdum1360G3ald0W9kCg==}
+  ci-info@4.3.0:
+    resolution: {integrity: sha512-l+2bNRMiQgcfILUi33labAZYIWlH1kWDp+ecNo5iisRKrbm0xcRyCww71/YU0Fkw0mAFpz9bJayXPjey6vkmaQ==}
     engines: {node: '>=8'}
 
   cipher-base@1.0.4:
@@ -24898,9 +24753,6 @@ packages:
   cose-base@1.0.3:
     resolution: {integrity: sha512-s9whTXInMSgAp/NVXVNuVxVKzGH2qck3aQlVHxDCdAEPgtMKwc4Wq6/QKhgdEdgbLSi9rBTAcPoRa6JpiG4ksg==}
 
-  cose-base@2.1.0:
-    resolution: {integrity: sha512-HTMm07dhxq1dIPGWwpiVrIk9n+DH7KYmqWA786mLe8jDS+1ZjGtJGIIsJVKoseZXS6/FxiUWCJ2B7XzqUCuhPw==}
-
   cosmiconfig@7.0.1:
     resolution: {integrity: sha512-a1YWNUV2HwGimB7dU2s1wUMurNKjpx60HxBB6xUM8Re+2s1g1IIfJvFR0/iCF+XHdE0GMTKTuLR32UQff4TEyQ==}
     engines: {node: '>=10'}
@@ -25077,15 +24929,6 @@ packages:
     resolution: {integrity: sha512-wgQlVIUJF13Quxiv5e1gstZ08rnZj2XaLHGoFMYXz7SkNfCDOOteKBE6SYRfA9WxxI/iBc3ajfDoc6hb/MRAHQ==}
     peerDependencies:
       cytoscape: ^3.2.0
-
-  cytoscape-fcose@2.1.0:
-    resolution: {integrity: sha512-Q3apPl66jf8/2sMsrCjNP247nbDkyIPjA9g5iPMMWNLZgP3/mn9aryF7EFY/oRPEpv7bKJ4jYmCoU5r5/qAc1Q==}
-    peerDependencies:
-      cytoscape: ^3.2.0
-
-  cytoscape@3.23.0:
-    resolution: {integrity: sha512-gRZqJj/1kiAVPkrVFvz/GccxsXhF3Qwpptl32gKKypO4IlqnKBjTOu+HbXtEggSGzC5KCaHp3/F7GgENrtsFkA==}
-    engines: {node: '>=0.10'}
 
   cytoscape@3.33.1:
     resolution: {integrity: sha512-iJc4TwyANnOGR1OmWhsS9ayRS3s+XQ185FmuHObThD+5AeJCakAAbWv8KimMTt08xCCLNgneQwFp+JRJOr9qGQ==}
@@ -25634,9 +25477,6 @@ packages:
     resolution: {integrity: sha512-KxektNH63SrbfUyDiwXqRb1rLwKt33AmMv+5Nhsw1kqZ13SJBRTgZHtGbE+hH3a1mVW1cz+4pqSWVPAtLVXTzQ==}
     engines: {node: '>=18'}
 
-  devalue@5.1.1:
-    resolution: {integrity: sha512-maua5KUiapvEwiEAe+XnlZ3Rh0GD+qI1J/nb9vrJc3muPXvcF/8gXYTWF76+5DAqHyDUtOIImEuo0YKE9mshVw==}
-
   devalue@5.3.2:
     resolution: {integrity: sha512-UDsjUbpQn9kvm68slnrs+mfxwFkIflOhkanmyabZ8zOYk8SMEIbJ3TK+88g70hSIeytu4y18f0z/hYHMTrXIWw==}
 
@@ -25677,6 +25517,10 @@ packages:
 
   diff@5.2.0:
     resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
+    engines: {node: '>=0.3.1'}
+
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
     engines: {node: '>=0.3.1'}
 
   diffie-hellman@5.0.3:
@@ -25819,9 +25663,6 @@ packages:
 
   electron-to-chromium@1.5.45:
     resolution: {integrity: sha512-vOzZS6uZwhhbkZbcRyiy99Wg+pYFV5hk+5YaECvx0+Z31NR3Tt5zS6dze2OepT6PCTzVzT0dIJItti+uAW5zmw==}
-
-  elkjs@0.8.2:
-    resolution: {integrity: sha512-L6uRgvZTH+4OF5NE/MBbzQx/WYpru1xCBE9respNj6qznEewGUIfhzmm7horWWxbNO2M0WckQypGctR8lH79xQ==}
 
   elkjs@0.9.3:
     resolution: {integrity: sha512-f/ZeWvW/BCXbhGEf1Ujp29EASo/lk1FDnETgNKwJrsVvGZhUWCZyg3xLJjAsxfOmt8KjswHmI5EwCQcPMpOYhQ==}
@@ -26018,11 +25859,6 @@ packages:
 
   esbuild@0.25.4:
     resolution: {integrity: sha512-8pgjLUcUjcgDg+2Q4NYXnPbo/vncAY4UmyaCm0jZevERqCHZIaWwdJHkf8XQtu4AxSKCdvrUbT0XUr1IdZzI8Q==}
-    engines: {node: '>=18'}
-    hasBin: true
-
-  esbuild@0.25.6:
-    resolution: {integrity: sha512-GVuzuUwtdsghE3ocJ9Bs8PNoF13HNQ5TXbEi2AhvVb8xU1Iwt9Fos9FEamfoee+u/TOsn7GUWc04lz46n2bbTg==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -27079,8 +26915,8 @@ packages:
     resolution: {integrity: sha512-LPjlHSwB9zQZrMqKloCZmmmt3yZzIK7nqPcXqwU93zT3TtYG6jP4tZBzAPouxut7lLjdFbMQ75wRBiKfpsnY7w==}
     engines: {node: '>=4', npm: '>=3', yarn: '>=1.3.0'}
 
-  h3@1.15.3:
-    resolution: {integrity: sha512-z6GknHqyX0h9aQaTx22VZDf6QyZn+0Nh+Ym8O/u0SGSkyF5cuTJYKlc8MkzW3Nzf9LE1ivcpmYC3FUGpywhuUQ==}
+  h3@1.15.4:
+    resolution: {integrity: sha512-z5cFQWDffyOe4vQ9xIqNfCZdV4p//vy6fBnr8Q1AWnVZ0teurKMG66rLj++TKwKPUP3u7iMUvrvKaEUiQw2QWQ==}
 
   hachure-fill@0.5.2:
     resolution: {integrity: sha512-3GKBOn+m2LX9iq+JC1064cSFprJY4jL1jCXTcpnfER5HYE2l/4EfWSGzkPa/ZDBmYI0ZOEj5VHV/eKnPGkHuOg==}
@@ -27250,9 +27086,6 @@ packages:
   header-case@2.0.4:
     resolution: {integrity: sha512-H/vuk5TEEVZwrR0lp2zed9OCo1uAILMlx0JEMgC26rzyJJ3N1v6XkwHHXJQdR2doSjcGPM6OKPYoJgf0plJ11Q==}
 
-  heap@0.2.7:
-    resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
-
   highlight.js@10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
 
@@ -27327,6 +27160,9 @@ packages:
 
   http-cache-semantics@4.1.1:
     resolution: {integrity: sha512-er295DKPVsV82j5kw1Gjt+ADA/XYHsajl82cGNQG2eyoPkvgUhX+nDIyelzhIWbbsXP39EHcI6l5tYs2FYqYXQ==}
+
+  http-cache-semantics@4.2.0:
+    resolution: {integrity: sha512-dTxcvPXqPvXBQpq5dUr6mEMJX4oIEFv6bwom3FDwKRDsuIjjJGANqhBuoAn9c1RQJIdAKav33ED65E2ys+87QQ==}
 
   http-call@5.3.0:
     resolution: {integrity: sha512-ahwimsC23ICE4kPl9xTBjKB4inbRaeLyZeRunC/1Jy/Z6X8tv22MEAjK+KBOMSVLaqXPTTmd8638waVIKLGx2w==}
@@ -27478,6 +27314,9 @@ packages:
 
   import-meta-resolve@4.1.0:
     resolution: {integrity: sha512-I6fiaX09Xivtk+THaMfAwnA3MVA5Big1WHF1Dfx9hFuvNIWpXnorlkzhcQf6ehrqQiiZECRt1poOAkPmer3ruw==}
+
+  import-meta-resolve@4.2.0:
+    resolution: {integrity: sha512-Iqv2fzaTQN28s/FwZAoFq0ZSs/7hMAHJVX+w8PZl3cY19Pxk6jFFalxQoIfW2826i/fDLXv8IiEZRIT0lDuWcg==}
 
   imurmurhash@0.1.4:
     resolution: {integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==}
@@ -28285,8 +28124,9 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
-  json-stable-stringify@1.0.1:
-    resolution: {integrity: sha512-i/J297TW6xyj7sDFa7AmBPkQvLIxWr2kKPWI26tXydnZrzVAocNqn5DMNT1Mzk0vit1V5UkRM7C1KdVNp7Lmcg==}
+  json-stable-stringify@1.3.0:
+    resolution: {integrity: sha512-qtYiSSFlwot9XHtF9bD9c7rwKjr+RecWT//ZnPvSmEjpV5mmPOCN4j8UjY5hbjNkOwZ/jQv3J6R1/pL7RwgMsg==}
+    engines: {node: '>= 0.4'}
 
   json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
@@ -28398,9 +28238,6 @@ packages:
 
   layout-base@1.0.2:
     resolution: {integrity: sha512-8h2oVEZNktL4BH2JCOI90iD1yXwL6iNW7KcCKT2QZgQJR2vbqDsldCTPRU9NifTCqHZci57XvQQ15YTu+sTYPg==}
-
-  layout-base@2.0.1:
-    resolution: {integrity: sha512-dp3s92+uNI1hWIpPGH3jK2kxE2lMjdXdr+DH8ynZHpd6PUlH6x6cbuXnoMmiNumznqaNO31xu9e79F0uuZ0JFg==}
 
   lazy-cache@0.2.7:
     resolution: {integrity: sha512-gkX52wvU/R8DVMMt78ATVPFMJqfW8FPz1GZ1sVHBVQHmu/WvhIWE4cE1GBzhJNFicDeYhnwp6Rl35BcAIM3YOQ==}
@@ -28738,6 +28575,9 @@ packages:
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
 
+  magic-string@0.30.19:
+    resolution: {integrity: sha512-2N21sPY9Ws53PZvsEpVtNuSW+ScYbQdp4b9qUaL+9QkHUrGFKo56Lg9Emg5s9V/qrtNBmiR01sYhUOwu3H+VOw==}
+
   magic-string@0.30.8:
     resolution: {integrity: sha512-ISQTe55T2ao7XtlAStud6qwYPZjE4GK1S/BeVPus4jrq6JuOnQ00YKQC581RWhR122W7msZV263KzVeLoqidyQ==}
     engines: {node: '>=12'}
@@ -28937,11 +28777,11 @@ packages:
   merkle-tree-stream@4.0.0:
     resolution: {integrity: sha512-TIurLf/ustQNMXi5foClGTcEsRvH6DCvxeAKu68OrwHMOSM/M1pgPXb7qe52Svk1ClvmZuAVpLtP5FWKzPr/sw==}
 
-  mermaid@10.6.1:
-    resolution: {integrity: sha512-Hky0/RpOw/1il9X8AvzOEChfJtVvmXm+y7JML5C//ePYMy0/9jCEmW1E1g86x9oDfW9+iVEdTV/i+M6KWRNs4A==}
-
   mermaid@10.9.3:
     resolution: {integrity: sha512-V80X1isSEvAewIL3xhmz/rVmc27CVljcsbWxkxlWJWY/1kQa4XOABqpDl2qQLGKzpKm6WbTfUEKImBlUfFYArw==}
+
+  mermaid@10.9.4:
+    resolution: {integrity: sha512-VIG2B0R9ydvkS+wShA8sXqkzfpYglM2Qwj7VyUeqzNVqSGPoP/tcaUr3ub4ESykv8eqQJn3p99bHNvYdg3gCHQ==}
 
   meshline@3.3.1:
     resolution: {integrity: sha512-/TQj+JdZkeSUOl5Mk2J7eLcYTLiQm2IDzmlSvYm7ov15anEcDJ92GHqqazxTSreeNgfnYu24kiEvvv0WlbCdFQ==}
@@ -29567,6 +29407,9 @@ packages:
   node-fetch-native@1.6.6:
     resolution: {integrity: sha512-8Mc2HhqPdlIfedsuZoc3yioPuzp6b+L5jRCRY1QzuWZh2EGJVQrGppC6V6cF0bLdbW0+O2YpqCA25aF/1lvipQ==}
 
+  node-fetch-native@1.6.7:
+    resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
+
   node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -29609,8 +29452,8 @@ packages:
     resolution: {integrity: sha512-K9vk96HdTK5fEipJwxSvIIqwTqr4e3HRJeJrNxBSeVMNSC/JWARRaX7etOLOuTmrRMeOI/K5TCJu3aWIwZiNTw==}
     engines: {node: '>= 7.6.0'}
 
-  node-mock-http@1.0.0:
-    resolution: {integrity: sha512-0uGYQ1WQL1M5kKvGRXWQ3uZCHtLTO8hln3oBjIusM75WoesZ909uQJs/Hb946i2SS+Gsrhkaa6iAO17jRIv6DQ==}
+  node-mock-http@1.0.3:
+    resolution: {integrity: sha512-jN8dK25fsfnMrVsEhluUTPkBFY+6ybu7jSB1n+ri/vOGjJxU8J9CZhpSGkHXSkFjtUhbmoncG/YG9ta5Ludqog==}
 
   node-notifier@10.0.1:
     resolution: {integrity: sha512-YX7TSyDukOZ0g+gmzjB6abKu+hTGvO8+8+gIFDsRCU2t8fLV/P2unmt+LGFaIa4y64aX98Qksa97rgz4vMNeLQ==}
@@ -30586,6 +30429,10 @@ packages:
     resolution: {integrity: sha512-Kx/1w86q/epKcmte75LNrEoT+lX8pBpavuAbvJWRXar7Hz8jrtF+e3vY751p0R8H9HdArwaCTNDDzHg/ScJK1Q==}
     engines: {node: '>=6'}
 
+  prismjs@1.30.0:
+    resolution: {integrity: sha512-DEvV2ZF2r2/63V+tK8hQvrR2ZGn10srHbXviTlcv7Kpzw8jWiNTqbVgjO3IY8RxrrOUF8VPMQQFysYYYv0YZxw==}
+    engines: {node: '>=6'}
+
   proc-log@4.2.0:
     resolution: {integrity: sha512-g8+OnU/L2v+wyiVK+D5fA34J7EH8jZ8DDlvwhRCMxmMj7UCBvxiO1mGeN+36JXIKF4zevU4kRBd8lVgG9vLelA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -30754,8 +30601,8 @@ packages:
   quote-unquote@1.0.0:
     resolution: {integrity: sha512-twwRO/ilhlG/FIgYeKGFqyHhoEhqgnKVkcmqMKi2r524gz3ZbDTcyFt38E9xjJI2vT+KbRNHVbnJ/e0I25Azwg==}
 
-  race-as-promised@0.0.2:
-    resolution: {integrity: sha512-7BLWiZMSVJDxMTT/QUuEEdd/f/pYDkusGvU0p3NUCDAc6HSlhPpvRS42/GmK79p3Kw4aDA+l+sD8wNpxQdOYTQ==}
+  race-as-promised@0.0.3:
+    resolution: {integrity: sha512-BH1qgNWMG4Mhp4wlX2uYE6reVsIXogb+aPEcosVDmnPjpkQVcWRxqDIlP1hGUiGZG8ohoiyaUlwX3xiu8O7tzw==}
 
   radix3@1.1.2:
     resolution: {integrity: sha512-b484I/7b8rDEdSDKckSSBA8knMpcdsXudlE/LNL639wFoHKwLbEkQFZHWEYwDC0wa0FKUcCY+GAF73Z7wxNVFA==}
@@ -31517,11 +31364,6 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
 
-  rollup@4.40.2:
-    resolution: {integrity: sha512-tfUOg6DTP4rhQ3VjOO6B4wyrJnGOX85requAXvqYTHsOgb2TFJdZ3aWpT8W2kPoypSGP7dZUyzxJ9ee4buM5Fg==}
-    engines: {node: '>=18.0.0', npm: '>=8.0.0'}
-    hasBin: true
-
   rollup@4.50.1:
     resolution: {integrity: sha512-78E9voJHwnXQMiQdiqswVLZwJIzdBKJ1GdI5Zx6XwoFKUIk09/sSrr+05QFzvYb8q6Y9pPV45zzDuYa3907TZA==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
@@ -31815,6 +31657,9 @@ packages:
   shiki@1.29.2:
     resolution: {integrity: sha512-njXuliz/cP+67jU2hukkxCNuH1yUi4QfdZZY+sMr5PPrIyXSu5iTb/qYC4BiWWB0vZ+7TbdvYUCeL23zpwCfbg==}
 
+  shiki@3.13.0:
+    resolution: {integrity: sha512-aZW4l8Og16CokuCLf8CF8kq+KK2yOygapU5m3+hoGw0Mdosc6fPitjM+ujYarppj5ZIKGyPDPP1vqmQhr+5/0g==}
+
   shiki@3.4.0:
     resolution: {integrity: sha512-Ni80XHcqhOEXv5mmDAvf5p6PAJqbUc/RzFeaOqk+zP5DLvTPS3j0ckvA+MI87qoxTQ5RGJDVTbdl/ENLSyyAnQ==}
 
@@ -31934,6 +31779,10 @@ packages:
 
   smol-toml@1.3.4:
     resolution: {integrity: sha512-UOPtVuYkzYGee0Bd2Szz8d2G3RfMfJ2t3qVdZUAozZyAk+a0Sxa+QKix0YCwjL/A1RR0ar44nCxaoN9FxdJGwA==}
+    engines: {node: '>= 18'}
+
+  smol-toml@1.4.2:
+    resolution: {integrity: sha512-rInDH6lCNiEyn3+hH8KVGFdbjc099j47+OSgbMrfDYX1CmXLfdKd7qi6IfcWj2wFxvSVkuI46M+wPGYfEOEj6g==}
     engines: {node: '>= 18'}
 
   snake-case@3.0.4:
@@ -32577,8 +32426,16 @@ packages:
     resolution: {integrity: sha512-Zba82s87IFq9A9XmjiX5uZA/ARWDrB03OHlq+Vw1fSdt0I+4/Kutwy8BP4Y/y/aORMo61FQ0vIb5j44vSo5Pkg==}
     engines: {node: ^18.0.0 || >=20.0.0}
 
+  tinyrainbow@1.2.0:
+    resolution: {integrity: sha512-weEDEq7Z5eTHPDh4xjX789+fHfF+P8boiFB+0vbWzpbnbsEr/GRaohi/uMKxg8RZMXnl1ItAi/IUHWMsjDV7kQ==}
+    engines: {node: '>=14.0.0'}
+
   tinyrainbow@2.0.0:
     resolution: {integrity: sha512-op4nsTR47R6p0vMUUoYl/a+ljLFVtlfaXkLQmqfLR1qHma1h/ysYk4hEXZ880bf2CYgTskvTa/e196Vd5dDQXw==}
+    engines: {node: '>=14.0.0'}
+
+  tinyspy@3.0.2:
+    resolution: {integrity: sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==}
     engines: {node: '>=14.0.0'}
 
   tinyspy@4.0.3:
@@ -32764,6 +32621,16 @@ packages:
 
   tsconfck@3.1.5:
     resolution: {integrity: sha512-CLDfGgUp7XPswWnezWwsCRxNmgQjhYq3VXHM0/XIRxhVrKw0M1if9agzryh1QS3nxjCROvV+xWxoJO1YctzzWg==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+    peerDependencies:
+      typescript: ^5.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  tsconfck@3.1.6:
+    resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
     hasBin: true
     peerDependencies:
@@ -33035,8 +32902,8 @@ packages:
   unified@11.0.5:
     resolution: {integrity: sha512-xKvGhPWw3k84Qjh8bI3ZeJjqnyadK+GEFtazSfZv/rKeTkTjOJho6mFqh2SM96iIcZokxiOpg78GazTSg8+KHA==}
 
-  unifont@0.5.0:
-    resolution: {integrity: sha512-4DueXMP5Hy4n607sh+vJ+rajoLu778aU3GzqeTCqsD/EaUcvqZT9wPC8kgK6Vjh22ZskrxyRCR71FwNOaYn6jA==}
+  unifont@0.5.2:
+    resolution: {integrity: sha512-LzR4WUqzH9ILFvjLAUU7dK3Lnou/qd5kD+IakBtBK4S15/+x2y9VX+DcWQv6s551R6W+vzwgVS6tFg3XggGBgg==}
 
   unique-string@2.0.0:
     resolution: {integrity: sha512-uNaeirEPvpZWSgzwsPGtU2zVSTrn/8L5q/IexZmH0eH6SA73CmAA5U4GwORTxQAZs95TAXLNqeLoPPNO5gZfWg==}
@@ -33156,8 +33023,8 @@ packages:
   unrs-resolver@1.11.1:
     resolution: {integrity: sha512-bSjt9pjaEBnNiGgc9rUiHGKv5l4/TGzDmYw3RhnkJGtLhbnnA/5qJj7x3dNDCRx/PJxu774LlH8lCOlB4hEfKg==}
 
-  unstorage@1.16.0:
-    resolution: {integrity: sha512-WQ37/H5A7LcRPWfYOrDa1Ys02xAbpPJq6q5GkO88FBXVSQzHd7+BjEwfRqyaSWCv9MbsJy058GWjjPjcJ16GGA==}
+  unstorage@1.17.1:
+    resolution: {integrity: sha512-KKGwRTT0iVBCErKemkJCLs7JdxNVfqTPc/85ae1XES0+bsHbc/sFBfVi5kJp156cc51BHinIH2l3k0EZ24vOBQ==}
     peerDependencies:
       '@azure/app-configuration': ^1.8.0
       '@azure/cosmos': ^4.2.0
@@ -33167,10 +33034,11 @@ packages:
       '@azure/storage-blob': ^12.26.0
       '@capacitor/preferences': ^6.0.3 || ^7.0.0
       '@deno/kv': '>=0.9.0'
-      '@netlify/blobs': ^6.5.0 || ^7.0.0 || ^8.1.0
+      '@netlify/blobs': ^6.5.0 || ^7.0.0 || ^8.1.0 || ^9.0.0 || ^10.0.0
       '@planetscale/database': ^1.19.0
       '@upstash/redis': ^1.34.3
       '@vercel/blob': '>=0.27.1'
+      '@vercel/functions': ^2.2.12 || ^3.0.0
       '@vercel/kv': ^1.0.1
       aws4fetch: ^1.0.20
       db0: '>=0.2.1'
@@ -33201,6 +33069,8 @@ packages:
       '@upstash/redis':
         optional: true
       '@vercel/blob':
+        optional: true
+      '@vercel/functions':
         optional: true
       '@vercel/kv':
         optional: true
@@ -33474,8 +33344,8 @@ packages:
       vite:
         optional: true
 
-  vite@6.3.5:
-    resolution: {integrity: sha512-cZn6NDFE7wdTpINgs++ZJ4N49W2vRp8LCKrn3Ob1kYNtOo21vfDoaV5GzBfLU4MovSAB8uNRm4jgzVQZ+mBzPQ==}
+  vite@6.3.6:
+    resolution: {integrity: sha512-0msEVHJEScQbhkbVTb/4iHZdJ6SXp/AvxL2sjwYQFfBqleHtnCqv1J3sa9zbWz/6kW1m9Tfzn92vW+kZ1WV6QA==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -33554,10 +33424,10 @@ packages:
       yaml:
         optional: true
 
-  vitefu@1.0.6:
-    resolution: {integrity: sha512-+Rex1GlappUyNN6UfwbVZne/9cYC4+R2XDk9xkNXBKMw6HQagdX9PgZ8V2v1WUSK1wfBLp7qbI1+XSNIlB1xmA==}
+  vitefu@1.1.1:
+    resolution: {integrity: sha512-B/Fegf3i8zh0yFbpzZ21amWzHmuNlLlmJT6n7bu5e+pCHUKQIfXSYokrqOBGEMMe9UG2sostKQF9mml/vYaWJQ==}
     peerDependencies:
-      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0-beta.0
     peerDependenciesMeta:
       vite:
         optional: true
@@ -34137,8 +34007,8 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
-  yocto-spinner@0.2.2:
-    resolution: {integrity: sha512-21rPcM3e4vCpOXThiFRByX8amU5By1R0wNS8Oex+DP3YgC8xdU0vEJ/K8cbPLiIJVosSSysgcFof6s6MSD5/Vw==}
+  yocto-spinner@0.2.3:
+    resolution: {integrity: sha512-sqBChb33loEnkoXte1bLg45bEBsOP9N1kzQh5JZNKj/0rik4zAPTNSAVPj3uQAdc6slYJ0Ksc403G2XgxsJQFQ==}
     engines: {node: '>=18.19'}
 
   yoctocolors-cjs@2.1.2:
@@ -34178,8 +34048,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zod-to-json-schema@3.24.5:
-    resolution: {integrity: sha512-/AuWwMP+YqiPbsJx5D6TfgRTc4kTLjsh5SOcd4bLsfUg2RcEXrFMJl1DGgdHy2aCfsIA/cr/1JM0xcB2GZji8g==}
+  zod-to-json-schema@3.24.6:
+    resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
     peerDependencies:
       zod: ^3.24.1
 
@@ -34194,6 +34064,9 @@ packages:
 
   zod@3.24.4:
     resolution: {integrity: sha512-OdqJE9UDRPwWsrHjLN2F8bPxvwJBK22EHLWtanu0LSYr5YqzsaaW3RMgmjwr8Rypg5k+meEJdSPXJZXE/yqOMg==}
+
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zone.js@0.14.8:
     resolution: {integrity: sha512-48uh7MnVp4/OQDuCHeFdXw5d8xwPqFTvlHgPJ1LBFb5GaustLSZV+YUH0to5ygNyGpqTsjpbpt141U/j3pCfqQ==}
@@ -34334,9 +34207,11 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@astrojs/compiler@2.12.0': {}
+  '@astrojs/compiler@2.13.0': {}
 
   '@astrojs/internal-helpers@0.6.1': {}
+
+  '@astrojs/internal-helpers@0.7.3': {}
 
   '@astrojs/markdown-remark@6.3.1':
     dependencies:
@@ -34364,12 +34239,38 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@4.2.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
+  '@astrojs/markdown-remark@6.3.7':
+    dependencies:
+      '@astrojs/internal-helpers': 0.7.3
+      '@astrojs/prism': 3.3.0
+      github-slugger: 2.0.0
+      hast-util-from-html: 2.0.3
+      hast-util-to-text: 4.0.2
+      import-meta-resolve: 4.2.0
+      js-yaml: 4.1.0
+      mdast-util-definitions: 6.0.0
+      rehype-raw: 7.0.0
+      rehype-stringify: 10.0.1
+      remark-gfm: 4.0.1
+      remark-parse: 11.0.0
+      remark-rehype: 11.1.2
+      remark-smartypants: 3.0.2
+      shiki: 3.13.0
+      smol-toml: 1.4.2
+      unified: 11.0.5
+      unist-util-remove-position: 5.0.0
+      unist-util-visit: 5.0.0
+      unist-util-visit-parents: 6.0.1
+      vfile: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@astrojs/mdx@4.2.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.1
       '@mdx-js/mdx': 3.1.0(acorn@8.15.0)
       acorn: 8.15.0
-      astro: 5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro: 5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -34387,22 +34288,26 @@ snapshots:
     dependencies:
       prismjs: 1.29.0
 
+  '@astrojs/prism@3.3.0':
+    dependencies:
+      prismjs: 1.30.0
+
   '@astrojs/sitemap@3.4.0':
     dependencies:
       sitemap: 8.0.0
       stream-replace-string: 2.0.0
       zod: 3.24.4
 
-  '@astrojs/starlight@0.32.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
+  '@astrojs/starlight@0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))':
     dependencies:
-      '@astrojs/mdx': 4.2.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      '@astrojs/mdx': 4.2.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       '@astrojs/sitemap': 3.4.0
       '@pagefind/default-ui': 1.3.0
       '@types/hast': 3.0.4
       '@types/js-yaml': 4.0.9
       '@types/mdast': 4.0.4
-      astro: 5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
-      astro-expressive-code: 0.40.2(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      astro: 5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro-expressive-code: 0.40.2(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       bcp-47: 2.1.0
       hast-util-from-html: 2.0.3
       hast-util-select: 6.0.4
@@ -34424,9 +34329,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/telemetry@3.2.1':
+  '@astrojs/telemetry@3.3.0':
     dependencies:
-      ci-info: 4.2.0
+      ci-info: 4.3.0
       debug: 4.4.1
       dlv: 1.1.3
       dset: 3.1.4
@@ -36189,25 +36094,25 @@ snapshots:
 
   '@cloudflare/workers-types@4.20250909.0': {}
 
-  '@codemirror/autocomplete@6.18.7':
+  '@codemirror/autocomplete@6.19.0':
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
 
   '@codemirror/commands@6.6.2':
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
 
   '@codemirror/commands@6.8.1':
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
 
   '@codemirror/lang-angular@0.1.2':
@@ -36226,7 +36131,7 @@ snapshots:
 
   '@codemirror/lang-css@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/common': 1.2.2
@@ -36234,7 +36139,7 @@ snapshots:
 
   '@codemirror/lang-go@6.0.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/common': 1.2.2
@@ -36242,12 +36147,12 @@ snapshots:
 
   '@codemirror/lang-html@6.4.9':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/lang-css': 6.2.1
       '@codemirror/lang-javascript': 6.2.4
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/css': 1.1.1
       '@lezer/html': 1.3.3
@@ -36259,11 +36164,11 @@ snapshots:
 
   '@codemirror/lang-javascript@6.2.4':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/lint': 6.8.5
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/javascript': 1.4.1
 
@@ -36281,22 +36186,22 @@ snapshots:
 
   '@codemirror/lang-liquid@6.2.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/lang-html': 6.4.9
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
 
   '@codemirror/lang-markdown@6.3.4':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/lang-html': 6.4.9
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/markdown': 1.3.1
 
@@ -36310,7 +36215,7 @@ snapshots:
 
   '@codemirror/lang-python@6.1.2':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@lezer/python': 1.1.2
 
@@ -36329,7 +36234,7 @@ snapshots:
 
   '@codemirror/lang-sql@6.4.0':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/highlight': 1.2.1
@@ -36352,16 +36257,16 @@ snapshots:
 
   '@codemirror/lang-xml@6.1.0':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/xml': 1.0.6
 
   '@codemirror/lang-yaml@6.1.1':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
       '@lezer/common': 1.2.2
@@ -36396,7 +36301,7 @@ snapshots:
   '@codemirror/language@6.11.3':
     dependencies:
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
       '@lezer/highlight': 1.2.1
       '@lezer/lr': 1.4.2
@@ -36409,13 +36314,13 @@ snapshots:
   '@codemirror/lint@6.8.5':
     dependencies:
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       crelt: 1.0.5
 
   '@codemirror/search@6.5.11':
     dependencies:
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       crelt: 1.0.5
 
   '@codemirror/state@6.5.2':
@@ -36426,10 +36331,10 @@ snapshots:
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/highlight': 1.2.1
 
-  '@codemirror/view@6.38.2':
+  '@codemirror/view@6.38.4':
     dependencies:
       '@codemirror/state': 6.5.2
       crelt: 1.0.6
@@ -36593,7 +36498,7 @@ snapshots:
       '@effect/platform': 0.92.1(effect@3.18.1)
       effect: 3.18.1
 
-  '@effect/ai-anthropic@0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)':
+  '@effect/ai-anthropic@0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@anthropic-ai/tokenizer': 0.0.4
       '@effect/ai': 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
@@ -36627,12 +36532,12 @@ snapshots:
       toml: 3.0.0
       yaml: 2.7.1
 
-  '@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
-      '@effect/workflow': 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/workflow': 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect: 3.18.1
 
   '@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)':
@@ -36651,9 +36556,9 @@ snapshots:
       effect: 3.18.1
       multipasta: 0.2.7
 
-  '@effect/platform-node-shared@0.51.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/platform-node-shared@0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
-      '@effect/cluster': 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -36665,11 +36570,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/platform-node@0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
-      '@effect/cluster': 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform': 0.92.1(effect@3.18.1)
-      '@effect/platform-node-shared': 0.51.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/platform-node-shared': 0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       effect: 3.18.1
@@ -36725,7 +36630,7 @@ snapshots:
       effect: 3.18.1
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1)
 
-  '@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -36806,9 +36711,6 @@ snapshots:
   '@esbuild/aix-ppc64@0.25.4':
     optional: true
 
-  '@esbuild/aix-ppc64@0.25.6':
-    optional: true
-
   '@esbuild/android-arm64@0.17.19':
     optional: true
 
@@ -36819,9 +36721,6 @@ snapshots:
     optional: true
 
   '@esbuild/android-arm64@0.25.4':
-    optional: true
-
-  '@esbuild/android-arm64@0.25.6':
     optional: true
 
   '@esbuild/android-arm@0.17.19':
@@ -36836,9 +36735,6 @@ snapshots:
   '@esbuild/android-arm@0.25.4':
     optional: true
 
-  '@esbuild/android-arm@0.25.6':
-    optional: true
-
   '@esbuild/android-x64@0.17.19':
     optional: true
 
@@ -36849,9 +36745,6 @@ snapshots:
     optional: true
 
   '@esbuild/android-x64@0.25.4':
-    optional: true
-
-  '@esbuild/android-x64@0.25.6':
     optional: true
 
   '@esbuild/darwin-arm64@0.17.19':
@@ -36866,9 +36759,6 @@ snapshots:
   '@esbuild/darwin-arm64@0.25.4':
     optional: true
 
-  '@esbuild/darwin-arm64@0.25.6':
-    optional: true
-
   '@esbuild/darwin-x64@0.17.19':
     optional: true
 
@@ -36879,9 +36769,6 @@ snapshots:
     optional: true
 
   '@esbuild/darwin-x64@0.25.4':
-    optional: true
-
-  '@esbuild/darwin-x64@0.25.6':
     optional: true
 
   '@esbuild/freebsd-arm64@0.17.19':
@@ -36896,9 +36783,6 @@ snapshots:
   '@esbuild/freebsd-arm64@0.25.4':
     optional: true
 
-  '@esbuild/freebsd-arm64@0.25.6':
-    optional: true
-
   '@esbuild/freebsd-x64@0.17.19':
     optional: true
 
@@ -36909,9 +36793,6 @@ snapshots:
     optional: true
 
   '@esbuild/freebsd-x64@0.25.4':
-    optional: true
-
-  '@esbuild/freebsd-x64@0.25.6':
     optional: true
 
   '@esbuild/linux-arm64@0.17.19':
@@ -36926,9 +36807,6 @@ snapshots:
   '@esbuild/linux-arm64@0.25.4':
     optional: true
 
-  '@esbuild/linux-arm64@0.25.6':
-    optional: true
-
   '@esbuild/linux-arm@0.17.19':
     optional: true
 
@@ -36939,9 +36817,6 @@ snapshots:
     optional: true
 
   '@esbuild/linux-arm@0.25.4':
-    optional: true
-
-  '@esbuild/linux-arm@0.25.6':
     optional: true
 
   '@esbuild/linux-ia32@0.17.19':
@@ -36956,9 +36831,6 @@ snapshots:
   '@esbuild/linux-ia32@0.25.4':
     optional: true
 
-  '@esbuild/linux-ia32@0.25.6':
-    optional: true
-
   '@esbuild/linux-loong64@0.17.19':
     optional: true
 
@@ -36969,9 +36841,6 @@ snapshots:
     optional: true
 
   '@esbuild/linux-loong64@0.25.4':
-    optional: true
-
-  '@esbuild/linux-loong64@0.25.6':
     optional: true
 
   '@esbuild/linux-mips64el@0.17.19':
@@ -36986,9 +36855,6 @@ snapshots:
   '@esbuild/linux-mips64el@0.25.4':
     optional: true
 
-  '@esbuild/linux-mips64el@0.25.6':
-    optional: true
-
   '@esbuild/linux-ppc64@0.17.19':
     optional: true
 
@@ -36999,9 +36865,6 @@ snapshots:
     optional: true
 
   '@esbuild/linux-ppc64@0.25.4':
-    optional: true
-
-  '@esbuild/linux-ppc64@0.25.6':
     optional: true
 
   '@esbuild/linux-riscv64@0.17.19':
@@ -37016,9 +36879,6 @@ snapshots:
   '@esbuild/linux-riscv64@0.25.4':
     optional: true
 
-  '@esbuild/linux-riscv64@0.25.6':
-    optional: true
-
   '@esbuild/linux-s390x@0.17.19':
     optional: true
 
@@ -37029,9 +36889,6 @@ snapshots:
     optional: true
 
   '@esbuild/linux-s390x@0.25.4':
-    optional: true
-
-  '@esbuild/linux-s390x@0.25.6':
     optional: true
 
   '@esbuild/linux-x64@0.17.19':
@@ -37046,16 +36903,10 @@ snapshots:
   '@esbuild/linux-x64@0.25.4':
     optional: true
 
-  '@esbuild/linux-x64@0.25.6':
-    optional: true
-
   '@esbuild/netbsd-arm64@0.25.10':
     optional: true
 
   '@esbuild/netbsd-arm64@0.25.4':
-    optional: true
-
-  '@esbuild/netbsd-arm64@0.25.6':
     optional: true
 
   '@esbuild/netbsd-x64@0.17.19':
@@ -37070,16 +36921,10 @@ snapshots:
   '@esbuild/netbsd-x64@0.25.4':
     optional: true
 
-  '@esbuild/netbsd-x64@0.25.6':
-    optional: true
-
   '@esbuild/openbsd-arm64@0.25.10':
     optional: true
 
   '@esbuild/openbsd-arm64@0.25.4':
-    optional: true
-
-  '@esbuild/openbsd-arm64@0.25.6':
     optional: true
 
   '@esbuild/openbsd-x64@0.17.19':
@@ -37094,13 +36939,7 @@ snapshots:
   '@esbuild/openbsd-x64@0.25.4':
     optional: true
 
-  '@esbuild/openbsd-x64@0.25.6':
-    optional: true
-
   '@esbuild/openharmony-arm64@0.25.10':
-    optional: true
-
-  '@esbuild/openharmony-arm64@0.25.6':
     optional: true
 
   '@esbuild/sunos-x64@0.17.19':
@@ -37115,9 +36954,6 @@ snapshots:
   '@esbuild/sunos-x64@0.25.4':
     optional: true
 
-  '@esbuild/sunos-x64@0.25.6':
-    optional: true
-
   '@esbuild/win32-arm64@0.17.19':
     optional: true
 
@@ -37128,9 +36964,6 @@ snapshots:
     optional: true
 
   '@esbuild/win32-arm64@0.25.4':
-    optional: true
-
-  '@esbuild/win32-arm64@0.25.6':
     optional: true
 
   '@esbuild/win32-ia32@0.17.19':
@@ -37145,9 +36978,6 @@ snapshots:
   '@esbuild/win32-ia32@0.25.4':
     optional: true
 
-  '@esbuild/win32-ia32@0.25.6':
-    optional: true
-
   '@esbuild/win32-x64@0.17.19':
     optional: true
 
@@ -37158,9 +36988,6 @@ snapshots:
     optional: true
 
   '@esbuild/win32-x64@0.25.4':
-    optional: true
-
-  '@esbuild/win32-x64@0.25.6':
     optional: true
 
   '@eslint-community/eslint-utils@4.7.0(eslint@9.36.0(jiti@2.4.2))':
@@ -37626,7 +37453,7 @@ snapshots:
 
   '@img/sharp-wasm32@0.34.1':
     dependencies:
-      '@emnapi/runtime': 1.4.3
+      '@emnapi/runtime': 1.5.0
     optional: true
 
   '@img/sharp-win32-ia32@0.33.5':
@@ -37880,6 +37707,8 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.29
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
+
+  '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@jridgewell/trace-mapping@0.3.29':
     dependencies:
@@ -38593,7 +38422,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38603,7 +38432,7 @@ snapshots:
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/propagator-aws-xray': 1.3.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/aws-lambda': 8.10.122
     transitivePeerDependencies:
       - supports-color
@@ -38614,7 +38443,7 @@ snapshots:
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/propagation-utils': 0.30.8(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38631,7 +38460,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38640,7 +38469,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/connect': 3.4.36
     transitivePeerDependencies:
       - supports-color
@@ -38650,7 +38479,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/connect': 3.4.36
     transitivePeerDependencies:
       - supports-color
@@ -38659,7 +38488,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38674,7 +38503,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
@@ -38686,7 +38515,7 @@ snapshots:
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-web': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38695,7 +38524,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38704,7 +38533,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38713,7 +38542,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38722,7 +38551,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38741,7 +38570,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38749,7 +38578,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38780,7 +38609,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/hapi__hapi': 20.0.13
     transitivePeerDependencies:
       - supports-color
@@ -38790,7 +38619,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38809,7 +38638,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/redis-common': 0.36.2
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/ioredis4': '@types/ioredis@4.28.10'
     transitivePeerDependencies:
       - supports-color
@@ -38819,7 +38648,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/redis-common': 0.36.2
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38827,7 +38656,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38836,7 +38665,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/koa': 2.14.0
       '@types/koa__router': 12.0.3
     transitivePeerDependencies:
@@ -38847,7 +38676,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38862,7 +38691,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/memcached': 2.2.10
     transitivePeerDependencies:
       - supports-color
@@ -38872,7 +38701,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-metrics': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38881,7 +38710,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-metrics': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38890,7 +38719,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38899,7 +38728,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38907,7 +38736,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@opentelemetry/sql-common': 0.40.1(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - supports-color
@@ -38916,7 +38745,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@opentelemetry/sql-common': 0.40.1(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - supports-color
@@ -38925,7 +38754,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/mysql': 2.15.22
     transitivePeerDependencies:
       - supports-color
@@ -38934,7 +38763,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/mysql': 2.15.22
     transitivePeerDependencies:
       - supports-color
@@ -38943,7 +38772,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38951,7 +38780,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38959,7 +38788,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -38967,7 +38796,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@opentelemetry/sql-common': 0.40.1(@opentelemetry/api@1.9.0)
       '@types/pg': 8.6.1
       '@types/pg-pool': 2.0.4
@@ -38978,7 +38807,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@opentelemetry/sql-common': 0.40.1(@opentelemetry/api@1.9.0)
       '@types/pg': 8.6.1
       '@types/pg-pool': 2.0.4
@@ -38997,7 +38826,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/redis-common': 0.36.2
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39006,7 +38835,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/redis-common': 0.36.2
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39015,7 +38844,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/redis-common': 0.36.2
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39024,7 +38853,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39032,7 +38861,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39040,7 +38869,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
 
@@ -39048,7 +38877,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.50.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@types/tedious': 4.0.14
     transitivePeerDependencies:
       - supports-color
@@ -39166,27 +38995,27 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
 
   '@opentelemetry/resource-detector-aws@1.4.1(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
 
   '@opentelemetry/resource-detector-container@0.3.8(@opentelemetry/api@1.9.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
 
   '@opentelemetry/resource-detector-gcp@0.29.8(@opentelemetry/api@1.9.0)(encoding@0.1.13)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       gcp-metadata: 6.1.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
@@ -39259,7 +39088,7 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.25.1': {}
 
-  '@opentelemetry/semantic-conventions@1.34.0': {}
+  '@opentelemetry/semantic-conventions@1.37.0': {}
 
   '@opentelemetry/sql-common@0.40.1(@opentelemetry/api@1.9.0)':
     dependencies:
@@ -39516,7 +39345,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-module-imports': 7.25.9
       '@babel/helper-plugin-utils': 7.27.1
-      '@preact/signals-core': 1.11.0
+      '@preact/signals-core': 1.12.1
       debug: 4.4.1
       hotscript: 1.0.13
       react: 19.2.0
@@ -39533,7 +39362,7 @@ snapshots:
       '@babel/core': 7.28.4
       '@babel/helper-module-imports': 7.25.9
       '@babel/helper-plugin-utils': 7.27.1
-      '@preact/signals-core': 1.11.0
+      '@preact/signals-core': 1.12.1
       debug: 4.4.1
       hotscript: 1.0.13
       react: 19.2.0
@@ -39545,17 +39374,23 @@ snapshots:
       - '@swc/helpers'
       - supports-color
 
-  '@preact/signals-core@1.11.0': {}
+  '@preact/signals-core@1.12.1': {}
 
   '@preact/signals-react@3.2.1(react@19.2.0)':
     dependencies:
-      '@preact/signals-core': 1.11.0
+      '@preact/signals-core': 1.12.1
       react: 19.2.0
       use-sync-external-store: 1.2.2(react@19.2.0)
 
-  '@preact/signals@2.2.1(preact@10.26.9)':
+  '@preact/signals-react@3.3.0(react@19.2.0)':
     dependencies:
-      '@preact/signals-core': 1.11.0
+      '@preact/signals-core': 1.12.1
+      react: 19.2.0
+      use-sync-external-store: 1.6.0(react@19.2.0)
+
+  '@preact/signals@2.3.1(preact@10.26.9)':
+    dependencies:
+      '@preact/signals-core': 1.12.1
       preact: 10.26.9
 
   '@prisma/instrumentation@5.17.0':
@@ -40940,23 +40775,23 @@ snapshots:
 
   '@remix-run/router@1.0.2': {}
 
-  '@replit/codemirror-vim@6.2.1(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)':
+  '@replit/codemirror-vim@6.2.1(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)':
     dependencies:
       '@codemirror/commands': 6.8.1
       '@codemirror/language': 6.11.3
       '@codemirror/search': 6.5.11
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
 
-  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.18.7)(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)':
+  '@replit/codemirror-vscode-keymap@6.0.2(@codemirror/autocomplete@6.19.0)(@codemirror/commands@6.8.1)(@codemirror/language@6.11.3)(@codemirror/lint@6.8.5)(@codemirror/search@6.5.11)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/commands': 6.8.1
       '@codemirror/language': 6.11.3
       '@codemirror/lint': 6.8.5
       '@codemirror/search': 6.5.11
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
 
   '@resvg/resvg-js-android-arm-eabi@2.6.2':
     optional: true
@@ -41113,91 +40948,54 @@ snapshots:
     optionalDependencies:
       rollup: 3.23.0
 
-  '@rollup/rollup-android-arm-eabi@4.40.2':
-    optional: true
+  '@rollup/pluginutils@5.3.0(rollup@3.23.0)':
+    dependencies:
+      '@types/estree': 1.0.8
+      estree-walker: 2.0.2
+      picomatch: 4.0.3
+    optionalDependencies:
+      rollup: 3.23.0
 
   '@rollup/rollup-android-arm-eabi@4.50.1':
-    optional: true
-
-  '@rollup/rollup-android-arm64@4.40.2':
     optional: true
 
   '@rollup/rollup-android-arm64@4.50.1':
     optional: true
 
-  '@rollup/rollup-darwin-arm64@4.40.2':
-    optional: true
-
   '@rollup/rollup-darwin-arm64@4.50.1':
-    optional: true
-
-  '@rollup/rollup-darwin-x64@4.40.2':
     optional: true
 
   '@rollup/rollup-darwin-x64@4.50.1':
     optional: true
 
-  '@rollup/rollup-freebsd-arm64@4.40.2':
-    optional: true
-
   '@rollup/rollup-freebsd-arm64@4.50.1':
-    optional: true
-
-  '@rollup/rollup-freebsd-x64@4.40.2':
     optional: true
 
   '@rollup/rollup-freebsd-x64@4.50.1':
     optional: true
 
-  '@rollup/rollup-linux-arm-gnueabihf@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-arm-gnueabihf@4.50.1':
-    optional: true
-
-  '@rollup/rollup-linux-arm-musleabihf@4.40.2':
     optional: true
 
   '@rollup/rollup-linux-arm-musleabihf@4.50.1':
     optional: true
 
-  '@rollup/rollup-linux-arm64-gnu@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-arm64-gnu@4.50.1':
-    optional: true
-
-  '@rollup/rollup-linux-arm64-musl@4.40.2':
     optional: true
 
   '@rollup/rollup-linux-arm64-musl@4.50.1':
     optional: true
 
-  '@rollup/rollup-linux-loongarch64-gnu@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-loongarch64-gnu@4.50.1':
-    optional: true
-
-  '@rollup/rollup-linux-powerpc64le-gnu@4.40.2':
     optional: true
 
   '@rollup/rollup-linux-ppc64-gnu@4.50.1':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-gnu@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-riscv64-gnu@4.50.1':
     optional: true
 
-  '@rollup/rollup-linux-riscv64-musl@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-riscv64-musl@4.50.1':
-    optional: true
-
-  '@rollup/rollup-linux-s390x-gnu@4.40.2':
     optional: true
 
   '@rollup/rollup-linux-s390x-gnu@4.50.1':
@@ -41206,13 +41004,7 @@ snapshots:
   '@rollup/rollup-linux-x64-gnu@4.40.0':
     optional: true
 
-  '@rollup/rollup-linux-x64-gnu@4.40.2':
-    optional: true
-
   '@rollup/rollup-linux-x64-gnu@4.50.1':
-    optional: true
-
-  '@rollup/rollup-linux-x64-musl@4.40.2':
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.50.1':
@@ -41221,19 +41013,10 @@ snapshots:
   '@rollup/rollup-openharmony-arm64@4.50.1':
     optional: true
 
-  '@rollup/rollup-win32-arm64-msvc@4.40.2':
-    optional: true
-
   '@rollup/rollup-win32-arm64-msvc@4.50.1':
     optional: true
 
-  '@rollup/rollup-win32-ia32-msvc@4.40.2':
-    optional: true
-
   '@rollup/rollup-win32-ia32-msvc@4.50.1':
-    optional: true
-
-  '@rollup/rollup-win32-x64-msvc@4.40.2':
     optional: true
 
   '@rollup/rollup-win32-x64-msvc@4.50.1':
@@ -41435,10 +41218,10 @@ snapshots:
       '@opentelemetry/instrumentation-redis-4': 0.41.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@prisma/instrumentation': 5.17.0
       '@sentry/core': 8.19.0
-      '@sentry/opentelemetry': 8.19.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.52.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)
+      '@sentry/opentelemetry': 8.19.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.52.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)
       '@sentry/types': 8.19.0
       '@sentry/utils': 8.19.0
     optionalDependencies:
@@ -41446,13 +41229,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@sentry/opentelemetry@8.19.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.52.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.34.0)':
+  '@sentry/opentelemetry@8.19.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/instrumentation@0.52.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.25.1(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/core': 1.25.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation': 0.52.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.25.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
       '@sentry/core': 8.19.0
       '@sentry/types': 8.19.0
       '@sentry/utils': 8.19.0
@@ -41502,6 +41285,13 @@ snapshots:
       '@types/hast': 3.0.4
       hast-util-to-html: 9.0.5
 
+  '@shikijs/core@3.13.0':
+    dependencies:
+      '@shikijs/types': 3.13.0
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+      hast-util-to-html: 9.0.5
+
   '@shikijs/core@3.4.0':
     dependencies:
       '@shikijs/types': 3.4.0
@@ -41515,6 +41305,12 @@ snapshots:
       '@shikijs/vscode-textmate': 10.0.2
       oniguruma-to-es: 2.3.0
 
+  '@shikijs/engine-javascript@3.13.0':
+    dependencies:
+      '@shikijs/types': 3.13.0
+      '@shikijs/vscode-textmate': 10.0.2
+      oniguruma-to-es: 4.3.3
+
   '@shikijs/engine-javascript@3.4.0':
     dependencies:
       '@shikijs/types': 3.4.0
@@ -41526,6 +41322,11 @@ snapshots:
       '@shikijs/types': 1.29.2
       '@shikijs/vscode-textmate': 10.0.2
 
+  '@shikijs/engine-oniguruma@3.13.0':
+    dependencies:
+      '@shikijs/types': 3.13.0
+      '@shikijs/vscode-textmate': 10.0.2
+
   '@shikijs/engine-oniguruma@3.4.0':
     dependencies:
       '@shikijs/types': 3.4.0
@@ -41535,6 +41336,10 @@ snapshots:
     dependencies:
       '@shikijs/types': 1.29.2
 
+  '@shikijs/langs@3.13.0':
+    dependencies:
+      '@shikijs/types': 3.13.0
+
   '@shikijs/langs@3.4.0':
     dependencies:
       '@shikijs/types': 3.4.0
@@ -41543,11 +41348,20 @@ snapshots:
     dependencies:
       '@shikijs/types': 1.29.2
 
+  '@shikijs/themes@3.13.0':
+    dependencies:
+      '@shikijs/types': 3.13.0
+
   '@shikijs/themes@3.4.0':
     dependencies:
       '@shikijs/types': 3.4.0
 
   '@shikijs/types@1.29.2':
+    dependencies:
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+
+  '@shikijs/types@3.13.0':
     dependencies:
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
@@ -42001,6 +41815,12 @@ snapshots:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
+  '@storybook/instrumenter@8.6.14(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@vitest/utils': 2.1.9
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
+
   '@storybook/mdx2-csf@1.1.0': {}
 
   '@storybook/react-dom-shim@9.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))':
@@ -42039,6 +41859,17 @@ snapshots:
       storybook: 9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
     optionalDependencies:
       typescript: 5.9.3
+
+  '@storybook/test@8.6.14(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))':
+    dependencies:
+      '@storybook/global': 5.0.0
+      '@storybook/instrumenter': 8.6.14(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))
+      '@testing-library/dom': 10.4.0
+      '@testing-library/jest-dom': 6.5.0
+      '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
+      '@vitest/expect': 2.0.5
+      '@vitest/spy': 2.0.5
+      storybook: 9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
 
   '@storybook/web-components-vite@9.1.10(lit@3.3.1)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(webpack-sources@3.2.3)':
     dependencies:
@@ -42315,7 +42146,7 @@ snapshots:
       mini-svg-data-uri: 1.4.4
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
-  '@tauri-apps/api@2.7.0': {}
+  '@tauri-apps/api@2.8.0': {}
 
   '@tauri-apps/cli-darwin-arm64@2.8.4':
     optional: true
@@ -42364,21 +42195,32 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.8.4
       '@tauri-apps/cli-win32-x64-msvc': 2.8.4
 
-  '@tauri-apps/plugin-os@2.3.0':
+  '@tauri-apps/plugin-os@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.7.0
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-process@2.3.0':
     dependencies:
-      '@tauri-apps/api': 2.7.0
+      '@tauri-apps/api': 2.8.0
 
-  '@tauri-apps/plugin-shell@2.3.0':
+  '@tauri-apps/plugin-shell@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.7.0
+      '@tauri-apps/api': 2.8.0
 
   '@tauri-apps/plugin-updater@2.9.0':
     dependencies:
-      '@tauri-apps/api': 2.7.0
+      '@tauri-apps/api': 2.8.0
+
+  '@testing-library/dom@10.4.0':
+    dependencies:
+      '@babel/code-frame': 7.27.1
+      '@babel/runtime': 7.27.1
+      '@types/aria-query': 5.0.4
+      aria-query: 5.3.0
+      chalk: 4.1.2
+      dom-accessibility-api: 0.5.14
+      lz-string: 1.5.0
+      pretty-format: 27.5.1
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -42390,6 +42232,16 @@ snapshots:
       lz-string: 1.5.0
       picocolors: 1.1.1
       pretty-format: 27.5.1
+
+  '@testing-library/jest-dom@6.5.0':
+    dependencies:
+      '@adobe/css-tools': 4.4.0
+      aria-query: 5.3.2
+      chalk: 3.0.0
+      css.escape: 1.5.1
+      dom-accessibility-api: 0.6.3
+      lodash: 4.17.21
+      redent: 3.0.0
 
   '@testing-library/jest-dom@6.9.1':
     dependencies:
@@ -42409,6 +42261,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.0
       '@types/react-dom': 19.2.0(@types/react@19.2.0)
+
+  '@testing-library/user-event@14.5.2(@testing-library/dom@10.4.0)':
+    dependencies:
+      '@testing-library/dom': 10.4.0
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@10.4.1)':
     dependencies:
@@ -42897,8 +42753,6 @@ snapshots:
       parse5: 7.3.0
 
   '@types/json-schema@7.0.15': {}
-
-  '@types/json-stable-stringify@1.0.34': {}
 
   '@types/json-stringify-safe@5.0.0': {}
 
@@ -43467,18 +43321,18 @@ snapshots:
       '@use-gesture/core': 10.2.27
       react: 19.2.0
 
-  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)(@lezer/common@1.2.2)':
+  '@valtown/codemirror-continue@2.3.1(@codemirror/language@6.11.3)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)(@lezer/common@1.2.2)':
     dependencies:
       '@codemirror/language': 6.11.3
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
       '@lezer/common': 1.2.2
 
-  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.18.7)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.2)':
+  '@valtown/codemirror-ts@2.2.0(@codemirror/autocomplete@6.19.0)(@codemirror/lint@6.8.5)(@codemirror/view@6.38.4)':
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/lint': 6.8.5
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
 
   '@vitejs/plugin-react-swc@4.0.1(@swc/helpers@0.5.17)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))':
     dependencies:
@@ -43541,6 +43395,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@vitest/expect@2.0.5':
+    dependencies:
+      '@vitest/spy': 2.0.5
+      '@vitest/utils': 2.0.5
+      chai: 5.2.0
+      tinyrainbow: 1.2.0
+
   '@vitest/expect@3.2.4':
     dependencies:
       '@types/chai': 5.2.2
@@ -43556,6 +43417,14 @@ snapshots:
       magic-string: 0.30.17
     optionalDependencies:
       vite: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
+
+  '@vitest/pretty-format@2.0.5':
+    dependencies:
+      tinyrainbow: 1.2.0
+
+  '@vitest/pretty-format@2.1.9':
+    dependencies:
+      tinyrainbow: 1.2.0
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -43573,6 +43442,10 @@ snapshots:
       magic-string: 0.30.17
       pathe: 2.0.3
 
+  '@vitest/spy@2.0.5':
+    dependencies:
+      tinyspy: 3.0.2
+
   '@vitest/spy@3.2.4':
     dependencies:
       tinyspy: 4.0.3
@@ -43587,6 +43460,19 @@ snapshots:
       tinyglobby: 0.2.14
       tinyrainbow: 2.0.0
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1)
+
+  '@vitest/utils@2.0.5':
+    dependencies:
+      '@vitest/pretty-format': 2.0.5
+      estree-walker: 3.0.3
+      loupe: 3.1.4
+      tinyrainbow: 1.2.0
+
+  '@vitest/utils@2.1.9':
+    dependencies:
+      '@vitest/pretty-format': 2.1.9
+      loupe: 3.1.4
+      tinyrainbow: 1.2.0
 
   '@vitest/utils@3.2.4':
     dependencies:
@@ -44163,75 +44049,77 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro-expressive-code@0.40.2(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)):
+  astro-expressive-code@0.40.2(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)):
     dependencies:
-      astro: 5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
+      astro: 5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1)
       rehype-expressive-code: 0.40.2
 
-  astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1):
+  astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1):
     dependencies:
-      '@astrojs/compiler': 2.12.0
-      '@astrojs/internal-helpers': 0.6.1
-      '@astrojs/markdown-remark': 6.3.1
-      '@astrojs/telemetry': 3.2.1
+      '@astrojs/compiler': 2.13.0
+      '@astrojs/internal-helpers': 0.7.3
+      '@astrojs/markdown-remark': 6.3.7
+      '@astrojs/telemetry': 3.3.0
       '@capsizecss/unpack': 2.4.0(encoding@0.1.13)
       '@oslojs/encoding': 1.1.0
-      '@rollup/pluginutils': 5.1.4(rollup@3.23.0)
+      '@rollup/pluginutils': 5.3.0(rollup@3.23.0)
       acorn: 8.15.0
       aria-query: 5.3.2
       axobject-query: 4.1.0
       boxen: 8.0.1
-      ci-info: 4.2.0
+      ci-info: 4.3.0
       clsx: 2.1.1
       common-ancestor-path: 1.0.1
       cookie: 1.0.2
       cssesc: 3.0.0
       debug: 4.4.1
       deterministic-object-hash: 2.0.2
-      devalue: 5.1.1
+      devalue: 5.3.2
       diff: 5.2.0
       dlv: 1.1.3
       dset: 3.1.4
       es-module-lexer: 1.7.0
-      esbuild: 0.25.6
+      esbuild: 0.25.10
       estree-walker: 3.0.3
       flattie: 1.1.1
       fontace: 0.3.0
       github-slugger: 2.0.0
       html-escaper: 3.0.3
-      http-cache-semantics: 4.1.1
+      http-cache-semantics: 4.2.0
+      import-meta-resolve: 4.2.0
       js-yaml: 4.1.0
       kleur: 4.1.5
-      magic-string: 0.30.17
+      magic-string: 0.30.19
       magicast: 0.3.5
       mrmime: 2.0.1
       neotraverse: 0.6.18
       p-limit: 6.2.0
       p-queue: 8.1.0
       package-manager-detector: 1.3.0
-      picomatch: 4.0.2
+      picomatch: 4.0.3
       prompts: 2.4.2
       rehype: 13.0.2
       semver: 7.7.2
-      shiki: 3.4.0
+      shiki: 3.13.0
+      smol-toml: 1.4.2
       tinyexec: 0.3.2
-      tinyglobby: 0.2.14
-      tsconfck: 3.1.5(typescript@5.9.3)
+      tinyglobby: 0.2.15
+      tsconfck: 3.1.6(typescript@5.9.3)
       ultrahtml: 1.6.0
-      unifont: 0.5.0
+      unifont: 0.5.2
       unist-util-visit: 5.0.0
-      unstorage: 1.16.0(idb-keyval@6.2.1)
+      unstorage: 1.17.1(idb-keyval@6.2.1)
       vfile: 6.0.3
-      vite: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)
-      vitefu: 1.0.6(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1))
+      vite: 6.3.6(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)
+      vitefu: 1.1.1(vite@6.3.6(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1))
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
-      yocto-spinner: 0.2.2
-      zod: 3.24.4
-      zod-to-json-schema: 3.24.5(zod@3.24.4)
-      zod-to-ts: 1.2.0(typescript@5.9.3)(zod@3.24.4)
+      yocto-spinner: 0.2.3
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-ts: 1.2.0(typescript@5.9.3)(zod@3.25.76)
     optionalDependencies:
-      sharp: 0.33.5
+      sharp: 0.34.1
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -44246,6 +44134,7 @@ snapshots:
       - '@types/node'
       - '@upstash/redis'
       - '@vercel/blob'
+      - '@vercel/functions'
       - '@vercel/kv'
       - aws4fetch
       - db0
@@ -44560,12 +44449,12 @@ snapshots:
     dependencies:
       ansi-align: 3.0.1
       camelcase: 8.0.0
-      chalk: 5.3.0
+      chalk: 5.6.2
       cli-boxes: 3.0.0
       string-width: 7.2.0
       type-fest: 4.41.0
       widest-line: 5.0.0
-      wrap-ansi: 9.0.0
+      wrap-ansi: 9.0.2
 
   brace-expansion@1.1.11:
     dependencies:
@@ -44882,6 +44771,11 @@ snapshots:
       escape-string-regexp: 1.0.5
       supports-color: 5.5.0
 
+  chalk@3.0.0:
+    dependencies:
+      ansi-styles: 4.3.0
+      supports-color: 7.2.0
+
   chalk@4.1.2:
     dependencies:
       ansi-styles: 4.3.0
@@ -45023,7 +44917,7 @@ snapshots:
       devtools-protocol: 0.0.1147663
       mitt: 3.0.0
 
-  ci-info@4.2.0: {}
+  ci-info@4.3.0: {}
 
   cipher-base@1.0.4:
     dependencies:
@@ -45175,13 +45069,13 @@ snapshots:
 
   codemirror@6.0.1:
     dependencies:
-      '@codemirror/autocomplete': 6.18.7
+      '@codemirror/autocomplete': 6.19.0
       '@codemirror/commands': 6.6.2
       '@codemirror/language': 6.11.3
       '@codemirror/lint': 6.8.5
       '@codemirror/search': 6.5.11
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.4
 
   collapse-white-space@2.1.0: {}
 
@@ -45426,10 +45320,6 @@ snapshots:
     dependencies:
       layout-base: 1.0.2
 
-  cose-base@2.1.0:
-    dependencies:
-      layout-base: 2.0.1
-
   cosmiconfig@7.0.1:
     dependencies:
       '@types/parse-json': 4.0.0
@@ -45644,25 +45534,10 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  cytoscape-cose-bilkent@4.1.0(cytoscape@3.23.0):
-    dependencies:
-      cose-base: 1.0.3
-      cytoscape: 3.23.0
-
   cytoscape-cose-bilkent@4.1.0(cytoscape@3.33.1):
     dependencies:
       cose-base: 1.0.3
       cytoscape: 3.33.1
-
-  cytoscape-fcose@2.1.0(cytoscape@3.23.0):
-    dependencies:
-      cose-base: 2.1.0
-      cytoscape: 3.23.0
-
-  cytoscape@3.23.0:
-    dependencies:
-      heap: 0.2.7
-      lodash: 4.17.21
 
   cytoscape@3.33.1: {}
 
@@ -46254,8 +46129,6 @@ snapshots:
     dependencies:
       base-64: 1.0.0
 
-  devalue@5.1.1: {}
-
   devalue@5.3.2: {}
 
   devlop@1.1.0:
@@ -46287,6 +46160,8 @@ snapshots:
   diff@4.0.2: {}
 
   diff@5.2.0: {}
+
+  diff@8.0.2: {}
 
   diffie-hellman@5.0.3:
     dependencies:
@@ -46460,8 +46335,6 @@ snapshots:
       encoding: 0.1.13
 
   electron-to-chromium@1.5.45: {}
-
-  elkjs@0.8.2: {}
 
   elkjs@0.9.3: {}
 
@@ -46816,35 +46689,6 @@ snapshots:
       '@esbuild/win32-ia32': 0.25.4
       '@esbuild/win32-x64': 0.25.4
 
-  esbuild@0.25.6:
-    optionalDependencies:
-      '@esbuild/aix-ppc64': 0.25.6
-      '@esbuild/android-arm': 0.25.6
-      '@esbuild/android-arm64': 0.25.6
-      '@esbuild/android-x64': 0.25.6
-      '@esbuild/darwin-arm64': 0.25.6
-      '@esbuild/darwin-x64': 0.25.6
-      '@esbuild/freebsd-arm64': 0.25.6
-      '@esbuild/freebsd-x64': 0.25.6
-      '@esbuild/linux-arm': 0.25.6
-      '@esbuild/linux-arm64': 0.25.6
-      '@esbuild/linux-ia32': 0.25.6
-      '@esbuild/linux-loong64': 0.25.6
-      '@esbuild/linux-mips64el': 0.25.6
-      '@esbuild/linux-ppc64': 0.25.6
-      '@esbuild/linux-riscv64': 0.25.6
-      '@esbuild/linux-s390x': 0.25.6
-      '@esbuild/linux-x64': 0.25.6
-      '@esbuild/netbsd-arm64': 0.25.6
-      '@esbuild/netbsd-x64': 0.25.6
-      '@esbuild/openbsd-arm64': 0.25.6
-      '@esbuild/openbsd-x64': 0.25.6
-      '@esbuild/openharmony-arm64': 0.25.6
-      '@esbuild/sunos-x64': 0.25.6
-      '@esbuild/win32-arm64': 0.25.6
-      '@esbuild/win32-ia32': 0.25.6
-      '@esbuild/win32-x64': 0.25.6
-
   escalade@3.2.0: {}
 
   escape-html@1.0.3: {}
@@ -47081,7 +46925,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
 
   esutils@2.0.3: {}
 
@@ -48172,14 +48016,14 @@ snapshots:
 
   h3-js@3.7.2: {}
 
-  h3@1.15.3:
+  h3@1.15.4:
     dependencies:
       cookie-es: 1.2.2
       crossws: 0.3.5
       defu: 6.1.4
       destr: 2.0.5
       iron-webcrypto: 1.2.1
-      node-mock-http: 1.0.0
+      node-mock-http: 1.0.3
       radix3: 1.1.2
       ufo: 1.6.1
       uncrypto: 0.1.3
@@ -48502,8 +48346,6 @@ snapshots:
       capital-case: 1.0.4
       tslib: 2.8.1
 
-  heap@0.2.7: {}
-
   highlight.js@10.7.3: {}
 
   highlight.js@11.6.0: {}
@@ -48574,6 +48416,8 @@ snapshots:
       entities: 4.5.0
 
   http-cache-semantics@4.1.1: {}
+
+  http-cache-semantics@4.2.0: {}
 
   http-call@5.3.0:
     dependencies:
@@ -48780,6 +48624,8 @@ snapshots:
       module-details-from-path: 1.0.3
 
   import-meta-resolve@4.1.0: {}
+
+  import-meta-resolve@4.2.0: {}
 
   imurmurhash@0.1.4: {}
 
@@ -49634,9 +49480,13 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
-  json-stable-stringify@1.0.1:
+  json-stable-stringify@1.3.0:
     dependencies:
+      call-bind: 1.0.8
+      call-bound: 1.0.4
+      isarray: 2.0.5
       jsonify: 0.0.1
+      object-keys: 1.1.1
 
   json-stringify-safe@5.0.1: {}
 
@@ -49765,8 +49615,6 @@ snapshots:
   layerr@2.1.0: {}
 
   layout-base@1.0.2: {}
-
-  layout-base@2.0.1: {}
 
   lazy-cache@0.2.7: {}
 
@@ -50107,14 +49955,18 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  magic-string@0.30.19:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
+
   magic-string@0.30.8:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
   magicast@0.3.5:
     dependencies:
-      '@babel/parser': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/parser': 7.28.4
+      '@babel/types': 7.28.4
       source-map-js: 1.2.1
 
   main-thread-scheduling@14.2.0:
@@ -50485,20 +50337,20 @@ snapshots:
       flat-tree: 1.9.0
       streamx: 2.15.6
 
-  mermaid@10.6.1:
+  mermaid@10.9.3:
     dependencies:
       '@braintree/sanitize-url': 6.0.2
       '@types/d3-scale': 4.0.8
       '@types/d3-scale-chromatic': 3.0.0
-      cytoscape: 3.23.0
-      cytoscape-cose-bilkent: 4.1.0(cytoscape@3.23.0)
-      cytoscape-fcose: 2.1.0(cytoscape@3.23.0)
+      cytoscape: 3.33.1
+      cytoscape-cose-bilkent: 4.1.0(cytoscape@3.33.1)
       d3: 7.9.0
       d3-sankey: 0.12.3
       dagre-d3-es: 7.0.10
       dayjs: 1.11.10
       dompurify: 3.0.6
-      elkjs: 0.8.2
+      elkjs: 0.9.3
+      katex: 0.16.22
       khroma: 2.0.0
       lodash-es: 4.17.21
       mdast-util-from-markdown: 1.3.1
@@ -50510,7 +50362,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mermaid@10.9.3:
+  mermaid@10.9.4:
     dependencies:
       '@braintree/sanitize-url': 6.0.2
       '@types/d3-scale': 4.0.8
@@ -50658,7 +50510,7 @@ snapshots:
 
   micromark-extension-mdx-expression@3.0.1:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       devlop: 1.1.0
       micromark-factory-mdx-expression: 2.0.3
       micromark-factory-space: 2.0.0
@@ -50669,7 +50521,7 @@ snapshots:
 
   micromark-extension-mdx-jsx@3.0.2:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       devlop: 1.1.0
       estree-util-is-identifier-name: 3.0.0
       micromark-factory-mdx-expression: 2.0.3
@@ -50686,7 +50538,7 @@ snapshots:
 
   micromark-extension-mdxjs-esm@3.0.0:
     dependencies:
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.0
       micromark-util-character: 2.1.0
@@ -51404,6 +51256,8 @@ snapshots:
 
   node-fetch-native@1.6.6: {}
 
+  node-fetch-native@1.6.7: {}
+
   node-fetch@2.6.7(encoding@0.1.13):
     dependencies:
       whatwg-url: 5.0.0
@@ -51440,7 +51294,7 @@ snapshots:
     dependencies:
       shallowequal: 1.1.0
 
-  node-mock-http@1.0.0: {}
+  node-mock-http@1.0.3: {}
 
   node-notifier@10.0.1:
     dependencies:
@@ -51804,7 +51658,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/instrumentation': 0.46.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.34.0
+      '@opentelemetry/semantic-conventions': 1.37.0
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -52516,6 +52370,8 @@ snapshots:
 
   prismjs@1.29.0: {}
 
+  prismjs@1.30.0: {}
+
   proc-log@4.2.0: {}
 
   process-nextick-args@2.0.1: {}
@@ -52757,7 +52613,7 @@ snapshots:
 
   quote-unquote@1.0.0: {}
 
-  race-as-promised@0.0.2: {}
+  race-as-promised@0.0.3: {}
 
   radix3@1.1.2: {}
 
@@ -53747,32 +53603,6 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  rollup@4.40.2:
-    dependencies:
-      '@types/estree': 1.0.7
-    optionalDependencies:
-      '@rollup/rollup-android-arm-eabi': 4.40.2
-      '@rollup/rollup-android-arm64': 4.40.2
-      '@rollup/rollup-darwin-arm64': 4.40.2
-      '@rollup/rollup-darwin-x64': 4.40.2
-      '@rollup/rollup-freebsd-arm64': 4.40.2
-      '@rollup/rollup-freebsd-x64': 4.40.2
-      '@rollup/rollup-linux-arm-gnueabihf': 4.40.2
-      '@rollup/rollup-linux-arm-musleabihf': 4.40.2
-      '@rollup/rollup-linux-arm64-gnu': 4.40.2
-      '@rollup/rollup-linux-arm64-musl': 4.40.2
-      '@rollup/rollup-linux-loongarch64-gnu': 4.40.2
-      '@rollup/rollup-linux-powerpc64le-gnu': 4.40.2
-      '@rollup/rollup-linux-riscv64-gnu': 4.40.2
-      '@rollup/rollup-linux-riscv64-musl': 4.40.2
-      '@rollup/rollup-linux-s390x-gnu': 4.40.2
-      '@rollup/rollup-linux-x64-gnu': 4.40.2
-      '@rollup/rollup-linux-x64-musl': 4.40.2
-      '@rollup/rollup-win32-arm64-msvc': 4.40.2
-      '@rollup/rollup-win32-ia32-msvc': 4.40.2
-      '@rollup/rollup-win32-x64-msvc': 4.40.2
-      fsevents: 2.3.3
-
   rollup@4.50.1:
     dependencies:
       '@types/estree': 1.0.8
@@ -54144,7 +53974,7 @@ snapshots:
   sharp@0.34.1:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
       semver: 7.7.2
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.1
@@ -54192,6 +54022,17 @@ snapshots:
       '@shikijs/langs': 1.29.2
       '@shikijs/themes': 1.29.2
       '@shikijs/types': 1.29.2
+      '@shikijs/vscode-textmate': 10.0.2
+      '@types/hast': 3.0.4
+
+  shiki@3.13.0:
+    dependencies:
+      '@shikijs/core': 3.13.0
+      '@shikijs/engine-javascript': 3.13.0
+      '@shikijs/engine-oniguruma': 3.13.0
+      '@shikijs/langs': 3.13.0
+      '@shikijs/themes': 3.13.0
+      '@shikijs/types': 3.13.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
 
@@ -54342,6 +54183,8 @@ snapshots:
   smob@1.5.0: {}
 
   smol-toml@1.3.4: {}
+
+  smol-toml@1.4.2: {}
 
   snake-case@3.0.4:
     dependencies:
@@ -54549,9 +54392,9 @@ snapshots:
       automation-events: 7.1.9
       tslib: 2.8.1
 
-  starlight-links-validator@0.14.3(@astrojs/starlight@0.32.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))):
+  starlight-links-validator@0.14.3(@astrojs/starlight@0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))):
     dependencies:
-      '@astrojs/starlight': 0.32.6(astro@5.7.12(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
+      '@astrojs/starlight': 0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.4.2)(rollup@3.23.0)(sass@1.51.0)(terser@5.19.2)(typescript@5.9.3)(yaml@2.7.1))
       '@types/picomatch': 3.0.1
       github-slugger: 2.0.0
       hast-util-from-html: 2.0.3
@@ -55187,7 +55030,11 @@ snapshots:
 
   tinypool@1.1.1: {}
 
+  tinyrainbow@1.2.0: {}
+
   tinyrainbow@2.0.0: {}
+
+  tinyspy@3.0.2: {}
 
   tinyspy@4.0.3: {}
 
@@ -55383,6 +55230,10 @@ snapshots:
   ts-toolbelt@9.6.0: {}
 
   tsconfck@3.1.5(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
+
+  tsconfck@3.1.6(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
 
@@ -55652,9 +55503,10 @@ snapshots:
       trough: 2.1.0
       vfile: 6.0.3
 
-  unifont@0.5.0:
+  unifont@0.5.2:
     dependencies:
       css-tree: 3.1.0
+      ofetch: 1.4.1
       ohash: 2.0.11
 
   unique-string@2.0.0:
@@ -55813,14 +55665,14 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.11.1
       '@unrs/resolver-binding-win32-x64-msvc': 1.11.1
 
-  unstorage@1.16.0(idb-keyval@6.2.1):
+  unstorage@1.17.1(idb-keyval@6.2.1):
     dependencies:
       anymatch: 3.1.3
       chokidar: 4.0.3
       destr: 2.0.5
-      h3: 1.15.3
+      h3: 1.15.4
       lru-cache: 10.4.3
-      node-fetch-native: 1.6.6
+      node-fetch-native: 1.6.7
       ofetch: 1.4.1
       ufo: 1.6.1
     optionalDependencies:
@@ -56136,14 +55988,14 @@ snapshots:
       - supports-color
       - typescript
 
-  vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1):
+  vite@6.3.6(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1):
     dependencies:
       esbuild: 0.25.10
-      fdir: 6.4.4(picomatch@4.0.2)
-      picomatch: 4.0.2
-      postcss: 8.5.3
-      rollup: 4.40.2
-      tinyglobby: 0.2.14
+      fdir: 6.5.0(picomatch@4.0.3)
+      picomatch: 4.0.3
+      postcss: 8.5.6
+      rollup: 4.50.1
+      tinyglobby: 0.2.15
     optionalDependencies:
       '@types/node': 22.10.2
       fsevents: 2.3.3
@@ -56167,9 +56019,9 @@ snapshots:
       terser: 5.19.2
       yaml: 2.7.1
 
-  vitefu@1.0.6(vite@6.3.5(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)):
+  vitefu@1.1.1(vite@6.3.6(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)):
     optionalDependencies:
-      vite: 6.3.5(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)
+      vite: 6.3.6(@types/node@22.10.2)(jiti@2.4.2)(sass@1.51.0)(terser@5.19.2)(yaml@2.7.1)
 
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1):
     dependencies:
@@ -56906,7 +56758,7 @@ snapshots:
 
   yocto-queue@1.2.1: {}
 
-  yocto-spinner@0.2.2:
+  yocto-spinner@0.2.3:
     dependencies:
       yoctocolors: 2.1.1
 
@@ -56955,18 +56807,20 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
 
-  zod-to-json-schema@3.24.5(zod@3.24.4):
+  zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
-      zod: 3.24.4
+      zod: 3.25.76
 
-  zod-to-ts@1.2.0(typescript@5.9.3)(zod@3.24.4):
+  zod-to-ts@1.2.0(typescript@5.9.3)(zod@3.25.76):
     dependencies:
       typescript: 5.9.3
-      zod: 3.24.4
+      zod: 3.25.76
 
   zod@3.22.3: {}
 
   zod@3.24.4: {}
+
+  zod@3.25.76: {}
 
   zone.js@0.14.8: {}
 

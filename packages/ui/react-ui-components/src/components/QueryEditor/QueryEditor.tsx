@@ -31,8 +31,6 @@ export type QueryEditorProps = {
   onCancel?: () => void;
 };
 
-// TODO(wittjosiah): Factor out.
-
 export const QueryEditor = ({
   space,
   classNames,

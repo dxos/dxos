@@ -43,13 +43,13 @@ jobs:
             spec: '"@ch-ui/*"'
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1
+      image: ghcr.io/dxos/gh-actions:20.19.5
       credentials:
         username: dxos-bot
         password: ${{ secrets.CREATE_PR_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           lfs: true
