@@ -25,6 +25,9 @@ import { testToolkit } from '../../blueprints/testing';
 
 import { default as entityExtraction } from './entity-extraction';
 import { ResearchGraph } from '../research';
+import { PublicKey, ObjectId } from '@dxos/keys';
+
+ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -37,6 +40,7 @@ const TestLayer = Layer.mergeAll(
     Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
+        spaceKey: PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723'),
         indexing: { vector: true },
         types: [Blueprint.Blueprint, DataType.Message, DataType.Person, DataType.Organization, ResearchGraph],
       }),
@@ -79,6 +83,7 @@ describe('Entity-extraction', () => {
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });
+        expect(result.entities).toHaveLength(2);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

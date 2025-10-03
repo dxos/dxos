@@ -25,11 +25,12 @@ export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: 
 export type TestDatabaseOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
   types?: Schema.Schema.AnyNoContext[];
+  spaceKey?: PublicKey;
   storagePath?: string;
   onInit?: () => Effect.Effect<void, never, DatabaseService | QueueService>;
 };
 
-export const TestDatabaseLayer = ({ indexing, types, storagePath, onInit }: TestDatabaseOptions = {}) =>
+export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}) =>
   Layer.scopedContext(
     Effect.gen(function* () {
       const builder = yield* testBuilder;
@@ -59,7 +60,7 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath, onInit }: Test
         });
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
-          const key = PublicKey.random();
+          const key = spaceKey ?? PublicKey.random();
           db = yield* Effect.promise(() => peer.createDatabase(key));
           queues = peer.client.constructQueueFactory(db.spaceId);
 
@@ -80,7 +81,7 @@ export const TestDatabaseLayer = ({ indexing, types, storagePath, onInit }: Test
           queues = peer.client.constructQueueFactory(db.spaceId);
         }
       } else {
-        db = yield* Effect.promise(() => peer.createDatabase());
+        db = yield* Effect.promise(() => peer.createDatabase(spaceKey));
         queues = peer.client.constructQueueFactory(db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
