@@ -5,17 +5,16 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import type { Schema } from 'effect';
 import React, { useCallback, useEffect } from 'react';
 
-import { Filter, Ref, type Space } from '@dxos/client/echo';
+import { Filter, Ref } from '@dxos/client/echo';
 import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
-import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
+import { createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
@@ -30,24 +29,10 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
   return <span>{item.id}</span>;
 };
 
-const useStorybookAddItem = (space?: Space) => {
-  return useCallback(
-    (schema: Schema.Schema.AnyNoContext) => {
-      if (!space || !schema) {
-        return;
-      }
-      space.db.add(createReactiveObject(schema)({}));
-    },
-    [space],
-  );
-};
-
 const DefaultStory = () => {
   const { space } = useClientProvider();
   const projects = useQuery(space, Filter.typename(DataType.Project.typename));
   const project = projects[0];
-
-  const handleAddItem = useStorybookAddItem(space);
 
   const handleAddColumn = useCallback(() => {
     if (!space || !project) {
@@ -74,7 +59,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
+    <Project.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
       <Project.Content project={project} />
     </Project.Root>
   );
@@ -85,8 +70,6 @@ const MutationsStory = () => {
   const projects = useQuery(space, Filter.typename(DataType.Project.typename));
   const contacts = useQuery(space, Filter.typename(DataType.Person.typename));
   const project = projects[0];
-
-  const handleAddItem = useStorybookAddItem(space);
 
   const handleAddColumn = useCallback(() => {
     if (!space || !project) {
@@ -138,7 +121,7 @@ const MutationsStory = () => {
   }
 
   return (
-    <Project.Root Item={StorybookProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
+    <Project.Root Item={StorybookProjectItem} onAddColumn={handleAddColumn}>
       <Project.Content project={project} />
     </Project.Root>
   );

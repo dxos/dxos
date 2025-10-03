@@ -34,7 +34,9 @@ export const useTestTableModel = () => {
 
   const projection = useMemo(() => {
     if (schema && view?.projection) {
-      return new ProjectionModel(toJsonSchema(schema), view.projection);
+      const projection = new ProjectionModel(toJsonSchema(schema), view.projection);
+      projection.normalizeView();
+      return projection;
     }
   }, [schema, view?.projection]);
 

@@ -39,6 +39,7 @@ describe('Projection', () => {
       presentation: Obj.make(Type.Expando, {}),
       registry,
     });
+    assert(typeof view.query !== 'string');
     assert(view.query.type === 'select');
     assert(view.query.filter.type === 'object');
     expect(view.query.filter.typename).to.eq(Type.getDXN(schema)?.toString());

@@ -3,7 +3,6 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import type { Schema } from 'effect';
 import React, { type FC } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -19,7 +18,9 @@ const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
 type ProjectContextValue = {
   Item: FC<ItemProps>;
-  onAddItem?: (schema: Schema.Schema.AnyNoContext) => void;
+  // TODO(wittjosiah): Support adding items.
+  //   If the created item doesn't match the current query, it will not be visible.
+  // onAddItem?: (schema: Schema.Schema.AnyNoContext) => void;
   onAddColumn?: () => void;
 };
 type ProjectRootProps = ProjectContextValue;
@@ -35,7 +36,7 @@ type ProjectContentProps = {
 };
 
 const ProjectContent = ({ project }: ProjectContentProps) => {
-  // Note that this doesn’t encompass column types which the Project schema.
+  // NOTE: This doesn’t encompass column types which the Project schema.
   const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
 
   return (
