@@ -198,6 +198,7 @@ const createSnippet = (text: string, len = 32) =>
 
 // TODO(dmaretskyi): Extract as a general util.
 const logDump = (message: string, data: unknown) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { writeFileSync } = require('node:fs');
   const path = `/tmp/log-data-${Date.now()}.json`;
   writeFileSync(path, JSON.stringify(data, null, 2));
