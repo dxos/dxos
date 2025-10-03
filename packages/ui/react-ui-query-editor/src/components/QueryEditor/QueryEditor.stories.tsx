@@ -26,14 +26,14 @@ const allTags: QueryTag[] = [
 const meta = {
   title: 'ui/react-ui-query-editor/QueryEditor',
   component: QueryEditor,
-  render: ({ items: initialItems, onChange }) => {
+  render: ({ initialItems: initialItems, onChange }) => {
     const [items, setItems] = useState(initialItems ?? []);
     const [selected, setSelected] = useState<string>();
     return (
       <div className='w-[20rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
           <QueryEditor
-            items={items}
+            initialItems={items}
             onSearch={(text, ids) =>
               allTags.filter(
                 ({ id, label }) => ids.indexOf(id) === -1 && label.toLowerCase().includes(text.toLowerCase()),
@@ -58,7 +58,7 @@ type Story = StoryObj<typeof QueryEditor>;
 
 export const Default: Story = {
   args: {
-    items: [allTags[0], { content: 'Junie' }, allTags[1]],
+    initialItems: [allTags[0], { content: 'Junie' }, allTags[1]],
     onChange: fn(),
   },
   play: async ({ canvasElement, args }) => {

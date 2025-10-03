@@ -41,7 +41,7 @@ import {
 import { QueryEditorItem } from './QueryEditorItem';
 
 export type QueryEditorProps = ThemedClassName<{
-  items?: QueryItem[];
+  initialItems?: QueryItem[];
   readonly?: boolean;
   placeholder?: string;
   onSearch?: (text: string, ids: string[]) => QueryTag[];
@@ -63,10 +63,10 @@ export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(({ re
 
 QueryEditor.displayName = 'QueryEditor';
 
-const ReadonlyQueryEditor = ({ classNames, items }: QueryEditorProps) => {
+const ReadonlyQueryEditor = ({ classNames, initialItems }: QueryEditorProps) => {
   return (
     <div className={mx(classNames)}>
-      {items?.map((item) => {
+      {initialItems?.map((item) => {
         if (itemIsTag(item)) {
           return (
             <QueryEditorItem
@@ -92,12 +92,12 @@ const ReadonlyQueryEditor = ({ classNames, items }: QueryEditorProps) => {
 };
 
 const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
-  ({ classNames, items = [], placeholder, onSearch, onBlur, onChange }, ref) => {
+  ({ classNames, initialItems = [], placeholder, onSearch, onBlur, onChange }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();
     const viewRef = useRef<EditorView | null>(null);
 
-    const itemsRef = useDynamicRef(items);
+    const itemsRef = useDynamicRef(initialItems);
 
     const handleChange = useCallback(
       (items: QueryItem[]) => {
@@ -145,7 +145,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
 
     const { parentRef, view } = useTextEditor(
       () => ({
-        initialValue: renderItems(items),
+        initialValue: renderItems(initialItems),
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
           createThemeExtensions({
@@ -172,13 +172,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       viewRef.current = view;
     }, [view]);
 
-    useEffect(() => {
-      const text = renderItems(items);
-      if (text !== view?.state.doc.toString()) {
-        // TODO(burdon): This will cancel any current autocomplete; need to merge?
-        view?.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
-      }
-    }, [view, items]);
+    useEffect(() => () => console.log('[query editor unmount]'), []);
 
     return (
       <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
