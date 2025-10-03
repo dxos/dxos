@@ -124,6 +124,7 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
         } catch {
           // Ignore parsing errors.
         }
+
         return false; // Don't descend into children.
       }
     },
