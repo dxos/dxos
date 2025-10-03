@@ -8,13 +8,7 @@ import { Context, Effect, Layer, Record, Schema } from 'effect';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import {
-  DatabaseService,
-  FunctionDefinition,
-  type FunctionImplementationResolver,
-  FunctionInvocationService,
-  FunctionType,
-} from '@dxos/functions';
+import { DatabaseService, FunctionDefinition, FunctionInvocationService, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -66,7 +60,7 @@ export const makeToolResolverFromFunctions = (
 export const makeToolExecutionServiceFromFunctions = (
   toolkit: Toolkit.Toolkit<any>,
   handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService | FunctionImplementationResolver> => {
+): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {

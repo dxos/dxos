@@ -23,17 +23,17 @@ overrides:
   react: ~19.2.0
   react-dom: ~19.2.0
 
-pnpmfileChecksum: sha256-GtIoJdWkmSkcDRR1OmffTto9ihmUDdmxJWxwYOGt4m8=
+pnpmfileChecksum: 3lqnwcuov6arx4lvmywjuoe2zi
 
 patchedDependencies:
   random-access-idb@1.2.2:
-    hash: 207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e
+    hash: mqfhtwnltd5kq5s4kb4gk7k2k4
     path: patches/random-access-idb@1.2.2.patch
   ts-node@10.9.1:
-    hash: 8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636
+    hash: rke3py7up3u364r7wwqfla7cdm
     path: patches/ts-node@10.9.1.patch
   uuid@8.3.2:
-    hash: 7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9
+    hash: rxfbstxgb7ip2ka7npjixuqpye
     path: patches/uuid@8.3.2.patch
 
 importers:
@@ -49,7 +49,7 @@ importers:
         version: 0.1.13
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.61
-        version: 0.8.71(@cloudflare/workers-types@4.20250919.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4)
+        version: 0.8.71(@cloudflare/workers-types@4.20250919.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))
       '@cloudflare/workers-types':
         specifier: ^4.20250803.0
         version: 4.20250919.0
@@ -106,7 +106,7 @@ importers:
         version: 0.41.1
       '@effect/vitest':
         specifier: ~0.26.0
-        version: 0.26.0(effect@3.18.1)(vitest@3.2.4)
+        version: 0.26.0(effect@3.18.1)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))
       '@eslint/js':
         specifier: ^9.36.0
         version: 9.36.0
@@ -144,7 +144,7 @@ importers:
         specifier: ^10.4.1
         version: 10.4.1
       '@testing-library/jest-dom':
-        specifier: ^6.9.0
+        specifier: ^6.9.1
         version: 6.9.1
       '@testing-library/react':
         specifier: ^16.3.0
@@ -199,7 +199,7 @@ importers:
         version: 3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3))
       '@vitest/coverage-v8':
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/browser@3.2.4)(vitest@3.2.4)
+        version: 3.2.4(@vitest/browser@3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))
       '@vitest/expect':
         specifier: ^3.2.4
         version: 3.2.4
@@ -919,7 +919,7 @@ importers:
         version: 1.1.4
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       unplugin-fonts:
         specifier: ^1.4.0
         version: 1.4.0(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
@@ -974,7 +974,7 @@ importers:
         version: 8.5.3
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       vite:
         specifier: 7.1.7
         version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
@@ -1415,14 +1415,14 @@ importers:
       streamx:
         specifier: ^2.12.5
         version: 2.15.6
-    devDependencies:
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
     optionalDependencies:
       '@dxos/random':
         specifier: workspace:*
         version: link:../random
+    devDependencies:
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
 
   packages/common/graph:
     dependencies:
@@ -1895,7 +1895,7 @@ importers:
         version: 2.0.0
       random-access-idb:
         specifier: ^1.2.2
-        version: 1.2.2(patch_hash=207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e)
+        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
@@ -2227,8 +2227,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-openai':
         specifier: 0.32.0
         version: 0.32.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -2239,11 +2239,17 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: ^0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
+      diff:
+        specifier: ^8.0.2
+        version: 8.0.2
+      json-stable-stringify:
+        specifier: ^1.3.0
+        version: 1.3.0
       parjs:
         specifier: ^1.3.9
         version: 1.3.9
@@ -2327,8 +2333,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/experimental':
         specifier: 0.56.0
         version: 0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)
@@ -2336,8 +2342,8 @@ importers:
         specifier: ^0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: ^0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
@@ -2433,8 +2439,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: 0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/experimental':
         specifier: 0.56.0
         version: 0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)
@@ -2455,8 +2461,8 @@ importers:
         specifier: 0.46.0
         version: 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/workflow':
-        specifier: 0.11.2
-        version: 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.11.3
+        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -3361,12 +3367,8 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       json-stable-stringify:
-        specifier: ^1.0.1
-        version: 1.0.1
-    devDependencies:
-      '@types/json-stable-stringify':
-        specifier: ^1.0.32
-        version: 1.0.34
+        specifier: ^1.3.0
+        version: 1.3.0
 
   packages/core/halo/keyring:
     dependencies:
@@ -4122,7 +4124,7 @@ importers:
         version: 0.3.4
       ts-node:
         specifier: 10.9.1
-        version: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
       undici:
         specifier: '*'
         version: 7.10.0
@@ -4549,14 +4551,14 @@ importers:
         specifier: 0.71.0
         version: 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/cluster':
-        specifier: 0.50.2
-        version: 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.50.3
+        version: 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.1)
       '@effect/platform-node':
-        specifier: 0.98.2
-        version: 0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.98.3
+        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/printer':
         specifier: 0.46.0
         version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.1))(effect@3.18.1)
@@ -4573,8 +4575,8 @@ importers:
         specifier: 0.37.0
         version: 0.37.0(effect@3.18.1)
       '@effect/workflow':
-        specifier: 0.11.2
-        version: 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+        specifier: 0.11.3
+        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect:
         specifier: 3.18.1
         version: 3.18.1
@@ -4835,7 +4837,7 @@ importers:
         version: 8.5.3
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       unplugin-fonts:
         specifier: ^1.4.0
         version: 1.4.0(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
@@ -4971,7 +4973,7 @@ importers:
         version: 1.1.4
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       unplugin-fonts:
         specifier: ^1.4.0
         version: 1.4.0(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
@@ -5635,8 +5637,8 @@ importers:
         specifier: 0.29.1
         version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-anthropic':
-        specifier: ^0.19.0
-        version: 0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
+        specifier: ^0.19.1
+        version: 0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/ai-openai':
         specifier: ^0.32.0
         version: 0.32.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -7911,7 +7913,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
   packages/plugins/plugin-mermaid:
     dependencies:
@@ -10717,7 +10719,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
   packages/plugins/plugin-transformer:
     dependencies:
@@ -11561,7 +11563,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       vite:
         specifier: 7.1.7
         version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
@@ -11779,6 +11781,16 @@ importers:
       react-error-boundary:
         specifier: ^4.0.13
         version: 4.0.13(react@19.2.0)
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
     devDependencies:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
@@ -11804,16 +11816,6 @@ importers:
       typedoc:
         specifier: 0.28.1
         version: 0.28.1(typescript@5.9.3)
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
 
   packages/sdk/react-edge-client:
     dependencies:
@@ -12026,6 +12028,13 @@ importers:
       xstate:
         specifier: ^4.37.0
         version: 4.37.1
+    optionalDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -12063,13 +12072,6 @@ importers:
       vite:
         specifier: 7.1.7
         version: 7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)
-    optionalDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-theme
 
   packages/ui/brand:
     dependencies:
@@ -13908,6 +13910,10 @@ importers:
       topojson-client:
         specifier: ^3.1.0
         version: 3.1.0
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
     devDependencies:
       '@babel/core':
         specifier: ^7.18.13
@@ -13954,10 +13960,6 @@ importers:
       react-dom:
         specifier: ~19.2.0
         version: 19.2.0(react@19.2.0)
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
 
   packages/ui/react-ui-grid:
     dependencies:
@@ -14936,7 +14938,7 @@ importers:
     dependencies:
       '@ch-ui/tailwind-tokens':
         specifier: 2.7.0
-        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
+        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
       '@ch-ui/tokens':
         specifier: 2.4.0
         version: 2.4.0
@@ -14954,10 +14956,10 @@ importers:
         version: 5.0.21
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
-        version: 0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
+        version: 0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
       '@tailwindcss/forms':
         specifier: ^0.5.3
-        version: 0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
+        version: 0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
       autoprefixer:
         specifier: ^10.4.12
         version: 10.4.13(postcss@8.5.3)
@@ -14984,13 +14986,13 @@ importers:
         version: 2.2.1
       tailwind-scrollbar:
         specifier: ^3.1.0
-        version: 3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
+        version: 3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))
       tailwindcss:
         specifier: ~3.4.1
-        version: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       tailwindcss-logical:
         specifier: ^3.0.0
-        version: 3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+        version: 3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       tailwindcss-radix:
         specifier: ^2.8.0
         version: 2.8.0
@@ -15203,7 +15205,7 @@ importers:
         version: 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))
       '@storybook/addon-vitest':
         specifier: ^9.1.10
-        version: 9.1.10(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4)
+        version: 9.1.10(@vitest/browser@3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3)))(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))
       '@storybook/builder-vite':
         specifier: ^9.1.10
         version: 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(webpack-sources@3.2.3)
@@ -15289,7 +15291,7 @@ importers:
         version: 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))
       '@storybook/addon-vitest':
         specifier: ^9.1.10
-        version: 9.1.10(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4)
+        version: 9.1.10(@vitest/browser@3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3)))(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))
       '@storybook/builder-vite':
         specifier: ^9.1.10
         version: 9.1.10(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(webpack-sources@3.2.3)
@@ -16977,13 +16979,13 @@ packages:
       '@effect/platform': '*'
       effect: ^3.17.0
 
-  '@effect/ai-anthropic@0.19.0':
-    resolution: {integrity: sha512-RoxaDcuu/a0F54mHXllDbblxNJJc2A8ebGh07xt91Rr19xPZ61D2cKUG43H8dccCzv02JDp0ibZp/AzkJRuLPw==}
+  '@effect/ai-anthropic@0.19.1':
+    resolution: {integrity: sha512-2D2XMyKJyaPARrJggeE7rUDpxMlEQh9qP1rTK1ErrHmwrKh/xQfDx3yAoULEXLFx3bbxXL7jlkBlfbH74fk8IQ==}
     peerDependencies:
-      '@effect/ai': ^0.29.0
+      '@effect/ai': ^0.29.1
       '@effect/experimental': ^0.56.0
-      '@effect/platform': ^0.92.0
-      effect: ^3.18.0
+      '@effect/platform': ^0.92.1
+      effect: ^3.18.1
 
   '@effect/ai-openai@0.32.0':
     resolution: {integrity: sha512-o+U7arjXrcLByZ+P2vbCfr7ldCs5xYTPUw8mAwXXXKy9EaqXh348Wh26rmrld/+zaHhzd1+oePZmtYlpLjio2g==}
@@ -17009,13 +17011,13 @@ packages:
       '@effect/printer-ansi': ^0.46.0
       effect: ^3.18.0
 
-  '@effect/cluster@0.50.2':
-    resolution: {integrity: sha512-SYo60OFAQujP+JvpR5vOvXOKZDsTh90nKhSpa0wz++zLFYGszYpbHQQWqep+6h4gtZyNZUM9zOWzt886lNx6kQ==}
+  '@effect/cluster@0.50.3':
+    resolution: {integrity: sha512-xh6okxbkvVzjJXnDEsL/byEsVEYiOhqKUAEugwCnH6yNKnT6VWK8GMyHuL9Tlbex2X9soiMxUSWbreqErrzlqQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
-      '@effect/workflow': ^0.11.2
+      '@effect/workflow': ^0.11.3
       effect: ^3.18.1
 
   '@effect/experimental@0.56.0':
@@ -17041,19 +17043,19 @@ packages:
       '@effect/platform': ^0.92.0
       effect: ^3.18.0
 
-  '@effect/platform-node-shared@0.51.2':
-    resolution: {integrity: sha512-PoAFWnjYAC4w8Enuc5aWgqk7ZQXmUxKjRhhLynqwxTtmEG4ZZmHq7aB7iZ63VcqB0wWA/h5pXizT3jz+qhELGw==}
+  '@effect/platform-node-shared@0.51.3':
+    resolution: {integrity: sha512-1NtCP06RFAnqTgBUF5YXuVGwoW396DKhaZutaWfiZMRlODda0t/iTRYq2CHUlvOGG8x/ZvLtJrC+EQXJEywDWQ==}
     peerDependencies:
-      '@effect/cluster': ^0.50.2
+      '@effect/cluster': ^0.50.3
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
       effect: ^3.18.1
 
-  '@effect/platform-node@0.98.2':
-    resolution: {integrity: sha512-CCPdb8vU427L+HZTlE7Spr8+QIJzVT4vwCRSMJlYvEPwdHaq5xtN0CBPuodG/nxgvWO1vzX9DCzn93m1a1rBtg==}
+  '@effect/platform-node@0.98.3':
+    resolution: {integrity: sha512-90eMWmFSVHrUEreICCd2qLPiw7qcaAv9XTx9OJ+LLv7igQgt4qkisRSK0oxAr5hqU9TdUrsgFDohqe7q7h3ZRg==}
     peerDependencies:
-      '@effect/cluster': ^0.50.2
+      '@effect/cluster': ^0.50.3
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
       '@effect/sql': ^0.46.0
@@ -17106,8 +17108,8 @@ packages:
       effect: ^3.18.0
       vitest: ^3.2.0
 
-  '@effect/workflow@0.11.2':
-    resolution: {integrity: sha512-/21L7HTc5fFxtBBvmTSEx2toWDvtqMORYkpAKxVwZkzTdUuVHwggzGWY4n2obWrgBnYMhCvvIf18KeSa1GVA5A==}
+  '@effect/workflow@0.11.3':
+    resolution: {integrity: sha512-3uyj0yOc2QRtQVOw6NEJVEMOhN/F7khhnf3QSU+2T3wvuDag9iBUzJFvSls8PgNCO3j/GgeaWzbcXwxqpFQYOQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
@@ -22542,9 +22544,6 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/json-stable-stringify@1.0.34':
-    resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
-
   '@types/json-stringify-safe@5.0.0':
     resolution: {integrity: sha512-UUA1sH0RSRROdInuDOA1yoRzbi5xVFD1RHCoOvNRPTNwR8zBkJ/84PZ6NhKVDtKp0FTeIccJCdQz1X2aJPr4uw==}
 
@@ -25497,6 +25496,10 @@ packages:
     resolution: {integrity: sha512-uIFDxqpRZGZ6ThOk84hEfqWoHx2devRFvpTZcTHur85vImfaxUbTW9Ryh4CpCuDnToOP1CEtXKIgytHBPVff5A==}
     engines: {node: '>=0.3.1'}
 
+  diff@8.0.2:
+    resolution: {integrity: sha512-sSuxWU5j5SR9QQji/o2qMvqRNYRDOcBTgsJ/DeCf4iSN4gW+gNMXM7wFIP+fdXZxoNiAnHUTGjCr+TSWXdRDKg==}
+    engines: {node: '>=0.3.1'}
+
   diffie-hellman@5.0.3:
     resolution: {integrity: sha512-kqag/Nl+f3GwyK25fhUMYj81BUOrZ9IuJsjIcDE5icNM9FJHAVm3VcUDxdLPoQtTuUylWm6ZIknYJwwaPxsUzg==}
 
@@ -28098,8 +28101,9 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
-  json-stable-stringify@1.0.1:
-    resolution: {integrity: sha512-i/J297TW6xyj7sDFa7AmBPkQvLIxWr2kKPWI26tXydnZrzVAocNqn5DMNT1Mzk0vit1V5UkRM7C1KdVNp7Lmcg==}
+  json-stable-stringify@1.3.0:
+    resolution: {integrity: sha512-qtYiSSFlwot9XHtF9bD9c7rwKjr+RecWT//ZnPvSmEjpV5mmPOCN4j8UjY5hbjNkOwZ/jQv3J6R1/pL7RwgMsg==}
+    engines: {node: '>= 0.4'}
 
   json-stringify-safe@5.0.1:
     resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
@@ -35959,10 +35963,10 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
+  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
     dependencies:
       '@ch-ui/tokens': 2.4.0
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
   '@ch-ui/tokens@2.4.0':
     dependencies:
@@ -35994,7 +35998,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20250906.0
 
-  '@cloudflare/vitest-pool-workers@0.8.71(@cloudflare/workers-types@4.20250919.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4)':
+  '@cloudflare/vitest-pool-workers@0.8.71(@cloudflare/workers-types@4.20250919.0)(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))':
     dependencies:
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
@@ -36471,7 +36475,7 @@ snapshots:
       '@effect/platform': 0.92.1(effect@3.18.1)
       effect: 3.18.1
 
-  '@effect/ai-anthropic@0.19.0(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)':
+  '@effect/ai-anthropic@0.19.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@anthropic-ai/tokenizer': 0.0.4
       '@effect/ai': 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
@@ -36505,12 +36509,12 @@ snapshots:
       toml: 3.0.0
       yaml: 2.7.1
 
-  '@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
-      '@effect/workflow': 0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/workflow': 0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       effect: 3.18.1
 
   '@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2)':
@@ -36529,9 +36533,9 @@ snapshots:
       effect: 3.18.1
       multipasta: 0.2.7
 
-  '@effect/platform-node-shared@0.51.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/platform-node-shared@0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
-      '@effect/cluster': 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -36543,11 +36547,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@0.98.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/platform-node@0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
-      '@effect/cluster': 0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/platform': 0.92.1(effect@3.18.1)
-      '@effect/platform-node-shared': 0.51.2(@effect/cluster@0.50.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
+      '@effect/platform-node-shared': 0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(effect@3.18.1))(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
       effect: 3.18.1
@@ -36598,12 +36602,12 @@ snapshots:
     dependencies:
       effect: 3.18.1
 
-  '@effect/vitest@0.26.0(effect@3.18.1)(vitest@3.2.4)':
+  '@effect/vitest@0.26.0(effect@3.18.1)(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))':
     dependencies:
       effect: 3.18.1
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1)
 
-  '@effect/workflow@0.11.2(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
+  '@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.1))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1))(effect@3.18.1)':
     dependencies:
       '@effect/platform': 0.92.1(effect@3.18.1)
       '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
@@ -38033,7 +38037,7 @@ snapshots:
   '@ngneat/falso@7.1.1':
     dependencies:
       seedrandom: 3.0.5
-      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
+      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
 
   '@noble/hashes@1.3.2': {}
 
@@ -39269,7 +39273,7 @@ snapshots:
 
   '@peermetrics/webrtc-stats@5.7.1':
     dependencies:
-      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
+      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
 
   '@phosphor-icons/core@2.1.1': {}
 
@@ -41727,7 +41731,7 @@ snapshots:
       storybook: 9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))
       ts-dedent: 2.2.0
 
-  '@storybook/addon-vitest@9.1.10(@vitest/browser@3.2.4)(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4)':
+  '@storybook/addon-vitest@9.1.10(@vitest/browser@3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3)))(@vitest/runner@3.2.4)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@9.1.10(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 1.4.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -42102,14 +42106,14 @@ snapshots:
     dependencies:
       defer-to-connect: 2.0.1
 
-  '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
+  '@tailwindcss/container-queries@0.1.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
     dependencies:
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
-  '@tailwindcss/forms@0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
+  '@tailwindcss/forms@0.5.3(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)))':
     dependencies:
       mini-svg-data-uri: 1.4.4
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
   '@tauri-apps/api@2.8.0': {}
 
@@ -42718,8 +42722,6 @@ snapshots:
       parse5: 7.3.0
 
   '@types/json-schema@7.0.15': {}
-
-  '@types/json-stable-stringify@1.0.34': {}
 
   '@types/json-stringify-safe@5.0.0': {}
 
@@ -43341,7 +43343,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@3.2.4(@vitest/browser@3.2.4)(vitest@3.2.4)':
+  '@vitest/coverage-v8@3.2.4(@vitest/browser@3.2.4(playwright@1.54.1)(vite@7.1.7(@types/node@22.10.2)(jiti@2.4.2)(terser@5.19.2)(yaml@2.7.1))(vitest@3.2.4)(webdriverio@8.33.1(encoding@0.1.13)(typescript@5.9.3)))(vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@26.1.0)(terser@5.19.2)(yaml@2.7.1))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 1.0.2
@@ -46127,6 +46129,8 @@ snapshots:
   diff@4.0.2: {}
 
   diff@5.2.0: {}
+
+  diff@8.0.2: {}
 
   diffie-hellman@5.0.3:
     dependencies:
@@ -49147,7 +49151,7 @@ snapshots:
       istanbul-lib-coverage: 3.2.2
       p-map: 3.0.0
       rimraf: 3.0.2
-      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
+      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
 
   istanbul-lib-report@3.0.1:
     dependencies:
@@ -49445,9 +49449,13 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
-  json-stable-stringify@1.0.1:
+  json-stable-stringify@1.3.0:
     dependencies:
+      call-bind: 1.0.8
+      call-bound: 1.0.4
+      isarray: 2.0.5
       jsonify: 0.0.1
+      object-keys: 1.1.1
 
   json-stringify-safe@5.0.1: {}
 
@@ -51263,7 +51271,7 @@ snapshots:
       is-wsl: 2.2.0
       semver: 7.7.2
       shellwords: 0.1.1
-      uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
+      uuid: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
       which: 2.0.2
 
   node-preload@0.2.1:
@@ -52141,21 +52149,21 @@ snapshots:
       camelcase-css: 2.0.1
       postcss: 8.5.3
 
-  postcss-load-config@3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
+  postcss-load-config@3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
     dependencies:
       lilconfig: 2.1.0
       yaml: 1.10.2
     optionalDependencies:
       postcss: 8.5.3
-      ts-node: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
+      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
 
-  postcss-load-config@4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
+  postcss-load-config@4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
     dependencies:
       lilconfig: 2.1.0
       yaml: 2.7.1
     optionalDependencies:
       postcss: 8.5.3
-      ts-node: 10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
+      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)
 
   postcss-modules-extract-imports@3.0.0(postcss@8.5.3):
     dependencies:
@@ -52589,7 +52597,7 @@ snapshots:
       mkdirp-classic: 0.5.3
       random-access-storage: 1.4.3
 
-  random-access-idb@1.2.2(patch_hash=207ec2404ef8b5e9e6d9de8ce83586d215ef77b94a7d0cadced03125874a1d9e):
+  random-access-idb@1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4):
     dependencies:
       buffer-alloc: 1.2.0
       buffer-from: 0.1.2
@@ -53909,7 +53917,7 @@ snapshots:
   sharp@0.33.5:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
       semver: 7.7.2
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
@@ -53935,7 +53943,7 @@ snapshots:
   sharp@0.34.1:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
       semver: 7.7.2
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.1
@@ -54725,13 +54733,13 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.27.1
 
-  tailwind-scrollbar@3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))):
+  tailwind-scrollbar@3.1.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))):
     dependencies:
-      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
 
-  tailwindcss-logical@3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
+  tailwindcss-logical@3.0.0(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
     dependencies:
-      tailwindcss: 3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      tailwindcss: 3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
     transitivePeerDependencies:
       - autoprefixer
       - postcss
@@ -54739,7 +54747,7 @@ snapshots:
 
   tailwindcss-radix@2.8.0: {}
 
-  tailwindcss@3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
+  tailwindcss@3.0.7(autoprefixer@10.4.13(postcss@8.5.3))(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
     dependencies:
       arg: 5.0.2
       autoprefixer: 10.4.13(postcss@8.5.3)
@@ -54757,7 +54765,7 @@ snapshots:
       object-hash: 2.2.0
       postcss: 8.5.3
       postcss-js: 3.0.3
-      postcss-load-config: 3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      postcss-load-config: 3.1.4(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       postcss-nested: 5.0.6(postcss@8.5.3)
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
@@ -54767,7 +54775,7 @@ snapshots:
     transitivePeerDependencies:
       - ts-node
 
-  tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
+  tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3)):
     dependencies:
       '@alloc/quick-lru': 5.2.0
       arg: 5.0.2
@@ -54786,7 +54794,7 @@ snapshots:
       postcss: 8.5.3
       postcss-import: 15.1.0(postcss@8.5.3)
       postcss-js: 4.0.1(postcss@8.5.3)
-      postcss-load-config: 4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
+      postcss-load-config: 4.0.1(postcss@8.5.3)(ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3))
       postcss-nested: 6.0.1(postcss@8.5.3)
       postcss-selector-parser: 6.0.11
       resolve: 1.22.10
@@ -55167,7 +55175,7 @@ snapshots:
       '@ts-morph/common': 0.17.0
       code-block-writer: 11.0.3
 
-  ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3):
+  ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.5)(@types/node@22.10.2)(typescript@5.9.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
@@ -55760,7 +55768,7 @@ snapshots:
 
   uuid@11.1.0: {}
 
-  uuid@8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9): {}
+  uuid@8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye): {}
 
   uuid@9.0.1: {}
 

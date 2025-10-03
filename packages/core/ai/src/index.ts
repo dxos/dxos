@@ -14,3 +14,4 @@ export * from './model';
 export * from './status-report';
 export * from './tools';
 export * from './util';
+export * from './memoization';

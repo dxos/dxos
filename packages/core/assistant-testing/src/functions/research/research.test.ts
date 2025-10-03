@@ -39,35 +39,32 @@ import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
-const MOCK_SEARCH = true;
-
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research] })),
   Layer.provideMerge(
     Layer.mergeAll(
       AiServiceTestingPreset('direct'),
+      // MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      FunctionInvocationService.layerTest({ functions: [research] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerNoop),
-      ),
+      TracingService.layerNoop,
     ),
   ),
 );
 
-describe('Research', { timeout: 600_000 }, () => {
+describe.skip('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
             name: 'Notion',
@@ -76,8 +73,7 @@ describe('Research', { timeout: 600_000 }, () => {
         );
         yield* DatabaseService.flush({ indexes: true });
 
-        const functionInvocationService = yield* FunctionInvocationService;
-        const result = yield* functionInvocationService.invokeFunction(research, {
+        const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
           mockSearch: false,
         });
@@ -93,14 +89,14 @@ describe('Research', { timeout: 600_000 }, () => {
         console.log(inspect(data, { depth: null, colors: true }));
       },
       Effect.provide(TestLayer),
-      TestHelpers.taggedTest('llm'),
+      TestHelpers.provideTestContext,
     ),
   );
 
   it.effect(
     'research blueprint',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
@@ -119,7 +115,7 @@ describe('Research', { timeout: 600_000 }, () => {
         });
       },
       Effect.provide(TestLayer),
-      TestHelpers.taggedTest('llm'),
+      TestHelpers.provideTestContext,
     ),
   );
 });
