@@ -310,14 +310,14 @@ const queryLanguage = LRLanguage.define({
  * Define a custom highlight style for the query language.
  */
 const queryHighlightStyle = HighlightStyle.define([
-  { tag: t.keyword, class: 'text-blue-500' },
-  { tag: t.string, class: 'text-orange-500' },
-  { tag: t.number, class: 'text-green-500' },
-  { tag: t.bool, class: 'text-green-500' },
-  { tag: t.null, class: 'text-neutral-500' },
-  { tag: t.attributeName, class: 'text-blue-500' },
-  { tag: t.variableName, class: 'text-teal-500' },
-  { tag: t.propertyName, class: 'text-teal-500' },
+  { tag: t.keyword, class: 'text-blueText' },
+  { tag: t.string, class: 'text-orangeText' },
+  { tag: t.number, class: 'text-greenText' },
+  { tag: t.bool, class: 'text-greenText' },
+  { tag: t.null, class: 'text-neutralText' },
+  { tag: t.attributeName, class: 'text-blueText' },
+  { tag: t.variableName, class: 'text-tealText' },
+  { tag: t.propertyName, class: 'text-tealText' },
   { tag: t.definitionOperator, class: 'text-subdued' },
   { tag: t.separator, class: 'text-subdued' },
   { tag: t.derefOperator, class: 'text-subdued' },
