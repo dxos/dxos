@@ -28,7 +28,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationService.layerTest({ functions: [fetchDiscordMessages] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [fetchDiscordMessages] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),

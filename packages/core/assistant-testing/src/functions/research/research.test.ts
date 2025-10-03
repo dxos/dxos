@@ -45,9 +45,9 @@ const TestLayer = Layer.mergeAll(
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research] })),
   Layer.provideMerge(
     Layer.mergeAll(
-      TracingService.layerNoop,
       AiServiceTestingPreset('direct'),
       // MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
@@ -55,16 +55,13 @@ const TestLayer = Layer.mergeAll(
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
       CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-      FunctionInvocationService.layerTest({ functions: [research] }).pipe(
-        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
-        Layer.provideMerge(TracingService.layerNoop),
-      ),
+      TracingService.layerNoop,
     ),
   ),
 );
 
-describe.skip('Research', { timeout: 600_000 }, () => {
-  it.effect(
+describe('Research', { timeout: 600_000 }, () => {
+  it.effect.only(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
@@ -76,8 +73,7 @@ describe.skip('Research', { timeout: 600_000 }, () => {
         );
         yield* DatabaseService.flush({ indexes: true });
 
-        const functionInvocationService = yield* FunctionInvocationService;
-        const result = yield* functionInvocationService.invokeFunction(research, {
+        const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Who are the founders of Notion? Do one web query max.',
           mockSearch: false,
         });

@@ -66,7 +66,7 @@ export const makeToolResolverFromFunctions = (
 export const makeToolExecutionServiceFromFunctions = (
   toolkit: Toolkit.Toolkit<any>,
   handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService | FunctionImplementationResolver> => {
+): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
