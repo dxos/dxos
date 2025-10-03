@@ -17,10 +17,6 @@ semverGroups:
       - '@swc-node/register'
 versionGroups:
   - packages:
-      - '@dxos/docs'
-    dependencies:
-      - '@mdx-js/react'
-  - packages:
       - '@dxos/log-hook'
     dependencies:
       - '@swc/core'

@@ -23,11 +23,12 @@
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
     "lint": "moon run :lint -- --fix",
+    "lint-changed": "moon :lint --affected --remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
     "pkg-inspect": "./scripts/pkg-inspect.mjs",
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
-    "test": "moon run :test",
+    "test": "MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism",
     "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
@@ -56,7 +57,6 @@
     "@effect/language-service": "^0.41.1",
     "@effect/vitest": "~0.26.0",
     "@eslint/js": "^9.36.0",
-    "@mdx-js/react": "^2.1.3",
     "@moonrepo/cli": "^1.40.4",
     "@octokit/rest": "^19.0.5",
     "@phosphor-icons/core": "^2.1.1",
@@ -67,8 +67,8 @@
     "@swc-node/register": "1.11.1",
     "@swc/core": "1.13.5",
     "@swc/types": "^0.1.25",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
@@ -77,8 +77,8 @@
     "@types/json-stringify-safe": "5.0.0",
     "@types/node": "22.10.2",
     "@types/node-fetch": "^2.5.10",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
+    "@types/react": "~19.2.0",
+    "@types/react-dom": "~19.2.0",
     "@types/sharedworker": "^0.0.111",
     "@types/uuid": "^9.0.0",
     "@types/wicg-file-system-access": "^2020.9.6",
@@ -137,8 +137,8 @@
     "prettier": "^3.6.2",
     "prettier-plugin-packagejson": "^2.5.19",
     "raf": "^3.4.1",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^3.20.4",
     "rollup-plugin-sourcemaps": "^0.6.3",
@@ -170,7 +170,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "20.12.1"
+    "node": "20.19.5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -207,13 +207,13 @@
       "@opentelemetry/sdk-node": "^0.52.1",
       "@opentelemetry/sdk-trace-node": "^1.25.1",
       "@types/node": "22.10.2",
-      "@types/react": "~18.2.0",
-      "@types/react-dom": "~18.2.0",
+      "@types/react": "~19.2.0",
+      "@types/react-dom": "~19.2.0",
       "ipfs-utils": "9.0.14",
       "micromatch": "^4.0.8",
       "nan": "2.19.0",
-      "react": "~18.2.0",
-      "react-dom": "~18.2.0"
+      "react": "~19.2.0",
+      "react-dom": "~19.2.0"
     },
     "patchedDependencies": {
       "random-access-idb@1.2.2": "patches/random-access-idb@1.2.2.patch",

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Component, type JSX, type PropsWithChildren, type ReactNode } from 'react';
+import React, { Component, type PropsWithChildren, type ReactNode } from 'react';
 // import { useNavigate } from 'react-router-dom';
 
 // import { Button, Message } from '@dxos/react-ui';
@@ -63,7 +63,7 @@ export class ErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
-  override render(): string | number | boolean | JSX.Element | Iterable<ReactNode> | null | undefined {
+  override render(): ReactNode {
     if (this.state.hasError) {
       return (
         <ErrorPopup

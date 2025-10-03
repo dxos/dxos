@@ -32,6 +32,7 @@ export type QueryEditorProps = {
 };
 
 // TODO(wittjosiah): Factor out.
+// TODO(thure): Reconcile with `react-ui-query-editor`.
 
 export const QueryEditor = ({
   space,

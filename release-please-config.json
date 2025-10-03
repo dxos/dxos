@@ -875,6 +875,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-query-editor/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-searchlist/package.json",
           "jsonpath": "$.version"
         },
@@ -901,11 +906,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-tabs/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-tag-picker/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -54,7 +54,7 @@ const StoryComponent: FC<StoryProps> = ({ count = 1, ...options }) => {
   const grid = useGrid({ axis: true, grid: false });
   const zoom = useZoom();
 
-  const root = useRef<SVGGElement>();
+  const root = useRef<SVGGElement>(null);
   useEffect(() => {
     select(root.current)
       .selectAll('g')
