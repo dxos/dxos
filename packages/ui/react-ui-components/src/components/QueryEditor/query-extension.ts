@@ -31,29 +31,28 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
     decorations(),
     autocompletion({
       activateOnTyping: true,
-      // closeOnBlur: false,
       override: [
         async (context: CompletionContext) => {
           const tree = parser.parse(context.state.sliceDoc());
           const node = tree.cursorAt(context.pos, -1).node;
-          if (node.parent?.type.id === QueryDSL.Node.TypeFilter) {
-            let range = undefined;
-            if (node?.type.id === QueryDSL.Node.Identifier) {
-              range = { from: node.from, to: node.to };
-            } else if (node?.type.name === ':') {
-              range = { from: node.from + 1 };
-            }
 
-            if (range) {
-              // TODO(burdon): Unify schema registry.
-              // const schema = await space?.db.schemaRegistry.query().run();
-              const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+          switch (node.parent?.type.id) {
+            case QueryDSL.Node.TypeFilter: {
+              let range = undefined;
+              if (node?.type.id === QueryDSL.Node.Identifier) {
+                range = { from: node.from, to: node.to };
+              } else if (node?.type.name === ':') {
+                range = { from: node.from + 1 };
+              }
 
-              return {
-                ...range,
-                filter: true,
-                options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
-              };
+              if (range) {
+                const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+                return {
+                  ...range,
+                  filter: true,
+                  options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
+                };
+              }
             }
           }
 
@@ -102,14 +101,30 @@ const decorations = (): Extension => {
 
             const nodeIdent = node.node.getChild(QueryDSL.Node.Identifier);
             if (nodeIdent) {
-              const ident = state.sliceDoc(nodeIdent.from, nodeIdent.to);
+              const identifier = state.sliceDoc(nodeIdent.from, nodeIdent.to);
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TypeWidget(ident),
+                  widget: new TypeWidget(identifier),
                 }),
               );
+            }
+            break;
+          }
+
+          case QueryDSL.Node.TagFilter: {
+            const nodeIdent = node.node.getChild(QueryDSL.Node.Identifier);
+            if (nodeIdent) {
+              const identifier = state.sliceDoc(nodeIdent.from, nodeIdent.to);
+              deco.add(
+                node.from,
+                node.to,
+                Decoration.widget({
+                  widget: new TagWidget(identifier),
+                }),
+              );
+              atomicDeco.add(node.from, node.to, Decoration.mark({}));
             }
             break;
           }
@@ -201,10 +216,10 @@ class TypeWidget extends WidgetType {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return Domino.of('span')
       .classNames('inline-flex items-stretch border border-separator rounded-sm')
-      .child(
+      .children(
         Domino.of('span')
-          .text('type')
-          .classNames('flex items-center text-xs font-thin pis-1 pie-1 rounded-l-[0.2rem] bg-separator'),
+          .classNames('flex items-center text-xs font-thin pis-1 pie-1 rounded-l-[0.2rem] bg-separator')
+          .text('type'),
         Domino.of('span').text(label).classNames('leading-[22px] pis-1 pie-1 pb-[1px] text-green-500'),
       )
       .build();
@@ -235,13 +250,41 @@ class ObjectWidget extends WidgetType {
   override toDOM() {
     return Domino.of('span')
       .classNames('inline-flex items-stretch border border-separator divide-x divide-separator rounded-sm')
-      .child(
+      .children(
         ...this._entries.map(([key, value]) =>
-          Domino.of('span').classNames('pis-1 pie-1').child(
-            //
-            Domino.of('span').classNames('text-infoText').text(key),
-            Domino.of('span').classNames('pis-1').text(value),
-          ),
+          Domino.of('span')
+            .classNames('pis-1 pie-1')
+            .children(
+              Domino.of('span').classNames('text-infoText').text(key),
+              Domino.of('span').classNames('pis-1').text(value),
+            ),
+        ),
+      )
+      .build();
+  }
+}
+
+/**
+ * Tag
+ */
+class TagWidget extends WidgetType {
+  constructor(private readonly _str: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._str === other._str;
+  }
+
+  override toDOM() {
+    return Domino.of('span')
+      .classNames('inline-flex items-stretch border border-amberText rounded-sm text-sm')
+      .children(
+        Domino.of('span').children(
+          Domino.of('span')
+            .classNames('inline-flex items-center pis-1 pie-1 bg-amberText text-black rounded-l-[0.2rem]')
+            .text('#'),
+          Domino.of('span').classNames('pis-1 pie-1').text(this._str),
         ),
       )
       .build();

@@ -88,7 +88,7 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
 
   return (
     <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-      {/* TODO(burdon): Use Editor. */}
+      {/* TODO(burdon): Use Editor? */}
       <ChatEditor
         ref={editorRef}
         autoFocus

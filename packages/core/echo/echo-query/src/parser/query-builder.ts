@@ -11,7 +11,7 @@ import { QueryDSL } from './gen';
 /**
  * Stateless query builder that parses DSL trees into filters.
  */
-// TODO(burdon): Potentially build ECHO DSL directly from grammar.
+// TODO(burdon): Potentially build ECHO DSL directly from grammar?
 export class QueryBuilder {
   constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
 
@@ -242,6 +242,10 @@ export class QueryBuilder {
         result = this._parsePropertyFilter(cursor, input);
         break;
 
+      case 'TagFilter':
+        result = this._parseTagFilter(cursor, input);
+        break;
+
       default:
         result = Filter.nothing();
     }
@@ -276,7 +280,8 @@ export class QueryBuilder {
         if (cursor.node.name === 'ObjectProperty') {
           const { key, value } = this._parseObjectProperty(cursor, input);
           if (key) {
-            props[key] = value;
+            // Convert simple values to Filter.eq for compatibility with Filter.props
+            props[key] = Filter.eq(value);
           }
         }
       } while (cursor.nextSibling());
@@ -295,13 +300,12 @@ export class QueryBuilder {
     let value: any = null;
 
     if (cursor.firstChild()) {
-      // First child is PropertyKey
-      if (cursor.node.name === 'PropertyKey' && cursor.firstChild()) {
+      // First child should be the property name (Identifier).
+      if (cursor.node.name === 'Identifier') {
         key = this._getNodeText(cursor, input);
-        cursor.parent();
       }
 
-      // Skip ':' and move to Value
+      // Skip ':' and move to Value.
       cursor.nextSibling();
       cursor.nextSibling();
 
@@ -365,6 +369,20 @@ export class QueryBuilder {
     }
 
     return parts.join('.');
+  }
+
+  /**
+   * Parse a TagFilter node (#tag).
+   */
+  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
+    // Skip Tag token (#)
+    cursor.firstChild();
+    cursor.nextSibling(); // Move to Identifier
+
+    const tag = this._getNodeText(cursor, input);
+    cursor.parent();
+
+    return Filter.tag(tag);
   }
 
   /**
