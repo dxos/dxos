@@ -10,7 +10,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { QueryEditor, type QueryEditorProps, type QueryItem, itemIsTag } from '@dxos/react-ui-query-editor';
+import { QueryEditor, type QueryEditorProps, type QueryItem, itemIsTag, itemIsText } from '@dxos/react-ui-query-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { InboxCapabilities } from '../../capabilities';
@@ -40,6 +40,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     (visible: boolean) => {
       if (!visible) {
         model.clearSelectedTags();
+        model.clearTextFilters();
       }
       filterDispatch('toggle_from_toolbar');
     },
@@ -85,15 +86,26 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
   const handleQueryEditorChange = useCallback(
     (items: QueryItem[]) => {
+      // Clear existing filters
       model.clearSelectedTags();
+      model.clearTextFilters();
+
+      // Handle tag items
       const labels = items.filter(itemIsTag).map(({ label }) => label);
       labels.forEach((label) => model.selectTag(label));
 
-      if (labels.length === 0) {
+      // Handle text items
+      const textFilters = items
+        .filter(itemIsText)
+        .filter(({ content }) => /\w/.test(content))
+        .map(({ content }) => content);
+      model.setTextFilters(textFilters);
+
+      if (labels.length === 0 && textFilters.length === 0) {
         filterDispatch('all_tags_cleared');
       }
     },
-    [model.selectTag, filterDispatch],
+    [model, filterDispatch],
   );
 
   const handleSearch = useCallback<NonNullable<QueryEditorProps['onSearch']>>(
