@@ -56,8 +56,8 @@ export type AppObservabilityOptions = {
   config: Config;
   mode?: Mode;
   tracingEnable?: boolean;
+  profilingEnable?: boolean;
   replayEnable?: boolean;
-  // TODO(nf): options for providers?
 };
 
 // TODO(wittjosiah): Store preference for disabling observability.
@@ -66,9 +66,9 @@ export type AppObservabilityOptions = {
 export const initializeAppObservability = async ({
   namespace,
   config,
-  // TODO(nf): Configure mode.
   mode = 'basic',
   tracingEnable = false,
+  profilingEnable = false,
   replayEnable = false,
 }: AppObservabilityOptions): Promise<Observability> => {
   log('initializeAppObservability', { config });
@@ -95,13 +95,23 @@ export const initializeAppObservability = async ({
       sentryInitOptions: {
         environment,
         release,
-        tracing: tracingEnable,
-        replay: replayEnable,
-        // TODO(wittjosiah): Configure these.
-        //   Consider using a sampling function to dynamically configure these values.
-        //   https://docs.sentry.io/platforms/javascript/configuration/sampling/#setting-a-sampling-function
+
+        // Errors.
         sampleRate: 1.0,
-        replaySampleRate: 1.0,
+
+        // Traces.
+        // TODO(wittjosiah): Distributed tracing.
+        //   https://docs.sentry.io/platforms/javascript/tracing/distributed-tracing/custom-instrumentation/
+        tracing: tracingEnable,
+        // TODO(wittjosiah): Setup traces w/ a sampler.
+        //   https://docs.sentry.io/platforms/javascript/configuration/sampling/#setting-a-sampling-function
+        // tracesSampler: (samplingContext) => {},
+        profiling: profilingEnable,
+        profilesSampleRate: 1.0,
+
+        // Replay.
+        replay: replayEnable,
+        replaySampleRate: 0.1,
         replaySampleRateOnError: 1.0,
       },
     },
