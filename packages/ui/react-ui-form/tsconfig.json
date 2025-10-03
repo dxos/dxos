@@ -78,6 +78,9 @@
       "path": "../react-ui-pickers"
     },
     {
+      "path": "../react-ui-query-editor"
+    },
+    {
       "path": "../react-ui-searchlist"
     },
     {
@@ -85,9 +88,6 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

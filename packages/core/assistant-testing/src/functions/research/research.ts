@@ -128,7 +128,7 @@ export default defineFunction({
         makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
       ).pipe(
         Layer.provide(
-          Layer.mergeAll(FunctionInvocationService.layerTest({ functions: [exaFunction, exaMockFunction] })),
+          Layer.mergeAll(FunctionInvocationService.layerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),
     ),

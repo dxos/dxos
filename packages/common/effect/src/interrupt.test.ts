@@ -13,7 +13,7 @@ const doWork = Effect.fn('doWork')(function* () {
 it.effect.skip(
   'call a function to generate a research report',
   Effect.fnUntraced(
-    function* ({ expect: _ }) {
+    function* (_) {
       const resultFiber = yield* doWork().pipe(Effect.fork);
       setTimeout(() => {
         void Effect.runPromise(Fiber.interrupt(resultFiber));

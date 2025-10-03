@@ -108,13 +108,13 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-query-editor"
+    },
+    {
       "path": "../../ui/react-ui-stack"
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tag-picker"
     },
     {
       "path": "../../ui/react-ui-theme"

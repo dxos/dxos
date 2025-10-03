@@ -144,7 +144,7 @@ export const WithEchoSchema: StoryObj = {
       types: [Testing.Contact],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onCreateSpace: async ({ space }) => {
         Array.from({ length: 10 }).forEach(() => {
           space.db.add(
             Obj.make(Testing.Contact, {
