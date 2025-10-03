@@ -2,72 +2,65 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef, useEffect, useMemo } from 'react';
 
-import { type Space } from '@dxos/client-protocol';
-import { useThemeContext } from '@dxos/react-ui';
+import { type Space } from '@dxos/client/echo';
+import { type ThemedClassName, useForwardedRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  Editor,
+  type EditorProps,
   EditorView,
-  autocomplete,
+  type Extension,
   createBasicExtensions,
   createThemeExtensions,
-  useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
 
-import { useMatcherExtension } from '../../hooks';
+import { translationKey } from '../../translations';
 
-export type QueryEditorProps = {
-  space?: Space;
-  classNames?: string;
-  autoFocus?: boolean;
-  lineWrapping?: boolean;
-  placeholder?: string;
-  initialValue?: string;
-  onChange?: (text: string) => void;
-  onSubmit?: (text: string) => boolean | void;
-  onSuggest?: (text: string) => string[];
-  onCancel?: () => void;
-};
+import { query } from './query-extension';
 
-export const QueryEditor = ({
-  space,
-  classNames,
-  autoFocus,
-  lineWrapping,
-  placeholder,
-  initialValue,
-  onChange,
-  onSubmit,
-  onSuggest,
-  onCancel,
-}: QueryEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const extensions = useMatcherExtension(space);
+// TODO(burdon): Reconcile all QueryEditor variants.
+// TODO(burdon): Adjust grammar to support simple queries (e.g., tags).
+//  - Pipeline query editor
+//  - Mailbox search
 
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue,
-      autoFocus,
-      extensions: [
+export type QueryEditorProps = ThemedClassName<
+  {
+    space?: Space;
+    query?: string;
+    onQueryUpdate?: (query: string) => void;
+  } & EditorProps
+>;
+
+export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
+  ({ space, query: initialValue, onQueryUpdate, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const ref = useForwardedRef(forwardedRef);
+    const { themeMode } = useThemeContext();
+    const extensions = useMemo<Extension[]>(
+      () => [
+        createBasicExtensions({ placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode }),
-        autocomplete({ onSubmit, onSuggest, onCancel }),
-        createBasicExtensions({
-          bracketMatching: false,
-          lineWrapping,
-          placeholder,
+        EditorView.updateListener.of((view) => {
+          onQueryUpdate?.(view.state.sliceDoc());
         }),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChange?.(update.state.doc.toString());
-          }
-        }),
-        extensions,
-      ].filter(isNonNullable),
-    }),
-    [themeMode, extensions, onSubmit, onSuggest, onCancel],
-  );
+        query({ space }),
+      ],
+      [space],
+    );
 
-  return <div ref={parentRef} className={mx('is-full', classNames)} />;
-};
+    // Update content.
+    useEffect(() => {
+      const view = ref.current;
+      if (initialValue !== view?.state.sliceDoc()) {
+        requestAnimationFrame(() => {
+          view?.dispatch({
+            changes: { from: 0, to: view.state.doc.length, insert: initialValue },
+          });
+        });
+      }
+    }, [initialValue]);
+
+    return <Editor initialValue={initialValue} extensions={extensions} {...props} ref={ref} />;
+  },
+);

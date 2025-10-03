@@ -5,30 +5,36 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
+
+import { translations } from '../../translations';
 
 import { QueryEditor } from './QueryEditor';
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
-  decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+    translations,
+  },
 } satisfies Meta<typeof QueryEditor>;
 
 export default meta;
 
-type Story = StoryObj<typeof QueryEditor>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  render: () => {
-    const { space } = useClientProvider();
-    return <QueryEditor space={space} />;
+  args: {
+    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
+    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 }',
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
   },
 };

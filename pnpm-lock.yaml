@@ -13150,6 +13150,12 @@ importers:
 
   packages/ui/react-ui-components:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: ^6.19.0
+        version: 6.19.0
+      '@codemirror/language':
+        specifier: ^6.11.3
+        version: 6.11.3
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -13171,6 +13177,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13225,6 +13234,9 @@ importers:
       effect:
         specifier: 3.18.1
         version: 3.18.1
+      json5:
+        specifier: ^2.2.3
+        version: 2.2.3
       motion:
         specifier: ^12.0.6
         version: 12.11.0(@emotion/is-prop-valid@1.2.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
