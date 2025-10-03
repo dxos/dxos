@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Attributes, type Meter, type ObservableGauge } from '@opentelemetry/api';
+import { type Meter } from '@opentelemetry/api';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { Resource } from '@opentelemetry/resources';
+import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
@@ -15,23 +15,16 @@ import { type OtelOptions, setDiagLogger } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
 
-type SynchronousGauge = {
-  gauge: ObservableGauge<Attributes>;
-  nextValue: number;
-  nextTags?: any;
-};
-
 export class OtelMetrics {
   private _meterProvider: MeterProvider;
   private _meter: Meter;
-  private _gauges = new Map<string, SynchronousGauge>();
 
   constructor(private readonly options: OtelOptions) {
     // TODO: improve error handling/logging
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
-    const resource = Resource.default().merge(
-      new Resource({
+    const resource = defaultResource().merge(
+      resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
         [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
       }),
