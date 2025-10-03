@@ -15,7 +15,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
-import { type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type CommandMenuGroup,
   type CommandMenuItem,
@@ -34,6 +34,7 @@ import {
   type QueryTag,
   itemIsTag,
   itemIsText,
+  parseQueryItems,
   queryEditor,
   renderItems,
   renderTag,
@@ -97,20 +98,14 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
     const { ref: resizeRef, width } = useResizeDetector();
     const viewRef = useRef<EditorView | null>(null);
 
-    const itemsRef = useDynamicRef(initialItems);
-
-    const handleChange = useCallback(
-      (items: QueryItem[]) => {
-        itemsRef.current = items;
-        onChange?.(items);
-      },
-      [onChange],
-    );
-
     const getMenu = useCallback(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
         if (trigger === '#' && onSearch) {
-          const currentIds = itemsRef.current.filter(itemIsTag).map((item) => item.id);
+          const currentIds = viewRef?.current?.state
+            ? parseQueryItems(viewRef.current.state)
+                .filter(itemIsTag)
+                .map((item) => item.id)
+            : [];
           const results = onSearch(query || '', currentIds);
           const menuItems: CommandMenuItem[] = results.map((item) => ({
             id: item.id,
@@ -128,7 +123,7 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
         }
         return [];
       },
-      [onSearch, itemsRef],
+      [onSearch],
     );
 
     const {
@@ -141,10 +136,12 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
       getMenu,
     });
 
-    const queryEditorExtension = useMemo(() => queryEditor({ onChange: handleChange }), [handleChange]);
+    const queryEditorExtension = useMemo(() => queryEditor({ onChange }), [onChange]);
 
-    const { parentRef, view } = useTextEditor(
-      () => ({
+    // TODO(thure): In theory, `commandMenuExtension` should be a dependency, but it seems to change overly often in
+    //  certain scenarios; debug this if needed.
+    const { parentRef, view } = useTextEditor(() => {
+      return {
         initialValue: renderItems(initialItems),
         extensions: [
           createBasicExtensions({ lineWrapping: false, placeholder }),
@@ -161,9 +158,8 @@ const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
             blur: (event) => onBlur?.(event),
           }),
         ],
-      }),
-      [themeMode, onBlur, commandMenuExtension],
-    );
+      };
+    }, [themeMode, onBlur]);
 
     const composedRef = useComposedRefs(resizeRef, parentRef);
     useImperativeHandle(ref, () => ({ focus: () => view?.focus() }), [view]);
