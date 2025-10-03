@@ -6,6 +6,7 @@ import React from 'react';
 
 import { Capabilities, type PluginContext, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
+import { DataType } from '@dxos/schema';
 
 import { BoardContainer } from '../components';
 import { meta } from '../meta';
@@ -18,5 +19,11 @@ export default (context: PluginContext) =>
       role: ['article', 'section'],
       filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
       component: ({ data, role }) => <BoardContainer board={data.subject} role={role} />,
+    }),
+    createSurface({
+      id: `${meta.id}/surface/board-view`,
+      role: ['article', 'section'],
+      filter: (data): data is { subject: DataType.View } => Obj.instanceOf(DataType.View, data.subject),
+      component: ({ data, role }) => <BoardContainer view={data.subject} role={role} />,
     }),
   ]);

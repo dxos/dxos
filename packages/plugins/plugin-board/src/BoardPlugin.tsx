@@ -39,7 +39,9 @@ export const BoardPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Board.Board,
-          getIntent: () => createIntent(Board.Create),
+          formSchema: Board.CreateBoard,
+          hidden: true,
+          getIntent: (props, options) => createIntent(Board.Create, { ...props, space: options.space }),
         }),
       ),
   }),
