@@ -142,7 +142,7 @@ describe('FilterGenerator', () => {
     });
 
     test('props filter', ({ expect }) => {
-      const propsFilter = Filter._props({ name: 'John' });
+      const propsFilter = Filter.props({ name: 'John' });
       const expression = createExpression(propsFilter.ast);
       expect(expression).toEqual({
         type: 'binary',

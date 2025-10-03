@@ -28,7 +28,7 @@ export type ClientRepeaterProps<P extends ClientRepeatedComponentProps> = {
   clients?: Client[];
   types?: TypedObject[];
   args?: Omit<P, 'id' | 'count'>;
-} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onSpaceCreated'>;
+} & Pick<WithClientProviderProps, 'createIdentity' | 'createSpace' | 'onCreateSpace'>;
 
 /**
  * Utility component for Storybook stories which sets up clients for n peers.
@@ -48,7 +48,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
     types,
     createIdentity,
     createSpace,
-    onSpaceCreated,
+    onCreateSpace,
   } = props;
   useEffect(() => {
     registerSignalsRuntime();
@@ -72,7 +72,7 @@ export const ClientRepeater = <P extends ClientRepeatedComponentProps>(props: Cl
       const client = clients[0];
       const space = await client.spaces.create({ name: faker.commerce.productName() });
       setSpaceKey(space.key);
-      await onSpaceCreated?.({ client, space }, {});
+      await onCreateSpace?.({ client, space }, {});
       await Promise.all(clients.slice(1).flatMap((client) => performInvitation({ host: space, guest: client.spaces })));
     }
 

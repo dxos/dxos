@@ -174,7 +174,7 @@ const meta = {
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
         const { view } = await Table.makeView({ client, space, typename: schema.typename });
         view.projection.fields = [
@@ -212,7 +212,7 @@ export const StaticSchema: StoryObj = {
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const { view } = await Table.makeView({ client, space, typename: Testing.Contact.typename });
         space.db.add(view);
 
@@ -253,7 +253,7 @@ export const ArrayOfObjects: StoryObj = {
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const { view } = await Table.makeView({ client, space, typename: ContactWithArrayOfEmails.typename });
         space.db.add(view);
 
@@ -279,7 +279,7 @@ export const Tags: Meta<StoryProps> = {
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [

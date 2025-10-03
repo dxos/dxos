@@ -58,7 +58,7 @@ export const createFilter = (ast: Expression): Filter<any> => {
 
     case 'identifier': {
       const { name } = ast;
-      return Filter._props({ [name]: true });
+      return Filter.props({ [name]: true });
     }
 
     case 'literal': {
