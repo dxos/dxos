@@ -88,6 +88,6 @@ describe('Entity-extraction', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    60_000,
+    MemoizedAiService.isGenerationEnabled() ? 60_000 : undefined,
   );
 });
