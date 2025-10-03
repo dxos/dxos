@@ -5443,12 +5443,6 @@ importers:
       '@codemirror/autocomplete':
         specifier: ^6.19.0
         version: 6.19.0
-      '@codemirror/language':
-        specifier: ^6.11.3
-        version: 6.11.3
-      '@codemirror/search':
-        specifier: ^6.5.11
-        version: 6.5.11
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -5662,12 +5656,6 @@ importers:
       '@effect/platform-browser':
         specifier: 0.72.0
         version: 0.72.0(@effect/platform@0.92.1(effect@3.18.1))(effect@3.18.1)
-      '@lezer/common':
-        specifier: ^1.2.2
-        version: 1.2.2
-      '@lezer/highlight':
-        specifier: ^1.2.1
-        version: 1.2.1
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)

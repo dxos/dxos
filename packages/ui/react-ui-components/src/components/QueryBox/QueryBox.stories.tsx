@@ -15,6 +15,10 @@ import { QueryBox } from './QueryBox';
 const meta = {
   title: 'ui/react-ui-components/QueryBox',
   component: QueryBox,
+  render: () => {
+    const { space } = useClientProvider();
+    return <QueryBox classNames='is-[30rem] p-2 border border-separator rounded-sm' space={space} />;
+  },
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme],
   parameters: {
     layout: 'centered',
@@ -25,9 +29,4 @@ export default meta;
 
 type Story = StoryObj<typeof QueryBox>;
 
-export const Default: Story = {
-  render: () => {
-    const { space } = useClientProvider();
-    return <QueryBox space={space} />;
-  },
-};
+export const Default: Story = {};

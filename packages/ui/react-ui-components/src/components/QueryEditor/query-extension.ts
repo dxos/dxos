@@ -31,29 +31,28 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
     decorations(),
     autocompletion({
       activateOnTyping: true,
-      // closeOnBlur: false,
       override: [
         async (context: CompletionContext) => {
           const tree = parser.parse(context.state.sliceDoc());
           const node = tree.cursorAt(context.pos, -1).node;
-          if (node.parent?.type.id === QueryDSL.Node.TypeFilter) {
-            let range = undefined;
-            if (node?.type.id === QueryDSL.Node.Identifier) {
-              range = { from: node.from, to: node.to };
-            } else if (node?.type.name === ':') {
-              range = { from: node.from + 1 };
-            }
 
-            if (range) {
-              // TODO(burdon): Unify schema registry.
-              // const schema = await space?.db.schemaRegistry.query().run();
-              const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+          switch (node.parent?.type.id) {
+            case QueryDSL.Node.TypeFilter: {
+              let range = undefined;
+              if (node?.type.id === QueryDSL.Node.Identifier) {
+                range = { from: node.from, to: node.to };
+              } else if (node?.type.name === ':') {
+                range = { from: node.from + 1 };
+              }
 
-              return {
-                ...range,
-                filter: true,
-                options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
-              };
+              if (range) {
+                const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+                return {
+                  ...range,
+                  filter: true,
+                  options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
+                };
+              }
             }
           }
 

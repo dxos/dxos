@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
@@ -29,7 +29,7 @@ export type D3ForceGraphProps = ThemedClassName<
   } & Pick<GraphProps, 'drag'>
 >;
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection, grid, ...props }) => {
+export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, ...props }: D3ForceGraphProps) => {
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(() => {
     if (context.current) {

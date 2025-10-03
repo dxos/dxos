@@ -5,17 +5,31 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
-import { QueryEditor } from './QueryEditor';
+import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
-  decorators: [withTheme],
+  render: (args: QueryEditorProps) => {
+    const [space] = useSpaces();
+    return <QueryEditor {...args} space={space} />;
+  },
+  decorators: [
+    withClientProvider({
+      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      createIdentity: true,
+    }),
+    withTheme,
+  ],
   parameters: {
     layout: 'centered',
     translations,
