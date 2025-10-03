@@ -128,6 +128,7 @@ export default defineFunction({
         makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
       ).pipe(
         Layer.provide(
+          // TODO(dmaretskyi): This should be provided by environment.
           Layer.mergeAll(FunctionInvocationService.layerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),
