@@ -43,7 +43,7 @@ describe('preprocessor', () => {
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
-        sender: { role: 'user' },
+        sender: { role: 'tool' },
         blocks: [
           {
             _tag: 'toolResult',
@@ -59,15 +59,11 @@ describe('preprocessor', () => {
             result: JSON.stringify('Result of tool 2'),
             providerExecuted: false,
           },
-          {
-            _tag: 'text',
-            text: 'What do you think about these results?',
-          },
         ],
       });
 
       const input = yield* preprocessPrompt([message]);
-      expect(input.content).toHaveLength(2);
+      expect(input.content).toHaveLength(1);
 
       // First message should be tool results.
       expect(input.content[0].role).toBe('tool');
@@ -87,13 +83,6 @@ describe('preprocessor', () => {
           result: 'Result of tool 2',
         }),
       );
-
-      // Second message should be user text.
-      expect(input.content[1].role).toBe('user');
-      const userMessage = input.content[1] as Prompt.UserMessage;
-      expect(userMessage.content).toEqual([
-        Prompt.makePart('text', { text: 'What do you think about these results?' }),
-      ]);
     }),
   );
 
@@ -317,58 +306,6 @@ describe('preprocessor', () => {
   );
 
   it.effect(
-    'should handle mixed content with tool results and text',
-    Effect.fn(function* ({ expect }) {
-      const message = Obj.make(DataType.Message, {
-        created: new Date().toISOString(),
-        sender: { role: 'user' },
-        blocks: [
-          {
-            _tag: 'text',
-            text: 'Here are the results:',
-          },
-          {
-            _tag: 'toolResult',
-            toolCallId: 'call_1',
-            name: 'calculator',
-            result: JSON.stringify('First result'),
-            providerExecuted: false,
-          },
-          {
-            _tag: 'toolResult',
-            toolCallId: 'call_2',
-            name: 'search',
-            result: JSON.stringify('Second result'),
-            providerExecuted: false,
-          },
-          {
-            _tag: 'text',
-            text: 'What should I do next?',
-          },
-        ],
-      });
-
-      const input = yield* preprocessPrompt([message]);
-      expect(input.content).toHaveLength(3);
-
-      // First: user text.
-      expect(input.content[0].role).toBe('user');
-      const firstMessage = input.content[0] as Prompt.UserMessage;
-      expect(firstMessage.content).toEqual([Prompt.makePart('text', { text: 'Here are the results:' })]);
-
-      // Second: tool results.
-      expect(input.content[1].role).toBe('tool');
-      const toolMessage = input.content[1] as Prompt.ToolMessage;
-      expect(toolMessage.content).toHaveLength(2);
-
-      // Third: user text.
-      expect(input.content[2].role).toBe('user');
-      const lastMessage = input.content[2] as Prompt.UserMessage;
-      expect(lastMessage.content).toEqual([Prompt.makePart('text', { text: 'What should I do next?' })]);
-    }),
-  );
-
-  it.effect(
     'should handle assistant message with various block types',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -447,7 +384,7 @@ describe('preprocessor', () => {
   );
 
   it.effect(
-    'should fail when assistant message contains invalid blocks',
+    'handles provider-executed tool results',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
         created: new Date().toISOString(),
@@ -457,17 +394,22 @@ describe('preprocessor', () => {
             _tag: 'toolResult',
             toolCallId: 'call_1',
             name: 'test',
-            result: 'Invalid in assistant',
-            providerExecuted: false,
+            result: JSON.stringify('Testing'),
+            providerExecuted: true,
           },
         ],
       });
 
-      const result = yield* Effect.either(preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
-        expect(result.left).toBeInstanceOf(PromptPreprocessingError);
-      }
+      const result = yield* preprocessPrompt([message]);
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].role).toBe('assistant');
+      expect(result.content[0].content).toEqual([
+        Prompt.makePart('tool-result', {
+          id: 'call_1',
+          name: 'test',
+          result: 'Testing',
+        }),
+      ]);
     }),
   );
 

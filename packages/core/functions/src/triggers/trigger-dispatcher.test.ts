@@ -35,7 +35,7 @@ const TestLayer = pipe(
     Layer.mergeAll(
       AiService.notAvailable,
       CredentialsService.layerConfig([]),
-      FunctionInvocationService.layerTest({ functions: [reply] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [reply] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),

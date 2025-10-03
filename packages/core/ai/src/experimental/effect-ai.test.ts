@@ -181,7 +181,7 @@ describe('LanguageModel', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const stream = LanguageModel.streamText({ prompt: 'What is six times seven?' });
         yield* Stream.runForEach(
           stream,
@@ -201,7 +201,7 @@ describe('LanguageModel', () => {
   it.effect(
     'streaming with tools',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const chat = yield* Chat.empty;
         const toolkit = yield* TestToolkit;
 
@@ -234,7 +234,7 @@ describe('LanguageModel', () => {
   it.effect(
     'with parser',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const system = trim`
           Before you answer emit your current status (what are you doing?) inside <status></status> XML tags.
           After your answer emit your suggestions for follow-up user prompts inside <suggestion></suggestion> XML tags.
@@ -271,7 +271,7 @@ describe('LanguageModel', () => {
   it.effect(
     'built-in search',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const toolkit = Toolkit.make(
           AnthropicTool.WebSearch_20250305({
             // ..

@@ -28,7 +28,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationService.layerTest({ functions: [fetchDiscordMessages] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [fetchDiscordMessages] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),
@@ -42,7 +42,7 @@ describe('Feed', { timeout: 600_000 }, () => {
   it.effect(
     'fetch discord messages',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         const messages = yield* FunctionInvocationService.invokeFunction(fetchDiscordMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
