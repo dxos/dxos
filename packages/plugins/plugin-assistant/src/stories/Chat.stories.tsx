@@ -478,7 +478,7 @@ export const WithBoard: Story = {
     config: config.remote,
     types: [Board.Board],
     onInit: async ({ space }) => {
-      space.db.add(Board.makeBoard());
+      space.db.add(Board.make());
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Board.Board)).run();
