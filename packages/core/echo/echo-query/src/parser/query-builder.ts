@@ -11,6 +11,7 @@ import { QueryDSL } from './gen';
 /**
  * Stateless query builder that parses DSL trees into filters.
  */
+// TODO(burdon): Potentially build ECHO DSL directly from grammar.
 export class QueryBuilder {
   constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
 
