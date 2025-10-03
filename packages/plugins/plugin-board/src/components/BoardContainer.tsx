@@ -12,28 +12,22 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { Board, type BoardController, type BoardRootProps } from '@dxos/react-ui-board';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';
 
 export type BoardContainerProps = {
   role?: string;
-  board?: BoardType.Board;
-  view?: DataType.View;
+  board: BoardType.Board;
 };
 
-export const BoardContainer = ({ board: _board, view }: BoardContainerProps) => {
+export const BoardContainer = ({ board }: BoardContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const controller = useRef<BoardController>(null);
-  const board = _board ?? (view?.presentation.target as BoardType.Board | undefined);
-
-  // TODO(wittjosiah): If coming from a view need to fetch items via query.
-  const items = useSignalsMemo(() => (board?.items ?? []).map((ref) => ref.target).filter(isNonNullable), [board]);
+  const items = useSignalsMemo(() => board.items.map((ref) => ref.target).filter(isNonNullable), [board]);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (position = { x: 0, y: 0 }) => {
-      invariant(board);
       const space = getSpace(board);
       invariant(space);
       await dispatch(
@@ -42,6 +36,7 @@ export const BoardContainer = ({ board: _board, view }: BoardContainerProps) => 
           navigable: false,
           onCreateObject: (object: Obj.Any) => {
             board.items.push(Ref.make(object));
+            console.log(board.items.length);
             board.layout.cells[object.id] = { ...position, width: 1, height: 1 };
             controller.current?.center(position);
           },
@@ -54,7 +49,6 @@ export const BoardContainer = ({ board: _board, view }: BoardContainerProps) => 
   // TODO(burdon): Use intents so can be undone.
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
-      invariant(board);
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
       if (idx !== -1) {
@@ -67,16 +61,11 @@ export const BoardContainer = ({ board: _board, view }: BoardContainerProps) => 
 
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
-      invariant(board);
       const layout = board.layout.cells[id];
       board.layout.cells[id] = { ...layout, ...position };
     },
     [board],
   );
-
-  if (!board) {
-    return null;
-  }
 
   return (
     <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
