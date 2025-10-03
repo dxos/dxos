@@ -5,8 +5,8 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from '@storybook/test';
 import React, { useState } from 'react';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
