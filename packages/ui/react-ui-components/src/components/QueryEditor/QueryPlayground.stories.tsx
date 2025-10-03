@@ -10,7 +10,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-// TODO(burdon): Move.
 // import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';

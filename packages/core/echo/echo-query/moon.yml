@@ -10,7 +10,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
   prebuild:
-    script: lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
+    script: pnpm lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
     inputs:
       - src/parser/query.grammar
     outputs:
