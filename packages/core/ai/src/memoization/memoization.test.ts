@@ -112,7 +112,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect.only(
+  it.effect(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
