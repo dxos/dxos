@@ -18,7 +18,7 @@ import {
   useElevationContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { QueryBox, QuerySerializer, createExpression } from '@dxos/react-ui-components';
+import { QueryEditor, QuerySerializer, createExpression } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTheme } from '@dxos/react-ui-theme';
@@ -206,7 +206,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                 return (
                   <Input.Root>
                     <InputHeader label={props.label} />
-                    <QueryBox
+                    <QueryEditor
                       classNames={mx(
                         inputTheme.input({ density, elevation }),
                         'flex items-center',
@@ -214,7 +214,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                       )}
                       space={space}
                       initialValue={props.getValue()}
-                      onChange={handleChange}
+                      onQueryUpdate={handleChange}
                     />
                   </Input.Root>
                 );
