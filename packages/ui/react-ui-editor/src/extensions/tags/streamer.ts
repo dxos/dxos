@@ -106,7 +106,7 @@ class CursorWidget extends WidgetType {
   toDOM() {
     return Domino.of('span')
       .style({ opacity: '0.8' })
-      .child(Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' }))
+      .children(Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' }))
       .build();
   }
 }
