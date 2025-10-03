@@ -6,6 +6,8 @@ export const
   And = 4,
   Or = 5,
   Relation = 6,
+  ArrowRight = 7,
+  ArrowLeft = 8,
   Filter = 11,
   ObjectLiteral = 12,
   ObjectProperty = 14,

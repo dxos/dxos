@@ -29,9 +29,13 @@ export class QueryBuilder {
   /**
    * Build a query from the input string.
    */
-  build(input: string): Filter.Any {
-    const tree = this._parser.parse(input);
-    return this.buildQuery(tree, input);
+  build(input: string): Filter.Any | null {
+    try {
+      const tree = this._parser.parse(input);
+      return this.buildQuery(tree, input);
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -279,8 +283,7 @@ export class QueryBuilder {
       cursor.parent();
     }
 
-    // TODO(burdon): Internal only?
-    return Filter._props(props);
+    return Filter.props(props);
   }
 
   /**
@@ -341,7 +344,7 @@ export class QueryBuilder {
       return Filter.nothing();
     }
 
-    return Filter._props({ [path]: value });
+    return Filter.props({ [path]: value });
   }
 
   /**

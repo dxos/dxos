@@ -143,7 +143,7 @@ export const Link: Story = {
       onInitialized: async (client) => {
         client.addTypes([Testing.Contact]);
       },
-      onSpaceCreated: async ({ space }) => {
+      onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([{ type: Testing.Contact, count: 10 }]);
         await space.db.flush({ indexes: true });

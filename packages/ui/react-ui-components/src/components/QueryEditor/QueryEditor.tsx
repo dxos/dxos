@@ -31,8 +31,9 @@ export type QueryEditorProps = {
   onCancel?: () => void;
 };
 
-// TODO(wittjosiah): Factor out.
-
+/**
+ * @param param0 @deprecated
+ */
 export const QueryEditor = ({
   space,
   classNames,

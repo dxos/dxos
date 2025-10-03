@@ -94,9 +94,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
-        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
-        const spaceCreatedIntents = onSpaceCreatedCallbacks.map((onSpaceCreated) =>
-          onSpaceCreated({ space, rootCollection: collection }),
+        const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
+        const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
+          onCreateSpace({ space, rootCollection: collection }),
         );
 
         return {

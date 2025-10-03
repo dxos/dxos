@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type CompletionContext, autocompletion } from '@codemirror/autocomplete';
 import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
@@ -9,16 +10,59 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
+import { type Space } from '@dxos/client/echo';
+import { Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { Domino } from '@dxos/react-ui-editor';
+import { Domino, focus, focusField } from '@dxos/react-ui-editor';
 
-export type QueryOptions = {};
+export type QueryOptions = {
+  space?: Space;
+};
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = (_options: Partial<QueryOptions> = {}): Extension => {
-  return [new LanguageSupport(queryLanguage), syntaxHighlighting(queryHighlightStyle), decorations()];
+export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
+  const parser = QueryDSL.Parser.configure({ strict: false });
+
+  return [
+    new LanguageSupport(queryLanguage),
+    syntaxHighlighting(queryHighlightStyle),
+    decorations(),
+    autocompletion({
+      activateOnTyping: true,
+      // closeOnBlur: false,
+      override: [
+        async (context: CompletionContext) => {
+          const tree = parser.parse(context.state.sliceDoc());
+          const node = tree.cursorAt(context.pos, -1).node;
+          if (node.parent?.type.id === QueryDSL.Node.TypeFilter) {
+            let range = undefined;
+            if (node?.type.id === QueryDSL.Node.Identifier) {
+              range = { from: node.from, to: node.to };
+            } else if (node?.type.name === ':') {
+              range = { from: node.from + 1 };
+            }
+
+            if (range) {
+              // TODO(burdon): Unify schema registry.
+              // const schema = await space?.db.schemaRegistry.query().run();
+              const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+
+              return {
+                ...range,
+                filter: true,
+                options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
+              };
+            }
+          }
+
+          return null;
+        },
+      ],
+    }),
+    focus,
+  ];
 };
 
 /**
@@ -26,11 +70,11 @@ export const query = (_options: Partial<QueryOptions> = {}): Extension => {
  */
 const decorations = (): Extension => {
   const buildDecorations = (state: EditorState) => {
-    const isInside = (node: SyntaxNodeRef) =>
-      state.selection.main.from >= node.from &&
-      state.selection.main.to <= node.to &&
-      state.selection.main.from > 0 &&
-      state.selection.main.from < state.doc.length;
+    const hasFocus = state.field(focusField);
+    const isInside = (node: SyntaxNodeRef) => {
+      const range = intersectRanges(state.selection.main, node);
+      return hasFocus && range && (state.selection.main.from > 0 || range.to - range.from > 0);
+    };
 
     const deco = new RangeSetBuilder<Decoration>();
     const atomicDeco = new RangeSetBuilder<Decoration>();
@@ -97,6 +141,20 @@ const decorations = (): Extension => {
                 class: 'pie-1',
               }),
             );
+            break;
+          }
+
+          case QueryDSL.Node.ArrowRight:
+          case QueryDSL.Node.ArrowLeft: {
+            deco.add(
+              node.from,
+              node.to,
+              Decoration.widget({
+                widget: new SymbolWidget(node.type.id === QueryDSL.Node.ArrowRight ? '\u2192' : '\u2190'),
+              }),
+            );
+            atomicDeco.add(node.from, node.to, Decoration.mark({}));
+            break;
           }
         }
       },
@@ -146,8 +204,8 @@ class TypeWidget extends WidgetType {
       .child(
         Domino.of('span')
           .text('type')
-          .classNames('flex items-center text-xs pis-1 pie-1 rounded-l-[0.2rem] bg-separator'),
-        Domino.of('span').text(label).classNames('leading-[22px] pis-1 pie-1 pb-[1px]'),
+          .classNames('flex items-center text-xs font-thin pis-1 pie-1 rounded-l-[0.2rem] bg-separator'),
+        Domino.of('span').text(label).classNames('leading-[22px] pis-1 pie-1 pb-[1px] text-green-500'),
       )
       .build();
   }
@@ -187,6 +245,23 @@ class ObjectWidget extends WidgetType {
         ),
       )
       .build();
+  }
+}
+
+/**
+ * Symbol
+ */
+class SymbolWidget extends WidgetType {
+  constructor(private readonly _str: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._str === other._str;
+  }
+
+  override toDOM() {
+    return Domino.of('span').text(this._str).build();
   }
 }
 
@@ -251,3 +326,10 @@ const queryHighlightStyle = HighlightStyle.define([
   { tag: t.operator, class: 'text-subdued' },
   { tag: t.paren, class: 'text-yellow-500' },
 ]);
+
+type Range = { from: number; to: number };
+function intersectRanges(a: Range, b: Range): Range | null {
+  const start = Math.max(a.from, b.from);
+  const end = Math.min(a.to, b.to);
+  return start <= end ? { from: start, to: end } : null;
+}

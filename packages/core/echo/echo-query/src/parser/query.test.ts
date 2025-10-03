@@ -10,9 +10,7 @@ import { Filter } from '@dxos/echo';
 import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
 
-// TODO(burdon): Generate query + test.
 // TODO(burdon): Ref/Relation traversal.
-// TODO(burdon): Factor out.
 
 describe('query', () => {
   it('should parse a simple query', ({ expect }) => {
@@ -21,10 +19,10 @@ describe('query', () => {
     type Test = { query: string; expected: string[] };
     const tests: Test[] = [
       {
-        query: 'type:dxos.org/type/Contact',
+        query: 'type:dxos.org/type/Person',
         expected: [
           'Query',
-          // type:dxos.org/type/Contact
+          // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -84,10 +82,10 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Contact OR type:dxos.org/type/Organization',
+        query: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
         expected: [
           'Query',
-          // type:dxos.org/type/Contact
+          // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -104,11 +102,11 @@ describe('query', () => {
         ],
       },
       {
-        query: '(type:dxos.org/type/Contact OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
+        query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
         expected: [
           'Query',
           '(',
-          // type:dxos.org/type/Contact
+          // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -138,10 +136,10 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Contact => type:dxos.org/type/Organization',
+        query: 'type:dxos.org/type/Person => type:dxos.org/type/Organization',
         expected: [
           'Query',
-          // type:dxos.org/type/Contact
+          // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -158,7 +156,7 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Organization <= type:dxos.org/type/Contact',
+        query: 'type:dxos.org/type/Organization <= type:dxos.org/type/Person',
         expected: [
           'Query',
           // type:dxos.org/type/Organization
@@ -169,7 +167,7 @@ describe('query', () => {
           'Identifier',
           'Relation',
           '<=',
-          // type:dxos.org/type/Contact
+          // type:dxos.org/type/Person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -178,9 +176,9 @@ describe('query', () => {
         ],
       },
       {
-        // Contacts for Organizations with name "DXOS"
+        // Persons for Organizations with name "DXOS"
         // TODO(burdon): Filter relations.
-        query: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Contact)',
+        query: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Person)',
         expected: [
           'Query',
           '(',
@@ -238,26 +236,26 @@ describe('query', () => {
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
       {
-        input: 'type:dxos.org/type/Contact',
-        expected: Filter.typename('dxos.org/type/Contact'),
+        input: 'type:dxos.org/type/Person',
+        expected: Filter.typename('dxos.org/type/Person'),
       },
       {
         input: '{ name: "DXOS" }',
-        expected: Filter._props({ name: 'DXOS' }),
+        expected: Filter.props({ name: 'DXOS' }),
       },
       {
         input: '{ value: 100 }',
-        expected: Filter._props({ value: 100 }),
+        expected: Filter.props({ value: 100 }),
       },
       {
-        input: 'type:dxos.org/type/Contact OR type:dxos.org/type/Organization',
-        expected: Filter.or(Filter.typename('dxos.org/type/Contact'), Filter.typename('dxos.org/type/Organization')),
+        input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
+        expected: Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
       },
       {
-        input: '(type:dxos.org/type/Contact OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
+        input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
         expected: Filter.and(
-          Filter.or(Filter.typename('dxos.org/type/Contact'), Filter.typename('dxos.org/type/Organization')),
-          Filter._props({ name: 'DXOS' }),
+          Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+          Filter.props({ name: 'DXOS' }),
         ),
       },
     ];
