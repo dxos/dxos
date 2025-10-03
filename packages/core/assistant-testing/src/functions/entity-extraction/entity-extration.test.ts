@@ -57,7 +57,6 @@ describe('Entity-extraction', () => {
       function* (_) {
         const email = yield* DatabaseService.add(
           Obj.make(DataType.Message, {
-            id: '01K6N6RBQZNM4K8AV836ZW3SK3',
             created: new Date('2025-01-01').toISOString(),
             sender: {
               name: 'John Smith',
