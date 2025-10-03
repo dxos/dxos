@@ -158,7 +158,7 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
   [FormatEnum.Timestamp]: TypeEnum.Number,
 
   // Objects
-  [FormatEnum.GeoPoint]: TypeEnum.Object,
+  [FormatEnum.GeoPoint]: TypeEnum.Array,
 };
 
 /**
