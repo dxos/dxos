@@ -1,5 +1,4 @@
 # All referenced variables must be set or the script will fail.
-BASELIME_API_KEY=${BASELIME_API_KEY}
 DX_IPDATA_API_KEY=${IPDATA_API_KEY}
 IPFS_API_SECRET=${IPFS_API_SECRET}
 NPM_TOKEN=${NPM_TOKEN}
