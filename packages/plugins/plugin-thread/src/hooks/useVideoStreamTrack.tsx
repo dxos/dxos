@@ -4,7 +4,7 @@
 
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
-export const useVideoStreamTrack = (videoElement: RefObject<HTMLVideoElement>, videoSrc: string) => {
+export const useVideoStreamTrack = (videoElement: RefObject<HTMLVideoElement | null>, videoSrc: string) => {
   // Get video stream track.
   const [videoStreamTrack, setVideoStreamTrack] = useState<MediaStreamTrack | undefined>(undefined);
   const hadRun = useRef(false);

@@ -27,7 +27,7 @@ export type QueryEditorProps = ThemedClassName<
   } & EditorProps
 >;
 
-export const QueryEditor = forwardRef<EditorView | undefined, QueryEditorProps>(
+export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
   ({ space, query: initialValue, onQueryUpdate, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const ref = useForwardedRef(forwardedRef);

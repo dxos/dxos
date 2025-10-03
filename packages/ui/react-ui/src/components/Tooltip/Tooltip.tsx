@@ -25,6 +25,7 @@ import React, {
   type FC,
   type MutableRefObject,
   type ReactNode,
+  type RefObject,
   type SyntheticEvent,
   forwardRef,
   useCallback,
@@ -218,7 +219,7 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
           {content}
           <TooltipArrow className={tx('tooltip.arrow', 'tooltip__arrow')} />
         </TooltipContent>
-        <TooltipVirtualTrigger virtualRef={triggerRef} />
+        <TooltipVirtualTrigger virtualRef={triggerRef as RefObject<HTMLButtonElement>} />
         {children}
       </TooltipContextProvider>
     </PopperPrimitive.Root>

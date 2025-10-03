@@ -223,7 +223,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
           onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
         />
-        <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
+        <div role='none' {...{ inert: true }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>
     </div>
   );

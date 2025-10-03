@@ -77,7 +77,7 @@ export const GridSheet = () => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const rangeController = useRef<RangeController>();
+  const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(

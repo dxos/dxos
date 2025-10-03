@@ -15,7 +15,7 @@ export type EditorProps = ThemedClassName<UseTextEditorProps>;
 /**
  * Minimal text editor.
  */
-export const Editor = forwardRef<EditorView | undefined, EditorProps>(
+export const Editor = forwardRef<EditorView | null, EditorProps>(
   ({ classNames, id, extensions, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -26,7 +26,7 @@ export const Editor = forwardRef<EditorView | undefined, EditorProps>(
       [id, extensions],
     );
 
-    useImperativeHandle(forwardedRef, () => view, [view]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
     return <div role='none' className={mx(classNames)} {...focusAttributes} ref={parentRef} />;
   },
 );
