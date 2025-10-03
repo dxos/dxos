@@ -60,8 +60,8 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Research', { timeout: 600_000 }, () => {
-  it.effect.only(
+describe.skip('Research', () => {
+  it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {

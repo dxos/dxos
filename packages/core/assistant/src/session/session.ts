@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
-import { Chunk, Effect, type Schema, Stream } from 'effect';
+import { type AiError, LanguageModel, type Tool, type Toolkit, Prompt } from '@effect/ai';
+import { Chunk, Effect, Schema, Stream } from 'effect';
 
 import {
   AiParser,
@@ -111,6 +111,7 @@ export class AiSession {
         const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
 
         // Execute the stream request.
+        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
         const blocks = yield* LanguageModel.streamText({
           prompt,
           toolkit,
@@ -194,3 +195,11 @@ export class AiSession {
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');
+
+// TODO(dmaretskyi): Extract as a general util.
+const logDump = (message: string, data: unknown) => {
+  const { writeFileSync } = require('node:fs');
+  const path = `/tmp/log-data-${Date.now()}.json`;
+  writeFileSync(path, JSON.stringify(data, null, 2));
+  log.info(message, { path });
+};
