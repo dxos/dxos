@@ -5,24 +5,24 @@
 import { useComputed, useSignal } from '@preact/signals-react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { TagPickerHandle } from '@dxos/react-ui-tag-picker';
+import type { QueryEditorHandle } from '@dxos/react-ui-query-editor';
 
 type TagFilterVisibility = 'closed' | 'display' | 'controlled';
 
 type TagFilterVisibilityEvent = 'toggle_from_toolbar' | 'tag_selected_from_message' | 'all_tags_cleared';
 
 /**
- * Custom hook to manage focus for a TagPicker component based on visibility state.
+ * Custom hook to manage focus for a QueryEditor component based on visibility state.
  */
-export const useTagPickerFocusRef = (tagFilterVisibility: TagFilterVisibility) => {
-  const tagPickerRef = useRef<TagPickerHandle>(null);
+export const useQueryEditorFocusRef = (tagFilterVisibility: TagFilterVisibility) => {
+  const queryEditorRef = useRef<QueryEditorHandle>(null);
   useEffect(() => {
-    if (tagFilterVisibility === 'controlled' && tagPickerRef.current) {
-      setTimeout(() => tagPickerRef.current?.focus(), 0);
+    if (tagFilterVisibility === 'controlled' && queryEditorRef.current) {
+      setTimeout(() => queryEditorRef.current?.focus(), 0);
     }
   }, [tagFilterVisibility]);
 
-  return tagPickerRef;
+  return queryEditorRef;
 };
 
 /**

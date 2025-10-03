@@ -4,6 +4,6 @@
 
 import { DxTagPickerItem, type DxTagPickerItemProps } from '@dxos/lit-ui/react';
 
-export const TagPickerItem = DxTagPickerItem;
+export const QueryEditorItem = DxTagPickerItem;
 
-export type TagPickerItemProps = DxTagPickerItemProps;
+export type QueryEditorItemProps = DxTagPickerItemProps;
