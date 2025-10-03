@@ -36,7 +36,6 @@
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-compose-refs": "1.1.1",
-    "@storybook/test": "^8.6.14",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
