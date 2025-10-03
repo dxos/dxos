@@ -39,3 +39,21 @@ export const getMessageProps = (message: DataType.Message, now: Date = new Date(
   const snippet = message.properties?.snippet ?? textBlocks[0]?.text;
   return { id, text, date, from, email, hue, subject, snippet };
 };
+
+// TODO(thure): How to build this as a Query or Filter?
+export const getMessageTextMatch = (message: DataType.Message, textQueries: string[]) => {
+  const senderName = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const lowerQueries = textQueries.map((textQuery) => textQuery.toLowerCase());
+  return (
+    (senderName && lowerQueries.every((textQuery) => senderName.toLowerCase().includes(textQuery))) ||
+    (message.sender?.email &&
+      lowerQueries.every((textQuery) => message.sender.email!.toLowerCase().includes(textQuery))) ||
+    (message.properties?.subject &&
+      lowerQueries.every((textQuery) => message.properties!.subject!.toLowerCase().includes(textQuery))) ||
+    message.blocks
+      .filter((block) => 'text' in block)
+      .some(({ text }) => {
+        return lowerQueries.every((textQuery) => text.toLowerCase().includes(textQuery));
+      })
+  );
+};

@@ -7,6 +7,8 @@ import { type ReadonlySignal, type Signal, computed, signal } from '@preact/sign
 import { type DataType } from '@dxos/schema';
 import { intersectBy } from '@dxos/util';
 
+import { getMessageTextMatch } from '../../util';
+
 /**
  * Sort direction for messages.
  */
@@ -78,6 +80,7 @@ export class MailboxModel {
   private _messages: Signal<DataType.Message[]>;
   private _sortDirection: Signal<SortDirection>;
   private _selectedTagLabels: Signal<string[]>;
+  private _selectedTextFilters: Signal<string[]>;
 
   // Computed signals (derived state).
   private _tagToMessagesIndex: ReadonlySignal<Map<string, DataType.Message[]>>;
@@ -95,19 +98,37 @@ export class MailboxModel {
     this._messages = signal(messages);
     this._sortDirection = signal(sortDirection);
     this._selectedTagLabels = signal([]);
+    this._selectedTextFilters = signal([]);
 
     this._tagIndex = computed(() => createTagIndex(this._messages.value));
     this._tagToMessagesIndex = computed(() => createTagToMessageIndex(this._messages.value));
 
     this._filteredMessages = computed(() => {
       const selectedTagLabels = this._selectedTagLabels.value;
-      if (selectedTagLabels.length === 0) {
+      const selectedTextFilters = this._selectedTextFilters.value;
+
+      // If no filters are applied, return all messages
+      if (selectedTagLabels.length === 0 && selectedTextFilters.length === 0) {
         return this._messages.value;
       }
 
-      const tagToMessagesIndex = this._tagToMessagesIndex.value;
-      const messagesForSelectedTags = selectedTagLabels.map((label) => tagToMessagesIndex.get(label) ?? []);
-      return intersectBy(messagesForSelectedTags, (message) => message.id);
+      let filteredMessages = this._messages.value;
+
+      // Apply tag filtering
+      if (selectedTagLabels.length > 0) {
+        const tagToMessagesIndex = this._tagToMessagesIndex.value;
+        const messagesForSelectedTags = selectedTagLabels.map((label) => tagToMessagesIndex.get(label) ?? []);
+        filteredMessages = intersectBy(messagesForSelectedTags, (message) => message.id);
+      }
+
+      // Apply text filtering - messages must contain ALL selected text filters
+      if (selectedTextFilters.length > 0) {
+        filteredMessages = filteredMessages.filter((message) => {
+          return getMessageTextMatch(message, selectedTextFilters);
+        });
+      }
+
+      return filteredMessages;
     });
 
     this._sortedFilteredMessages = computed(() => {
@@ -208,5 +229,46 @@ export class MailboxModel {
    */
   clearSelectedTags(): void {
     this._selectedTagLabels.value = [];
+  }
+
+  /**
+   * Adds a text filter for message content filtering.
+   * @param text - The text string to filter by.
+   */
+  addTextFilter(text: string): void {
+    const currentFilters = this._selectedTextFilters.value;
+    if (!currentFilters.includes(text)) {
+      this._selectedTextFilters.value = [...currentFilters, text];
+    }
+  }
+
+  /**
+   * Removes a text filter from the filtering criteria.
+   * @param text - The text string to remove from filters.
+   */
+  removeTextFilter(text: string): void {
+    this._selectedTextFilters.value = this._selectedTextFilters.value.filter((filter) => filter !== text);
+  }
+
+  /**
+   * Clears all text filters.
+   */
+  clearTextFilters(): void {
+    this._selectedTextFilters.value = [];
+  }
+
+  /**
+   * Gets the currently selected text filters.
+   */
+  get selectedTextFilters(): string[] {
+    return this._selectedTextFilters.value;
+  }
+
+  /**
+   * Sets the text filters directly, replacing any existing ones.
+   * @param textFilters - Array of text strings to filter by.
+   */
+  setTextFilters(textFilters: string[]): void {
+    this._selectedTextFilters.value = textFilters;
   }
 }

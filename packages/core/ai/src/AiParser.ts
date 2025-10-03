@@ -328,6 +328,13 @@ export const parseResponse =
                 block = undefined;
                 break;
               }
+
+              case 'source': {
+                yield* flushText();
+                // TODO(dmaretskyi): Handle sources.
+                break;
+              }
+
               case 'response-metadata': {
                 yield* flushText();
                 summary.model = Option.getOrUndefined(part.modelId);
