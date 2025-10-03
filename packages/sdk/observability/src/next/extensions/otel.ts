@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-// NOTE: localStorage is not available in web workers.
 import { Effect, Ref } from 'effect';
-import * as localForage from 'localforage';
 
 import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
@@ -12,9 +10,8 @@ import { LogLevel, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
+import { isObservabilityDisabled, storeObservabilityDisabled } from '../../helpers';
 import { type Extension } from '../observability-extension';
-
-const ENABLED_KEY = 'dxos:observability:enabled';
 
 export type ExtensionsOptions = {
   serviceName: string;
@@ -24,21 +21,18 @@ export type ExtensionsOptions = {
   authorizationHeader?: string;
 };
 
-export const extensions = async ({
+export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
   serviceName,
   serviceVersion,
   config,
   endpoint: _endpoint,
   authorizationHeader: _authorizationHeader,
-}: ExtensionsOptions): Promise<Extension> => {
-  const { OtelLogs, OtelTraces } = await import('../../otel');
+}) {
+  const { OtelLogs, OtelTraces } = yield* Effect.promise(() => import('../../otel'));
 
-  const enabledRef = await Effect.gen(function* () {
-    // TODO(wittjosiah): Isomorphic storage.
-    const cached = yield* Effect.promise(() => localForage.getItem(ENABLED_KEY));
-    const enabled = yield* Ref.make(cached !== 'false');
-    return enabled;
-  }).pipe(Effect.runPromise);
+  // TODO(wittjosiah): Isomorphic storage.
+  const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
+  const enabledRef = yield* Ref.make(!cachedDisabled);
   const tags = new Map<string, string>();
 
   const endpoint = isNode()
@@ -69,22 +63,20 @@ export const extensions = async ({
   });
 
   return {
-    initialize: () => {
+    initialize: Effect.fn(function* () {
       log.runtimeConfig.processors.push(logs.logProcessor);
       traces.start();
-    },
-    enable: () =>
-      Effect.gen(function* () {
-        yield* Effect.promise(() => localForage.setItem(ENABLED_KEY, 'true'));
-        yield* Ref.update(enabledRef, () => true);
-      }).pipe(Effect.runPromise),
-    disable: () =>
-      Effect.gen(function* () {
-        yield* Effect.promise(() => localForage.setItem(ENABLED_KEY, 'false'));
-        yield* Ref.update(enabledRef, () => false);
-      }).pipe(Effect.runPromise),
-    close: () => logs.close(),
-    flush: () => logs.flush(),
+    }),
+    enable: Effect.fn(function* () {
+      yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
+      yield* Ref.update(enabledRef, () => true);
+    }),
+    disable: Effect.fn(function* () {
+      yield* Effect.promise(() => storeObservabilityDisabled(serviceName, true));
+      yield* Ref.update(enabledRef, () => false);
+    }),
+    close: () => Effect.promise(() => logs.close()),
+    flush: () => Effect.promise(() => logs.flush()),
     setTags: (incomingTags) => {
       for (const [key, value] of Object.entries(incomingTags)) {
         tags.set(key, value);
@@ -95,4 +87,4 @@ export const extensions = async ({
     },
     apis: [{ kind: 'logs' }, { kind: 'traces' }],
   };
-};
+});

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, pipe } from 'effect';
+import { Array, Effect, pipe } from 'effect';
 
 import { type CleanupFn, SubscriptionList } from '@dxos/async';
-import { type MaybePromise } from '@dxos/util';
+import { invariant } from '@dxos/invariant';
 
 import {
   type Attributes,
@@ -25,59 +25,115 @@ import {
 /**
  * Provider of observability data.
  */
-export type DataProvider = (observability: Observability) => MaybePromise<CleanupFn | void>;
+export type DataProvider = (observability: Observability) => Effect.Effect<CleanupFn | void>;
 
 /**
  * Extensible observability provider.
  */
-export class Observability {
+// TODO(wittjosiah): Add pipe method.
+export interface Observability {
+  initialize(): Effect.Effect<void>;
+  close(): Effect.Effect<void>;
+  enable(): Effect.Effect<void>;
+  disable(): Effect.Effect<void>;
+  flush(): Effect.Effect<void>;
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void>;
+  identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
+  alias(distinctId: string, previousId?: string): void;
+  setTags(tags: Attributes, kind?: Kind): void;
+  enabled: boolean;
+  errors: Errors;
+  events: Events;
+  feedback: Feedback;
+  metrics: Metrics;
+}
+
+class ObservabilityImpl implements Observability {
+  private _initialized = false;
+  private readonly _extensions: Extension[] = [];
+  private readonly _dataProviders: DataProvider[] = [];
   private readonly _subscriptions = new SubscriptionList();
 
-  constructor(
-    private readonly _extensions: Extension[],
-    private readonly _dataProviders: DataProvider[],
-  ) {}
-
-  async initialize(): Promise<void> {
-    for (const extension of this._extensions) {
-      await extension.initialize?.();
+  initialize(): Effect.Effect<void> {
+    if (this._initialized) {
+      return Effect.succeed(undefined);
     }
 
-    const cleanups = await Promise.all(this._dataProviders.map((provider) => provider(this)));
-    this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+    return Effect.gen(this, function* () {
+      this._initialized = true;
+      for (const extension of this._extensions) {
+        if (extension.initialize) {
+          yield* extension.initialize();
+        }
+      }
+
+      const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
+      this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+    });
   }
 
-  async close(): Promise<void> {
-    this._subscriptions.clear();
-    for (const extension of this._extensions) {
-      await extension.close?.();
-    }
+  close(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      this._subscriptions.clear();
+      for (const extension of this._extensions) {
+        if (extension.close) {
+          yield* extension.close();
+        }
+      }
+    });
   }
 
-  async enable(): Promise<void> {
-    for (const extension of this._extensions) {
-      await extension.enable?.();
-    }
+  enable(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.enable) {
+          yield* extension.enable();
+        }
+      }
+    });
   }
 
-  async disable(): Promise<void> {
-    for (const extension of this._extensions) {
-      await extension.disable?.();
-    }
+  disable(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.disable) {
+          yield* extension.disable();
+        }
+      }
+    });
   }
 
-  async flush(): Promise<void> {
-    for (const extension of this._extensions) {
-      await extension.flush?.();
-    }
+  flush(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.flush) {
+          yield* extension.flush();
+        }
+      }
+    });
   }
 
-  async addDataProvider(dataProvider: DataProvider): Promise<void> {
+  _addExtension(extension: Extension): void {
+    invariant(!this._initialized, 'Observability is already initialized');
+    this._extensions.push(extension);
+  }
+
+  _addDataProvider(dataProvider: DataProvider): void {
+    invariant(!this._initialized, 'Observability is already initialized');
     this._dataProviders.push(dataProvider);
-    const cleanup = await dataProvider(this);
-    if (cleanup) {
-      this._subscriptions.add(cleanup);
-    }
+  }
+
+  /**
+   * Adds a data provider and initializes it.
+   */
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      this._addDataProvider(dataProvider);
+      const cleanup = yield* dataProvider(this);
+      if (cleanup) {
+        this._subscriptions.add(cleanup);
+      }
+    });
   }
 
   identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void {
@@ -170,6 +226,21 @@ export class Observability {
   }
 }
 
-export const make = (extensions: Extension[], dataProviders: DataProvider[] = []): Observability => {
-  return new Observability(extensions, dataProviders);
-};
+export const make = (): Effect.Effect<Observability> => Effect.succeed(new ObservabilityImpl());
+
+export const addExtension = (_extension: Effect.Effect<Extension>) =>
+  Effect.fn(function* (_observability: Effect.Effect<Observability>) {
+    const observability = yield* _observability;
+    const extension = yield* _extension;
+    invariant('_addExtension' in observability && typeof observability._addExtension === 'function');
+    observability._addExtension(extension);
+    return observability;
+  });
+
+export const addDataProvider = (dataProvider: DataProvider) =>
+  Effect.fn(function* (_observability: Effect.Effect<Observability>) {
+    const observability = yield* _observability;
+    invariant('_addDataProvider' in observability && typeof observability._addDataProvider === 'function');
+    observability._addDataProvider(dataProvider);
+    return observability;
+  });

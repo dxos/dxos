@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
+
 import { type Client, type ClientServices } from '@dxos/client';
 import { DeviceKind } from '@dxos/client/halo';
 
 import { type DataProvider } from '../observability';
 
 // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
-export const identityProvider =
-  (clientServices: Partial<ClientServices>): DataProvider =>
-  (observability) => {
+export const identityProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+  Effect.fn(function* (observability) {
     if (clientServices.IdentityService) {
       // TODO(wittjosiah): Currently cannot unsubscribe from this subscription.
       clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
@@ -41,22 +42,19 @@ export const identityProvider =
         }
       });
     }
-  };
+  });
 
-export const networkMetricsProvider =
-  (clientServices: Partial<ClientServices>): DataProvider =>
-  (observability) => {
+export const networkMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+  Effect.fn(function* (observability) {
     // TODO(wittjosiah): Migrate.
-  };
+  });
 
-export const runtimeMetricsProvider =
-  (clientServices: Partial<ClientServices>): DataProvider =>
-  (observability) => {
+export const runtimeMetricsProvider = (clientServices: Partial<ClientServices>): DataProvider =>
+  Effect.fn(function* (observability) {
     // TODO(wittjosiah): Migrate.
-  };
+  });
 
-export const spacesMetricsProvider =
-  (client: Client): DataProvider =>
-  (observability) => {
+export const spacesMetricsProvider = (client: Client): DataProvider =>
+  Effect.fn(function* (observability) {
     // TODO(wittjosiah): Migrate.
-  };
+  });

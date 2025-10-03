@@ -6,7 +6,7 @@ import { Duration, Effect, Fiber, Schedule } from 'effect';
 
 import { type DataProvider } from '../observability';
 
-export const provider: DataProvider = (observability) => {
+export const provider: DataProvider = Effect.fn(function* (observability) {
   if (typeof navigator !== 'undefined' && navigator.storage?.estimate) {
     const action = Effect.gen(function* () {
       const storageEstimate = yield* Effect.tryPromise(() => navigator.storage.estimate());
@@ -17,4 +17,4 @@ export const provider: DataProvider = (observability) => {
     const fiber = action.pipe(Effect.repeat(Schedule.fixed(Duration.hours(1))), Effect.runFork);
     return () => Effect.runSync(Fiber.interrupt(fiber));
   }
-};
+});

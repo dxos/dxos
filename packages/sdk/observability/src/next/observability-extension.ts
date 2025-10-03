@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type MaybePromise } from '@dxos/util';
+import { type Effect } from 'effect';
+
+export * from './extensions';
 
 /**
  * Kind of observability extension.
@@ -71,11 +73,11 @@ export type Attributes = Record<string, string | number | boolean | undefined>;
  * Implementation of an observability extension API.
  */
 export type Extension = {
-  initialize?(): MaybePromise<void>;
-  close?(): MaybePromise<void>;
-  enable?(): MaybePromise<void>;
-  disable?(): MaybePromise<void>;
-  flush?(): MaybePromise<void>;
+  initialize?(): Effect.Effect<void>;
+  close?(): Effect.Effect<void>;
+  enable?(): Effect.Effect<void>;
+  disable?(): Effect.Effect<void>;
+  flush?(): Effect.Effect<void>;
   identify?(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
   alias?(distinctId: string, previousId?: string): void;
   setTags?(tags: Record<string, string>): void;

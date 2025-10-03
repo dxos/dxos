@@ -11677,6 +11677,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/platform':
+        specifier: 0.92.1
+        version: 0.92.1(effect@3.18.1)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0

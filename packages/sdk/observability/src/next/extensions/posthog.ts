@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Effect } from 'effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
@@ -11,26 +12,29 @@ import { type Extension } from '../observability-extension';
 
 export type ExtensionsOptions = { config: Config; posthog?: Partial<PostHogConfig> };
 
-export const extensions = async ({ config, posthog: posthogConfig }: ExtensionsOptions): Promise<Extension> => {
-  const { default: posthog } = await import('posthog-js');
+export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
+  config,
+  posthog: posthogConfig,
+}) {
+  const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
   const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
 
   return {
-    initialize: () => {
+    initialize: Effect.fn(function* () {
       // https://posthog.com/docs/libraries/js/config
       posthog.init(apiKey, {
         api_host,
         mask_all_text: true,
         ...posthogConfig,
       });
-    },
-    enable: () => {
+    }),
+    enable: Effect.fn(function* () {
       posthog.opt_in_capturing();
-    },
-    disable: () => {
+    }),
+    disable: Effect.fn(function* () {
       posthog.opt_out_capturing();
-    },
+    }),
     identify: (distinctId, attributes, setOnceAttributes) => {
       posthog.identify(distinctId, attributes, setOnceAttributes);
     },
@@ -65,4 +69,4 @@ export const extensions = async ({ config, posthog: posthogConfig }: ExtensionsO
       },
     ],
   };
-};
+});
