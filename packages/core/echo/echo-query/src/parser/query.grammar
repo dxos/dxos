@@ -16,13 +16,13 @@ expression {
 // Boolean logic
 
 Not { 
-  @specialize<Identifier, "NOT" | "!"> 
+  @specialize<Identifier, "NOT"> 
 }
 And { 
-  @specialize<Identifier, "AND" | "&&">
+  @specialize<Identifier, "AND">
 }
 Or { 
-  @specialize<Identifier, "OR" | "||">
+  @specialize<Identifier, "OR">
 }
 
 Relation {
