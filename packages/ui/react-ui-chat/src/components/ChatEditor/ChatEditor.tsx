@@ -44,13 +44,13 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   ) => {
     const { themeMode } = useThemeContext();
     const { findNextFocusable, findPrevFocusable } = useFocusFinders();
-
     const { parentRef, view } = useTextEditor(
       () => ({
         debug: true,
         autoFocus,
         extensions: [
           createThemeExtensions({ themeMode }),
+          createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           references ? referencesExtension({ provider: references.provider }) : [],
           createBasicExtensions({

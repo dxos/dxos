@@ -53,8 +53,8 @@ const clientProps: WithClientProviderProps = {
   onInitialized: async (client) => {
     log.info('onInitialized', { client });
   },
-  onSpaceCreated: async ({ client, space }) => {
-    log.info('onSpaceCreated', { client, space });
+  onCreateSpace: async ({ client, space }) => {
+    log.info('onCreateSpace', { client, space });
   },
 };
 

@@ -19,8 +19,8 @@ export namespace SpaceCapabilities {
   export type SettingsSection = { id: string; label: Label; position?: Position };
   export const SettingsSection = defineCapability<SettingsSection>(`${meta.id}/capability/settings-section`);
 
-  export type OnSpaceCreated = (params: { space: Space; rootCollection: DataType.Collection }) => AnyIntentChain;
-  export const OnSpaceCreated = defineCapability<OnSpaceCreated>(`${meta.id}/capability/on-space-created`);
+  export type onCreateSpace = (params: { space: Space; rootCollection: DataType.Collection }) => AnyIntentChain;
+  export const onCreateSpace = defineCapability<onCreateSpace>(`${meta.id}/capability/on-space-created`);
 
   export type OnSchemaAdded = (params: { space: Space; schema: Schema.Schema.AnyNoContext }) => AnyIntentChain;
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
