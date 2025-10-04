@@ -20,7 +20,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 export interface QueryBoxController {
   getText: () => string;
@@ -88,7 +87,7 @@ export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
               onChange?.(update.state.doc.toString());
             }
           }),
-        ].filter(isNonNullable),
+        ],
       }),
       [themeMode, handleComplete, onSubmit, onSuggest, onCancel],
     );
