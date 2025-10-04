@@ -2,21 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import { useImperativeHandle } from '@preact-signals/safe-react/react';
+import React, { forwardRef, useCallback } from 'react';
 
 import { type Space } from '@dxos/client-protocol';
+import { Type } from '@dxos/echo';
 import { useThemeContext } from '@dxos/react-ui';
 import {
   EditorView,
+  type TypeaheadContext,
   autocomplete,
   createBasicExtensions,
   createThemeExtensions,
+  matchCompletion,
+  staticCompletion,
+  typeahead,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
 
-import { useMatcherExtension } from '../../hooks';
+export interface QueryBoxController {
+  getText: () => string;
+}
 
 export type QueryBoxProps = {
   space?: Space;
@@ -31,43 +38,68 @@ export type QueryBoxProps = {
   onCancel?: () => void;
 };
 
-export const QueryBox = ({
-  space,
-  classNames,
-  autoFocus,
-  lineWrapping,
-  placeholder,
-  initialValue,
-  onChange,
-  onSubmit,
-  onSuggest,
-  onCancel,
-}: QueryBoxProps) => {
-  const { themeMode } = useThemeContext();
-  const extensions = useMatcherExtension(space);
+/**
+ * @deprecated Reconcile with QueryEditor.
+ */
+export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
+  (
+    { space, classNames, autoFocus, lineWrapping, placeholder, initialValue, onChange, onSubmit, onSuggest, onCancel },
+    forwardedRef,
+  ) => {
+    const { themeMode } = useThemeContext();
 
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue,
-      autoFocus,
-      extensions: [
-        createThemeExtensions({ themeMode }),
-        createBasicExtensions({
-          bracketMatching: false,
-          lineWrapping,
-          placeholder,
-        }),
-        autocomplete({ onSubmit, onSuggest, onCancel }),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChange?.(update.state.doc.toString());
+    const handleComplete = useCallback(
+      ({ line }: TypeaheadContext) => {
+        const words = line.split(/\s+/).filter(Boolean);
+        if (words.length > 0) {
+          const word = words.at(-1);
+          const match = word?.match(/^type:(.+)/);
+          if (match) {
+            const part = match[1];
+            for (const schema of space?.db.graph.schemaRegistry.schemas ?? []) {
+              const typename = Type.getTypename(schema);
+              if (typename) {
+                const completion = matchCompletion(typename, part);
+                if (completion) {
+                  return completion;
+                }
+              }
+            }
           }
-        }),
-        extensions,
-      ].filter(isNonNullable),
-    }),
-    [themeMode, extensions, onSubmit, onSuggest, onCancel],
-  );
 
-  return <div ref={parentRef} className={mx('is-full', classNames)} />;
-};
+          return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
+        }
+      },
+      [space],
+    );
+
+    const { parentRef, view } = useTextEditor(
+      () => ({
+        initialValue,
+        autoFocus,
+        extensions: [
+          createBasicExtensions({ lineWrapping, placeholder }),
+          createThemeExtensions({ themeMode }),
+          autocomplete({ onSubmit, onSuggest, onCancel }),
+          typeahead({ onComplete: handleComplete }),
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              onChange?.(update.state.doc.toString());
+            }
+          }),
+        ],
+      }),
+      [themeMode, handleComplete, onSubmit, onSuggest, onCancel],
+    );
+
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        getText: () => view?.state.doc.toString() ?? '',
+      }),
+      [view],
+    );
+
+    return <div ref={parentRef} className={mx('is-full', classNames)} />;
+  },
+);

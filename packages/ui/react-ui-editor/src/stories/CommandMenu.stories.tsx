@@ -36,7 +36,7 @@ type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
+  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
     <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>

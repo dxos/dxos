@@ -17,7 +17,7 @@ const meta = {
   component: QueryBox,
   render: () => {
     const { space } = useClientProvider();
-    return <QueryBox classNames='is-[30rem] p-2 border border-separator rounded-sm' space={space} />;
+    return <QueryBox classNames='is-[40rem] p-2 border border-separator rounded-sm' space={space} />;
   },
   decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme],
   parameters: {
