@@ -53,10 +53,8 @@ export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
       ({ line }: TypeaheadContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
-          const word = words.at(-1)!;
-
-          // Match type.
-          const match = word.match(/^type:(.+)/);
+          const word = words.at(-1);
+          const match = word?.match(/^type:(.+)/);
           if (match) {
             const part = match[1];
             for (const schema of space?.db.graph.schemaRegistry.schemas ?? []) {
@@ -70,7 +68,6 @@ export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
             }
           }
 
-          // Match static.
           return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
         }
       },
