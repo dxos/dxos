@@ -49,7 +49,7 @@
     "@radix-ui/react-primitive": "2.0.2",
     "@radix-ui/react-slot": "1.1.2",
     "@radix-ui/react-use-controllable-state": "1.1.0",
-    "effect": "3.18.1"
+    "effect": "3.18.2"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

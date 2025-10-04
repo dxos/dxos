@@ -65,7 +65,7 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
     "chess.js": "^1.0.0",
-    "effect": "3.18.1"
+    "effect": "3.18.2"
   },
   "devDependencies": {
     "@dxos/plugin-theme": "workspace:*",
