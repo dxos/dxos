@@ -16,6 +16,7 @@ import { type QueryItem, type QueryTag, type QueryText, itemIsTag, itemIsText } 
  * Regular text is converted to QueryText objects (trimmed).
  * Anchor elements are converted to QueryTag objects.
  */
+// TODO(burdon): Deprecate in favor of echo-query parser (see QueryEditor).
 export const parseQueryItems = (state: EditorState): QueryItem[] => {
   const tree = syntaxTree(state);
   const doc = state.doc;
