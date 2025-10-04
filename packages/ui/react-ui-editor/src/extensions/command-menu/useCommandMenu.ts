@@ -58,13 +58,13 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
 
   // TOOD(burdon): Move outside.
   const handleActivate = useCallback(
-    async (event: DxAnchorActivate) => {
+    async (ev: DxAnchorActivate) => {
       const item = getItem(groupsRef.current, currentItem);
       if (item) {
         currentRef.current = item;
       }
 
-      const triggerKey = event.trigger.getAttribute('data-trigger');
+      const triggerKey = ev.trigger.getAttribute('data-trigger');
       if (!open && triggerKey) {
         await handleOpenChange(true, triggerKey);
       }
@@ -83,6 +83,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
+
   const memoizedCommandMenu = useMemo<Extension>(() => {
     return commandMenu({
       trigger,
