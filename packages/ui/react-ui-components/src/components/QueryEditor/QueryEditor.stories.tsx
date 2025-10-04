@@ -42,17 +42,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const Complex: Story = {
   args: {
-    value:
-      '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 } AND #important',
+    value: 'type:dxos.org/type/Person AND #important OR { title:"DXOS", value: true }',
+  },
+};
+
+export const Relation: Story = {
+  args: {
+    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
-    value: '#investor #new',
+    value: 'type:dxos.org/type/Person #investor #new',
   },
 };
-
-export const Empty: Story = {};

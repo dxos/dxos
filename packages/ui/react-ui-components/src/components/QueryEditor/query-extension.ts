@@ -63,6 +63,7 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
       ],
     }),
     focus,
+    styles,
   ];
 };
 
@@ -217,12 +218,34 @@ class TypeWidget extends WidgetType {
   override toDOM() {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return Domino.of('span')
-      .classNames('inline-flex items-stretch border border-separator rounded-sm')
+      .classNames('inline-flex bs-[24px] border border-separator rounded-sm')
       .children(
-        Domino.of('span')
-          .classNames('flex items-center text-xs font-thin pis-1 pie-1 rounded-l-[0.2rem] bg-separator')
-          .text('type'),
-        Domino.of('span').text(label).classNames('leading-[22px] pis-1 pie-1 pb-[1px] text-green-500'),
+        Domino.of('span').classNames('flex items-center text-xs font-thin pis-1 pie-1 bg-separator').text('type'),
+        Domino.of('span').classNames('flex items-center pis-1 pie-1 text-green-500').text(label),
+      )
+      .build();
+  }
+}
+
+/**
+ * Tag
+ */
+class TagWidget extends WidgetType {
+  constructor(private readonly _str: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._str === other._str;
+  }
+
+  override toDOM() {
+    const { bg, border } = getHashColor(this._str);
+    return Domino.of('span')
+      .classNames(['inline-flex bs-[24px] border rounded-sm', border])
+      .children(
+        Domino.of('span').classNames(['flex items-center text-xs pis-1 pie-1 text-black', bg]).text('#'),
+        Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
       )
       .build();
   }
@@ -251,43 +274,16 @@ class ObjectWidget extends WidgetType {
 
   override toDOM() {
     return Domino.of('span')
-      .classNames('inline-flex items-stretch border border-separator divide-x divide-separator rounded-sm')
+      .classNames('inline-flex bs-[24px] border border-separator divide-x divide-separator rounded-sm')
       .children(
         ...this._entries.map(([key, value]) =>
           Domino.of('span')
-            .classNames('pis-1 pie-1')
+            .classNames('inline-flex items-center pis-1 pie-1')
             .children(
-              Domino.of('span').classNames('text-infoText').text(key),
+              Domino.of('span').classNames('text-xs text-infoText').text(key),
+              Domino.of('span').classNames('text-xs font-thin text-infoText').text(':'),
               Domino.of('span').classNames('pis-1').text(value),
             ),
-        ),
-      )
-      .build();
-  }
-}
-
-/**
- * Tag
- */
-class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._str === other._str;
-  }
-
-  override toDOM() {
-    const { bg, border } = getHashColor(this._str);
-    return Domino.of('span')
-      .classNames(['inline-flex items-stretch border rounded-sm text-sm', border])
-      .children(
-        Domino.of('span').children(
-          Domino.of('span')
-            .classNames(['inline-flex items-center pis-1 pie-1 rounded-l-[0.2rem] text-black', bg])
-            .text('#'),
-          Domino.of('span').classNames(['pis-1 pie-1 text-subdued']).text(this._str),
         ),
       )
       .build();
@@ -311,6 +307,12 @@ class SymbolWidget extends WidgetType {
   }
 }
 
+const styles = EditorView.theme({
+  '.cm-line': {
+    lineHeight: '28px',
+  },
+});
+
 /**
  * Define syntax highlighting tags for the query language.
  */
@@ -328,7 +330,7 @@ const queryHighlighting = styleTags({
   // Identifiers
   Identifier: t.variableName,
   PropertyPath: t.propertyName,
-  PropertyKey: t.propertyName,
+  Tagname: t.variableName,
 
   // Punctuation
   '{ }': t.brace,
