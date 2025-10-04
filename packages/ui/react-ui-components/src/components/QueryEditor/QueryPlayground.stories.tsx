@@ -26,8 +26,8 @@ import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
 
-const DefaultStory = ({ query: queryParam }: QueryEditorProps) => {
-  const [query, setQuery] = useState(queryParam);
+const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
+  const [query, setQuery] = useState(valueParam);
   const [space] = useSpaces();
   const viewRef = useRef<EditorView>(null);
   const builder = useMemo(() => new QueryBuilder(), []);
@@ -52,8 +52,8 @@ const DefaultStory = ({ query: queryParam }: QueryEditorProps) => {
           ref={viewRef}
           classNames='p-2 is-full border border-subduedSeparator rounded-sm'
           space={space}
-          query={query}
-          onQueryUpdate={setQuery}
+          value={query}
+          onChange={setQuery}
         />
       </div>
       {/* <D3ForceGraph model={model} /> */}
@@ -107,6 +107,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    query: '(type:dxos.org/type/Person => type:dxos.org/type/Organization)',
+    value: '(type:dxos.org/type/Person => type:dxos.org/type/Organization)',
   },
 };

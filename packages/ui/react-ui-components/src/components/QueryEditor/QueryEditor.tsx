@@ -22,13 +22,13 @@ import { query } from './query-extension';
 export type QueryEditorProps = ThemedClassName<
   {
     space?: Space;
-    query?: string;
-    onQueryUpdate?: (query: string) => void;
+    value?: string;
+    onChange?: (text: string) => void;
   } & EditorProps
 >;
 
 export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
-  ({ space, query: initialValue, onQueryUpdate, ...props }, forwardedRef) => {
+  ({ space, value: initialValue, onChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const ref = useForwardedRef(forwardedRef);
     const { themeMode } = useThemeContext();
@@ -37,7 +37,7 @@ export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
         createBasicExtensions({ placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode }),
         EditorView.updateListener.of((view) => {
-          onQueryUpdate?.(view.state.sliceDoc());
+          onChange?.(view.state.sliceDoc());
         }),
         query({ space }),
       ],
