@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType } from 'react';
+import React, { type ComponentType, type JSX } from 'react';
 
 import { DXN } from '@dxos/keys';
 import { Clipboard, Input } from '@dxos/react-ui';

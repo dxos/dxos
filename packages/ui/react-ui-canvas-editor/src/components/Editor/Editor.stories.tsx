@@ -106,7 +106,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }, { args: { spec, registerSchema } }) => {
+      onCreateSpace: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.

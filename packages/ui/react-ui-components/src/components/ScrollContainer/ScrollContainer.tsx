@@ -61,7 +61,7 @@ const Root = forwardRef<ScrollController, RootProps>(({ children, classNames, pi
   const [overflow, setOverflow] = useState(false);
   const [pinned, setPinned] = useState(pin);
 
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'instant') => {
     if (scrollerRef.current) {
       // Temporarily hide scrollbar to prevent flicker.

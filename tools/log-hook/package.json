@@ -18,7 +18,7 @@
     "src"
   ],
   "dependencies": {
-    "@swc-node/sourcemap-support": "^0.2.0",
+    "@swc-node/sourcemap-support": "^0.6.1",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
     "source-map": "^0.6.1"

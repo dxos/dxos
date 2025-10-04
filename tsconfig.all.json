@@ -511,6 +511,9 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-query-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
     },
     {
@@ -527,9 +530,6 @@
     },
     {
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-tag-picker/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-text-tooltip/tsconfig.json"

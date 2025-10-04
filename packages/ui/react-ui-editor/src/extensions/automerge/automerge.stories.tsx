@@ -136,7 +136,7 @@ export const WithEcho: Story = {
         count={2}
         component={EchoStory}
         createSpace
-        onSpaceCreated={async ({ space }) => {
+        onCreateSpace={async ({ space }) => {
           space.db.add(
             Obj.make(Type.Expando, {
               type: 'test',

@@ -20,9 +20,9 @@ export type ForceGraphProps = {
 export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
   const { ref, width, height } = useResizeDetector({ refreshRate: 200 });
   const rootRef = useRef<HTMLDivElement>(null);
-  const forceGraph = useRef<NativeForceGraph>();
+  const forceGraph = useRef<NativeForceGraph>(null);
 
-  const filteredRef = useRef<SearchResult[]>();
+  const filteredRef = useRef<SearchResult[]>([]);
   filteredRef.current = filterObjectsSync(model?.objects ?? [], match);
 
   const [data, setData] = useState<GraphAdapter>();
@@ -48,7 +48,7 @@ export const ForceGraph: FC<ForceGraphProps> = ({ model, match }) => {
 
     return () => {
       forceGraph.current?.pauseAnimation().graphData({ nodes: [], links: [] });
-      forceGraph.current = undefined;
+      forceGraph.current = null;
     };
   }, []);
 

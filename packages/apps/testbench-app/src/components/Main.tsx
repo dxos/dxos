@@ -44,7 +44,7 @@ export const Main = () => {
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
-  const flushingPromise = useRef<Promise<void>>();
+  const flushingPromise = useRef<Promise<void>>(null);
   const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.

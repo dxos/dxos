@@ -35,7 +35,7 @@ const generator: ValueGenerator = faker as any;
 type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
   const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
@@ -83,9 +83,11 @@ export const Slash: Story = {
     placeholder: {
       content: () =>
         Domino.of('div')
-          .child(Domino.of('span').text('Press'))
-          .child(Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'))
-          .child(Domino.of('span').text('for commands'))
+          .children(
+            Domino.of('span').text('Press'),
+            Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'),
+            Domino.of('span').text('for commands'),
+          )
           .build(),
     },
     getMenu: (text) => {
@@ -143,7 +145,7 @@ export const Link: Story = {
       onInitialized: async (client) => {
         client.addTypes([Testing.Contact]);
       },
-      onSpaceCreated: async ({ space }) => {
+      onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
         await createObjects([{ type: Testing.Contact, count: 10 }]);
         await space.db.flush({ indexes: true });

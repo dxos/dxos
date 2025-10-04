@@ -40,7 +40,7 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     });
   }, [sequence]);
 
-  const editorRef = useRef<EditorView | undefined>(undefined);
+  const editorRef = useRef<EditorView>(null);
 
   // TODO(burdon): Factor out.
   // const toolRegistry = useMemo(() => {

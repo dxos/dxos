@@ -7,6 +7,7 @@ export * from './MarkdownStream';
 export * from './MarkdownViewer';
 export * from './NumericTabs';
 export * from './ProgressBar';
+export * from './QueryBox';
 export * from './QueryEditor';
 export * from './ScrollContainer';
 export * from './TextCrawl';

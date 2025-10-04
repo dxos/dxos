@@ -31,42 +31,7 @@ dxos/
 └── docs/              # Documentation
 ```
 
-## Development Setup
-
-### Prerequisites
-```bash
-# Install native libraries (macOS)
-brew install cairo giflib git-lfs jpeg libpng librsvg pango pkg-config python-setuptools git unzip gzip xz
-
-# Install proto (toolchain manager)
-bash <(curl -fsSL https://moonrepo.dev/install/proto.sh)
-
-# Setup proto for shell
-eval "$(proto activate zsh --config-mode all)"
-```
-
-### Initial Setup
-```bash
-# Install toolchain
-proto install
-
-# Install dependencies
-pnpm i
-
-# Build everything
-moon :build
-```
-
-## Development Workflow
-
-### Running Applications
-```bash
-moon composer-app:serve    # Main Composer IDE
-moon tasks-app:serve      # Tasks application
-moon docs:serve           # Documentation site
-```
-
-### Development Commands
+## Development
 
 When building, linting, or testing, do not use `npm`, `npx`, or `pnpm`. Only use `moon`.
 
@@ -88,17 +53,11 @@ moon <package>:e2e            # Run Playwright tests
 moon <package>:e2e -- --debug # Debug with Playwright inspector
 ```
 
-### Storybook
-```bash
-moon storybook:serve     # Launch component documentation
-```
-
 ## Key Scripts & Tools
 
 ### Development Tools
 - `tools/toolbox/` - Development utilities
 - `tools/dx-build/` - Custom build system
-- `tools/storybook/` - Component documentation
 - `tools/beast/` - Documentation generator
 
 ## Best Practices
@@ -113,6 +72,7 @@ moon storybook:serve     # Launch component documentation
 - Always run `pnpm i` and `moon :build` when switching branches.
 - Run tests before committing changes.
 - When writing comments, use proper punctuation, especially ending full sentences with a full stop, ‘.’, even if the comment doesn’t have another sentence.
+- Always memoize any functions or values computed in the closure of a React component’s render function by using `useMemo`, `useCallback`, etc.
 
 ### Dependencies
 - Use `npm-check-updates` for updates, not `pnpm up`.
@@ -121,4 +81,3 @@ moon storybook:serve     # Launch component documentation
 ### Testing
 - Write unit tests with Vitest.
 - Use Playwright for e2e tests following tools/executors/test/PLAYWRIGHT.md.
-- Test components by writing stories for Storybook and testing them with Playwright.

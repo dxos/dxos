@@ -57,11 +57,11 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
           const scroller = view.scrollDOM.parentElement;
           buttonContainer = Domino.of('div')
             .classNames(true && 'cm-scroll-button transition-opacity duration-300 opacity-0')
-            .child(
+            .children(
               Domino.of('button')
                 .classNames('dx-button bg-accentSurface')
                 .data('density', 'fine')
-                .child(Domino.of<any>('dx-icon').attr('icon', 'ph--arrow-down--regular'))
+                .children(Domino.of<any>('dx-icon').attr('icon', 'ph--arrow-down--regular'))
                 .on('click', () => {
                   scrollToBottom(view);
                 }),

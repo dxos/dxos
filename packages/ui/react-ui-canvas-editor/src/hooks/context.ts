@@ -64,7 +64,7 @@ export type EditorContextType<S extends Shape = Shape> = {
   actionHandler: ActionHandler | undefined;
   setActionHandler: (cb: ActionHandler | undefined) => void;
 
-  overlayRef: RefObject<SVGSVGElement>;
+  overlayRef: RefObject<SVGSVGElement | null>;
   repaint: () => void;
 };
 

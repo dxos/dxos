@@ -24,21 +24,20 @@ jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1
+      image: ghcr.io/dxos/gh-actions:20.19.5
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 45
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           lfs: true
       # TODO: read secrets directly from 1p?
       - name: Set environment variables from secrets, env files. Also set DX_ENVIRONMENT and BRANCH
         run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV
         env:
-          BASELIME_API_KEY: ${{ secrets.BASELIME_API_KEY }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}

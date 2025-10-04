@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import { Context, Effect } from 'effect';
 import type { TestContext } from 'vitest';
 
 // TODO(dmaretskyi): Add all different test tags here.
@@ -79,4 +79,31 @@ export namespace TestHelpers {
           return yield* effect;
         }
       });
+
+  /**
+   * Provide TestContext from test parameters.
+   *
+   * Exmaple:
+   * ```ts
+   * it.effect(
+   *   'with context',
+   *   Effect.fn(function* ({ expect }) {
+   *     const ctx = yield* TestContextService;
+   *   }),
+   *   TestHelpers.provideTestContext,
+   * );
+   * ```
+   */
+  export const provideTestContext = <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+    ctx: TestContext,
+  ): Effect.Effect<A, E, Exclude<R, TestContextService>> => Effect.provideService(effect, TestContextService, ctx);
 }
+
+/**
+ * Exposes vitest test context as an effect service.
+ */
+export class TestContextService extends Context.Tag('@dxos/effect/TestContextService')<
+  TestContextService,
+  TestContext
+>() {}

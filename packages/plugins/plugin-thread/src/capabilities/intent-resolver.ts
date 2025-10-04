@@ -22,7 +22,7 @@ import { ThreadCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ThreadAction.OnSpaceCreated,
+      intent: ThreadAction.onCreateSpace,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);

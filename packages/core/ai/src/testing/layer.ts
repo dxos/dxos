@@ -5,6 +5,7 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { Config, type ConfigError, Layer } from 'effect';
+import { Redacted } from 'effect';
 
 import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
@@ -22,7 +23,7 @@ export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, nev
 export const DirectAiServiceLayer: AiServiceLayer = AiServiceRouter.AiServiceRouter.pipe(
   Layer.provide(
     AnthropicClient.layerConfig({
-      apiKey: Config.redacted('ANTHROPIC_API_KEY'),
+      apiKey: Config.redacted('ANTHROPIC_API_KEY').pipe(Config.withDefault(Redacted.make('not-a-real-key'))),
       transformClient: tapHttpErrors,
     }),
   ),

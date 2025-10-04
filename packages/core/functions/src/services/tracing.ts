@@ -36,7 +36,6 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
 
   static console: Context.Tag.Service<TracingService> = {
     write: (event) => {
-      // eslint-disable-next-line no-console
       console.log(event);
     },
     getTraceContext: () => ({}),
@@ -89,17 +88,19 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   /**
    * Emit the current human-readable execution status.
    */
-  static emitStatus: (data: Obj.MakeProps<typeof AgentStatus>) => Effect.Effect<void, never, TracingService> =
-    Effect.fnUntraced(function* (data) {
-      const tracing = yield* TracingService;
-      tracing.write(
-        Obj.make(AgentStatus, {
-          parentMessage: tracing.getTraceContext().parentMessage,
-          toolCallId: tracing.getTraceContext().toolCallId,
-          ...data,
-        }),
-      );
-    });
+  static emitStatus: (
+    data: Omit<Obj.MakeProps<typeof AgentStatus>, 'created'>,
+  ) => Effect.Effect<void, never, TracingService> = Effect.fnUntraced(function* (data) {
+    const tracing = yield* TracingService;
+    tracing.write(
+      Obj.make(AgentStatus, {
+        parentMessage: tracing.getTraceContext().parentMessage,
+        toolCallId: tracing.getTraceContext().toolCallId,
+        created: new Date().toISOString(),
+        ...data,
+      }),
+    );
+  });
 
   static emitConverationMessage: (
     data: Obj.MakeProps<typeof DataType.Message>,

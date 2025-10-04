@@ -35,8 +35,8 @@ export type CursorInfo = {
 
 export type UseTextEditor = {
   // TODO(burdon): Rename.
-  parentRef: RefObject<HTMLDivElement>;
-  view?: EditorView;
+  parentRef: RefObject<HTMLDivElement | null>;
+  view: EditorView | null;
   focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
     tabIndex: 0;
     onKeyUp: KeyboardEventHandler<HTMLDivElement>;
@@ -66,11 +66,11 @@ export const useTextEditor = (
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
-  const [view, setView] = useState<EditorView>();
+  const [view, setView] = useState<EditorView | null>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let view: EditorView;
+    let view: EditorView | null = null;
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 

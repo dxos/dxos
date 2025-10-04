@@ -46,8 +46,8 @@ const Component = ({
   grid: showGrid = false,
 }: ComponentProps) => {
   const context = useSvgContext();
-  const graphRef = useRef<SVGGElement>();
-  const markersRef = useRef<SVGGElement>();
+  const graphRef = useRef<SVGGElement>(null);
+  const markersRef = useRef<SVGGElement>(null);
   const grid = useGrid({ visible: showGrid });
   const zoom = useZoom();
 

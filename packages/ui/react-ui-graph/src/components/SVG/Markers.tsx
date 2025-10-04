@@ -16,7 +16,7 @@ export type MarkersProps = {
  * SVG markers wrapper.
  */
 export const Markers = ({ arrowSize, className }: MarkersProps) => {
-  const ref = useRef();
+  const ref = useRef(null);
   useEffect(() => {
     select(ref.current).call(createMarkers({ arrowSize }));
   }, [ref]);

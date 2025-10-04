@@ -13,6 +13,7 @@ import {
   type ProjectionModel,
   type PropertyType,
   type SchemaProperty,
+  formatToAdditionalPropertyAttributes,
   getFormatSchema,
   getSchemaProperties,
   sortProperties,
@@ -94,8 +95,10 @@ export const FieldEditor = ({
 
       setProps((props) => {
         const type = formatToType[_props.format as keyof typeof formatToType];
+        const additionalProps =
+          formatToAdditionalPropertyAttributes[_props.format as keyof typeof formatToAdditionalPropertyAttributes];
         if (props.type !== type) {
-          return { ...props, ..._props, type };
+          return { ...props, ..._props, ...additionalProps, type } as PropertyType;
         }
 
         return _props as PropertyType;

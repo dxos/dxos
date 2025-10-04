@@ -95,7 +95,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
-            FunctionInvocationService.layerTest({ functions: [readDocument, updateDocument] }).pipe(
+            FunctionInvocationService.layerTestMocked({ functions: [readDocument, updateDocument] }).pipe(
               Layer.provideMerge(ComputeEventLogger.layerFromTracing),
               Layer.provideMerge(TracingService.layerNoop),
             ),

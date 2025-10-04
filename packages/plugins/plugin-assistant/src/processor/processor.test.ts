@@ -42,7 +42,7 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationService.layerTest({ functions: [] }).pipe(
+  FunctionInvocationService.layerTestMocked({ functions: [] }).pipe(
     Layer.provideMerge(ComputeEventLogger.layerFromTracing),
     Layer.provideMerge(TracingService.layerNoop),
   ),

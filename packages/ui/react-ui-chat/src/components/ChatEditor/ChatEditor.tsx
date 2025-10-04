@@ -44,20 +44,20 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   ) => {
     const { themeMode } = useThemeContext();
     const { findNextFocusable, findPrevFocusable } = useFocusFinders();
-
     const { parentRef, view } = useTextEditor(
       () => ({
         debug: true,
         autoFocus,
         extensions: [
           createThemeExtensions({ themeMode }),
-          autocomplete({ onSubmit, onSuggest, onCancel }),
-          references ? referencesExtension({ provider: references.provider }) : [],
+          createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
           createBasicExtensions({
             bracketMatching: false,
             lineWrapping,
             placeholder,
           }),
+          autocomplete({ onSubmit, onSuggest, onCancel }),
+          references ? referencesExtension({ provider: references.provider }) : [],
           // TODO(thure): Surely this should not be unique to ChatEditor, iirc we have several instances of CM where Tab
           //  should move focus.
           keymap.of([

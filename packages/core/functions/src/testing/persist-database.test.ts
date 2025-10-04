@@ -15,7 +15,7 @@ import { TestDatabaseLayer, testStoragePath } from './layer';
 describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect(
     'persist database to disk',
-    Effect.fnUntraced(function* ({ expect: _ }) {
+    Effect.fnUntraced(function* (_) {
       const DbLayer = TestDatabaseLayer({
         storagePath: testStoragePath({ name: `feed-test-${Date.now()}` }),
       });
@@ -34,7 +34,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
 
   it.effect(
     'reload database -- save index before restart',
-    Effect.fnUntraced(function* ({ expect: _ }) {
+    Effect.fnUntraced(function* (_) {
       const NUM_OBJECTS = 500;
       const DbLayer = TestDatabaseLayer({
         types: [DataType.Person],
@@ -58,7 +58,7 @@ describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
   it.effect.skip(
     'reload database -- save index before restart [manual]',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         const NUM_OBJECTS = 500;
 
         {

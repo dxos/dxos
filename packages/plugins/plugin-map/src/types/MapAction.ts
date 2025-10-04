@@ -14,12 +14,10 @@ import { LocationAnnotationId } from './types';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: Schema.optional(
-    Schema.String.annotations({
-      [TypenameAnnotationId]: ['dynamic'],
-      title: 'Record type',
-    }),
-  ),
+  typename: Schema.String.annotations({
+    [TypenameAnnotationId]: ['used-static', 'dynamic'],
+    title: 'Select pin record type',
+  }),
   locationFieldName: Schema.String.annotations({
     [LocationAnnotationId]: true,
     title: 'Location property',

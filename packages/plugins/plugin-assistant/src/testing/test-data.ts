@@ -7,13 +7,6 @@ import { Obj, Ref, Relation, type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-// import { faker } from '@dxos/random';
-// import { DataType } from '@dxos/schema';
-// import { type ValueGenerator, createGenerator } from '@dxos/schema/testing';
-// faker.seed(1);
-// const generator = faker as any as ValueGenerator;
-// const objectGenerator = createGenerator(generator, DataType.Organization, { force: true });
-
 export const testTypes: Type.Obj.Any[] = [
   DataType.Organization,
   DataType.Person,

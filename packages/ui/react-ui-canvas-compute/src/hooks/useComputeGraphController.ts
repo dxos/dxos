@@ -21,7 +21,7 @@ const combine = (...cbs: CleanupFn[]) => {
 
 export type UseComputeGraphControllerOptions = Pick<EditorRootProps<ComputeShape>, 'graph'> & {
   controller: ComputeGraphController | null;
-  editorRef: RefObject<EditorController>;
+  editorRef: RefObject<EditorController | null>;
 };
 
 export const useComputeGraphController = ({ controller, graph, editorRef }: UseComputeGraphControllerOptions) => {

@@ -51,7 +51,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
-    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-core": "^1.12.1",
     "effect": "3.18.1",
     "lodash.defaultsdeep": "^4.6.1"
   },

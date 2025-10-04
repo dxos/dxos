@@ -12,7 +12,7 @@ type ExecutionGraphPanelProps = {
 };
 
 export const ExecutionGraphPanel: FC<ExecutionGraphPanelProps> = ({ queue }) => {
-  const { branches, commits } = useExecutionGraph(queue, true);
+  const { branches, commits } = useExecutionGraph(queue);
 
   return (
     <div className='flex flex-col h-full'>

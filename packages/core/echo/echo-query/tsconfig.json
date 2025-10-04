@@ -19,6 +19,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../echo"
+    },
+    {
       "path": "../echo-generator"
     }
   ]

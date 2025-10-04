@@ -16,7 +16,7 @@ import { isNonNullable } from '@dxos/util';
 // TODO(wittjosiah): Reconcile with @dxos/react-ui-components.
 export type Commit = {
   id: string;
-  parents?: string[];
+  parents: string[];
   branch: string;
   icon?: string;
   level?: LogLevel;
@@ -62,7 +62,8 @@ export class ExecutionGraph {
    * Adds events to the graph.
    */
   addEvents(events: Obj.Any[]) {
-    for (const event of events) {
+    const sortedEvents = this.sortObjectsByCreated(events);
+    for (const event of sortedEvents) {
       if (Obj.instanceOf(DataType.Message, event)) {
         this._processMessage(event);
       } else if (Obj.instanceOf(AgentStatus, event)) {
@@ -108,15 +109,47 @@ export class ExecutionGraph {
       message: event.message,
       icon: IconType.FLAG,
       parents: this._getAgentStatusParents(event),
+      timestamp: new Date(event.created),
     };
 
     this._commits.push(agentStatusCommit);
+
+    // Update last block ID for sequential chaining.
+    this._lastBlockId = event.id;
 
     // Update pending tool results to point to this AgentStatus.
     if (event.toolCallId) {
       this._lastCommitByBranch.set(branch, event.id);
       this._updatePendingToolResults(event.toolCallId, event.id);
     }
+  }
+
+  /**
+   * Stable sort: objects with 'created' field are sorted by it, others remain in place.
+   */
+  private sortObjectsByCreated(objects: any[]) {
+    const sortedObjects = objects.slice();
+    // Find indices of objects with 'created'
+    const createdObjects: { idx: number; obj: any }[] = [];
+    sortedObjects.forEach((obj, idx) => {
+      if (obj && typeof obj.created === 'string') {
+        createdObjects.push({ idx, obj });
+      }
+    });
+    // Sort only the objects with 'created' by their date, stable
+    createdObjects.sort((a, b) => {
+      const aDate = new Date(a.obj.created).getTime();
+      const bDate = new Date(b.obj.created).getTime();
+      return aDate - bDate;
+    });
+    // Place sorted createdObjects back into their original positions
+    let createdIdx = 0;
+    return sortedObjects.map((obj, _idx) => {
+      if (obj && typeof obj.created === 'string') {
+        return createdObjects[createdIdx++].obj;
+      }
+      return obj;
+    });
   }
 
   /**
@@ -128,7 +161,7 @@ export class ExecutionGraph {
 
     return {
       branches: Array.from(this._branchNames),
-      commits: commits,
+      commits,
     };
   }
 
@@ -164,7 +197,7 @@ export class ExecutionGraph {
     if (!toolResultId) return;
 
     const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
-    if (!toolResultCommit?.parents) return;
+    if (!toolResultCommit) return;
 
     const toolCallCommitId = this._toolCallCommitIds.get(toolCallId);
     if (!toolCallCommitId) return;
@@ -191,7 +224,7 @@ export class ExecutionGraph {
 
     if (agentStatusCommitId && agentStatusCommitId !== toolCallCommitId) {
       const toolResultCommit = this._commits.find((c) => c.id === toolResultId);
-      if (toolResultCommit?.parents) {
+      if (toolResultCommit) {
         const toolCallIndex = toolResultCommit.parents.indexOf(toolCallCommitId);
         if (toolCallIndex !== -1) {
           toolResultCommit.parents[toolCallIndex] = agentStatusCommitId;
@@ -205,8 +238,8 @@ export class ExecutionGraph {
    * Gets the branch name for a tool call.
    */
   private _getToolCallBranch(parentMessage?: ObjectId, toolCallId?: string): string {
-    if (parentMessage && toolCallId) {
-      return `${parentMessage}_${toolCallId}`;
+    if (toolCallId) {
+      return toolCallId;
     }
     return parentMessage || 'main';
   }
@@ -214,11 +247,11 @@ export class ExecutionGraph {
   /**
    * Gets the parents for an AgentStatus commit.
    */
-  private _getAgentStatusParents(event: AgentStatus): string[] | undefined {
+  private _getAgentStatusParents(event: AgentStatus): string[] {
     if (event.parentMessage && event.toolCallId) {
       return [getToolCallId(event.parentMessage, event.toolCallId)];
     }
-    return undefined;
+    return [];
   }
 
   /**
@@ -327,6 +360,7 @@ const createBlockCommit = (
   parents: string[],
   idx: number,
 ): Commit | null => {
+  const timestamp = new Date(message.created);
   switch (block._tag) {
     case 'text':
       if (!block.text.trim().length) return null;
@@ -334,6 +368,7 @@ const createBlockCommit = (
         id: getGenericBlockId(message.id, idx),
         branch,
         parents,
+        timestamp,
         ...(message.sender.role === 'user'
           ? {
               icon: IconType.USER,
@@ -351,6 +386,7 @@ const createBlockCommit = (
         id: getToolCallId(message.id, block.toolCallId),
         branch,
         parents,
+        timestamp,
         icon: IconType.TOOL,
         level: LogLevel.INFO,
         message: `Calling tool (${block.name})`,
@@ -361,6 +397,7 @@ const createBlockCommit = (
         id: getToolResultId(message.id, block.toolCallId),
         branch,
         parents,
+        timestamp,
         icon: block.error ? IconType.ERROR : IconType.SUCCESS,
         level: block.error ? LogLevel.ERROR : LogLevel.INFO,
         message: block.error ? 'Tool error: ' + block.error : 'Tool call succeeded',
@@ -371,6 +408,7 @@ const createBlockCommit = (
         id: getGenericBlockId(message.id, idx),
         branch,
         parents,
+        timestamp,
         icon: IconType.ROCKET,
         level: LogLevel.INFO,
         message: ContentBlock.createSummaryMessage(block),
@@ -381,6 +419,7 @@ const createBlockCommit = (
         id: getGenericBlockId(message.id, idx),
         branch,
         parents,
+        timestamp,
         message: block.statusText,
         level: LogLevel.INFO,
         icon: IconType.FLAG,
@@ -391,6 +430,7 @@ const createBlockCommit = (
         id: getGenericBlockId(message.id, idx),
         branch,
         parents,
+        timestamp,
         message: block.reasoningText ?? 'Thinking...',
         icon: IconType.THINKING,
       } satisfies Commit;
@@ -400,6 +440,7 @@ const createBlockCommit = (
         id: getGenericBlockId(message.id, idx),
         branch,
         parents,
+        timestamp,
         icon: IconType.LINK,
         message: stringifyRef(block.reference),
       } satisfies Commit;
@@ -422,8 +463,8 @@ const getToolResultId = (messageId: ObjectId, toolCallId: string) => `${messageI
 const getGenericBlockId = (messageId: ObjectId, idx: number) => `${messageId}_block_${idx}`;
 
 const getBranchName = (options: { parentMessage?: ObjectId; toolCallId?: string }) => {
-  if (options.parentMessage && options.toolCallId) {
-    return `${options.parentMessage}_${options.toolCallId}`;
+  if (options.toolCallId) {
+    return options.toolCallId;
   } else if (options.parentMessage) {
     return options.parentMessage;
   } else {

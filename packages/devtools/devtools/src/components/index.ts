@@ -8,7 +8,6 @@ export * from './Bitbar';
 export * from './BooleanIcon';
 export * from './ControlledSelector';
 export * from './ErrorBoundary';
-export * from './FeedGraph';
 export * from './JsonView';
 export * from './MasterDetailTable';
 export * from './PanelContainer';

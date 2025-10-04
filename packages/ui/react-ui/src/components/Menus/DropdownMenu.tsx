@@ -168,7 +168,7 @@ DropdownMenuTrigger.displayName = TRIGGER_NAME;
 const VIRTUAL_TRIGGER_NAME = 'DropdownMenuVirtualTrigger';
 
 interface DropdownMenuVirtualTriggerProps {
-  virtualRef: RefObject<DropdownMenuTriggerElement>;
+  virtualRef: RefObject<DropdownMenuTriggerElement | null>;
 }
 
 const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTriggerProps>) => {
@@ -180,7 +180,7 @@ const DropdownMenuVirtualTrigger = (props: ScopedProps<DropdownMenuVirtualTrigge
       context.triggerRef.current = virtualRef.current;
     }
   });
-  return <MenuPrimitive.Anchor {...menuScope} virtualRef={virtualRef} />;
+  return <MenuPrimitive.Anchor {...menuScope} virtualRef={virtualRef as RefObject<DropdownMenuTriggerElement>} />;
 };
 
 DropdownMenuVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;

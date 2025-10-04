@@ -21,10 +21,16 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../core/assistant-testing"
@@ -51,7 +57,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-stack"

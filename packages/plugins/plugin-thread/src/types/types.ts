@@ -13,7 +13,7 @@ import { meta } from '../meta';
 import { ChannelType, ThreadType } from './schema';
 
 export namespace ThreadAction {
-  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${meta.id}/action/on-space-created`, {
+  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
       rootCollection: DataType.Collection,

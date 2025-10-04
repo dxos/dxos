@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'react-ui-tag-picker';
+export const translationKey = 'react-ui-query-editor';
 
 export const translations = [
   {

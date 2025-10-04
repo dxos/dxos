@@ -33,10 +33,9 @@ export const TasksContainer = ({ space }: ComponentProps) => {
       </Toolbar.Root>
       <Editor
         id={document.id}
-        text={document.content.target}
+        initialValue={document.content.target.content}
         classNames='h-full p-2 overflow-hidden'
         extensions={[
-          // TODO(burdon): Create util.
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions(),

@@ -56,7 +56,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       ]}
       tabIndex={-1}
       aria-label={title}
-      {...(!open && { inert: 'true' })}
+      {...(!open && { inert: true })}
     >
       {item.id === currentItemId && (
         <>

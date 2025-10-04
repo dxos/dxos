@@ -156,7 +156,7 @@ export const defaultTheme: ThemeStyles = {
    * Tooltip.
    */
   '.cm-tooltip': {
-    background: 'var(--dx-modalSurface)',
+    background: 'var(--dx-baseSurface)',
   },
   '.cm-tooltip-below': {},
 
@@ -165,10 +165,10 @@ export const defaultTheme: ThemeStyles = {
    * https://github.com/codemirror/autocomplete/blob/main/src/completion.ts
    */
   '.cm-tooltip.cm-tooltip-autocomplete': {
-    marginTop: '4px',
-    marginLeft: '-3px',
-    borderColor: 'var(--dx-separator)',
-    borderTop: 'none',
+    marginTop: '6px',
+    marginLeft: '-10px',
+    border: '2px solid var(--dx-separator)',
+    borderRadius: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
     maxHeight: '20em',
@@ -177,13 +177,12 @@ export const defaultTheme: ThemeStyles = {
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--dx-accentSurface)',
-    color: 'var(--dx-accentSurfaceText)',
+    background: 'var(--dx-activeSurface)',
+    color: 'var(--dx-activeSurfaceText)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    borderBottom: 'none !important',
-    color: 'var(--dx-accentText)',
+    color: 'var(--dx-hoverSurfaceText)',
   },
 
   '.cm-completionInfo': {
@@ -197,10 +196,12 @@ export const defaultTheme: ThemeStyles = {
   },
   '.cm-completionLabel': {
     fontFamily: fontBody,
+    color: 'var(--dx-description)',
+    padding: '0 4px',
   },
   '.cm-completionMatchedText': {
     textDecoration: 'none !important',
-    opacity: 0.5,
+    color: 'var(--dx-baseText)',
   },
 
   /**

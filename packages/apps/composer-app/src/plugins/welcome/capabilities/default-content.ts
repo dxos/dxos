@@ -34,9 +34,9 @@ export default async (context: PluginContext) => {
   defaultSpaceCollection?.objects.push(Ref.make(records));
 
   await context.activatePromise(SpaceEvents.SpaceCreated);
-  const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
-  const spaceCreatedIntents = onSpaceCreatedCallbacks.map((onSpaceCreated) =>
-    onSpaceCreated({ space: defaultSpace, rootCollection: defaultSpaceCollection }),
+  const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
+  const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
+    onCreateSpace({ space: defaultSpace, rootCollection: defaultSpaceCollection }),
   );
   await Promise.all(spaceCreatedIntents.map((intent) => dispatch(intent)));
 

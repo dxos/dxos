@@ -23,6 +23,8 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
     invokeFunction<I, O>(functionDef: FunctionDefinition<I, O>, input: I): Effect.Effect<O, never, InvocationServices>;
   }
 >() {
+  static invokeFunction = Effect.serviceFunctionEffect(FunctionInvocationService, (_) => _.invokeFunction);
+
   static layer = Layer.effect(
     FunctionInvocationService,
     Effect.gen(function* () {
@@ -45,23 +47,36 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
     }),
   );
 
+  // TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
   static layerTest = ({
+    functions = [],
+  }: {
+    functions?: FunctionDefinition<any, any>[];
+  } = {}): Layer.Layer<
+    FunctionInvocationService,
+    never,
+    AiService.AiService | CredentialsService | DatabaseService | QueueService
+  > =>
+    FunctionInvocationService.layer.pipe(
+      Layer.provide(LocalFunctionExecutionService.layerLive),
+      Layer.provide(FunctionImplementationResolver.layerTest({ functions })),
+      Layer.provide(RemoteFunctionExecutionService.layerMock),
+    );
+
+  // TODO(dmaretskyi): This shouldn't default to all services being not available.
+  // TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
+  /**
+   * @deprecated Use {@link layerTest} instead.
+   */
+  static layerTestMocked = ({
     functions,
   }: {
     functions: FunctionDefinition<any, any>[];
-  }): Layer.Layer<FunctionInvocationService | FunctionImplementationResolver, never, InvocationServices> =>
-    FunctionInvocationService.layer.pipe(
-      Layer.provideMerge(
-        LocalFunctionExecutionService.layerLive.pipe(
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-          Layer.provideMerge(AiService.notAvailable),
-          Layer.provideMerge(CredentialsService.configuredLayer([])),
-          Layer.provideMerge(DatabaseService.notAvailable),
-          Layer.provideMerge(QueueService.notAvailable),
-          Layer.provideMerge(RemoteFunctionExecutionService.layerMock),
-        ),
-      ),
+  }): Layer.Layer<FunctionInvocationService> =>
+    FunctionInvocationService.layerTest({ functions }).pipe(
+      Layer.provide(AiService.notAvailable),
+      Layer.provide(CredentialsService.configuredLayer([])),
+      Layer.provide(DatabaseService.notAvailable),
+      Layer.provide(QueueService.notAvailable),
     );
-
-  static invokeFunction = Effect.serviceFunctionEffect(FunctionInvocationService, (_) => _.invokeFunction);
 }

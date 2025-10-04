@@ -39,7 +39,7 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      FunctionInvocationService.layerTest({ functions: [fetchLinearIssues] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [fetchLinearIssues] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),
@@ -52,7 +52,7 @@ describe('Linear', { timeout: 600_000 }, () => {
   it.effect(
     'sync',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         yield* DatabaseService.flush({ indexes: true });
 
         yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {

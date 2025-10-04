@@ -14,7 +14,7 @@ import { commandMenu, commandRangeEffect } from './command-menu';
 import { type PlaceholderOptions } from './placeholder';
 
 export type UseCommandMenuOptions = {
-  viewRef: RefObject<EditorView | undefined>;
+  viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
   getMenu: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;

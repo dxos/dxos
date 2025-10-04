@@ -20,6 +20,6 @@ export const withTheme: Decorator = (Story: StoryFn, context: StoryContext) => {
     {
       tx: defaultTx,
     },
-    createElement(Story),
+    createElement(Story as any),
   );
 };
