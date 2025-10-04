@@ -2,14 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
-import { type QueryItem, SearchBox, type SearchBoxProps, itemIsTag, itemIsText } from '@dxos/react-ui-components';
+import {
+  type QueryItem,
+  SearchBox,
+  type SearchBoxController,
+  type SearchBoxProps,
+  itemIsTag,
+  itemIsText,
+} from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -19,7 +26,7 @@ import { InboxAction, type Mailbox } from '../../types';
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { useMailboxModel } from './model';
-import { useMailboxToolbarActions, useQueryEditorFocusRef, useTagFilterVisibility } from './toolbar';
+import { useMailboxToolbarActions, useTagFilterVisibility } from './toolbar';
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
@@ -33,8 +40,16 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const model = useMailboxModel(mailbox.queue.dxn);
-  // Use the new hook for tag filter visibility management.
+
+  const queryEditorRef = useRef<SearchBoxController>(null);
   const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    if (tagFilterState === 'controlled' && queryEditorRef.current) {
+      t = setTimeout(() => queryEditorRef.current?.focus());
+    }
+    return () => clearTimeout(t);
+  }, [tagFilterState]);
 
   const setTagFilterVisible = useCallback(
     (visible: boolean) => {
@@ -46,9 +61,8 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     },
     [model, filterDispatch],
   );
-  const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
 
-  const queryEditorFocusRef = useQueryEditorFocusRef(tagFilterState);
+  const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -136,7 +150,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       {tagFilterVisible.value && (
         <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
           <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
-          <SearchBox ref={queryEditorFocusRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
+          <SearchBox ref={queryEditorRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
         </div>
       )}
 
