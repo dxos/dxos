@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { type Observability } from '@dxos/observability';
+import { type Observability } from '@dxos/observability/next';
 
 import {
   AppGraphBuilder,
@@ -20,13 +20,14 @@ import { translations } from './translations';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
-  observability: () => Promise<Observability>;
+  observability: () => Promise<Observability.Observability>;
 };
 
 export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta, ({ namespace, observability }) => [
   defineModule({
     id: `${meta.id}/module/observability`,
     activatesOn: Events.Startup,
+    activatesAfter: [ObservabilityEvents.ObservabilityReady],
     activate: async () => contributes(ObservabilityCapabilities.Observability, await observability()),
   }),
   defineModule({
@@ -48,7 +49,7 @@ export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta
   defineModule({
     id: `${meta.id}/module/intent-resolver`,
     activatesOn: Events.SetupIntentResolver,
-    activate: (context) => IntentResolver({ context, namespace }),
+    activate: IntentResolver,
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,
@@ -62,9 +63,12 @@ export const ObservabilityPlugin = definePlugin<ObservabilityPluginOptions>(meta
   }),
   defineModule({
     id: `${meta.id}/module/client-ready`,
-    activatesOn: allOf(Events.DispatcherReady, ObservabilityEvents.StateReady, ClientReadyEvent),
-    activate: async (context) => {
-      return ClientReady({ context, observability: await observability(), namespace });
-    },
+    activatesOn: allOf(
+      Events.DispatcherReady,
+      ObservabilityEvents.ObservabilityReady,
+      ObservabilityEvents.StateReady,
+      ClientReadyEvent,
+    ),
+    activate: ClientReady,
   }),
 ]);

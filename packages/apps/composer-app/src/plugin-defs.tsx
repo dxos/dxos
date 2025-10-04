@@ -7,7 +7,7 @@ import '@dxos/plugin-inbox/css';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
-import { type Observability } from '@dxos/observability';
+import { type Observability } from '@dxos/observability/next';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
@@ -60,7 +60,7 @@ export type State = {
   appKey: string;
   config: Config;
   services: ClientServicesProvider;
-  observability: Promise<Observability>;
+  observability: Promise<Observability.Observability>;
 };
 
 export type PluginConfig = State & {

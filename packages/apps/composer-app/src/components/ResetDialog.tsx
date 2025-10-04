@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Observability } from '@dxos/observability';
+import { type Observability } from '@dxos/observability/next';
 import { FeedbackForm } from '@dxos/plugin-observability';
 import { type UserFeedback } from '@dxos/plugin-observability/types';
 import {
@@ -43,7 +43,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  observability?: Promise<Observability>;
+  observability?: Promise<Observability.Observability>;
   isDev?: boolean;
 };
 
@@ -79,7 +79,7 @@ export const ResetDialog = ({
       }
 
       const observability = await observabilityPromise;
-      observability.captureUserFeedback(values.message);
+      observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
     },
     [observabilityPromise],
