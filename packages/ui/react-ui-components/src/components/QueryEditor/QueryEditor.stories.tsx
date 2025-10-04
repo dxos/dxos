@@ -21,7 +21,9 @@ const meta = {
   component: QueryEditor,
   render: (args: QueryEditorProps) => {
     const [space] = useSpaces();
-    return <QueryEditor {...args} space={space} />;
+    return (
+      <QueryEditor classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm' {...args} space={space} />
+    );
   },
   decorators: [
     withClientProvider({
@@ -40,24 +42,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const classNames = 'is-[50rem] p-2 border border-subduedSeparator rounded-sm';
+export const Default: Story = {};
 
-export const Default: Story = {
+export const Complex: Story = {
   args: {
-    classNames,
-    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 } AND #foo',
+    value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
+  },
+};
+
+export const Relation: Story = {
+  args: {
+    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
-    classNames,
-    value: '#foo #bar',
-  },
-};
-
-export const Empty: Story = {
-  args: {
-    classNames,
+    value: 'type:dxos.org/type/Person #investor #new',
   },
 };

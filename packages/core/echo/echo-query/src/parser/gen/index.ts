@@ -9,5 +9,5 @@ import * as terms from './query.terms';
 export namespace QueryDSL {
   export const Parser: LRParser = parser;
   export const Node = terms;
-  export const Tokens = ['type:', 'AND', 'OR'];
+  export const Tokens = ['type:', 'AND', 'OR', 'NOT'];
 }
