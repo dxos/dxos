@@ -56,6 +56,9 @@ export interface SearchBoxController {
   focus: () => void;
 }
 
+/**
+ * @deprecated
+ */
 export const SearchBox = forwardRef<SearchBoxController, SearchBoxProps>(({ readonly, ...props }, ref) => {
   if (readonly) {
     return <ReadonlySearchbox {...props} />;
@@ -140,8 +143,6 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
 
     const queryEditorExtension = useMemo(() => queryEditor({ onChange }), [onChange]);
 
-    // TODO(thure): In theory, `commandMenuExtension` should be a dependency, but it seems to change overly often in
-    //  certain scenarios; debug this if needed.
     const { parentRef, view } = useTextEditor(() => {
       return {
         initialValue: renderItems(initialItems),
@@ -154,6 +155,8 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
               content: { className: '!text-sm' },
             },
           }),
+          // TODO(thure): In theory, `commandMenuExtension` should be a dependency,
+          //  but it seems to change overly often in certain scenarios; debug this if needed.
           commandMenuExtension,
           queryEditorExtension,
           EditorView.domEventHandlers({

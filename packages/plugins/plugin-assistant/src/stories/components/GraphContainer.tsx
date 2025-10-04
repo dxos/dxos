@@ -10,9 +10,14 @@ import { Filter, Query } from '@dxos/echo';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
-import { useMatcherExtension } from '@dxos/react-ui-components';
-import { type Expression, QueryParser, createFilter } from '@dxos/react-ui-components';
+import { type ChatEditorProps } from '@dxos/react-ui-chat';
+import {
+  type Expression,
+  QueryBox,
+  type QueryBoxController,
+  QueryParser,
+  createFilter,
+} from '@dxos/react-ui-components';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -83,20 +88,11 @@ export const GraphContainer = ({ space }: ComponentProps) => {
 
 export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorProps, 'onSubmit'>) => {
   const { state: flushState, handleFlush } = useFlush(space);
-  const extensions = useMatcherExtension(space);
-  const editorRef = useRef<ChatEditorController>(null);
+  const editorRef = useRef<QueryBoxController>(null);
 
   return (
     <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-      {/* TODO(burdon): Use Editor? */}
-      <ChatEditor
-        ref={editorRef}
-        autoFocus
-        placeholder='Search'
-        extensions={extensions}
-        fireIfEmpty
-        onSubmit={onSubmit}
-      />
+      <QueryBox ref={editorRef} autoFocus placeholder='Search' onSubmit={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly
