@@ -72,7 +72,7 @@
     "react-dom": "~19.2.0",
     "react-floater": "0.7.9",
     "type-fest": "4.10.1",
-    "vite": "7.1.7"
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
