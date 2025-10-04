@@ -15,6 +15,7 @@ import { Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { focus, focusField } from '@dxos/react-ui-editor';
+import { getHashColor } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
   space?: Space;
@@ -278,14 +279,15 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
+    const { bg, border } = getHashColor(this._str);
     return Domino.of('span')
-      .classNames('inline-flex items-stretch border border-amberText rounded-sm text-sm')
+      .classNames(['inline-flex items-stretch border rounded-sm text-sm', border])
       .children(
         Domino.of('span').children(
           Domino.of('span')
-            .classNames('inline-flex items-center pis-1 pie-1 bg-amberText text-black rounded-l-[0.2rem]')
+            .classNames(['inline-flex items-center pis-1 pie-1 rounded-l-[0.2rem] text-black', bg])
             .text('#'),
-          Domino.of('span').classNames('pis-1 pie-1').text(this._str),
+          Domino.of('span').classNames(['pis-1 pie-1 text-subdued']).text(this._str),
         ),
       )
       .build();
