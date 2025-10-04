@@ -50,7 +50,7 @@
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
     "partykit": "^0.0.103",
-    "vite": "7.1.7",
+    "vite": "7.1.9",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0"
   }
