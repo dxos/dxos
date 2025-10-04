@@ -137,7 +137,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "effect": "3.18.1",
+    "effect": "3.18.2",
     "jwt-decode": "^4.0.0",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0",
