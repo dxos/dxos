@@ -24,13 +24,13 @@ const allTags: QueryTag[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-conmponents/SearchBox',
+  title: 'ui/react-ui-components/SearchBox',
   component: SearchBox,
   render: ({ initialItems: initialItems, onChange }) => {
     const [items] = useState(initialItems ?? []);
     const [selected] = useState<string>();
     return (
-      <div className='w-[20rem] space-y-2'>
+      <div className='is-[40rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
           <SearchBox
             initialItems={items}
@@ -42,7 +42,7 @@ const meta = {
             onChange={onChange}
           />
         </div>
-        <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
+        <div className='flex flex-col bs-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items, selected }, null, 2)}</pre>
         </div>
       </div>

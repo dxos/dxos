@@ -4,9 +4,8 @@
 
 import '@dxos-theme';
 
-import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -29,7 +28,6 @@ const generator = faker as any as ValueGenerator;
 const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   const [query, setQuery] = useState(valueParam);
   const [space] = useSpaces();
-  const viewRef = useRef<EditorView>(null);
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
   // TODO(burdon): Catch invalid filter error.
@@ -49,7 +47,6 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
     <div role='none' className='flex flex-col bs-full'>
       <div className='p-4'>
         <QueryEditor
-          ref={viewRef}
           classNames='p-2 is-full border border-subduedSeparator rounded-sm'
           space={space}
           value={query}
