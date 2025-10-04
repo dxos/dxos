@@ -8,12 +8,11 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Domino, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CommandMenuGroup,
   CommandMenuProvider,
   type DNDOptions,
-  Domino,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,

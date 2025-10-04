@@ -11,6 +11,7 @@ import React, { useCallback, useRef } from 'react';
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Domino } from '@dxos/react-ui';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -26,7 +27,6 @@ import {
 } from '../components';
 import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
 import { str } from '../testing';
-import { Domino } from '../util';
 
 import { EditorStory, names } from './components';
 

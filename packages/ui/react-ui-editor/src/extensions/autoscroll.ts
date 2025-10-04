@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { Domino } from '../util';
+import { Domino } from '@dxos/react-ui';
 
 const lineHeight = 24;
 
