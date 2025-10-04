@@ -44,7 +44,7 @@ export interface SearchBoxController {
 }
 
 /**
- * @deprecated
+ * @deprecated Reconcile with QueryEditor.
  */
 export const SearchBox = forwardRef<SearchBoxController, SearchBoxProps>(({ readonly, ...props }, ref) => {
   if (readonly) {

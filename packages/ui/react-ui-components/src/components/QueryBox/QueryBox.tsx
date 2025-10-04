@@ -39,7 +39,7 @@ export type QueryBoxProps = {
 };
 
 /**
- * @deprecated
+ * @deprecated Reconcile with QueryEditor.
  */
 export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
   (
