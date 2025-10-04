@@ -243,7 +243,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
-    return <Icon icon={item.properties.icon} size={5} {...hueFgStyle} />;
+    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {

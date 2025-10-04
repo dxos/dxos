@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/react-ui';
 
 /**
  * Simple prompt widget.
