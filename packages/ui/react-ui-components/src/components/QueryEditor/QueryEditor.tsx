@@ -36,10 +36,12 @@ export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
       () => [
         createBasicExtensions({ placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode }),
-        EditorView.updateListener.of((view) => {
-          onChange?.(view.state.sliceDoc());
-        }),
         query({ space }),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            onChange?.(update.state.doc.toString());
+          }
+        }),
       ],
       [space],
     );

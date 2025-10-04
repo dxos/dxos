@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
@@ -14,13 +15,26 @@ import { commandMenu, commandRangeEffect } from './command-menu';
 import { type PlaceholderOptions } from './placeholder';
 
 export type UseCommandMenuOptions = {
+  // TODO(burdon): Extensions should not depend directly on the view.
+  //  Need to restructure since viewRef is used by callbacks that are not used internally.
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
   getMenu: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
-export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions) => {
+// TODO(burdon): Simplify (see above).
+export type UseCommandMenu = {
+  groupsRef: RefObject<CommandMenuGroup[]>;
+  commandMenu: Extension;
+  currentItem: string | undefined;
+  open: boolean;
+  onActivate: (event: DxAnchorActivate) => void;
+  onSelect: (item: CommandMenuItem) => void;
+  onOpenChange: (open: boolean) => void;
+};
+
+export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions): UseCommandMenu => {
   const currentRef = useRef<CommandMenuItem | null>(null);
   const groupsRef = useRef<CommandMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
@@ -32,6 +46,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
       if (open && trigger) {
         groupsRef.current = await getMenu(trigger);
       }
+
       setOpen(open);
       if (!open) {
         setCurrentItem(undefined);
@@ -41,6 +56,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [getMenu],
   );
 
+  // TOOD(burdon): Move outside.
   const handleActivate = useCallback(
     async (event: DxAnchorActivate) => {
       const item = getItem(groupsRef.current, currentItem);
@@ -67,7 +83,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
-  const memoizedCommandMenu = useMemo(() => {
+  const memoizedCommandMenu = useMemo<Extension>(() => {
     return commandMenu({
       trigger,
       placeholder,
@@ -95,6 +111,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
         if (/\W/.test(text)) {
           return queueMicrotask(() => handleOpenChange(false));
         }
+
         groupsRef.current = await getMenu(trigger, text);
         const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
         if (firstItem) {
@@ -107,12 +124,12 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   }, [handleOpenChange, getMenu, serializedTrigger, placeholder]);
 
   return {
+    groupsRef,
     commandMenu: memoizedCommandMenu,
     currentItem,
-    groupsRef,
     open,
     onActivate: handleActivate,
-    onOpenChange: setOpen,
     onSelect: handleSelect,
+    onOpenChange: setOpen,
   };
 };

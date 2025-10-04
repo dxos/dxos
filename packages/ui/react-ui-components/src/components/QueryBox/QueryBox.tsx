@@ -82,12 +82,8 @@ export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
         initialValue,
         autoFocus,
         extensions: [
+          createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
           createThemeExtensions({ themeMode }),
-          createBasicExtensions({
-            bracketMatching: false,
-            lineWrapping,
-            placeholder,
-          }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           typeahead({ onComplete: handleComplete }),
           EditorView.updateListener.of((update) => {

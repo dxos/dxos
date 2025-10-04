@@ -115,7 +115,7 @@ export const MarkdownEditor = ({
     };
   }, [getMenu]);
 
-  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
+  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (

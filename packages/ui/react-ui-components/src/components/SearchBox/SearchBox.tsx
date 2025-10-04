@@ -3,15 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, {
-  type CSSProperties,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { type CSSProperties, forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -29,13 +21,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 
-import {
-  type QueryEditorExtensionProps,
-  parseQueryItems,
-  queryEditor,
-  renderItems,
-  renderTag,
-} from './searchbox-extension';
+import { type SearchBoxOptions, parseQueryItems, renderItems, renderTag, searchbox } from './searchbox-extension';
 import { type QueryItem, type QueryTag, itemIsTag, itemIsText } from './types';
 
 export const SearchBoxItem = DxTagPickerItem;
@@ -49,7 +35,7 @@ export type SearchBoxProps = ThemedClassName<
     placeholder?: string;
     onSearch?: (text: string, ids: string[]) => QueryTag[];
     onBlur?: (event: FocusEvent) => void;
-  } & QueryEditorExtensionProps
+  } & SearchBoxOptions
 >;
 
 export interface SearchBoxController {
@@ -126,22 +112,17 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
           }));
           return [{ id: 'query-items', items: menuItems }];
         }
+
         return [];
       },
       [onSearch],
     );
 
-    const {
-      commandMenu: commandMenuExtension,
-      groupsRef,
-      ...commandMenuProps
-    } = useCommandMenu({
+    const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({
       viewRef,
       trigger: '#',
       getMenu,
     });
-
-    const queryEditorExtension = useMemo(() => queryEditor({ onChange }), [onChange]);
 
     const { parentRef, view } = useTextEditor(() => {
       return {
@@ -157,23 +138,21 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
           }),
           // TODO(thure): In theory, `commandMenuExtension` should be a dependency,
           //  but it seems to change overly often in certain scenarios; debug this if needed.
-          commandMenuExtension,
-          queryEditorExtension,
+          commandMenu,
+          searchbox({ onChange }),
           EditorView.domEventHandlers({
             blur: (event) => onBlur?.(event),
           }),
         ],
       };
-    }, [themeMode, onBlur]);
-
-    const composedRef = useComposedRefs(resizeRef, parentRef);
-    useImperativeHandle(ref, () => ({ focus: () => view?.focus() }), [view]);
+    }, [themeMode, onBlur, onChange]);
 
     useEffect(() => {
       viewRef.current = view;
     }, [view]);
 
-    useEffect(() => () => console.log('[query editor unmount]'), []);
+    const composedRef = useComposedRefs(resizeRef, parentRef);
+    useImperativeHandle(ref, () => ({ focus: () => view?.focus() }), [view]);
 
     return (
       <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
