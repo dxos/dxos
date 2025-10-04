@@ -24,11 +24,11 @@ const allTags: QueryTag[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-query-editor/QueryEditor',
+  title: 'ui/react-ui-conmponents/SearchBox',
   component: SearchBox,
   render: ({ initialItems: initialItems, onChange }) => {
-    const [items, setItems] = useState(initialItems ?? []);
-    const [selected, setSelected] = useState<string>();
+    const [items] = useState(initialItems ?? []);
+    const [selected] = useState<string>();
     return (
       <div className='w-[20rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
