@@ -10,6 +10,11 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
+export type EditorController = {
+  view: EditorView | null;
+  focus: () => void;
+};
+
 export type EditorProps = ThemedClassName<
   {
     value?: string;
@@ -21,7 +26,7 @@ export type EditorProps = ThemedClassName<
  * Minimal text editor.
  * NOTE: This shouold not be used with the automerge extension.
  */
-export const Editor = forwardRef<EditorView | null, EditorProps>(
+export const Editor = forwardRef<EditorController, EditorProps>(
   ({ classNames, id, extensions = [], value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -40,7 +45,14 @@ export const Editor = forwardRef<EditorView | null, EditorProps>(
     );
 
     // External controller.
-    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        view,
+        focus: () => view?.focus(),
+      }),
+      [view],
+    );
 
     // Update content.
     useEffect(() => {

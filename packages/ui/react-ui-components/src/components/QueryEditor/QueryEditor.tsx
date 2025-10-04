@@ -8,8 +8,8 @@ import { type Space } from '@dxos/client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
+  type EditorController,
   type EditorProps,
-  type EditorView,
   type Extension,
   createBasicExtensions,
   createThemeExtensions,
@@ -29,7 +29,7 @@ export type QueryEditorProps = ThemedClassName<
 /**
  * Query editor with decorations and autocomplete.
  */
-export const QueryEditor = forwardRef<EditorView | null, QueryEditorProps>(
+export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ space, value, readonly, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
