@@ -5,7 +5,7 @@
 import { useComputed, useSignal } from '@preact/signals-react';
 import { useCallback, useEffect, useRef } from 'react';
 
-import type { QueryEditorHandle } from '@dxos/react-ui-query-editor';
+import type { SearchBoxController } from '@dxos/react-ui-components';
 
 type TagFilterVisibility = 'closed' | 'display' | 'controlled';
 
@@ -15,11 +15,13 @@ type TagFilterVisibilityEvent = 'toggle_from_toolbar' | 'tag_selected_from_messa
  * Custom hook to manage focus for a QueryEditor component based on visibility state.
  */
 export const useQueryEditorFocusRef = (tagFilterVisibility: TagFilterVisibility) => {
-  const queryEditorRef = useRef<QueryEditorHandle>(null);
+  const queryEditorRef = useRef<SearchBoxController>(null);
   useEffect(() => {
+    let t: NodeJS.Timeout;
     if (tagFilterVisibility === 'controlled' && queryEditorRef.current) {
-      setTimeout(() => queryEditorRef.current?.focus(), 0);
+      t = setTimeout(() => queryEditorRef.current?.focus());
     }
+    return () => clearTimeout(t);
   }, [tagFilterVisibility]);
 
   return queryEditorRef;

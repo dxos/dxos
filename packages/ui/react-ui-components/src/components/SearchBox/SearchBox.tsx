@@ -34,40 +34,41 @@ import {
   queryEditor,
   renderItems,
   renderTag,
-} from './query-editor-extension';
-import { QueryEditorItem } from './QueryEditorItem';
+} from './searchbox-extension';
+import { SearchBoxItem } from './types';
 import { type QueryItem, type QueryTag, itemIsTag, itemIsText } from './types';
 
-export type QueryEditorProps = ThemedClassName<{
-  initialItems?: QueryItem[];
-  readonly?: boolean;
-  placeholder?: string;
-  onSearch?: (text: string, ids: string[]) => QueryTag[];
-  onBlur?: (event: FocusEvent) => void;
-}> &
-  QueryEditorExtensionProps;
+export type SearchBoxProps = ThemedClassName<
+  {
+    initialItems?: QueryItem[];
+    readonly?: boolean;
+    placeholder?: string;
+    onSearch?: (text: string, ids: string[]) => QueryTag[];
+    onBlur?: (event: FocusEvent) => void;
+  } & QueryEditorExtensionProps
+>;
 
-export interface QueryEditorHandle {
+export interface SearchBoxController {
   focus: () => void;
 }
 
-export const QueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(({ readonly, ...props }, ref) => {
+export const SearchBox = forwardRef<SearchBoxController, SearchBoxProps>(({ readonly, ...props }, ref) => {
   if (readonly) {
-    return <ReadonlyQueryEditor {...props} />;
+    return <ReadonlySearchbox {...props} />;
   } else {
-    return <EditableQueryEditor ref={ref} {...props} />;
+    return <EditableSearchBox ref={ref} {...props} />;
   }
 });
 
-QueryEditor.displayName = 'QueryEditor';
+SearchBox.displayName = 'SearchBox';
 
-const ReadonlyQueryEditor = ({ classNames, initialItems }: QueryEditorProps) => {
+const ReadonlySearchbox = ({ classNames, initialItems }: SearchBoxProps) => {
   return (
     <div className={mx(classNames)}>
       {initialItems?.map((item) => {
         if (itemIsTag(item)) {
           return (
-            <QueryEditorItem
+            <SearchBoxItem
               key={item.id}
               itemId={item.id}
               label={item.label}
@@ -89,7 +90,7 @@ const ReadonlyQueryEditor = ({ classNames, initialItems }: QueryEditorProps) => 
   );
 };
 
-const EditableQueryEditor = forwardRef<QueryEditorHandle, QueryEditorProps>(
+const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
   ({ classNames, initialItems = [], placeholder, onSearch, onBlur, onChange }, ref) => {
     const { themeMode } = useThemeContext();
     const { ref: resizeRef, width } = useResizeDetector();

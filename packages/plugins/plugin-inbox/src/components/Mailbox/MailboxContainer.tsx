@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, Icon } from '@dxos/react-ui';
+import { type QueryItem, SearchBox, type SearchBoxProps, itemIsTag, itemIsText } from '@dxos/react-ui-components';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
-import { QueryEditor, type QueryEditorProps, type QueryItem, itemIsTag, itemIsText } from '@dxos/react-ui-query-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { InboxCapabilities } from '../../capabilities';
@@ -108,7 +108,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     [model, filterDispatch],
   );
 
-  const handleSearch = useCallback<NonNullable<QueryEditorProps['onSearch']>>(
+  const handleSearch = useCallback<NonNullable<SearchBoxProps['onSearch']>>(
     (text, ids) =>
       model.availableTags
         .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
@@ -136,7 +136,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       {tagFilterVisible.value && (
         <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
           <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
-          <QueryEditor ref={queryEditorFocusRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
+          <SearchBox ref={queryEditorFocusRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
         </div>
       )}
 
