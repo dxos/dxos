@@ -15,6 +15,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import '@dxos/lit-ui/dx-tag-picker.pcss';
+import { DxTagPickerItem, type DxTagPickerItemProps } from '@dxos/lit-ui/react';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type CommandMenuGroup,
@@ -35,8 +36,11 @@ import {
   renderItems,
   renderTag,
 } from './searchbox-extension';
-import { SearchBoxItem } from './types';
 import { type QueryItem, type QueryTag, itemIsTag, itemIsText } from './types';
+
+export const SearchBoxItem = DxTagPickerItem;
+
+export type SearchBoxItemProps = DxTagPickerItemProps;
 
 export type SearchBoxProps = ThemedClassName<
   {

@@ -2,12 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DxTagPickerItem, type DxTagPickerItemProps } from '@dxos/lit-ui/react';
 import { type ChromaticPalette } from '@dxos/react-ui';
-
-export const SearchBoxItem = DxTagPickerItem;
-
-export type SearchBoxItemProps = DxTagPickerItemProps;
 
 export type QueryTag = {
   id: string;
