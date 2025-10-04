@@ -45,14 +45,14 @@ const classNames = 'is-[50rem] p-2 border border-subduedSeparator rounded-sm';
 export const Default: Story = {
   args: {
     classNames,
-    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 } AND #foo',
+    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 } AND #foo',
   },
 };
 
 export const Tags: Story = {
   args: {
     classNames,
-    query: '#foo #bar',
+    value: '#foo #bar',
   },
 };
 
