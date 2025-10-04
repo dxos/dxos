@@ -19,6 +19,7 @@ export type EditorProps = ThemedClassName<
 
 /**
  * Minimal text editor.
+ * NOTE: This shouold not be used with the automerge extension.
  */
 export const Editor = forwardRef<EditorView | null, EditorProps>(
   ({ classNames, id, extensions = [], value, onChange, ...props }, forwardedRef) => {
