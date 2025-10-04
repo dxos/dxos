@@ -14,6 +14,7 @@ import {
   type CommandMenuItem,
   CommandMenuProvider,
   EditorView,
+  type UseCommandMenuOptions,
   createBasicExtensions,
   createThemeExtensions,
   useCommandMenu,
@@ -89,28 +90,23 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
     const { ref: resizeRef, width } = useResizeDetector();
     const viewRef = useRef<EditorView | null>(null);
 
-    const getMenu = useCallback(
+    const getMenu = useCallback<UseCommandMenuOptions['getMenu']>(
       async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
-        if (trigger === '#' && onSearch) {
-          const currentIds = viewRef?.current?.state
-            ? parseQueryItems(viewRef.current.state)
-                .filter(itemIsTag)
-                .map((item) => item.id)
-            : [];
-          const results = onSearch(query || '', currentIds);
-          const menuItems: CommandMenuItem[] = results.map((item) => ({
-            id: item.id,
-            label: item.label,
-            onSelect: (view: EditorView) => {
-              const newItem = renderTag(item);
-              const selection = view.state.selection.main;
-              view.dispatch({
-                changes: { from: selection.from, to: selection.to, insert: newItem },
-                selection: { anchor: selection.from + newItem.length },
-              });
-            },
-          }));
-          return [{ id: 'query-items', items: menuItems }];
+        if (!onSearch) {
+          return [];
+        }
+
+        switch (trigger) {
+          case '#': {
+            const currentIds = viewRef?.current?.state
+              ? parseQueryItems(viewRef.current.state)
+                  .filter(itemIsTag)
+                  .map((item) => item.id)
+              : [];
+
+            const results = onSearch(query || '', currentIds);
+            return [{ id: 'query-items', items: createMenu(results) }];
+          }
         }
 
         return [];
@@ -118,11 +114,7 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
       [onSearch],
     );
 
-    const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({
-      viewRef,
-      trigger: '#',
-      getMenu,
-    });
+    const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, trigger: '#', getMenu });
 
     const { parentRef, view } = useTextEditor(() => {
       return {
@@ -136,7 +128,7 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
               content: { className: '!text-sm' },
             },
           }),
-          // TODO(thure): In theory, `commandMenuExtension` should be a dependency,
+          // TODO(thure): In theory, `commandMenu` should be a dependency,
           //  but it seems to change overly often in certain scenarios; debug this if needed.
           commandMenu,
           searchbox({ onChange }),
@@ -165,3 +157,18 @@ const EditableSearchBox = forwardRef<SearchBoxController, SearchBoxProps>(
     );
   },
 );
+
+const createMenu = (results: QueryTag[]): CommandMenuItem[] => {
+  return results.map((item) => ({
+    id: item.id,
+    label: item.label,
+    onSelect: (view: EditorView) => {
+      const newItem = renderTag(item);
+      const selection = view.state.selection.main;
+      view.dispatch({
+        changes: { from: selection.from, to: selection.to, insert: newItem },
+        selection: { anchor: selection.from + newItem.length },
+      });
+    },
+  }));
+};

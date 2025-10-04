@@ -15,23 +15,21 @@ import { commandMenu, commandRangeEffect } from './command-menu';
 import { type PlaceholderOptions } from './placeholder';
 
 export type UseCommandMenuOptions = {
-  // TODO(burdon): Extensions should not depend directly on the view.
-  //  Need to restructure since viewRef is used by callbacks that are not used internally.
+  // TODO(burdon): Extensions should not depend directly on the editor view.
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
   getMenu: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
 };
 
-// TODO(burdon): Simplify (see above).
 export type UseCommandMenu = {
   groupsRef: RefObject<CommandMenuGroup[]>;
   commandMenu: Extension;
   currentItem: string | undefined;
   open: boolean;
+  onOpenChange: (open: boolean) => void;
   onActivate: (event: DxAnchorActivate) => void;
   onSelect: (item: CommandMenuItem) => void;
-  onOpenChange: (open: boolean) => void;
 };
 
 export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions): UseCommandMenu => {
@@ -56,15 +54,14 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [getMenu],
   );
 
-  // TOOD(burdon): Move outside.
-  const handleActivate = useCallback(
-    async (ev: DxAnchorActivate) => {
+  const handleActivate = useCallback<UseCommandMenu['onActivate']>(
+    async (event) => {
       const item = getItem(groupsRef.current, currentItem);
       if (item) {
         currentRef.current = item;
       }
 
-      const triggerKey = ev.trigger.getAttribute('data-trigger');
+      const triggerKey = event.trigger.getAttribute('data-trigger');
       if (!open && triggerKey) {
         await handleOpenChange(true, triggerKey);
       }
@@ -72,14 +69,14 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [open, handleOpenChange],
   );
 
-  const handleSelect = useCallback((item: CommandMenuItem) => {
-    const view = viewRef.current;
-    if (!view) {
+  // TODO(burdon): Move outside.
+  const handleSelect = useCallback<UseCommandMenu['onSelect']>((item) => {
+    if (!viewRef.current) {
       return;
     }
 
-    const selection = view.state.selection.main;
-    void item.onSelect?.(view, selection.head);
+    const selection = viewRef.current.state.selection.main;
+    void item.onSelect?.(viewRef.current, selection.head);
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
@@ -119,6 +116,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
           setCurrentItem(firstItem.id);
           currentRef.current = firstItem;
         }
+
         refresh({});
       },
     });
@@ -129,8 +127,8 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     commandMenu: memoizedCommandMenu,
     currentItem,
     open,
+    onOpenChange: setOpen,
     onActivate: handleActivate,
     onSelect: handleSelect,
-    onOpenChange: setOpen,
   };
 };

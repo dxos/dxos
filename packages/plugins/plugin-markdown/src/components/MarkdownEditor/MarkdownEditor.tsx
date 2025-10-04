@@ -76,16 +76,18 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback(
+  const getMenu = useCallback<UseCommandMenuOptions['getMenu']>(
     (trigger: string, query?: string) => {
       switch (trigger) {
-        case '@':
+        case '@': {
           return onLinkQuery?.(query) ?? [];
+        }
         case '/':
-        default:
+        default: {
           return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
+        }
       }
     },
     [onLinkQuery, slashCommandGroups],
@@ -113,9 +115,10 @@ export const MarkdownEditor = ({
       },
       getMenu,
     };
-  }, [getMenu]);
+  }, [onLinkQuery, getMenu]);
 
   const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
+
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
