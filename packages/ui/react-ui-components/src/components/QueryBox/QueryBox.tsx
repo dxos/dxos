@@ -79,7 +79,7 @@ export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
         initialValue,
         autoFocus,
         extensions: [
-          createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
+          createBasicExtensions({ lineWrapping, placeholder }),
           createThemeExtensions({ themeMode }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           typeahead({ onComplete: handleComplete }),
