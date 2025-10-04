@@ -200,6 +200,42 @@ const decorations = (): Extension => {
 };
 
 /**
+ * The outer container makes sure the main inner text is aligned with content in the outer div.
+ */
+const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
+  return Domino.of('span')
+    .classNames('inline-flex bs-[28px] align-middle')
+    .children(
+      Domino.of('span')
+        .classNames(['inline-flex bs-[26px] border rounded-sm', classNames])
+        .children(...children),
+    )
+    .build();
+};
+
+/**
+ * Tag
+ */
+class TagWidget extends WidgetType {
+  constructor(private readonly _str: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._str === other._str;
+  }
+
+  override toDOM() {
+    const { bg, border } = getHashColor(this._str);
+    return container(
+      border,
+      Domino.of('span').classNames(['flex items-center text-sm pis-1 pie-1 text-black', bg]).text('#'),
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
+    );
+  }
+}
+
+/**
  * TypeKeyword:Identifier
  */
 class TypeWidget extends WidgetType {
@@ -217,37 +253,11 @@ class TypeWidget extends WidgetType {
 
   override toDOM() {
     const label: string = this._identifier.split(/\W/).at(-1)!;
-    return Domino.of('span')
-      .classNames('inline-flex bs-[24px] border border-separator rounded-sm')
-      .children(
-        Domino.of('span').classNames('flex items-center text-xs font-thin pis-1 pie-1 bg-separator').text('type'),
-        Domino.of('span').classNames('flex items-center pis-1 pie-1 text-green-500').text(label),
-      )
-      .build();
-  }
-}
-
-/**
- * Tag
- */
-class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._str === other._str;
-  }
-
-  override toDOM() {
-    const { bg, border } = getHashColor(this._str);
-    return Domino.of('span')
-      .classNames(['inline-flex bs-[24px] border rounded-sm', border])
-      .children(
-        Domino.of('span').classNames(['flex items-center text-xs pis-1 pie-1 text-black', bg]).text('#'),
-        Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
-      )
-      .build();
+    return container(
+      'border-separator',
+      Domino.of('span').classNames(['flex items-center text-xs font-thin pis-1 pie-1 bg-separator']).text('type'),
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-infoText']).text(label),
+    );
   }
 }
 
@@ -273,20 +283,19 @@ class ObjectWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('span')
-      .classNames('inline-flex bs-[24px] border border-separator divide-x divide-separator rounded-sm')
-      .children(
-        ...this._entries.map(([key, value]) =>
-          Domino.of('span')
-            .classNames('inline-flex items-center pis-1 pie-1')
-            .children(
-              Domino.of('span').classNames('text-xs text-infoText').text(key),
-              Domino.of('span').classNames('text-xs font-thin text-infoText').text(':'),
-              Domino.of('span').classNames('pis-1').text(value),
-            ),
-        ),
-      )
-      .build();
+    return container(
+      'border-separator divide-x divide-separator',
+      ...this._entries.map(([key, value]) =>
+        Domino.of('span')
+          .classNames('inline-flex items-center pis-1 pie-1')
+          .children(
+            Domino.of('span')
+              .classNames('text-xs text-subdued mt-[1px]')
+              .text(key + ':'),
+            Domino.of('span').classNames('text-infoText pis-1').text(value),
+          ),
+      ),
+    );
   }
 }
 
@@ -309,7 +318,7 @@ class SymbolWidget extends WidgetType {
 
 const styles = EditorView.theme({
   '.cm-line': {
-    lineHeight: '28px',
+    lineHeight: '30px',
   },
 });
 

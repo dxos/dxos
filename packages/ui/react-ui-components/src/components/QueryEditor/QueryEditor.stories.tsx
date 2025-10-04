@@ -46,7 +46,7 @@ export const Default: Story = {};
 
 export const Complex: Story = {
   args: {
-    value: 'type:dxos.org/type/Person AND #important OR { title:"DXOS", value: true }',
+    value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
   },
 };
 
