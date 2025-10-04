@@ -13,7 +13,8 @@ import JSON5 from 'json5';
 import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
-import { Domino, focus, focusField } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/react-ui';
+import { focus, focusField } from '@dxos/react-ui-editor';
 
 export type QueryOptions = {
   space?: Space;
