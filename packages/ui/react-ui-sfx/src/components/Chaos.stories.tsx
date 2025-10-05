@@ -10,7 +10,6 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
 
 import { Button } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useAudioStream } from '../hooks';
 import { type ShaderOptions } from '../shaders';
@@ -69,7 +68,9 @@ const meta = {
   title: 'ui/react-ui-sfx/Chaos',
   component: Chaos,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Chaos>;
 
 export default meta;

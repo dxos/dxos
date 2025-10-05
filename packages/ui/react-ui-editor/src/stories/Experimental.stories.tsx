@@ -10,7 +10,6 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
 import { str } from '../testing';
@@ -20,8 +19,9 @@ import { EditorStory, content } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

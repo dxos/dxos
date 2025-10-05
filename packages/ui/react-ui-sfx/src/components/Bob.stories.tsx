@@ -6,14 +6,14 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { Blob } from './Blob';
 
 const meta = {
   title: 'ui/react-ui-sfx/Blob',
   component: Blob,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Blob>;
 
 export default meta;

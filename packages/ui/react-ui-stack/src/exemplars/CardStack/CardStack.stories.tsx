@@ -10,7 +10,6 @@ import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
@@ -162,7 +161,9 @@ const CardStackStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof CardStackStory>;
 
 export default meta;

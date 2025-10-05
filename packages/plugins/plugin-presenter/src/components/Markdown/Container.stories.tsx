@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { createSlide } from '../../testing';
 
 import { Container } from './Container';
@@ -25,7 +23,6 @@ const DefaultStory = ({ content = '' }: SlideProps) => {
 const meta = {
   title: 'plugins/plugin-presenter/Container',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

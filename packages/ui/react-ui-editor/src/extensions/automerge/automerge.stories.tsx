@@ -16,7 +16,7 @@ import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace }
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render, withTheme } from '@dxos/storybook-utils';
 
 import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
@@ -114,8 +114,8 @@ const meta = {
   title: 'ui/react-ui-editor/Automerge',
   component: Editor as any,
   render: render(DefaultStory),
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Canvas } from '@dxos/react-ui-canvas';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { createRectangle } from '../../shapes';
 import { Editor } from '../Editor';
@@ -29,7 +28,9 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/Frame',
   component: Canvas,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

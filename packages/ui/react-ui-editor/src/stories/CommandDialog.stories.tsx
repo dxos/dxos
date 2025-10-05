@@ -9,7 +9,6 @@ import React, { type KeyboardEvent, useState } from 'react';
 
 import { Button, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorWidth } from '../defaults';
 import { type Action, commandDialog } from '../extensions';
@@ -67,7 +66,6 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 
 const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   render: () => (
     <EditorStory
       text={str('# Command', '', '', '')}
@@ -79,7 +77,9 @@ const meta = {
       ]}
     />
   ),
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Button>;
 
 export default meta;

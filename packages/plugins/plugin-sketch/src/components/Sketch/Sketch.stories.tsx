@@ -12,7 +12,6 @@ import React, { useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
@@ -69,7 +68,6 @@ const meta = {
   title: 'plugins/plugin-sketch/Sketch',
   component: Sketch as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

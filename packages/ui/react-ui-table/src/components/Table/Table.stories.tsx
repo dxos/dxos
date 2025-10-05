@@ -26,7 +26,6 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -160,16 +159,7 @@ type StoryProps = { rows?: number };
 const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: {
-    translations,
-    layout: 'fullscreen',
-    controls: {
-      disable: true,
-    },
-  },
   decorators: [
-    withTheme,
-    withLayout({ fullscreen: true }),
     withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,
@@ -196,6 +186,13 @@ const meta = {
       },
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
+    translations,
+  },
 } satisfies Meta<typeof TableComponent>;
 
 export default meta;
@@ -206,7 +203,6 @@ export const Default: Story = {};
 
 export const StaticSchema: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization],
@@ -223,9 +219,11 @@ export const StaticSchema: StoryObj = {
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
@@ -247,7 +245,6 @@ const ContactWithArrayOfEmails = Schema.Struct({
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
@@ -265,15 +262,16 @@ export const ArrayOfObjects: StoryObj = {
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 export const Tags: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table],
@@ -321,7 +319,9 @@ export const Tags: Meta<StoryProps> = {
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };

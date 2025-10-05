@@ -9,7 +9,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
@@ -71,8 +70,10 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withAttention, withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withAttention],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

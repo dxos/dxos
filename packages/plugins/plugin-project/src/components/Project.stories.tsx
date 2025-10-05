@@ -16,7 +16,6 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -146,7 +145,6 @@ const MutationsStory = () => {
 
 const meta: Meta<typeof Project> = {
   title: 'plugins/plugin-project/Project',
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
@@ -177,9 +175,11 @@ const meta: Meta<typeof Project> = {
         await factory([{ type: DataType.Person, count: 12 }]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 export default meta;

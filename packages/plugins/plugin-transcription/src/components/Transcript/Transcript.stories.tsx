@@ -22,7 +22,6 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -200,9 +199,9 @@ const meta = {
         StorybookLayoutPlugin({}),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta;

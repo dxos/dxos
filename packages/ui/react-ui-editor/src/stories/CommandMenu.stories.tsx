@@ -13,7 +13,6 @@ import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Domino } from '@dxos/react-ui';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import {
   type CommandMenuGroup,
@@ -65,7 +64,6 @@ const groups: CommandMenuGroup[] = [
 const meta = {
   title: 'ui/react-ui-editor/CommandMenu',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

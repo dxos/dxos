@@ -7,8 +7,6 @@ import '@dxos-theme';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
 import { testId } from '../../util';
@@ -93,7 +91,9 @@ const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Grid>;
 
 export default meta;

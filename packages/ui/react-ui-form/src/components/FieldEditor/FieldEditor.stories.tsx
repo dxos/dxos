@@ -11,7 +11,6 @@ import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
 import { ProjectionModel } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';
@@ -58,8 +57,8 @@ const meta = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor as any,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

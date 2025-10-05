@@ -19,7 +19,6 @@ import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
@@ -128,10 +127,11 @@ const meta = {
         }
       },
     }),
-    withTheme,
     withAttention,
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

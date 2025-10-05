@@ -8,8 +8,6 @@ import { markdown } from '@codemirror/lang-markdown';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
 import { str } from '../testing';
 
@@ -18,8 +16,9 @@ import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, t
 const meta = {
   title: 'ui/react-ui-editor/Markdown',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

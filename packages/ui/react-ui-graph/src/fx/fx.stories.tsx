@@ -8,8 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
 import { type D3Callable } from '../util';
@@ -96,7 +94,9 @@ const createNode: D3Callable<SVGGElement, Datum> = (group, classNames, options) 
 const meta = {
   title: 'ui/react-ui-graph/fx',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

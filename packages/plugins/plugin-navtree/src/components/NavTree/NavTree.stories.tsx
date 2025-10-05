@@ -31,7 +31,6 @@ import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
@@ -147,9 +146,9 @@ const meta = {
         ]),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof NavTreeContainer>;
@@ -196,6 +195,9 @@ export const WithClient: Story = {
         ]),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };

@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -87,8 +86,8 @@ const DefaultStory = ({ layout: _layout, items: _items, ...props }: StoryProps) 
 const meta = {
   title: 'ui/react-ui-board/Board',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
+    layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;

@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import {
@@ -66,8 +65,9 @@ const text = trim`
 const meta = {
   title: 'ui/react-ui-editor/Tags',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

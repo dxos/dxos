@@ -23,7 +23,6 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
@@ -181,12 +180,13 @@ const meta = {
   component: Editor.Root as any,
   render: DefaultStory,
   decorators: [
-    withTheme,
     withAttention,
     withClientProvider({ createIdentity: true, createSpace: true }),
-    withLayout({ fullscreen: true }),
     withPluginManager({ capabilities }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

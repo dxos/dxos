@@ -11,7 +11,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { JournalEntryType, JournalType, OutlineType, createJournal, createJournalEntry } from '../../types';
@@ -37,10 +37,9 @@ const meta = {
       createSpace: true,
       types: [DataType.Text, JournalType, JournalEntryType, OutlineType],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof Journal>;

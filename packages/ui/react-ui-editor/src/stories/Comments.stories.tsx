@@ -11,7 +11,6 @@ import React, { type FC } from 'react';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';
@@ -23,8 +22,9 @@ import { EditorStory, content, longText } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

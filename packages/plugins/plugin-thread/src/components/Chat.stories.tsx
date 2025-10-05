@@ -18,7 +18,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Thread } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
@@ -76,11 +76,12 @@ const meta = {
         ),
       ],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
     withClientProvider({ createSpace: true, types: [ThreadType, ChannelType, DataType.Message] }),
   ],
-  parameters: { translations },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

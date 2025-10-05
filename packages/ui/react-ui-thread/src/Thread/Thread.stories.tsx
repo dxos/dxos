@@ -11,7 +11,6 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';
@@ -87,8 +86,10 @@ const meta = {
   title: 'ui/react-ui-thread/Thread',
   component: Thread.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof Thread.Root>;
 
 export default meta;

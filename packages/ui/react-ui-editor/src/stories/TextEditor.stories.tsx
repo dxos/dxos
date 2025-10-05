@@ -10,7 +10,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { editorMonospace } from '../defaults';
 import {
@@ -44,8 +43,10 @@ import {
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

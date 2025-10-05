@@ -10,7 +10,6 @@ import React, { useCallback, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { useThemeContext } from '@dxos/react-ui';
 import { attentionSurface, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { EditorToolbar, useEditorToolbarState } from '../components';
 import { editorWidth } from '../defaults';
@@ -78,8 +77,10 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations, layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

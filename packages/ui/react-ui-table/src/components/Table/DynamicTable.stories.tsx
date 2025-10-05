@@ -15,7 +15,6 @@ import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -60,8 +59,10 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  parameters: { translations },
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DynamicTable>;
 
 export default meta;

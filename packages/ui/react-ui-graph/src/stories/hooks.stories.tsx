@@ -10,7 +10,6 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
@@ -154,7 +153,9 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

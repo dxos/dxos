@@ -9,7 +9,6 @@ import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { type SelectOption, SelectOptionSchema } from '@dxos/echo-schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
@@ -49,8 +48,8 @@ const meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

@@ -14,7 +14,7 @@ import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDX
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -71,8 +71,8 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form as any,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
   argTypes: {

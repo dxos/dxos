@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
@@ -41,8 +40,10 @@ const meta = {
   title: 'ui/react-ui-thread/Message',
   component: MessageRoot as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

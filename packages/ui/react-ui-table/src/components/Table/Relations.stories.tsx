@@ -15,7 +15,6 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
@@ -114,16 +113,18 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
-  parameters: { translations, controls: { disable: true } },
   decorators: [
     withClientProvider({
       types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
       createIdentity: true,
       createSpace: true,
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
