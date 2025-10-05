@@ -28,8 +28,10 @@ export type LayoutOptions =
 /**
  * Process layout parameter (add to preview.ts)
  */
-export const withLayout: Decorator = (Story, { parameters }) => {
-  const { layout } = parameters;
+export const withLayout: Decorator = (Story, context) => {
+  const {
+    parameters: { layout },
+  } = context;
   const { type, classNames, scroll } = typeof layout === 'object' ? layout : { type: layout };
 
   switch (type) {

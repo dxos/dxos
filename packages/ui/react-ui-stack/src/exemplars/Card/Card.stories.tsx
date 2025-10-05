@@ -39,10 +39,7 @@ const DefaultStory = ({ title, description, image, showImage, showIcon }: CardSt
 };
 
 const meta = {
-  title: {
-    control: 'text',
-    description: 'Card title',
-  },
+  title: 'ui/react-ui-stack/Card',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

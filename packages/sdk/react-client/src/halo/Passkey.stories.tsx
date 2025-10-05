@@ -125,16 +125,6 @@ const Test = () => {
   );
 };
 
-const meta = {
-  title: 'sdk/react-client/Passkeys',
-  render: Test,
-  decorators: [withTheme],
-} satisfies Meta<typeof Config>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
 const config = new Config({
   runtime: {
     client: {
@@ -155,6 +145,14 @@ const config = new Config({
   },
 });
 
-export const Default: Story = {
-  decorators: [withClientProvider({ config })],
-};
+const meta = {
+  title: 'sdk/react-client/Passkeys',
+  render: Test,
+  decorators: [withClientProvider({ config }), withTheme],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
