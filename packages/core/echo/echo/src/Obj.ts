@@ -198,6 +198,12 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   }
 };
 
+export const sortByLabel = (a: Any, b: Any) => {
+  const labelA = getLabel(a) ?? '';
+  const labelB = getLabel(b) ?? '';
+  return labelA.localeCompare(labelB);
+};
+
 /**
  * JSON representation of an object.
  */
