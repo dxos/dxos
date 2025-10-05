@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
 import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
+import { withTheme } from '../testing';
 
 // TODO(burdon): Change density to 3 or 4 sizes: (large, medium, small; or 22, 28, 32, 40)
 // TODO(burdon): IconButton should be square if no text.

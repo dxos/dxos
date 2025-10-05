@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
+import { withTheme } from '../testing';
 import { withSurfaceVariantsLayout } from '../testing';
 
 const DefaultStory = () => {
