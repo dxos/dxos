@@ -5,7 +5,6 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -14,6 +13,7 @@ import { faker } from '@dxos/random';
 import { Popover } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
@@ -168,7 +168,6 @@ const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

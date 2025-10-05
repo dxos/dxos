@@ -5,7 +5,6 @@
 import './mailbox.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin, Surface, useCapability } from '@dxos/app-framework';
@@ -20,6 +19,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { InboxCapabilities } from '../../capabilities';

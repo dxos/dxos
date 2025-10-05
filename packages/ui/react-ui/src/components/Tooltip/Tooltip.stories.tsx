@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Button } from '../Buttons';
 
@@ -34,8 +34,9 @@ const meta = {
   component: Tooltip as any,
   render: DefaultStory,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

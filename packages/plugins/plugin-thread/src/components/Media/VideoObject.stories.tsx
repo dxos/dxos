@@ -3,12 +3,12 @@
 //
 
 import { type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { getUserMediaTrack } from '../../calls';
 import { ResponsiveContainer } from '../ResponsiveGrid';
@@ -48,7 +48,6 @@ const meta = {
   component: VideoObject,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

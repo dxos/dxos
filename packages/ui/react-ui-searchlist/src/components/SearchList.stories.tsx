@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SearchList } from './SearchList';
 
@@ -41,10 +41,9 @@ const DefaultStory = ({ items = defaultItems }: StoryProps) => {
 
 const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
-
-  decorators: [withTheme],
   component: SearchList.Root as any,
   render: DefaultStory,
+  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

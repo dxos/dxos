@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -11,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -28,7 +28,9 @@ const meta: Meta<typeof MarkdownCard> = {
       </CardContainer>
     );
   },
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [IntentPlugin()],
     }),
   ],

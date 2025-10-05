@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -22,6 +21,7 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';
@@ -178,9 +178,12 @@ const meta = {
   title: 'ui/react-ui-canvas-compute/compute',
   component: Editor.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withAttention,
+  decorators: [
+    withTheme,
+    withAttention,
     withClientProvider({ createIdentity: true, createSpace: true }),
-    withPluginManager({ capabilities }),],
+    withPluginManager({ capabilities }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },

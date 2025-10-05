@@ -3,12 +3,12 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
@@ -204,7 +204,6 @@ const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

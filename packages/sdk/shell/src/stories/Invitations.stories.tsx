@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -16,6 +15,7 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
 import { activeSurface, getSize } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
@@ -212,7 +212,6 @@ const Invitations = () => {
 
 const meta = {
   title: 'sdk/shell/Invitations',
-
   decorators: [withTheme],
 } satisfies Meta;
 

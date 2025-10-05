@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo } from 'react';
 
 import {
@@ -30,6 +29,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -57,7 +57,9 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-markdown/MarkdownContainer',
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
@@ -66,12 +68,10 @@ const meta = {
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-
             const queue = space.queues.create();
             const alice = Obj.make(DataType.Person, { fullName: 'Alice' });
             const acme = Obj.make(DataType.Organization, { name: 'ACME' });
             await queue.append([alice, acme]);
-
             const doc = Markdown.makeDocument({
               name: 'Test',
               content: `# Test\n\n![Alice](${Obj.getDXN(alice)})\n\n![ACME](${Obj.getDXN(acme)})`,
@@ -86,7 +86,6 @@ const meta = {
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),
-
         // UI
         ThemePlugin({ tx: defaultTx }),
         AttentionPlugin(),

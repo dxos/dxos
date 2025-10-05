@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -14,6 +13,7 @@ import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -59,7 +59,6 @@ const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
     translations,

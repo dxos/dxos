@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { withSurfaceVariantsLayout } from '../../testing';
 import { Icon } from '../Icon';
@@ -37,7 +38,9 @@ const meta = {
   component: Button,
   render: DefaultStory,
   decorators: [withTheme, withSurfaceVariantsLayout()],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof Button>;
 
 export default meta;

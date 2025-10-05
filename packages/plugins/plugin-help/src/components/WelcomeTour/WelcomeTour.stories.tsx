@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useHelp } from '../../hooks';
 

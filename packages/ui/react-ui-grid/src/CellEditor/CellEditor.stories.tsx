@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
 
@@ -70,7 +71,6 @@ const meta = {
   component: CellEditor,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

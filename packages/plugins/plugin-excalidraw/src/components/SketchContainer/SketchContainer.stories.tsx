@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SketchContainer } from './SketchContainer';
 
@@ -34,7 +34,6 @@ const meta = {
   component: SketchContainer as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

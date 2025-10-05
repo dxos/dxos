@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
@@ -19,6 +18,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';
@@ -39,7 +39,9 @@ const meta = {
   title: 'plugins/plugin-meeting/MeetingContainer',
   component: MeetingContainer,
   render: () => <Story />,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         AttentionPlugin(),
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),

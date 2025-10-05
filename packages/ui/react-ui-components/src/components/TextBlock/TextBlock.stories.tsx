@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { TextBlock } from './TextBlock';
@@ -54,7 +54,6 @@ const meta = {
   title: 'ui/react-ui-components/TextBlock',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

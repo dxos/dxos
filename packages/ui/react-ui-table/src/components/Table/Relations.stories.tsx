@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
@@ -14,6 +13,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
@@ -112,7 +112,9 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
       createIdentity: true,
       createSpace: true,

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -11,6 +10,7 @@ import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -42,8 +42,9 @@ const meta = {
   title: 'ui/react-ui-table/TableCellEditor',
   component: DefaultStory,
   render: DefaultStory,
-  parameters: { translations, layout: 'centered' },
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       types: [DataType.View, DataType.Task, Table.Table],
       createIdentity: true,
       createSpace: true,
@@ -62,6 +63,10 @@ const meta = {
       },
     }),
   ],
+  parameters: {
+    translations,
+    layout: 'centered',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

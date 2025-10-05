@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -37,7 +37,9 @@ export const Basic = () => {
 const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
-  decorators: [withTheme, withClientProvider({ types: [SheetType], createSpace: true }),
+  decorators: [
+    withTheme,
+    withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withPluginManager({
       plugins: [IntentPlugin()],

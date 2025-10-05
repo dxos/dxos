@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -30,6 +29,7 @@ import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';
@@ -194,7 +194,9 @@ const DefaultStory = ({
 const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],

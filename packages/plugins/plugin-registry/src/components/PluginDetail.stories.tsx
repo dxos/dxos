@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -15,7 +15,6 @@ const meta = {
   title: 'plugins/plugin-registry/PluginDetail',
   component: PluginDetail,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
     translations,

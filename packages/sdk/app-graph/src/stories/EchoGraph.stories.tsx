@@ -4,7 +4,6 @@
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Option, pipe } from 'effect';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
@@ -26,6 +25,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
@@ -247,13 +247,16 @@ const Controls = ({ children }: PropsWithChildren) => {
 
 const meta = {
   title: 'sdk/app-graph/EchoGraph',
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
       },
-    }),],
+    }),
+  ],
 } satisfies Meta<typeof Registry>;
 
 export default meta;

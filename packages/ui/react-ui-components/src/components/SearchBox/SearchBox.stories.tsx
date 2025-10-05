@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SearchBox } from './SearchBox';
 import { type QueryTag } from './types';
@@ -46,7 +47,6 @@ const meta = {
     );
   },
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

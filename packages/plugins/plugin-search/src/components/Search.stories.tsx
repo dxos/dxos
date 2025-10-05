@@ -3,10 +3,10 @@
 //
 
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
 

@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
 
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useAudioStream } from '../hooks';
 import { type ShaderOptions } from '../shaders';
@@ -68,7 +68,6 @@ const meta = {
   component: Chaos,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

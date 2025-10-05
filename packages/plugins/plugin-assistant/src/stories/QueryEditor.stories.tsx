@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -16,6 +15,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
@@ -73,7 +73,9 @@ const meta = {
   title: 'plugins/plugin-assistant/QueryEditor',
   component: QueryEditor,
   render: render(DefaultStory),
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {

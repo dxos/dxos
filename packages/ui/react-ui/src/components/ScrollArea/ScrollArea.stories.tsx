@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
 import { activeSurface, surfaceShadow } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ScrollArea } from './ScrollArea';
 
@@ -37,8 +37,9 @@ const meta = {
   component: ScrollArea as any,
   render: DefaultStory,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

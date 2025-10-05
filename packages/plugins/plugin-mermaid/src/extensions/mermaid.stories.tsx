@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -14,6 +13,7 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { mermaid } from './mermaid-extension';
 
@@ -46,7 +46,6 @@ const meta = {
   title: 'plugins/plugin-mermaid/extensions',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

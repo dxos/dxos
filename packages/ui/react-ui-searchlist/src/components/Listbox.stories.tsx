@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Listbox } from './Listbox';
 
@@ -56,7 +57,6 @@ const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

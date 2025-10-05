@@ -4,14 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/storybook-utils';
+
 import { Searchbar } from './Searchbar';
 
 const meta = {
   title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

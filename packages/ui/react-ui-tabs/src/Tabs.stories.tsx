@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
 import { Dialog, Icon } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Tabs as NaturalTabs } from './Tabs';
 
@@ -58,10 +58,9 @@ const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; pa
 
 const meta = {
   title: 'ui/react-ui-tabs/Tabs',
-
-  decorators: [withTheme],
   component: NaturalTabs.Root,
   render: DefaultStory,
+  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

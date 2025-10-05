@@ -4,11 +4,11 @@
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
@@ -161,7 +161,6 @@ const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useRef, useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type ProjectionState } from '../../hooks';
 
@@ -26,7 +27,6 @@ const meta = {
   component: GridComponent,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

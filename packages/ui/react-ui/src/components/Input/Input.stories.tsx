@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
+import { withTheme } from '@dxos/storybook-utils';
 
 import {
   type CheckboxProps,
@@ -91,8 +91,9 @@ const meta = {
   component: Input.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

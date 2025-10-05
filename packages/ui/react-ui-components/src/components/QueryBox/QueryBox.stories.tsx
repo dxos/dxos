@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { QueryBox } from './QueryBox';
 

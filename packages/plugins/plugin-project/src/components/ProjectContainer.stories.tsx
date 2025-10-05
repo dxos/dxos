@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -23,6 +22,7 @@ import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -45,7 +45,9 @@ const DefaultStory = () => {
 const meta: Meta<typeof ProjectContainer> = {
   title: 'plugins/plugin-project/ProjectContainer',
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [
@@ -55,7 +57,8 @@ const meta: Meta<typeof ProjectContainer> = {
             DataType.Organization,
             DataType.Task,
             DataType.Person,
-            DataType.Message,],
+            DataType.Message,
+          ],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

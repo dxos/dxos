@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { PopoverCombobox } from './PopoverCombobox';
 
@@ -33,10 +33,9 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/react-ui-searchlist/PopoverCombobox',
-
-  decorators: [withTheme],
   component: PopoverCombobox.Root as any,
   render: DefaultStory,
+  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

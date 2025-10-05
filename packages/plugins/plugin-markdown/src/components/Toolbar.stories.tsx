@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
@@ -31,6 +30,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 faker.seed(101);
 
@@ -101,7 +101,6 @@ const meta = {
   component: EditorToolbar as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
     translations,

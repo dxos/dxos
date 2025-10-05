@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SVG } from '../components';
 import {
@@ -153,7 +153,6 @@ const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

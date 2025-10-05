@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SignalMessageTable } from './SignalMessageTable';
 

@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Ghost, type GhostProps } from './Ghost';
 
@@ -27,7 +27,6 @@ const meta = {
   component: Ghost,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

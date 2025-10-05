@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Button } from '../Buttons';
 
@@ -44,8 +45,11 @@ const meta = {
   component: Dialog as any,
   render: DefaultStory,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

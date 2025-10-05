@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React, { type PropsWithChildren, useRef, useState } from 'react';
 
@@ -18,6 +17,7 @@ import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';
@@ -100,7 +100,9 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/Editor',
   component: Editor.Root as any,
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }, { args: { spec, registerSchema } }) => {
@@ -108,7 +110,8 @@ const meta = {
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
-              ...new Set(spec.map((schema: any) => schema.type)),] as Schema.Schema.AnyNoContext[]);
+              ...new Set(spec.map((schema: any) => schema.type)),
+            ] as Schema.Schema.AnyNoContext[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -21,6 +20,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';
@@ -179,7 +179,9 @@ const QueueStoryWrapper = () => {
 
 const meta = {
   title: 'plugins/plugin-transcription/Transcript',
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],

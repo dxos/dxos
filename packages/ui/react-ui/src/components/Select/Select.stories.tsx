@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { withSurfaceVariantsLayout } from '../../testing';
 
@@ -45,7 +45,9 @@ const meta = {
   title: 'ui/react-ui-core/Select',
   render: DefaultStory,
   decorators: [withTheme, withSurfaceVariantsLayout()],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
@@ -16,6 +15,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { DataType, DataTypes } from '../common';
 
@@ -97,7 +97,9 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       createIdentity: true,
       config: new Config({
         runtime: {
@@ -110,7 +112,8 @@ const meta = {
         },
       }),
       types: DataTypes,
-    }),],
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },

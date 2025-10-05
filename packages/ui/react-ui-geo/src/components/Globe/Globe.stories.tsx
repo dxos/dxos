@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useRef, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncState } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
 import { type LatLngLiteral } from '../../types';
@@ -228,7 +228,6 @@ const meta = {
   component: Globe.Root,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

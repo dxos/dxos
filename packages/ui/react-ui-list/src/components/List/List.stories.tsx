@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React from 'react';
 
 import { live } from '@dxos/live-object';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
@@ -93,7 +93,6 @@ const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

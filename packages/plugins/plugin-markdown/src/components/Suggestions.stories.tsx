@@ -3,7 +3,6 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
@@ -24,6 +23,7 @@ import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { MarkdownCapabilities } from '../capabilities';
@@ -150,7 +150,9 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: render(DefaultStory),
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Markdown.Document, TestItem],

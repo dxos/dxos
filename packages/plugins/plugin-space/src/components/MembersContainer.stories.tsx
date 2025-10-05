@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -11,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
@@ -35,7 +35,8 @@ const meta = {
   title: 'plugins/plugin-space/MembersContainer',
   component: MembersContainer as any,
   render: render(DefaultStory),
-  decorators: [withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({
       createIdentity: true,

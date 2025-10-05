@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Spinner, type SpinnerProps } from './Spinner';
 
@@ -33,7 +33,6 @@ const meta = {
   component: Spinner,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

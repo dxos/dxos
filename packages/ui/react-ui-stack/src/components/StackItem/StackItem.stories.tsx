@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { DropdownMenu, Icon } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { StackItem, type StackItemRootProps } from './StackItem';
 
@@ -35,7 +35,6 @@ const meta = {
   component: StackItem.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -13,6 +12,7 @@ import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { sheetExtension } from '../../extensions';
 import { SheetType, createSheet } from '../../types';

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
@@ -11,6 +10,7 @@ import React, { useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
@@ -68,7 +68,6 @@ const meta = {
   component: Sketch as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

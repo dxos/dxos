@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { type SelectOption, SelectOptionSchema } from '@dxos/echo-schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';
@@ -48,7 +48,6 @@ const meta = {
   component: SelectOptionInput as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
     translations,

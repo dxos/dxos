@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { useSpaces } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { SpaceGenerator } from './SpaceGenerator';
@@ -27,14 +27,17 @@ const meta = {
   title: 'plugins/plugin-debug/SpaceGenerator',
   component: SpaceGenerator as any,
   render: render(DefaultStory),
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        IntentPlugin(),],
+        IntentPlugin(),
+      ],
     }),
   ],
   parameters: {

@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TEST_ID, Test } from './Test';
 
@@ -16,10 +16,9 @@ import { TEST_ID, Test } from './Test';
  */
 const meta = {
   title: 'common/storybook-utils/Test',
-
-  decorators: [withTheme],
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
+  decorators: [withTheme],
   tags: ['test'],
 } satisfies Meta<typeof Test>;
 

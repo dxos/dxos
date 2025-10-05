@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { SVG, type SVGRootProps } from '../SVG';
 
@@ -37,7 +38,6 @@ const meta = {
   title: 'ui/react-ui-graph/Mesh',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

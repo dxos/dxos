@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
 
@@ -81,7 +81,6 @@ const meta = {
   component: Chessboard,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ScriptToolbar } from './ScriptToolbar';
 

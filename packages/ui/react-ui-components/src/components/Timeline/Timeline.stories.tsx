@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
@@ -15,6 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
@@ -139,7 +139,6 @@ const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

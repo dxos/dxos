@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import type { Schema } from 'effect';
 import React, { useCallback, useEffect } from 'react';
 
@@ -15,6 +14,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -144,7 +144,9 @@ const MutationsStory = () => {
 
 const meta: Meta<typeof Project> = {
   title: 'plugins/plugin-project/Project',
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
       createSpace: true,

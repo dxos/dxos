@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { inviteWithState } from '../../testing/fixtures';
 
@@ -16,8 +16,9 @@ const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof InvitationList>;
 
 export default meta;

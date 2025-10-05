@@ -4,16 +4,15 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';
 
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/SyntaxHighlighter',
-
-  decorators: [withTheme],
   component: SyntaxHighlighter,
+  decorators: [withTheme],
 } satisfies Meta<typeof SyntaxHighlighter>;
 
 export default meta;

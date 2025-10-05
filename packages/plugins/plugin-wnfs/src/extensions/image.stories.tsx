@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
 
@@ -19,6 +18,7 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';

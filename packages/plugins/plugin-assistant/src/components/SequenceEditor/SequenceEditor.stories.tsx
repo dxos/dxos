@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { RESEARCH_SEQUENCE_DEFINITION } from '../../testing';
 import { translations } from '../../translations';
@@ -17,7 +18,6 @@ const meta = {
   // TODO(wittjosiah): Fix story.
   render: () => <>TODO</>,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
     translations,

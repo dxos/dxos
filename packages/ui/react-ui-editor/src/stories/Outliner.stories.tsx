@@ -4,10 +4,10 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useRef } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
 import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';

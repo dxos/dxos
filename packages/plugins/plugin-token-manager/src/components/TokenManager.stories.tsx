@@ -4,10 +4,10 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { TokenManager } from './TokenManager';
 

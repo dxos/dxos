@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useRef } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type SVGContext, useGrid, useZoom } from '../../hooks';
 
@@ -45,7 +46,6 @@ const meta = {
   title: 'ui/react-ui-graph/SVGRoot',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

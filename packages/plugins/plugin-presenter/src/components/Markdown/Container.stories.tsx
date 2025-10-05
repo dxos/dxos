@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { createSlide } from '../../testing';
 
@@ -23,7 +24,6 @@ const meta = {
   title: 'plugins/plugin-presenter/Container',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

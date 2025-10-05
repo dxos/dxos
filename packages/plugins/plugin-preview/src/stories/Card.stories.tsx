@@ -4,9 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -15,7 +15,8 @@ import { Defaultstory, createCards } from './testing';
 const meta = {
   title: 'plugins/plugin-preview/Card',
   render: Defaultstory,
-  decorators: [withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],
   parameters: {

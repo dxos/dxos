@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -32,7 +32,6 @@ const meta = {
   component: Board.Cell,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
     translations: [...translations, ...stackTranslations],

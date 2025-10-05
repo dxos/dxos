@@ -4,9 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -16,14 +16,17 @@ import { RecoveryCredentialsContainer } from './RecoveryCredentialsContainer';
 const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        IntentPlugin(),],
+        IntentPlugin(),
+      ],
     }),
   ],
   parameters: {

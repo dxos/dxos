@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -27,7 +27,9 @@ const meta = {
   title: 'plugins/plugin-space/SpaceSettingsContainer',
   component: SpaceSettingsContainer,
   render: Story,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true }),
+  decorators: [
+    withTheme,
+    withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],

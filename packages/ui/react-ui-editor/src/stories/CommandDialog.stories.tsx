@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type KeyboardEvent, useState } from 'react';
 
 import { Button, Icon, Input } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { editorWidth } from '../defaults';
 import { type Action, commandDialog } from '../extensions';
@@ -77,7 +77,6 @@ const meta = {
     />
   ),
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

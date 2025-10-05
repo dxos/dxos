@@ -4,11 +4,11 @@
 
 import { type ReadonlySignal, computed, signal } from '@preact/signals-core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 
@@ -89,7 +89,6 @@ const meta = {
   component: ToggleContainer.Root,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

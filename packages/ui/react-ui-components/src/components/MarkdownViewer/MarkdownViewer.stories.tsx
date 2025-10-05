@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { MarkdownViewer } from './MarkdownViewer';
@@ -16,7 +16,6 @@ const meta = {
   title: 'ui/react-ui-components/MarkdownViewer',
   component: MarkdownViewer,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

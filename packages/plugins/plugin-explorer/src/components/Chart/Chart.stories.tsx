@@ -3,10 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import CitiesData from '../../../data/cities.js';
 
@@ -35,7 +35,6 @@ const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 import { IntrinsicCardContainer } from '@dxos/storybook-utils';
 
 import { MessageCard } from './MessageCard';
@@ -47,7 +47,6 @@ const meta = {
     );
   },
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

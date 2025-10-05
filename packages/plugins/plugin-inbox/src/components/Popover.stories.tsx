@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -19,6 +18,7 @@ import { List, ListItem } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';
@@ -91,7 +91,9 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 
 const meta = {
   title: 'plugins/plugin-inbox/Popover',
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],

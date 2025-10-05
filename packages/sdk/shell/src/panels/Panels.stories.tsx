@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -55,7 +56,6 @@ const meta = {
   title: 'sdk/shell/All',
   component: StoryRow,
   decorators: [withTheme],
-
   parameters: {
     translations,
     chromatic: {

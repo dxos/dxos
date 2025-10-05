@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Effect, Fiber, Layer } from 'effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -15,6 +14,7 @@ import { Popover } from '@dxos/react-ui';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
@@ -97,7 +97,9 @@ const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
+  decorators: [
+    withTheme,
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
   ],
   parameters: {
     layout: 'fullscreen',

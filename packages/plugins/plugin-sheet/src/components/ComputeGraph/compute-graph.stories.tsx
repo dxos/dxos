@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
@@ -13,6 +12,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
@@ -86,7 +86,9 @@ export const Default: Story = {};
 const meta = {
   title: 'plugins/plugin-sheet/functions',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
+  decorators: [
+    withTheme,
+    withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
   ],
 } satisfies Meta<typeof DefaultStory>;

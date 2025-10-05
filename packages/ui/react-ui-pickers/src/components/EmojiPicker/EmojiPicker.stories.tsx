@@ -4,10 +4,10 @@
 
 import EmojiPicker from '@emoji-mart/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { EmojiPickerBlock, type EmojiPickerProps, EmojiPickerToolbarButton } from './EmojiPicker';
 
@@ -15,7 +15,6 @@ const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',
   component: EmojiPicker,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

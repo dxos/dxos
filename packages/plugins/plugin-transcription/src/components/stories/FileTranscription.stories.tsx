@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -23,6 +22,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
@@ -186,7 +186,9 @@ const AudioFile = ({
 
 const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],

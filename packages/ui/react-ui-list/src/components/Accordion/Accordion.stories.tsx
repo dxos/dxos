@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Accordion } from './Accordion';
 
@@ -43,7 +43,6 @@ const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

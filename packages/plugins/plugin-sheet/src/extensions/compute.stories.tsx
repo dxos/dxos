@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -20,6 +19,7 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
 
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
@@ -101,7 +101,9 @@ const GraphStory = (props: EditorProps) => {
 
 const meta = {
   title: 'plugins/plugin-sheet/extensions',
-  decorators: [withTheme, withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+  decorators: [
+    withTheme,
+    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withComputeGraphDecorator(),

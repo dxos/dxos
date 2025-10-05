@@ -3,11 +3,11 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren } from 'react';
 
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
+import { withTheme } from '@dxos/storybook-utils';
 import { hexToFallback } from '@dxos/util';
 
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
@@ -59,8 +59,9 @@ const meta = {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar.Root,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

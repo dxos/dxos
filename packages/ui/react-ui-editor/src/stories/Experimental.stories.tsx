@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
 import { str } from '../testing';
@@ -19,7 +19,6 @@ const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

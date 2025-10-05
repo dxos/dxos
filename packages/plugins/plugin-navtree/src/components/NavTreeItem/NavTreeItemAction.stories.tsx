@@ -4,9 +4,9 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
 import { type NodeArg } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
@@ -47,7 +47,6 @@ const meta = {
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
   decorators: [withTheme],
-
   parameters: {
     layout: 'centered',
   },

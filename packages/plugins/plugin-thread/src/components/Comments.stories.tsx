@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -15,6 +14,7 @@ import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { AnchoredTo, DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
@@ -62,7 +62,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
-  decorators: [withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
+  decorators: [
+    withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
     //   Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [

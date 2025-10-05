@@ -4,12 +4,12 @@
 
 import { effect, useSignal } from '@preact/signals-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC } from 'react';
 
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';
@@ -22,7 +22,6 @@ const meta = {
   title: 'ui/react-ui-editor/Comments',
   component: EditorStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
   },

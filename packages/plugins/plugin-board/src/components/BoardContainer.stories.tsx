@@ -3,7 +3,6 @@
 //
 
 import { type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -19,6 +18,7 @@ import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { Board } from '../types';
@@ -74,7 +74,9 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-board/Board',
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],

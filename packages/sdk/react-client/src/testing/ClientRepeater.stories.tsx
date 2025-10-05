@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';
@@ -16,7 +16,6 @@ import { type ClientRepeatedComponentProps, ClientRepeater } from './ClientRepea
 
 const meta = {
   title: 'sdk/react-client/ClientRepeater',
-
   decorators: [withTheme],
 } satisfies Meta<typeof Input>;
 

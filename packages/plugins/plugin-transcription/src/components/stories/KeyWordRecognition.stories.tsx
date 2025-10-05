@@ -3,12 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 type Word = {
   text: string;
@@ -119,7 +119,6 @@ const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'column',
   },

@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React, { useCallback } from 'react';
 
@@ -25,6 +24,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -158,7 +158,9 @@ type StoryProps = { rows?: number };
 const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,

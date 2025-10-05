@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { VideoObject as VideoObjectComponent } from '../Media';
@@ -15,7 +16,6 @@ const meta = {
   title: 'plugins/plugin-thread/ResponsiveContainer',
   component: ResponsiveContainer,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
     translations,

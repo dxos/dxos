@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -13,6 +12,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
+import { withTheme } from '@dxos/storybook-utils';
 import { render } from '@dxos/storybook-utils';
 
 import { useGraphModel } from '../../hooks';
@@ -49,7 +49,9 @@ const meta = {
   title: 'plugins/plugin-explorer/D3ForceGraph',
   component: D3ForceGraph,
   render: render(DefaultStory),
-  decorators: [withTheme, withClientProvider({
+  decorators: [
+    withTheme,
+    withClientProvider({
       createSpace: true,
       types: [ViewType, DataType.Organization, DataType.Project, DataType.Person, DataType.HasRelationship],
     }),

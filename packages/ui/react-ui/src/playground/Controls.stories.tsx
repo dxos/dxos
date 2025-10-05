@@ -3,8 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
+
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
 import { withSurfaceVariantsLayout } from '../testing';
@@ -85,7 +86,9 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
   decorators: [withTheme, withSurfaceVariantsLayout()],
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof Icon>;
 
 export default meta;

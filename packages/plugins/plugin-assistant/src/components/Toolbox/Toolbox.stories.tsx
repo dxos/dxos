@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -14,6 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -27,7 +27,9 @@ const meta = {
   title: 'plugins/plugin-assistant/Toolbox',
   component: Toolbox as any,
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
@@ -39,7 +41,8 @@ const meta = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
-        TablePlugin(),],
+        TablePlugin(),
+      ],
       capabilities,
     }),
   ],

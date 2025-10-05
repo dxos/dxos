@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { AlertDialog } from '@dxos/react-ui';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Action } from '../Panel';
 
@@ -58,8 +58,9 @@ const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
   decorators: [withTheme],
-
-  parameters: { chromatic: { disableSnapshot: false } },
+  parameters: {
+    chromatic: { disableSnapshot: false },
+  },
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

@@ -3,11 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
@@ -40,7 +40,6 @@ const meta = {
   component: MessageRoot as any,
   render: DefaultStory,
   decorators: [withTheme],
-
   parameters: {
     layout: 'fullscreen',
     translations,

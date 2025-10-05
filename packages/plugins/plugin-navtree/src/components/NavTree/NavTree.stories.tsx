@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -30,6 +29,7 @@ import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
@@ -118,7 +118,9 @@ const meta = {
   title: 'plugins/plugin-navtree/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({
+  decorators: [
+    withTheme,
+    withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         GraphPlugin(),
@@ -126,7 +128,8 @@ const meta = {
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),],
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
+      ],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),
