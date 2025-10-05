@@ -2,8 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
+
+import { withLayout2, withTheme } from '@dxos/storybook-utils';
 
 // import { DocsContainer } from '@dxos/storybook-utils';
 
@@ -14,8 +18,8 @@ import { docsTheme } from './theme';
  * https://storybook.js.org/docs/configure#configure-story-rendering
  */
 export const preview: Preview = {
+  // Note: Does not affect docs.
   decorators: [
-    // Does not affect docs.
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {
@@ -23,6 +27,9 @@ export const preview: Preview = {
         light: 'light',
       },
     }),
+
+    withTheme,
+    withLayout2(),
   ],
 
   /**

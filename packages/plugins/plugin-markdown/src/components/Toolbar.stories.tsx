@@ -32,7 +32,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 faker.seed(101);
 
@@ -102,8 +101,8 @@ const meta = {
   title: 'plugins/plugin-markdown/Toolbar',
   component: EditorToolbar as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

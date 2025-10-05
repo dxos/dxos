@@ -10,7 +10,7 @@ import React from 'react';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+// import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -30,7 +30,7 @@ const meta = {
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),
-    withTheme,
+    // withTheme,
   ],
   parameters: {
     layout: 'centered',

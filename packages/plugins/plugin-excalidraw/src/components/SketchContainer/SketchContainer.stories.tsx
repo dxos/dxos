@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { SketchContainer } from './SketchContainer';
 
@@ -35,7 +34,6 @@ const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchContainer as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
   parameters: {
     layout: 'fullscreen',
   },

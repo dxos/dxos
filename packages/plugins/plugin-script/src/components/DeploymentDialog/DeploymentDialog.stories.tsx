@@ -13,7 +13,6 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -33,7 +32,7 @@ const meta = {
   render: DefaultStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }), withTheme, withLayout()],
+  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

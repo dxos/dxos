@@ -17,7 +17,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -88,11 +88,9 @@ const meta = {
         ]);
       },
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof QueryEditor>;

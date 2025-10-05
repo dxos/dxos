@@ -6,14 +6,14 @@ import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { Popup } from './Popup';
 
 const meta = {
   title: 'apps/composer-crx/Popup',
   component: Popup,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
 } satisfies Meta<typeof Popup>;
 
 export default meta;

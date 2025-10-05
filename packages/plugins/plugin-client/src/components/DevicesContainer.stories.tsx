@@ -9,7 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -31,7 +31,6 @@ const meta = {
       ],
     }),
     withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'fullscreen',

@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withMultiClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Item } from '../data';
 
@@ -23,12 +22,11 @@ const meta = {
       createIdentity: true,
       createSpace: true,
     }),
-    withLayout({
-      fullscreen: true,
-      classNames: ['grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden'],
-    }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+  },
 } satisfies Meta<typeof Main>;
 
 export default meta;

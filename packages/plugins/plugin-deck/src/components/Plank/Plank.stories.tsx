@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { Stack } from '@dxos/react-ui-stack';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DeckStateFactory } from '../../capabilities';
 import { translations } from '../../translations';
@@ -34,10 +33,9 @@ const meta = {
       plugins: [AttentionPlugin(), SettingsPlugin(), IntentPlugin(), GraphPlugin()],
       capabilities: () => DeckStateFactory(),
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof Plank>;

@@ -9,14 +9,12 @@ import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { TextCrawl, sizes } from './TextCrawl';
 
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
   component: TextCrawl,
-  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },

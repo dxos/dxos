@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { useApp } from '../components';
 import { IntentPlugin } from '../plugin-intent';
 
@@ -38,7 +36,6 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/playground',
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

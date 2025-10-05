@@ -8,8 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
-
 import { SearchBox } from './SearchBox';
 import { type QueryTag } from './types';
 
@@ -48,8 +46,9 @@ const meta = {
       </div>
     );
   },
-  decorators: [withTheme, withLayout()],
-  parameters: { layout: 'centered' },
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof SearchBox>;
 
 export default meta;

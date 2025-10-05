@@ -26,7 +26,6 @@ import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -147,9 +146,7 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
-  parameters: { translations },
   decorators: [
-    withLayout({ fullscreen: true }),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -183,6 +180,10 @@ const meta = {
       ],
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof StorybookKanban>;
 
 export default meta;

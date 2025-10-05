@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -43,8 +43,6 @@ const meta = {
       createIdentity: true,
       createSpace: true,
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'fullscreen',

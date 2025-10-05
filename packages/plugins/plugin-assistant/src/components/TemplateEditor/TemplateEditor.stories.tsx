@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
+// import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
@@ -11,7 +11,6 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -66,10 +65,9 @@ const meta = {
       createIdentity: true,
       createSpace: true,
     }),
-    withLayout({ fullscreen: true, classNames: 'justify-center bg-deckSurface' }),
-    withTheme,
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

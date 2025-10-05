@@ -32,6 +32,7 @@ export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC
 
 /**
  * Decorator to layout the story container, adding optional providers.
+ * @deprecated
  */
 export const withLayout = ({
   classNames,
@@ -80,3 +81,34 @@ export const ColumnContainer = ({ children, classNames = 'w-[30rem]', ...props }
     </FullscreenContainer>
   );
 };
+
+/**
+ * Default decorator (add to preview.ts)
+ */
+// TODO(burdon): Add theme here.
+export const withLayout2 =
+  (): Decorator =>
+  (Story, { parameters: { layout, classNames } }) => {
+    switch (layout) {
+      // Fullscreen.
+      case 'fullscreen':
+        return (
+          <div role='none' className='fixed inset-0 flex overflow-hidden'>
+            <Story />
+          </div>
+        );
+
+      // Single column.
+      case 'column':
+        return (
+          <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deckSurface'>
+            <div role='none' className={mx(classNames ?? 'bs-full is-[40rem]')}>
+              <Story />
+            </div>
+          </div>
+        );
+
+      default:
+        return <Story />;
+    }
+  };

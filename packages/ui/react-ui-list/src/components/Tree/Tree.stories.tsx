@@ -56,7 +56,6 @@ const meta = {
   title: 'ui/react-ui-list/Tree',
   component: Tree,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
   args: {
     id: tree.id,
     useItems: (parent?: TestItem) => {

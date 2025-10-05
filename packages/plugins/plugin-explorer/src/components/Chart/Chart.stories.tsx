@@ -8,7 +8,6 @@ import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import CitiesData from '../../../data/cities.js';
 
@@ -36,7 +35,9 @@ export const Default = () => <ClientRepeater component={Story} />;
 const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Chart>;
 
 export default meta;

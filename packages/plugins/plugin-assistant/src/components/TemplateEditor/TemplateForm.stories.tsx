@@ -10,7 +10,6 @@ import React, { useState } from 'react';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -57,10 +56,9 @@ const meta = {
       createIdentity: true,
       createSpace: true,
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
-    withTheme,
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof TemplateForm>;

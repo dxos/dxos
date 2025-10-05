@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -37,7 +37,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
   component: RecoveryCodeDialog as any,
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
+  decorators: [withClientProvider({ createIdentity: true }), withTheme],
   parameters: {
     layout: 'fullscreen',
     translations,

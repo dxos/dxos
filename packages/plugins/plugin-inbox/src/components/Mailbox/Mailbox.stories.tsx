@@ -21,7 +21,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { render, withLayout } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
@@ -65,7 +65,10 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withAttention],
+  decorators: [withAttention],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

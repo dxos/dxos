@@ -15,7 +15,6 @@ import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
@@ -186,8 +185,6 @@ const meta = {
         },
       }),
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

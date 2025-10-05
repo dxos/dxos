@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { HuePicker, type HuePickerProps } from './HuePicker';
 
@@ -32,7 +31,6 @@ const meta = {
   title: 'ui/react-ui-pickers/HuePicker',
   component: HuePicker,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },

@@ -16,7 +16,6 @@ import { Popover } from '@dxos/react-ui';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
@@ -101,11 +100,9 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
   parameters: {
-    layout: 'fullscreen', // TODO(burdon): Replace withLayout.
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof ChatThread>;

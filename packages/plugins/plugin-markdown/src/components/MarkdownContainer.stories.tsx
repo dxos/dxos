@@ -31,7 +31,6 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -98,11 +97,11 @@ const meta = {
         StorybookLayoutPlugin({}),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
-    translations,
+    layout: 'fullscreen',
     controls: { disable: true },
+    translations,
   },
 } satisfies Meta<typeof Capabilities>;
 

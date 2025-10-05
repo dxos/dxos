@@ -5,13 +5,15 @@
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/web-components-vite';
 
+import { withLayout2 } from '@dxos/storybook-utils';
+
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
  */
 export const preview: Preview = {
   decorators: [
-    // Does not affect docs.
+    // Note: Does not affect docs.
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {
@@ -19,7 +21,10 @@ export const preview: Preview = {
         light: 'light',
       },
     }),
+
+    withLayout2(),
   ],
+
   /**
    * Referenced when story is previewed in browser.
    * https://storybook.js.org/docs/writing-stories/parameters#global-parameters

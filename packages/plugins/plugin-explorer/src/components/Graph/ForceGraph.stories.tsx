@@ -14,7 +14,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { useGraphModel } from '../../hooks';
 import { ViewType } from '../../types';
@@ -55,9 +55,10 @@ const meta = {
       createSpace: true,
       types: [ViewType, DataType.HasRelationship, DataType.Organization, DataType.Project, DataType.Person],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof ForceGraph>;
 
 export default meta;

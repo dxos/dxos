@@ -7,7 +7,6 @@ import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -16,7 +15,7 @@ import { ProfileContainer } from './ProfileContainer';
 const meta = {
   title: 'plugins/plugin-client/ProfileContainer',
   component: ProfileContainer,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout()],
+  decorators: [withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

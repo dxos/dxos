@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -44,7 +44,6 @@ const meta = {
         }
       },
     }),
-    withLayout(),
     withTheme,
   ],
   parameters: {

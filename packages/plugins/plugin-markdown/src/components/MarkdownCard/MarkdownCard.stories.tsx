@@ -12,7 +12,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -34,8 +33,6 @@ const meta: Meta<typeof MarkdownCard> = {
     withPluginManager({
       plugins: [IntentPlugin()],
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

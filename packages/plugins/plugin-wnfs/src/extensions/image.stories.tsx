@@ -20,7 +20,6 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
@@ -96,7 +95,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
+  decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

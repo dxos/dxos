@@ -12,7 +12,6 @@ import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -64,8 +63,6 @@ const meta = {
         });
       },
     }),
-    withTheme,
-    withLayout(),
   ],
 } satisfies Meta<typeof DefaultStory>;
 

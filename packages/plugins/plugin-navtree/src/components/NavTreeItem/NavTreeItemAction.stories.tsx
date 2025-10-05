@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
@@ -42,7 +41,6 @@ const menuActions = faker.helpers.multiple(
 const meta = {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout()],
   args: {
     icon: 'ph--list--regular',
     parent,

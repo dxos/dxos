@@ -8,7 +8,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IconPicker, type IconPickerProps } from './IconPicker';
 
@@ -27,7 +26,6 @@ const meta = {
   title: 'ui/react-ui-pickers/IconPicker',
   component: IconPicker,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
   parameters: {
     layout: 'centered',
   },

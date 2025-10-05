@@ -15,7 +15,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { type DataType, ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -132,16 +132,11 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
-      createSpace: true,
-    }),
-    withLayout({
-      fullscreen: true,
-    }),
-    withTheme,
-  ],
-  parameters: { translations },
+  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  parameters: {
+    translations,
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

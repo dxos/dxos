@@ -18,7 +18,6 @@ import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -94,8 +93,6 @@ const meta = {
     withPluginManager({
       plugins: [IntentPlugin()],
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

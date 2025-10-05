@@ -11,7 +11,7 @@ import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { SpaceGenerator } from './SpaceGenerator';
 
@@ -39,8 +39,6 @@ const meta = {
         IntentPlugin(),
       ],
     }),
-    withLayout(),
-    withTheme,
   ],
   parameters: {
     layout: 'fullscreen',
