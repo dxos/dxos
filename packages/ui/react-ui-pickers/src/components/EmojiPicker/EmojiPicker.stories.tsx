@@ -14,7 +14,7 @@ const meta = {
   title: 'ui/react-ui-pickers/EmojiPicker',
   component: EmojiPicker,
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof EmojiPicker>;
 
@@ -34,7 +34,7 @@ const BlockStory = (props: EmojiPickerProps) => {
   const [emoji, setEmoji] = useState<string>(props.defaultEmoji ?? '😀');
 
   return (
-    <div className='flex gap-2'>
+    <div>
       <EmojiPickerBlock
         {...props}
         emoji={emoji}

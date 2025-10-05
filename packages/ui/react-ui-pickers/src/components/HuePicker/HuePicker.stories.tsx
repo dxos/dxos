@@ -30,7 +30,7 @@ const meta = {
   component: HuePicker,
   render: DefaultStory,
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof HuePicker>;
 

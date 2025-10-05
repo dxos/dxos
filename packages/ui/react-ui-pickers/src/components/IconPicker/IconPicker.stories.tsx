@@ -25,7 +25,7 @@ const meta = {
   component: IconPicker,
   render: DefaultStory,
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof IconPicker>;
 

@@ -47,7 +47,7 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
           <div
             role='none'
             className={mx(
-              'flex flex-col bs-full is-[40rem] bg-baseSurface',
+              'flex flex-col bs-full is-[40rem] bg-baseSurface border-is border-ie border-subduedSeparator',
               classNames,
               scroll ? 'overflow-y-auto' : 'overflow-hidden',
             )}
