@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '../../testing';
 
 import { Link } from './Link';
 

@@ -17,8 +17,8 @@ import {
   mx,
   surfaceShadow,
 } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
+import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { List, ListItem, type ListScopedProps } from './List';

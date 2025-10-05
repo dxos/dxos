@@ -7,7 +7,8 @@ import React from 'react';
 
 import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
-import { withTheme } from '@dxos/storybook-utils';
+
+import { withTheme } from '../../testing';
 
 import {
   type CheckboxProps,

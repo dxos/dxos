@@ -7,7 +7,8 @@ import React from 'react';
 
 import { hues } from '@dxos/react-ui-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
-import { withTheme } from '@dxos/storybook-utils';
+
+import { withTheme } from '../../testing';
 
 import { Tag } from './Tag';
 

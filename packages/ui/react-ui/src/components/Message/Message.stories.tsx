@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
-import { withTheme } from '@dxos/storybook-utils';
+
+import { withTheme } from '../../testing';
 
 import { Callout } from './Message';
 

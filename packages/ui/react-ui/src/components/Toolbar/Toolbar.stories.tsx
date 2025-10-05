@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
+import { withTheme } from '../../testing';
 import { Toggle } from '../Buttons';
 import { Icon } from '../Icon';
 import { Select } from '../Select';

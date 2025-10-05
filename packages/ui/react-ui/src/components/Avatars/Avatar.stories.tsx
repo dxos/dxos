@@ -7,8 +7,9 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
-import { withTheme } from '@dxos/storybook-utils';
 import { hexToFallback } from '@dxos/util';
+
+import { withTheme } from '../../testing';
 
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 

@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 import { Toast } from './Toast';

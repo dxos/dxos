@@ -7,7 +7,8 @@ import React, { type PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
 import { activeSurface, surfaceShadow } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+
+import { withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
 

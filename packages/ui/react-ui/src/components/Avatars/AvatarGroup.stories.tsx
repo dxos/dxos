@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useId } from '@dxos/react-hooks';
-import { withTheme } from '@dxos/storybook-utils';
 import { toEmoji } from '@dxos/util';
+
+import { withTheme } from '../../testing';
 
 import { Avatar } from './Avatar';
 

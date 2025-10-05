@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
 
+import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Treegrid } from './Treegrid';

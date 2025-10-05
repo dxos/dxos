@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
 
+import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 import { Popover } from './Popover';
