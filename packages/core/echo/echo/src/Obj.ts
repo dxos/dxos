@@ -183,7 +183,6 @@ export const isDeleted = (obj: Any | Relation.Any): boolean => {
   return deleted;
 };
 
-// TODO(burdon): Rename "label"
 export const getLabel = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
@@ -198,10 +197,33 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   }
 };
 
-export const sortByLabel = (a: Any, b: Any) => {
-  const labelA = getLabel(a) ?? '';
-  const labelB = getLabel(b) ?? '';
-  return labelA.localeCompare(labelB);
+const compare = (a?: string, b?: string) => {
+  if (a == null) {
+    return b == null ? 0 : 1;
+  }
+
+  if (b == null) {
+    return -1;
+  }
+
+  return a.localeCompare(b);
+};
+
+export type Comparator = (a: Any, b: Any) => number;
+
+export const sortByLabel: Comparator = (a: Any, b: Any) => compare(getLabel(a), getLabel(b));
+export const sortByTypename: Comparator = (a: Any, b: Any) => compare(getTypename(a), getTypename(b));
+export const sort = (...comparators: Comparator[]): Comparator => {
+  return (a: Any, b: Any) => {
+    for (const comparator of comparators) {
+      const result = comparator(a, b);
+      if (result !== 0) {
+        return result;
+      }
+    }
+
+    return 0;
+  };
 };
 
 /**
