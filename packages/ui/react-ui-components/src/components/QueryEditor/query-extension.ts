@@ -209,8 +209,10 @@ const decorations = (): Extension => {
   ];
 };
 
+const lineHeight = '30px';
+
 /**
- * The outer container makes sure the main inner text is aligned with content in the outer div.
+ * NOTE: The outer container vertically aligns the inner text with content in the outer div.
  */
 const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
   return Domino.of('span')
@@ -239,7 +241,7 @@ class TagWidget extends WidgetType {
     const { bg, border } = getHashColor(this._str);
     return container(
       border,
-      Domino.of('span').classNames(['flex items-center text-sm pis-1 pie-1 text-black', bg]).text('#'),
+      Domino.of('span').classNames(['flex items-center text-xs pis-1 pie-1 text-black', bg]).text('#'),
       Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
     );
   }
@@ -328,7 +330,7 @@ class SymbolWidget extends WidgetType {
 
 const styles = EditorView.theme({
   '.cm-line': {
-    lineHeight: '30px',
+    lineHeight,
   },
 });
 
