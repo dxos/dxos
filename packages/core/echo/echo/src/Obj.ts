@@ -183,7 +183,6 @@ export const isDeleted = (obj: Any | Relation.Any): boolean => {
   return deleted;
 };
 
-// TODO(burdon): Rename "label"
 export const getLabel = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
@@ -212,18 +211,8 @@ const compare = (a?: string, b?: string) => {
 
 export type Comparator = (a: Any, b: Any) => number;
 
-export const sortByLabel: Comparator = (a: Any, b: Any) => {
-  const str1 = getLabel(a);
-  const str2 = getLabel(b);
-  return compare(str1, str2);
-};
-
-export const sortByTypename: Comparator = (a: Any, b: Any) => {
-  const str1 = getTypename(a);
-  const str2 = getTypename(b);
-  return compare(str1, str2);
-};
-
+export const sortByLabel: Comparator = (a: Any, b: Any) => compare(getLabel(a), getLabel(b));
+export const sortByTypename: Comparator = (a: Any, b: Any) => compare(getTypename(a), getTypename(b));
 export const sort = (...comparators: Comparator[]): Comparator => {
   return (a: Any, b: Any) => {
     for (const comparator of comparators) {
