@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-const screenClassName = 'fixed inset-0 bg-deckSurface';
+const bgStyles = 'fixed inset-0 bg-deckSurface';
 
 export type LayoutType = 'fullscreen' | 'column' | 'centered';
 
@@ -23,6 +23,7 @@ export type LayoutOptions =
   | LayoutType
   | {
       type: LayoutType;
+      scroll?: boolean;
       classNames?: string;
     };
 
@@ -30,13 +31,13 @@ export type LayoutOptions =
  * Process layout parameter (add to preview.ts)
  */
 export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
-  const { type, classNames } = typeof layout === 'string' ? { type: layout } : layout;
+  const { type, classNames, scroll } = typeof layout === 'string' ? { type: layout } : layout;
 
   switch (type) {
     // Fullscreen.
     case 'fullscreen':
       return (
-        <div role='none' className={mx(screenClassName, 'flex flex-col overflow-hidden', classNames)}>
+        <div role='none' className={mx(bgStyles, 'flex flex-col overflow-hidden', classNames)}>
           <Story />
         </div>
       );
@@ -44,10 +45,14 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
     // Centered column.
     case 'column':
       return (
-        <div role='none' className={mx(screenClassName, 'flex justify-center overflow-hidden')}>
+        <div role='none' className={mx(bgStyles, 'flex justify-center overflow-hidden')}>
           <div
             role='none'
-            className={mx('flex flex-col bs-full is-[40rem] overflow-hidden bg-baseSurface', classNames)}
+            className={mx(
+              'flex flex-col bs-full is-[40rem] bg-baseSurface',
+              classNames,
+              scroll ? 'overflow-y-auto' : 'overflow-hidden',
+            )}
           >
             <Story />
           </div>
@@ -57,8 +62,8 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
     // Centered.
     case 'centered':
       return (
-        <div role='none' className={mx(screenClassName, 'grid place-items-center')}>
-          <div role='none' className={mx('contents', classNames)}>
+        <div role='none' className={mx(bgStyles, 'grid place-items-center')}>
+          <div role='none' className={mx('contents bg-baseSurface', classNames)}>
             <Story />
           </div>
         </div>
