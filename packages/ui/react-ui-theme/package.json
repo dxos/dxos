@@ -34,6 +34,7 @@
     "@ch-ui/tailwind-tokens": "2.7.0",
     "@ch-ui/tokens": "2.4.0",
     "@dxos/node-std": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "5.0.16",
     "@fontsource-variable/jetbrains-mono": "5.0.21",
