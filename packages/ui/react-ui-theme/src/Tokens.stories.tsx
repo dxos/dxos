@@ -6,8 +6,6 @@ import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosit
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
-
 import { tokenSet } from './config';
 
 const colorAudit = auditFacet(tokenSet.colors, { condition: 'p3' });
@@ -81,7 +79,6 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-theme/Tokens',
   render: DefaultStory,
-  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
