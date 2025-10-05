@@ -18,10 +18,9 @@ describe('query', () => {
 
     type Test = { input: string; expected: string[] };
     const tests: Test[] = [
-      // TODO(burdon): Update builder.
       {
         input: '#test',
-        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Identifier'],
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Tagname'],
       },
       {
         input: 'type:dxos.org/type/Person',
@@ -210,6 +209,48 @@ describe('query', () => {
           ')',
         ],
       },
+      {
+        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        expected: [
+          'Query',
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          'And',
+          'Filter',
+          'ObjectLiteral',
+          '{',
+          'ObjectProperty',
+          'Identifier',
+          ':',
+          'Value',
+          'String',
+          '}',
+        ],
+      },
+      {
+        input: 'type:dxos.org/type/Person And { name: "DXOS" }',
+        expected: [
+          'Query',
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          'And',
+          'Filter',
+          'ObjectLiteral',
+          '{',
+          'ObjectProperty',
+          'Identifier',
+          ':',
+          'Value',
+          'String',
+          '}',
+        ],
+      },
     ];
 
     for (const { input, expected } of tests) {
@@ -261,6 +302,14 @@ describe('query', () => {
           Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
           Filter.props({ name: 'DXOS' }),
         ),
+      },
+      {
+        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+      },
+      {
+        input: 'type:dxos.org/type/Person And { name: "DXOS" }',
+        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
       },
     ];
 
