@@ -19,7 +19,7 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
-    parameters: {
+  parameters: {
     translations,
   },
 } satisfies Meta<typeof ToolbarMenu>;

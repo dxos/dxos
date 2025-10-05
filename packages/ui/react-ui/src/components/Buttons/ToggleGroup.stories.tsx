@@ -27,7 +27,7 @@ const meta = {
   title: 'ui/react-ui-core/ToggleGroup',
   component: ToggleGroup,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof ToggleGroup>;
 
 export default meta;

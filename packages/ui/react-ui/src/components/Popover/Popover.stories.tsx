@@ -31,7 +31,7 @@ const meta = {
   title: 'ui/react-ui-core/Popover',
   component: Popover.Root,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

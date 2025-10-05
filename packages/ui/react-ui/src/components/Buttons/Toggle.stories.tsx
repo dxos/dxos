@@ -23,7 +23,7 @@ const meta = {
   title: 'ui/react-ui-core/Toggle',
   component: Toggle,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Toggle>;
 
 export default meta;

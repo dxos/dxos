@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { useApp } from './useApp';
 
 const DefaultStory = () => {
@@ -19,7 +18,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/App',
   render: DefaultStory,
-    parameters: {
+  parameters: {
     layout: 'fullscreen',
   },
 } satisfies Meta;

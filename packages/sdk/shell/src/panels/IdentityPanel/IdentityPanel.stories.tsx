@@ -40,7 +40,7 @@ const noOpProps: IdentityPanelImplProps = {
 
 const meta = {
   title: 'sdk/shell/IdentityPanel',
-    parameters: {
+  parameters: {
     translations,
     chromatic: {
       disableSnapshot: false,

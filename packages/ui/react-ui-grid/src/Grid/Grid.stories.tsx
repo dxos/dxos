@@ -101,7 +101,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
-    parameters: { layout: 'fullscreen' },
+  parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof GridStory>;
 
 export default meta;

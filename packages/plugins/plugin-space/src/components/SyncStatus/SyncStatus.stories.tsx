@@ -4,7 +4,6 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-
 import { translations } from '../../translations';
 
 import { SyncStatusIndicator } from './SyncStatus';
@@ -12,7 +11,7 @@ import { SyncStatusIndicator } from './SyncStatus';
 const meta = {
   title: 'plugins/plugin-space/SyncStatusIndicator',
   component: SyncStatusIndicator,
-    parameters: {
+  parameters: {
     translations,
     layout: 'centered',
   },

@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-
 import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
 
 const DefaultStory = (props: CellEditorProps) => {
@@ -69,7 +68,7 @@ const meta = {
   title: 'ui/react-ui-grid/CellEditor',
   component: CellEditor,
   render: DefaultStory,
-    parameters: {
+  parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof CellEditor>;

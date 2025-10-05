@@ -253,7 +253,8 @@ const meta = {
         await client.spaces.create();
         await client.spaces.create();
       },
-    })],
+    }),
+  ],
 } satisfies Meta<typeof Registry>;
 
 export default meta;

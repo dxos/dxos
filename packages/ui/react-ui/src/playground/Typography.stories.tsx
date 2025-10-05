@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 const DefaultStory = () => {
   return (
     <div className='mli-auto p-8 max-is-[60rem] space-b-4'>
@@ -44,7 +43,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/Playground/Typography',
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

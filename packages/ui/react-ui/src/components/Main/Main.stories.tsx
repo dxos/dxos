@@ -48,7 +48,7 @@ const meta = {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
   render: DefaultStory,
-    parameters: {
+  parameters: {
     chromatic: { disableSnapshot: false },
     layout: 'fullscreen',
   },

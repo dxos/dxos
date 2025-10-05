@@ -8,7 +8,6 @@ import React from 'react';
 import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
-
 import {
   type CheckboxProps,
   Input,
@@ -90,7 +89,7 @@ const meta = {
   title: 'ui/react-ui-core/Input',
   component: Input.Root as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

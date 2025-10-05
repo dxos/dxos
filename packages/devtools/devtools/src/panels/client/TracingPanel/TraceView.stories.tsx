@@ -4,14 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-
 import { TraceView } from './TraceView';
 import { type State } from './types';
 
 const meta = {
   title: 'devtools/devtools/TraceView',
   component: TraceView,
-  } satisfies Meta<typeof TraceView>;
+} satisfies Meta<typeof TraceView>;
 
 export default meta;
 

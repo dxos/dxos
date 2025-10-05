@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-
 import { translations } from '../translations';
 
 import * as IdentityPanels from './IdentityPanel/IdentityPanel.stories';
@@ -53,7 +52,7 @@ Default.parameters = { layout: 'fullscreen' };
 
 const meta = {
   title: 'sdk/shell/All',
-    component: StoryRow,
+  component: StoryRow,
   parameters: {
     translations,
     chromatic: {

@@ -33,7 +33,7 @@ const meta = {
   title: 'ui/react-ui-stack/StackItem',
   component: StackItem.Root as any,
   render: DefaultStory,
-    parameters: {
+  parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;

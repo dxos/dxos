@@ -39,9 +39,11 @@ const meta = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
-        TablePlugin()],
+        TablePlugin(),
+      ],
       capabilities,
-    })],
+    }),
+  ],
   parameters: {
     layout: 'centered',
     translations,

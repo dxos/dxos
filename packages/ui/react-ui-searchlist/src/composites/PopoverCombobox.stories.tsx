@@ -34,7 +34,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/PopoverCombobox',
   component: PopoverCombobox.Root as any,
   render: DefaultStory,
-  } satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

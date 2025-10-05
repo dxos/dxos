@@ -87,7 +87,8 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator({ plugins: testFunctionPlugins })],
+    withComputeGraphDecorator({ plugins: testFunctionPlugins }),
+  ],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

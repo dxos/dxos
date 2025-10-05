@@ -14,7 +14,7 @@ const Icon = () => null;
 const meta = {
   title: 'ui/brand/LogoTypes',
   component: Icon,
-  } satisfies Meta<typeof Icon>;
+} satisfies Meta<typeof Icon>;
 
 export default meta;
 

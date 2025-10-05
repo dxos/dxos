@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { Capabilities, createSurface } from '../common';
 import { contributes } from '../core';
 import { Surface } from '../react';
@@ -25,7 +24,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
-  decorators: [withPluginManager({
+  decorators: [
+    withPluginManager({
       capabilities: [
         contributes(
           Capabilities.ReactSurface,

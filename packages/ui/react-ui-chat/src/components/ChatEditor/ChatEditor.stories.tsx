@@ -14,7 +14,7 @@ import { type ReferenceData } from './references';
 const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
   component: ChatEditor,
-    parameters: {
+  parameters: {
     layout: 'centered',
     translations,
   },

@@ -49,7 +49,7 @@ const meta = {
   title: 'ui/react-ui-core/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

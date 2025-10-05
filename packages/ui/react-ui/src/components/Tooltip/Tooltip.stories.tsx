@@ -32,7 +32,7 @@ const meta = {
   title: 'ui/react-ui-core/Tooltip',
   component: Tooltip as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -45,7 +45,8 @@ export const Default: Story = {
       {
         label: 'Tooltip trigger',
         content: 'This is the tooltip content',
-      }],
+      },
+    ],
   },
   parameters: {
     chromatic: { delay: 500 },
@@ -59,7 +60,8 @@ export const DefaultOpen: Story = {
       {
         label: 'Tooltip trigger',
         content: 'This is the tooltip content',
-      }],
+      },
+    ],
   },
   parameters: {
     chromatic: { delay: 500 },

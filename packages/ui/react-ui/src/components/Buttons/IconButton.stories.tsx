@@ -26,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-core/IconButton',
   component: IconButton,
   render: DefaultStory as any,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

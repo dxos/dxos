@@ -47,7 +47,7 @@ const meta = {
   title: 'ui/react-ui-core/Toast',
   component: Toast as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -63,7 +63,8 @@ export const Default: Story = {
       {
         altText: 'Press F5 to reload the page',
         trigger: <Button variant='primary'>Reload</Button>,
-      }],
+      },
+    ],
     closeTrigger: <Button>Close</Button>,
   },
   parameters: {

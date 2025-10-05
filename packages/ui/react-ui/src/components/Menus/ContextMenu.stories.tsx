@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { ContextMenu } from './ContextMenu';
 
 const DefaultStory = () => {
@@ -94,7 +93,7 @@ const meta = {
   title: 'ui/react-ui-core/ContextMenu',
   component: ContextMenu.Root as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

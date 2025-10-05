@@ -60,7 +60,7 @@ const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
   component: CellEditor,
   render: DefaultStory,
-  } satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

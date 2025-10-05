@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { ConfirmResetImpl } from '../../steps';
 import { translations } from '../../translations';
@@ -31,7 +30,7 @@ const JoinDialog = (props: Partial<JoinPanelImplProps>) => (
 const meta = {
   title: 'sdk/shell/JoinPanel',
   component: JoinDialog,
-    parameters: {
+  parameters: {
     translations,
     chromatic: {
       disableSnapshot: false,

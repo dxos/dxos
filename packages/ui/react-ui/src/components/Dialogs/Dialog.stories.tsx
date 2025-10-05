@@ -42,7 +42,7 @@ const meta = {
   title: 'ui/react-ui-core/Dialog',
   component: Dialog as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -351,7 +351,7 @@ const meta = {
   title: 'ui/react-ui-thread/Comments',
   component: StoryThread as any,
   render: DefaultStory,
-    parameters: { translations, layout: 'fullscreen' },
+  parameters: { translations, layout: 'fullscreen' },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

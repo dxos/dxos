@@ -40,7 +40,7 @@ const DefaultStory = ({ title, description, image, showImage, showIcon }: CardSt
 const meta = {
   title: 'ui/react-ui-stack/Card',
   render: DefaultStory,
-    parameters: {
+  parameters: {
     layout: 'centered',
   },
   argTypes: {

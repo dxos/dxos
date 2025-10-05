@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { StorybookDialog } from '../StorybookDialog';
 
 import { Action } from './Action';
@@ -16,7 +15,7 @@ import { Label } from './Label';
 const meta = {
   title: 'sdk/shell/StorybookDialog',
   component: StorybookDialog,
-  } satisfies Meta<typeof StorybookDialog>;
+} satisfies Meta<typeof StorybookDialog>;
 
 export default meta;
 

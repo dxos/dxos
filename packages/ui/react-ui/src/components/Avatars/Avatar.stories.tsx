@@ -9,7 +9,6 @@ import { type HuePalette } from '@dxos/react-ui-theme';
 import { type Size } from '@dxos/react-ui-types';
 import { hexToFallback } from '@dxos/util';
 
-
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
 type StoryProps = PropsWithChildren<{
@@ -58,7 +57,7 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar.Root,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

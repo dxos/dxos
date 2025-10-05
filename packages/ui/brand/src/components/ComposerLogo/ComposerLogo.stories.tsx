@@ -21,7 +21,7 @@ import { type AnimationController, ComposerLogo, ComposerSpinner } from './Compo
 const meta = {
   title: 'ui/brand/Logo',
   component: ComposerLogo,
-  } satisfies Meta<typeof ComposerLogo>;
+} satisfies Meta<typeof ComposerLogo>;
 
 export default meta;
 

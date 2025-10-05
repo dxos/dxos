@@ -25,7 +25,7 @@ import { List, ListItem, type ListScopedProps } from './List';
 const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof List>;
 
 export default meta;

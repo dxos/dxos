@@ -4,13 +4,12 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-
 import { Searchbar } from './Searchbar';
 
 const meta = {
   title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
-    parameters: {
+  parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof Searchbar>;

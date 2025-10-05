@@ -22,7 +22,7 @@ const meta = {
   title: 'sdk/shell/CompoundButton',
   component: CompoundButton,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof CompoundButton>;
 
 export default meta;

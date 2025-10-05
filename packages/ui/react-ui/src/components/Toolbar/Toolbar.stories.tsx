@@ -73,7 +73,7 @@ const meta = {
   title: 'ui/react-ui-core/Toolbar',
   component: Toolbar as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

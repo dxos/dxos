@@ -7,7 +7,6 @@ import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-
 import { Callout } from './Message';
 
 type StoryProps = {
@@ -27,7 +26,7 @@ const meta = {
   title: 'ui/react-ui-core/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     valence: {
       control: 'select',

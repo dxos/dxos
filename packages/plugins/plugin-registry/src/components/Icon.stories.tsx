@@ -101,7 +101,7 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
-  } satisfies Meta<typeof IconBase>;
+} satisfies Meta<typeof IconBase>;
 
 export default meta;
 

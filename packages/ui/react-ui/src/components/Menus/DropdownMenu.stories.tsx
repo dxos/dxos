@@ -94,7 +94,7 @@ const meta = {
   title: 'ui/react-ui-core/DropdownMenu',
   component: DropdownMenu.Root,
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

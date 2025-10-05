@@ -8,7 +8,6 @@ import React from 'react';
 import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
-
 import { Avatar } from './Avatar';
 
 const hues = ['lime', 'teal', 'purple', 'pink'];
@@ -39,7 +38,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/AvatarGroup',
   render: DefaultStory,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

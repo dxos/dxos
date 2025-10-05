@@ -19,7 +19,7 @@ const meta = {
       <Image {...args} />
     </div>
   ),
-    parameters: {
+  parameters: {
     layout: 'fullscreen',
   },
 } satisfies Meta<typeof Image>;

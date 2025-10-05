@@ -121,7 +121,7 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Custom',
   component: Button,
   render: DefaultStory,
-    parameters: { layout: 'centered' },
+  parameters: { layout: 'centered' },
 } satisfies Meta<typeof Button>;
 
 export default meta;

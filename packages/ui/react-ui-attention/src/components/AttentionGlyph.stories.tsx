@@ -30,7 +30,7 @@ const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
   component: AttentionGlyph as any,
   render: DefaultStory,
-  } satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

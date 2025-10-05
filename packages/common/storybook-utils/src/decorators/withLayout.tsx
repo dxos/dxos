@@ -7,8 +7,6 @@ import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
-const bgStyles = 'fixed inset-0 bg-deckSurface';
-
 export type LayoutType = 'fullscreen' | 'column' | 'centered';
 
 /**
@@ -37,7 +35,7 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
     // Fullscreen.
     case 'fullscreen':
       return (
-        <div role='none' className={mx(bgStyles, 'flex flex-col overflow-hidden', classNames)}>
+        <div role='none' className={mx('fixed inset-0 flex flex-col overflow-hidden bg-baseSurface', classNames)}>
           <Story />
         </div>
       );
@@ -45,7 +43,7 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
     // Centered column.
     case 'column':
       return (
-        <div role='none' className={mx(bgStyles, 'flex justify-center overflow-hidden')}>
+        <div role='none' className={mx('fixed inset-0 flex justify-center overflow-hidden bg-deckSurface')}>
           <div
             role='none'
             className={mx(
@@ -62,7 +60,7 @@ export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
     // Centered.
     case 'centered':
       return (
-        <div role='none' className={mx(bgStyles, 'grid place-items-center')}>
+        <div role='none' className={mx('fixed inset-0 grid place-items-center bg-deckSurface')}>
           <div role='none' className={mx('contents bg-baseSurface', classNames)}>
             <Story />
           </div>

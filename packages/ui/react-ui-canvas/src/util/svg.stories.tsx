@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-
 import { Arrow, createPath } from './svg';
 import { testId } from './util';
 
@@ -31,7 +30,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
-    parameters: {
+  parameters: {
     layout: 'centered',
   },
 } satisfies Meta;

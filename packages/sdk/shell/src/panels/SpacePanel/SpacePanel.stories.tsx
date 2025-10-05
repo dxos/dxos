@@ -29,7 +29,7 @@ const noOpProps: SpacePanelImplProps = {
 const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;

@@ -8,7 +8,6 @@ import React from 'react';
 import { hues } from '@dxos/react-ui-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
 
-
 import { Tag } from './Tag';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
@@ -16,7 +15,7 @@ const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as 
 const meta = {
   title: 'ui/react-ui-core/Tag',
   component: Tag,
-    parameters: { chromatic: { disableSnapshot: false } },
+  parameters: { chromatic: { disableSnapshot: false } },
 } as const;
 
 export const Default: Story = {

@@ -34,7 +34,7 @@ const meta = {
   title: 'plugins/plugin-status/StatusBar',
   component: StatusBar as any,
   render: DefaultStory,
-    parameters: {
+  parameters: {
     chromatic: { disableSnapshot: false },
   },
 } satisfies Meta<typeof StatusBar>;

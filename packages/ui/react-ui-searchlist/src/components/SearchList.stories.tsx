@@ -42,7 +42,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
   render: DefaultStory,
-  } satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
