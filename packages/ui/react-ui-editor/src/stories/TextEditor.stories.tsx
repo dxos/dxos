@@ -5,6 +5,7 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { openSearchPanel } from '@codemirror/search';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { log } from '@dxos/log';
@@ -41,6 +42,8 @@ import {
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

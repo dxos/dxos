@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Config } from '@dxos/client';
@@ -96,8 +97,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       createIdentity: true,
       config: new Config({
         runtime: {
@@ -110,8 +110,7 @@ const meta = {
         },
       }),
       types: DataTypes,
-    }),
-  ],
+    }),],
   parameters: {
     layout: 'fullscreen',
   },

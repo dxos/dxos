@@ -4,6 +4,7 @@
 
 import { effect } from '@preact/signals-core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -323,6 +324,8 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

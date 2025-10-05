@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Invitation } from '@dxos/react-client/invitations';
@@ -14,6 +15,8 @@ import { InvitationList } from './InvitationList';
 const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof InvitationList>;
 

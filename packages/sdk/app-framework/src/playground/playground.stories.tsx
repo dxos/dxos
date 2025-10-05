@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useApp } from '../components';
@@ -33,6 +34,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'sdk/app-framework/playground',
+
+  decorators: [withTheme],
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;
 

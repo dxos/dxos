@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { sleep } from '@dxos/async';
@@ -11,6 +12,8 @@ import { useAsyncEffect } from './useAsyncEffect';
 
 const meta = {
   title: 'ui/react-hooks/useAsyncEffect',
+
+  decorators: [withTheme],
 } satisfies Meta;
 
 export default meta;

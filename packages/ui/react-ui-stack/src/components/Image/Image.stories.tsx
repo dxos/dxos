@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -19,6 +20,8 @@ const meta = {
       <Image {...args} />
     </div>
   ),
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

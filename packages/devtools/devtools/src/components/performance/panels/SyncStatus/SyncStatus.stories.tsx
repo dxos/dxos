@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { type Client } from '@dxos/client';
@@ -56,7 +57,7 @@ const createSpaceSyncStateMap = async (client: Client): Promise<SpaceSyncStateMa
 const meta = {
   title: 'devtools/devtools/SyncStatus',
   component: SyncStatus,
-  decorators: [withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'centered',
   },

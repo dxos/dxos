@@ -5,6 +5,7 @@
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
@@ -20,6 +21,8 @@ import { type AnimationController, ComposerLogo, ComposerSpinner } from './Compo
 
 const meta = {
   title: 'ui/brand/Logo',
+
+  decorators: [withTheme],
   component: ComposerLogo,
 } satisfies Meta<typeof ComposerLogo>;
 

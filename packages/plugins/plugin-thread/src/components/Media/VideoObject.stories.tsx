@@ -3,6 +3,7 @@
 //
 
 import { type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { scheduleTask } from '@dxos/async';
@@ -46,6 +47,8 @@ const meta = {
   title: 'plugins/plugin-thread/VideoObject',
   component: VideoObject,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

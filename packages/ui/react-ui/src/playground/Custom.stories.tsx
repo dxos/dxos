@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
@@ -121,6 +122,8 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Custom',
   component: Button,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { layout: 'centered' },
 } satisfies Meta<typeof Button>;
 

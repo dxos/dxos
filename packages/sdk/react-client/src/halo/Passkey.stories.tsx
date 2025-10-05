@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback } from 'react';
 
 import { Config, PublicKey } from '@dxos/client';
@@ -126,6 +127,8 @@ const Test = () => {
 
 const meta = {
   title: 'sdk/react-client/Passkeys',
+
+  decorators: [withTheme],
   render: Test,
 } satisfies Meta<typeof Config>;
 

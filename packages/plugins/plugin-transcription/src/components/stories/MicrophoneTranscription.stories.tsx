@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Events, IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -193,8 +194,7 @@ const DefaultStory = ({
 const meta = {
   title: 'plugins/plugin-transcription/MicrophoneTranscription',
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],

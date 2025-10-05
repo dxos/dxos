@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -32,6 +33,8 @@ const meta = {
   title: 'plugins/plugin-excalidraw/SketchComponent',
   component: SketchContainer as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

@@ -4,6 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useRef } from 'react';
 
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -68,7 +69,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/Outliner',
   render: DefaultStory,
-  decorators: [withAttention],
+  decorators: [withTheme, withAttention],
   parameters: {
     layout: 'fullscreen',
   },

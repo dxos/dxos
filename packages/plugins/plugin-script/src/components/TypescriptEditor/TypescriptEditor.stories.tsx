@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
@@ -22,6 +23,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
+
+  decorators: [withTheme],
   component: TypescriptEditor as any,
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { Input, Select } from '@dxos/react-ui';
@@ -67,6 +68,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'common/keyboard/Keyboard',
+
+  decorators: [withTheme],
   render: DefaultStory,
 } satisfies Meta<typeof Input>;
 

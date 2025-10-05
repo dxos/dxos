@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Capabilities, createSurface } from '../common';
@@ -24,8 +25,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/withPluginManager',
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       capabilities: [
         contributes(
           Capabilities.ReactSurface,
@@ -34,8 +34,7 @@ const meta = {
             role: 'main',
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
-        ),
-      ],
+        ),],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

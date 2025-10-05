@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -117,6 +118,8 @@ const DefaultStory = ({ keywords }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

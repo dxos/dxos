@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
@@ -50,6 +51,8 @@ const meta = {
       </>
     );
   },
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
     translations,

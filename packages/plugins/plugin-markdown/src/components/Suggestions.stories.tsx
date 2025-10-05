@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
@@ -149,8 +150,7 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
   render: render(DefaultStory),
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Markdown.Document, TestItem],

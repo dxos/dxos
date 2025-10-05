@@ -7,6 +7,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type ReactNode, useState } from 'react';
 
 import {
@@ -25,6 +26,8 @@ import { List, ListItem, type ListScopedProps } from './List';
 const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof List>;
 

@@ -4,6 +4,7 @@
 
 import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type ReactElement, type SVGProps, forwardRef } from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -98,6 +99,8 @@ export const Default: Story = {};
 const meta = {
   title: 'plugins/plugin-registry/Icon',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

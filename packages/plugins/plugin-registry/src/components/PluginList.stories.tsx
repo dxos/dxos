@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { type Plugin, definePlugin } from '@dxos/app-framework';
@@ -62,6 +63,8 @@ const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
     translations,

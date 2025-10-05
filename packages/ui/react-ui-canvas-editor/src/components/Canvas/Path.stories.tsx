@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
@@ -62,6 +63,8 @@ const Rope = () => {
 const meta = {
   title: 'ui/react-ui-canvas-editor/Rope',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },

@@ -4,6 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useRef } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
@@ -62,6 +63,8 @@ const groups: CommandMenuGroup[] = [
 const meta = {
   title: 'ui/react-ui-editor/CommandMenu',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

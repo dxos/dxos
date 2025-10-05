@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@dxos/react-ui';
@@ -28,6 +29,8 @@ const DefaultStory = (props: AttentionGlyphProps) => {
 
 const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
+
+  decorators: [withTheme],
   component: AttentionGlyph as any,
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;

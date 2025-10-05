@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC, type ReactNode } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
@@ -13,6 +14,8 @@ const Icon = () => null;
 
 const meta = {
   title: 'ui/brand/LogoTypes',
+
+  decorators: [withTheme],
   component: Icon,
 } satisfies Meta<typeof Icon>;
 

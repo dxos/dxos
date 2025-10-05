@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -16,16 +17,14 @@ import { DevicesContainer } from './DevicesContainer';
 const meta = {
   title: 'plugins/plugin-client/DevicesContainer',
   component: DevicesContainer,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
         }),
-        IntentPlugin(),
-      ],
+        IntentPlugin(),],
     }),
   ],
   parameters: {

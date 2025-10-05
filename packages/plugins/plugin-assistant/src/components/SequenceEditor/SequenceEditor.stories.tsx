@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { RESEARCH_SEQUENCE_DEFINITION } from '../../testing';
@@ -15,6 +16,8 @@ const meta = {
   component: SequenceEditor,
   // TODO(wittjosiah): Fix story.
   render: () => <>TODO</>,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
     translations,

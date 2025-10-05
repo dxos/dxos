@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useRef, useState } from 'react';
 
 import { Button } from '../Buttons';
@@ -94,6 +95,8 @@ const meta = {
   title: 'ui/react-ui-core/DropdownMenu',
   component: DropdownMenu.Root,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 

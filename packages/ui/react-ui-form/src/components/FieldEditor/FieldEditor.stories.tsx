@@ -7,6 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
 
@@ -55,6 +56,7 @@ const meta = {
   title: 'ui/react-ui-form/FieldEditor',
   component: FieldEditor as any,
   render: DefaultStory,
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
     translations,

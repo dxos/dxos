@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Listbox } from './Listbox';
@@ -54,6 +55,8 @@ const DefaultValueStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

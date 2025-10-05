@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
@@ -151,6 +152,8 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

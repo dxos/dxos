@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -178,8 +179,7 @@ const QueueStoryWrapper = () => {
 
 const meta = {
   title: 'plugins/plugin-transcription/Transcript',
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [TestItem, Testing.DocumentType, DataType.Person, DataType.Organization],

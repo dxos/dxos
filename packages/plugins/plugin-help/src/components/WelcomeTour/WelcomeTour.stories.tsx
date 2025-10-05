@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -108,7 +109,7 @@ const meta = {
   component: WelcomeTour,
   render: DefaultStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin({})] })],
+  decorators: [withTheme, withPluginManager({ plugins: [StorybookLayoutPlugin({})] })],
 } satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

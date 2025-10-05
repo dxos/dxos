@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { BitField } from '@dxos/util';
@@ -60,6 +61,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'devtools/devtools/Bitbar',
+
+  decorators: [withTheme],
   component: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;
 

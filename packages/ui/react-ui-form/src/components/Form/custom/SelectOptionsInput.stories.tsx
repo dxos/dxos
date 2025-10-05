@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
@@ -46,6 +47,8 @@ const meta = {
   title: 'ui/react-ui-form/SelectOptionsInput',
   component: SelectOptionInput as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     translations,

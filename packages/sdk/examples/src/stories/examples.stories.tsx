@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -12,6 +13,8 @@ import { NetworkToggle } from '../template/src/components';
 
 const meta = {
   title: 'sdk/examples/DXOS',
+
+  decorators: [withTheme],
 } satisfies Meta<typeof ClientRepeater>;
 
 export default meta;

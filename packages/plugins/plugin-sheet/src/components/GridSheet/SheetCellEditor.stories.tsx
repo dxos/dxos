@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { Client } from '@dxos/client';
@@ -58,6 +59,8 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
 
 const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
+
+  decorators: [withTheme],
   component: CellEditor,
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;

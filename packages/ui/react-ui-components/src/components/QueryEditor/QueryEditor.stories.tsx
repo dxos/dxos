@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
@@ -22,8 +23,7 @@ const meta = {
       <QueryEditor classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm' {...args} space={space} />
     );
   },
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),

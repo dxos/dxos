@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
 import { DataType } from '@dxos/schema';
@@ -27,6 +28,8 @@ export const Default: Story = {};
 
 const meta = {
   title: 'plugins/plugin-token-manager/TokenManager',
+
+  decorators: [withTheme],
   component: TokenManager,
   args: {
     tokens: await Promise.all([...Array(10)].map(() => generator.createObject())),

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { CellEditor, type CellEditorProps, type EditorKeyEvent, editorKeys } from './CellEditor';
@@ -68,6 +69,8 @@ const meta = {
   title: 'ui/react-ui-grid/CellEditor',
   component: CellEditor,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { scheduleTask, sleep } from '@dxos/async';
@@ -173,8 +174,7 @@ const DefaultStory = ({ source }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-thread/calls-service',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       config: new Config({
         runtime: {
           services: {

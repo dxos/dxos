@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { CardContainer } from '@dxos/react-ui-stack/testing';
@@ -28,6 +29,8 @@ const meta: Meta<DefaultStoryProps> = {
       </Chessboard.Root>
     </CardContainer>
   ),
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Effect, Fiber, Layer } from 'effect';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -96,8 +97,7 @@ const meta = {
   title: 'plugins/plugin-assistant/ChatThread',
   component: ChatThread,
   render: DefaultStory,
-  decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
+  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
   ],
   parameters: {
     layout: 'fullscreen',

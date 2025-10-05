@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 
 import { SignalMessageTable } from './SignalMessageTable';
@@ -11,7 +12,7 @@ import { SignalMessageTable } from './SignalMessageTable';
 const meta = {
   title: 'devtools/devtools/SignalMessageTable',
   component: SignalMessageTable,
-  decorators: [withClientProvider()],
+  decorators: [withTheme, withClientProvider()],
   parameters: {
     layout: 'fullscreen',
   },

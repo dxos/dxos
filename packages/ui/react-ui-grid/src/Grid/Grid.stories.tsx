@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultRowSize } from '@dxos/lit-grid';
@@ -101,6 +102,8 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
+  decorators: [withTheme],
+
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof GridStory>;
 

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
@@ -26,6 +27,8 @@ const meta = {
   title: 'ui/react-ui-core/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     valence: {

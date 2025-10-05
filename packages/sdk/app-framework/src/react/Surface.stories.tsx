@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -86,6 +87,8 @@ const DefaultStory = (props: { manager: PluginManager }) => {
 
 const meta = {
   title: 'sdk/app-framework/Surface',
+
+  decorators: [withTheme],
   render: DefaultStory,
   args: {
     manager: setupPluginManager(),

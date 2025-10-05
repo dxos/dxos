@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -45,6 +46,8 @@ const meta = {
   title: 'plugins/plugin-explorer/Tree',
   component: Tree as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

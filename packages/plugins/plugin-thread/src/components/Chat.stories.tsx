@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createSurface } from '@dxos/app-framework';
@@ -60,8 +61,7 @@ const meta = {
   title: 'plugins/plugin-thread/Chat',
   component: Thread.Root as any,
   render: render(DefaultStory),
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [IntentPlugin()],
       capabilities: [
         contributes(

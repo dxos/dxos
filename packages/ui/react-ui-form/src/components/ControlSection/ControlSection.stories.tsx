@@ -5,6 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { withTheme } from '@dxos/react-ui/testing';
+
 import { translations } from '../../translations';
 
 import { ControlPage, ControlSection } from './ControlSection';
@@ -17,6 +19,7 @@ const meta = {
       <ControlSection {...args} />
     </ControlPage>
   ),
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
     translations,

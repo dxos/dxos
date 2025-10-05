@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Icon } from '../Icon';
@@ -23,6 +24,8 @@ const meta = {
   title: 'ui/react-ui-core/Toggle',
   component: Toggle,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Toggle>;
 

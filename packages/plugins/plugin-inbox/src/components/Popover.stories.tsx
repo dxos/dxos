@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useRef } from 'react';
 
 import { IntentPlugin, LayoutAction, SettingsPlugin, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -90,8 +91,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 
 const meta = {
   title: 'plugins/plugin-inbox/Popover',
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Mailbox.Mailbox, DataType.Message, DataType.Person, DataType.Organization],

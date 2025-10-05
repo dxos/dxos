@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -75,6 +76,8 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     translations,

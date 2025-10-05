@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
@@ -66,6 +67,8 @@ const meta = {
   title: 'ui/react-ui-sfx/Chaos',
   component: Chaos,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

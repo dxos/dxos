@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -36,8 +37,7 @@ export const Basic = () => {
 const meta = {
   title: 'plugins/plugin-sheet/GridSheet',
   component: GridSheet,
-  decorators: [
-    withClientProvider({ types: [SheetType], createSpace: true }),
+  decorators: [withTheme, withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withPluginManager({
       plugins: [IntentPlugin()],

@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -202,6 +203,8 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

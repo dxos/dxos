@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -15,6 +16,8 @@ import { TEST_ID, Test } from './Test';
  */
 const meta = {
   title: 'common/storybook-utils/Test',
+
+  decorators: [withTheme],
   component: Test,
   render: (args) => <Test {...{ 'data-testid': TEST_ID }} {...args} />,
   tags: ['test'],

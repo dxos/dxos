@@ -5,6 +5,7 @@
 import '@fontsource/poiret-one';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { useIdentity } from '@dxos/react-client/halo';
@@ -39,6 +40,8 @@ const meta = {
   title: 'apps/composer-app/Welcome',
   component: Welcome as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     translations,
     chromatic: {

@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -23,6 +24,8 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
 
 const meta = {
   title: 'plugins/plugin-space/SpacePresence',
+  decorators: [withTheme],
+
   parameters: {
     translations,
   },

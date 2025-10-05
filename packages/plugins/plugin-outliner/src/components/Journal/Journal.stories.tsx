@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -29,8 +30,7 @@ const meta = {
       return <Journal journal={journal} />;
     }
   }),
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       createIdentity: true,
       createSpace: true,
       types: [DataType.Text, JournalType, JournalEntryType, OutlineType],

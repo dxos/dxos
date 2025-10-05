@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -61,8 +62,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
-  decorators: [
-    // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
+  decorators: [withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
     //   Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [

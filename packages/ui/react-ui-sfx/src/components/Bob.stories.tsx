@@ -4,11 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { Blob } from './Blob';
 
 const meta = {
   title: 'ui/react-ui-sfx/Blob',
   component: Blob,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

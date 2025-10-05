@@ -3,12 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Tree } from './Tree';
 
 const meta = {
   title: 'devtools/devtools/Tree',
+
+  decorators: [withTheme],
   component: Tree,
 } satisfies Meta<typeof Tree>;
 

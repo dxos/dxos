@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -91,6 +92,8 @@ const list = live(createList(100));
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

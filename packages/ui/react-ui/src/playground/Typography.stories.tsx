@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 const DefaultStory = () => {
@@ -43,6 +44,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/Playground/Typography',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 

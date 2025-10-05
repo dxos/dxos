@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -30,8 +31,7 @@ const meta = {
   title: 'plugins/plugin-automation/AutomationPanel',
   component: AutomationPanel as any,
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       createIdentity: true,
       createSpace: true,
       types: [FunctionType, FunctionTrigger],

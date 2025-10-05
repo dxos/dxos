@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
@@ -89,6 +90,8 @@ const meta = {
   title: 'ui/react-ui-core/Input',
   component: Input.Root as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 

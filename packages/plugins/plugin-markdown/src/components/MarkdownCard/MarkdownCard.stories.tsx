@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -27,8 +28,7 @@ const meta: Meta<typeof MarkdownCard> = {
       </CardContainer>
     );
   },
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [IntentPlugin()],
     }),
   ],

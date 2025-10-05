@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -57,6 +58,8 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     translations,

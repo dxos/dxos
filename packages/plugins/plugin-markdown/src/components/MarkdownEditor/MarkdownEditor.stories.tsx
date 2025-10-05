@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -39,7 +40,7 @@ const meta = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
   component: MarkdownEditor as any,
   render: DefaultStory,
-  decorators: [withPluginManager({ plugins: [IntentPlugin()] }), withAttention],
+  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin()] }), withAttention],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...editorTranslations],

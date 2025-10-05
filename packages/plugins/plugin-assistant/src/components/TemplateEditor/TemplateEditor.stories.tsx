@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { createSystemPrompt } from '@dxos/assistant';
@@ -57,8 +58,7 @@ const meta = {
   title: 'plugins/plugin-assistant/TemplateEditor',
   component: TemplateEditor as any,
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,

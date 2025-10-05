@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -28,8 +29,7 @@ const meta = {
   title: 'plugins/plugin-client/ResetDialog',
   component: ResetDialog,
   render: Render,
-  decorators: [
-    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }),
   ],
   parameters: {

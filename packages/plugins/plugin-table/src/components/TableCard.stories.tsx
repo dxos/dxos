@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -41,8 +42,7 @@ const DefaultStory = ({ role }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-table/Card',
   render: DefaultStory,
-  decorators: [
-    // TODO(burdon): Should not require space.
+  decorators: [withTheme, // TODO(burdon): Should not require space.
     withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,

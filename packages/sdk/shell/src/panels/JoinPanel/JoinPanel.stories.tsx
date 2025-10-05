@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { StorybookDialog } from '../../components/StorybookDialog';
@@ -30,6 +31,8 @@ const JoinDialog = (props: Partial<JoinPanelImplProps>) => (
 const meta = {
   title: 'sdk/shell/JoinPanel',
   component: JoinDialog,
+  decorators: [withTheme],
+
   parameters: {
     translations,
     chromatic: {

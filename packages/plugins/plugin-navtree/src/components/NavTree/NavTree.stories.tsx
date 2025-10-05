@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React from 'react';
 
@@ -117,8 +118,7 @@ const meta = {
   title: 'plugins/plugin-navtree/NavTree',
   component: NavTreeContainer,
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
         GraphPlugin(),
@@ -126,8 +126,7 @@ const meta = {
         SettingsPlugin(),
         AttentionPlugin(),
         NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
-      ],
+        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),],
       capabilities: (context) => [
         contributes(StoryState, live({ tab: 'space-0' })),
         contributes(Capabilities.AppGraphBuilder, storybookGraphBuilders(context)),

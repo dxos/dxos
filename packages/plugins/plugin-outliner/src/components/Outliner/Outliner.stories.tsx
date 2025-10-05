@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
@@ -27,7 +28,7 @@ const meta = {
       return <Outliner id={text.id} text={text} />;
     }
   }),
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text, OutlineType] })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text, OutlineType] })],
   parameters: {
     layout: 'fullscreen',
     translations,

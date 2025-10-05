@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
 import React, { useMemo, useRef, useState } from 'react';
@@ -226,6 +227,8 @@ const meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

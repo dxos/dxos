@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Tooltip } from '../Tooltip';
@@ -26,6 +27,8 @@ const meta = {
   title: 'ui/react-ui-core/IconButton',
   component: IconButton,
   render: DefaultStory as any,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof IconButton>;
 

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
@@ -29,6 +30,8 @@ const noOpProps: SpacePanelImplProps = {
 const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof SpacePanelImpl>;
 

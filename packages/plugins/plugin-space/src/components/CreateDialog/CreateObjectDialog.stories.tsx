@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -33,8 +34,7 @@ const meta = {
   title: 'plugins/plugin-space/CreateObjectDialog',
   component: CreateObjectDialog,
   render: Story,
-  decorators: [
-    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+  decorators: [withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
   ],

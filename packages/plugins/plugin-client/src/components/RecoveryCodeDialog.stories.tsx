@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -34,7 +35,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
   component: RecoveryCodeDialog as any,
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

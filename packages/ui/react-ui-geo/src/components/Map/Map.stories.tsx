@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { useMapZoomHandler } from '../../hooks';
@@ -28,6 +29,8 @@ const meta = {
   title: 'ui/react-ui-geo/Map',
   component: Map.Root as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

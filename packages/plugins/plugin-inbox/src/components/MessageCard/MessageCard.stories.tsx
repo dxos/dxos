@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -45,6 +46,8 @@ const meta = {
       </IntrinsicCardContainer>
     );
   },
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

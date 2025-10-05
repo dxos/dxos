@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IdentityDid } from '@dxos/keys';
@@ -40,6 +41,8 @@ const noOpProps: IdentityPanelImplProps = {
 
 const meta = {
   title: 'sdk/shell/IdentityPanel',
+  decorators: [withTheme],
+
   parameters: {
     translations,
     chromatic: {

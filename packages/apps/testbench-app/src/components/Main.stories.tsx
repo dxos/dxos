@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { withMultiClientProvider } from '@dxos/react-client/testing';
 
 import { Item } from '../data';
@@ -13,8 +14,7 @@ import { Main } from './Main';
 const meta = {
   title: 'apps/testbench-app/Main',
   component: Main,
-  decorators: [
-    withMultiClientProvider({
+  decorators: [withTheme, withMultiClientProvider({
       numClients: 2,
       types: [Item],
       createIdentity: true,

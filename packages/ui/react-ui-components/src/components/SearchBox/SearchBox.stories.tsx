@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -44,6 +45,8 @@ const meta = {
       </div>
     );
   },
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

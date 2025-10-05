@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
@@ -17,7 +18,7 @@ const meta = {
   title: 'plugins/plugin-script/Toolbar',
   component: ScriptToolbar,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
+  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
 } satisfies Meta<typeof ScriptToolbar>;
 
 export default meta;

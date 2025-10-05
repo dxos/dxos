@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -33,6 +34,8 @@ export const Default = () => <ClientRepeater component={Story} />;
 const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

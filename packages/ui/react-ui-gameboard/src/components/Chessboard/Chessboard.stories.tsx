@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
@@ -79,6 +80,8 @@ const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

@@ -5,6 +5,7 @@
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect } from 'react';
 
 import { type Live, live } from '@dxos/live-object';
@@ -51,6 +52,8 @@ const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta = {
   title: 'ui/react-ui-list/Tree',
+
+  decorators: [withTheme],
   component: Tree,
   render: DefaultStory,
   args: {

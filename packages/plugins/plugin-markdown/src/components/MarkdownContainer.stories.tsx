@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo } from 'react';
 
 import {
@@ -56,8 +57,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-markdown/MarkdownContainer',
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],

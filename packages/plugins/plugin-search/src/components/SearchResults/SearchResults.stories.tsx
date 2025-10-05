@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -39,6 +40,8 @@ const meta = {
   title: 'plugins/plugin-search/SearchResults',
   component: SearchResults,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

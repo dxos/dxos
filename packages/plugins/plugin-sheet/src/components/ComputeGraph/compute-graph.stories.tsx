@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
@@ -85,8 +86,7 @@ export const Default: Story = {};
 const meta = {
   title: 'plugins/plugin-sheet/functions',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
+  decorators: [withTheme, withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
   ],
 } satisfies Meta<typeof DefaultStory>;

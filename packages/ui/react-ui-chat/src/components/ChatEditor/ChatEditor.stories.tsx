@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { log } from '@dxos/log';
 
 import { translations } from '../../translations';
@@ -14,6 +15,8 @@ import { type ReferenceData } from './references';
 const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
   component: ChatEditor,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
     translations,

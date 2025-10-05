@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { log } from '@dxos/log';
@@ -38,6 +39,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'sdk/react-client/withClientProvider',
+
+  decorators: [withTheme],
   render: render(DefaultStory),
 } satisfies Meta<typeof DefaultStory>;
 

@@ -10,7 +10,7 @@ import { ContactType } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
 import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
-import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
+import { withSurfaceVariantsLayout, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
 
 import { translations } from '../../translations';
@@ -68,6 +68,7 @@ const meta = {
   title: 'ui/react-ui-form/Form',
   component: Form as any,
   render: DefaultStory,
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
     translations,

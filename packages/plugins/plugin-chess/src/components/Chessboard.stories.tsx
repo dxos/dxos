@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 
 import { translations } from '../translations';
@@ -14,7 +15,7 @@ import { ChessboardArticle } from './ChessboardArticle';
 const meta = {
   title: 'plugins/plugin-chess/Chessboard',
   component: ChessboardArticle,
-  decorators: [withClientProvider({ createIdentity: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -57,6 +58,8 @@ const content = [...Array(24)].reduce((acc: { [key: string]: { title: string; pa
 
 const meta = {
   title: 'ui/react-ui-tabs/Tabs',
+
+  decorators: [withTheme],
   component: NaturalTabs.Root,
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;

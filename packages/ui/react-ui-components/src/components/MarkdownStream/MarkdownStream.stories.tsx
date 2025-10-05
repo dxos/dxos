@@ -5,6 +5,7 @@
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type CSSProperties, useCallback, useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -102,6 +103,8 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

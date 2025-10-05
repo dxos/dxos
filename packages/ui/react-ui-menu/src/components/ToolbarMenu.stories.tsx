@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
@@ -19,6 +20,8 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
+  decorators: [withTheme],
+
   parameters: {
     translations,
   },

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren } from 'react';
 
 import { Icon } from '@dxos/react-ui';
@@ -22,6 +23,8 @@ const meta = {
   title: 'sdk/shell/CompoundButton',
   component: CompoundButton,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof CompoundButton>;
 

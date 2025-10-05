@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
@@ -29,6 +30,8 @@ const meta = {
   title: 'ui/react-ui-pickers/HuePicker',
   component: HuePicker,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

@@ -7,6 +7,7 @@ import '@preact/signals-react';
 import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -112,6 +113,8 @@ const meta = {
   title: 'ui/react-ui-editor/Automerge',
   component: Editor as any,
   render: render(DefaultStory),
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     translations,

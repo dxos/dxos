@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { alice } from '../../testing/fixtures';
@@ -12,6 +13,8 @@ import { SpaceMemberListImpl } from './SpaceMemberList';
 const meta = {
   title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof SpaceMemberListImpl>;
 

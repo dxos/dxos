@@ -4,6 +4,7 @@
 
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -129,6 +130,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/react-ui-stack/Stack',
+
+  decorators: [withTheme],
   component: DefaultStory,
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
 } satisfies Meta<typeof DefaultStory>;

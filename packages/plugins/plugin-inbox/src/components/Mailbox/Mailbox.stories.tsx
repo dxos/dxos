@@ -5,6 +5,7 @@
 import './mailbox.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin, Surface, useCapability } from '@dxos/app-framework';
@@ -63,7 +64,7 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withAttention],
+  decorators: [withTheme, withAttention],
   parameters: {
     layout: 'fullscreen',
   },

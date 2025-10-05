@@ -4,6 +4,7 @@
 
 import { type Rive, useRive } from '@rive-app/react-canvas';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect } from 'react';
 
 import { log } from '@dxos/log';
@@ -84,6 +85,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/brand/Rive',
   render: render(DefaultStory),
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

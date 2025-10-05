@@ -5,6 +5,7 @@
 import { syntaxTree } from '@codemirror/language';
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -166,6 +167,8 @@ const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElemen
 const meta = {
   title: 'ui/react-ui-editor/Preview',
   component: EditorStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

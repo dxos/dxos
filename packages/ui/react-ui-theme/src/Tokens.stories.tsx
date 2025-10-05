@@ -4,6 +4,7 @@
 
 import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { Fragment } from 'react';
 
 import { tokenSet } from './config';
@@ -78,6 +79,8 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/react-ui-theme/Tokens',
+
+  decorators: [withTheme],
   render: DefaultStory,
 } satisfies Meta<typeof DefaultStory>;
 

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { faker } from '@dxos/random';
@@ -30,6 +31,8 @@ const meta = {
   title: 'ui/react-ui-components/Flex',
   component: Flex,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

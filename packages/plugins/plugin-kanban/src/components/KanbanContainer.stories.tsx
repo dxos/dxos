@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -144,8 +145,7 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, DataType.View, Kanban.Kanban],

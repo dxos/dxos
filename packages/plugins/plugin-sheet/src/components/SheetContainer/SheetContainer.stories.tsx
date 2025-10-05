@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
@@ -24,8 +25,7 @@ import { SheetContainer } from './SheetContainer';
 const meta = {
   title: 'plugins/plugin-sheet/SheetContainer',
   component: SheetContainer,
-  decorators: [
-    withClientProvider({ types: [SheetType], createSpace: true }),
+  decorators: [withTheme, withClientProvider({ types: [SheetType], createSpace: true }),
     withComputeGraphDecorator(),
     withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.

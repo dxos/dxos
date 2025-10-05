@@ -4,10 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { Popup } from './Popup';
 
 const meta = {
   title: 'apps/composer-crx/Popup',
+
+  decorators: [withTheme],
   component: Popup,
 } satisfies Meta<typeof Popup>;
 

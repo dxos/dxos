@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -26,8 +27,7 @@ const meta = {
   title: 'plugins/plugin-assistant/Toolbox',
   component: Toolbox as any,
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           onClientInitialized: async ({ client }) => {
@@ -39,8 +39,7 @@ const meta = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
-        TablePlugin(),
-      ],
+        TablePlugin(),],
       capabilities,
     }),
   ],

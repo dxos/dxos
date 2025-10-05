@@ -4,6 +4,7 @@
 
 import { useEffect } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -74,6 +75,8 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

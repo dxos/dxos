@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
@@ -211,6 +212,8 @@ const Invitations = () => {
 
 const meta = {
   title: 'sdk/shell/Invitations',
+
+  decorators: [withTheme],
 } satisfies Meta;
 
 export default meta;

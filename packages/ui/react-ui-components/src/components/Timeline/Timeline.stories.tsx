@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
@@ -137,6 +138,8 @@ const generateCommit = (
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'column',
   },

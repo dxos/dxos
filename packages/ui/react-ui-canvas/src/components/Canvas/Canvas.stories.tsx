@@ -3,6 +3,7 @@
 //
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useCanvasContext, useWheel } from '../../hooks';
@@ -89,6 +90,8 @@ const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

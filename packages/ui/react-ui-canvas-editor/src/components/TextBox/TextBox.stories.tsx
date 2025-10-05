@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { TextBox, type TextBoxProps } from './TextBox';
@@ -19,6 +20,8 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'centered',
   },

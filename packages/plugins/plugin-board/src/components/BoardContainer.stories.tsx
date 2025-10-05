@@ -3,6 +3,7 @@
 //
 
 import { type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -73,8 +74,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-board/Board',
   render: DefaultStory,
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [
         ClientPlugin({
           types: [DataType.Organization, DataType.Person, Board.Board],

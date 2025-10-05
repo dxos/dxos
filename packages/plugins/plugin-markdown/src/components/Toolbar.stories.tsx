@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useCallback, useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
@@ -99,6 +100,8 @@ const meta = {
   title: 'plugins/plugin-markdown/Toolbar',
   component: EditorToolbar as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
     translations,

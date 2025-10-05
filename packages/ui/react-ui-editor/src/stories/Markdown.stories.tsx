@@ -4,6 +4,7 @@
 
 import { markdown } from '@codemirror/lang-markdown';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { decorateMarkdown, image, linkTooltip, table } from '../extensions';
@@ -14,6 +15,8 @@ import { EditorStory, content, defaultExtensions, headings, renderLinkTooltip, t
 const meta = {
   title: 'ui/react-ui-editor/Markdown',
   component: EditorStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

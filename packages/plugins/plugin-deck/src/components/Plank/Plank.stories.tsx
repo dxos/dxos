@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
@@ -26,8 +27,7 @@ const meta = {
       </Stack>
     );
   },
-  decorators: [
-    withPluginManager({
+  decorators: [withTheme, withPluginManager({
       plugins: [AttentionPlugin(), SettingsPlugin(), IntentPlugin(), GraphPlugin()],
       capabilities: () => DeckStateFactory(),
     }),

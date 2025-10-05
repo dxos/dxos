@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
 
@@ -93,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

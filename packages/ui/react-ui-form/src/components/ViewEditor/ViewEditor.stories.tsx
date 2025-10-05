@@ -11,6 +11,7 @@ import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { type DataType, ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
 
@@ -129,10 +130,10 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true })],
+  decorators: [withClientProvider({ createSpace: true }), withTheme],
   parameters: {
-    translations,
     layout: 'fullscreen',
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -143,9 +144,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Readonly: Story = {
-  args: { readonly: true },
+  args: {
+    readonly: true,
+  },
 };
 
 export const Advanced: Story = {
-  args: { kind: 'advanced' },
+  args: {
+    kind: 'advanced',
+  },
 };

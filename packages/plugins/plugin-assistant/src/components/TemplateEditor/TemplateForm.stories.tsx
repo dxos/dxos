@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useState } from 'react';
 
 import { Blueprint, Template } from '@dxos/blueprints';
@@ -48,8 +49,7 @@ const meta = {
   title: 'plugins/plugin-assistant/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,

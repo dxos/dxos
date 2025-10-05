@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useApp } from './useApp';
@@ -18,6 +19,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/App',
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
@@ -111,8 +112,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-table/Relations',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
       createIdentity: true,
       createSpace: true,

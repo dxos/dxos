@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -31,6 +32,8 @@ const meta = {
   title: 'ui/react-ui-core/Popover',
   component: Popover.Root,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 

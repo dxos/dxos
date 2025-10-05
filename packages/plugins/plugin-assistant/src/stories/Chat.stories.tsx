@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
@@ -192,6 +193,8 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
+  decorators: [withTheme],
+
   parameters: {
     translations,
     controls: { disable: true },

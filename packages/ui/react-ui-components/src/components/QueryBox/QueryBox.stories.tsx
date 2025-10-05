@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -16,7 +17,7 @@ const meta = {
     const { space } = useClientProvider();
     return <QueryBox classNames='is-[40rem] p-2 border border-separator rounded-sm' space={space} />;
   },
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
   parameters: {
     layout: 'centered',
   },

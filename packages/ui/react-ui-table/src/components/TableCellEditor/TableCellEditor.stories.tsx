@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -42,8 +43,7 @@ const meta = {
   component: DefaultStory,
   render: DefaultStory,
   parameters: { translations, layout: 'centered' },
-  decorators: [
-    withClientProvider({
+  decorators: [withTheme, withClientProvider({
       types: [DataType.View, DataType.Task, Table.Table],
       createIdentity: true,
       createSpace: true,

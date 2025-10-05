@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { hues } from '@dxos/react-ui-theme';
@@ -15,6 +16,8 @@ const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as 
 const meta = {
   title: 'ui/react-ui-core/Tag',
   component: Tag,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } as const;
 

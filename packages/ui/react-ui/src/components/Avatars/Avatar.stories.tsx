@@ -3,6 +3,7 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type PropsWithChildren } from 'react';
 
 import { type HuePalette } from '@dxos/react-ui-theme';
@@ -57,6 +58,8 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar.Root,
+  decorators: [withTheme],
+
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Avatar.Root>;
 

@@ -4,6 +4,7 @@
 
 import { dot, geo, graticule, plot, sphere } from '@observablehq/plot';
 import { type Meta } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import { geoCircle } from 'd3';
 import React, { useEffect } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -80,6 +81,8 @@ const ExtendedStory = () => {
 
 const meta = {
   title: 'plugins/plugin-explorer/Globe',
+  decorators: [withTheme],
+
   parameters: {
     layout: 'fullscreen',
   },

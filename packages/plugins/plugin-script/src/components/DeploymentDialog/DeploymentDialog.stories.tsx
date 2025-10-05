@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
@@ -30,7 +31,7 @@ const meta = {
   render: DefaultStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
+  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

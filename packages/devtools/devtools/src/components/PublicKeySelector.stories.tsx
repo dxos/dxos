@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
@@ -12,6 +13,8 @@ import { PublicKeySelector } from './PublicKeySelector';
 
 const meta = {
   title: 'devtools/devtools/PublicKeySelector',
+
+  decorators: [withTheme],
   component: PublicKeySelector,
   render: (args) => (
     <Toolbar.Root>

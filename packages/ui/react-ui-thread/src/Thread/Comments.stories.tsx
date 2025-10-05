@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { withTheme } from '@dxos/react-ui/testing';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
@@ -351,6 +352,8 @@ const meta = {
   title: 'ui/react-ui-thread/Comments',
   component: StoryThread as any,
   render: DefaultStory,
+  decorators: [withTheme],
+
   parameters: { translations, layout: 'fullscreen' },
 } satisfies Meta<typeof DefaultStory>;
 
