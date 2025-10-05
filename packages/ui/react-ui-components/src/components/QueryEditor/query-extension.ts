@@ -79,7 +79,6 @@ const decorations = (): Extension => {
     };
 
     const deco = new RangeSetBuilder<Decoration>();
-    const atomicDeco = new RangeSetBuilder<Decoration>();
     syntaxTree(state).iterate({
       enter: (node) => {
         switch (node.type.name) {
@@ -102,14 +101,13 @@ const decorations = (): Extension => {
               break;
             }
 
-            const nodeIdent = node.node.getChild(QueryDSL.Node.Identifier);
-            if (nodeIdent) {
-              const identifier = state.sliceDoc(nodeIdent.from, nodeIdent.to);
+            const identifier = node.node.getChild(QueryDSL.Node.Identifier);
+            if (identifier) {
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TypeWidget(identifier),
+                  widget: new TypeWidget(state.sliceDoc(identifier.from, identifier.to)),
                 }),
               );
             }
@@ -117,17 +115,16 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const nodeIdent = node.node.getChild(QueryDSL.Node.Identifier);
-            if (nodeIdent) {
-              const identifier = state.sliceDoc(nodeIdent.from, nodeIdent.to);
+            const tag = node.node.getChild(QueryDSL.Node.Tagname);
+            if (tag) {
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(identifier),
+                  widget: new TagWidget(state.sliceDoc(tag.from, tag.to)),
+                  atomic: true,
                 }),
               );
-              atomicDeco.add(node.from, node.to, Decoration.mark({}));
             }
             break;
           }
@@ -150,13 +147,15 @@ const decorations = (): Extension => {
             break;
           }
 
+          case QueryDSL.Node.Not:
           case QueryDSL.Node.And:
           case QueryDSL.Node.Or: {
-            atomicDeco.add(
+            deco.add(
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pie-1',
+                class: 'pie-1 uppercase',
+                atomic: true,
               }),
             );
             break;
@@ -169,20 +168,20 @@ const decorations = (): Extension => {
               node.to,
               Decoration.widget({
                 widget: new SymbolWidget(node.type.id === QueryDSL.Node.ArrowRight ? '\u2192' : '\u2190'),
+                atomic: true,
               }),
             );
-            atomicDeco.add(node.from, node.to, Decoration.mark({}));
             break;
           }
         }
       },
     });
 
-    return { deco: deco.finish(), atomicDeco: atomicDeco.finish() };
+    return deco.finish();
   };
 
   return [
-    StateField.define<{ deco: DecorationSet; atomicDeco: DecorationSet }>({
+    StateField.define<DecorationSet>({
       create: (state) => buildDecorations(state),
       update: (deco, tr) => {
         if (tr.docChanged || tr.newSelection) {
@@ -192,8 +191,19 @@ const decorations = (): Extension => {
         return deco;
       },
       provide: (field) => [
-        EditorView.decorations.from(field, (value) => value.deco),
-        EditorView.atomicRanges.of((view) => view.state.field(field).atomicDeco),
+        EditorView.decorations.from(field),
+        EditorView.atomicRanges.of((view) => {
+          const builder = new RangeSetBuilder<Decoration>();
+          const cursor = view.state.field(field).iter();
+          while (cursor.value) {
+            if (cursor.value.spec.atomic) {
+              builder.add(cursor.from, cursor.to, cursor.value);
+            }
+            cursor.next();
+          }
+
+          return builder.finish();
+        }),
       ],
     }),
   ];
