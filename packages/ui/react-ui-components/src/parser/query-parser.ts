@@ -6,14 +6,16 @@ import { invariant } from '@dxos/invariant';
 
 import { type BinaryOperator, type Expression, type RelationalOperator, type RelationalSymbol } from './types';
 
-// TODO(burdon): Move to echo-schema?
-
 const operators: Record<RelationalSymbol, RelationalOperator> = {
   '=': 'EQ',
   '<': 'LT',
   '>': 'GT',
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Remove.
 export class QueryParser {
   private tokens: string[] = [];
   private current = 0;
@@ -21,6 +23,18 @@ export class QueryParser {
   constructor(input: string) {
     // Tokenize the input string.
     this.tokens = this.tokenize(input);
+  }
+
+  public parse(): Expression {
+    // Return a special expression for empty input.
+    if (this.tokens.length === 0) {
+      return {
+        type: 'literal',
+        value: '*',
+      };
+    }
+
+    return this.parseExpression();
   }
 
   private tokenize(input: string): string[] {
@@ -181,17 +195,5 @@ export class QueryParser {
     }
 
     throw new Error(`Unexpected token: ${token}`);
-  }
-
-  public parse(): Expression {
-    // Return a special expression for empty input.
-    if (this.tokens.length === 0) {
-      return {
-        type: 'literal',
-        value: '*',
-      };
-    }
-
-    return this.parseExpression();
   }
 }

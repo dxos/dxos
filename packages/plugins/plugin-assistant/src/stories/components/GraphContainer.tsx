@@ -3,21 +3,16 @@
 //
 
 import { Match } from 'effect';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ResearchGraph } from '@dxos/assistant-testing';
 import { Filter, Query } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
-import {
-  type Expression,
-  QueryBox,
-  type QueryBoxController,
-  QueryParser,
-  createFilter,
-} from '@dxos/react-ui-components';
+import { type Expression, type QueryBoxController, QueryEditor } from '@dxos/react-ui-components';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -26,40 +21,36 @@ import { useFlush } from '../../hooks';
 import { type ComponentProps } from './types';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
-  const [ast, setAst] = useState<Expression | undefined>();
+  const [ast, _setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
   const [researchGraph] = useQuery(space, Query.type(ResearchGraph));
   const queue = researchGraph?.queue.target;
 
+  // TODO(burdon): Clean-up API.
   const model = useGraphModel(space, undefined, undefined, queue);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
 
+  const parser = useMemo(() => new QueryBuilder(), []);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      try {
-        const parser = new QueryParser(text);
-        const ast = parser.parse();
-        setAst(ast);
-        const filter = createFilter(ast);
+      // TODO(burdon): Get AST from filter?
+      const filter = parser.build(text);
+      if (filter) {
         setFilter(filter);
         setOpen(true);
-      } catch {
-        // TODO(mykola): Make hybrid search.
-        const filter = Filter.text(text, { type: 'vector' });
-        setFilter(filter);
       }
     },
-    [space],
+    [space, parser],
   );
 
   return (
-    <div className={mx('relative grid h-full', open && 'grid-rows-[min-content_1fr]')}>
+    <div className={mx('relative bs-full grid', open && 'grid-rows-[min-content_1fr]')}>
       <SearchBar space={space} onSubmit={handleSubmit} />
-      <D3ForceGraph classNames='min-h-[50vh]' model={model} />
+      <D3ForceGraph classNames='min-bs-[50vh]' model={model} />
 
       {/* TODO(burdon): Create component with context state for story. */}
       {(open && (
@@ -92,7 +83,7 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
 
   return (
     <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
-      <QueryBox ref={editorRef} autoFocus placeholder='Search' onSubmit={onSubmit} />
+      <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' space={space} onChange={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly

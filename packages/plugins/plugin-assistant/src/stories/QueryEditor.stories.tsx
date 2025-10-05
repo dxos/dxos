@@ -30,7 +30,7 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
   // TODO(burdon): Catch invalid filter error.
-  const objects = useQuery(space, filter).sort(Obj.sortByLabel);
+  const objects = useQuery(space, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
   const model = useGraphModel(space, filter);
 
   useEffect(() => {
@@ -103,6 +103,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '(type:dxos.org/type/Person => type:dxos.org/type/Organization)',
+    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization)',
   },
 };
