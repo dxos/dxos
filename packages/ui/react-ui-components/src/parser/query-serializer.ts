@@ -49,12 +49,12 @@ export class QuerySerializer {
   private serializeBinaryExpression(expression: BinaryExpression): string {
     const { operator, left, right } = expression;
 
-    // Handle special case for type:value expressions
+    // Handle special case for type:value expressions.
     if (this.isTypeExpression(left, right, operator)) {
       return `${(left as any).name}:${(right as any).value}`;
     }
 
-    // Handle field operator value expressions
+    // Handle field operator value expressions..
     if (this.isFieldExpression(left, right, operator)) {
       const field = (left as any).name;
       const value = this.serializeLiteral(right as Literal);
@@ -62,12 +62,12 @@ export class QuerySerializer {
       return `${field} ${opSymbol} ${value}`;
     }
 
-    // Handle logical operators (AND, OR)
+    // Handle logical operators (AND, OR).
     if (operator === 'AND' || operator === 'OR') {
       const leftStr = this.serializeExpression(left);
       const rightStr = this.serializeExpression(right);
 
-      // Add parentheses around OR expressions when they're part of an AND expression
+      // Add parentheses around OR expressions when they're part of an AND expression.
       if (operator === 'AND' && right.type === 'binary' && right.operator === 'OR') {
         return `${leftStr} ${operator} (${rightStr})`;
       }
@@ -75,7 +75,7 @@ export class QuerySerializer {
       return `${leftStr} ${operator} ${rightStr}`;
     }
 
-    // Handle relational operators in general case
+    // Handle relational operators in general case.
     const leftStr = this.serializeExpression(left);
     const rightStr = this.serializeExpression(right);
     const opSymbol = operators[operator as RelationalOperator];
@@ -87,7 +87,7 @@ export class QuerySerializer {
 
     if (operator === 'NOT') {
       const argStr = this.serializeExpression(argument);
-      // Only add parentheses if the argument is a complex binary expression (AND/OR)
+      // Only add parentheses if the argument is a complex binary expression (AND/OR).
       if (argument.type === 'binary' && (argument.operator === 'AND' || argument.operator === 'OR')) {
         return `NOT (${argStr})`;
       }
@@ -100,7 +100,7 @@ export class QuerySerializer {
   private serializeLiteral(literal: Literal): string {
     const { value } = literal;
 
-    // Handle special wildcard case
+    // Handle special wildcard case.
     if (value === '*') {
       return value;
     }
@@ -127,7 +127,7 @@ export class QuerySerializer {
   }
 
   private needsQuoting(value: string): boolean {
-    // Quote if contains spaces, parentheses, or operators
+    // Quote if contains spaces, parentheses, or operators.
     return /[\s()=<>]/.test(value);
   }
 }

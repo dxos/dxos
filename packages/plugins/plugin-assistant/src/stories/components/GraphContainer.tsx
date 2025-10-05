@@ -21,7 +21,7 @@ import { useFlush } from '../../hooks';
 import { type ComponentProps } from './types';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
-  const [ast, setAst] = useState<Expression | undefined>();
+  const [ast, _setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
