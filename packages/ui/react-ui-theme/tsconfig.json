@@ -19,9 +19,6 @@
       "path": "../../common/node-std"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
