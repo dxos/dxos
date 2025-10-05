@@ -8,15 +8,6 @@ import React from 'react';
 import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
 import { withTheme } from '../testing';
 
-// TODO(burdon): Change density to 3 or 4 sizes: (large, medium, small; or 22, 28, 32, 40)
-// TODO(burdon): IconButton should be square if no text.
-// TODO(burdon): IconButton icon should be auto-sized based on density.
-
-// TODO(burdon): Remove custom padding from all Buttons.
-
-// TODO(burdon): Forms w/ labels.
-// TODO(burdon): Card preview with sections.
-
 const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
   return (
     <Tooltip.Provider>
