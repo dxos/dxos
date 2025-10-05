@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -15,7 +13,6 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { mermaid } from './mermaid-extension';
 
@@ -47,13 +44,9 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-mermaid/extensions',
   render: DefaultStory,
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

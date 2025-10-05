@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/web-components-vite';
 
-import { withLayout2 } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 /**
  * Configure Storybook rendering.
@@ -22,7 +24,8 @@ export const preview: Preview = {
       },
     }),
 
-    withLayout2(),
+    withLayout,
+    withTheme,
   ],
 
   /**

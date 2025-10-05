@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { dot, geo, graticule, plot, sphere } from '@observablehq/plot';
 import { type Meta } from '@storybook/react-vite';
 import { geoCircle } from 'd3';

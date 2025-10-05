@@ -7,7 +7,6 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Treegrid } from './Treegrid';
@@ -59,12 +58,9 @@ const content = {
                 {
                   id: faker.string.uuid(),
                   title: faker.commerce.productName(),
-                },
-              ],
-            },
-          ],
-        },
-      ],
+                }],
+            }],
+        }],
     },
     {
       id: faker.string.uuid(),
@@ -74,8 +70,7 @@ const content = {
         {
           id: faker.string.uuid(),
           title: faker.commerce.productName(),
-        },
-      ],
+        }],
     },
     {
       id: faker.string.uuid(),
@@ -86,8 +81,7 @@ const content = {
       id: faker.string.uuid(),
       title: faker.commerce.productName(),
       icon: 'ph--planet--regular',
-    },
-  ],
+    }],
 } as StorybookNode;
 
 function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean): Generator<StorybookIteratorNode> {
@@ -96,8 +90,7 @@ function* visitor(node: StorybookNode, isOpen?: (node: StorybookNode) => boolean
       node,
       path: [node.id],
       parentOf: (node.nodes ?? []).map(({ id }) => id),
-    },
-  ];
+    }];
   while (stack.length > 0) {
     const { node, path, parentOf } = stack.pop()!;
     if (path.length > 1) {
@@ -147,8 +140,7 @@ const meta = {
   title: 'ui/react-ui-core/Treegrid',
   component: Treegrid.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-} satisfies Meta<typeof DefaultStory>;
+  } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

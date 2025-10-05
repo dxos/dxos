@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog, useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -37,7 +34,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCodeDialog',
   component: RecoveryCodeDialog as any,
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme],
+  decorators: [withClientProvider({ createIdentity: true })],
   parameters: {
     layout: 'fullscreen',
     translations,

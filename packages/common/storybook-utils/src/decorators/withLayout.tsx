@@ -3,112 +3,68 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import defaultsDeep from 'lodash.defaultsdeep';
-import React, { type FC, type JSX, type PropsWithChildren } from 'react';
+import React from 'react';
 
-import { type Density, DensityProvider, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-type ProviderOptions = {
-  fullscreen?: boolean;
-  density?: Density;
-};
+const screenClassName = 'fixed inset-0 bg-deckSurface';
 
-const defaultOptions: ProviderOptions = {
-  density: 'fine',
-};
-
-type Provider = (children: JSX.Element, options: ProviderOptions) => JSX.Element;
-
-const providers: Provider[] = [
-  (children, options) => {
-    return options?.density ? <DensityProvider density={options.density}>{children}</DensityProvider> : children;
-  },
-];
-
-export type ContainerProps = ThemedClassName<PropsWithChildren<Pick<ProviderOptions, 'fullscreen'>>>;
-
-export type WithLayoutProps = ThemedClassName<ProviderOptions & { Container?: FC<ContainerProps> }>;
+export type LayoutType = 'fullscreen' | 'column' | 'centered';
 
 /**
- * Decorator to layout the story container, adding optional providers.
- * @deprecated
+ * parameters: {
+ *   layout: {
+ *     type: 'fullscreen' | 'column' | 'centered'
+ *     classNames?: string
+ *   }
+ * }
  */
-export const withLayout = ({
-  classNames,
-  fullscreen,
-  Container = fullscreen ? FullscreenContainer : DefaultContainer,
-  ...providedOptions
-}: WithLayoutProps = {}): Decorator => {
-  // TODO(burdon): Inspect "fullscreen" parameter in context.
-  return (Story, _context) => {
-    const children = (
-      <Container classNames={classNames} fullscreen={fullscreen}>
-        <Story />
-      </Container>
-    );
-
-    const options = defaultsDeep({}, providedOptions, defaultOptions);
-    return providers.reduceRight((acc, provider) => provider(acc, options), children);
-  };
-};
-
-// TODO(burdon): Use consistently.
-export const layoutCentered = 'bg-deckSurface justify-center overflow-y-auto';
-
-export const DefaultContainer = ({ children, classNames }: ContainerProps) => {
-  return (
-    <div role='none' className={mx(classNames)}>
-      {children}
-    </div>
-  );
-};
-
-export const FullscreenContainer = ({ children, classNames }: ContainerProps) => {
-  return (
-    <div role='none' className={mx('fixed inset-0 flex overflow-hidden', classNames)}>
-      {children}
-    </div>
-  );
-};
-
-export const ColumnContainer = ({ children, classNames = 'w-[30rem]', ...props }: ContainerProps) => {
-  return (
-    <FullscreenContainer classNames='justify-center bg-modalSurface' {...props}>
-      <div role='none' className={mx('flex flex-col h-full overflow-y-auto bg-baseSurface', classNames)}>
-        {children}
-      </div>
-    </FullscreenContainer>
-  );
-};
+export type LayoutOptions =
+  | LayoutType
+  | {
+      type: LayoutType;
+      classNames?: string;
+    };
 
 /**
- * Default decorator (add to preview.ts)
+ * Process layout parameter (add to preview.ts)
  */
-// TODO(burdon): Add theme here.
-export const withLayout2 =
-  (): Decorator =>
-  (Story, { parameters: { layout, classNames } }) => {
-    switch (layout) {
-      // Fullscreen.
-      case 'fullscreen':
-        return (
-          <div role='none' className='fixed inset-0 flex overflow-hidden'>
+export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
+  const { type, classNames } = typeof layout === 'string' ? { type: layout } : layout;
+
+  switch (type) {
+    // Fullscreen.
+    case 'fullscreen':
+      return (
+        <div role='none' className={mx(screenClassName, 'flex flex-col overflow-hidden', classNames)}>
+          <Story />
+        </div>
+      );
+
+    // Centered column.
+    case 'column':
+      return (
+        <div role='none' className={mx(screenClassName, 'flex justify-center overflow-hidden')}>
+          <div
+            role='none'
+            className={mx('flex flex-col bs-full is-[40rem] overflow-hidden bg-baseSurface', classNames)}
+          >
             <Story />
           </div>
-        );
+        </div>
+      );
 
-      // Single column.
-      case 'column':
-        return (
-          <div role='none' className='fixed inset-0 flex justify-center overflow-hidden bg-deckSurface'>
-            <div role='none' className={mx(classNames ?? 'bs-full is-[40rem]')}>
-              <Story />
-            </div>
+    // Centered.
+    case 'centered':
+      return (
+        <div role='none' className={mx(screenClassName, 'grid place-items-center')}>
+          <div role='none' className={mx('contents', classNames)}>
+            <Story />
           </div>
-        );
+        </div>
+      );
 
-      default:
-        return <Story />;
-    }
-  };
+    default:
+      return <Story />;
+  }
+};

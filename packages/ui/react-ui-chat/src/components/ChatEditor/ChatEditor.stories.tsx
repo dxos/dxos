@@ -2,12 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -17,8 +14,7 @@ import { type ReferenceData } from './references';
 const meta = {
   title: 'ui/react-ui-chat/ChatEditor',
   component: ChatEditor,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
     translations,
   },

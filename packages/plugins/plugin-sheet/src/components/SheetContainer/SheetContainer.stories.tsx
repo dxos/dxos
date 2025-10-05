@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { Capabilities, IntentPlugin, contributes, createResolver } from '@dxos/app-framework';
@@ -14,7 +12,6 @@ import { fullyQualifiedId, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
@@ -24,7 +21,38 @@ import { RangeList } from '../RangeList';
 
 import { SheetContainer } from './SheetContainer';
 
-export const Basic = () => {
+const meta = {
+  title: 'plugins/plugin-sheet/SheetContainer',
+  component: SheetContainer,
+  decorators: [
+    withClientProvider({ types: [SheetType], createSpace: true }),
+    withComputeGraphDecorator(),
+    withAttention,
+    // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
+    withPluginManager({
+      plugins: [IntentPlugin(), GraphPlugin()],
+      capabilities: [
+        contributes(
+          Capabilities.IntentResolver,
+          createResolver({
+            intent: SheetAction.DropAxis,
+            resolve: ({ model, axis, axisIndex }) => {
+              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
+            },
+          }),
+        ),
+      ],
+    }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof SheetContainer>;
+
+export default meta;
+
+export const Default = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
@@ -58,35 +86,3 @@ export const Spec = () => {
     </AttendableContainer>
   );
 };
-
-const meta = {
-  title: 'plugins/plugin-sheet/SheetContainer',
-  component: SheetContainer,
-  decorators: [
-    withClientProvider({ types: [SheetType], createSpace: true }),
-    withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'grid' }),
-    withAttention,
-    // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.
-    withPluginManager({
-      plugins: [IntentPlugin(), GraphPlugin()],
-      capabilities: [
-        contributes(
-          Capabilities.IntentResolver,
-          createResolver({
-            intent: SheetAction.DropAxis,
-            resolve: ({ model, axis, axisIndex }) => {
-              model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
-            },
-          }),
-        ),
-      ],
-    }),
-  ],
-  parameters: { translations },
-} satisfies Meta<typeof SheetContainer>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;

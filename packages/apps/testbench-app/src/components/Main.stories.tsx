@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withMultiClientProvider } from '@dxos/react-client/testing';
@@ -24,8 +22,10 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'fullscreen',
-    classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+    layout: {
+      type: 'fullscreen',
+      classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+    },
   },
 } satisfies Meta<typeof Main>;
 

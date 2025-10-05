@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -11,7 +9,6 @@ import { Obj } from '@dxos/echo';
 import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -44,7 +41,6 @@ const meta = {
         }
       },
     }),
-    withTheme,
   ],
   parameters: {
     layout: 'centered',

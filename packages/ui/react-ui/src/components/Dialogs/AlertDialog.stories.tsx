@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 import { Toolbar } from '../Toolbar';
 
@@ -52,8 +49,7 @@ const meta = {
   title: 'ui/react-ui-core/AlertDialog',
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

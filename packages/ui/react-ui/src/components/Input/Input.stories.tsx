@@ -2,15 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { baseSurface, modalSurface, mx, surfaceShadow } from '@dxos/react-ui-theme';
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { withTheme } from '../../testing';
 
 import {
   type CheckboxProps,
@@ -93,8 +90,7 @@ const meta = {
   title: 'ui/react-ui-core/Input',
   component: Input.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

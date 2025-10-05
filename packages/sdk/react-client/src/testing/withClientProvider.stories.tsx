@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { useClient } from '../client';
 import { type Space, useSpaces } from '../echo';
@@ -29,7 +27,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded'>
+    <div className='flex flex-col divide-y divide-separator border border-separator'>
       <SyntaxHighlighter language='json'>{JSON.stringify(client.toJSON(), null, 2)}</SyntaxHighlighter>
       {spaces.map((space) => (
         <SpaceInfo key={space.id} space={space} />
@@ -59,13 +57,18 @@ const clientProps: WithClientProviderProps = {
 };
 
 export const Default: Story = {
-  decorators: [withClientProvider(clientProps), withTheme, withLayout({ classNames: ['flex gap-2'] })],
+  decorators: [withClientProvider(clientProps)],
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 export const Multiple: Story = {
-  decorators: [
-    withMultiClientProvider({ ...clientProps, numClients: 3 }),
-    withTheme,
-    withLayout({ classNames: ['flex gap-2'] }),
-  ],
+  decorators: [withMultiClientProvider({ ...clientProps, numClients: 3 })],
+  parameters: {
+    layout: {
+      type: 'fullscreen',
+      classNames: 'grid grid-cols-3',
+    },
+  },
 };

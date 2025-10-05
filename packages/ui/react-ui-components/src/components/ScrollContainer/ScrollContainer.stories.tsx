@@ -52,8 +52,10 @@ const meta = {
   component: ScrollContainer.Root,
   render: DefaultStory,
   parameters: {
-    layout: 'column',
-    classNames: 'w-[30rem]',
+    layout: {
+      type: 'column',
+      classNames: 'w-[30rem]',
+    },
   },
 } satisfies Meta<typeof DefaultStory>;
 

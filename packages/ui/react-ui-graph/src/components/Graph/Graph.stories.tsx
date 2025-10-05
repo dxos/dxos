@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { effect } from '@preact/signals-core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';

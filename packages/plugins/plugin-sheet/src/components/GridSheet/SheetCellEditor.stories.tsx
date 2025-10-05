@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
@@ -14,7 +12,6 @@ import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { sheetExtension } from '../../extensions';
 import { SheetType, createSheet } from '../../types';
@@ -63,8 +60,7 @@ const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
   component: CellEditor,
   render: DefaultStory,
-  decorators: [withTheme],
-} satisfies Meta<typeof DefaultStory>;
+  } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
 import { Toggle } from '../Buttons';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
@@ -76,8 +73,7 @@ const meta = {
   title: 'ui/react-ui-core/Toolbar',
   component: Toolbar as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

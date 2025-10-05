@@ -2,8 +2,6 @@
 // Copyright 2018 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type FeatureCollection, type Geometry, type Position } from 'geojson';
 import { Leva } from 'leva';
@@ -11,7 +9,6 @@ import React, { useMemo, useRef, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncState } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
 import { type LatLngLiteral } from '../../types';
@@ -229,7 +226,9 @@ const meta = {
   title: 'ui/react-ui-geo/Globe',
   component: Globe.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-[#000]' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta;
 
 export default meta;

@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { StorybookDialog } from '../StorybookDialog';
 
@@ -19,8 +16,7 @@ import { Label } from './Label';
 const meta = {
   title: 'sdk/shell/StorybookDialog',
   component: StorybookDialog,
-  decorators: [withTheme],
-} satisfies Meta<typeof StorybookDialog>;
+  } satisfies Meta<typeof StorybookDialog>;
 
 export default meta;
 

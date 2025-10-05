@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup';
@@ -30,8 +27,7 @@ const meta = {
   title: 'ui/react-ui-core/ToggleGroup',
   component: ToggleGroup,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof ToggleGroup>;
 
 export default meta;

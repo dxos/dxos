@@ -2,12 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { withAttention } from '../testing';
 
@@ -37,7 +34,7 @@ const Story = () => {
 const meta = {
   title: 'ui/react-ui-attention/AttentionProvider',
   render: Story,
-  decorators: [withTheme, withAttention],
+  decorators: [withAttention],
 } satisfies Meta;
 
 export default meta;

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -11,10 +10,8 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { editorWidth } from '@dxos/react-ui-editor';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
@@ -105,9 +102,8 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: editorWidth })],
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof DefaultStory>;
 

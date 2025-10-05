@@ -2,15 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { useEffect } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Flex } from '../Flex';
 import { TextCrawl } from '../TextCrawl';
@@ -77,8 +74,7 @@ const DefaultStory = ({ items, ...props }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-components/ProgressBar',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;

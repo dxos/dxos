@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -20,13 +17,11 @@ const meta = {
   decorators: [
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      classNames: 'flex flex-col justify-center',
-    }),
   ],
-  parameters: { translations },
+  parameters: {
+    layout: 'column',
+    translations,
+  },
   tags: ['cards'],
 } satisfies Meta<typeof Defaultstory>;
 

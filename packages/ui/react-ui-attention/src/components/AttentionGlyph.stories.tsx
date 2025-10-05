@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
 import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph';
@@ -33,8 +30,7 @@ const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
   component: AttentionGlyph as any,
   render: DefaultStory,
-  decorators: [withTheme],
-} satisfies Meta<typeof DefaultStory>;
+  } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

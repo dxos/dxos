@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';

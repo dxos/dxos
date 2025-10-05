@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -28,7 +26,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';
@@ -354,8 +351,7 @@ const meta = {
   title: 'ui/react-ui-thread/Comments',
   component: StoryThread as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { translations, layout: 'fullscreen' },
+    parameters: { translations, layout: 'fullscreen' },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

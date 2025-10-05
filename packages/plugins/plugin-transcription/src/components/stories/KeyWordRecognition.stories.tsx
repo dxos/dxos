@@ -2,15 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 type Word = {
   text: string;
@@ -120,7 +117,9 @@ const DefaultStory = ({ keywords }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

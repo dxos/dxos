@@ -2,12 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Arrow, createPath } from './svg';
 import { testId } from './util';
@@ -34,8 +31,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'ui/react-ui-canvas/svg',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
   },
 } satisfies Meta;

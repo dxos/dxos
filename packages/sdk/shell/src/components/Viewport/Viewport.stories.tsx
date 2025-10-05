@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { AlertDialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Action } from '../Panel';
 
@@ -59,8 +56,7 @@ const StorybookViewport = (props: StorybookViewportProps) => {
 const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

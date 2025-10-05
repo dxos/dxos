@@ -2,13 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Button, type ButtonProps, IconButton, Tooltip } from '../components';
-import { withTheme } from '../testing';
 
 // TODO(burdon): Change density to 3 or 4 sizes: (large, medium, small; or 22, 28, 32, 40)
 // TODO(burdon): IconButton should be square if no text.
@@ -124,8 +121,7 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Custom',
   component: Button,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { layout: 'centered' },
+    parameters: { layout: 'centered' },
 } satisfies Meta<typeof Button>;
 
 export default meta;

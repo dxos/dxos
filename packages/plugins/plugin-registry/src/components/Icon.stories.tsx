@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactElement, type SVGProps, forwardRef } from 'react';
 
 import { Icon } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
 /**
  * Serializable icon props.
@@ -104,8 +101,7 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
-  decorators: [withTheme],
-} satisfies Meta<typeof IconBase>;
+  } satisfies Meta<typeof IconBase>;
 
 export default meta;
 

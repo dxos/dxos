@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
 import { activeSurface, surfaceShadow } from '@dxos/react-ui-theme';
 
-import { withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
 
@@ -39,8 +36,7 @@ const meta = {
   title: 'ui/react-ui-core/Scroll area',
   component: ScrollArea as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

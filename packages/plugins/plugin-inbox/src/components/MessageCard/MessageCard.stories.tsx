@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -10,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { IntrinsicCardContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { IntrinsicCardContainer } from '@dxos/storybook-utils';
 
 import { MessageCard } from './MessageCard';
 
@@ -46,12 +45,9 @@ const meta = {
       </IntrinsicCardContainer>
     );
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-    }),
-  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof MessageCard>;
 
 export default meta;

@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Card } from './Card';
 
@@ -43,8 +40,7 @@ const DefaultStory = ({ title, description, image, showImage, showIcon }: CardSt
 const meta = {
   title: 'ui/react-ui-stack/Card',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
   },
   argTypes: {

@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { StatusBar } from './StatusBar';
 
@@ -37,8 +34,7 @@ const meta = {
   title: 'plugins/plugin-status/StatusBar',
   component: StatusBar as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     chromatic: { disableSnapshot: false },
   },
 } satisfies Meta<typeof StatusBar>;

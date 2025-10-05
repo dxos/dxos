@@ -2,8 +2,6 @@
 // Copyright 20255555 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -20,7 +18,6 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';
@@ -73,8 +70,10 @@ const meta = {
       ],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
-    withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
   ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof MeetingContainer>;
 
 export default meta;

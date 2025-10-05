@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
 
@@ -82,7 +79,9 @@ const meta = {
   title: 'ui/react-ui-gameboard/Chessboard',
   component: Chessboard,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: '' })],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Chessboard>;
 
 export default meta;

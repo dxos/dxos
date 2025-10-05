@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 import { Tooltip } from './Tooltip';
@@ -35,8 +32,7 @@ const meta = {
   title: 'ui/react-ui-core/Tooltip',
   component: Tooltip as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -49,8 +45,7 @@ export const Default: Story = {
       {
         label: 'Tooltip trigger',
         content: 'This is the tooltip content',
-      },
-    ],
+      }],
   },
   parameters: {
     chromatic: { delay: 500 },
@@ -64,8 +59,7 @@ export const DefaultOpen: Story = {
       {
         label: 'Tooltip trigger',
         content: 'This is the tooltip content',
-      },
-    ],
+      }],
   },
   parameters: {
     chromatic: { delay: 500 },

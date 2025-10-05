@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
@@ -14,7 +12,6 @@ import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDX
 import { live } from '@dxos/live-object';
 import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -105,7 +102,7 @@ type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
 type Story = StoryObj<StoryProps<any>>;
 
 export const Default: Story = {
-  decorators: [withSurfaceVariantsLayout(), withTheme],
+  decorators: [withSurfaceVariantsLayout()],
   args: {
     schema: ContactSchema,
     values: {

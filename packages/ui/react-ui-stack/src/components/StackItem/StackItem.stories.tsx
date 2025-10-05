@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DropdownMenu, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { StackItem, type StackItemRootProps } from './StackItem';
 
@@ -36,8 +33,7 @@ const meta = {
   title: 'ui/react-ui-stack/StackItem',
   component: StackItem.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof DefaultStory>;

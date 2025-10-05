@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -24,7 +22,6 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
@@ -212,9 +209,10 @@ const meta = {
       ],
       fireEvents: [Events.SetupAppGraph],
     }),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta;
 
 export default meta;

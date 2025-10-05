@@ -2,14 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';
 import { useMenuActions } from '../hooks';
@@ -22,8 +19,7 @@ faker.seed(1234);
 const meta = {
   title: 'ui/react-ui-menu/ToolbarMenu',
   component: ToolbarMenu,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     translations,
   },
 } satisfies Meta<typeof ToolbarMenu>;

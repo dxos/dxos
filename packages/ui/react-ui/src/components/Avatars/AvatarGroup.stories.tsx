@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useId } from '@dxos/react-hooks';
 import { toEmoji } from '@dxos/util';
 
-import { withTheme } from '../../testing';
 
 import { Avatar } from './Avatar';
 
@@ -42,8 +39,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/AvatarGroup',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

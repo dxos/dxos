@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Image } from './Image';
 
@@ -22,8 +19,7 @@ const meta = {
       <Image {...args} />
     </div>
   ),
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'fullscreen',
   },
 } satisfies Meta<typeof Image>;

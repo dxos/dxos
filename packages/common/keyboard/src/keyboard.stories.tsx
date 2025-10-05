@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Input, Select } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { type KeyHandler, Keyboard } from './keyboard';
 
@@ -70,7 +67,6 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'common/keyboard/Keyboard',
-  decorators: [withTheme],
   render: DefaultStory,
 } satisfies Meta<typeof Input>;
 

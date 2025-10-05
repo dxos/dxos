@@ -2,13 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Composer, DXNS, DXOS, ECHO, HALO, KUBE, MESH } from './icons';
 
@@ -17,8 +14,7 @@ const Icon = () => null;
 const meta = {
   title: 'ui/brand/Icons',
   component: Icon,
-  decorators: [withTheme],
-} satisfies Meta<typeof Icon>;
+  } satisfies Meta<typeof Icon>;
 
 export default meta;
 

@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { meta as pluginMeta } from '../meta';
 import { Chess } from '../types';
@@ -31,7 +28,6 @@ const meta: Meta<DefaultStoryProps> = {
       </Chessboard.Root>
     </CardContainer>
   ),
-  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },

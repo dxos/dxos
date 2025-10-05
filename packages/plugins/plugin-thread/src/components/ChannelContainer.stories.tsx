@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -12,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
@@ -21,7 +19,7 @@ import { ChannelType, ThreadType } from '../types';
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
-const Story = ({ roomId }: ChannelContainerProps) => {
+const DefaultStory = ({ roomId }: ChannelContainerProps) => {
   const space = useSpace();
   const [channel] = useQuery(space, Query.type(ChannelType));
   if (!channel) {
@@ -34,15 +32,15 @@ const Story = ({ roomId }: ChannelContainerProps) => {
 const meta = {
   title: 'plugins/plugin-thread/ChannelContainer',
   component: ChannelContainer,
-  render: (args) => <Story {...args} />,
+  render: render(DefaultStory),
   decorators: [
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
-    withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof ChannelContainer>;

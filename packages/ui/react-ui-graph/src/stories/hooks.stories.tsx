@@ -2,8 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';

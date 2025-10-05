@@ -2,15 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { hues } from '@dxos/react-ui-theme';
 import { type ChromaticPalette, type MessageValence } from '@dxos/react-ui-types';
 
-import { withTheme } from '../../testing';
 
 import { Tag } from './Tag';
 
@@ -19,8 +16,7 @@ const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as 
 const meta = {
   title: 'ui/react-ui-core/Tag',
   component: Tag,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } as const;
 
 export const Default: Story = {

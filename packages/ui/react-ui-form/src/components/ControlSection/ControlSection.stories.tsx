@@ -2,12 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -21,8 +17,8 @@ const meta = {
       <ControlSection {...args} />
     </ControlPage>
   ),
-  decorators: [withLayout({ fullscreen: true, classNames: 'justify-center' }), withTheme],
   parameters: {
+    layout: 'centered',
     translations,
   },
 } satisfies Meta<typeof ControlSection>;

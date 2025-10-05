@@ -2,11 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { TraceView } from './TraceView';
 import { type State } from './types';
@@ -14,8 +11,7 @@ import { type State } from './types';
 const meta = {
   title: 'devtools/devtools/TraceView',
   component: TraceView,
-  decorators: [withTheme],
-} satisfies Meta<typeof TraceView>;
+  } satisfies Meta<typeof TraceView>;
 
 export default meta;
 

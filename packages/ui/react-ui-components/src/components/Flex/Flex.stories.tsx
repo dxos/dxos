@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Flex } from './Flex';
 
@@ -33,13 +30,9 @@ const meta = {
   title: 'ui/react-ui-components/Flex',
   component: Flex,
   render: DefaultStory,
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      Container: ColumnContainer,
-    }),
-  ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Flex>;
 
 export default meta;

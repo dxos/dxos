@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useApp } from './useApp';
 
@@ -22,8 +19,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/App',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'fullscreen',
   },
 } satisfies Meta;

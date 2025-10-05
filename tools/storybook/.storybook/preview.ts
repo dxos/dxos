@@ -7,7 +7,7 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-import { withLayout2, withTheme } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 // import { DocsContainer } from '@dxos/storybook-utils';
 
@@ -29,7 +29,7 @@ export const preview: Preview = {
     }),
 
     withTheme,
-    withLayout2(),
+    withLayout,
   ],
 
   /**

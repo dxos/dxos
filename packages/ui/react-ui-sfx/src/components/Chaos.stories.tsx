@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
 import defaultsDeep from 'lodash.defaultsdeep';

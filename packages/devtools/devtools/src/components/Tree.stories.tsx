@@ -2,20 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Tree } from './Tree';
 
 const meta = {
   title: 'devtools/devtools/Tree',
   component: Tree,
-  decorators: [withTheme],
-  argTypes: {},
 } satisfies Meta<typeof Tree>;
 
 export default meta;

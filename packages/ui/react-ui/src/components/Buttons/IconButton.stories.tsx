@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
 
 import { IconButton, type IconButtonProps } from './IconButton';
@@ -29,8 +26,7 @@ const meta = {
   title: 'ui/react-ui-core/IconButton',
   component: IconButton,
   render: DefaultStory as any,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

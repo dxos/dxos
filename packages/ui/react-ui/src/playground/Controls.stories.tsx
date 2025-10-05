@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Icon, Input, Select, Toggle, Toolbar } from '../components';
-import { withSurfaceVariantsLayout, withTheme } from '../testing';
+import { withSurfaceVariantsLayout } from '../testing';
 
 const DefaultStory = () => {
   const [checked, setChecked] = useState<boolean>(false);
@@ -85,7 +83,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
-  decorators: [withSurfaceVariantsLayout(), withTheme],
+  decorators: [withSurfaceVariantsLayout()],
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Icon>;
 

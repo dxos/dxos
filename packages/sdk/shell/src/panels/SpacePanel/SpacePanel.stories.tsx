@@ -2,15 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IdentityDid, PublicKey } from '@dxos/keys';
 import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { InvitationList, InvitationListItemImpl, SpaceMemberListImpl } from '../../components';
 import { StorybookDialog } from '../../components/StorybookDialog';
@@ -32,8 +29,7 @@ const noOpProps: SpacePanelImplProps = {
 const meta = {
   title: 'sdk/shell/SpacePanel',
   component: SpacePanelImpl,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof SpacePanelImpl>;
 
 export default meta;

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 

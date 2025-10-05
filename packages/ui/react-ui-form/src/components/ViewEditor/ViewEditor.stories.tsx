@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,7 +13,6 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { type DataType, ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -132,7 +129,7 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  decorators: [withClientProvider({ createSpace: true })],
   parameters: {
     translations,
     layout: 'fullscreen',

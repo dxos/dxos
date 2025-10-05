@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Effect, Fiber, Layer } from 'effect';
 import React, { useEffect, useMemo, useState } from 'react';

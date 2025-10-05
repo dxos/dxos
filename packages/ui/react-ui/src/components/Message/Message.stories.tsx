@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { type MessageValence } from '@dxos/react-ui-types';
 
-import { withTheme } from '../../testing';
 
 import { Callout } from './Message';
 
@@ -30,8 +27,7 @@ const meta = {
   title: 'ui/react-ui-core/Callout',
   component: Callout.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
   argTypes: {
     valence: {
       control: 'select',

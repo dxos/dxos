@@ -2,19 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Searchbar } from './Searchbar';
 
 const meta = {
   title: 'plugins/plugin-search/Searchbar',
   component: Searchbar,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
   },
 } satisfies Meta<typeof Searchbar>;

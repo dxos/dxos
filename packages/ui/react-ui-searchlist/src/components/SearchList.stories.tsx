@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { SearchList } from './SearchList';
 
@@ -45,8 +42,7 @@ const meta = {
   title: 'ui/react-ui-searchlist/SearchList',
   component: SearchList.Root as any,
   render: DefaultStory,
-  decorators: [withTheme],
-} satisfies Meta<typeof DefaultStory>;
+  } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

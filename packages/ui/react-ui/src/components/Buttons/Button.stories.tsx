@@ -2,12 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withSurfaceVariantsLayout, withTheme } from '../../testing';
+import { withSurfaceVariantsLayout } from '../../testing';
 import { Icon } from '../Icon';
 
 import { Button, ButtonGroup, type ButtonProps } from './Button';
@@ -37,7 +35,7 @@ const meta = {
   title: 'ui/react-ui-core/Button',
   component: Button,
   render: DefaultStory,
-  decorators: [withSurfaceVariantsLayout(), withTheme],
+  decorators: [withSurfaceVariantsLayout()],
   parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Button>;
 

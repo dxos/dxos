@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -15,7 +13,6 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -42,12 +39,9 @@ const meta = {
         IntentPlugin(),
         ChessPlugin(),
         MapPlugin(),
-        TablePlugin(),
-      ],
+        TablePlugin()],
       capabilities,
-    }),
-    withTheme,
-  ],
+    })],
   parameters: {
     layout: 'centered',
     translations,

@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { Accordion } from './Accordion';
 
@@ -44,7 +41,9 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-list/Accordion',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex justify-center' })],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Accordion>;
 
 export default meta;

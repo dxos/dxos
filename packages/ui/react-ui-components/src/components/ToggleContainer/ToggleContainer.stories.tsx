@@ -2,15 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type ReadonlySignal, computed, signal } from '@preact/signals-core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 
@@ -90,7 +87,9 @@ const meta = {
   title: 'ui/react-ui-components/ToggleContainer',
   component: ToggleContainer.Root,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center bg-baseSurface' })],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof ToggleContainer.Root>;
 
 export default meta;

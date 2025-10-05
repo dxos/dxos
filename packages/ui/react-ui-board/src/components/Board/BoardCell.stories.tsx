@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -33,8 +30,7 @@ const meta = {
   title: 'ui/react-ui-board/Cell',
   component: Board.Cell,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     layout: 'centered',
     translations: [...translations, ...stackTranslations],
   },

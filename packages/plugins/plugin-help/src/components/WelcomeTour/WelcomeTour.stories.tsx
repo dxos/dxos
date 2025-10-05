@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
@@ -11,7 +9,6 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { faker } from '@dxos/random';
 import { Button, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useHelp } from '../../hooks';
 
@@ -111,7 +108,7 @@ const meta = {
   component: WelcomeTour,
   render: DefaultStory,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin({})] }), withTheme],
+  decorators: [withPluginManager({ plugins: [StorybookLayoutPlugin({})] })],
 } satisfies Meta<typeof WelcomeTour>;
 
 export default meta;

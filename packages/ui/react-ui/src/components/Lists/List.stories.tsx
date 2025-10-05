@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { DndContext, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -20,7 +18,6 @@ import {
   surfaceShadow,
 } from '@dxos/react-ui-theme';
 
-import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
 
 import { List, ListItem, type ListScopedProps } from './List';
@@ -28,8 +25,7 @@ import { List, ListItem, type ListScopedProps } from './List';
 const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof List>;
 
 export default meta;

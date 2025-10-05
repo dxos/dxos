@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -14,7 +12,6 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
@@ -90,9 +87,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
-    withComputeGraphDecorator({ plugins: testFunctionPlugins }),
-    withTheme,
-  ],
+    withComputeGraphDecorator({ plugins: testFunctionPlugins })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

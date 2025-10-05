@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 import { Main, useSidebars } from './Main';
@@ -51,8 +48,7 @@ const meta = {
   title: 'ui/react-ui-core/Main',
   component: Main.Root,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     chromatic: { disableSnapshot: false },
     layout: 'fullscreen',
   },

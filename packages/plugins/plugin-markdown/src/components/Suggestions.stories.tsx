@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta } from '@storybook/react-vite';
 import { Match, Option, Schema, pipe } from 'effect';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
@@ -25,7 +23,7 @@ import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { MarkdownCapabilities } from '../capabilities';
 import { MarkdownPlugin } from '../MarkdownPlugin';
@@ -101,7 +99,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
   };
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames='bs-full overflow-hidden'>
       <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>
@@ -136,21 +134,21 @@ const DefaultStory = ({ document, chat }: { document: string; chat: string }) =>
   }, [space]);
 
   if (!space || !doc) {
-    return <></>;
+    return null;
   }
 
+  // TODO(burdon): Layout issue.
   return (
-    <>
+    <div className='grid grid-cols-2 bs-full overflow-hidden'>
       <MarkdownContainer id={doc.id} object={doc} settings={settings} editorStateStore={editorState} />
       <TestChat doc={doc} content={chat} />
-    </>
+    </div>
   );
 };
 
-// TODO(burdon): Make consistent.
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/Suggestions',
-  render: DefaultStory,
+  render: render(DefaultStory),
   decorators: [
     withPluginManager({
       plugins: [
@@ -174,11 +172,13 @@ const storybook: Meta<typeof DefaultStory> = {
       // TODO(thure): `commandDialog` doesn’t do anything without a `renderDialog` option.
       // capabilities: [contributes(MarkdownCapabilities.Extensions, [() => commandDialog()])],
     }),
-    withLayout({ fullscreen: true, classNames: 'grid grid-cols-2' }),
   ],
   parameters: {
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
     translations,
-    controls: { disable: true },
   },
 };
 

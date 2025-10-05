@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -12,7 +10,6 @@ import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { Invitation } from '@dxos/react-client/invitations';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { StorybookDialog } from '../../components/StorybookDialog';
 import { InvitationManager, type InvitationManagerProps } from '../../steps';
@@ -43,8 +40,7 @@ const noOpProps: IdentityPanelImplProps = {
 
 const meta = {
   title: 'sdk/shell/IdentityPanel',
-  decorators: [withTheme],
-  parameters: {
+    parameters: {
     translations,
     chromatic: {
       disableSnapshot: false,

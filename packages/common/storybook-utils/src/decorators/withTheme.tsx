@@ -9,7 +9,7 @@ import { type ThemeMode, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
 /**
- * Adds theme decorator.
+ * Adds theme decorator (add to preview.ts)
  */
 export const withTheme: Decorator = (Story, context) => {
   const {

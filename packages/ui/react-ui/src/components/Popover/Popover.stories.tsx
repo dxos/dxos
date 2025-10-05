@@ -2,14 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withTheme } from '../../testing';
 import { Button } from '../Buttons';
 
 import { Popover } from './Popover';
@@ -34,8 +31,7 @@ const meta = {
   title: 'ui/react-ui-core/Popover',
   component: Popover.Root,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+    parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
@@ -12,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
@@ -157,5 +154,5 @@ const config = new Config({
 });
 
 export const Default: Story = {
-  decorators: [withClientProvider({ config }), withTheme],
+  decorators: [withClientProvider({ config })],
 };

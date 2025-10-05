@@ -2,13 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -29,7 +26,6 @@ const meta = {
         IntentPlugin(),
       ],
     }),
-    withTheme,
   ],
   parameters: {
     layout: 'fullscreen',
