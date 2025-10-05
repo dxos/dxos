@@ -14,6 +14,9 @@ const operators: Record<RelationalSymbol, RelationalOperator> = {
   '>': 'GT',
 };
 
+/**
+ * @deprecated
+ */
 export class QueryParser {
   private tokens: string[] = [];
   private current = 0;

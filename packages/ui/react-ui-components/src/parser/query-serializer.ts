@@ -21,6 +21,7 @@ const operators: Record<RelationalOperator, RelationalSymbol> = {
 /**
  * Serializes an Expression AST back into a string query.
  * This is the inverse operation of QueryParser.parse().
+ * @deprecated
  */
 export class QuerySerializer {
   /**
