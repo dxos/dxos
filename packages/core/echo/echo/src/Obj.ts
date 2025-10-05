@@ -198,10 +198,43 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   }
 };
 
-export const sortByLabel = (a: Any, b: Any) => {
-  const labelA = getLabel(a) ?? '';
-  const labelB = getLabel(b) ?? '';
-  return labelA.localeCompare(labelB);
+const compare = (a?: string, b?: string) => {
+  if (a == null) {
+    return b == null ? 0 : 1;
+  }
+
+  if (b == null) {
+    return -1;
+  }
+
+  return a.localeCompare(b);
+};
+
+export type SortFunction = (a: Any, b: Any) => number;
+
+export const sortByLabel: SortFunction = (a: Any, b: Any) => {
+  const str1 = getLabel(a);
+  const str2 = getLabel(b);
+  return compare(str1, str2);
+};
+
+export const sortByTypename: SortFunction = (a: Any, b: Any) => {
+  const str1 = getTypename(a);
+  const str2 = getTypename(b);
+  return compare(str1, str2);
+};
+
+export const sort = (...fns: SortFunction[]): SortFunction => {
+  return (a: Any, b: Any) => {
+    for (const fn of fns) {
+      const result = fn(a, b);
+      if (result !== 0) {
+        return result;
+      }
+    }
+
+    return 0;
+  };
 };
 
 /**
