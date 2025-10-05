@@ -210,24 +210,24 @@ const compare = (a?: string, b?: string) => {
   return a.localeCompare(b);
 };
 
-export type SortFunction = (a: Any, b: Any) => number;
+export type Comparator = (a: Any, b: Any) => number;
 
-export const sortByLabel: SortFunction = (a: Any, b: Any) => {
+export const sortByLabel: Comparator = (a: Any, b: Any) => {
   const str1 = getLabel(a);
   const str2 = getLabel(b);
   return compare(str1, str2);
 };
 
-export const sortByTypename: SortFunction = (a: Any, b: Any) => {
+export const sortByTypename: Comparator = (a: Any, b: Any) => {
   const str1 = getTypename(a);
   const str2 = getTypename(b);
   return compare(str1, str2);
 };
 
-export const sort = (...fns: SortFunction[]): SortFunction => {
+export const sort = (...comparators: Comparator[]): Comparator => {
   return (a: Any, b: Any) => {
-    for (const fn of fns) {
-      const result = fn(a, b);
+    for (const comparator of comparators) {
+      const result = comparator(a, b);
       if (result !== 0) {
         return result;
       }
