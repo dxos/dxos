@@ -46,9 +46,6 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Typography',
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

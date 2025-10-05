@@ -12,9 +12,6 @@ const meta = {
   title: 'ui/react-ui-core/Link',
   component: Link,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Link>;
 
 export default meta;

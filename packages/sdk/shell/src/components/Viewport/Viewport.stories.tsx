@@ -58,9 +58,6 @@ const meta = {
   title: 'sdk/shell/StorybookViewport',
   component: StorybookViewport,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof StorybookViewport>;
 
 export default meta;

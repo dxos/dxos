@@ -16,9 +16,6 @@ const meta = {
   title: 'sdk/shell/InvitationList',
   component: InvitationList,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof InvitationList>;
 
 export default meta;

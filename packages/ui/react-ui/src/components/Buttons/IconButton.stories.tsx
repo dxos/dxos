@@ -29,9 +29,6 @@ const meta = {
   component: IconButton,
   render: DefaultStory as any,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof IconButton>;
 
 export default meta;

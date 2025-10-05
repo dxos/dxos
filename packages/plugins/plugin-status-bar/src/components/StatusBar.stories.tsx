@@ -36,9 +36,6 @@ const meta = {
   component: StatusBar as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof StatusBar>;
 
 export default meta;

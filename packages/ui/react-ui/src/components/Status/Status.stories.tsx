@@ -13,9 +13,6 @@ const meta = {
   title: 'ui/react-ui-core/Status',
   component: Status,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Status>;
 
 export default meta;

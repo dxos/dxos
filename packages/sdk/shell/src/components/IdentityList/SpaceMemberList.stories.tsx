@@ -15,9 +15,6 @@ const meta = {
   title: 'sdk/shell/SpaceMemberList',
   component: SpaceMemberListImpl,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof SpaceMemberListImpl>;
 
 export default meta;

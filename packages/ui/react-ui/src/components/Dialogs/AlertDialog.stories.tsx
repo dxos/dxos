@@ -52,9 +52,6 @@ const meta = {
   component: AlertDialog.Root as any,
   render: DefaultStory as any,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

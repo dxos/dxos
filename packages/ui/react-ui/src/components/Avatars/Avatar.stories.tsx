@@ -59,9 +59,6 @@ const meta = {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar.Root,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

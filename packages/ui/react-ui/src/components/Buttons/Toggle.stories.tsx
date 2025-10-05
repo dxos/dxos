@@ -26,9 +26,6 @@ const meta = {
   component: Toggle,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Toggle>;
 
 export default meta;

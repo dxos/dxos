@@ -91,9 +91,6 @@ const meta = {
   component: Input.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -44,9 +44,6 @@ const meta = {
   component: Breadcrumb.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -30,9 +30,6 @@ const meta = {
   component: ToggleGroup,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof ToggleGroup>;
 
 export default meta;

@@ -27,9 +27,6 @@ const meta = {
   title: 'ui/react-ui-core/List',
   component: List,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof List>;
 
 export default meta;

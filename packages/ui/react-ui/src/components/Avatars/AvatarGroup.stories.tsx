@@ -40,9 +40,6 @@ const meta = {
   title: 'ui/react-ui-core/AvatarGroup',
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -38,9 +38,6 @@ const meta = {
   component: Button,
   render: DefaultStory,
   decorators: [withTheme, withSurfaceVariantsLayout()],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Button>;
 
 export default meta;

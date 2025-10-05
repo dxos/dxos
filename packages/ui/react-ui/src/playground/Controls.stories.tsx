@@ -86,9 +86,6 @@ const meta = {
   title: 'ui/react-ui-core/Playground/Controls',
   render: DefaultStory,
   decorators: [withTheme, withSurfaceVariantsLayout()],
-  parameters: {
-    chromatic: { disableSnapshot: false },
-  },
 } satisfies Meta<typeof Icon>;
 
 export default meta;
