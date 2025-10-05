@@ -29,7 +29,7 @@ export type LayoutOptions =
  * Process layout parameter (add to preview.ts)
  */
 export const withLayout: Decorator = (Story, { parameters: { layout } }) => {
-  const { type, classNames, scroll } = typeof layout === 'string' ? { type: layout } : layout;
+  const { type, classNames, scroll } = typeof layout === 'object' ? layout : { type: layout };
 
   switch (type) {
     // Fullscreen.
