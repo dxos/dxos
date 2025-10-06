@@ -291,6 +291,7 @@ export class QueryExecutor extends Resource {
 
         break;
       }
+
       case 'IdSelector': {
         const beginLoad = performance.now();
         const items = await Promise.all(
@@ -304,6 +305,7 @@ export class QueryExecutor extends Resource {
         trace.objectCount = workingSet.length;
         break;
       }
+
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
         const indexHits = await this._indexer.execQuery({
@@ -327,6 +329,7 @@ export class QueryExecutor extends Resource {
 
         break;
       }
+
       case 'TextSelector': {
         const beginIndexQuery = performance.now();
         const indexHits = await this._indexer.execQuery({
@@ -357,6 +360,7 @@ export class QueryExecutor extends Resource {
         trace.objectCount = workingSet.length;
         break;
       }
+
       default:
         throw new Error(`Unknown selector type: ${(step.selector as any)._tag}`);
     }
@@ -372,6 +376,7 @@ export class QueryExecutor extends Resource {
         doc: item.doc,
       }),
     );
+
     return {
       workingSet: result,
       trace: {
