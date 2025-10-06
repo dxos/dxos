@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { QueryFn } from '@dxos/echo-db';
+import type { Queryable } from '@dxos/echo-db';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -15,9 +15,9 @@ import type { Space } from './space';
  * TODO(burdon): Public API (move comments here).
  */
 // TODO(wittjosiah): Rename?
-//   https://ts.dev/style/#naming-style
-//   ClientApi? ClientProtocol?
-export interface Echo extends MulticastObservable<Space[]> {
+//  https://ts.dev/style/#naming-style
+//  ClientApi? ClientProtocol?
+export interface Echo extends MulticastObservable<Space[]>, Queryable {
   /**
    * Resolves when the default space is available.
    */
@@ -66,11 +66,4 @@ export interface Echo extends MulticastObservable<Space[]> {
   join(invitation: Invitation | string): AuthenticatingInvitation;
 
   joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
-
-  /**
-   * Query all spaces.
-   * @param filter
-   * @param options
-   */
-  query: QueryFn;
 }

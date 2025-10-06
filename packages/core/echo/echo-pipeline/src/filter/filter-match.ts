@@ -69,7 +69,13 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     case 'tag': {
       // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
       const tags = getDeep(obj.doc.data, ['properties', 'tags']);
-      return Array.isArray(tags) && tags?.includes(filter.tag);
+      console.log('===', tags, filter.tag);
+      return (
+        Array.isArray(tags) &&
+        tags?.some((tag) => {
+          return typeof tag === 'object' && tag.label === filter.tag;
+        })
+      );
     }
 
     case 'text-search': {

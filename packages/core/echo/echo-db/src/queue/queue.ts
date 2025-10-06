@@ -152,16 +152,16 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     return this._refResolver;
   }
 
-  // Odd way to define methods types from a typedef.
+  // Odd way to define method's types from a typedef.
   declare query: QueryFn;
   static {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: QueryOptions) {
+  private _query(queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) {
     assertArgument(options === undefined, 'options', 'not supported');
-    query = Filter.is(query) ? Query.select(query) : query;
-    return new QueryResult(new QueueQueryContext(this), query);
+    queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    return new QueryResult(new QueueQueryContext(this), queryOrFilter);
   }
 
   /**

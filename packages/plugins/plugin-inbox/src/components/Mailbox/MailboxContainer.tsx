@@ -51,13 +51,18 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
   const menu = useMailboxToolbarActions(mailbox, tagFilterVisible, setTagFilterVisible);
 
-  const parser = useMemo(() => new QueryBuilder(), []);
-  const [query, setQuery] = useState<Filter.Any | null>(null);
+  const [filter, setFilter] = useState<Filter.Any | null>();
   const [queryText, setQueryText] = useState<string>('');
+  const parser = useMemo(() => new QueryBuilder(), []);
   useEffect(() => {
-    setQuery(parser.build(queryText));
+    setFilter(parser.build(queryText));
   }, [queryText]);
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, query ?? Filter.everything());
+
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, Filter.tag('eng'));
+  // const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
+  console.log(JSON.stringify(filter));
+  // console.log(JSON.stringify(filter), messages.length);
+  // console.log(JSON.stringify(messages.slice(0, 3), null, 2));
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
