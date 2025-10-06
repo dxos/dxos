@@ -103,7 +103,7 @@
     "@valtown/codemirror-ts": "^2.2.0",
     "codemirror": "^6.0.1",
     "date-fns": "^3.3.1",
-    "esbuild-wasm": "^0.16.14",
+    "esbuild-wasm": "^0.25.10",
     "prettier": "^3.6.2",
     "react-syntax-highlighter": "^15.6.1",
     "typescript": "^5.9.3"
