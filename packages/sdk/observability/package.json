@@ -14,46 +14,13 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./next": {
-      "source": "./src/next/index.ts",
-      "types": "./dist/types/src/next/index.d.ts",
-      "browser": "./dist/lib/browser/next/index.mjs",
-      "node": "./dist/lib/node-esm/next/index.mjs"
-    },
-    "./segment": {
-      "source": "./src/segment/index.ts",
-      "types": "./dist/types/src/segment/index.d.ts",
-      "browser": "./dist/lib/browser/segment/index.mjs",
-      "node": "./dist/lib/node-esm/segment/index.mjs"
-    },
-    "./sentry": {
-      "source": "./src/sentry/index.ts",
-      "types": "./dist/types/src/sentry/index.d.ts",
-      "browser": "./dist/lib/browser/sentry/index.mjs",
-      "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
   },
   "browser": {
-    "./src/segment/node.ts": "./src/segment/browser.ts",
-    "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
+    "./src/storage/node.ts": "./src/storage/browser.ts",
     "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "next": [
-        "dist/types/src/next/index.d.ts"
-      ],
-      "segment": [
-        "dist/types/src/segment/index.d.ts"
-      ],
-      "sentry": [
-        "dist/types/src/sentry/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"

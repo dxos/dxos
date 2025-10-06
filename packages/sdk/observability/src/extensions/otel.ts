@@ -5,13 +5,14 @@
 import { Effect, Ref } from 'effect';
 
 import { type Config } from '@dxos/config';
-import { invariant } from '@dxos/invariant';
 import { LogLevel, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import buildSecrets from '../../cli-observability-secrets.json';
-import { isObservabilityDisabled, storeObservabilityDisabled } from '../../helpers';
+import buildSecrets from '../cli-observability-secrets.json';
 import { type Extension } from '../observability-extension';
+import { isObservabilityDisabled, storeObservabilityDisabled } from '../storage';
+
+import { stubExtension } from './stub';
 
 export type ExtensionsOptions = {
   serviceName: string;
@@ -28,7 +29,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   endpoint: _endpoint,
   authorizationHeader: _authorizationHeader,
 }) {
-  const { OtelLogs, OtelTraces } = yield* Effect.promise(() => import('../../otel'));
+  const { OtelLogs, OtelTraces } = yield* Effect.promise(() => import('../otel'));
 
   // TODO(wittjosiah): Isomorphic storage.
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
@@ -41,8 +42,11 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const authorizationHeader = isNode()
     ? (process.env.DX_OTEL_AUTHORIZATION ?? _authorizationHeader ?? buildSecrets.OTEL_AUTHORIZATION)
     : config.get('runtime.app.env.DX_OTEL_AUTHORIZATION');
-  invariant(endpoint, 'Missing OTEL_ENDPOINT');
-  invariant(authorizationHeader, 'Missing OTEL_AUTHORIZATION');
+
+  if (!endpoint || !authorizationHeader) {
+    log.warn('Missing OTEL_ENDPOINT or OTEL_AUTHORIZATION');
+    return stubExtension;
+  }
 
   const logs = new OtelLogs({
     endpoint,

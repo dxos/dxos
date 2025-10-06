@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, allOf, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { type Observability } from '@dxos/observability/next';
+import { type Observability } from '@dxos/observability';
 
 import {
   AppGraphBuilder,

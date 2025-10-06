@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Observability } from '@dxos/observability/next';
+import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-observability';
 import { type UserFeedback } from '@dxos/plugin-observability/types';
 import {

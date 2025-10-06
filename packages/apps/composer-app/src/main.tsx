@@ -4,22 +4,19 @@
 
 import '@dxos-theme';
 
-import { Effect, pipe } from 'effect';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { useApp } from '@dxos/app-framework';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { LogLevel, log } from '@dxos/log';
-import { getObservabilityGroup, isObservabilityDisabled } from '@dxos/observability';
-import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability/next';
-import { DXOS_VERSION } from '@dxos/react-client';
+import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
-import { setupConfig } from './config';
+import { initializeObservability, setupConfig } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
@@ -69,22 +66,9 @@ const main = async () => {
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
   // The namespace has to match the value passed to sentryVitePlugin in vite.config.ts for sourcemaps to work.
-  const observability = pipe(
-    Observability.make(),
-    Observability.addExtension(
-      ObservabilityExtension.Otel.extensions({
-        serviceName: APP_KEY,
-        serviceVersion: DXOS_VERSION,
-        config,
-      }),
-    ),
-    Observability.addExtension(ObservabilityExtension.PostHog.extensions({ config })),
-    Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
-    Observability.addDataProvider(ObservabilityProvider.Storage.provider),
-    Effect.runPromise,
-  );
-  const observabilityDisabled = await isObservabilityDisabled(APP_KEY);
-  const observabilityGroup = await getObservabilityGroup(APP_KEY);
+  const observability = initializeObservability(config);
+  const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
+  const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
   const disableSharedWorker = config.values.runtime?.app?.env?.DX_HOST;
   const services = await createClientServices(

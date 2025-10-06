@@ -6,7 +6,6 @@ import { Effect } from 'effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
-import { todo } from '@dxos/debug';
 
 import { type Extension } from '../observability-extension';
 
@@ -63,8 +62,22 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       },
       {
         kind: 'feedback',
-        captureUserFeedback: () => {
-          todo();
+        // TODO(wittjosiah): Support custom surveys.
+        captureUserFeedback: (form) => {
+          posthog.getActiveMatchingSurveys((surveys) => {
+            const survey = surveys[0];
+            // https://posthog.com/docs/surveys/implementing-custom-surveys
+            posthog.capture('survey sent', {
+              $survey_id: survey.id,
+              $survey_questions: [
+                {
+                  id: survey.questions[0].id,
+                  question: survey.questions[0].question,
+                },
+              ],
+              [`$survey_response_${survey.questions[0].id}`]: form.message,
+            });
+          });
         },
       },
     ],

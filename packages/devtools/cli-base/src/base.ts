@@ -32,12 +32,12 @@ import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { LogLevel, createFileProcessor, log, parseFilter } from '@dxos/log';
-import {
-  type Observability,
-  getObservabilityState,
-  initializeNodeObservability,
-  showObservabilityBanner,
-} from '@dxos/observability';
+// import {
+//   type Observability,
+//   getObservabilityState,
+//   initializeNodeObservability,
+//   showObservabilityBanner,
+// } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientInitializationError, FriendlyError } from './errors';
@@ -159,7 +159,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   private _failing = false;
 
   protected _startTime: Date;
-  protected _observability?: Observability;
+  // protected _observability?: Observability;
 
   protected flags!: Flags<T>;
   protected args!: Args<T>;
@@ -246,11 +246,11 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       await this._loadConfigFromFile();
     }
 
-    await this._initObservability(
-      this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
-        ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
-        : undefined,
-    );
+    // await this._initObservability(
+    //   this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
+    //     ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
+    //     : undefined,
+    // );
   }
 
   async readStdin(): Promise<string> {
@@ -268,45 +268,45 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     });
   }
 
-  private async _initObservability(
-    logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
-  ): Promise<void> {
-    const observabilityState = await getObservabilityState(DX_DATA);
-    const { mode, installationId, group } = observabilityState;
-    if (mode === 'disabled') {
-      this.log('observability disabled by config');
-      return;
-    }
+  // private async _initObservability(
+  //   logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
+  // ): Promise<void> {
+  //   const observabilityState = await getObservabilityState(DX_DATA);
+  //   const { mode, installationId, group } = observabilityState;
+  //   if (mode === 'disabled') {
+  //     this.log('observability disabled by config');
+  //     return;
+  //   }
 
-    if (group === 'dxos') {
-      this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
-    }
+  //   if (group === 'dxos') {
+  //     this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
+  //   }
 
-    await showObservabilityBanner(DX_DATA, (input: string) => {
-      // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
-      logCb(input);
-    });
+  //   await showObservabilityBanner(DX_DATA, (input: string) => {
+  //     // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+  //     logCb(input);
+  //   });
 
-    // TODO(nf): handle cases where the cli starts the agent for the user
-    let namespace = 'cli';
-    if (this.id === 'agent:start') {
-      namespace = 'agent';
-    }
+  //   // TODO(nf): handle cases where the cli starts the agent for the user
+  //   let namespace = 'cli';
+  //   if (this.id === 'agent:start') {
+  //     namespace = 'agent';
+  //   }
 
-    this._observability = await initializeNodeObservability({
-      namespace,
-      version: this.config.version,
-      installationId,
-      group,
-      config: this._clientConfig!,
-      mode,
-      tracingEnable: true,
-      replayEnable: true,
-    });
+  //   this._observability = await initializeNodeObservability({
+  //     namespace,
+  //     version: this.config.version,
+  //     installationId,
+  //     group,
+  //     config: this._clientConfig!,
+  //     mode,
+  //     tracingEnable: true,
+  //     replayEnable: true,
+  //   });
 
-    invariant(this.id);
-    this._observability.setTag('command', this.id, 'telemetry');
-  }
+  //   invariant(this.id);
+  //   this._observability.setTag('command', this.id, 'telemetry');
+  // }
 
   /**
    * Load or create config file from defaults.
@@ -372,7 +372,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
   override catch(err: string | Error, options?: any): never;
   override catch(err: string | Error, options?: any): void {
     // Will only submit if API key exists (i.e., prod).
-    this._observability?.captureException(err);
+    // this._observability?.captureException(err);
 
     this._failing = true;
 
@@ -397,23 +397,23 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Called after each command run.
    */
   override async finally(): Promise<void> {
-    const endTime = new Date();
+    // const endTime = new Date();
     // TODO(nf): Move to observability.
-    const installationId = this._observability?.getTag('installationId');
-    const did = this._observability?.getTag('did');
-    if (this._observability) {
-      this._observability?.track({
-        installationId: installationId?.value,
-        did: did?.value,
-        action: 'cli.command.run',
-        properties: {
-          status: this._failing ? 'failure' : 'success',
-          duration: endTime.getTime() - this._startTime.getTime(),
-        },
-      });
+    // const installationId = this._observability?.getTag('installationId');
+    // const did = this._observability?.getTag('did');
+    // if (this._observability) {
+    //   this._observability?.track({
+    //     installationId: installationId?.value,
+    //     did: did?.value,
+    //     action: 'cli.command.run',
+    //     properties: {
+    //       status: this._failing ? 'failure' : 'success',
+    //       duration: endTime.getTime() - this._startTime.getTime(),
+    //     },
+    //   });
 
-      await this._observability.close();
-    }
+    //   await this._observability.close();
+    // }
     if (process.env.DX_TRACK_LEAKS) {
       (global as any).dxDumpLeaks?.();
       (globalThis as any).wtf.dump();

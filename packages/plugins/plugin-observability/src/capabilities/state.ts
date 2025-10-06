@@ -4,7 +4,7 @@
 
 import { contributes } from '@dxos/app-framework';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getObservabilityGroup } from '@dxos/observability';
+import { Observability } from '@dxos/observability';
 
 import { meta } from '../meta';
 
@@ -16,7 +16,7 @@ export default async ({ namespace }: { namespace: string }) => {
   state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
   // NOTE: This is not stored in local storage such that it can be accessed by workers.
-  state.values.group = await getObservabilityGroup(namespace);
+  state.values.group = await Observability.getObservabilityGroup(namespace);
 
   return contributes(ObservabilityCapabilities.State, state.values, () => state.close());
 };

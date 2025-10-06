@@ -4,7 +4,7 @@
 
 import { defineCapability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
-import { type Observability } from '@dxos/observability/next';
+import { type Observability } from '@dxos/observability';
 
 import { meta } from '../meta';
 

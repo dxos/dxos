@@ -1,634 +1,248 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import { Event, scheduleTaskInterval } from '@dxos/async';
-import { type Client, type Config, PublicKey } from '@dxos/client';
-import { type ClientServices, type Space } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
+import { Array, Effect, pipe } from 'effect';
+
+import { type CleanupFn, SubscriptionList } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { LogLevel, log } from '@dxos/log';
-import { ConnectionState } from '@dxos/network-manager';
-import { DeviceKind, type NetworkStatus, Platform } from '@dxos/protocols/proto/dxos/client/services';
-import { isNode } from '@dxos/util';
 
-import buildSecrets from './cli-observability-secrets.json';
-import { type IPData, getTelemetryIdentity, mapSpaces } from './helpers';
-import { type OtelLogs, type OtelMetrics, type OtelTraces } from './otel';
-import { type PageOptions, type SegmentTelemetry, TelemetryEvent, type TrackOptions } from './segment';
-import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
-import { type SentryLogProcessor } from './sentry/sentry-log-processor';
+import {
+  type Attributes,
+  type Errors,
+  type Events,
+  type Extension,
+  type ExtensionApi,
+  type Feedback,
+  type Kind,
+  type Metrics,
+} from './observability-extension';
 
-const SPACE_METRICS_MIN_INTERVAL = 1000 * 60; // 1 minute
-const SPACE_TELEMETRY_MIN_INTERVAL = 1000 * 60 * 60; // 1 hour
-const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 5; // 5 minutes
+export * from './storage';
 
-// Secrets? EnvironmentConfig?
+// TODO(wittjosiah): Figure out how to handle when telemetry is disabled.
+//   In theory the setting should be both persisted and synchronized.
+//   Initialize probably should still run for the cases where data is emitted manually (e.g., feedback).
 
-export type ObservabilitySecrets = {
-  DX_ENVIRONMENT: string | null;
-  DX_RELEASE: string | null;
-  SENTRY_DESTINATION: string | null;
-  TELEMETRY_API_KEY: string | null;
-  IPDATA_API_KEY: string | null;
-  OTEL_ENDPOINT: string | null;
-  OTEL_AUTHORIZATION: string | null;
-};
-
-export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
-
-/** Gathering mode. */
-export type Mode = 'basic' | 'full' | 'disabled';
-
-export type ObservabilityOptions = {
-  mode: Mode;
-
-  /** Environment. */
-  environment?: string;
-
-  /** Application namespace. */
-  namespace: string;
-
-  /** Application release. */
-  release?: string;
-
-  /** User group. */
-  group?: string;
-
-  config?: Config;
-  secrets?: Record<string, string>;
-
-  telemetry?: {
-    batchSize?: number;
-  };
-
-  errorLog?: {
-    sentryInitOptions?: InitOptions;
-  };
-};
-
-/*
- * Observability provides a common interface for error logging, metrics, and telemetry.
- * It currently provides these capabilities using Sentry, OpenTelemetry, and Segment.
- *
- * Segment:
- * https://app.segment.com/dxos/sources/composer-app/debugger
- * https://app.segment.com/dxos/sources/composer-app/settings/keys
- *
- * NOTE:
- * - Segment maintains a set of admin creates Source (e.g., "composer-app").
- * - Each source has at least one API_KEY, which is used by the client.
- *
- * Testing:
- * https://app.segment.com/dxos/sources/composer-app/settings/keys
- * - DX_TELEMETRY_API_KEY
- * - DX_SENTRY_DESTINATION
- *
- * Sentry:
- * https://sentry.io/organizations/dxos/issues
- *
- * OpenTelemetry:
- * https://dxosorg.grafana.net/explore
+/**
+ * Provider of observability data.
  */
-export class Observability {
-  private _mode: Mode;
-  private readonly _namespace: string;
-  private readonly _config?: Config;
-  private readonly _group?: string;
-  private readonly _secrets: ObservabilitySecrets;
-  private readonly _tags = new Map<string, { value: string; scope: TagScope }>();
+export type DataProvider = (observability: Observability) => Effect.Effect<CleanupFn | void>;
 
-  // TODO(wittjosiah): Generic metrics interface.
-  private _otelMetrics?: OtelMetrics;
-  private _otelTraces?: OtelTraces;
-  // TODO(wittjosiah): Generic telemetry interface.
-  private _telemetryBatchSize: number;
-  private _telemetry?: SegmentTelemetry;
-  // TODO(wittjosiah): Generic error logging interface.
-  private _sentryLogProcessor?: SentryLogProcessor;
-  private _otelLogs?: OtelLogs;
-  private _errorReportingOptions?: InitOptions;
-  private _captureException?: typeof SentryCaptureException;
-  private _captureUserFeedback?: (message: string) => Promise<void>;
-  private _lastNetworkStatus?: NetworkStatus;
+/**
+ * Extensible observability provider.
+ */
+// TODO(wittjosiah): Add pipe method.
+export interface Observability {
+  initialize(): Effect.Effect<void>;
+  close(): Effect.Effect<void>;
+  enable(): Effect.Effect<void>;
+  disable(): Effect.Effect<void>;
+  flush(): Effect.Effect<void>;
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void>;
+  identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void;
+  alias(distinctId: string, previousId?: string): void;
+  setTags(tags: Attributes, kind?: Kind): void;
+  enabled: boolean;
+  errors: Errors;
+  events: Events;
+  feedback: Feedback;
+  metrics: Metrics;
+}
 
-  private _ctx = new Context();
+class ObservabilityImpl implements Observability {
+  private _initialized = false;
+  private readonly _extensions: Extension[] = [];
+  private readonly _dataProviders: DataProvider[] = [];
+  private readonly _subscriptions = new SubscriptionList();
 
-  // TODO(nf): make platform a required extension?
-  constructor({
-    mode,
-    namespace,
-    environment,
-    release,
-    config,
-    group,
-    secrets,
-    telemetry,
-    errorLog,
-  }: ObservabilityOptions) {
-    this._mode = mode;
-    this._namespace = namespace;
-    this._config = config;
-    this._group = group;
-    this._secrets = this._loadSecrets(config, secrets);
-
-    this._telemetryBatchSize = telemetry?.batchSize ?? 30;
-    this._errorReportingOptions = errorLog?.sentryInitOptions;
-
-    // Tags.
-    this.setTag('mode', this._mode);
-    this.setTag('namespace', this._namespace);
-    this.setTag('environment', environment);
-    this.setTag('release', release);
-    this.setTag('session', PublicKey.random().toHex());
-    this.setTag('group', this._group);
-  }
-
-  get mode() {
-    return this._mode;
-  }
-
-  get group() {
-    return this._group;
-  }
-
-  get enabled() {
-    return this._mode !== 'disabled';
-  }
-
-  private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
-    if (isNode()) {
-      const mergedSecrets = {
-        ...(buildSecrets as ObservabilitySecrets),
-        ...secrets,
-      };
-
-      process.env.DX_ENVIRONMENT && (mergedSecrets.DX_ENVIRONMENT = process.env.DX_ENVIRONMENT);
-      process.env.DX_RELEASE && (mergedSecrets.DX_RELEASE = process.env.DX_RELEASE);
-      process.env.SENTRY_DESTINATION && (mergedSecrets.SENTRY_DESTINATION = process.env.SENTRY_DESTINATION);
-      process.env.TELEMETRY_API_KEY && (mergedSecrets.TELEMETRY_API_KEY = process.env.TELEMETRY_API_KEY);
-      process.env.IPDATA_API_KEY && (mergedSecrets.IPDATA_API_KEY = process.env.IPDATA_API_KEY);
-      process.env.DX_OTEL_ENDPOINT && (mergedSecrets.OTEL_ENDPOINT = process.env.DX_OTEL_ENDPOINT);
-      process.env.DX_OTEL_AUTHORIZATION && (mergedSecrets.OTEL_AUTHORIZATION = process.env.DX_OTEL_AUTHORIZATION);
-
-      return mergedSecrets;
-    } else {
-      log('config', { rtc: this._secrets, config });
-      return {
-        DX_ENVIRONMENT: config?.get('runtime.app.env.DX_ENVIRONMENT'),
-        DX_RELEASE: config?.get('runtime.app.env.DX_RELEASE'),
-        SENTRY_DESTINATION: config?.get('runtime.app.env.DX_SENTRY_DESTINATION'),
-        TELEMETRY_API_KEY: config?.get('runtime.app.env.DX_TELEMETRY_API_KEY'),
-        IPDATA_API_KEY: config?.get('runtime.app.env.DX_IPDATA_API_KEY'),
-        OTEL_ENDPOINT: config?.get('runtime.app.env.DX_OTEL_ENDPOINT'),
-        OTEL_AUTHORIZATION: config?.get('runtime.app.env.DX_OTEL_AUTHORIZATION'),
-        ...secrets,
-      };
-    }
-  }
-
-  async initialize(): Promise<void> {
-    log('initializing...');
-    await this._initLogs();
-    await this._initMetrics();
-    await this._initTelemetry();
-    await this._initErrorLogs();
-    await this._initTraces();
-  }
-
-  async close(): Promise<void> {
-    log('closing...');
-    const closes: Promise<void>[] = [];
-    this._telemetry && closes.push(this._telemetry.close());
-    this._otelMetrics && closes.push(this._otelMetrics.close());
-    this._otelLogs && closes.push(this._otelLogs.close());
-
-    await Promise.all(closes);
-    await this._ctx.dispose();
-  }
-
-  setMode(mode: Mode): void {
-    this._mode = mode;
-  }
-
-  //
-  // Tags
-  //
-
-  /** Callback (e.g., to share tags with Sentry.) */
-  private _setTag?: (key: string, value: string) => void;
-
-  /**
-   * camelCase keys are converted to snake_case in Segment.
-   */
-  setTag(key: string, value: string | undefined, scope?: TagScope): void {
-    if (value === undefined) {
-      return;
-    }
-    if (this.enabled && (scope === undefined || scope === 'all' || scope === 'errors')) {
-      this._setTag?.(key, value);
-    }
-    if (!scope) {
-      scope = 'all';
+  initialize(): Effect.Effect<void> {
+    if (this._initialized) {
+      return Effect.succeed(undefined);
     }
 
-    this._tags.set(key, { value, scope });
-  }
-
-  getTag(key: string) {
-    return this._tags.get(key);
-  }
-
-  // TODO(wittjosiah): Improve privacy of telemetry identifiers. See `getTelemetryIdentifier`.
-  async setIdentityTags(clientServices: Partial<ClientServices>): Promise<void> {
-    if (clientServices.IdentityService) {
-      clientServices.IdentityService.queryIdentity().subscribe((idqr) => {
-        if (!idqr?.identity?.did) {
-          log('empty response from identity service', { idqr });
-          return;
+    return Effect.gen(this, function* () {
+      this._initialized = true;
+      for (const extension of this._extensions) {
+        if (extension.initialize) {
+          yield* extension.initialize();
         }
+      }
 
-        this.setTag('did', idqr.identity.did);
-        this._telemetry?.identify({ userId: idqr.identity.did });
-      });
-    }
-
-    if (clientServices.DevicesService) {
-      clientServices.DevicesService.queryDevices().subscribe((dqr) => {
-        if (!dqr || !dqr.devices || dqr.devices.length === 0) {
-          log('empty response from device service', { device: dqr });
-          return;
-        }
-
-        invariant(dqr, 'empty response from device service');
-        const thisDevice = dqr.devices.find((device) => device.kind === DeviceKind.CURRENT);
-        if (!thisDevice) {
-          log('no current device', { device: dqr });
-          return;
-        }
-
-        this.setTag('deviceKey', thisDevice.deviceKey.truncate());
-        if (thisDevice.profile?.label) {
-          this.setTag('deviceProfile', thisDevice.profile.label);
-        }
-      });
-    }
+      const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
+      this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
+    });
   }
 
-  setIPDataTelemetryTags = (ipData: IPData) => {
-    this.setTag('city', ipData.city, 'telemetry');
-    this.setTag('region', ipData.region, 'telemetry');
-    this.setTag('country', ipData.country, 'telemetry');
-    ipData.latitude && this.setTag('latitude', ipData.latitude.toString(), 'telemetry');
-    ipData.longitude && this.setTag('longitude', ipData.longitude.toString(), 'telemetry');
-  };
-
-  //
-  // Logs
-  //
-
-  private async _initLogs(): Promise<void> {
-    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
-      const { OtelLogs } = await import('./otel');
-      this._otelLogs = new OtelLogs({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'errors';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-        logLevel: LogLevel.VERBOSE,
-        includeSharedWorkerLogs: false,
-      });
-      this._otelLogs && log.runtimeConfig.processors.push(this._otelLogs.logProcessor);
-      log('otel logs enabled', { namespace: this._namespace });
-    } else {
-      log('otel logs disabled');
-    }
+  close(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      this._subscriptions.clear();
+      for (const extension of this._extensions) {
+        if (extension.close) {
+          yield* extension.close();
+        }
+      }
+    });
   }
 
-  //
-  // Metrics
-  //
+  enable(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.enable) {
+          yield* extension.enable();
+        }
+      }
+    });
+  }
 
-  private async _initMetrics(): Promise<void> {
-    if (this.enabled && this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION) {
-      const { OtelMetrics } = await import('./otel');
-      this._otelMetrics = new OtelMetrics({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-      log('otel metrics enabled');
-    } else {
-      log('otel metrics disabled');
-    }
+  disable(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.disable) {
+          yield* extension.disable();
+        }
+      }
+    });
+  }
+
+  flush(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      for (const extension of this._extensions) {
+        if (extension.flush) {
+          yield* extension.flush();
+        }
+      }
+    });
+  }
+
+  _addExtension(extension: Extension): void {
+    invariant(!this._initialized, 'Observability is already initialized');
+    this._extensions.push(extension);
+  }
+
+  _addDataProvider(dataProvider: DataProvider): void {
+    invariant(!this._initialized, 'Observability is already initialized');
+    this._dataProviders.push(dataProvider);
   }
 
   /**
-   * Gauge metric.
-   *
-   * The default implementation uses OpenTelemetry
+   * Adds a data provider and initializes it.
    */
-  gauge(name: string, value: number | any, extraTags?: any): void {
-    this._otelMetrics?.gauge(name, value, extraTags);
+  addDataProvider(dataProvider: DataProvider): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      this._addDataProvider(dataProvider);
+      const cleanup = yield* dataProvider(this);
+      if (cleanup) {
+        this._subscriptions.add(cleanup);
+      }
+    });
   }
 
-  // TODO(nf): Refactor into ObservabilityExtensions.
-
-  startNetworkMetrics(clientServices: Partial<ClientServices>): void {
-    if (!clientServices.NetworkService) {
-      return;
+  identify(distinctId: string, attributes?: Attributes, setOnceAttributes?: Attributes): void {
+    for (const extension of this._extensions) {
+      extension.identify?.(distinctId, attributes, setOnceAttributes);
     }
-    // TODO(nf): support type in debounce()
-    const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
-    updateSignalMetrics.on(this._ctx, async () => {
-      log('send signal metrics');
-      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[])?.forEach(({ server, state }) => {
-        this.gauge('dxos.client.network.signal.connectionState', state, { server });
-      });
-
-      let swarmCount = 0;
-      const connectionStates = new Map<string, number>();
-      for (const state in ConnectionState) {
-        connectionStates.set(state, 0);
-      }
-
-      let totalReadBufferSize = 0;
-      let totalWriteBufferSize = 0;
-      let totalChannelBufferSize = 0;
-
-      this._lastNetworkStatus?.connectionInfo?.forEach((connectionInfo) => {
-        swarmCount++;
-
-        for (const conn of connectionInfo.connections ?? []) {
-          connectionStates.set(conn.state, (connectionStates.get(conn.state) ?? 0) + 1);
-          totalReadBufferSize += conn.readBufferSize ?? 0;
-          totalWriteBufferSize += conn.writeBufferSize ?? 0;
-          for (const stream of conn.streams ?? []) {
-            totalChannelBufferSize += stream.writeBufferSize ?? 0;
-          }
-        }
-
-        this.gauge('dxos.client.network.swarm.count', swarmCount);
-        for (const state in ConnectionState) {
-          this.gauge('dxos.client.network.connection.count', connectionStates.get(state) ?? 0, { state });
-        }
-        this.gauge('dxos.client.network.totalReadBufferSize', totalReadBufferSize);
-        this.gauge('dxos.client.network.totalWriteBufferSize', totalWriteBufferSize);
-        this.gauge('dxos.client.network.totalChannelBufferSize', totalChannelBufferSize);
-      });
-    });
-
-    clientServices.NetworkService.queryStatus().subscribe((networkStatus) => {
-      this._lastNetworkStatus = networkStatus;
-      updateSignalMetrics.emit();
-    });
-
-    scheduleTaskInterval(this._ctx, async () => updateSignalMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
-  startSpacesMetrics(client: Client, namespace: string): void {
-    // TODO(nf): update subscription on new spaces
-    const spaces = client.spaces.get();
-    const subscriptions = new Map<string, { unsubscribe: () => void }>();
-    this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
-
-    const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
-    updateSpaceMetrics.on(this._ctx, async () => {
-      log('send space metrics');
-      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        this.gauge('dxos.client.space.members', data.members, { key: data.key });
-        this.gauge('dxos.client.space.objects', data.objects, { key: data.key });
-        this.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
-        this.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, { key: data.key });
-      }
-    });
-
-    const updateSpaceTelemetry = new Event<Space>().debounce(SPACE_TELEMETRY_MIN_INTERVAL);
-    updateSpaceTelemetry.on(this._ctx, async () => {
-      log('send space telemetry');
-      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        this.track({
-          ...getTelemetryIdentity(client),
-          event: TelemetryEvent.METRICS,
-          action: 'space.update',
-          properties: data,
-        });
-      }
-    });
-
-    const subscribeToSpaceUpdate = (space: Space) =>
-      space.pipeline.subscribe({
-        next: () => {
-          updateSpaceMetrics.emit();
-          updateSpaceTelemetry.emit();
-        },
-      });
-
-    spaces.forEach((space) => {
-      subscriptions.set(space.id, subscribeToSpaceUpdate(space));
-    });
-
-    client.spaces.subscribe({
-      next: async (spaces) => {
-        spaces
-          .filter((space) => !subscriptions.has(space.id))
-          .forEach((space) => {
-            subscriptions.set(space.id, subscribeToSpaceUpdate(space));
-          });
-      },
-    });
-
-    scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
-  }
-
-  async startRuntimeMetrics(client: Client, frequency: number = NETWORK_METRICS_MIN_INTERVAL): Promise<void> {
-    const platform = await client.services.services.SystemService?.getPlatform();
-    invariant(platform, 'platform is required');
-
-    this.setTag('platformType', Platform.PLATFORM_TYPE[platform.type as number].toLowerCase());
-    if (this._mode === 'full') {
-      if (platform.platform) {
-        this.setTag('platform', platform.platform);
-      }
-      if (platform.arch) {
-        this.setTag('arch', platform.arch);
-      }
-      if (platform.runtime) {
-        this.setTag('runtime', platform.runtime);
-      }
+  alias(distinctId: string, previousId?: string): void {
+    for (const extension of this._extensions) {
+      extension.alias?.(distinctId, previousId);
     }
+  }
 
-    scheduleTaskInterval(
-      this._ctx,
-      async () => {
-        if (client.services.constructor.name === 'WorkerClientServices') {
-          const memory = (window.performance as any).memory;
-          if (memory) {
-            this.gauge('dxos.client.runtime.heapTotal', memory.totalJSHeapSize);
-            this.gauge('dxos.client.runtime.heapUsed', memory.usedJSHeapSize);
-            this.gauge('dxos.client.runtime.heapSizeLimit', memory.jsHeapSizeLimit);
-          }
+  setTags(tags: Attributes, kind?: Kind): void {
+    for (const extension of this._extensions) {
+      if (kind && extension.apis.some((api) => api.kind !== kind)) {
+        continue;
+      }
+
+      const processedTags = Object.fromEntries(
+        Object.entries(tags)
+          .filter((entry): entry is [string, string | number | boolean] => entry[1] !== undefined)
+          .map(([key, value]) => [key, value.toString()]),
+      );
+      extension.setTags?.(processedTags);
+    }
+  }
+
+  get enabled(): boolean {
+    return this._extensions.every((extension) => extension.enabled);
+  }
+
+  get errors(): Errors {
+    return {
+      captureException: (error, attributes) => {
+        for (const extension of this._getExtensions('errors')) {
+          extension.captureException(error, attributes);
         }
-        client.services.services.SystemService?.getPlatform()
-          .then((platform) => {
-            if (platform.memory) {
-              this.gauge('dxos.client.services.runtime.rss', platform.memory.rss);
-              this.gauge('dxos.client.services.runtime.heapTotal', platform.memory.heapTotal);
-              this.gauge('dxos.client.services.runtime.heapUsed', platform.memory.heapUsed);
-            }
-          })
-          .catch((error) => log('platform error', { error }));
       },
-      frequency,
+    };
+  }
+
+  get events(): Events {
+    return {
+      captureEvent: (event, attributes) => {
+        for (const extension of this._getExtensions('events')) {
+          extension.captureEvent(event, attributes);
+        }
+      },
+    };
+  }
+
+  get feedback(): Feedback {
+    return {
+      captureUserFeedback: (form) => {
+        for (const extension of this._getExtensions('feedback')) {
+          extension.captureUserFeedback(form);
+        }
+      },
+    };
+  }
+
+  get metrics(): Metrics {
+    return {
+      gauge: (name, value, attributes) => {
+        for (const extension of this._getExtensions('metrics')) {
+          extension.gauge(name, value, attributes);
+        }
+      },
+      increment: (name, value, attributes) => {
+        for (const extension of this._getExtensions('metrics')) {
+          extension.increment(name, value, attributes);
+        }
+      },
+      distribution: (name, value, attributes) => {
+        for (const extension of this._getExtensions('metrics')) {
+          extension.distribution(name, value, attributes);
+        }
+      },
+    };
+  }
+
+  private _getExtensions<T extends Kind>(kind: T): Extract<ExtensionApi, { kind: T }>[] {
+    return pipe(
+      this._extensions,
+      Array.flatMap((extension) => extension.apis),
+      Array.filter((api): api is Extract<ExtensionApi, { kind: T }> => api.kind === kind),
     );
   }
-
-  //
-  // Telemetry
-  //
-
-  private async _initTelemetry(): Promise<void> {
-    if (this._secrets.TELEMETRY_API_KEY && this._mode !== 'disabled' && typeof document !== 'undefined') {
-      const { SegmentTelemetry } = await import('./segment');
-      this._telemetry = new SegmentTelemetry({
-        apiKey: this._secrets.TELEMETRY_API_KEY,
-        batchSize: this._telemetryBatchSize,
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'telemetry';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-    } else {
-      log('segment disabled');
-    }
-  }
-
-  /**
-   * Submit telemetry page view.
-   * The default implementation uses Segment.
-   */
-  page(options: PageOptions): void {
-    this._telemetry?.page(options);
-  }
-
-  /**
-   * Submit telemetry user action.
-   * The default implementation uses Segment.
-   */
-  track(options: TrackOptions): void {
-    this._telemetry?.track(options);
-  }
-
-  //
-  // Error Logs
-  //
-
-  private async _initErrorLogs(): Promise<void> {
-    if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
-      const { captureException, captureUserFeedback, init, setTag } = await import('./sentry');
-      const { SentryLogProcessor } = await import('./sentry/sentry-log-processor');
-      this._captureException = captureException;
-      this._captureUserFeedback = captureUserFeedback;
-      this._setTag = setTag;
-
-      // TODO(nf): Refactor package into this one?
-      log.info('Initializing Sentry', {
-        dest: this._secrets.SENTRY_DESTINATION,
-        options: this._errorReportingOptions,
-      });
-      this._sentryLogProcessor = new SentryLogProcessor();
-      init({
-        ...this._errorReportingOptions,
-        destination: this._secrets.SENTRY_DESTINATION,
-        scrubFilenames: this._mode !== 'full',
-        onError: (event) => this._sentryLogProcessor!.addLogBreadcrumbsTo(event),
-      });
-
-      // TODO(nf): Set platform at instantiation? needed for node.
-      // TODO(nf): Is this different than passing as properties in options?
-      this._tags.forEach((v, k) => {
-        if (v.scope === 'all' || v.scope === 'errors') {
-          setTag(k, v.value);
-        }
-      });
-    } else {
-      log('sentry disabled');
-    }
-  }
-
-  startErrorLogs(): void {
-    this._sentryLogProcessor && log.runtimeConfig.processors.push(this._sentryLogProcessor.logProcessor);
-  }
-
-  startTraces(): void {
-    this._otelTraces && this._otelTraces.start();
-  }
-
-  // TODO(nf): Refactor init based on providers and their capabilities.
-  private async _initTraces(): Promise<void> {
-    if (this._secrets.OTEL_ENDPOINT && this._secrets.OTEL_AUTHORIZATION && this._mode !== 'disabled') {
-      const { OtelTraces } = await import('./otel');
-      this._otelTraces = new OtelTraces({
-        endpoint: this._secrets.OTEL_ENDPOINT,
-        authorizationHeader: this._secrets.OTEL_AUTHORIZATION,
-        serviceName: this._namespace,
-        serviceVersion: this.getTag('release')?.value ?? '0.0.0',
-        getTags: () =>
-          Object.fromEntries(
-            Array.from(this._tags)
-              .filter(([key, value]) => {
-                return value.scope === 'all' || value.scope === 'metrics';
-              })
-              .map(([key, value]) => [key, value.value]),
-          ),
-      });
-    }
-  }
-
-  /**
-   * Manually capture an exception.
-   * The default implementation uses Sentry.
-   */
-  captureException(err: any): void {
-    if (this.enabled) {
-      this._captureException?.(err);
-    }
-  }
-
-  /**
-   * Manually capture user feedback.
-   * The default implementation uses Sentry.
-   */
-  captureUserFeedback(message: string): void {
-    if (!this._secrets.SENTRY_DESTINATION) {
-      log.info('Feedback submitted without Sentry destination', { message });
-      return;
-    }
-
-    // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
-    // - Maybe if telemetry is disable we shouldn't enable replay.
-    // - (Check the browser.ts implementation for reference).
-    void this._captureUserFeedback?.(message);
-  }
 }
+
+export const make = (): Effect.Effect<Observability> => Effect.succeed(new ObservabilityImpl());
+
+export const addExtension = (_extension: Effect.Effect<Extension>) =>
+  Effect.fn(function* (_observability: Effect.Effect<Observability>) {
+    const observability = yield* _observability;
+    const extension = yield* _extension;
+    invariant('_addExtension' in observability && typeof observability._addExtension === 'function');
+    observability._addExtension(extension);
+    return observability;
+  });
+
+export const addDataProvider = (dataProvider: DataProvider) =>
+  Effect.fn(function* (_observability: Effect.Effect<Observability>) {
+    const observability = yield* _observability;
+    invariant('_addDataProvider' in observability && typeof observability._addDataProvider === 'function');
+    observability._addDataProvider(dataProvider);
+    return observability;
+  });

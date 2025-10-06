@@ -8,11 +8,6 @@ import { join } from 'node:path';
 import yaml from 'js-yaml';
 import { v4 as uuid, validate as validateUuid } from 'uuid';
 
-import type { Config } from '@dxos/client';
-import { log } from '@dxos/log';
-
-import { type Mode, Observability } from '../observability';
-
 /**
  * Print observability banner once per installation.
  */
@@ -22,7 +17,6 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
     return;
   }
   bannercb(
-    // eslint-disable-next-line no-multi-str
     'Basic observability data will be sent to the DXOS team in order to improve the product. This includes \
     performance metrics, error logs, and usage data. No personally identifiable information, other than your \
     public key, is included with this data and no private data ever leaves your devices. To disable sending \
@@ -32,7 +26,29 @@ export const showObservabilityBanner = async (configDir: string, bannercb: (inpu
   await writeFile(path, '', 'utf-8');
 };
 
-export const getObservabilityState = async (configDir: string): Promise<PersistentObservabilityState> => {
+export const isObservabilityDisabled = async (configDir: string): Promise<boolean> => {
+  const observabilityState = await getObservabilityState(configDir);
+  return observabilityState.disabled;
+};
+
+export const storeObservabilityDisabled = async (configDir: string, value: boolean) => {
+  const observabilityState = await getObservabilityState(configDir);
+  observabilityState.disabled = value;
+  await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
+};
+
+export const getObservabilityGroup = async (configDir: string): Promise<string | undefined> => {
+  const observabilityState = await getObservabilityState(configDir);
+  return observabilityState.group;
+};
+
+export const storeObservabilityGroup = async (configDir: string, value: string) => {
+  const observabilityState = await getObservabilityState(configDir);
+  observabilityState.group = value;
+  await writeFile(join(configDir, 'observability.yml'), yaml.dump(observabilityState), 'utf-8');
+};
+
+const getObservabilityState = async (configDir: string): Promise<PersistentObservabilityState> => {
   // check whether configDir exists and if it's a directory
 
   if (existsSync(configDir)) {
@@ -54,8 +70,8 @@ export const getObservabilityState = async (configDir: string): Promise<Persiste
 
 export type PersistentObservabilityState = {
   installationId: string;
+  disabled: boolean;
   group?: string;
-  mode: Mode;
 };
 
 // create initial state and write to file, using environment variables to override defaults.
@@ -63,8 +79,8 @@ const initializeState = async (idPath: string): Promise<PersistentObservabilityS
   // TODO(nf): read initial values from config or seed file
   const observabilityState = {
     installationId: uuid(),
+    disabled: process.env.DX_DISABLE_OBSERVABILITY ? true : false,
     group: process.env.DX_OBSERVABILITY_GROUP ?? undefined,
-    mode: (process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : (process.env.DX_OBSERVABILITY_MODE ?? 'basic')) as Mode,
   };
 
   await writeFile(
@@ -81,66 +97,7 @@ const validate = (contextString: string) => {
   if (Boolean(context.installationId) && validateUuid(context.installationId!)) {
     return {
       ...context,
-      mode: process.env.DX_DISABLE_OBSERVABILITY ? 'disabled' : (context.mode ?? 'basic'),
+      disabled: process.env.DX_DISABLE_OBSERVABILITY ? true : (context.disabled ?? false),
     };
   }
-};
-
-export type NodeObservabilityOptions = {
-  installationId: string;
-  group?: string;
-  namespace: string;
-  version: string;
-  config: Config;
-  mode?: Mode;
-  tracingEnable?: boolean;
-  replayEnable?: boolean;
-  // TODO(nf): options for providers?
-};
-
-export const initializeNodeObservability = async ({
-  namespace,
-  version,
-  config,
-  installationId,
-  group,
-  mode = 'basic',
-  tracingEnable = true,
-  replayEnable = true,
-}: NodeObservabilityOptions): Promise<Observability> => {
-  log('initializeCliObservability', { config });
-
-  // TODO(nf): make CLI build populate runtime.app.build config?
-  const release = `${namespace}@${version}`;
-  const environment = process.env.DX_ENVIRONMENT ?? 'unknown';
-
-  const observability = new Observability({
-    mode,
-    namespace,
-    release,
-    environment,
-    group,
-    errorLog: {
-      sentryInitOptions: {
-        environment,
-        release,
-        // TODO(wittjosiah): Configure this.
-        sampleRate: 1.0,
-      },
-    },
-  });
-
-  observability.setTag('installationId', installationId);
-
-  // TODO(nf): cache ipdata to avoid repeated requests
-  const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
-  try {
-    const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);
-    const ipData = await res.json();
-    ipData && observability.setIPDataTelemetryTags(ipData);
-  } catch (err) {
-    observability?.captureException(err);
-  }
-
-  return observability;
 };

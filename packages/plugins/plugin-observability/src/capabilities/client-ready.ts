@@ -12,7 +12,7 @@ import {
   contributes,
   createIntent,
 } from '@dxos/app-framework';
-import { ObservabilityProvider } from '@dxos/observability/next';
+import { ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '../meta';
 
