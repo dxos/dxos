@@ -25,7 +25,7 @@ const parseSequence = (text: string): SequenceDefinition | undefined => {
     const json = JSON5.parse(text);
     const { steps } = json;
     return { steps };
-  } catch (error) {
+  } catch {
     // Ignore.
   }
 };

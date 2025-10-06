@@ -6,7 +6,7 @@ import { type ForwardedRef, useEffect, useRef } from 'react';
 
 /**
  * Combines a possibly undefined forwarded ref with a locally defined ref.
- * @deprecated Use @radix-ui/react-compose-refs
+ * @deprecated Use `useComposedRefs` from @radix-ui/react-compose-refs
  */
 export const useForwardedRef = <T>(ref: ForwardedRef<T>) => {
   const innerRef = useRef<T>(null);

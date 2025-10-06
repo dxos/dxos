@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
@@ -15,9 +13,9 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { DataType, DataTypes } from '../common';
 
@@ -100,6 +98,7 @@ const meta = {
   title: 'sdk/schema/ECHO',
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       createIdentity: true,
       config: new Config({
@@ -114,9 +113,10 @@ const meta = {
       }),
       types: DataTypes,
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

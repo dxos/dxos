@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -12,8 +10,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -33,7 +31,7 @@ const meta = {
   render: DefaultStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }), withTheme, withLayout()],
+  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -56,8 +54,8 @@ Default.parameters = { layout: 'fullscreen' };
 
 const meta = {
   title: 'sdk/shell/All',
-  decorators: [withTheme],
   component: StoryRow,
+  decorators: [withTheme],
   parameters: {
     translations,
     chromatic: {

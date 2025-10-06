@@ -16,11 +16,11 @@ export const semanticColors = {
     dark: ['.dark'],
   },
   sememes: {
-    // Please define each set of sememes in its own file.
+    // Define each set of sememes in its own file.
     ...callsSememes,
     ...codemirrorSememes,
-    ...sheetSememes,
     ...hueSememes,
+    ...sheetSememes,
     ...systemSememes,
   },
   namespace: 'dx-',

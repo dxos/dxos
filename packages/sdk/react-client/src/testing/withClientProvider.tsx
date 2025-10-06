@@ -111,7 +111,6 @@ export const useMultiClient = () => useContext(MultiClientContext);
 /**
  * Decorator that creates a scaffold for multiple clients.
  * Orchestrates invitations between a randomly selected host and the remaining clients.
- * NOTE: Should come before withLayout.
  */
 export const withMultiClientProvider = ({
   numClients = 2,

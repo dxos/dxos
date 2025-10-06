@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';
@@ -96,7 +94,10 @@ const createNode: D3Callable<SVGGElement, Datum> = (group, classNames, options) 
 const meta = {
   title: 'ui/react-ui-graph/fx',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

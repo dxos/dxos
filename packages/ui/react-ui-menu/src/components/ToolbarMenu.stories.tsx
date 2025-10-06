@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { MenuProvider, DropdownMenu as NaturalDropdownMenu, ToolbarMenu } from '../components';
 import { useMenuActions } from '../hooks';

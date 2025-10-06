@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -52,15 +50,15 @@ const meta = {
   component: TemplateForm,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
       createSpace: true,
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center' }),
-    withTheme,
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof TemplateForm>;

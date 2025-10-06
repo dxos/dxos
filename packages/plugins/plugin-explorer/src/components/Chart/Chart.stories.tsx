@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta } from '@storybook/react-vite';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import CitiesData from '../../../data/cities.js';
 
@@ -36,7 +34,10 @@ export const Default = () => <ClientRepeater component={Story} />;
 const meta = {
   title: 'plugins/plugin-explorer/Chart',
   component: Chart,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Chart>;
 
 export default meta;

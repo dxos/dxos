@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, useState } from 'react';
 
 import { defaultRowSize } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
@@ -105,7 +103,9 @@ const meta = {
   title: 'ui/react-ui-grid/Grid',
   component: GridStory,
   decorators: [withTheme],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof GridStory>;
 
 export default meta;

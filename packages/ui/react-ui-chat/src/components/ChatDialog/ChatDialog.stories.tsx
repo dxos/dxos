@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -53,8 +51,9 @@ const meta = {
       </>
     );
   },
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'flex flex-col' })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof ChatDialog.Root>;

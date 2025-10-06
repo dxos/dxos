@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React from 'react';
@@ -28,10 +26,10 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { storybookGraphBuilders } from '../../testing';
@@ -121,6 +119,7 @@ const meta = {
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
         ThemePlugin({ tx: defaultTx }),
@@ -147,9 +146,9 @@ const meta = {
         ]),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof NavTreeContainer>;
@@ -196,6 +195,9 @@ export const WithClient: Story = {
         ]),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };

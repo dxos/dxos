@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { useEffect } from '@preact-signals/safe-react/react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Flex } from '../Flex';
 import { TextCrawl } from '../TextCrawl';

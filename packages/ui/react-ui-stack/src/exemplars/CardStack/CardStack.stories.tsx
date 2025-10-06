@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';
@@ -162,7 +160,10 @@ const CardStackStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/CardStack',
   component: CardStackStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof CardStackStory>;
 
 export default meta;

@@ -2,16 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import '@fontsource/k2d/100-italic.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { DXOS } from '../../icons';
 

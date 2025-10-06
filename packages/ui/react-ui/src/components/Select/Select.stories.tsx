@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
 
-import { withSurfaceVariantsLayout, withTheme } from '../../testing';
+import { withTheme } from '../../testing';
+import { withSurfaceVariantsLayout } from '../../testing';
 
 import { Select } from './Select';
 
@@ -45,8 +44,7 @@ const DefaultStory = ({ items = [] }: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-core/Select',
   render: DefaultStory,
-  decorators: [withSurfaceVariantsLayout(), withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
+  decorators: [withTheme, withSurfaceVariantsLayout()],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

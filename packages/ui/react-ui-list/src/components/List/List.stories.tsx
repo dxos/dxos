@@ -2,15 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React from 'react';
 
 import { live } from '@dxos/live-object';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';
@@ -94,7 +92,10 @@ const list = live(createList(100));
 const meta = {
   title: 'ui/react-ui-list/List',
   component: List.Root,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof List.Root>;
 
 export default meta;

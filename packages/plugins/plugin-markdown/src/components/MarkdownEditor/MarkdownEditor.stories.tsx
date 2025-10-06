@@ -2,18 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -42,13 +40,9 @@ const meta = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
   component: MarkdownEditor as any,
   render: DefaultStory,
-  decorators: [
-    withPluginManager({ plugins: [IntentPlugin()] }),
-    withAttention,
-    withTheme,
-    withLayout({ fullscreen: true }),
-  ],
+  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin()] }), withAttention],
   parameters: {
+    layout: 'fullscreen',
     translations: [...translations, ...editorTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;

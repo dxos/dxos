@@ -5,6 +5,7 @@
 import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { getDeep } from '@dxos/util';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -19,11 +20,11 @@ export type MatchedObject = {
 export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
   switch (filter.type) {
     case 'object': {
-      // Check typename if specified
+      // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
         if (!obj.doc.system?.type?.['/']) {
-          // Objects with no type are considered to be expando objects
+          // Objects with no type are considered to be expando objects.
           const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
           if (expectedDXN?.type !== EXPANDO_TYPENAME) {
             return false;
@@ -31,19 +32,18 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         } else {
           const actualDXN = DXN.parse(obj.doc.system.type['/']);
           const expectedDXN = DXN.parse(filter.typename);
-
           if (!compareTypename(expectedDXN, actualDXN)) {
             return false;
           }
         }
       }
 
-      // Check IDs if specified
+      // Check IDs if specified.
       if (filter.id && filter.id.length > 0 && !filter.id.includes(obj.id)) {
         return false;
       }
 
-      // Check properties
+      // Check properties.
       if (filter.props) {
         for (const [key, valueFilter] of Object.entries(filter.props)) {
           const value = obj.doc.data[key];
@@ -53,7 +53,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         }
       }
 
-      // Check foreign keys if specified
+      // Check foreign keys if specified.
       if (filter.foreignKeys && filter.foreignKeys.length > 0) {
         const hasMatchingKey = filter.foreignKeys.some((filterKey) =>
           obj.doc.meta.keys.some((objKey) => objKey.source === filterKey.source && objKey.id === filterKey.id),
@@ -66,8 +66,14 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       return true;
     }
 
+    case 'tag': {
+      // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
+      const tags = getDeep(obj.doc.data, ['properties', 'tags']);
+      return Array.isArray(tags) && tags?.includes(filter.tag);
+    }
+
     case 'text-search': {
-      // TODO: Implement text search
+      // TODO(???): Implement text search.
       return false;
     }
 

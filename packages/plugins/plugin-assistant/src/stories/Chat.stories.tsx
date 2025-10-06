@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
@@ -45,6 +43,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, createView } from '@dxos/schema';
@@ -194,6 +193,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
+  decorators: [withTheme],
   parameters: {
     translations,
     controls: { disable: true },

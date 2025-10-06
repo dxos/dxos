@@ -511,9 +511,6 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-query-editor/tsconfig.json"
-    },
-    {
       "path": "packages/ui/react-ui-searchlist/tsconfig.json"
     },
     {

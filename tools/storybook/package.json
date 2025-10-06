@@ -39,7 +39,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "storybook": "^9.1.10",
-    "vite": "7.1.7",
+    "vite": "7.1.9",
     "vite-plugin-turbosnap": "^1.0.3"
   },
   "peerDependencies": {

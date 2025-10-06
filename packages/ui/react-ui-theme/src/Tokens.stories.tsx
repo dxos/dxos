@@ -2,13 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type HelicalArcSeries, type TokenAudit, auditFacet, parseAlphaLuminosity } from '@ch-ui/tokens';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment } from 'react';
-
-import { trim } from '@dxos/util';
 
 import { tokenSet } from './config';
 
@@ -43,20 +39,9 @@ const Swatch = ({ variableName, value, semantic, physical }: TokenAudit<HelicalA
 const DefaultStory = () => {
   return (
     <>
-      <style>
-        {trim`
-        html {
-          background-color: #888;
-          background-image: linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777),
-          linear-gradient(45deg, #777 25%, transparent 25%, transparent 75%, #777 75%, #777);
-          background-size: 32px 32px;
-          background-position: 0 0, 16px 16px;
-        }`}
-      </style>
-
       <div className='flex'>
         <div className='p-2 bg-baseSurface rounded'>
-          <h1 className='text-lg mbe-2'>Physical color token audit</h1>
+          <h1 className='text-lg mbe-2'>Physical color tokens</h1>
           <pre className='text-xs'>
             Luminosity (/ alpha)?
             <br />

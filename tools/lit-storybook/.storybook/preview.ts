@@ -2,8 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import '@dxos-theme';
+
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/web-components-vite';
+
+import { withLayout } from '@dxos/storybook-utils';
 
 /**
  * Configure Storybook rendering.
@@ -11,7 +15,7 @@ import { type Preview } from '@storybook/web-components-vite';
  */
 export const preview: Preview = {
   decorators: [
-    // Does not affect docs.
+    // Note: Does not affect docs.
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {
@@ -19,7 +23,10 @@ export const preview: Preview = {
         light: 'light',
       },
     }),
+
+    withLayout,
   ],
+
   /**
    * Referenced when story is previewed in browser.
    * https://storybook.js.org/docs/writing-stories/parameters#global-parameters

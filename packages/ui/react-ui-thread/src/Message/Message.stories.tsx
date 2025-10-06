@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { withTheme } from '@dxos/react-ui/testing';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type MessageEntity, MessageStoryText } from '../testing';
 import { Thread } from '../Thread';
@@ -41,8 +39,11 @@ const meta = {
   title: 'ui/react-ui-thread/Message',
   component: MessageRoot as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { translations },
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

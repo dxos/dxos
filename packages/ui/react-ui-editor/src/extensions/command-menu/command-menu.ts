@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 
 import { type Range } from '../../types';
@@ -22,7 +22,7 @@ export type CommandMenuOptions = {
   onTextChange?: (trigger: string, text: string) => void;
 };
 
-export const commandMenu = (options: CommandMenuOptions) => {
+export const commandMenu = (options: CommandMenuOptions): Extension => {
   const commandMenuPlugin = ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;

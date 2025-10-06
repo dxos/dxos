@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Tree, type TreeComponentProps } from './Tree';
 import { Tree as TreeModel, TreeType } from './types';
@@ -48,7 +46,7 @@ const meta = {
   title: 'plugins/plugin-explorer/Tree',
   component: Tree as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },

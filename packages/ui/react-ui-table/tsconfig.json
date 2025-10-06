@@ -78,6 +78,9 @@
       "path": "../react-ui-attention"
     },
     {
+      "path": "../react-ui-components"
+    },
+    {
       "path": "../react-ui-editor"
     },
     {
@@ -88,9 +91,6 @@
     },
     {
       "path": "../react-ui-menu"
-    },
-    {
-      "path": "../react-ui-query-editor"
     },
     {
       "path": "../react-ui-searchlist"

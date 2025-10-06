@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-// TODO(burdon): Factor out.
-
 export type UnaryOperator = 'NOT';
 
 export type RelationalOperator = 'EQ' | 'LT' | 'GT';

@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Card } from './Card';
 
@@ -46,28 +44,6 @@ const meta = {
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
-  },
-  argTypes: {
-    title: {
-      control: 'text',
-      description: 'Card title',
-    },
-    description: {
-      control: 'text',
-      description: 'Card description',
-    },
-    image: {
-      control: 'text',
-      description: 'URL for the poster image',
-    },
-    showImage: {
-      control: 'boolean',
-      description: 'Whether to show the image',
-    },
-    showIcon: {
-      control: 'boolean',
-      description: 'Whether to show an icon (when image is not shown)',
-    },
   },
 } satisfies Meta<typeof DefaultStory>;
 

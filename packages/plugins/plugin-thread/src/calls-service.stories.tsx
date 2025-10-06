@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -14,8 +12,8 @@ import { log } from '@dxos/log';
 import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 
@@ -177,6 +175,7 @@ const meta = {
   title: 'plugins/plugin-thread/calls-service',
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       config: new Config({
         runtime: {
@@ -186,8 +185,6 @@ const meta = {
         },
       }),
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

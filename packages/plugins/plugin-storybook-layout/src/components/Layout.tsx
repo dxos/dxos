@@ -21,7 +21,6 @@ import { meta } from '../meta';
 const debounce_delay = 100;
 
 // TODO(wittjosiah): Support dialogs, tooltips, maybe toast.
-//   Provide root container along the lines with `withLayout` decorator.
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const layout = useCapability(LayoutState);

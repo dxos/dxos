@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DropdownMenu, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem, type StackItemRootProps } from './StackItem';
 

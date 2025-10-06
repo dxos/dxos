@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import './mailbox.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -17,11 +15,12 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { Filter, fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { render, withLayout } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
@@ -65,7 +64,10 @@ const meta = {
   title: 'plugins/plugin-inbox/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withAttention],
+  decorators: [withTheme, withAttention],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

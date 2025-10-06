@@ -89,6 +89,7 @@ export const systemSememes = {
   //
   // Elevation cadence tokens
   //
+
   baseSurface: elevationCadence(0),
   groupSurface: elevationCadence(1),
   modalSurface: elevationCadence(2, 1.7),
@@ -133,7 +134,13 @@ export const systemSememes = {
   //
 
   // Screen overlay for modal dialogs.
-  scrimSurface: applyAlpha({ light: ['neutral', LIGHT_CONTRAST_MAX], dark: ['neutral', DARK_ELEVATION_MIN] }, 0.65),
+  scrimSurface: applyAlpha(
+    {
+      light: ['neutral', LIGHT_CONTRAST_MAX],
+      dark: ['neutral', DARK_ELEVATION_MIN],
+    },
+    0.65,
+  ),
 
   // High contrast for focused interactive elements. (Technically this is part of the surface cadence, but the contrast cadence is on the opposite side of the elevation cadence as this point.)
   focusSurface: {
@@ -212,42 +219,76 @@ export const systemSememes = {
 } satisfies ColorSememes;
 
 type SememeName = keyof typeof systemSememes;
+type SememeKey = 'root' | 'group' | 'modal';
 
 /**
  * Alias map.
  */
-const aliasDefs: Record<string, Record<string, SememeName>> = {
+const aliasDefs: Record<string, Partial<Record<SememeKey, SememeName>>> = {
   // The background color appearing in overscroll and between planks when Deck is enabled.
-  deckSurface: { root: 'groupSurface' },
-
-  // Secondary aliases.
-  textInputSurface: { root: 'textInputSurfaceBase', group: 'textInputSurfaceGroup', modal: 'textInputSurfaceModal' },
-  inputSurface: { root: 'inputSurfaceBase', group: 'inputSurfaceGroup', modal: 'inputSurfaceModal' },
-  hoverSurface: { root: 'hoverSurfaceBase', group: 'hoverSurfaceGroup', modal: 'hoverSurfaceModal' },
-
-  // Borders and dividers.
-  separator: { root: 'separatorBase', group: 'separatorGroup', modal: 'separatorModal' },
+  // TODO(burdon): Make distinct from groupSurface.
+  deckSurface: {
+    root: 'groupSurface',
+  },
 
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
-  activeSurface: { root: 'inputSurface' as any /* TODO(thure): strongly type secondary aliases. */ },
+  activeSurface: {
+    root: 'inputSurfaceBase',
+  },
 
   // Main sidebar panel.
-  sidebarSurface: { root: 'groupSurface' },
+  sidebarSurface: {
+    root: 'groupSurface',
+  },
 
   // Plank header.
-  headerSurface: { root: 'groupSurface' },
-
-  // Forms, cards, etc.
-  cardSurface: { root: 'groupSurface' },
+  headerSurface: {
+    root: 'groupSurface',
+  },
 
   // Toolbars, table/sheet headers, etc.
-  toolbarSurface: { root: 'groupSurface' },
+  toolbarSurface: {
+    root: 'groupSurface',
+  },
+
+  // Forms, cards, etc.
+  cardSurface: {
+    root: 'groupSurface',
+  },
+
+  // Secondary aliases.
+  textInputSurface: {
+    root: 'textInputSurfaceBase',
+    group: 'textInputSurfaceGroup',
+    modal: 'textInputSurfaceModal',
+  },
+  inputSurface: {
+    root: 'inputSurfaceBase',
+    group: 'inputSurfaceGroup',
+    modal: 'inputSurfaceModal',
+  },
+  hoverSurface: {
+    root: 'hoverSurfaceBase',
+    group: 'hoverSurfaceGroup',
+    modal: 'hoverSurfaceModal',
+  },
 
   // TODO(thure): rename uses of this token to `focusSurface` and remove this alias.
-  attention: { root: 'focusSurface' },
+  attention: {
+    root: 'focusSurface',
+  },
 
   // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.
-  currentRelated: { root: 'accentSurfaceRelated' },
+  currentRelated: {
+    root: 'accentSurfaceRelated',
+  },
+
+  // Borders and dividers.
+  separator: {
+    root: 'separatorBase',
+    group: 'separatorGroup',
+    modal: 'separatorModal',
+  },
 };
 
 export const systemAliases: ColorAliases = Object.entries(aliasDefs).reduce((aliases, [alias, values]) => {

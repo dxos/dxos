@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -15,8 +13,9 @@ import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { AnchoredTo, DataType } from '@dxos/schema';
-import { layoutCentered, render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { ThreadType } from '../types';
@@ -57,20 +56,14 @@ const DefaultStory = () => {
     return null;
   }
 
-  return (
-    <div className='w-[30rem] overflow-y-auto bg-baseSurface'>
-      <CommentsContainer anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />
-    </div>
-  );
+  return <CommentsContainer anchors={anchors} onThreadDelete={console.log} onAcceptProposal={console.log} />;
 };
 
 const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme,
-    withLayout({ fullscreen: true, classNames: layoutCentered }),
-    // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
+    withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
     //   Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
@@ -85,6 +78,10 @@ const meta = {
     }),
   ],
   parameters: {
+    layout: {
+      type: 'column',
+      classNames: 'overflow-y-scroll',
+    },
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

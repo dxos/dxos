@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
@@ -13,9 +11,9 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -37,11 +35,9 @@ const meta = {
   component: CreateObjectDialog,
   render: Story,
   decorators: [
-    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Collection] }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     translations: [...translations, ...shellTranslations],

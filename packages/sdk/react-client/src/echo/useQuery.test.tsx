@@ -65,7 +65,7 @@ describe('useQuery', () => {
      *   Actual: 4 renders
      *   1. [] (empty)
      *   2. ['Alice', 'Bob', 'Charlie'] (all loaded)
-     *   3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)
+     *   3. ['Alice', 'Charlie', 'Bob'] (FLASH BUG - Bob moves to end!)x
      *   4. ['Alice', 'Charlie'] (Bob finally removed)
      */
 
@@ -122,7 +122,6 @@ describe('useQuery', () => {
       new Set([]), // Initial loading state.
       new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), // All objects loaded.
       // TODO(dmaretskyi): Fix this with query ordering.
-      new Set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]), // Getting another render for some reason.
       new Set([]), // All items deleted.
     ]);
   });

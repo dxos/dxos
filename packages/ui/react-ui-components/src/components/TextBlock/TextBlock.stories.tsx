@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { TextBlock } from './TextBlock';
@@ -55,9 +53,9 @@ const DefaultStory = ({ blocks, interval = 0 }: { blocks: string[]; interval?: n
 const meta = {
   title: 'ui/react-ui-components/TextBlock',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
+  decorators: [withTheme],
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -24,7 +24,7 @@ export type ConfigOptions = {
   node?: boolean | NodeOptions;
   browser?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] });
   storybook?: boolean;
-}
+};
 
 export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   const { dirname, node, browser, storybook } = options;
@@ -36,11 +36,9 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
-      projects: [
-        nodeProject,
-        storybookProject,
-        ...browserProjects,
-      ].filter((project): project is UserWorkspaceConfig => project !== undefined),
+      projects: [nodeProject, storybookProject, ...browserProjects].filter(
+        (project): project is UserWorkspaceConfig => project !== undefined,
+      ),
     },
   };
 };
@@ -137,13 +135,7 @@ type NodeOptions = {
   plugins?: Plugin[];
 };
 
-const createNodeProject = ({
-  environment = 'node',
-  retry,
-  timeout,
-  setupFiles = [],
-  plugins = [],
-}: NodeOptions = {}) =>
+const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
       target: 'es2020',
@@ -171,12 +163,9 @@ const createNodeProject = ({
     // http://localhost:51204/__inspect/#/
     plugins: [
       ...plugins,
-
       PluginImportSource(),
-
       process.env.VITE_INSPECT ? Inspect() : undefined,
-
-      // We don't care about react but we want the SWC transforers.
+      // Add react plugin to enable SWC transfors.
       react({
         tsDecorators: true,
         plugins: [
@@ -253,7 +242,9 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   };
 };
 
-const normalizeBrowserOptions = (options?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] })): BrowserOptions[] => {
+const normalizeBrowserOptions = (
+  options?: string | string[] | (Omit<BrowserOptions, 'browserName'> & { browsers: string[] }),
+): BrowserOptions[] => {
   if (!options) {
     return [];
   }

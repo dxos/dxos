@@ -5,8 +5,6 @@
 import { Filter, type QueryAST } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-// TODO(burdon): Factor out.
-
 import { type Expression, type Identifier, type Literal, type RelationalOperator } from './types';
 
 const relationalOperators: Record<RelationalOperator, (value: any) => Filter<any>> = {
@@ -19,6 +17,9 @@ const specialPredicates: Record<string, (value: string) => Filter<any>> = {
   ['type' as const]: Filter.typename,
 };
 
+/**
+ * @deprecated
+ */
 export const createFilter = (ast: Expression): Filter<any> => {
   switch (ast.type) {
     case 'binary': {

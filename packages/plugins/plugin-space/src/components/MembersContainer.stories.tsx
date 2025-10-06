@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -11,8 +9,9 @@ import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -37,14 +36,12 @@ const meta = {
   component: MembersContainer as any,
   render: render(DefaultStory),
   decorators: [
-    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'fullscreen',

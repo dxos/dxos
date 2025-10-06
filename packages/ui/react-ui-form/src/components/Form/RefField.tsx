@@ -18,7 +18,7 @@ import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { QueryEditorItem } from '@dxos/react-ui-query-editor';
+import { SearchBoxItem } from '@dxos/react-ui-components';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
@@ -32,10 +32,10 @@ import { InputHeader, type InputProps } from './Input';
 export type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
   onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
+  onQueryRefOptions?: QueryRefOptions;
 };
 
 // TODO(thure): Is this a standard that should be better canonized?
@@ -52,11 +52,11 @@ export const RefField = ({
   array,
   ast,
   getValue,
-  onBlur,
-  onQueryRefOptions,
   createOptionLabel,
   createOptionIcon,
+  onBlur,
   onCreateFromQuery,
+  onQueryRefOptions,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
@@ -185,7 +185,7 @@ export const RefField = ({
                 <div role='none' className='grow'>
                   {items?.length ? (
                     items?.map((item) => (
-                      <QueryEditorItem
+                      <SearchBoxItem
                         key={item.id}
                         itemId={item.id}
                         label={item.label}

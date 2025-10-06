@@ -20,6 +20,7 @@ export const useSafeArea = (): SafeAreaPadding => {
       left: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-left')),
     });
   }, []);
+
   useResize(handleResize);
   return padding;
 };

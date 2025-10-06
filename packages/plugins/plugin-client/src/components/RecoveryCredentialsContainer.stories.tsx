@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';
@@ -19,6 +17,7 @@ const meta = {
   title: 'plugins/plugin-client/RecoveryCredentialsContainer',
   component: RecoveryCredentialsContainer,
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -29,8 +28,6 @@ const meta = {
         IntentPlugin(),
       ],
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'fullscreen',

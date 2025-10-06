@@ -29,7 +29,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(syncLinearIssues.name)],
+  tools: [ToolId.make(syncLinearIssues.key)],
 });
 
 export default blueprint;

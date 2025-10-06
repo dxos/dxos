@@ -20,6 +20,8 @@ import { type MaybePromise } from '@dxos/util';
 
 import { commandRangeEffect } from '../../extensions';
 
+// TODO(burdon): Rename ComboBox (and factor out to separate package).
+
 export type CommandMenuGroup = {
   id: string;
   label?: Label;

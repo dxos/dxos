@@ -2,18 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Voice } from './Voice';
 
 const meta = {
   title: 'plugins/plugin-transformer/Voice',
   component: Voice,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },

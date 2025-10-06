@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { SyntaxHighlighter } from './SyntaxHighlighter';

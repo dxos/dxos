@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, type ReactNode, useRef, useState } from 'react';
 
@@ -35,7 +33,6 @@ const meta = {
   component: Popover.Root,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

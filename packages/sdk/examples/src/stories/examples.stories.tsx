@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TaskListExample } from '../examples';
 import { NetworkToggle } from '../template/src/components';
@@ -100,5 +98,5 @@ export const TaskList: Story = {
 //       args={{ spaceKey: editor.spaceKey }}
 //     />
 //   ),
-//   decorators: [withTheme, DemoToggles(editor)],
+//   decorators: [DemoToggles(editor)],
 // };

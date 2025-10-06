@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';
@@ -93,7 +91,10 @@ const meta = {
   title: 'ui/react-ui-canvas/Canvas',
   component: Grid,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Grid>;
 
 export default meta;

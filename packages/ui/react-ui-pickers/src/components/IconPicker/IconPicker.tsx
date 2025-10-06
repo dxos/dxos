@@ -42,6 +42,12 @@ const IconPreview = ({ value, iconSize = 5 }: { value: string; iconSize?: IconPr
  * NOTE: Select icons that we are unlikely to use for the UI.
  */
 const icons = [
+  'ph--house-line--regular',
+  'ph--planet--regular',
+  'ph--piggy-bank--regular',
+  'ph--snowflake--regular',
+  'ph--virus--regular',
+  'ph--graph--regular',
   'ph--air-traffic-control--regular',
   'ph--asterisk--regular',
   'ph--atom--regular',

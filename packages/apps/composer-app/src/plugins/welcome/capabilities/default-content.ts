@@ -18,37 +18,43 @@ export default async (context: PluginContext) => {
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const { graph } = context.getCapability(Capabilities.AppGraph);
   const client = context.getCapability(ClientCapabilities.Client);
-  const defaultSpace = client.spaces.default;
+
+  const space = client.spaces.default;
+  space.properties.icon = 'house-line';
 
   const readme = Markdown.makeDocument({
     name: INITIAL_DOC_TITLE,
     content: INITIAL_CONTENT.join('\n\n'),
   });
 
-  const defaultSpaceCollection = defaultSpace.properties[DataType.Collection.typename].target;
-  defaultSpaceCollection?.objects.push(Ref.make(readme));
+  const defaultSpaceCollection = space.properties[DataType.Collection.typename].target;
 
-  const records = Obj.make(DataType.QueryCollection, {
-    query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
-  });
-  defaultSpaceCollection?.objects.push(Ref.make(records));
+  defaultSpaceCollection?.objects.push(Ref.make(readme));
+  defaultSpaceCollection?.objects.push(
+    Ref.make(
+      Obj.make(DataType.QueryCollection, {
+        query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
+      }),
+    ),
+  );
 
   await context.activatePromise(SpaceEvents.SpaceCreated);
   const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
-  const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
-    onCreateSpace({ space: defaultSpace, rootCollection: defaultSpaceCollection }),
+  await Promise.all(
+    onCreateSpaceCallbacks
+      .map((onCreateSpace) => onCreateSpace({ space: space, rootCollection: defaultSpaceCollection }))
+      .map((intent) => dispatch(intent)),
   );
-  await Promise.all(spaceCreatedIntents.map((intent) => dispatch(intent)));
 
   // Ensure the default content is in the graph and connected.
   // This will allow the expose action to work before the navtree renders for the first time.
   graph.expand(SPACES);
-  graph.expand(defaultSpace.id);
+  graph.expand(space.id);
 
   await dispatch(
     createIntent(LayoutAction.SwitchWorkspace, {
       part: 'workspace',
-      subject: defaultSpace.id,
+      subject: space.id,
     }),
   );
   await dispatch(

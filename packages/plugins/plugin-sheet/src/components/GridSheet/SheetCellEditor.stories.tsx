@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
@@ -12,9 +10,9 @@ import { createDocAccessor } from '@dxos/client/echo';
 import { defaultFunctions } from '@dxos/compute';
 import { getRegisteredFunctionNames } from '@dxos/compute/testing';
 import { useAsyncEffect } from '@dxos/react-hooks';
+import { withTheme } from '@dxos/react-ui/testing';
 import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { sheetExtension } from '../../extensions';
 import { SheetType, createSheet } from '../../types';
@@ -61,9 +59,10 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
 
 const meta = {
   title: 'plugins/plugin-sheet/CellEditor',
+
+  decorators: [withTheme],
   component: CellEditor,
   render: DefaultStory,
-  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import defaultsDeep from 'lodash.defaultsdeep';
 import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
 import { str } from '../testing';
@@ -20,8 +18,10 @@ import { EditorStory, content } from './components';
 const meta = {
   title: 'ui/react-ui-editor/Experimental',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen' },
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

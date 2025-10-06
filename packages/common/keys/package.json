@@ -28,7 +28,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "ulidx": "^2.3.0"
   },
   "devDependencies": {

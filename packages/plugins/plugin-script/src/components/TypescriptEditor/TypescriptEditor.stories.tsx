@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { templates } from '../../templates';
 
@@ -25,9 +23,10 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
+
+  decorators: [withTheme],
   component: TypescriptEditor as any,
   render: DefaultStory,
-  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

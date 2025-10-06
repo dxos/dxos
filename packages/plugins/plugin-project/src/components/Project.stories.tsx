@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type { Schema } from 'effect';
 import React, { useCallback, useEffect } from 'react';
@@ -13,10 +11,10 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -146,8 +144,8 @@ const MutationsStory = () => {
 
 const meta: Meta<typeof Project> = {
   title: 'plugins/plugin-project/Project',
-  parameters: { translations },
   decorators: [
+    withTheme,
     withClientProvider({
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
@@ -177,9 +175,11 @@ const meta: Meta<typeof Project> = {
         await factory([{ type: DataType.Person, count: 12 }]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 export default meta;

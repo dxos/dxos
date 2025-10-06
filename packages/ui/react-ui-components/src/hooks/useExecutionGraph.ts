@@ -10,6 +10,7 @@ import { type Queue, useQuery } from '@dxos/react-client/echo';
 
 export const useExecutionGraph = (queueRef?: Queue, lastRequest = false) => {
   const objects = useQuery(queueRef, Filter.everything());
+
   return useMemo(() => {
     const graph = new ExecutionGraph();
     graph.addEvents(objects);

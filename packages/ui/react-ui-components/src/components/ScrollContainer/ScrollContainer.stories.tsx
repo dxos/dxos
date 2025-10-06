@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
@@ -26,13 +24,11 @@ const DefaultStory = (props: ScrollContainerRootProps) => {
       setLines((lines) => [...lines, faker.lorem.paragraph()]);
     }, 500);
 
-    return () => {
-      clearInterval(i);
-    };
+    return () => clearInterval(i);
   }, [running]);
 
   return (
-    <div className='flex flex-col w-[30rem] overflow-hidden'>
+    <div className='flex flex-col bs-full overflow-hidden'>
       <Toolbar.Root>
         <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
         <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
@@ -56,13 +52,13 @@ const meta = {
   title: 'ui/react-ui-components/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      classNames: 'justify-center',
-    }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: {
+      type: 'column',
+      classNames: 'w-[30rem]',
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

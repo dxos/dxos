@@ -7,7 +7,7 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { Dialog, Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Tabs as NaturalTabs } from './Tabs';
 

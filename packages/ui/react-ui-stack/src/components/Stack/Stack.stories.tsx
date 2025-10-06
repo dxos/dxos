@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Edge } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { type StackItemData } from '../defs';
 import { StackItem } from '../StackItem';
@@ -133,8 +131,8 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/react-ui-stack/Stack',
   component: DefaultStory,
-  decorators: [withTheme],
   argTypes: { orientation: { control: 'radio', options: ['horizontal', 'vertical'] } },
+  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

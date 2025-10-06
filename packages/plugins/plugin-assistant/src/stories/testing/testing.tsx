@@ -53,7 +53,6 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
 import { trim } from '@dxos/util';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
@@ -179,10 +178,6 @@ export const getDecorators = ({
       // Test-specific.
       ...plugins,
     ],
-  }),
-  withLayout({
-    fullscreen: true,
-    classNames: 'justify-center bg-deckSurface',
   }),
 ];
 

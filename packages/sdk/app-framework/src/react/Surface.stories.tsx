@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, List, ListItem } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Capabilities, createSurface } from '../common';
 import { type PluginManager } from '../core';
@@ -90,8 +88,7 @@ const DefaultStory = (props: { manager: PluginManager }) => {
 const meta = {
   title: 'sdk/app-framework/Surface',
   render: DefaultStory,
-  // NOTE: Intentionally not using withPluginManager to try to reduce surface area of the story.
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
   args: {
     manager: setupPluginManager(),
   },

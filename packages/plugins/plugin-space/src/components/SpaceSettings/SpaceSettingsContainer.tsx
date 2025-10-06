@@ -111,14 +111,14 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         );
       },
       icon: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((nextEmoji: string) => onValueChange(type, nextEmoji), [onValueChange, type]);
-        const handleEmojiReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+        const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('icon description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
-              onReset={handleEmojiReset}
+              onReset={handleReset}
               classNames='justify-self-end'
               iconSize={5}
             />
@@ -127,13 +127,13 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
-        const handleHueReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('hue description')}>
             <HuePicker
               value={getValue()}
               onChange={handleChange}
-              onReset={handleHueReset}
+              onReset={handleReset}
               classNames='[--hue-preview-size:1.25rem] justify-self-end'
             />
           </ControlItem>

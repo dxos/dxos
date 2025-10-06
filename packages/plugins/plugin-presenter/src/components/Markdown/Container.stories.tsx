@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '../../testing';
 
@@ -25,7 +23,7 @@ const DefaultStory = ({ content = '' }: SlideProps) => {
 const meta = {
   title: 'plugins/plugin-presenter/Container',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },

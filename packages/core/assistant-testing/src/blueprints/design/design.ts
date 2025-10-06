@@ -27,7 +27,7 @@ const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(readDocument.name), ToolId.make(updateDocument.name)],
+  tools: [ToolId.make(readDocument.key), ToolId.make(updateDocument.key)],
 });
 
 export default blueprint;

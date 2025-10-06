@@ -10,7 +10,7 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ThemedClassName, useDynamicRef, useTrackProps } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useGameboardContext } from './Gameboard';
@@ -26,8 +26,7 @@ export type PieceProps = ThemedClassName<{
   onClick?: () => void;
 }>;
 
-export const Piece = memo(({ classNames, Component, piece, orientation, bounds, label, onClick }: PieceProps) => {
-  useTrackProps({ classNames, Component, piece, orientation, bounds, label }, Piece.displayName, false);
+export const Piece = memo(({ classNames, Component, piece, bounds, label, onClick }: PieceProps) => {
   const { model, dragging: isDragging, promoting } = useGameboardContext(Piece.displayName!);
   const promotingRef = useDynamicRef(promoting);
   const [dragging, setDragging] = useState(false);

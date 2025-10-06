@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction';
 
@@ -42,13 +40,13 @@ const menuActions = faker.helpers.multiple(
 const meta = {
   title: 'plugins/plugin-navtree/NavTreeItemAction',
   component: NavTreeItemAction,
-  decorators: [withTheme, withLayout()],
   args: {
     icon: 'ph--list--regular',
     parent,
     menuActions,
     label: 'Select action',
   } satisfies Partial<NavTreeItemActionMenuProps>,
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
