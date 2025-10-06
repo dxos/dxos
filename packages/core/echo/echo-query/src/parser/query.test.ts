@@ -5,7 +5,7 @@
 import { type Tree } from '@lezer/common';
 import { describe, it } from 'vitest';
 
-import { Filter } from '@dxos/echo';
+import { Query, type QueryAST } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
@@ -274,48 +274,215 @@ describe('query', () => {
   it('build', ({ expect }) => {
     const queryBuilder = new QueryBuilder();
 
-    type Test = { input: string; expected: Filter.Any };
+    type Test = { input: string; expected: QueryAST.Query };
     const tests: Test[] = [
       {
         input: 'type:dxos.org/type/Person',
-        expected: Filter.typename('dxos.org/type/Person'),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: 'dxn:type:dxos.org/type/Person',
+            props: {},
+          },
+        },
       },
       {
         input: '#test',
-        expected: Filter.tag('test'),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'tag',
+            tag: 'test',
+          },
+        },
       },
       {
         input: '{ name: "DXOS" }',
-        expected: Filter.props({ name: 'DXOS' }),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: null,
+            props: {
+              name: {
+                type: 'compare',
+                operator: 'eq',
+                value: 'DXOS',
+              },
+            },
+          },
+        },
       },
       {
         input: '{ value: 100 }',
-        expected: Filter.props({ value: 100 }),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: null,
+            props: {
+              value: {
+                type: 'compare',
+                operator: 'eq',
+                value: 100,
+              },
+            },
+          },
+        },
       },
       {
         input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
-        expected: Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'or',
+            filters: [
+              {
+                type: 'object',
+                typename: 'dxn:type:dxos.org/type/Person',
+                props: {},
+              },
+              {
+                type: 'object',
+                typename: 'dxn:type:dxos.org/type/Organization',
+                props: {},
+              },
+            ],
+          },
+        },
       },
       {
         input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
-        expected: Filter.and(
-          Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
-          Filter.props({ name: 'DXOS' }),
-        ),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'and',
+            filters: [
+              {
+                type: 'or',
+                filters: [
+                  {
+                    type: 'object',
+                    typename: 'dxn:type:dxos.org/type/Person',
+                    props: {},
+                  },
+                  {
+                    type: 'object',
+                    typename: 'dxn:type:dxos.org/type/Organization',
+                    props: {},
+                  },
+                ],
+              },
+              {
+                type: 'object',
+                typename: null,
+                props: {
+                  name: {
+                    type: 'compare',
+                    operator: 'eq',
+                    value: 'DXOS',
+                  },
+                },
+              },
+            ],
+          },
+        },
       },
       {
         input: 'type:dxos.org/type/Person and { name: "DXOS" }',
-        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'and',
+            filters: [
+              {
+                type: 'object',
+                typename: 'dxn:type:dxos.org/type/Person',
+                props: {},
+              },
+              {
+                type: 'object',
+                typename: null,
+                props: {
+                  name: {
+                    type: 'compare',
+                    operator: 'eq',
+                    value: 'DXOS',
+                  },
+                },
+              },
+            ],
+          },
+        },
       },
       {
         input: 'type:dxos.org/type/Person And { name: "DXOS" }',
-        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+        expected: {
+          type: 'select',
+          filter: {
+            type: 'and',
+            filters: [
+              {
+                type: 'object',
+                typename: 'dxn:type:dxos.org/type/Person',
+                props: {},
+              },
+              {
+                type: 'object',
+                typename: null,
+                props: {
+                  name: {
+                    type: 'compare',
+                    operator: 'eq',
+                    value: 'DXOS',
+                  },
+                },
+              },
+            ],
+          },
+        },
       },
+      // TODO(wittjosiah): Support reference and relation traversals.
+      // {
+      //   input: '',
+      //   expected: {
+      //     type: 'relation-traversal',
+      //     anchor: {
+      //       type: 'relation',
+      //       anchor: {
+      //         type: 'reference-traversal',
+      //         anchor: {
+      //           type: 'select',
+      //           filter: {
+      //             type: 'object',
+      //             typename: 'dxn:type:dxos.org/type/Person:0.1.0',
+      //             props: {
+      //               jobTitle: {
+      //                 type: 'compare',
+      //                 operator: 'eq',
+      //                 value: 'investor',
+      //               },
+      //             },
+      //           },
+      //         },
+      //         property: 'organization',
+      //       },
+      //       direction: 'incoming',
+      //       filter: {
+      //         type: 'object',
+      //         typename: 'dxn:type:dxos.org/relation/ResearchOn:0.1.0',
+      //         props: {},
+      //       },
+      //     },
+      //     direction: 'source',
+      //   },
+      // },
     ];
 
     tests.forEach(({ input, expected }) => {
       const query = queryBuilder.build(input);
-      expect(query, input).toEqual(expected);
+      expect(Query.select(query!).ast, input).toEqual(expected);
     });
   });
 });
