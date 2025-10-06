@@ -10,8 +10,10 @@ import { QueryDSL } from './gen';
 
 /**
  * Stateless query builder that parses DSL trees into filters.
+ *
+ * NOTE: QueryBuilder was largely developed using Claude Sonnet 4.5 (in Windsurf)..
+ * To modify the functionality, create a minimal breaking test and direct the LLM to fix either the grammar or builder.
  */
-// TODO(burdon): Potentially build ECHO DSL directly from grammar?
 export class QueryBuilder {
   constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
 
@@ -59,9 +61,11 @@ export class QueryBuilder {
       cursor.parent();
     }
 
-    // If we have an operator in the children, parse as binary expression.
+    // If we have an operator in the children, or multiple expressions (implicit AND), parse as binary expression.
     const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
-    if (hasOperator) {
+    const hasMultipleExpressions =
+      children.filter((child) => child.name === 'Filter' || child.name === 'Not' || child.name === '(').length > 1;
+    if (hasOperator || hasMultipleExpressions) {
       return this._parseBinaryExpression(cursor, input);
     }
 
@@ -110,14 +114,19 @@ export class QueryBuilder {
         // Check if this is a binary expression (has And/Or as a child).
         const savedPos = cursor.from;
         if (cursor.firstChild()) {
-          // Look for And/Or operators.
+          // Look for And/Or operators or multiple expressions (implicit AND).
           let hasOperator = false;
+          let expressionCount = 0;
           do {
             if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
               hasOperator = true;
               break;
             }
+            if (cursor.node.name === 'Filter' || cursor.node.name === 'Not' || cursor.node.name === '(') {
+              expressionCount++;
+            }
           } while (cursor.nextSibling());
+          hasOperator = hasOperator || expressionCount > 1;
 
           // Reset cursor to the saved position.
           cursor.parent();
@@ -268,8 +277,7 @@ export class QueryBuilder {
     cursor.nextSibling(); // Move to Identifier
 
     const typename = this._getNodeText(cursor, input);
-    cursor.parent();
-
+    cursor.parent(); // Go back to TypeFilter.
     return Filter.typename(typename);
   }
 
@@ -277,10 +285,9 @@ export class QueryBuilder {
    * Parse a TextFilter node (quoted string).
    */
   private _parseTextFilter(cursor: TreeCursor, input: string): Filter.Any {
-    cursor.firstChild(); // Move to String node
+    cursor.firstChild(); // Move to String node.
     const text = this._getNodeText(cursor, input);
-    cursor.parent();
-
+    cursor.parent(); // Go back to TextFilter.
     // Remove quotes.
     return Filter.text(text.slice(1, -1));
   }
@@ -392,8 +399,6 @@ export class QueryBuilder {
    */
   private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
     const tag = this._getNodeText(cursor, input);
-    cursor.parent();
-
     return Filter.tag(tag.slice(1));
   }
 

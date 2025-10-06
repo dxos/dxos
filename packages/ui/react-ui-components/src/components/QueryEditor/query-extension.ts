@@ -117,7 +117,6 @@ const decorations = (): Extension => {
           case QueryDSL.Node.TagFilter: {
             const tag = node.node.getChild(QueryDSL.Node.Tag);
             if (tag) {
-              console.log(tag);
               deco.add(
                 node.from,
                 node.to,

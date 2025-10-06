@@ -7,6 +7,7 @@
 expression {
   Filter |
   !Not Not expression |
+  expression !ImplicitAnd expression |
   expression !And And expression |
   expression !Or Or expression |
   expression !Relation Relation expression |
@@ -116,6 +117,7 @@ Value {
 
 @precedence {
   Not @right,
+  ImplicitAnd @left,
   And @left,
   Or @left,
   Relation @left

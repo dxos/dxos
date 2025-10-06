@@ -23,8 +23,12 @@ describe('query', () => {
         expected: ['Query', 'Filter', 'TagFilter', 'Tag'],
       },
       {
+        input: '#foo AND #bar',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'And', 'Filter', 'TagFilter', 'Tag'],
+      },
+      {
         input: '#foo #bar',
-        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'TagFilter', 'Tag'],
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Filter', 'TagFilter', 'Tag'],
       },
       {
         input: '"foo"',
@@ -268,15 +272,23 @@ describe('query', () => {
     // TODO(burdon): Test "not"
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
-      // Type
+      // Types
       {
         input: 'type:dxos.org/type/Person',
         expected: Filter.typename('dxos.org/type/Person'),
       },
-      // Tag
+      // Tags
       {
-        input: '#test',
-        expected: Filter.tag('test'),
+        input: '#foo',
+        expected: Filter.tag('foo'),
+      },
+      {
+        input: '#foo AND #bar',
+        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
+      },
+      {
+        input: '#foo #bar',
+        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
       },
       // Text
       {
@@ -324,8 +336,8 @@ describe('query', () => {
     ];
 
     tests.forEach(({ input, expected }) => {
-      const query = queryBuilder.build(input);
-      expect(query, input).toEqual(expected);
+      const result = queryBuilder.build(input);
+      expect(result, JSON.stringify({ input, result, expected }, null, 2)).toEqual(expected);
     });
   });
 });
