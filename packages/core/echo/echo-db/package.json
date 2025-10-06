@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@dxos/indexing": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.12.1",
     "@types/lodash.isequal": "^4.5.0"

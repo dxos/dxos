@@ -32,10 +32,10 @@ import { InputHeader, type InputProps } from './Input';
 export type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
   onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
+  onQueryRefOptions?: QueryRefOptions;
 };
 
 // TODO(thure): Is this a standard that should be better canonized?
@@ -52,11 +52,11 @@ export const RefField = ({
   array,
   ast,
   getValue,
-  onBlur,
-  onQueryRefOptions,
   createOptionLabel,
   createOptionIcon,
+  onBlur,
   onCreateFromQuery,
+  onQueryRefOptions,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
