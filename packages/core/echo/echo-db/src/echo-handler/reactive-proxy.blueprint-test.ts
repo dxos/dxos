@@ -137,8 +137,9 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect((obj.nullableShapeArray![2] as any).side).to.eq(33);
       });
 
-      test('validation failures', async () => {
-        if (schema == null) {
+      test('validation failures', async (ctx) => {
+        if (schema == Type.Expando) {
+          ctx.skip();
           return;
         }
 
