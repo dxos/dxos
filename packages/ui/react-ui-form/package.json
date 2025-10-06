@@ -63,7 +63,7 @@
     "@types/jsonpath": "^0.2.4",
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "fast-check": "^3.19.0",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
