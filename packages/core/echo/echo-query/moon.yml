@@ -9,3 +9,10 @@ tasks:
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
+  prebuild:
+    script: pnpm lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
+    inputs:
+      - src/parser/query.grammar
+    outputs:
+      - src/parser/gen/query.terms.ts
+      - src/parser/gen/query.ts

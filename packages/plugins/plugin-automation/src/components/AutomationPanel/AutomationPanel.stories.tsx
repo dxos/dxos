@@ -38,7 +38,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       types: [FunctionType, FunctionTrigger],
-      onSpaceCreated: ({ space }) => {
+      onCreateSpace: ({ space }) => {
         for (const fn of functions) {
           space.db.add(Obj.make(FunctionType, fn));
         }

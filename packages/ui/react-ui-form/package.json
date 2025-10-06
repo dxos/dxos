@@ -42,7 +42,6 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-query-editor": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
@@ -68,7 +67,7 @@
     "fast-check": "^3.19.0",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.7"
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

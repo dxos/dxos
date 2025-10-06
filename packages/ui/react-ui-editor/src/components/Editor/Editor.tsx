@@ -2,36 +2,69 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EditorView } from '@codemirror/view';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import { EditorView } from '@codemirror/view';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
+export type EditorController = {
+  view: EditorView | null;
+  focus: () => void;
+};
+
 export type EditorProps = ThemedClassName<
   {
-    id: string;
-    text: DataType.Text;
-  } & Omit<UseTextEditorProps, 'id'>
+    value?: string;
+    onChange?: (value: string) => void;
+  } & Omit<UseTextEditorProps, 'initialValue'>
 >;
 
 /**
  * Minimal text editor.
+ * NOTE: This shouold not be used with the automerge extension.
  */
-export const Editor = forwardRef<EditorView | null, EditorProps>(({ classNames, id, text, ...props }, forwardedRef) => {
-  const { themeMode } = useThemeContext();
-  const { parentRef, focusAttributes, view } = useTextEditor(
-    () => ({
-      id,
-      initialValue: text.content,
-      ...props,
-    }),
-    [id, text, themeMode],
-  );
+export const Editor = forwardRef<EditorController, EditorProps>(
+  ({ classNames, id, extensions = [], value, onChange, ...props }, forwardedRef) => {
+    const { parentRef, focusAttributes, view } = useTextEditor(
+      () => ({
+        id,
+        extensions: [
+          extensions,
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              onChange?.(update.state.doc.toString());
+            }
+          }),
+        ],
+        ...props,
+      }),
+      [id, extensions, onChange],
+    );
 
-  useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => view, [view]);
-  return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
-});
+    // External controller.
+    useImperativeHandle(
+      forwardedRef,
+      () => ({
+        view,
+        focus: () => view?.focus(),
+      }),
+      [view],
+    );
+
+    // Update content.
+    useEffect(() => {
+      if (value !== view?.state.doc.toString()) {
+        requestAnimationFrame(() => {
+          view?.dispatch({
+            changes: { from: 0, to: view.state.doc.length, insert: value },
+          });
+        });
+      }
+    }, [view, value]);
+
+    return <div role='none' className={mx(classNames)} {...focusAttributes} ref={parentRef} />;
+  },
+);

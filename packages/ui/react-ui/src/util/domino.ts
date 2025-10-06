@@ -37,7 +37,7 @@ export class Domino<T extends HTMLElement> {
     (this._el as any)[key] = value;
     return this;
   }
-  child<C extends HTMLElement>(...children: Domino<C>[]): this {
+  children<C extends HTMLElement>(...children: Domino<C>[]): this {
     children.forEach((child) => this._el.appendChild(child.build()));
     return this;
   }

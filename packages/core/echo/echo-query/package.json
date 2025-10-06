@@ -25,13 +25,18 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@lezer/common": "^1.2.2",
+    "@lezer/lezer": "^1.1.2",
+    "@lezer/lr": "^1.4.2",
     "@orama/orama": "^3.1.7"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
-    "@dxos/random": "workspace:*"
+    "@dxos/random": "workspace:*",
+    "@lezer/generator": "^1.7.1"
   },
   "publishConfig": {
     "access": "public"

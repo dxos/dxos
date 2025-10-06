@@ -10,7 +10,7 @@ import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxo
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Callout, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { QueryEditor, QuerySerializer, createExpression } from '@dxos/react-ui-components';
+import { QueryBox, QuerySerializer, createExpression } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
@@ -173,7 +173,7 @@ export const ViewEditor = ({
               );
 
               // TODO(wittjosiah): Add label & input styles.
-              return <QueryEditor space={space} initialValue={props.getValue()} onChange={handleChange} />;
+              return <QueryBox space={space} initialValue={props.getValue()} onChange={handleChange} />;
             },
           }
         : {},

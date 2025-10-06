@@ -5,13 +5,13 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from '@storybook/test';
 import React, { useState } from 'react';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
-import { type QueryTag } from './query-editor-extension';
-import { QueryEditor } from './QueryEditor';
+import { SearchBox } from './SearchBox';
+import { type QueryTag } from './types';
 
 const allTags: QueryTag[] = [
   { id: 'cloudflare', label: 'Cloudflare', hue: 'amber' },
@@ -24,15 +24,15 @@ const allTags: QueryTag[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-query-editor/QueryEditor',
-  component: QueryEditor,
+  title: 'ui/react-ui-components/SearchBox',
+  component: SearchBox,
   render: ({ initialItems: initialItems, onChange }) => {
-    const [items, setItems] = useState(initialItems ?? []);
-    const [selected, setSelected] = useState<string>();
+    const [items] = useState(initialItems ?? []);
+    const [selected] = useState<string>();
     return (
-      <div className='w-[20rem] space-y-2'>
+      <div className='is-[40rem] space-y-2'>
         <div className='flex p-1 border items-center border-separator'>
-          <QueryEditor
+          <SearchBox
             initialItems={items}
             onSearch={(text, ids) =>
               allTags.filter(
@@ -42,7 +42,7 @@ const meta = {
             onChange={onChange}
           />
         </div>
-        <div className='flex flex-col h-[20rem] p-2 text-xs border border-separator'>
+        <div className='flex flex-col bs-[20rem] p-2 text-xs border border-separator'>
           <pre>{JSON.stringify({ items, selected }, null, 2)}</pre>
         </div>
       </div>
@@ -50,22 +50,22 @@ const meta = {
   },
   decorators: [withTheme, withLayout()],
   parameters: { layout: 'centered' },
-} satisfies Meta<typeof QueryEditor>;
+} satisfies Meta<typeof SearchBox>;
 
 export default meta;
 
-type Story = StoryObj<typeof QueryEditor>;
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
     initialItems: [allTags[0], { content: 'Junie' }, allTags[1]],
     onChange: fn(),
   },
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement, args: { onChange } }) => {
     const canvas = within(canvasElement);
 
     // Get the onChange mock function to verify calls
-    const onChangeMock = args.onChange;
+    const onChangeMock = onChange;
 
     // Find the editor element
     const editorContainer = canvas.getByRole('textbox');

@@ -241,11 +241,14 @@ interface FilterAPI {
   typeDXN(dxn: DXN): Filter<any>;
 
   /**
-   * Filter by properties.
-   *
-   * INTERNAL API: Do not use.
+   * Filter by tag.
    */
-  _props<T>(props: Filter.Props<T>): Filter<T>;
+  tag(tag: string): Filter<any>;
+
+  /**
+   * Filter by properties.
+   */
+  props<T>(props: Filter.Props<T>): Filter<T>;
 
   /**
    * Full-text or vector search.
@@ -430,10 +433,15 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  /**
-   * @internal
-   */
-  static _props<T>(props: Filter.Props<T>): Filter<T> {
+  // TODO(burdon): Implement.
+  static tag(tag: string): Filter<any> {
+    return new FilterClass({
+      type: 'tag',
+      tag,
+    });
+  }
+
+  static props<T>(props: Filter.Props<T>): Filter<T> {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -675,7 +683,7 @@ class QueryClass implements Query<any> {
       return new QueryClass({
         type: 'filter',
         selection: this.ast,
-        filter: FilterClass._props(filter).ast,
+        filter: FilterClass.props(filter).ast,
       });
     }
   }

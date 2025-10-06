@@ -152,7 +152,7 @@ const meta: Meta<typeof Project> = {
       types: [DataType.Project, DataType.View, DataType.Collection, DataType.Person],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ space }) => {
+      onCreateSpace: async ({ space }) => {
         // Create a project
         const project = DataType.makeProject({
           collections: [],

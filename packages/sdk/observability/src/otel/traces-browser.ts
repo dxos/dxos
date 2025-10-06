@@ -6,7 +6,7 @@ import { type Tracer, trace } from '@opentelemetry/api';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { Resource } from '@opentelemetry/resources';
+import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
@@ -19,28 +19,31 @@ import { type OtelOptions } from './otel';
 export class OtelTraces {
   private _tracer: Tracer;
   constructor(private readonly options: OtelOptions) {
-    const resource = Resource.default().merge(
-      new Resource({
+    const resource = defaultResource().merge(
+      resourceFromAttributes({
         [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
         [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
       }),
     );
 
-    const tracerProvider = new WebTracerProvider({ resource });
-    tracerProvider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
-    tracerProvider.addSpanProcessor(
-      new BatchSpanProcessor(
-        new OTLPTraceExporter({
-          url: this.options.endpoint + '/v1/traces',
-          headers: {
-            Authorization: this.options.authorizationHeader,
-          },
-          concurrencyLimit: 10, // an optional limit on pending requests
-        }),
-      ),
-    );
+    const tracerProvider = new WebTracerProvider({
+      resource,
+      spanProcessors: [
+        new SimpleSpanProcessor(new ConsoleSpanExporter()),
+        new BatchSpanProcessor(
+          new OTLPTraceExporter({
+            url: this.options.endpoint + '/v1/traces',
+            headers: {
+              Authorization: this.options.authorizationHeader,
+            },
+            concurrencyLimit: 10, // an optional limit on pending requests
+          }),
+        ),
+      ],
+    });
+
     // TODO(nf): ContextManager? Propogator?
-    tracerProvider.register({});
+    trace.setGlobalTracerProvider(tracerProvider);
     this._tracer = trace.getTracer('dxos-observability', this.options.serviceVersion);
   }
 

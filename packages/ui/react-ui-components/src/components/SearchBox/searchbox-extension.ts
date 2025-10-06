@@ -3,30 +3,44 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState } from '@codemirror/state';
+import { type EditorState, type Extension } from '@codemirror/state';
 import { EditorView, WidgetType } from '@codemirror/view';
 
 import { type ChromaticPalette } from '@dxos/react-ui';
 import { type XmlWidgetRegistry, extendedMarkdown, getXmlTextChild, xmlTags } from '@dxos/react-ui-editor';
+import { isTruthy } from '@dxos/util';
 
-export type QueryTag = {
-  id: string;
-  label: string;
-  hue?: ChromaticPalette;
-};
+import { type QueryItem, type QueryTag, type QueryText, itemIsTag, itemIsText } from './types';
 
-export type QueryText = {
-  content: string;
-};
+export type SearchBoxOptions = { onChange?: (items: QueryItem[]) => void };
 
-export type QueryItem = QueryText | QueryTag;
-
-export const itemIsTag = (item: Record<string, string>): item is QueryTag => {
-  return 'id' in item && typeof item.id === 'string' && 'label' in item && typeof item.label === 'string';
-};
-
-export const itemIsText = (item: Record<string, string>): item is QueryText => {
-  return 'content' in item && typeof item.content === 'string';
+export const searchbox = ({ onChange }: SearchBoxOptions): Extension => {
+  return [
+    extendedMarkdown({ registry: queryEditorTagRegistry }),
+    xmlTags({ registry: queryEditorTagRegistry }),
+    onChange &&
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          const queryItems = parseQueryItems(update.state);
+          onChange(queryItems);
+        }
+      }),
+    EditorView.theme({
+      // Hide scrollbar.
+      '.cm-scroller': {
+        scrollbarWidth: 'none', // Firefox.
+      },
+      '.cm-scroller::-webkit-scrollbar': {
+        display: 'none', // WebKit.
+      },
+      '.cm-line': {
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'middle',
+      },
+      'dx-anchor': {},
+    }),
+  ].filter(isTruthy);
 };
 
 /**
@@ -34,6 +48,7 @@ export const itemIsText = (item: Record<string, string>): item is QueryText => {
  * Regular text is converted to QueryText objects (trimmed).
  * Anchor elements are converted to QueryTag objects.
  */
+// TODO(burdon): Deprecate in favor of echo-query parser (see QueryEditor).
 export const parseQueryItems = (state: EditorState): QueryItem[] => {
   const tree = syntaxTree(state);
   const doc = state.doc;
@@ -121,9 +136,10 @@ export const parseQueryItems = (state: EditorState): QueryItem[] => {
               }
             }
           }
-        } catch (err) {
+        } catch {
           // Ignore parsing errors.
         }
+
         return false; // Don't descend into children.
       }
     },
@@ -224,35 +240,3 @@ export const queryEditorTagRegistry = {
     },
   },
 } satisfies XmlWidgetRegistry;
-
-export type QueryEditorExtensionProps = { onChange?: (items: QueryItem[]) => void };
-
-export const queryEditor = ({ onChange }: QueryEditorExtensionProps) => [
-  extendedMarkdown({ registry: queryEditorTagRegistry }),
-  xmlTags({ registry: queryEditorTagRegistry }),
-  ...(onChange
-    ? [
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            const queryItems = parseQueryItems(update.state);
-            onChange(queryItems);
-          }
-        }),
-      ]
-    : []),
-  EditorView.theme({
-    // Hide scrollbar.
-    '.cm-scroller': {
-      scrollbarWidth: 'none', // Firefox.
-    },
-    '.cm-scroller::-webkit-scrollbar': {
-      display: 'none', // WebKit.
-    },
-    '.cm-line': {
-      display: 'flex',
-      flexWrap: 'wrap',
-      alignItems: 'middle',
-    },
-    'dx-anchor': {},
-  }),
-];

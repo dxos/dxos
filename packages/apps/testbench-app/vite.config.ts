@@ -85,7 +85,7 @@ export default defineConfig(
           }),
         ConfigPlugin({
           root: dirname,
-          env: ['DX_VAULT', 'BASELIME_API_KEY'],
+          env: ['DX_VAULT'],
         }),
         ThemePlugin({
           root: dirname,

@@ -72,6 +72,7 @@ const DefaultStory = (props: StoryProps) => {
 
       if (props.kind === 'advanced') {
         try {
+          // TODO(burdon): Use QueryBuilder from @dxos/echo-query.
           const parser = new QueryParser(newQueryString);
           // TODO(wittjosiah): When this fails it should show validation errors in the UI.
           const newQuery = Query.select(createFilter(parser.parse()));

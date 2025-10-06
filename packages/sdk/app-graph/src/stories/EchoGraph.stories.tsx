@@ -252,7 +252,7 @@ const meta = {
   decorators: [
     withClientProvider({
       createIdentity: true,
-      onIdentityCreated: async ({ client }) => {
+      onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
       },

@@ -31,7 +31,7 @@ export const TaskList: Story = {
 // const editor = await setupPeersInSpace({
 //   count: 2,
 //   schema: types,
-//   onSpaceCreated: ({ space }) => {
+//   onCreateSpace: ({ space }) => {
 //     space.db.add(new Document());
 //   },
 // });
