@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ToggleContainer } from '../ToggleContainer';
 
@@ -22,7 +20,10 @@ const content = Array.from({ length: 15 }, (_, i) => ({
 const meta = {
   title: 'ui/react-ui-components/NumericTabs',
   component: NumericTabs,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof NumericTabs>;
 
 export default meta;

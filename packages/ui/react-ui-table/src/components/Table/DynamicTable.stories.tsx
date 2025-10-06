@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
@@ -13,9 +11,9 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';
@@ -60,8 +58,11 @@ const DynamicTableStory = () => {
 const meta = {
   title: 'ui/react-ui-table/DynamicTable',
   component: DynamicTable,
-  parameters: { translations },
-  decorators: [withLayout({ fullscreen: true }), withTheme],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DynamicTable>;
 
 export default meta;

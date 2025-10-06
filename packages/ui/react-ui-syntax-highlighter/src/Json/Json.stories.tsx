@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Json } from './Json';
 
@@ -57,7 +55,10 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/Json',
   component: Json,
-  decorators: [withTheme, withLayout({ fullscreen: true, Container: ColumnContainer })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Json>;
 
 export default meta;

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
@@ -16,20 +14,12 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { activeSurface, getSize } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
-
-const meta = {
-  title: 'sdk/shell/Invitations',
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
@@ -220,6 +210,15 @@ const Invitations = () => {
   );
 };
 
+const meta = {
+  title: 'sdk/shell/Invitations',
+  decorators: [withTheme],
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
 // TODO(wittjosiah): This story fails to start in Safari/Webkit.
 //   The issue appears to be related to dynamic imports during client initialization.
 //   This does not seem to be a problem in other browsers nor in Safari in the app.
@@ -232,11 +231,15 @@ export const Default: Story = {
       </Clipboard.Provider>
     );
   },
-  decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' }), withTheme],
+  decorators: [withMultiClientProvider({ numClients: 3 })],
   parameters: {
-    translations,
+    layout: {
+      type: 'fullscreen',
+      classNames: 'grid grid-cols-3',
+    },
     chromatic: {
       disableSnapshot: true,
     },
+    translations,
   },
 };

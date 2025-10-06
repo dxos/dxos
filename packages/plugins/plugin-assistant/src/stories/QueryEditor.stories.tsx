@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -14,10 +12,11 @@ import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -43,7 +42,7 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   }, [builder, query]);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator'>
+    <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
         <QueryEditor
           classNames='p-2 is-full border-b border-subduedSeparator'
@@ -75,6 +74,7 @@ const meta = {
   component: QueryEditor,
   render: render(DefaultStory),
   decorators: [
+    withTheme,
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
@@ -88,8 +88,6 @@ const meta = {
         ]);
       },
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
     layout: 'fullscreen',

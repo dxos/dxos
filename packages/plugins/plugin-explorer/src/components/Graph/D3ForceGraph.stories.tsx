@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
@@ -12,9 +10,10 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { useGraphModel } from '../../hooks';
 import { ViewType } from '../../types';
@@ -51,13 +50,15 @@ const meta = {
   component: D3ForceGraph,
   render: render(DefaultStory),
   decorators: [
+    withTheme,
     withClientProvider({
       createSpace: true,
       types: [ViewType, DataType.Organization, DataType.Project, DataType.Person, DataType.HasRelationship],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof D3ForceGraph>;
 
 export default meta;
