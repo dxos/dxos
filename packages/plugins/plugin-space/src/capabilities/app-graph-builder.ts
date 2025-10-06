@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const typename = typenameFromQuery(collection.query);
+              const typename = typenameFromQuery({ kind: 'ast', ast: collection.query });
               return typename && space ? Option.some({ typename, space }) : Option.none();
             }),
             Option.map(({ typename, space }) => {
@@ -494,7 +494,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
-              typenameFromQuery(node.data.query) === DataType.StoredSchema.typename
+              typenameFromQuery({ kind: 'ast', ast: node.data.query }) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -661,7 +661,7 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.QueryCollection, object) &&
-                  typenameFromQuery(object.query) === DataType.StoredSchema.typename
+                  typenameFromQuery({ kind: 'ast', ast: object.query }) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));

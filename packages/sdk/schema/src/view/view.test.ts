@@ -39,10 +39,10 @@ describe('Projection', () => {
       presentation: Obj.make(Type.Expando, {}),
       registry,
     });
-    assert(typeof view.query !== 'string');
-    assert(view.query.type === 'select');
-    assert(view.query.filter.type === 'object');
-    expect(view.query.filter.typename).to.eq(Type.getDXN(schema)?.toString());
+    assert(view.query.kind === 'ast');
+    assert(view.query.ast.type === 'select');
+    assert(view.query.ast.filter.type === 'object');
+    expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
     const visibleFields = view.projection.fields.filter((f) => f.visible);
     expect(visibleFields.map((f) => f.path)).to.deep.eq([
       'fullName',

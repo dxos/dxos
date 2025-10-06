@@ -110,9 +110,11 @@ const meta: Meta<typeof ProjectContainer> = {
             });
 
             // Create a view for Messages
+            const messageQueue = space.queues.create();
             const messageView = createView({
               name: 'Messages',
               query: 'type:dxos.org/type/Message',
+              options: { queues: [messageQueue.dxn.toString()] },
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,
             });
@@ -167,7 +169,7 @@ const meta: Meta<typeof ProjectContainer> = {
             });
 
             // Generate sample Messages
-            Array.from({ length: 6 }).forEach(() => {
+            const messages = Array.from({ length: 6 }).map(() => {
               const message = Obj.make(DataType.Message, {
                 created: faker.date.recent().toISOString(),
                 sender: { role: 'user' },
@@ -178,8 +180,9 @@ const meta: Meta<typeof ProjectContainer> = {
                   },
                 ],
               });
-              space.db.add(message);
+              return message;
             });
+            await messageQueue.append(messages);
           },
         }),
         SpacePlugin({}),

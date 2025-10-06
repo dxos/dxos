@@ -34,12 +34,12 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const query = useMemo(() => {
     if (!view) {
       return Query.select(Filter.nothing());
-    } else if (typeof view.query === 'string') {
+    } else if (view.query.kind === 'grammar') {
       const builder = new QueryBuilder();
-      const filter = builder.build(view.query) ?? Filter.nothing();
-      return Query.select(filter);
+      const filter = builder.build(view.query.grammar) ?? Filter.nothing();
+      return Query.select(filter).options(view.query.options ?? {});
     } else {
-      return Query.fromAst(view.query);
+      return Query.fromAst(view.query.ast);
     }
   }, [view?.query]);
 

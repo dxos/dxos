@@ -9,11 +9,11 @@ import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { QueryParser, createFilter } from '@dxos/react-ui-components';
 import { type DataType, type ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -81,30 +81,32 @@ const DefaultStory = (props: StoryProps) => {
       }
 
       if (props.mode === 'query') {
-        try {
-          const parser = new QueryParser(newQueryString);
-          // TODO(wittjosiah): When this fails it should show validation errors in the UI.
-          const newQuery = Query.select(createFilter(parser.parse()));
-          const typename = typenameFromQuery(newQuery.ast);
-          const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
-          if (!newSchema) {
-            return;
-          }
+        if (view.query.kind === 'ast') {
+          return;
+        }
 
-          const newView = createView({
-            query: newQuery,
-            jsonSchema: newSchema.jsonSchema,
-            presentation: Obj.make(Type.Expando, {}),
-          });
+        view.query.grammar = newQueryString;
 
-          view.query = newQuery.ast;
-          view.projection = Obj.getSnapshot(newView).projection;
-          setSchema(newSchema);
-        } catch {}
+        const builder = new QueryBuilder();
+        const filter = builder.build(newQueryString) ?? Filter.nothing();
+        const newQuery = Query.select(filter);
+        const typename = typenameFromQuery({ kind: 'ast', ast: newQuery.ast });
+        const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
+        if (!newSchema) {
+          return;
+        }
+
+        const newView = createView({
+          query: newQuery,
+          jsonSchema: newSchema.jsonSchema,
+          presentation: Obj.make(Type.Expando, {}),
+        });
+        view.projection = Obj.getSnapshot(newView).projection;
+        setSchema(() => newSchema);
       } else {
         const typename = newQueryString;
         const newQuery = Query.select(Filter.typename(typename));
-        view.query = newQuery.ast;
+        view.query = { kind: 'ast', ast: newQuery.ast };
         schema.updateTypename(typename);
       }
     },

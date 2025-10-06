@@ -105,7 +105,7 @@ const StorybookKanban = () => {
       invariant(view);
 
       schema.updateTypename(typename);
-      view.query = Query.select(Filter.typename(typename)).ast;
+      view.query = { kind: 'ast', ast: Query.select(Filter.typename(typename)).ast };
     },
     [view, schema],
   );

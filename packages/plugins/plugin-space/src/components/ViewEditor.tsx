@@ -29,7 +29,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       invariant(Type.isMutable(schema));
 
       const newQuery = Query.select(Filter.typename(typename));
-      view.query = newQuery.ast;
+      view.query = { kind: 'ast', ast: newQuery.ast };
       schema.updateTypename(typename);
     },
     [view, schema],

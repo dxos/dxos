@@ -145,7 +145,7 @@ const getQueryCollectionNodePartials = ({
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const typename = typenameFromQuery(collection.query);
+  const typename = typenameFromQuery({ kind: 'ast', ast: collection.query });
   return {
     icon: typename && resolve(typename)?.icon,
     acceptPersistenceClass: new Set(['echo']),
@@ -523,7 +523,10 @@ export const constructObjectActions = ({
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === typenameFromQuery(queryCollection.query))
+    ? objectForms.find(
+        (form) =>
+          Type.getTypename(form.objectSchema) === typenameFromQuery({ kind: 'ast', ast: queryCollection.query }),
+      )
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
@@ -577,7 +580,9 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection ? typenameFromQuery(queryCollection.query) : undefined,
+                    typename: queryCollection
+                      ? typenameFromQuery({ kind: 'ast', ast: queryCollection.query })
+                      : undefined,
                   }),
                 );
               } else {

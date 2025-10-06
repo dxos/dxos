@@ -85,14 +85,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const serializedQuery = Match.value(mode).pipe(
       Match.when('schema', () => typenameFromQuery(view.query)),
       Match.when('query', () => {
-        if (typeof view.query === 'string') {
-          return view.query;
+        if (view.query.kind === 'grammar') {
+          return view.query.grammar;
         } else {
           return 'Serializing query AST is not currently supported.';
         }
       }),
       Match.exhaustive,
     );
+
+    const queueTarget = view.query.kind === 'grammar' ? view.query.options?.queues?.[0] : undefined;
 
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({
@@ -106,6 +108,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         return Schema.Struct({
           name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
           ...base.fields,
+          target: Schema.optional(Schema.String.annotations({ title: 'Target Queue' })),
         }).pipe(Schema.mutable);
       }
 
@@ -113,7 +116,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     }, [mode]);
     // TODO(burdon): Need to warn user of possible consequences of editing.
     // TODO(burdon): Settings should have domain name owned by user.
-    const viewValues = useMemo(() => ({ name: view.name, query: serializedQuery }), [view.name, serializedQuery]);
+    const viewValues = useMemo(
+      () => ({ name: view.name, query: serializedQuery, target: queueTarget }),
+      [view.name, serializedQuery, queueTarget],
+    );
 
     const handleToggleField = useCallback(
       (field: FieldType) => {
@@ -138,12 +144,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             view.name = values.name;
           }
 
+          if ('target' in values && values.target && view.query.kind === 'grammar' && queueTarget !== values.target) {
+            view.query.options = { queues: [values.target] };
+          }
+
           if (serializedQuery !== values.query && !readonly) {
             onQueryChanged?.(values.query);
           }
         });
       },
-      [serializedQuery, onQueryChanged, readonly, view],
+      [serializedQuery, onQueryChanged, readonly, view, queueTarget],
     );
 
     const handleDelete = useCallback(

@@ -46,12 +46,12 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
     }
 
     let query: QueryAST.Query;
-    if (typeof view.query === 'string') {
+    if (view.query.kind === 'grammar') {
       const builder = new QueryBuilder();
-      const filter = builder.build(view.query) ?? Filter.nothing();
+      const filter = builder.build(view.query.grammar) ?? Filter.nothing();
       query = Query.select(filter).ast;
     } else {
-      query = view.query;
+      query = view.query.ast;
     }
 
     const foundSchema = await resolveSchemaWithClientAndSpace(client, space, query);
@@ -67,11 +67,11 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
 
   const updateViewQuery = useCallback(
     async (newQueryString: string) => {
-      if (!view || !space) {
+      if (!view || !space || view.query.kind === 'ast') {
         return;
       }
 
-      view.query = newQueryString;
+      view.query.grammar = newQueryString;
 
       const builder = new QueryBuilder();
       const filter = builder.build(newQueryString) ?? Filter.nothing();

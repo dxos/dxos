@@ -71,7 +71,17 @@ const View_ = Schema.Struct({
    * Query used to retrieve data.
    * Can be a user-provided query grammar string or a query AST.
    */
-  query: Schema.Union(Schema.String, QueryAST.Query),
+  query: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal('grammar'),
+      grammar: Schema.String,
+      options: Schema.optional(QueryAST.QueryOptions),
+    }).pipe(Schema.mutable),
+    Schema.Struct({
+      kind: Schema.Literal('ast'),
+      ast: QueryAST.Query,
+    }).pipe(Schema.mutable),
+  ),
 
   /**
    * @deprecated Prefer ordering in query.
@@ -96,14 +106,14 @@ export const View: Schema.Schema<View, ViewEncoded> = View_;
 
 /** @deprecated */
 // TODO(wittjosiah): Try to remove. Use full query instead.
-export const typenameFromQuery = (query: string | QueryAST.Query) => {
+export const typenameFromQuery = (query: View['query']) => {
   let queryAST: QueryAST.Query;
-  if (typeof query === 'string') {
+  if (query.kind === 'grammar') {
     const builder = new QueryBuilder();
-    const filter = builder.build(query) ?? Filter.nothing();
+    const filter = builder.build(query.grammar) ?? Filter.nothing();
     queryAST = Query.select(filter).ast;
   } else {
-    queryAST = query;
+    queryAST = query.ast;
   }
 
   return queryAST.type === 'select'
@@ -118,6 +128,7 @@ export const createFieldId = () => PublicKey.random().truncate();
 type CreateViewProps = {
   name?: string;
   query: string | Query.Any;
+  options?: QueryAST.QueryOptions;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -133,6 +144,7 @@ type CreateViewProps = {
 export const createView = ({
   name,
   query,
+  options,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -141,7 +153,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: typeof query === 'string' ? query : query.ast,
+    query: typeof query === 'string' ? { kind: 'grammar', grammar: query, options } : { kind: 'ast', ast: query.ast },
     projection: {
       schema: overrideSchema,
       fields: [],
@@ -219,6 +231,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
 export const createViewWithReferences = async ({
   name,
   query,
+  options,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -230,6 +243,7 @@ export const createViewWithReferences = async ({
   const view = createView({
     name,
     query,
+    options,
     jsonSchema,
     overrideSchema,
     presentation,
@@ -296,7 +310,10 @@ export const createViewWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'query' | 'jsonSchema' | 'registry'> & {
+export type CreateViewFromSpaceProps = Omit<
+  CreateViewWithReferencesProps,
+  'query' | 'options' | 'jsonSchema' | 'registry'
+> & {
   client?: Client;
   space: Space;
   typename?: string;
