@@ -29,7 +29,9 @@ export const Basic = () => {
 
   return (
     <SheetProvider graph={graph} sheet={sheet} ignoreAttention>
-      <GridSheet />
+      <div role='none' className='grid bs-full is-full'>
+        <GridSheet />
+      </div>
     </SheetProvider>
   );
 };

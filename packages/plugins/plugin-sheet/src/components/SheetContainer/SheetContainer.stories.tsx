@@ -64,7 +64,7 @@ export const Default = () => {
 
   return (
     <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
-      <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
+      <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
     </AttendableContainer>
   );
 };
@@ -79,8 +79,8 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={fullyQualifiedId(sheet)} classNames='contents'>
-      <div role='none' className='grid grid-rows-[66%_33%] grid-cols-1'>
-        <SheetContainer space={space} sheet={sheet} role='article' ignoreAttention />
+      <div role='none' className='grid grid-rows-[66%_33%] bs-full grid-cols-1'>
+        <SheetContainer space={space} sheet={sheet} role='story' ignoreAttention />
         <div role='none' data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
