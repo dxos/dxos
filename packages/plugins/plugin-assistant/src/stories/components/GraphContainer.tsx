@@ -12,7 +12,7 @@ import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
-import { type EditorController, type Expression, QueryEditor } from '@dxos/react-ui-components';
+import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -21,7 +21,6 @@ import { useFlush } from '../../hooks';
 import { type ComponentProps } from './types';
 
 export const GraphContainer = ({ space }: ComponentProps) => {
-  const [ast, _setAst] = useState<Expression | undefined>();
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
@@ -56,7 +55,7 @@ export const GraphContainer = ({ space }: ComponentProps) => {
       {(open && (
         <div className='absolute left-2 right-2 bottom-2 h-[8rem] flex overflow-hidden bg-baseSurface border border-subduedSeparator'>
           <SyntaxHighlighter language='json' classNames='text-sm'>
-            {JSON.stringify({ ast, filter }, null, 2)}
+            {JSON.stringify({ filter }, null, 2)}
           </SyntaxHighlighter>
           <div className='absolute bottom-1 right-1'>
             <IconButton variant='ghost' icon='ph--x--regular' iconOnly label='Close' onClick={() => setOpen(false)} />
