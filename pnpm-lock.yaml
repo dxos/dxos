@@ -2996,8 +2996,8 @@ importers:
         specifier: ^3.19.0
         version: 3.23.1
       get-port-please:
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
 
   packages/core/echo/echo-protocol:
     dependencies:
@@ -3320,8 +3320,8 @@ importers:
         specifier: ^4.19.2
         version: 4.19.2
       get-port-please:
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
       i18next:
         specifier: ^24.2.1
         version: 24.2.3(typescript@5.9.3)
@@ -11458,8 +11458,8 @@ importers:
         specifier: ^2.3.9
         version: 2.3.14
       get-port-please:
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
 
   packages/sdk/config:
     dependencies:
@@ -26737,8 +26737,8 @@ packages:
     resolution: {integrity: sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==}
     engines: {node: '>=8.0.0'}
 
-  get-port-please@3.1.1:
-    resolution: {integrity: sha512-3UBAyM3u4ZBVYDsxOQfJDxEa6XTbpBDrOjp4mf7ExFRt5BKs/QywQQiJsh2B+hxcZLSapWqCRvElUe8DnKcFHA==}
+  get-port-please@3.2.0:
+    resolution: {integrity: sha512-I9QVvBw5U/hw3RmWpYKRumUeaDgxTPd401x364rLmWBJcOQ753eov1eTgzDqRG9bqFIfDc7gfzcQEWrUri3o1A==}
 
   get-port@7.0.0:
     resolution: {integrity: sha512-mDHFgApoQd+azgMdwylJrv2DX47ywGq1i5VFJE7fZ0dttNq3iQMfsU4IvEgBHojA3KqEudyu7Vq+oN8kNaNkWw==}
@@ -29781,8 +29781,8 @@ packages:
   ogl@1.0.11:
     resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
-  ohash@1.1.4:
-    resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
+  ohash@1.1.6:
+    resolution: {integrity: sha512-TBu7PtV8YkAZn0tSxobKY2n2aAQva936lhRrj6957aDaCf9IEtqsKbgMzXE/F/sjqYOwmrukeORHNLe5glk7Cg==}
 
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
@@ -47860,7 +47860,7 @@ snapshots:
 
   get-package-type@0.1.0: {}
 
-  get-port-please@3.1.1: {}
+  get-port-please@3.2.0: {}
 
   get-port@7.0.0: {}
 
@@ -51766,7 +51766,7 @@ snapshots:
 
   ogl@1.0.11: {}
 
-  ohash@1.1.4: {}
+  ohash@1.1.6: {}
 
   ohash@2.0.11: {}
 
@@ -55660,7 +55660,7 @@ snapshots:
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     dependencies:
       defu: 6.1.4
-      ohash: 1.1.4
+      ohash: 1.1.6
       pathe: 1.1.2
       ufo: 1.6.1
 
