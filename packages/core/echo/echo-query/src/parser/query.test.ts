@@ -261,16 +261,25 @@ describe('query', () => {
   it('build', ({ expect }) => {
     const queryBuilder = new QueryBuilder();
 
+    // TODO(burdon): Test "not"
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
+      // Type
       {
         input: 'type:dxos.org/type/Person',
         expected: Filter.typename('dxos.org/type/Person'),
       },
+      // Tag
       {
         input: '#test',
         expected: Filter.tag('test'),
       },
+      // Text
+      {
+        input: '"test"',
+        expected: Filter.text('test'),
+      },
+      // Props
       {
         input: '{ name: "DXOS" }',
         expected: Filter.props({ name: 'DXOS' }),

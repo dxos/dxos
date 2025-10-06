@@ -14,7 +14,7 @@ expression {
 }
 
 Not { 
-  @specialize<Identifier, "NOT" | "not">
+  @specialize<Identifier, "NOT" | "not" | "!">
 }
 And { 
   @specialize<Identifier, "AND" | "and">

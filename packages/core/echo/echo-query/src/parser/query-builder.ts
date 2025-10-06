@@ -230,6 +230,14 @@ export class QueryBuilder {
     let result: Filter.Any;
 
     switch (filterType) {
+      case 'TagFilter':
+        result = this._parseTagFilter(cursor, input);
+        break;
+
+      case 'TextFilter':
+        result = this._parseTextFilter(cursor, input);
+        break;
+
       case 'TypeFilter':
         result = this._parseTypeFilter(cursor, input);
         break;
@@ -240,10 +248,6 @@ export class QueryBuilder {
 
       case 'PropertyFilter':
         result = this._parsePropertyFilter(cursor, input);
-        break;
-
-      case 'TagFilter':
-        result = this._parseTagFilter(cursor, input);
         break;
 
       default:
@@ -267,6 +271,18 @@ export class QueryBuilder {
     cursor.parent();
 
     return Filter.typename(typename);
+  }
+
+  /**
+   * Parse a TextFilter node (quoted string).
+   */
+  private _parseTextFilter(cursor: TreeCursor, input: string): Filter.Any {
+    cursor.firstChild(); // Move to String node
+    const text = this._getNodeText(cursor, input);
+    cursor.parent();
+
+    // Remove quotes.
+    return Filter.text(text.slice(1, -1));
   }
 
   /**
