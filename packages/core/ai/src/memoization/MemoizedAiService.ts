@@ -53,7 +53,12 @@ export const layerTest = (options: Partial<Omit<MakeOptions, 'upstream'>> = {}) 
       return make({
         upstream,
         storePath: options.storePath ?? ctx.task.file.filepath.replace('.test.ts', '.conversations.json'),
-        allowGeneration: options.allowGeneration ?? ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0'),
+        allowGeneration: options.allowGeneration ?? isGenerationEnabled(),
       });
     }),
   );
+
+/**
+ * @returns true if generation is enabled according to the environment variable `ALLOW_LLM_GENERATION`.
+ */
+export const isGenerationEnabled = () => ['1', 'true'].includes(process.env.ALLOW_LLM_GENERATION ?? '0');
