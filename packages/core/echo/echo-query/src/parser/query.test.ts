@@ -18,6 +18,7 @@ describe('query', () => {
 
     type Test = { input: string; expected: string[] };
     const tests: Test[] = [
+      // Tags
       {
         input: '#foo',
         expected: ['Query', 'Filter', 'TagFilter', 'Tag'],
@@ -30,6 +31,7 @@ describe('query', () => {
         input: '#foo #bar',
         expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Filter', 'TagFilter', 'Tag'],
       },
+      // Text
       {
         input: '"foo"',
         expected: ['Query', 'Filter', 'TextFilter', 'String'],
@@ -38,6 +40,16 @@ describe('query', () => {
         input: '"foo" OR "bar"',
         expected: ['Query', 'Filter', 'TextFilter', 'String', 'Or', 'Filter', 'TextFilter', 'String'],
       },
+      // Mixed
+      {
+        input: '#foo AND "bar"',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'And', 'Filter', 'TextFilter', 'String'],
+      },
+      {
+        input: '#foo "bar"',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Filter', 'TextFilter', 'String'],
+      },
+      // Type
       {
         input: 'type:dxos.org/type/Person',
         expected: [
@@ -294,6 +306,11 @@ describe('query', () => {
       {
         input: '"test"',
         expected: Filter.text('test'),
+      },
+      // Mixed
+      {
+        input: '#foo "test"',
+        expected: Filter.and(Filter.tag('foo'), Filter.text('test')),
       },
       // Props
       {
