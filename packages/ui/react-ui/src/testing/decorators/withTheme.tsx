@@ -5,11 +5,12 @@
 import { type Decorator } from '@storybook/react';
 import React, { memo } from 'react';
 
-import { type ThemeMode, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
+import { type ThemeMode, ThemeProvider, Tooltip } from '../../components';
+
 /**
- * Adds theme decorator.
+ * Adds theme decorator (add to preview.ts)
  */
 export const withTheme: Decorator = (Story, context) => {
   const {
