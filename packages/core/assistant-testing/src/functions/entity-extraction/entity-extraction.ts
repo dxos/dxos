@@ -52,7 +52,7 @@ export default defineFunction({
             `
             Extract the sender's organization from the email. If you are not sure, do nothing.
             The extracted organization URL must match the sender's email domain.
-          ` + (instructions ? `\n\<user_intructions>${instructions}</user_intructions>` : ''),
+          ` + (instructions ? `\n<user_intructions>${instructions}</user_intructions>` : ''),
           prompt: JSON.stringify({ source, contact }),
           toolkit,
         });

@@ -28,6 +28,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { RESEARCH_BLUEPRINT } from '../../blueprints';
@@ -38,7 +39,6 @@ import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import { ObjectId } from '@dxos/keys';
 
 ObjectId.dangerouslyDisableRandomness();
 
