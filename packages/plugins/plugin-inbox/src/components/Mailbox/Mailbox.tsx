@@ -204,7 +204,14 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
   }, [messages]);
 
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
+    <div
+      role='none'
+      className={mx(
+        'flex flex-col [&_.dx-grid]:grow',
+        role !== 'section' && '[&_.dx-grid]:bs-0',
+        role === 'story' && 'bs-full',
+      )}
+    >
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(
