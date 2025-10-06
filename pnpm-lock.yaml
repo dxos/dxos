@@ -15227,6 +15227,9 @@ importers:
       '@dxos/storybook-addon-logger':
         specifier: workspace:*
         version: link:../../packages/common/storybook-addon-logger
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../packages/common/storybook-utils
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
