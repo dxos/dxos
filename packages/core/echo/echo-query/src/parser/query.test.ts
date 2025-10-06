@@ -19,8 +19,12 @@ describe('query', () => {
     type Test = { input: string; expected: string[] };
     const tests: Test[] = [
       {
-        input: '#test',
+        input: '#foo',
         expected: ['Query', 'Filter', 'TagFilter', 'Tag'],
+      },
+      {
+        input: '#foo #bar',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'TagFilter', 'Tag'],
       },
       {
         input: '"foo"',
@@ -245,7 +249,7 @@ describe('query', () => {
       try {
         tree = queryParser.parse(input);
       } catch (err) {
-        console.error(input, err);
+        console.error(new Error(`Failed to parse: ${input}`, { cause: err }));
         continue;
       }
 

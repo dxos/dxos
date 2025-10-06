@@ -115,13 +115,14 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const tag = node.node.getChild(QueryDSL.Node.Tagname);
+            const tag = node.node.getChild(QueryDSL.Node.Tag);
             if (tag) {
+              console.log(tag);
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(state.sliceDoc(tag.from, tag.to)),
+                  widget: new TagWidget(state.sliceDoc(tag.from + 1, tag.to)),
                   atomic: true,
                 }),
               );
