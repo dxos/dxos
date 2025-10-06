@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj,Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -113,7 +113,7 @@ describe('Integration tests', () => {
 
     await using db = await peer.createDatabase();
     for (let i = 0; i < NUM_OBJECTS; i++) {
-      db.add(live(TestSchema.Person, { name: `Person ${i}` }));
+      db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
     }
     await db.flush({ indexes: true });
 
@@ -397,7 +397,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      live(Type.Expando, {
+      Obj.make(Type.Expando, {
         content: 'test',
       }),
     );

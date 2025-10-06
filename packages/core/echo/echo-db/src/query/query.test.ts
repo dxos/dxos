@@ -352,7 +352,7 @@ describe('Query', () => {
     const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map((idx) => createTestObject(idx));
     for (const object of objects) {
-      folder.objects.push(Ref.make(object));
+      folder.objects.push(Ref.make(object as any));
     }
 
     const queryResult = await db.query(Filter.type(Expando, { name: 'folder' })).run();
@@ -376,8 +376,8 @@ describe('Query', () => {
 
       const { peer, db } = await builder.createDatabase({ types: [ContactV1, ContactV2] });
 
-      const contactV1 = db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-      const contactV2 = db.add(live(ContactV2, { name: 'Brian Smith' }));
+      const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+      const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
       await db.flush({ indexes: true });
 
       const assertQueries = async (db: EchoDatabase) => {
@@ -652,12 +652,12 @@ describe('Query', () => {
 
   describe('Reactivity', () => {
     let db: EchoDatabase;
-    let objects: Expando[];
+    let objects: Obj.Any[];
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase());
 
-      objects = range(3).map((idx) => createTestObject(idx, 'red'));
+      objects = range(3).map((idx) => createTestObject(idx, 'red')) as any;
       for (const object of objects) {
         db.add(object);
       }
@@ -706,7 +706,7 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      objects[0].title = 'Task 0a';
+      (objects[0] as any).title = 'Task 0a';
       await sleep(10);
       expect(updateCount).to.equal(0);
     });
