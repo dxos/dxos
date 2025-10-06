@@ -8,7 +8,7 @@ import React from 'react';
 
 import { live } from '@dxos/live-object';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';

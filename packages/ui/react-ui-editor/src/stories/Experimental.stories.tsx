@@ -8,7 +8,7 @@ import React from 'react';
 
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { blast, defaultOptions, dropFile, typewriter } from '../extensions';
 import { str } from '../testing';

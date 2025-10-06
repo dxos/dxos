@@ -7,8 +7,9 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-import { withLayout } from '@dxos/storybook-utils';
+import { withLayout } from '@dxos/react-ui-theme/testing';
 
+// TODO(wittjosiah): Don't depend on storybook-utils in root storybook config.
 // import { DocsContainer } from '@dxos/storybook-utils';
 
 import { docsTheme } from './theme';

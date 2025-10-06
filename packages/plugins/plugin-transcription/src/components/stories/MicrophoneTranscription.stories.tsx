@@ -29,7 +29,7 @@ import { IndexKind, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { TestItem } from '../../testing';

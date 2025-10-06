@@ -8,7 +8,7 @@ import React from 'react';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ClientPlugin } from '../ClientPlugin';
 import { translations } from '../translations';

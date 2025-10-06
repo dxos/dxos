@@ -14,7 +14,7 @@ import { Popover } from '@dxos/react-ui';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';

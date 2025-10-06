@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { StackItem } from '../../components';
 import { Card, CardDragPreview } from '../Card';

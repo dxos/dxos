@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ScriptToolbar } from './ScriptToolbar';
 

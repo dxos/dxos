@@ -29,7 +29,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';

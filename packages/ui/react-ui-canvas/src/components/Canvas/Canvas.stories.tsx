@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useCanvasContext, useWheel } from '../../hooks';
 import { type Point } from '../../types';

@@ -13,7 +13,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { useAsyncEffect } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';

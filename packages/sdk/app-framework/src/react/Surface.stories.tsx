@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, List, ListItem } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Capabilities, createSurface } from '../common';
 import { type PluginManager } from '../core';

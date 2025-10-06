@@ -18,7 +18,7 @@ import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 import { Board } from '../types';

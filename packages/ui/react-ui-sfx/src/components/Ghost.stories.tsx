@@ -7,7 +7,7 @@ import React from 'react';
 
 import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Ghost, type GhostProps } from './Ghost';
 

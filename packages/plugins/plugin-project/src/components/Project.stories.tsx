@@ -14,7 +14,7 @@ import { useClientProvider, withClientProvider } from '@dxos/react-client/testin
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 

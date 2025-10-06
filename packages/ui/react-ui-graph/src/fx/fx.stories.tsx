@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SVG } from '../components';
 import { useGrid, useZoom } from '../hooks';

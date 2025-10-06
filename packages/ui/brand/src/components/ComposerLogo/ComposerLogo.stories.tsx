@@ -9,7 +9,7 @@ import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { DXOS } from '../../icons';
 

@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SketchContainer } from './SketchContainer';
 

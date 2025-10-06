@@ -9,7 +9,7 @@ import { defaultRowSize } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 

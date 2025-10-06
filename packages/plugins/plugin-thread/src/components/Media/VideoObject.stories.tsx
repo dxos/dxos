@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { getUserMediaTrack } from '../../calls';
 import { ResponsiveContainer } from '../ResponsiveGrid';

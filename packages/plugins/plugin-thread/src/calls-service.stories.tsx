@@ -13,7 +13,7 @@ import { Config, useConfig } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 const testVideo = new URL('../testing/video.mp4', import.meta.url).href;
 

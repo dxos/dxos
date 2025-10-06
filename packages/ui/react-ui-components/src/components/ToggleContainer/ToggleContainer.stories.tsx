@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { MarkdownViewer } from '../MarkdownViewer';
 

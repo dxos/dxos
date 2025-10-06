@@ -19,7 +19,7 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';

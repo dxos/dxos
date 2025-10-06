@@ -20,7 +20,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';

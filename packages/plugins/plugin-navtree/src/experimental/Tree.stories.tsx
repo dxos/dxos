@@ -8,7 +8,7 @@ import React, { type JSX, type PropsWithChildren, useEffect, useState } from 're
 import { faker } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 

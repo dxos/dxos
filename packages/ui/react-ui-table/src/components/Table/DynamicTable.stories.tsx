@@ -13,7 +13,7 @@ import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { type TableFeatures } from '../../model';
 import { translations } from '../../translations';

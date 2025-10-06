@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TEST_ID, Test } from './Test';
 

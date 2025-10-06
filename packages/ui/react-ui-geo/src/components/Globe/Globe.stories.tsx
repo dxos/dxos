@@ -9,7 +9,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { type Topology } from 'topojson-specification';
 
 import { useAsyncState } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { type Vector, useDrag, useGlobeZoomHandler, useSpinner, useTour } from '../../hooks';
 import { type LatLngLiteral } from '../../types';

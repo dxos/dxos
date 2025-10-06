@@ -10,7 +10,7 @@ import React, { useEffect } from 'react';
 import { type Live, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Path } from '../../util';
 

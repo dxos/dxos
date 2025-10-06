@@ -9,7 +9,7 @@ import { type Plugin, definePlugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 

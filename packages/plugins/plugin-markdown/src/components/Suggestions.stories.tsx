@@ -23,7 +23,7 @@ import { type EditorSelection, type Range, useTextEditor } from '@dxos/react-ui-
 import { StackItem } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { MarkdownCapabilities } from '../capabilities';

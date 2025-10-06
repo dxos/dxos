@@ -9,7 +9,7 @@ import React, { type FC } from 'react';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { annotations, comments, createExternalCommentSync } from '../extensions';
 import { str } from '../testing';

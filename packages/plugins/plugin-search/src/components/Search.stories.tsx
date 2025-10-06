@@ -6,7 +6,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
 

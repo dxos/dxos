@@ -14,7 +14,7 @@ import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace }
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { editorSlots } from '../../defaults';

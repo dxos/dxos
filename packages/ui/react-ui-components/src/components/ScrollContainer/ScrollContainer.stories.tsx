@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 

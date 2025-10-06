@@ -11,7 +11,7 @@ import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 

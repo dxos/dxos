@@ -30,7 +30,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 faker.seed(101);
 

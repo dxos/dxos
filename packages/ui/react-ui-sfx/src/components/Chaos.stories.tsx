@@ -8,7 +8,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { useEffect } from 'react';
 
 import { Button } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useAudioStream } from '../hooks';
 import { type ShaderOptions } from '../shaders';

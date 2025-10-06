@@ -4,7 +4,7 @@
 
 import { type Meta } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import CONTENT from '../../../testing/deck.md?raw';
 import { translations } from '../../translations';

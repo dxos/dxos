@@ -14,7 +14,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';

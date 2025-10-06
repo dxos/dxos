@@ -12,7 +12,7 @@ import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';

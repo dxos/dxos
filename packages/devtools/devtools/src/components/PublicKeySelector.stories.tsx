@@ -7,7 +7,7 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { PublicKeySelector } from './PublicKeySelector';
 

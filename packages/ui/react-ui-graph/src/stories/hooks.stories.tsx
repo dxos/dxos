@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SVG } from '../components';
 import {

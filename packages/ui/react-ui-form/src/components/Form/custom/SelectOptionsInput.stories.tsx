@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import React, { useState } from 'react';
 
 import { type SelectOption, SelectOptionSchema } from '@dxos/echo-schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';
 import { TestLayout, TestPanel } from '../../testing';

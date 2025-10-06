@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import {

@@ -26,7 +26,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';

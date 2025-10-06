@@ -13,7 +13,7 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { mermaid } from './mermaid-extension';
 

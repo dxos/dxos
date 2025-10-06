@@ -24,7 +24,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';

@@ -18,7 +18,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';

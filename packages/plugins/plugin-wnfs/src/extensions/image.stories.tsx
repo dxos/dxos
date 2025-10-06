@@ -18,7 +18,7 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';

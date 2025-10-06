@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {

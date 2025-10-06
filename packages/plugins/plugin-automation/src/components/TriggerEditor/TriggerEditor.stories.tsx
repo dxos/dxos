@@ -10,7 +10,7 @@ import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ContactType, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';

@@ -16,7 +16,7 @@ import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 

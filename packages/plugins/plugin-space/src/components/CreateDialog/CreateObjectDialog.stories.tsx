@@ -13,7 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Dialog } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
