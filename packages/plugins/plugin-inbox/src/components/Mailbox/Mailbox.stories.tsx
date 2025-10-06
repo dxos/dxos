@@ -32,7 +32,7 @@ import { Mailbox as MailboxComponent } from './Mailbox';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
-  return <MailboxComponent id='story' messages={messages} ignoreAttention />;
+  return <MailboxComponent id='story' messages={messages} ignoreAttention role='story' />;
 };
 
 const WithCompanionStory = () => {
@@ -53,7 +53,7 @@ const WithCompanionStory = () => {
   }
 
   return (
-    <div {...attentionAttrs} className='is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
+    <div {...attentionAttrs} className='bs-full is-full grid grid-cols-2 grid-rows-2 overflow-hidden'>
       <Surface role='article' data={mailboxData} />
       <Surface role='article' data={companionData} />
     </div>
