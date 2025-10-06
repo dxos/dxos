@@ -36,7 +36,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(research.key), ToolId.make(createResearchNote.kry)],
+  tools: [ToolId.make(research.key), ToolId.make(createResearchNote.key)],
 });
 
 export default blueprint;

@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -38,6 +38,9 @@ import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import { ObjectId } from '@dxos/keys';
+
+ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -45,11 +48,10 @@ const TestLayer = Layer.mergeAll(
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research] })),
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createResearchNote] })),
   Layer.provideMerge(
     Layer.mergeAll(
-      AiServiceTestingPreset('direct'),
-      // MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
+      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
@@ -61,7 +63,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 describe('Research', () => {
-  it.effect.only(
+  it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
@@ -91,9 +93,11 @@ describe('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 
-  it.effect(
+  // TODO(dmaretskyi): Out-of-memory.
+  it.effect.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {
@@ -113,10 +117,17 @@ describe('Research', () => {
           observer,
           prompt: `Research airbnb founders.`,
         });
+
+        const researchGraph = yield* queryResearchGraph();
+        const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
+          Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
+        );
+        console.log(inspect(data, { depth: null, colors: true }));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 });
 
