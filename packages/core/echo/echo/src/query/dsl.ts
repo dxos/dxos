@@ -433,7 +433,6 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  // TODO(burdon): Implement.
   static tag(tag: string): Filter<any> {
     return new FilterClass({
       type: 'tag',
