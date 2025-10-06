@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it, expect } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
 import { AiService, MemoizedAiService } from '@dxos/ai';
@@ -19,13 +19,13 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { ObjectId, PublicKey } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { testToolkit } from '../../blueprints/testing';
+import { ResearchGraph } from '../research';
 
 import { default as entityExtraction } from './entity-extraction';
-import { ResearchGraph } from '../research';
-import { PublicKey, ObjectId } from '@dxos/keys';
 
 ObjectId.dangerouslyDisableRandomness();
 

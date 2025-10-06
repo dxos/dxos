@@ -29,7 +29,7 @@ export class SimplePRNG {
   next(): number {
     // Update seed using LCG formula: (a * seed + c) mod m
     this._seed = (SimplePRNG._a * this._seed + SimplePRNG._c) % SimplePRNG._m;
-    
+
     // Normalize to [0, 1) range
     return this._seed / SimplePRNG._m;
   }

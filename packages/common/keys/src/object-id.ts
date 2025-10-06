@@ -3,7 +3,7 @@
 //
 
 import { Schema } from 'effect';
-import { monotonicFactory, type PRNG, ULIDFactory } from 'ulidx';
+import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
 
 // TODO(dmaretskyi): Make brand.
 // export const ObjectIdBrand: unique symbol = Symbol('@dxos/echo/ObjectId');

@@ -1,13 +1,19 @@
-import { AiSession, makeToolResolverFromFunctions, makeToolExecutionServiceFromFunctions } from '@dxos/assistant';
-import { Obj, Filter, Ref } from '@dxos/echo';
-import { defineFunction, DatabaseService, FunctionInvocationService } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Toolkit } from '@effect/ai';
+import { Effect, Layer, Predicate, Schema } from 'effect';
+
+import { AiService } from '@dxos/ai';
+import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
+import { Filter, Obj, Ref } from '@dxos/echo';
+import { DatabaseService, FunctionInvocationService, defineFunction } from '@dxos/functions';
+import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
-import { Effect, Schema, Predicate, Layer } from 'effect';
-import { makeGraphWriterToolkit, makeGraphWriterHandler, contextQueueLayerFromResearchGraph } from '../research';
-import { AiService } from '@dxos/ai';
-import { Toolkit } from '@effect/ai';
+
+import { contextQueueLayerFromResearchGraph, makeGraphWriterHandler, makeGraphWriterToolkit } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',
