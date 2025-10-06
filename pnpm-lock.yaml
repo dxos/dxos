@@ -2852,9 +2852,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
