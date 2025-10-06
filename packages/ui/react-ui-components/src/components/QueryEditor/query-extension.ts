@@ -14,7 +14,7 @@ import { type Space } from '@dxos/client/echo';
 import { Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
-import { focus, focusField } from '@dxos/react-ui-editor';
+import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { getHashColor } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
@@ -61,6 +61,14 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
           return null;
         },
       ],
+    }),
+    typeahead({
+      onComplete: ({ line }: TypeaheadContext) => {
+        const words = line.split(/\s+/).filter(Boolean);
+        if (words.length > 0) {
+          return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
+        }
+      },
     }),
     focus,
     styles,
