@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 import { withTheme } from '@dxos/react-ui/testing';
+import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 

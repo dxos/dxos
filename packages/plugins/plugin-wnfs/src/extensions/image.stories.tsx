@@ -10,6 +10,7 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -18,7 +19,6 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';

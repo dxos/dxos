@@ -11,10 +11,10 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Form } from '@dxos/react-ui-form';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory, createReactiveObject } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 

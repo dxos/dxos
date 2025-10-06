@@ -9,8 +9,8 @@ import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
+import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';

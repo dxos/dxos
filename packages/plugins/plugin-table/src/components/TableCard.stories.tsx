@@ -11,12 +11,12 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 

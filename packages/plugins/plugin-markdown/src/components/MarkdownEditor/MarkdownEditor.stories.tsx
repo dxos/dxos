@@ -8,10 +8,10 @@ import React, { useMemo } from 'react';
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 

@@ -7,8 +7,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Toolbar } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/react-ui-theme';
 
 type Word = {
   text: string;

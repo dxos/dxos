@@ -12,6 +12,7 @@ import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Icon, useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
   type CommentsOptions,
@@ -26,7 +27,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { MessageBody, MessageHeading, MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity } from '../testing';

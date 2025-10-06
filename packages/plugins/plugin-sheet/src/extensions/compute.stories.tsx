@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -19,7 +20,6 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';

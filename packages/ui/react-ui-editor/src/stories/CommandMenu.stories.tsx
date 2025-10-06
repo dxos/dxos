@@ -10,8 +10,8 @@ import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { Domino } from '@dxos/react-ui';
-import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withTheme } from '@dxos/react-ui/testing';
+import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
   type CommandMenuGroup,

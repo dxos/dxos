@@ -12,9 +12,9 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';

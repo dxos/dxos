@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
 import { Button, Icon, Input } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/react-ui-theme';
 
 import { editorWidth } from '../defaults';
 import { type Action, commandDialog } from '../extensions';

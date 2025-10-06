@@ -7,9 +7,9 @@ import React, { useEffect, useMemo } from 'react';
 
 import { createEchoSchema } from '@dxos/live-object/testing';
 import { log } from '@dxos/log';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel } from '@dxos/schema';
 import { TestSchema, testView } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 import { FIELD_EDITOR_DEBUG_SYMBOL, TestLayout, TestPanel } from '../testing';

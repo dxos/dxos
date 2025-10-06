@@ -10,9 +10,9 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { useGraphModel } from '../../hooks';

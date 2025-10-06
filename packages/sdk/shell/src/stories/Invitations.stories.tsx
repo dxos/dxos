@@ -14,8 +14,8 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
-import { activeSurface, getSize } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/react-ui/testing';
+import { activeSurface, getSize } from '@dxos/react-ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';

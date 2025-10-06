@@ -10,8 +10,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { Dialog } from '@dxos/react-ui';
-import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 

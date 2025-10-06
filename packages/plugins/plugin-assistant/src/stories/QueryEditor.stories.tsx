@@ -12,10 +12,10 @@ import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';

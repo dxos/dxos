@@ -13,8 +13,8 @@ import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { AnchoredTo, DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/react-ui/testing';
+import { AnchoredTo, DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';

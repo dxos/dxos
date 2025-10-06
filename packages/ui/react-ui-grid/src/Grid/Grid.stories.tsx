@@ -8,8 +8,8 @@ import React, { type MouseEvent, type MutableRefObject, useCallback, useRef, use
 import { defaultRowSize } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
-import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
 import { withTheme } from '@dxos/react-ui/testing';
+import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 

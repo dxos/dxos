@@ -10,9 +10,9 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/react-ui/testing';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';

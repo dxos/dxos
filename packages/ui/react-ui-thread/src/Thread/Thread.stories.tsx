@@ -7,9 +7,9 @@ import React, { useMemo, useRef, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { MessageRoot, MessageTextbox } from '../Message';
 import { type MessageEntity, MessageStoryText } from '../testing';

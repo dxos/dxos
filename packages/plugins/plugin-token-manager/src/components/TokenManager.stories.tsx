@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
-import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 
 import { TokenManager } from './TokenManager';
 

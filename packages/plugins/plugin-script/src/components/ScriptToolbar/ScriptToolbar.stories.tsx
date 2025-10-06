@@ -9,8 +9,8 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 
 import { ScriptToolbar } from './ScriptToolbar';
 

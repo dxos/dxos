@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { createDataExtensions } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/react-ui/testing';
+import { createDataExtensions } from '@dxos/react-ui-editor';
 
 import { templates } from '../../templates';
 

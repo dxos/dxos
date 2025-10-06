@@ -9,8 +9,8 @@ import { contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
-import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { createThreadPlugins } from '../testing';

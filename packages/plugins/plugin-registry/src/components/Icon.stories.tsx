@@ -7,8 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactElement, type SVGProps, forwardRef } from 'react';
 
 import { Icon } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/react-ui/testing';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 /**
  * Serializable icon props.

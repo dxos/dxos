@@ -11,6 +11,7 @@ import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '
 import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import {
   CanvasGraphModel,
@@ -21,7 +22,6 @@ import {
 } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { DiagnosticOverlay } from './components';
 import { ComputeShapeLayout } from './compute-layout';

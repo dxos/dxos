@@ -8,8 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef, useState } from 'react';
 
 import { Button, Icon } from '@dxos/react-ui';
-import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/react-ui-theme';
 
 import { DXOS } from '../../icons';
 

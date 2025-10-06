@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -13,7 +14,6 @@ import {
   decorateMarkdown,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { mermaid } from './mermaid-extension';
 

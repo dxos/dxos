@@ -15,10 +15,10 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { InboxPlugin } from '../InboxPlugin';
 import { Mailbox } from '../types';

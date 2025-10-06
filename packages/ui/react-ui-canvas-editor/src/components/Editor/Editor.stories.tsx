@@ -12,12 +12,12 @@ import { type Live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Form, TupleInput } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { createGraph } from '@dxos/schema';
 import { Testing, type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { doLayout } from '../../layout';
 import { Container, DragTest, useSelection } from '../../testing';

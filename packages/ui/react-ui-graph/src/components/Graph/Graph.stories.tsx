@@ -9,10 +9,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { Pulsar } from '../../fx';
 import {

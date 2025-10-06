@@ -11,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
   EditorToolbar,
@@ -30,7 +31,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/react-ui/testing';
 
 faker.seed(101);
 

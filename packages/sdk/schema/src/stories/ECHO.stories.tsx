@@ -13,9 +13,9 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { DataType, DataTypes } from '../common';
 

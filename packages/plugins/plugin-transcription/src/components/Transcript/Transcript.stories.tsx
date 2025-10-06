@@ -16,11 +16,11 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { useQueueModelAdapter } from '../../hooks';
 import { SerializationModel } from '../../model';

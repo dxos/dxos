@@ -20,11 +20,11 @@ import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
