@@ -63,7 +63,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "^0.19.1",
+    "@effect/ai-anthropic": "^0.19.2",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
     "@effect/platform-node": "^0.98.3",
@@ -75,7 +75,7 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.18.1",
+    "effect": "3.18.2",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

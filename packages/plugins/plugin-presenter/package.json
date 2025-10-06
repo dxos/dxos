@@ -63,7 +63,7 @@
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
     "@types/reveal.js": "^5.0.3",
-    "effect": "3.18.1",
+    "effect": "3.18.2",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "vite": "7.1.9"
