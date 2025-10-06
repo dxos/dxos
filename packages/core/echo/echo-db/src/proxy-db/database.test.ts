@@ -335,7 +335,7 @@ describe('Database', () => {
 
     db2.add(task2);
     await db2.flush();
-    expect(task2).to.be.instanceOf(Testing.Task);
+    expect(Obj.instanceOf(Testing.Task, task2)).to.be.true;
     expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;

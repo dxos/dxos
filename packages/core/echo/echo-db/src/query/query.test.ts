@@ -16,7 +16,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { range } from '@dxos/util';
-
+import { live } from '@dxos/echo/internal';
 import { getObjectCore } from '../echo-handler';
 import type { Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';
@@ -25,7 +25,7 @@ import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
 import { Filter, Query } from './api';
 
 const createTestObject = (idx: number, label?: string) => {
-  return Obj.make(Type.Expando, { idx, title: `Task ${idx}`, label });
+  return live({ idx, title: `Task ${idx}`, label });
 };
 
 describe('Query', () => {
@@ -132,8 +132,8 @@ describe('Query', () => {
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(Obj.make(Type.Expando, { label: 'obj a' }));
-      const objB = db.add(Obj.make(Type.Expando, { label: 'obj b', ref: Ref.make(objA) }));
+      const objA = db.add(live(Type.Expando, { label: 'obj a' }));
+      const objB = db.add(live(Type.Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
@@ -141,7 +141,7 @@ describe('Query', () => {
     });
 
     test('filter by foreign keys', async () => {
-      const obj = Obj.make(Type.Expando, { label: 'has meta' });
+      const obj = live(Type.Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
       await db.flush({ indexes: true });
@@ -151,7 +151,7 @@ describe('Query', () => {
     });
 
     test('filter by foreign keys without flushing index', async () => {
-      const obj = Obj.make(Type.Expando, { label: 'has meta' });
+      const obj = live(Type.Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
@@ -349,7 +349,7 @@ describe('Query', () => {
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
-    const folder = db.add(Obj.make(Type.Expando, { name: 'folder', objects: [] as any[] }));
+    const folder = db.add(live(Type.Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map((idx) => createTestObject(idx));
     for (const object of objects) {
       folder.objects.push(Ref.make(object));
@@ -376,8 +376,8 @@ describe('Query', () => {
 
       const { peer, db } = await builder.createDatabase({ types: [ContactV1, ContactV2] });
 
-      const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-      const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
+      const contactV1 = db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+      const contactV2 = db.add(live(ContactV2, { name: 'Brian Smith' }));
       await db.flush({ indexes: true });
 
       const assertQueries = async (db: EchoDatabase) => {
@@ -400,9 +400,9 @@ describe('Query', () => {
       const { db, graph } = await builder.createDatabase();
       graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.Task]);
 
-      const _contact = db.add(Obj.make(TestingDeprecated.Contact, {}));
-      const _task = db.add(Obj.make(TestingDeprecated.Task, {}));
-      const expando = db.add(Obj.make(Type.Expando, { name: 'expando' }));
+      const _contact = db.add(live(TestingDeprecated.Contact, {}));
+      const _task = db.add(live(TestingDeprecated.Task, {}));
+      const expando = db.add(live(Type.Expando, { name: 'expando' }));
 
       const query = db.query(
         Query.select(
@@ -417,9 +417,9 @@ describe('Query', () => {
     test('filter by refs', async () => {
       const { db } = await builder.createDatabase();
 
-      const a = db.add(Obj.make(Type.Expando, { name: 'a' }));
-      const b = db.add(Obj.make(Type.Expando, { name: 'b', owner: Ref.make(a) }));
-      const _c = db.add(Obj.make(Type.Expando, { name: 'c' }));
+      const a = db.add(live(Type.Expando, { name: 'a' }));
+      const b = db.add(live(Type.Expando, { name: 'b', owner: Ref.make(a) }));
+      const _c = db.add(live(Type.Expando, { name: 'c' }));
 
       const { objects } = await db.query(Query.select(Filter.type(Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
@@ -430,17 +430,17 @@ describe('Query', () => {
       graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
 
       const alice = db.add(
-        Obj.make(TestingDeprecated.Contact, {
+        live(TestingDeprecated.Contact, {
           name: 'Alice',
         }),
       );
       const bob = db.add(
-        Obj.make(TestingDeprecated.Contact, {
+        live(TestingDeprecated.Contact, {
           name: 'Bob',
         }),
       );
       const hasManager = db.add(
-        Obj.make(TestingDeprecated.HasManager, {
+        live(TestingDeprecated.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
@@ -464,26 +464,26 @@ describe('Query', () => {
 
       // TODO(dmaretskyi): Better test data.
       alice = db.add(
-        Obj.make(TestingDeprecated.Contact, {
+        live(TestingDeprecated.Contact, {
           name: 'Alice',
         }),
       );
       bob = db.add(
-        Obj.make(TestingDeprecated.Contact, {
+        live(TestingDeprecated.Contact, {
           name: 'Bob',
         }),
       );
       const _hasManager = db.add(
-        Obj.make(TestingDeprecated.HasManager, {
+        live(TestingDeprecated.HasManager, {
           [RelationSourceId]: bob,
           [RelationTargetId]: alice,
           since: '2022',
         }),
       );
 
-      const _task1 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
-      const _task2 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
-      const _task3 = db.add(Obj.make(TestingDeprecated.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
+      const _task1 = db.add(live(TestingDeprecated.Task, { title: 'Task 1', assignee: Ref.make(alice) }));
+      const _task2 = db.add(live(TestingDeprecated.Task, { title: 'Task 2', assignee: Ref.make(alice) }));
+      const _task3 = db.add(live(TestingDeprecated.Task, { title: 'Task 3', assignee: Ref.make(bob) }));
 
       await db.flush({ indexes: true });
     });
@@ -522,7 +522,7 @@ describe('Query', () => {
     });
 
     test('traverse outbound array references', async () => {
-      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
@@ -549,7 +549,7 @@ describe('Query', () => {
     });
 
     test('traverse inbound array references', async () => {
-      db.add(Obj.make(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
@@ -595,8 +595,8 @@ describe('Query', () => {
     test('vector', async () => {
       const { db } = await builder.createDatabase({ indexing: { vector: true }, types: [TestingDeprecated.Task] });
 
-      db.add(Obj.make(TestingDeprecated.Task, { title: 'apples' }));
-      db.add(Obj.make(TestingDeprecated.Task, { title: 'giraffes' }));
+      db.add(live(TestingDeprecated.Task, { title: 'apples' }));
+      db.add(live(TestingDeprecated.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
 
@@ -621,8 +621,8 @@ describe('Query', () => {
       const { db, graph } = await builder.createDatabase({ indexing: { fullText: true } });
       graph.schemaRegistry.addSchema([TestingDeprecated.Task]);
 
-      db.add(Obj.make(TestingDeprecated.Task, { title: 'apples' }));
-      db.add(Obj.make(TestingDeprecated.Task, { title: 'giraffes' }));
+      db.add(live(TestingDeprecated.Task, { title: 'apples' }));
+      db.add(live(TestingDeprecated.Task, { title: 'giraffes' }));
 
       await db.flush({ indexes: true });
 
@@ -779,9 +779,9 @@ describe('Query', () => {
       const { db } = await builder.createDatabase({ types: [TestingDeprecated.Contact] });
 
       // Create 3 test objects: Alice, Bob, Charlie.
-      const _alice = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Alice' }));
-      const bob = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Bob' }));
-      const _charlie = db.add(Obj.make(TestingDeprecated.Contact, { name: 'Charlie' }));
+      const _alice = db.add(live(TestingDeprecated.Contact, { name: 'Alice' }));
+      const bob = db.add(live(TestingDeprecated.Contact, { name: 'Bob' }));
+      const _charlie = db.add(live(TestingDeprecated.Contact, { name: 'Charlie' }));
       await db.flush({ indexes: true });
 
       // Track all updates to observe the bug.
@@ -836,7 +836,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
-      const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(Expando, { value: i + 1 })));
+      const objects = Array.from({ length: 10 }, (_, i) => db.add(live(Expando, { value: i + 1 })));
       await db.flush({ indexes: true, updates: true });
 
       // Track all updates to observe the bug.
@@ -879,7 +879,7 @@ describe('Query', () => {
 
     test('query by typename receives updates', async () => {
       graph.schemaRegistry.addSchema([TestingDeprecated.Contact]);
-      const contact = db.add(Obj.make(TestingDeprecated.Contact, {}));
+      const contact = db.add(live(TestingDeprecated.Contact, {}));
       const name = 'DXOS User';
 
       const query = db.query(Filter.typename(Type.getTypename(TestingDeprecated.Contact)));
@@ -900,7 +900,7 @@ describe('Query', () => {
       onTestFinished(() => unsub());
 
       contact.name = name;
-      db.add(Obj.make(TestingDeprecated.Contact, {}));
+      db.add(live(TestingDeprecated.Contact, {}));
 
       await asyncTimeout(nameUpdate.wait(), 1000);
       await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -908,7 +908,7 @@ describe('Query', () => {
 
     test('query mutable schema objects', async () => {
       const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
-      const contact = db.add(Obj.make(schema, {}));
+      const contact = db.add(live(schema, {}));
 
       // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
       const query = db.query(Query.type(schema));
@@ -920,7 +920,7 @@ describe('Query', () => {
     test('`instanceof` operator works', async () => {
       graph.schemaRegistry.addSchema([TestingDeprecated.Contact]);
       const name = 'DXOS User';
-      const contact = Obj.make(TestingDeprecated.Contact, { name });
+      const contact = live(TestingDeprecated.Contact, { name });
       db.add(contact);
       expect(Obj.instanceOf(TestingDeprecated.Contact, contact)).to.be.true;
 

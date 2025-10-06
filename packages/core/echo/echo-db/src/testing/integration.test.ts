@@ -113,7 +113,7 @@ describe('Integration tests', () => {
 
     await using db = await peer.createDatabase();
     for (let i = 0; i < NUM_OBJECTS; i++) {
-      db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
+      db.add(live(TestSchema.Person, { name: `Person ${i}` }));
     }
     await db.flush({ indexes: true });
 
@@ -338,7 +338,7 @@ describe('Integration tests', () => {
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
-    db1.add(Obj.make(Expando, {}));
+    db1.add(live(Expando, {}));
     await teleportConnections[0].whenOpen(false);
   });
 
@@ -397,7 +397,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      Obj.make(Type.Expando, {
+      live(Type.Expando, {
         content: 'test',
       }),
     );
@@ -417,17 +417,17 @@ describe('Integration tests', () => {
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          Obj.make(TestingDeprecated.Contact, {
+          live(TestingDeprecated.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          Obj.make(TestingDeprecated.Contact, {
+          live(TestingDeprecated.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          Obj.make(TestingDeprecated.HasManager, {
+          live(TestingDeprecated.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -465,7 +465,7 @@ describe('Integration tests', () => {
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
-        const object = db.add(Obj.make(stored, { field: 'test' }));
+        const object = db.add(live(stored, { field: 'test' }));
         expect(getSchema(object)).to.eq(stored);
 
         db.add({ text: 'Expando object' }); // Add Expando object to test filtering
@@ -519,7 +519,7 @@ describe('Integration tests', () => {
       });
       const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
-      db.add(Obj.make(schema, { name: 'Bob' }));
+      db.add(live(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
     }
 

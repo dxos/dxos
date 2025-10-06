@@ -5,6 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query } from '@dxos/echo';
+import { live } from '@dxos/echo/internal';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';
 
@@ -30,17 +31,17 @@ describe('Relations', () => {
 
   test('create relation between two objects', async () => {
     const alice = db.add(
-      Obj.make(TestingDeprecated.Contact, {
+      live(TestingDeprecated.Contact, {
         name: 'Alice',
       }),
     );
     const bob = db.add(
-      Obj.make(TestingDeprecated.Contact, {
+      live(TestingDeprecated.Contact, {
         name: 'Bob',
       }),
     );
     const hasManager = db.add(
-      Obj.make(TestingDeprecated.HasManager, {
+      live(TestingDeprecated.HasManager, {
         [RelationSourceId]: bob,
         [RelationTargetId]: alice,
         since: '2022',

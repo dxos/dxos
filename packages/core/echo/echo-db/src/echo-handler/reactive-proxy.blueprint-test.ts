@@ -223,10 +223,14 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
+        expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string']);
 
         obj.number = 42;
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'number', 'id'] : ['string', 'number']);
+        expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string', 'number']);
+
+        if (objectsHaveId) {
+          expect(Object.keys(obj)).to.include('id');
+        }
       });
 
       test('has', async () => {
