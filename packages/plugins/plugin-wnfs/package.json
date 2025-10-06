@@ -57,7 +57,7 @@
     "blockstore-core": "^5.0.1",
     "blockstore-idb": "^2.0.0",
     "debounce": "^2.2.0",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "idb-keyval": "^6.2.1",
     "interface-blockstore": "^5.2.10",
     "it-all": "^3.0.6",
