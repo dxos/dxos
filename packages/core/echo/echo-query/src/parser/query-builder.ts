@@ -258,7 +258,7 @@ export class QueryBuilder {
    * Parse a TypeFilter node (type:typename).
    */
   private _parseTypeFilter(cursor: TreeCursor, input: string): Filter.Any {
-    // Skip TypeKeyword
+    // Skip TypeKeyword.
     cursor.firstChild();
     cursor.nextSibling(); // Skip ':'
     cursor.nextSibling(); // Move to Identifier
@@ -280,7 +280,7 @@ export class QueryBuilder {
         if (cursor.node.name === 'ObjectProperty') {
           const { key, value } = this._parseObjectProperty(cursor, input);
           if (key) {
-            // Convert simple values to Filter.eq for compatibility with Filter.props
+            // Convert simple values to Filter.eq for compatibility with Filter.props.
             props[key] = Filter.eq(value);
           }
         }
@@ -328,12 +328,12 @@ export class QueryBuilder {
     let value: any = null;
 
     if (cursor.firstChild()) {
-      // First child is PropertyPath
+      // First child is PropertyPath.
       if (cursor.node.name === 'PropertyPath') {
         path = this._parsePropertyPath(cursor, input);
       }
 
-      // Skip ':' and move to Value
+      // Skip ':' and move to Value.
       cursor.nextSibling();
       cursor.nextSibling();
 
@@ -375,14 +375,10 @@ export class QueryBuilder {
    * Parse a TagFilter node (#tag).
    */
   private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
-    // Skip Tag token (#)
-    cursor.firstChild();
-    cursor.nextSibling(); // Move to Identifier
-
     const tag = this._getNodeText(cursor, input);
     cursor.parent();
 
-    return Filter.tag(tag);
+    return Filter.tag(tag.slice(1));
   }
 
   /**
@@ -393,7 +389,7 @@ export class QueryBuilder {
 
     switch (valueType) {
       case 'String': {
-        // Remove quotes
+        // Remove quotes.
         const str = this._getNodeText(cursor, input);
         return str.slice(1, -1);
       }
@@ -408,7 +404,7 @@ export class QueryBuilder {
         return null;
 
       case 'ObjectLiteral': {
-        // For nested objects, parse recursively
+        // For nested objects, parse recursively.
         const props: Record<string, any> = {};
         if (cursor.firstChild()) {
           do {

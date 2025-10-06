@@ -13,38 +13,43 @@ expression {
   "(" expression ")"
 }
 
-// Boolean logic
-
 Not { 
   @specialize<Identifier, "NOT" | "not">
 }
 And { 
-  @specialize<Identifier, "AND" | "and" | "And">
+  @specialize<Identifier, "AND" | "and">
 }
 Or { 
-  @specialize<Identifier, "OR" | "or" | "Or">
+  @specialize<Identifier, "OR" | "or">
 }
 
 Relation {
   ArrowRight | ArrowLeft
 }
 
-// Filter
+//
+// Filters
+//
 
 Filter {
+  TagFilter |
+  TextFilter |
   TypeFilter |
   PropertyFilter |
-  TagFilter |
   ObjectLiteral
 }
 
-// Type
+TagFilter {
+  Tag
+}
+
+TextFilter {
+  String
+}
 
 TypeFilter {
   @specialize[@name=TypeKeyword]<Identifier, "type"> ":" Identifier
 }
-
-// Property
 
 PropertyFilter {
   PropertyPath ":" Value
@@ -54,14 +59,6 @@ PropertyPath {
   Identifier ("." Identifier)*
 }
 
-// Tag
-
-TagFilter {
-  Tag Tagname
-}
-
-// Object
-
 ObjectLiteral {
   "{" (ObjectProperty ("," ObjectProperty)*)? "}"
 }
@@ -69,8 +66,6 @@ ObjectLiteral {
 ObjectProperty {
   Identifier ":" Value
 }
-
-// Array
 
 ArrayLiteral {
   "[" (Value ("," Value)*)? "]"
@@ -91,8 +86,8 @@ Value {
     $[a-zA-Z_]$[a-zA-Z0-9_./\-]* 
   }
 
-  Tagname {
-    $[a-zA-Z0-9_-]+
+  Tag {
+    "#" $[a-zA-Z0-9_\-]+
   }
 
   String { 
@@ -108,10 +103,8 @@ Value {
 
   Null { "null" }
 
-  ArrowRight { "=>" | "->" }
-  ArrowLeft { "<=" | "<-" }
-
-  Tag { '#' }
+  ArrowRight { "->" }
+  ArrowLeft { "<-" }
 
   space { @whitespace+ }
 

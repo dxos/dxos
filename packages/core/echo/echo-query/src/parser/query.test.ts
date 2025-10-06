@@ -20,7 +20,15 @@ describe('query', () => {
     const tests: Test[] = [
       {
         input: '#test',
-        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Tagname'],
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag'],
+      },
+      {
+        input: '"foo"',
+        expected: ['Query', 'Filter', 'TextFilter', 'String'],
+      },
+      {
+        input: '"foo" OR "bar"',
+        expected: ['Query', 'Filter', 'TextFilter', 'String', 'Or', 'Filter', 'TextFilter', 'String'],
       },
       {
         input: 'type:dxos.org/type/Person',
@@ -136,7 +144,7 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Person => type:dxos.org/type/Organization',
+        input: 'type:dxos.org/type/Person -> type:dxos.org/type/Organization',
         expected: [
           'Query',
           // type:dxos.org/type/Person
@@ -156,7 +164,7 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Organization <= type:dxos.org/type/Person',
+        input: 'type:dxos.org/type/Organization <- type:dxos.org/type/Person',
         expected: [
           'Query',
           // type:dxos.org/type/Organization
@@ -178,7 +186,7 @@ describe('query', () => {
       {
         // Persons for Organizations with name "DXOS"
         // TODO(burdon): Filter relations.
-        input: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Person)',
+        input: '((type:dxos.org/type/Organization AND { name: "DXOS" }) -> type:dxos.org/type/Person)',
         expected: [
           'Query',
           '(',
@@ -211,27 +219,6 @@ describe('query', () => {
       },
       {
         input: 'type:dxos.org/type/Person and { name: "DXOS" }',
-        expected: [
-          'Query',
-          'Filter',
-          'TypeFilter',
-          'TypeKeyword',
-          ':',
-          'Identifier',
-          'And',
-          'Filter',
-          'ObjectLiteral',
-          '{',
-          'ObjectProperty',
-          'Identifier',
-          ':',
-          'Value',
-          'String',
-          '}',
-        ],
-      },
-      {
-        input: 'type:dxos.org/type/Person And { name: "DXOS" }',
         expected: [
           'Query',
           'Filter',
@@ -307,10 +294,20 @@ describe('query', () => {
         input: 'type:dxos.org/type/Person and { name: "DXOS" }',
         expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
       },
-      {
-        input: 'type:dxos.org/type/Person And { name: "DXOS" }',
-        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
-      },
+      // TODO(burdon): Convert Query/Filter expr to AST.
+      // TODO(burdon): Person -> Organization (many-to-many relation).
+      // Get Research Note objects for Organization objects for Person objects with jobTitle.
+      //
+      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:ResearchOn]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
+      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:ResearchOn]- type:ResearchNote
+      //
+      // {
+      //   input: '',
+      //   expected: Query.select(Filter.typename('dxos.org/type/Person', { jobTitle: 'investor' }))
+      //     .reference('organization')
+      //     .targetOf(Relation.of('dxos.org/relation/ResearchOn')) // TODO(burdon): Invert?
+      //     .source(),
+      // },
     ];
 
     tests.forEach(({ input, expected }) => {
