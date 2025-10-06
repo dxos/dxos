@@ -52,7 +52,7 @@
     "@effect/schema": "^0.75.5",
     "@preact/signals-core": "^1.12.1",
     "date-fns": "^3.3.1",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "jsonpath": "^1.1.1"
   },
   "devDependencies": {
