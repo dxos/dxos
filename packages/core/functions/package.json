@@ -80,7 +80,7 @@
     "@preact/signals-core": "^1.12.1",
     "cron": "^3.1.6",
     "cron-schedule": "^5.0.4",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "esbuild-wasm": "^0.16.14",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
