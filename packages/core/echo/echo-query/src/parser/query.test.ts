@@ -5,7 +5,7 @@
 import { type Tree } from '@lezer/common';
 import { describe, it } from 'vitest';
 
-import { Query, type QueryAST } from '@dxos/echo';
+import { type QueryAST } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
@@ -482,7 +482,7 @@ describe('query', () => {
 
     tests.forEach(({ input, expected }) => {
       const query = queryBuilder.build(input);
-      expect(Query.select(query!).ast, input).toEqual(expected);
+      expect(query!.ast, input).toEqual(expected);
     });
   });
 });
