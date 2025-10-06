@@ -2816,6 +2816,9 @@ importers:
       '@dxos/indexing':
         specifier: workspace:*
         version: link:../indexing
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../../common/random
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
@@ -42917,7 +42920,7 @@ snapshots:
 
   '@types/eslint@8.56.2':
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.7
       '@types/json-schema': 7.0.15
 
   '@types/estree-jsx@1.0.0':
