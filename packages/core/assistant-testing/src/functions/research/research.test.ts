@@ -60,21 +60,21 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe.skip('Research', () => {
-  it.effect(
+describe('Research', () => {
+  it.effect.only(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
-            name: 'Notion',
-            website: 'https://www.notion.com',
+            name: 'Airbnb',
+            website: 'https://www.airbnb.com/',
           }),
         );
         yield* DatabaseService.flush({ indexes: true });
 
         const result = yield* FunctionInvocationService.invokeFunction(research, {
-          query: 'Who are the founders of Notion? Do one web query max.',
+          query: 'Founders and investors of airbnb.',
           mockSearch: false,
         });
 
@@ -101,7 +101,7 @@ describe.skip('Research', () => {
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+        const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
         yield* DatabaseService.add(org);
         yield* DatabaseService.flush({ indexes: true });
 
@@ -111,7 +111,7 @@ describe.skip('Research', () => {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         yield* conversation.createRequest({
           observer,
-          prompt: `Research notion founders.`,
+          prompt: `Research airbnb founders.`,
         });
       },
       Effect.provide(TestLayer),
