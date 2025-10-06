@@ -132,8 +132,8 @@ describe('Query', () => {
     });
 
     test('filter by reference', async () => {
-      const objA = db.add(live(Type.Expando, { label: 'obj a' }));
-      const objB = db.add(live(Type.Expando, { label: 'obj b', ref: Ref.make(objA) }));
+      const objA = db.add(live(Expando, { label: 'obj a' }));
+      const objB = db.add(live(Expando, { label: 'obj b', ref: Ref.make(objA) }));
       await db.flush({ indexes: true });
 
       const { objects } = await db.query(Filter.type(Expando, { ref: Ref.make(objA) })).run();
@@ -141,7 +141,7 @@ describe('Query', () => {
     });
 
     test('filter by foreign keys', async () => {
-      const obj = live(Type.Expando, { label: 'has meta' });
+      const obj = live(Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
       await db.flush({ indexes: true });
@@ -151,7 +151,7 @@ describe('Query', () => {
     });
 
     test('filter by foreign keys without flushing index', async () => {
-      const obj = live(Type.Expando, { label: 'has meta' });
+      const obj = live(Expando, { label: 'has meta' });
       getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' });
       db.add(obj);
 
@@ -349,7 +349,7 @@ describe('Query', () => {
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();
-    const folder = db.add(live(Type.Expando, { name: 'folder', objects: [] as any[] }));
+    const folder = db.add(live(Expando, { name: 'folder', objects: [] as any[] }));
     const objects = range(3).map((idx) => createTestObject(idx));
     for (const object of objects) {
       folder.objects.push(Ref.make(object));
@@ -402,7 +402,7 @@ describe('Query', () => {
 
       const _contact = db.add(live(TestingDeprecated.Contact, {}));
       const _task = db.add(live(TestingDeprecated.Task, {}));
-      const expando = db.add(live(Type.Expando, { name: 'expando' }));
+      const expando = db.add(live(Expando, { name: 'expando' }));
 
       const query = db.query(
         Query.select(
@@ -417,9 +417,9 @@ describe('Query', () => {
     test('filter by refs', async () => {
       const { db } = await builder.createDatabase();
 
-      const a = db.add(live(Type.Expando, { name: 'a' }));
-      const b = db.add(live(Type.Expando, { name: 'b', owner: Ref.make(a) }));
-      const _c = db.add(live(Type.Expando, { name: 'c' }));
+      const a = db.add(live(Expando, { name: 'a' }));
+      const b = db.add(live(Expando, { name: 'b', owner: Ref.make(a) }));
+      const _c = db.add(live(Expando, { name: 'c' }));
 
       const { objects } = await db.query(Query.select(Filter.type(Expando, { owner: Ref.make(a) }))).run();
       expect(objects).toEqual([b]);
@@ -522,7 +522,7 @@ describe('Query', () => {
     });
 
     test('traverse outbound array references', async () => {
-      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
@@ -549,11 +549,11 @@ describe('Query', () => {
     });
 
     test('traverse inbound array references', async () => {
-      db.add(live(Type.Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
+      db.add(live(Expando, { name: 'Contacts', objects: [Ref.make(alice)] }));
       await db.flush({ indexes: true });
 
       const { objects } = await db
-        .query(Query.select(Filter.type(TestingDeprecated.Contact)).referencedBy(Type.Expando, 'objects'))
+        .query(Query.select(Filter.type(TestingDeprecated.Contact)).referencedBy(Expando, 'objects'))
         .run();
       expect(objects).toMatchObject([{ name: 'Contacts' }]);
     });
@@ -652,7 +652,7 @@ describe('Query', () => {
 
   describe('Reactivity', () => {
     let db: EchoDatabase;
-    let objects: Type.Expando[];
+    let objects: Expando[];
 
     beforeEach(async () => {
       ({ db } = await builder.createDatabase());
