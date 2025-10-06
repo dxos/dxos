@@ -18,7 +18,7 @@ import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { QueryEditorItem } from '@dxos/react-ui-query-editor';
+import { SearchBoxItem } from '@dxos/react-ui-components';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { type MaybePromise, isNonNullable } from '@dxos/util';
@@ -185,7 +185,7 @@ export const RefField = ({
                 <div role='none' className='grow'>
                   {items?.length ? (
                     items?.map((item) => (
-                      <QueryEditorItem
+                      <SearchBoxItem
                         key={item.id}
                         itemId={item.id}
                         label={item.label}

@@ -5,17 +5,33 @@
 import '@dxos-theme';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { DataType } from '@dxos/schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
-import { QueryEditor } from './QueryEditor';
+import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
-  decorators: [withTheme],
+  render: (args: QueryEditorProps) => {
+    const [space] = useSpaces();
+    return (
+      <QueryEditor classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm' {...args} space={space} />
+    );
+  },
+  decorators: [
+    withClientProvider({
+      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      createIdentity: true,
+    }),
+    withTheme,
+  ],
   parameters: {
     layout: 'centered',
     translations,
@@ -26,15 +42,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const Complex: Story = {
   args: {
-    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
-    query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { title:"DXOS", value:100 }',
+    value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
   },
 };
 
-export const Empty: Story = {
+export const Relation: Story = {
   args: {
-    classNames: 'is-[50rem] p-2 border border-subduedSeparator rounded-sm',
+    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
+  },
+};
+
+export const Tags: Story = {
+  args: {
+    value: 'type:dxos.org/type/Person #investor #new',
   },
 };

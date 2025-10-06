@@ -11,6 +11,7 @@ import React, { useCallback, useRef } from 'react';
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
+import { Domino } from '@dxos/react-ui';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { withLayout, withTheme } from '@dxos/storybook-utils';
 
@@ -26,7 +27,6 @@ import {
 } from '../components';
 import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
 import { str } from '../testing';
-import { Domino } from '../util';
 
 import { EditorStory, names } from './components';
 
@@ -36,7 +36,7 @@ type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
+  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
     <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
@@ -83,9 +83,11 @@ export const Slash: Story = {
     placeholder: {
       content: () =>
         Domino.of('div')
-          .child(Domino.of('span').text('Press'))
-          .child(Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'))
-          .child(Domino.of('span').text('for commands'))
+          .children(
+            Domino.of('span').text('Press'),
+            Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'),
+            Domino.of('span').text('for commands'),
+          )
           .build(),
     },
     getMenu: (text) => {

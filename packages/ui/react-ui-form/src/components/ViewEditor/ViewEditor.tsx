@@ -222,8 +222,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                         'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
                       )}
                       space={space}
-                      initialValue={props.getValue()}
-                      onQueryUpdate={handleChange}
+                      value={props.getValue()}
+                      onChange={handleChange}
                     />
                   </Input.Root>
                 );
