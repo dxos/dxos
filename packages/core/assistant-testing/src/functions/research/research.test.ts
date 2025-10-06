@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { AiService, ConsolePrinter } from '@dxos/ai';
+import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import {
   AiConversation,
@@ -28,6 +28,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
+import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { RESEARCH_BLUEPRINT } from '../../blueprints';
@@ -39,17 +40,18 @@ import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
 
+ObjectId.dangerouslyDisableRandomness();
+
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research] })),
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createResearchNote] })),
   Layer.provideMerge(
     Layer.mergeAll(
-      AiServiceTestingPreset('direct'),
-      // MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
+      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
@@ -60,21 +62,21 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe.skip('Research', () => {
+describe('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
-            name: 'Notion',
-            website: 'https://www.notion.com',
+            name: 'Airbnb',
+            website: 'https://www.airbnb.com/',
           }),
         );
         yield* DatabaseService.flush({ indexes: true });
 
         const result = yield* FunctionInvocationService.invokeFunction(research, {
-          query: 'Who are the founders of Notion? Do one web query max.',
+          query: 'Founders and investors of airbnb.',
           mockSearch: false,
         });
 
@@ -91,9 +93,11 @@ describe.skip('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 
-  it.effect(
+  // TODO(dmaretskyi): Out-of-memory.
+  it.effect.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {
@@ -101,7 +105,7 @@ describe.skip('Research', () => {
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
 
-        const org = Obj.make(DataType.Organization, { name: 'Notion', website: 'https://www.notion.com' });
+        const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
         yield* DatabaseService.add(org);
         yield* DatabaseService.flush({ indexes: true });
 
@@ -111,12 +115,19 @@ describe.skip('Research', () => {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
         yield* conversation.createRequest({
           observer,
-          prompt: `Research notion founders.`,
+          prompt: `Research airbnb founders.`,
         });
+
+        const researchGraph = yield* queryResearchGraph();
+        const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
+          Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
+        );
+        console.log(inspect(data, { depth: null, colors: true }));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 });
 

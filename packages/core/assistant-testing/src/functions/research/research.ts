@@ -87,7 +87,7 @@ export default defineFunction({
 
       const toolkit = yield* createToolkit({
         toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit, NativeWebSearch),
-        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.key) : ToolId.make(exaFunction.key)],
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -128,6 +128,7 @@ export default defineFunction({
         makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
       ).pipe(
         Layer.provide(
+          // TODO(dmaretskyi): This should be provided by environment.
           Layer.mergeAll(FunctionInvocationService.layerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
       ),

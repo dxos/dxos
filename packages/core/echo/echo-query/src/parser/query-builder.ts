@@ -4,7 +4,7 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 
@@ -32,7 +32,7 @@ export class QueryBuilder {
   /**
    * Build a query from the input string.
    */
-  build(input: string): Filter.Any | null {
+  build(input: string): Query.Any | null {
     try {
       const tree = this._parser.parse(input);
       return this.buildQuery(tree, input);
@@ -41,10 +41,14 @@ export class QueryBuilder {
     }
   }
 
+  buildQuery(tree: Tree, input: string): Query.Any {
+    return Query.select(this.buildFilter(tree, input));
+  }
+
   /**
-   * Build a query from a parsed DSL tree.
+   * Build a filter from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): Filter.Any {
+  buildFilter(tree: Tree, input: string): Filter.Any {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
@@ -201,7 +205,7 @@ export class QueryBuilder {
             // Parse the expression inside parentheses as a subtree.
             const subInput = input.slice(exprStart, exprEnd);
             const subTree = this._parser.parse(subInput);
-            filters.push(this.buildQuery(subTree, subInput));
+            filters.push(this.buildFilter(subTree, subInput));
           } else {
             // Simple parenthesized expression.
             filters.push(this._parseExpression(cursor, input));

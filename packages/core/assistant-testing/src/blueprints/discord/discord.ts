@@ -28,7 +28,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(fetchDiscordMessages.name)],
+  tools: [ToolId.make(fetchDiscordMessages.key)],
 });
 
 export default blueprint;
