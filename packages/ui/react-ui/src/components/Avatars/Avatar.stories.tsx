@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
 import { type Meta } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
@@ -61,7 +60,6 @@ const meta = {
   title: 'ui/react-ui-core/Avatar',
   component: Avatar.Root,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Avatar.Root>;
 
 export default meta;

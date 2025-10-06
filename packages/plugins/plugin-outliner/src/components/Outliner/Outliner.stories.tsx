@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { OutlineType } from '../../types';
@@ -30,11 +29,11 @@ const meta = {
     }
   }),
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text, OutlineType] }),
     withTheme,
-    withLayout({ fullscreen: true }),
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Text, OutlineType] }),
   ],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof Outliner>;

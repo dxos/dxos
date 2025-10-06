@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -12,7 +10,7 @@ import React, { useEffect } from 'react';
 import { type Live, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { Icon } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Path } from '../../util';
 
@@ -54,9 +52,10 @@ const state = new Map<string, Live<{ open: boolean; current: boolean }>>();
 
 const meta = {
   title: 'ui/react-ui-list/Tree',
+
+  decorators: [withTheme],
   component: Tree,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
   args: {
     id: tree.id,
     useItems: (parent?: TestItem) => {

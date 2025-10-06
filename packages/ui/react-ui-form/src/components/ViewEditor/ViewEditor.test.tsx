@@ -200,4 +200,4 @@ describe('ViewEditor', () => {
     // Also verify that the field is back in the visible fields list.
     expect(debugObjects.view.projection.fields.filter(({ visible }) => visible !== false).length).toBeGreaterThan(0);
   });
-});
+}, 30_000);

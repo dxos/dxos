@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import '@preact/signals-react';
 
 import { Repo } from '@automerge/automerge-repo';
@@ -16,7 +14,8 @@ import { DocAccessor, Query, type Space, createDocAccessor, useQuery, useSpace }
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
+import { render } from '@dxos/storybook-utils';
 
 import { editorSlots } from '../../defaults';
 import { useTextEditor } from '../../hooks';
@@ -114,8 +113,9 @@ const meta = {
   title: 'ui/react-ui-editor/Automerge',
   component: Editor as any,
   render: render(DefaultStory),
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;
@@ -129,7 +129,6 @@ export const Default: Story = {
 };
 
 export const WithEcho: Story = {
-  decorators: [withTheme],
   render: () => {
     return (
       <ClientRepeater

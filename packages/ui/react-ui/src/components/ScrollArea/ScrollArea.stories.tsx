@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren } from 'react';
 
@@ -40,7 +38,6 @@ const meta = {
   component: ScrollArea as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
