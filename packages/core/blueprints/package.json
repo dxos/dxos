@@ -22,14 +22,17 @@
   ],
   "dependencies": {
     "@dxos/ai": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.12.1",
     "effect": "3.18.3",
     "handlebars": "4.7.8",
     "lodash.defaultsdeep": "^4.6.1"

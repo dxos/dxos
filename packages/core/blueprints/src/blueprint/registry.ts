@@ -2,35 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import { log } from '@dxos/log';
+import { untracked } from '@preact/signals-core';
 
-import { type Blueprint } from './blueprint';
+import { DeferredTask } from '@dxos/async';
+import { Filter, type Space } from '@dxos/client/echo';
+import { Resource } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
+import { live } from '@dxos/live-object';
+
+import { Blueprint } from './blueprint';
 
 /**
  * Blueprint registry.
  */
-export class Registry {
-  private readonly _blueprints: Blueprint[] = [];
+export class Registry extends Resource {
+  private readonly _staticBlueprints: Blueprint[] = [];
+  private _databaseBlueprints: Blueprint[] = [];
+  private _reconcileBlueprints?: DeferredTask;
+  private readonly _space?: Space;
+  private readonly _state = live<{ blueprints: Blueprint[] }>({ blueprints: [] });
 
-  constructor(blueprints: Blueprint[]) {
-    const seen = new Set<string>();
-    blueprints.forEach((blueprint) => {
-      if (seen.has(blueprint.key)) {
-        log.warn('duplicate blueprint', { key: blueprint.key });
-      } else {
+  constructor(blueprints: Blueprint[], space?: Space) {
+    super();
+    this._staticBlueprints = blueprints;
+    this._space = space;
+  }
+
+  protected override async _open(): Promise<void> {
+    this._reconcileBlueprints = new DeferredTask(this._ctx, async () => {
+      const seen = new Set<string>();
+      const newBlueprints = [];
+      for (const blueprint of [...this._staticBlueprints, ...this._databaseBlueprints]) {
+        if (seen.has(blueprint.key)) {
+          continue;
+        }
         seen.add(blueprint.key);
-        this._blueprints.push(blueprint);
+        newBlueprints.push(blueprint);
       }
+
+      newBlueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
+      this._state.blueprints = newBlueprints;
     });
 
-    this._blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
+    const unsub = this._space?.db.query(Filter.type(Blueprint)).subscribe(({ objects }) => {
+      this._databaseBlueprints = objects;
+      invariant(this._reconcileBlueprints, 'Reconcile blueprints task not initialized.');
+      this._reconcileBlueprints.schedule();
+    });
+
+    this._reconcileBlueprints?.schedule();
+    this._ctx.onDispose(() => unsub?.());
   }
 
   getByKey(key: string): Blueprint | undefined {
-    return this._blueprints.find((blueprint) => blueprint.key === key);
+    return untracked(() => this._state.blueprints.find((blueprint) => blueprint.key === key));
   }
 
+  /** @reactive */
   query(): Blueprint[] {
-    return this._blueprints;
+    return this._state.blueprints;
   }
 }
