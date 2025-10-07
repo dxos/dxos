@@ -45,14 +45,14 @@ export const Demo: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>([]);
     return (
-      <div className='flex flex-col w-96 gap-4 p-1'>
+      <div className='flex flex-col is-[20rem] gap-4 p-1'>
         <Toolbar.Root>
           <Button onClick={() => setLines((lines) => [...lines, `${lines.length + 1}. ${faker.lorem.paragraph()}`])}>
             Add
           </Button>
           <Button onClick={() => setLines([])}>Reset</Button>
         </Toolbar.Root>
-        <TextCrawl classNames='px-2 border border-separator rounded' lines={lines} autoAdvance />
+        <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance />
       </div>
     );
   },
