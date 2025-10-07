@@ -304,7 +304,7 @@ class ObjectWidget extends WidgetType {
             Domino.of('span')
               .classNames('flex items-center pis-1 pie-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
               .text(key),
-            Domino.of('span').classNames('flex items-center pis-1 pie-1 text-infoText').text(value),
+            Domino.of('span').classNames('flex items-center pis-1 pie-1 text-subdued').text(value),
           ),
       ),
     );
