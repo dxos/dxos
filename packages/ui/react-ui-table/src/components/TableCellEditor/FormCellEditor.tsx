@@ -21,16 +21,18 @@ import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-type FormCellEditorProps = {
+export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Obj.Any;
+
+export type FormCellEditorProps = {
   fieldProjection: FieldProjection;
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
   onSave?: () => void;
-  onCreate?: (schema: Schema.Schema.AnyNoContext, values: any) => Obj.Any;
+  onCreate?: OnCreateHandler;
   client?: Client;
   modals?: ModalController;
   __gridScope: any;
-} & Omit<FormProps<any>, 'values' | 'schema'>;
+} & Omit<FormProps<any>, 'values' | 'schema' | 'onCreate'>;
 
 const createOptionLabel = ['create new object label', { ns: translationKey }] as [string, { ns: string }];
 

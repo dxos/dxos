@@ -4,3 +4,4 @@
 
 export * from './Table';
 export * from './TableToolbar';
+export { type OnCreateHandler } from './TableCellEditor';

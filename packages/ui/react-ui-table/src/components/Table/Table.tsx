@@ -35,7 +35,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
-import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
+import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -85,11 +85,12 @@ export type TableMainProps = {
   client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
+  onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
@@ -406,6 +407,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           schema={schema}
           onFocus={handleFocus}
           onSave={handleSave}
+          onCreate={onCreate}
           client={client}
         />
         <Grid.Content
