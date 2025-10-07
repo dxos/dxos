@@ -13,7 +13,7 @@ import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
-import { cellQuery, parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
@@ -26,6 +26,7 @@ type FormCellEditorProps = {
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
   onSave?: () => void;
+  onCreate?: (schema: Schema.Schema.AnyNoContext, values: any) => Obj.Any;
   client?: Client;
   modals?: ModalController;
   __gridScope: any;
@@ -40,6 +41,7 @@ export const FormCellEditor = ({
   onSave,
   client,
   modals,
+  onCreate,
   __gridScope,
   ...formProps
 }: FormCellEditorProps) => {
@@ -117,7 +119,11 @@ export const FormCellEditor = ({
   );
 
   const handleCreate = useCallback(
-    (object: any) => {
+    (values: any) => {
+      if (!schema || !onCreate) {
+        return;
+      }
+      const object = onCreate?.(schema, values);
       const ref = Ref.make(object);
       const path = fieldProjection.field.path;
       setDeep(originalRow, [path], ref);
@@ -126,24 +132,7 @@ export const FormCellEditor = ({
       setLocalEditing(false);
       onSave?.();
     },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow],
-  );
-
-  const handleCreateFromQuery = useCallback(
-    async (typeAnnotation: TypeAnnotation, query: string) => {
-      if (model && modals && contextEditing?.index) {
-        setLocalEditing(false);
-        modals.openCreateRef(
-          typeAnnotation.typename,
-          document.querySelector(cellQuery(contextEditing.index, gridId)),
-          {
-            [fieldProjection.field.referencePath!]: query,
-          },
-          handleCreate,
-        );
-      }
-    },
-    [model, modals, client, contextEditing?.index, gridId, fieldProjection, handleSave],
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, schema, onCreate],
   );
 
   useEffect(() => {
@@ -194,9 +183,14 @@ export const FormCellEditor = ({
               onSave={handleSave}
               {...formProps}
               onQueryRefOptions={handleQueryRefOptions}
-              onCreateFromQuery={handleCreateFromQuery}
-              createOptionIcon='ph--plus--regular'
-              createOptionLabel={createOptionLabel}
+              {...(schema &&
+                onCreate && {
+                  onCreate: handleCreate,
+                  createSchema: schema,
+                  createInitialValuePath: fieldProjection.field.referencePath,
+                  createOptionIcon: 'ph--plus--regular',
+                  createOptionLabel,
+                })}
             />
           </Popover.Viewport>
         </Popover.Content>
