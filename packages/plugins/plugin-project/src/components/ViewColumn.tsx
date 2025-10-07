@@ -6,14 +6,13 @@ import { type Schema } from 'effect';
 import React, { useMemo, useState } from 'react';
 
 import { type Obj, Query, Type } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
 
-import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
+import { evalQuery, getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 import { useProject } from './Project';
@@ -31,17 +30,17 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
+  const rawQuery = view.query.kind === 'grammar' ? view.query.grammar : view.query.ast;
   const query = useMemo(() => {
     if (!view) {
       return Query.select(Filter.nothing());
     } else if (view.query.kind === 'grammar') {
-      const builder = new QueryBuilder();
-      const filter = builder.build(view.query.grammar) ?? Filter.nothing();
-      return Query.select(filter).options(view.query.options ?? {});
+      const query = evalQuery(view.query.grammar);
+      return query.options(view.query.options ?? {});
     } else {
       return Query.fromAst(view.query.ast);
     }
-  }, [view?.query]);
+  }, [view?.query.kind, rawQuery]);
 
   useAsyncEffect(async () => {
     if (!query || !space) {
@@ -50,7 +49,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
 
     const schema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
     setSchema(() => schema);
-  }, [view.query]);
+  }, [client, space, query]);
 
   const queryTarget = getQueryTarget(query.ast, space);
   const items = useQuery(queryTarget, query);

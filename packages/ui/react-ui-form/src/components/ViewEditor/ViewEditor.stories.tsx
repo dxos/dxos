@@ -64,7 +64,7 @@ const DefaultStory = (props: StoryProps) => {
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = createView({
         name: 'Test',
-        query: Query.select(Filter.type(TestSchema)),
+        query: props.mode === 'query' ? 'Query.select(Filter.type(TestSchema))' : Query.select(Filter.type(TestSchema)),
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
@@ -182,6 +182,6 @@ export const Readonly: Story = {
   args: { readonly: true },
 };
 
-export const Advanced: Story = {
+export const QueryMode: Story = {
   args: { mode: 'query' },
 };

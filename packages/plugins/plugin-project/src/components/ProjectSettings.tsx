@@ -6,7 +6,6 @@ import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj, Query, type QueryAST, Ref, Type } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -17,7 +16,7 @@ import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel, createView } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { resolveSchemaWithClientAndSpace } from '../helpers';
+import { evalQuery, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
@@ -47,9 +46,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
 
     let query: QueryAST.Query;
     if (view.query.kind === 'grammar') {
-      const builder = new QueryBuilder();
-      const filter = builder.build(view.query.grammar) ?? Filter.nothing();
-      query = Query.select(filter).ast;
+      query = evalQuery(view.query.grammar).ast;
     } else {
       query = view.query.ast;
     }
@@ -72,10 +69,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
       }
 
       view.query.grammar = newQueryString;
-
-      const builder = new QueryBuilder();
-      const filter = builder.build(newQueryString) ?? Filter.nothing();
-      const newQuery = Query.select(filter);
+      const newQuery = evalQuery(newQueryString);
       const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
       if (!newSchema) {
         return;

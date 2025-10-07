@@ -4,7 +4,8 @@
 
 import { Array, Effect, Match, Option, type Schema, SchemaAST, pipe } from 'effect';
 
-import { DXN, type QueryAST } from '@dxos/echo';
+import { ResearchOn } from '@dxos/assistant-testing';
+import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -13,8 +14,24 @@ import {
 } from '@dxos/echo-schema';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
+import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
+
+// TODO(wittjosiah): Support arbitrary imports.
+export const evalQuery = (queryString: string): QueryAST.Query => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', `return ${queryString}`)(
+      Query,
+      Filter,
+      DataType,
+      ResearchOn,
+    );
+  } catch {
+    return Query.select(Filter.nothing());
+  }
+};
 
 export const resolveSchemaWithClientAndSpace = (client: Client, space: Space, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
@@ -103,7 +120,7 @@ const resolveSchema = (
       ),
     ),
     Match.when({ type: 'options' }, ({ query }) => resolveSchema(query, resolve)),
-    Match.orElse((q) => {
+    Match.orElse((_q) => {
       // TODO(wittjosiah): Implement other cases.
       return Effect.succeed(Option.none());
     }),

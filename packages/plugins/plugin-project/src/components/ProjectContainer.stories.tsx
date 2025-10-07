@@ -80,7 +80,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Contacts
             const personView = createView({
               name: 'Contacts',
-              query: 'type:dxos.org/type/Person',
+              query: 'Query.select(Filter.type(DataType.Person))',
               jsonSchema: Type.toJsonSchema(DataType.Person),
               presentation: project,
             });
@@ -88,7 +88,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Organizations
             const organizationView = createView({
               name: 'Organizations',
-              query: 'type:dxos.org/type/Organization',
+              query: 'Query.select(Filter.type(DataType.Organization))',
               jsonSchema: Type.toJsonSchema(DataType.Organization),
               presentation: project,
             });
@@ -96,7 +96,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Tasks
             const taskView = createView({
               name: 'Tasks',
-              query: 'type:dxos.org/type/Task',
+              query: 'Query.select(Filter.type(DataType.Task))',
               jsonSchema: Type.toJsonSchema(DataType.Task),
               presentation: project,
             });
@@ -104,7 +104,7 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Project-Projects
             const projectView = createView({
               name: 'Projects (not the UI component)',
-              query: 'type:dxos.org/type/Project',
+              query: 'Query.select(Filter.type(DataType.Project))',
               jsonSchema: Type.toJsonSchema(DataType.Project),
               presentation: project,
             });
@@ -113,7 +113,7 @@ const meta: Meta<typeof ProjectContainer> = {
             const messageQueue = space.queues.create();
             const messageView = createView({
               name: 'Messages',
-              query: 'type:dxos.org/type/Message',
+              query: 'Query.select(Filter.type(DataType.Message))',
               options: { queues: [messageQueue.dxn.toString()] },
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,

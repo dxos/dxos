@@ -16,9 +16,10 @@ import {
   type ThemedClassName,
   useDensityContext,
   useElevationContext,
+  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { QueryEditor } from '@dxos/react-ui-components';
+import { Editor, createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
 import { inputTheme } from '@dxos/react-ui-theme';
@@ -203,6 +204,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         mode === 'query'
           ? {
               ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props: InputProps) => {
+                const { themeMode } = useThemeContext();
                 const density = useDensityContext();
                 const elevation = useElevationContext();
 
@@ -211,10 +213,29 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                   [props.onValueChange],
                 );
 
+                const extensions = useMemo(
+                  () => [
+                    createBasicExtensions({ placeholder: t('query placeholder') }),
+                    createThemeExtensions({ themeMode }),
+                  ],
+                  [],
+                );
+
                 // TODO(wittjosiah): This is probably not the right way to do these styles.
                 return (
                   <Input.Root>
                     <InputHeader label={props.label} />
+                    <Editor
+                      classNames={mx(
+                        inputTheme.input({ density, elevation }),
+                        'flex items-center',
+                        'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
+                      )}
+                      extensions={extensions}
+                      value={props.getValue()}
+                      onChange={handleChange}
+                    />
+                    {/* TODO(wittjosiah): Support query editor.
                     <QueryEditor
                       classNames={mx(
                         inputTheme.input({ density, elevation }),
@@ -224,7 +245,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                       space={space}
                       value={props.getValue()}
                       onChange={handleChange}
-                    />
+                    /> */}
                   </Input.Root>
                 );
               },
