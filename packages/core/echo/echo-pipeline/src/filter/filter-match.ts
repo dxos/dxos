@@ -69,7 +69,6 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     case 'tag': {
       // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
       const tags = getDeep(obj.doc.data, ['properties', 'tags']);
-      console.log('===', tags, filter.tag);
       return (
         Array.isArray(tags) &&
         tags?.some((tag) => {
@@ -157,7 +156,6 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     case 'tag': {
       // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
       const tags = getDeep(obj, ['properties', 'tags']);
-      console.log('===', tags, filter.tag);
       return (
         Array.isArray(tags) &&
         tags?.some((tag) => {

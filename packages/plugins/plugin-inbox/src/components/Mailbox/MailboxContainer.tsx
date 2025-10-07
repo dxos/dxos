@@ -111,7 +111,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       </ElevationProvider>
 
       {tagFilterVisible.value && (
-        <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
+        <div role='none' className='flex is-full items-center p-1 border-be border-separator'>
           <QueryEditor space={getSpace(mailbox)} onChange={setQueryText} value={queryText} ref={queryEditorRef} />
         </div>
       )}
