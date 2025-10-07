@@ -35,10 +35,14 @@ export const Default: Story = {
     const [selected, setSelected] = useState(0);
     return (
       <div className='flex flex-col w-[30rem] p-4 bg-attention'>
-        <ToggleContainer.Root classNames='grid grid-cols-[32px_1fr]' open>
-          <ToggleContainer.Header>{content[selected].title}</ToggleContainer.Header>
-          <ToggleContainer.Content>
-            <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
+        <ToggleContainer.Root classNames='grid grid-rows-[max-content_1fr]' open>
+          <ToggleContainer.Header>
+            <div className='pis-2'>{content[selected].title}</div>
+          </ToggleContainer.Header>
+          <ToggleContainer.Content classNames='grid grid-cols-[max-content_1fr]'>
+            <div className='pis-1 pie-1'>
+              <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
+            </div>
             <div className='flex-1 pis-2 pie-2 overflow-y-auto'>{content[selected].content}</div>
           </ToggleContainer.Content>
         </ToggleContainer.Root>
