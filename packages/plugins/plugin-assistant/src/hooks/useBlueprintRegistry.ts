@@ -25,7 +25,7 @@ export const useBlueprintRegistry = (space?: Space) => {
   useEffect(() => {
     const ctx = Context.default();
     scheduleTask(ctx, async () => {
-      const registry = new Blueprint.Registry(blueprints, space);
+      const registry = new Blueprint.Registry(blueprints, space?.db);
       await registry.open();
       setRegistry(registry);
       ctx.onDispose(() => registry.close());
