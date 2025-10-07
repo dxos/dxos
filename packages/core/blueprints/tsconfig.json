@@ -39,6 +39,9 @@
       "path": "../echo/echo"
     },
     {
+      "path": "../echo/echo-db"
+    },
+    {
       "path": "../echo/echo-schema"
     },
     {
