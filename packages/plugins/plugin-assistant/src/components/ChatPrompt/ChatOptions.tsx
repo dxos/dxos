@@ -5,12 +5,13 @@
 import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
+import { distinctBy } from '@dxos/util';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
@@ -98,7 +99,11 @@ const BlueprintsPanel = ({
 }: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry });
+  const staticBlueprints = useBlueprints({ blueprintRegistry });
+  const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
+  blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
+
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
 
