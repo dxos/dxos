@@ -41,6 +41,7 @@ export type QueryBoxProps = {
 /**
  * @deprecated Reconcile with QueryEditor.
  */
+// TODO(burdon): Remove.
 export const QueryBox = forwardRef<QueryBoxController, QueryBoxProps>(
   (
     { space, classNames, autoFocus, lineWrapping, placeholder, initialValue, onChange, onSubmit, onSuggest, onCancel },

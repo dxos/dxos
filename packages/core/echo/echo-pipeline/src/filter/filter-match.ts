@@ -69,7 +69,12 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     case 'tag': {
       // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
       const tags = getDeep(obj.doc.data, ['properties', 'tags']);
-      return Array.isArray(tags) && tags?.includes(filter.tag);
+      return (
+        Array.isArray(tags) &&
+        tags?.some((tag) => {
+          return typeof tag === 'object' && tag.label === filter.tag;
+        })
+      );
     }
 
     case 'text-search': {
@@ -94,6 +99,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
   }
 };
 
+// TODO(burdon): Reconcile with filterMatchObject.
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
     case 'object': {
@@ -109,7 +115,6 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
         } else {
           const actualDXN = DXN.parse(obj['@type']);
           const expectedDXN = DXN.parse(filter.typename);
-
           if (!compareTypename(expectedDXN, actualDXN)) {
             return false;
           }
@@ -146,6 +151,17 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       }
 
       return true;
+    }
+
+    case 'tag': {
+      // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
+      const tags = getDeep(obj, ['properties', 'tags']);
+      return (
+        Array.isArray(tags) &&
+        tags?.some((tag) => {
+          return typeof tag === 'object' && tag.label === filter.tag;
+        })
+      );
     }
 
     case 'text-search': {

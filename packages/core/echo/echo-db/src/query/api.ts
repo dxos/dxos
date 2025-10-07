@@ -22,6 +22,13 @@ export interface QueryFn {
 }
 
 /**
+ * Common interface for Echo and Queue.
+ */
+export interface Queryable {
+  query: QueryFn;
+}
+
+/**
  * @deprecated Use `Query.options` instead.
  */
 export type QueryOptions = {
