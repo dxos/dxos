@@ -102,7 +102,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               label: (object: DataType.QueryCollection) => [
                 'typename label',
                 {
-                  ns: typenameFromQuery({ kind: 'ast', ast: object.query }),
+                  ns: typenameFromQuery(object.query),
                   count: 2,
                   defaultValue: 'New smart collection',
                 },

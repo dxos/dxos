@@ -17,7 +17,7 @@ type KanbanViewEditorProps = { view: DataType.View };
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
-  const currentTypename = view.query ? typenameFromQuery(view.query) : undefined;
+  const currentTypename = view.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
 
   const projection = useMemo(() => {

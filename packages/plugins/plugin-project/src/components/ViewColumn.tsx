@@ -12,7 +12,7 @@ import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
 
-import { evalQuery, getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
+import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 import { useProject } from './Project';
@@ -30,17 +30,13 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
   const { t } = useTranslation(meta.id);
   const { Item } = useProject('ViewColumn');
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
-  const rawQuery = view.query.kind === 'grammar' ? view.query.grammar : view.query.ast;
   const query = useMemo(() => {
     if (!view) {
       return Query.select(Filter.nothing());
-    } else if (view.query.kind === 'grammar') {
-      const query = evalQuery(view.query.grammar);
-      return query.options(view.query.options ?? {});
     } else {
       return Query.fromAst(view.query.ast);
     }
-  }, [view?.query.kind, rawQuery]);
+  }, [view?.query.ast]);
 
   useAsyncEffect(async () => {
     if (!query || !space) {

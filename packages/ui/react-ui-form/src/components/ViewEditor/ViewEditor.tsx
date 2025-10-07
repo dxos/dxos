@@ -2,13 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Match, Schema } from 'effect';
+import { Array, Match, Option, Schema } from 'effect';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
 import { type SchemaRegistry } from '@dxos/echo-db';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { getSpace } from '@dxos/react-client/echo';
 import {
   Callout,
   IconButton,
@@ -48,7 +47,7 @@ export type ViewEditorProps = ThemedClassName<
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
-    onQueryChanged?: (query: string) => void;
+    onQueryChanged?: (query: string, target?: string) => void;
     onDelete?: (fieldId: string) => void;
   } & Pick<FormProps<any>, 'outerSpacing'>
 >;
@@ -72,7 +71,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     },
     forwardedRef,
   ) => {
-    const space = getSpace(view);
     const schemaReadonly = !isMutable(schema);
     const { t } = useTranslation(translationKey);
     const projectionModel = useMemo(() => {
@@ -84,10 +82,10 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
     const serializedQuery = Match.value(mode).pipe(
-      Match.when('schema', () => typenameFromQuery(view.query)),
+      Match.when('schema', () => typenameFromQuery(view.query.ast)),
       Match.when('query', () => {
-        if (view.query.kind === 'grammar') {
-          return view.query.grammar;
+        if (view.query.string) {
+          return view.query.string;
         } else {
           return 'Serializing query AST is not currently supported.';
         }
@@ -95,7 +93,15 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       Match.exhaustive,
     );
 
-    const queueTarget = view.query.kind === 'grammar' ? view.query.options?.queues?.[0] : undefined;
+    const queueTarget = Match.value(view.query.ast).pipe(
+      Match.when({ type: 'options' }, ({ options }) => {
+        return Option.fromNullable(options.queues).pipe(
+          Option.flatMap((queues) => Array.head(queues)),
+          Option.getOrUndefined,
+        );
+      }),
+      Match.orElse(() => undefined),
+    );
 
     const viewSchema = useMemo(() => {
       const base = Schema.Struct({
@@ -145,12 +151,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
             view.name = values.name;
           }
 
-          if ('target' in values && values.target && view.query.kind === 'grammar' && queueTarget !== values.target) {
-            view.query.options = { queues: [values.target] };
-          }
+          const queryChanged = serializedQuery !== values.query;
+          const targetValue = 'target' in values ? values.target : undefined;
+          const targetChanged = 'target' in values && values.target && queueTarget !== targetValue;
 
-          if (serializedQuery !== values.query && !readonly) {
-            onQueryChanged?.(values.query);
+          if ((queryChanged || targetChanged) && !readonly) {
+            onQueryChanged?.(values.query, targetValue);
           }
         });
       },

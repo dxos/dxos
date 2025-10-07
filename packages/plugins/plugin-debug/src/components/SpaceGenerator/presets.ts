@@ -97,21 +97,15 @@ export const generator = () => ({
       async (space, n, cb) => {
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
 
-        // TODO(wittjosiah): Factor out.
-        const evalQuery = (queryString: string): Query.Any => {
-          try {
-            // eslint-disable-next-line @typescript-eslint/no-implied-eval
-            return new Function('Query', 'Filter', 'DataType', `return ${queryString}`)(Query, Filter, DataType);
-          } catch {
-            return Query.select(Filter.nothing());
-          }
-        };
-
         const objects = range(n, () => {
           // TODO(wittjosiah): Move filter to another property.
-          const contactsQuery = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
-          const organizationsQuery = `${contactsQuery}.reference('organization')`;
-          const notesQuery = `${organizationsQuery}.targetOf(ResearchOn).source()`;
+          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
+          const organizationsQuery = contactsQuery.reference('organization');
+          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+          const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
+          const organizationsQueryString = `${contactsQueryString}.reference("organization")`;
+          const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
 
           const researchPrompt = space.db.add(
             Prompt.make({
@@ -134,7 +128,7 @@ export const generator = () => ({
             enabled: true,
             spec: {
               kind: 'subscription',
-              query: evalQuery(organizationsQuery).ast,
+              query: organizationsQuery.ast,
             },
             function: Ref.make(serializeFunction(agent)),
             input: {
@@ -146,29 +140,34 @@ export const generator = () => ({
 
           const mailboxView = createView({
             name: 'Mailbox',
-            query:
-              'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
-            options: {
+            query: Query.select(
+              Filter.type(DataType.Message, { properties: { labels: Filter.contains('investor') } }),
+            ).options({
               queues: [mailbox.queue.dxn.toString()],
-            },
+            }),
+            queryString:
+              'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const contactsView = createView({
             name: 'Contacts',
             query: contactsQuery,
+            queryString: contactsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Person),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
             query: organizationsQuery,
+            queryString: organizationsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Organization),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
             query: notesQuery,
+            queryString: notesQueryString,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });

@@ -59,7 +59,7 @@ export const CreateObjectDialog = ({
   const space = isSpace(target) ? target : getSpace(target);
   const queryCollections = useQuery(space, Query.type(DataType.QueryCollection));
   const hiddenTypenames = queryCollections
-    .map((collection) => typenameFromQuery({ kind: 'ast', ast: collection.query }))
+    .map((collection) => typenameFromQuery(collection.query))
     .filter(isNonNullable);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(

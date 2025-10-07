@@ -62,7 +62,8 @@ const DefaultStory = (props: StoryProps) => {
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = createView({
         name: 'Test',
-        query: props.mode === 'query' ? 'Query.select(Filter.type(TestSchema))' : Query.select(Filter.type(TestSchema)),
+        query: Query.select(Filter.type(TestSchema)),
+        queryString: 'Query.select(Filter.type(TestSchema))',
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
@@ -73,22 +74,18 @@ const DefaultStory = (props: StoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQueryString: string) => {
+    async (queryString: string) => {
       if (!schema || !view || !space) {
         return;
       }
 
       if (props.mode === 'query') {
-        if (view.query.kind === 'ast') {
-          return;
-        }
-
-        view.query.grammar = newQueryString;
+        view.query.string = queryString;
 
         const builder = new QueryBuilder();
-        const filter = builder.build(newQueryString) ?? Filter.nothing();
+        const filter = builder.build(queryString) ?? Filter.nothing();
         const newQuery = Query.select(filter);
-        const typename = typenameFromQuery({ kind: 'ast', ast: newQuery.ast });
+        const typename = typenameFromQuery(newQuery.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
         if (!newSchema) {
           return;
@@ -102,9 +99,9 @@ const DefaultStory = (props: StoryProps) => {
         view.projection = Obj.getSnapshot(newView).projection;
         setSchema(() => newSchema);
       } else {
-        const typename = newQueryString;
+        const typename = queryString;
         const newQuery = Query.select(Filter.typename(typename));
-        view.query = { kind: 'ast', ast: newQuery.ast };
+        view.query = { string: `Query.select(Filter.typename(${typename}))`, ast: newQuery.ast };
         schema.updateTypename(typename);
       }
     },

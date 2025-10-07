@@ -8,7 +8,7 @@ import React from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -78,7 +78,8 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Contacts
             const personView = createView({
               name: 'Contacts',
-              query: 'Query.select(Filter.type(DataType.Person))',
+              query: Query.select(Filter.type(DataType.Person)),
+              queryString: 'Query.select(Filter.type(DataType.Person))',
               jsonSchema: Type.toJsonSchema(DataType.Person),
               presentation: project,
             });
@@ -86,7 +87,8 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Organizations
             const organizationView = createView({
               name: 'Organizations',
-              query: 'Query.select(Filter.type(DataType.Organization))',
+              query: Query.select(Filter.type(DataType.Organization)),
+              queryString: 'Query.select(Filter.type(DataType.Organization))',
               jsonSchema: Type.toJsonSchema(DataType.Organization),
               presentation: project,
             });
@@ -94,7 +96,8 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Tasks
             const taskView = createView({
               name: 'Tasks',
-              query: 'Query.select(Filter.type(DataType.Task))',
+              query: Query.select(Filter.type(DataType.Task)),
+              queryString: 'Query.select(Filter.type(DataType.Task))',
               jsonSchema: Type.toJsonSchema(DataType.Task),
               presentation: project,
             });
@@ -102,7 +105,8 @@ const meta: Meta<typeof ProjectContainer> = {
             // Create a view for Project-Projects
             const projectView = createView({
               name: 'Projects (not the UI component)',
-              query: 'Query.select(Filter.type(DataType.Project))',
+              query: Query.select(Filter.type(DataType.Project)),
+              queryString: 'Query.select(Filter.type(DataType.Project))',
               jsonSchema: Type.toJsonSchema(DataType.Project),
               presentation: project,
             });
@@ -111,8 +115,8 @@ const meta: Meta<typeof ProjectContainer> = {
             const messageQueue = space.queues.create();
             const messageView = createView({
               name: 'Messages',
-              query: 'Query.select(Filter.type(DataType.Message))',
-              options: { queues: [messageQueue.dxn.toString()] },
+              query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
+              queryString: 'Query.select(Filter.type(DataType.Message))',
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,
             });

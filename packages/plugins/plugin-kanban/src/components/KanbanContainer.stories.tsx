@@ -49,7 +49,7 @@ const StorybookKanban = () => {
   const views = useQuery(space, Filter.type(DataType.View));
   const [view, setView] = useState<DataType.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
-  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   useEffect(() => {
@@ -103,7 +103,7 @@ const StorybookKanban = () => {
       invariant(view);
 
       schema.updateTypename(typename);
-      view.query = { kind: 'ast', ast: Query.select(Filter.typename(typename)).ast };
+      view.query.ast = Query.select(Filter.typename(typename)).ast;
     },
     [view, schema],
   );

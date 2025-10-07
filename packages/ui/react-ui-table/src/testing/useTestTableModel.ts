@@ -28,7 +28,7 @@ export const useTestTableModel = () => {
 
   const views = useQuery(space, Filter.type(DataType.View));
   const view = useMemo(() => views.at(0), [views]);
-  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const jsonSchema = useMemo(() => (schema ? toJsonSchema(schema) : undefined), [schema]);
 

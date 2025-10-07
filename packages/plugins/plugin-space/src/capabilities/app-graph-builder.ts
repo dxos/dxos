@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const typename = typenameFromQuery({ kind: 'ast', ast: collection.query });
+              const typename = typenameFromQuery(collection.query);
               return typename && space ? Option.some({ typename, space }) : Option.none();
             }),
             Option.map(({ typename, space }) => {
@@ -494,7 +494,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
-              typenameFromQuery({ kind: 'ast', ast: node.data.query }) === DataType.StoredSchema.typename
+              typenameFromQuery(node.data.query) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -538,7 +538,9 @@ export default (context: PluginContext) => {
               const filteredViews = get(
                 rxFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
-                  views.filter((view) => typenameFromQuery(view.query) === Type.getTypename(schema as Type.Obj.Any)),
+                  views.filter(
+                    (view) => typenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                  ),
                 ),
               );
               const deletable = filteredViews.length === 0;
@@ -585,7 +587,7 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(rxFromQuery(query))
-                .filter((view) => typenameFromQuery(view.query) === typename)
+                .filter((view) => typenameFromQuery(view.query.ast) === typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>
@@ -661,12 +663,12 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.QueryCollection, object) &&
-                  typenameFromQuery({ kind: 'ast', ast: object.query }) === DataType.StoredSchema.typename
+                  typenameFromQuery(object.query) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query) === object.typename)),
+                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query.ast) === object.typename)),
                 );
                 deletable = filteredViews.length === 0;
               }
