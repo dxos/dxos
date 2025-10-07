@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
@@ -13,6 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -21,7 +20,6 @@ import {
   documentId,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
 
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
@@ -44,7 +42,7 @@ type EditorProps = {
 
 const SHEET_NAME = 'Test Sheet';
 
-const EditorStory = ({ text }: EditorProps) => {
+const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
   const { themeMode } = useThemeContext();
   const space = useSpace();
@@ -95,7 +93,7 @@ const Grid = () => {
 const GraphStory = (props: EditorProps) => {
   return (
     <div className='grid grid-rows-2'>
-      <EditorStory {...props} />
+      <DefaultStory {...props} />
       <Grid />
     </div>
   );
@@ -104,21 +102,22 @@ const GraphStory = (props: EditorProps) => {
 const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
+    withTheme,
     withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withComputeGraphDecorator(),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta;
 
 export default meta;
 
 // TODO(burdon): Inline formulae.
-export const Default: StoryObj<typeof EditorStory> = {
-  render: EditorStory,
+export const Default: StoryObj<typeof DefaultStory> = {
+  render: DefaultStory,
   args: {
     text: str(
       //

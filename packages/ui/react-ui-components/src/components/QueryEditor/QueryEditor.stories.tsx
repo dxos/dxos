@@ -2,15 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 
@@ -26,11 +24,11 @@ const meta = {
     );
   },
   decorators: [
+    withTheme,
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),
-    withTheme,
   ],
   parameters: {
     layout: 'centered',
@@ -46,18 +44,21 @@ export const Default: Story = {};
 
 export const Complex: Story = {
   args: {
+    autoFocus: true,
     value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
   },
 };
 
 export const Relation: Story = {
   args: {
+    autoFocus: true,
     value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
+    autoFocus: true,
     value: 'type:dxos.org/type/Person #investor #new',
   },
 };

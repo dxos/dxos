@@ -98,7 +98,7 @@ export const generator = () => ({
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
 
         // TODO(wittjosiah): Factor out.
-        const evalQuery = (queryString: string): QueryAST.Query => {
+        const evalQuery = (queryString: string): Query.Any => {
           try {
             // eslint-disable-next-line @typescript-eslint/no-implied-eval
             return new Function('Query', 'Filter', 'DataType', `return ${queryString}`)(Query, Filter, DataType);

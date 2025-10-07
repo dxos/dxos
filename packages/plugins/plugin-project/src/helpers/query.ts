@@ -19,7 +19,7 @@ import { DataType } from '@dxos/schema';
 // TODO(wittjosiah): Factor out and add tests.
 
 // TODO(wittjosiah): Support arbitrary imports.
-export const evalQuery = (queryString: string): QueryAST.Query => {
+export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
     return new Function('Query', 'Filter', 'DataType', 'ResearchOn', `return ${queryString}`)(

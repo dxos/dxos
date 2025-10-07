@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -20,13 +18,13 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -147,9 +145,8 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
-  parameters: { translations },
   decorators: [
-    withLayout({ fullscreen: true }),
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -183,6 +180,10 @@ const meta = {
       ],
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof StorybookKanban>;
 
 export default meta;

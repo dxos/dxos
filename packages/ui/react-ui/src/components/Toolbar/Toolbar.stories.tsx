@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -77,7 +75,6 @@ const meta = {
   component: Toolbar as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

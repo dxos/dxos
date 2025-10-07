@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -15,7 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { MapPlugin } from '@dxos/plugin-map';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { TablePlugin } from '@dxos/plugin-table';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -30,6 +28,7 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -46,8 +45,6 @@ const meta = {
       ],
       capabilities,
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

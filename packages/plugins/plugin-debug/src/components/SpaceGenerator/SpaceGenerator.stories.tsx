@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -11,7 +9,8 @@ import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { useSpaces } from '@dxos/react-client/echo';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
+import { render } from '@dxos/storybook-utils';
 
 import { SpaceGenerator } from './SpaceGenerator';
 
@@ -29,6 +28,7 @@ const meta = {
   component: SpaceGenerator as any,
   render: render(DefaultStory),
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -39,8 +39,6 @@ const meta = {
         IntentPlugin(),
       ],
     }),
-    withLayout(),
-    withTheme,
   ],
   parameters: {
     layout: 'fullscreen',

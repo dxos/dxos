@@ -10,8 +10,10 @@ import { QueryDSL } from './gen';
 
 /**
  * Stateless query builder that parses DSL trees into filters.
+ *
+ * NOTE: QueryBuilder was largely developed using Claude Sonnet 4.5 (in Windsurf)..
+ * To modify the functionality, create a minimal breaking test and direct the LLM to fix either the grammar or builder.
  */
-// TODO(burdon): Potentially build ECHO DSL directly from grammar?
 export class QueryBuilder {
   constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
 
@@ -59,9 +61,11 @@ export class QueryBuilder {
       cursor.parent();
     }
 
-    // If we have an operator in the children, parse as binary expression.
+    // If we have an operator in the children, or multiple expressions (implicit AND), parse as binary expression.
     const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
-    if (hasOperator) {
+    const hasMultipleExpressions =
+      children.filter((child) => child.name === 'Filter' || child.name === 'Not' || child.name === '(').length > 1;
+    if (hasOperator || hasMultipleExpressions) {
       return this._parseBinaryExpression(cursor, input);
     }
 
@@ -110,14 +114,19 @@ export class QueryBuilder {
         // Check if this is a binary expression (has And/Or as a child).
         const savedPos = cursor.from;
         if (cursor.firstChild()) {
-          // Look for And/Or operators.
+          // Look for And/Or operators or multiple expressions (implicit AND).
           let hasOperator = false;
+          let expressionCount = 0;
           do {
             if (cursor.node.name === 'And' || cursor.node.name === 'Or') {
               hasOperator = true;
               break;
             }
+            if (cursor.node.name === 'Filter' || cursor.node.name === 'Not' || cursor.node.name === '(') {
+              expressionCount++;
+            }
           } while (cursor.nextSibling());
+          hasOperator = hasOperator || expressionCount > 1;
 
           // Reset cursor to the saved position.
           cursor.parent();
@@ -230,6 +239,14 @@ export class QueryBuilder {
     let result: Filter.Any;
 
     switch (filterType) {
+      case 'TagFilter':
+        result = this._parseTagFilter(cursor, input);
+        break;
+
+      case 'TextFilter':
+        result = this._parseTextFilter(cursor, input);
+        break;
+
       case 'TypeFilter':
         result = this._parseTypeFilter(cursor, input);
         break;
@@ -240,10 +257,6 @@ export class QueryBuilder {
 
       case 'PropertyFilter':
         result = this._parsePropertyFilter(cursor, input);
-        break;
-
-      case 'TagFilter':
-        result = this._parseTagFilter(cursor, input);
         break;
 
       default:
@@ -258,15 +271,25 @@ export class QueryBuilder {
    * Parse a TypeFilter node (type:typename).
    */
   private _parseTypeFilter(cursor: TreeCursor, input: string): Filter.Any {
-    // Skip TypeKeyword
+    // Skip TypeKeyword.
     cursor.firstChild();
     cursor.nextSibling(); // Skip ':'
     cursor.nextSibling(); // Move to Identifier
 
     const typename = this._getNodeText(cursor, input);
-    cursor.parent();
-
+    cursor.parent(); // Go back to TypeFilter.
     return Filter.typename(typename);
+  }
+
+  /**
+   * Parse a TextFilter node (quoted string).
+   */
+  private _parseTextFilter(cursor: TreeCursor, input: string): Filter.Any {
+    cursor.firstChild(); // Move to String node.
+    const text = this._getNodeText(cursor, input);
+    cursor.parent(); // Go back to TextFilter.
+    // Remove quotes.
+    return Filter.text(text.slice(1, -1));
   }
 
   /**
@@ -280,7 +303,7 @@ export class QueryBuilder {
         if (cursor.node.name === 'ObjectProperty') {
           const { key, value } = this._parseObjectProperty(cursor, input);
           if (key) {
-            // Convert simple values to Filter.eq for compatibility with Filter.props
+            // Convert simple values to Filter.eq for compatibility with Filter.props.
             props[key] = Filter.eq(value);
           }
         }
@@ -328,12 +351,12 @@ export class QueryBuilder {
     let value: any = null;
 
     if (cursor.firstChild()) {
-      // First child is PropertyPath
+      // First child is PropertyPath.
       if (cursor.node.name === 'PropertyPath') {
         path = this._parsePropertyPath(cursor, input);
       }
 
-      // Skip ':' and move to Value
+      // Skip ':' and move to Value.
       cursor.nextSibling();
       cursor.nextSibling();
 
@@ -375,14 +398,8 @@ export class QueryBuilder {
    * Parse a TagFilter node (#tag).
    */
   private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
-    // Skip Tag token (#)
-    cursor.firstChild();
-    cursor.nextSibling(); // Move to Identifier
-
     const tag = this._getNodeText(cursor, input);
-    cursor.parent();
-
-    return Filter.tag(tag);
+    return Filter.tag(tag.slice(1));
   }
 
   /**
@@ -393,7 +410,7 @@ export class QueryBuilder {
 
     switch (valueType) {
       case 'String': {
-        // Remove quotes
+        // Remove quotes.
         const str = this._getNodeText(cursor, input);
         return str.slice(1, -1);
       }
@@ -408,7 +425,7 @@ export class QueryBuilder {
         return null;
 
       case 'ObjectLiteral': {
-        // For nested objects, parse recursively
+        // For nested objects, parse recursively.
         const props: Record<string, any> = {};
         if (cursor.firstChild()) {
           do {

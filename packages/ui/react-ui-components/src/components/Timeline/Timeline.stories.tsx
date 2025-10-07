@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 
@@ -14,9 +12,9 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
@@ -140,13 +138,10 @@ const generateCommit = (
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
-  decorators: [
-    withTheme,
-    withLayout({
-      Container: ColumnContainer,
-      fullscreen: true,
-    }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Timeline>;
 
 export default meta;

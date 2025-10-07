@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -19,12 +18,12 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Stack } from '@dxos/react-ui-stack';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, createView } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -53,9 +52,8 @@ const DefaultStory = () => {
 const meta: Meta<typeof ProjectContainer> = {
   title: 'plugins/plugin-project/ProjectContainer',
   render: DefaultStory,
-  parameters: { translations: [...translations, ...stackTranslations] },
   decorators: [
-    withLayout({ fullscreen: true }),
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -198,6 +196,10 @@ const meta: Meta<typeof ProjectContainer> = {
       ],
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations: [...translations, ...stackTranslations],
+  },
 };
 
 export default meta;

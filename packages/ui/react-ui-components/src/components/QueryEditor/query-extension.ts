@@ -123,13 +123,13 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const tag = node.node.getChild(QueryDSL.Node.Tagname);
+            const tag = node.node.getChild(QueryDSL.Node.Tag);
             if (tag) {
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(state.sliceDoc(tag.from, tag.to)),
+                  widget: new TagWidget(state.sliceDoc(tag.from + 1, tag.to)),
                   atomic: true,
                 }),
               );
@@ -234,28 +234,6 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
 };
 
 /**
- * Tag
- */
-class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._str === other._str;
-  }
-
-  override toDOM() {
-    const { bg, border } = getHashColor(this._str);
-    return container(
-      border,
-      Domino.of('span').classNames(['flex items-center text-xs pis-1 pie-1 text-black', bg]).text('#'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
-    );
-  }
-}
-
-/**
  * TypeKeyword:Identifier
  */
 class TypeWidget extends WidgetType {
@@ -274,9 +252,31 @@ class TypeWidget extends WidgetType {
   override toDOM() {
     const label: string = this._identifier.split(/\W/).at(-1)!;
     return container(
-      'border-separator',
-      Domino.of('span').classNames(['flex items-center text-xs font-thin pis-1 pie-1 bg-separator']).text('type'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-infoText']).text(label),
+      'border-sky-500',
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs bg-sky-500']).text('type'),
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(label),
+    );
+  }
+}
+
+/**
+ * Tag
+ */
+class TagWidget extends WidgetType {
+  constructor(private readonly _str: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._str === other._str;
+  }
+
+  override toDOM() {
+    const { bg, border } = getHashColor(this._str);
+    return container(
+      border,
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
+      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
     );
   }
 }
@@ -307,12 +307,12 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) =>
         Domino.of('span')
-          .classNames('inline-flex items-center pis-1 pie-1')
+          .classNames('inline-flex items-stretch')
           .children(
             Domino.of('span')
-              .classNames('text-xs text-subdued mt-[1px]')
-              .text(key + ':'),
-            Domino.of('span').classNames('text-infoText pis-1').text(value),
+              .classNames('flex items-center pis-1 pie-1 text-subdued text-xs bg-modalSurface first:rounded-l-[3px]')
+              .text(key),
+            Domino.of('span').classNames('flex items-center pis-1 pie-1 text-subdued').text(value),
           ),
       ),
     );

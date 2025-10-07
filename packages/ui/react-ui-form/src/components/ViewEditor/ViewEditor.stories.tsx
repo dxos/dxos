@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -14,8 +12,8 @@ import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type DataType, type ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -160,16 +158,11 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
-      createSpace: true,
-    }),
-    withLayout({
-      fullscreen: true,
-    }),
-    withTheme,
-  ],
-  parameters: { translations },
+  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -179,9 +172,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Readonly: Story = {
-  args: { readonly: true },
+  args: {
+    readonly: true,
+  },
 };
 
 export const QueryMode: Story = {
-  args: { mode: 'query' },
+  args: {
+    mode: 'query',
+  },
 };

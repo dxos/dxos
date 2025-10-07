@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Plugin, definePlugin } from '@dxos/app-framework';
 import { faker } from '@dxos/random';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -65,8 +63,9 @@ const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof PluginList>;

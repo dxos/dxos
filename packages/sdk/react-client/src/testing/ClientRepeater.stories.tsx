@@ -2,14 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Input } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useClient } from '../client';
 import { useSpace } from '../echo';

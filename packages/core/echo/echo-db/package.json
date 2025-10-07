@@ -58,12 +58,13 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "eventemitter3": "^5.0.1",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
     "@dxos/indexing": "workspace:*",
+    "@dxos/random": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@preact/signals-core": "^1.12.1",
     "@types/lodash.isequal": "^4.5.0"

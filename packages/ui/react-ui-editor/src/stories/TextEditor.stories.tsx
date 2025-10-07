@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { javascript } from '@codemirror/lang-javascript';
 import { openSearchPanel } from '@codemirror/search';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { editorMonospace } from '../defaults';
 import {
@@ -44,8 +42,11 @@ import {
 const meta = {
   title: 'ui/react-ui-editor/TextEditor',
   component: EditorStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
-  parameters: { layout: 'fullscreen', controls: { disable: true } },
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    controls: { disable: true },
+  },
 } satisfies Meta<typeof EditorStory>;
 
 export default meta;

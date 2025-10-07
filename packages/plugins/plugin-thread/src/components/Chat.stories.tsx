@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
@@ -16,9 +14,10 @@ import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Thread } from '@dxos/react-ui-thread';
 import { DataType } from '@dxos/schema';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { ChannelType, ThreadType } from '../types';
@@ -63,6 +62,7 @@ const meta = {
   component: Thread.Root as any,
   render: render(DefaultStory),
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [IntentPlugin()],
       capabilities: [
@@ -76,11 +76,12 @@ const meta = {
         ),
       ],
     }),
-    withTheme,
-    withLayout({ fullscreen: true }),
     withClientProvider({ createSpace: true, types: [ThreadType, ChannelType, DataType.Message] }),
   ],
-  parameters: { translations },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Listbox } from './Listbox';
 
@@ -58,7 +56,10 @@ const DefaultValueStory = () => {
 const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof Listbox.Root>;
 
 export default meta;
