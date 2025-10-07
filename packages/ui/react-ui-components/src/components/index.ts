@@ -10,7 +10,6 @@ export * from './ProgressBar';
 export * from './QueryBox';
 export * from './QueryEditor';
 export * from './ScrollContainer';
-export * from './SearchBox';
 export * from './TextCrawl';
 export * from './Timeline';
 export * from './ToggleContainer';
