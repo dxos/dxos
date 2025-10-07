@@ -308,7 +308,7 @@ export const GridSheet = () => {
 
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
-    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
+    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}

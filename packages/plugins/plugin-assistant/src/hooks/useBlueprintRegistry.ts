@@ -10,7 +10,8 @@ import { type AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { isNonNullable } from '@dxos/util';
+import { useQuery } from '@dxos/react-client/echo';
+import { distinctBy, isNonNullable } from '@dxos/util';
 
 /**
  * Provide a registry of blueprints from plugins.
@@ -21,8 +22,21 @@ export const useBlueprintRegistry = () => {
   return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
-export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Blueprint.Registry }) =>
-  useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+export const useBlueprints = ({
+  blueprintRegistry,
+  space,
+}: {
+  blueprintRegistry?: Blueprint.Registry;
+  space?: Space;
+}) => {
+  const staticBlueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
+  const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  return useMemo(() => {
+    const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
+    blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
+    return blueprints;
+  }, [staticBlueprints, spaceBlueprints]);
+};
 
 /**
  * Create reactive map of active blueprints (by key).

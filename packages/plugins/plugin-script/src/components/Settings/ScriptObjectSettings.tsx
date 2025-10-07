@@ -5,7 +5,9 @@
 import { Octokit } from '@octokit/core';
 import React, { type ChangeEvent, useCallback, useState } from 'react';
 
+import { ToolId } from '@dxos/ai';
 import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { Blueprint, Template } from '@dxos/blueprints';
 import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -23,6 +25,7 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
   return (
     <>
       <Binding object={object} />
+      <BlueprintEditor object={object} />
       <Publishing object={object} />
     </>
   );
@@ -41,6 +44,90 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
         }}
       />
     </Input.Root>
+  );
+};
+
+const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
+  const { t } = useTranslation(meta.id);
+  const space = getSpace(object);
+  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
+  const blueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+
+  const [creating, setCreating] = useState(false);
+  const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
+  const blueprintKey = `dxos.org/blueprint/${kebabize(object.name ?? 'script')}`;
+  const existingBlueprint = blueprints.find((bp) => bp.key === blueprintKey);
+
+  useAsyncEffect(async () => {
+    if (!existingBlueprint) {
+      return;
+    }
+    const source = await existingBlueprint.instructions.source.load();
+    setInstructions(source.content ?? '');
+  }, [existingBlueprint]);
+
+  const handleSave = useCallback(async () => {
+    if (!space) {
+      return;
+    }
+
+    setCreating(true);
+    try {
+      if (existingBlueprint) {
+        const text = await existingBlueprint.instructions.source.load();
+        text.content = instructions;
+        if (fn?.key) {
+          const toolId = ToolId.make(fn.key);
+          if (!existingBlueprint.tools?.includes(toolId)) {
+            existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
+          }
+        }
+      } else if (fn?.key) {
+        space.db.add(
+          Blueprint.make({
+            key: blueprintKey,
+            name: object.name ?? 'Script',
+            instructions: Template.make({
+              source: instructions,
+            }),
+            tools: [ToolId.make(fn.key)],
+          }),
+        );
+      }
+      await space.db.flush();
+    } finally {
+      setCreating(false);
+    }
+  }, [space, existingBlueprint, fn, blueprintKey, object.name, instructions]);
+
+  return (
+    <div className='flex flex-col gap-4 mlb-cardSpacingBlock'>
+      <div>
+        <h2>{t('blueprint editor label', { default: 'Blueprint' })}</h2>
+        <p className='text-description text-sm'>
+          {t('blueprint editor description', { default: 'Create a blueprint that exposes this script as a tool.' })}
+        </p>
+      </div>
+      <Input.Root>
+        <div role='none' className='flex flex-col gap-1'>
+          <Input.Label>{t('blueprint instructions label', { default: 'Instructions' })}</Input.Label>
+          <Input.TextArea
+            placeholder={t('blueprint instructions placeholder', { default: 'Describe how this tool should be used.' })}
+            rows={6}
+            value={instructions}
+            onChange={(event) => setInstructions(event.target.value)}
+            classNames='resize-y'
+          />
+        </div>
+      </Input.Root>
+      <div className='flex justify-end gap-2'>
+        <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
+          {t(creating ? 'creating label' : 'create blueprint label', {
+            default: creating ? 'Creating…' : 'Create blueprint',
+          })}
+        </Button>
+      </div>
+    </div>
   );
 };
 
