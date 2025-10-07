@@ -5,13 +5,12 @@
 import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { distinctBy } from '@dxos/util';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
@@ -98,7 +97,7 @@ const BlueprintsPanel = ({
   context,
 }: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
   const { t } = useTranslation(meta.id);
-  
+
   const blueprints = useBlueprints({ blueprintRegistry, space });
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
