@@ -6,6 +6,7 @@ import { Array, Effect, pipe } from 'effect';
 
 import { type CleanupFn, SubscriptionList } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import {
   type Attributes,
