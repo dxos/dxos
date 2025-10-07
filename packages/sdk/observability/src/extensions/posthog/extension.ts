@@ -8,9 +8,10 @@ import { type PostHogConfig } from 'posthog-js';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { type Extension } from '../observability-extension';
+import { type Extension } from '../../observability-extension';
+import { stubExtension } from '../stub';
 
-import { stubExtension } from './stub';
+import { logProcessor } from './log-processor';
 
 export type ExtensionsOptions = { config: Config; posthog?: Partial<PostHogConfig> };
 
@@ -27,6 +28,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     log.warn('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
     return stubExtension;
   }
+
+  log.runtimeConfig.processors.push(logProcessor);
 
   return {
     initialize: Effect.fn(function* () {

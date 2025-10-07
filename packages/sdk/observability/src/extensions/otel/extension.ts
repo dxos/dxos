@@ -8,11 +8,10 @@ import { type Config } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import buildSecrets from '../cli-observability-secrets.json';
-import { type Extension } from '../observability-extension';
-import { isObservabilityDisabled, storeObservabilityDisabled } from '../storage';
-
-import { stubExtension } from './stub';
+import buildSecrets from '../../cli-observability-secrets.json';
+import { type Extension } from '../../observability-extension';
+import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
+import { stubExtension } from '../stub';
 
 // TODO(wittjosiah): Environment & release version attributes.
 
@@ -31,7 +30,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   endpoint: _endpoint,
   authorizationHeader: _authorizationHeader,
 }) {
-  const { OtelLogs, OtelTraces } = yield* Effect.promise(() => import('../otel'));
+  const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
+  const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
 
   // TODO(wittjosiah): Isomorphic storage.
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
