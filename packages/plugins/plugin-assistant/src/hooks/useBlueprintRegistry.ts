@@ -3,14 +3,12 @@
 //
 
 import { useSignalEffect } from '@preact/signals-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type AiContextBinder } from '@dxos/assistant';
-import { scheduleTask } from '@dxos/async';
 import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -18,24 +16,9 @@ import { isNonNullable } from '@dxos/util';
  * Provide a registry of blueprints from plugins.
  */
 // TODO(burdon): Reconcile with eventual public registry.
-export const useBlueprintRegistry = (space?: Space) => {
+export const useBlueprintRegistry = () => {
   const blueprints = useCapabilities(Capabilities.BlueprintDefinition);
-  const [registry, setRegistry] = useState<Blueprint.Registry | undefined>(undefined);
-
-  useEffect(() => {
-    const ctx = Context.default();
-    scheduleTask(ctx, async () => {
-      const registry = new Blueprint.Registry(blueprints, space?.db);
-      await registry.open();
-      setRegistry(registry);
-      ctx.onDispose(() => registry.close());
-    });
-    return () => {
-      void ctx.dispose();
-    };
-  }, [blueprints, space]);
-
-  return registry;
+  return useMemo(() => new Blueprint.Registry(blueprints), [blueprints]);
 };
 
 export const useBlueprints = ({ blueprintRegistry }: { blueprintRegistry?: Blueprint.Registry }) =>

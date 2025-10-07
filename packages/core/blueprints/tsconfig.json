@@ -12,12 +12,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -39,13 +33,7 @@
       "path": "../echo/echo"
     },
     {
-      "path": "../echo/echo-db"
-    },
-    {
       "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
     },
     {
       "path": "../functions"

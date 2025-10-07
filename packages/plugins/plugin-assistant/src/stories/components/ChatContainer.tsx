@@ -24,7 +24,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
 
-  const blueprintRegistry = useBlueprintRegistry(space);
+  const blueprintRegistry = useBlueprintRegistry();
   const services = useChatServices({ space, chat });
   const processor = useChatProcessor({ chat, preset, services, blueprintRegistry });
 
