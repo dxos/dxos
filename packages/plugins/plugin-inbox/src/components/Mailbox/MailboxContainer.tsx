@@ -11,7 +11,7 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
-import type { EditorController } from '@dxos/react-ui-editor';
+import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
@@ -111,7 +111,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       </ElevationProvider>
 
       {tagFilterVisible.value && (
-        <div role='none' className='flex is-full items-center p-1 border-be border-separator'>
+        <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
           <QueryEditor space={getSpace(mailbox)} onChange={setQueryText} value={queryText} ref={queryEditorRef} />
         </div>
       )}
