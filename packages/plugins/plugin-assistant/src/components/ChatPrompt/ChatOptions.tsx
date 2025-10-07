@@ -98,12 +98,8 @@ const BlueprintsPanel = ({
   context,
 }: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
   const { t } = useTranslation(meta.id);
-
-  const staticBlueprints = useBlueprints({ blueprintRegistry });
-  const spaceBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
-  const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
-  blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
-
+  
+  const blueprints = useBlueprints({ blueprintRegistry, space });
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
 
