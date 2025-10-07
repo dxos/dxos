@@ -98,7 +98,7 @@ const BlueprintsPanel = ({
 }: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry });
+  const blueprints = useBlueprints({ blueprintRegistry, space });
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
 
