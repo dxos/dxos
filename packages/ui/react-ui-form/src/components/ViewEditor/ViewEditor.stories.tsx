@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo-schema';
 import { useSpace } from '@dxos/react-client/echo';
@@ -74,7 +74,7 @@ const DefaultStory = (props: StoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (queryString: string) => {
+    async (queryString: string, target?: string) => {
       if (!schema || !view || !space) {
         return;
       }
@@ -84,7 +84,10 @@ const DefaultStory = (props: StoryProps) => {
 
         const builder = new QueryBuilder();
         const filter = builder.build(queryString) ?? Filter.nothing();
-        const newQuery = Query.select(filter);
+        const queue = target && DXN.tryParse(target) ? target : undefined;
+        const newQuery = queue ? Query.select(filter).options({ queues: [queue] }) : Query.select(filter);
+        view.query.ast = newQuery.ast;
+
         const typename = typenameFromQuery(newQuery.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
         if (!newSchema) {
@@ -101,7 +104,7 @@ const DefaultStory = (props: StoryProps) => {
       } else {
         const typename = queryString;
         const newQuery = Query.select(Filter.typename(typename));
-        view.query = { string: `Query.select(Filter.typename(${typename}))`, ast: newQuery.ast };
+        view.query.ast = newQuery.ast;
         schema.updateTypename(typename);
       }
     },

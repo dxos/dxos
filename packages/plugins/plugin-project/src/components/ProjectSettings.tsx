@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -56,14 +56,17 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
   );
 
   const updateViewQuery = useCallback(
-    async (queryString: string) => {
+    async (queryString: string, target?: string) => {
       if (!view || !space) {
         return;
       }
 
       view.query.string = queryString;
-      const newQuery = evalQuery(queryString);
+
+      const queue = target && DXN.tryParse(target) ? target : undefined;
+      const newQuery = queue ? evalQuery(queryString).options({ queues: [queue] }) : evalQuery(queryString);
       view.query.ast = newQuery.ast;
+
       const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
       if (!newSchema) {
         return;
