@@ -31,7 +31,7 @@ export class Registry extends Resource {
   protected override async _open(): Promise<void> {
     this._reconcileBlueprints = new DeferredTask(this._ctx, async () => {
       const seen = new Set<string>();
-      const newBlueprints = [];
+      const newBlueprints: Blueprint[] = [];
       for (const blueprint of [...this._staticBlueprints, ...this._databaseBlueprints]) {
         if (seen.has(blueprint.key)) {
           continue;
@@ -46,12 +46,20 @@ export class Registry extends Resource {
 
     const unsub = this._space?.db.query(Filter.type(Blueprint)).subscribe(({ objects }) => {
       this._databaseBlueprints = objects;
+      if (this._ctx.disposed) {
+        return;
+      }
       invariant(this._reconcileBlueprints, 'Reconcile blueprints task not initialized.');
       this._reconcileBlueprints.schedule();
     });
 
-    this._reconcileBlueprints?.schedule();
+    this._reconcileBlueprints.schedule();
     this._ctx.onDispose(() => unsub?.());
+  }
+
+  protected override async _close(): Promise<void> {
+    await this._reconcileBlueprints?.join();
+    this._reconcileBlueprints = undefined;
   }
 
   getByKey(key: string): Blueprint | undefined {
