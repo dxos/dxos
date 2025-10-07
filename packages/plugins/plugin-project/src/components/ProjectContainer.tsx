@@ -4,7 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
@@ -15,11 +17,23 @@ const ProjectItem = ({ item, projectionModel }: ItemProps) => {
 };
 
 export const ProjectContainer = ({ project }: { project: DataType.Project; role: string }) => {
-  const handleAddItem = useCallback(() => console.log('[project container]', 'To implement: handle add item'), []);
-  const handleAddColumn = useCallback(() => console.log('[project container]', 'To implement: handle add column'), []);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
+  const id = fullyQualifiedId(project);
+
+  const handleAddColumn = useCallback(
+    () =>
+      dispatch(
+        createIntent(DeckAction.ChangeCompanion, {
+          primary: id,
+          companion: `${id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        }),
+      ),
+    [dispatch, id],
+  );
+
   return (
     <StackItem.Content>
-      <Project.Root Item={ProjectItem} onAddItem={handleAddItem} onAddColumn={handleAddColumn}>
+      <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>

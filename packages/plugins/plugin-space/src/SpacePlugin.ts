@@ -101,7 +101,11 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             metadata: {
               label: (object: DataType.QueryCollection) => [
                 'typename label',
-                { ns: typenameFromQuery(object.query), count: 2, defaultValue: 'New smart collection' },
+                {
+                  ns: typenameFromQuery(object.query),
+                  count: 2,
+                  defaultValue: 'New smart collection',
+                },
               ],
               icon: 'ph--funnel-simple--regular',
             },
