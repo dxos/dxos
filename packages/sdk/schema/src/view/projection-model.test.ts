@@ -696,7 +696,7 @@ describe('ProjectionModel', () => {
     projectionModel.showFieldProjection('createdAt' as JsonProp);
     expect(projectionModel.getFieldProjection(getFieldId(view.projection, 'createdAt'))).to.exist;
     expect(projectionModel.fields).to.have.length(3);
-    expect(projectionModel.fields.map((f) => f.path)).to.deep.equal(['name', 'email', 'createdAt']);
+    expect(projectionModel.fields.map((f) => f.path)).to.deep.equal(['createdAt', 'name', 'email']);
     expect(projectionModel.getHiddenProperties()).to.deep.equal([]);
 
     // Record ID of the createdAt field.
