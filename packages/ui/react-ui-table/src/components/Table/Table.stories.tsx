@@ -80,7 +80,7 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(typename);
       invariant(view);
-      view.query = Query.select(Filter.typename(typename)).ast;
+      view.query.ast = Query.select(Filter.typename(typename)).ast;
     },
     [schema, view],
   );

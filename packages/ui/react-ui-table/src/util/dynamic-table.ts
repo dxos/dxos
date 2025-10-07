@@ -70,6 +70,7 @@ export const makeDynamicTable = ({
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
+  projection.normalizeView();
   if (properties && projection.fields) {
     setProperties(view, projection, table, properties);
   }

@@ -72,17 +72,20 @@ const CardStackFooter = forwardRef<HTMLDivElement, SharedCardStackProps>(
   },
 );
 
-const cardStackContent = [
-  'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop',
-  railGridHorizontalContainFitContent,
-];
+const cardStackContent =
+  'shrink min-bs-0 bg-baseSurface border border-separator rounded-md grid dx-focus-ring-group-x-indicator kanban-drop';
 
-const CardStackContent = forwardRef<HTMLDivElement, SharedCardStackProps>(
-  ({ children, classNames, asChild, role = 'none', ...props }, forwardedRef) => {
+type CardStackContentProps = SharedCardStackProps & {
+  footer?: boolean;
+};
+
+const CardStackContent = forwardRef<HTMLDivElement, CardStackContentProps>(
+  ({ children, classNames, asChild, role = 'none', footer = true, ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
+    const baseClassNames = footer ? [cardStackContent, railGridHorizontalContainFitContent] : [cardStackContent];
     const rootProps = asChild
-      ? { classNames: [...cardStackContent, classNames] }
-      : { className: mx(...cardStackContent, classNames), role };
+      ? { classNames: [...baseClassNames, classNames] }
+      : { className: mx(...baseClassNames, classNames), role };
     return (
       <Root {...props} {...rootProps} data-scroll-separator='false' ref={forwardedRef}>
         {children}
