@@ -21,7 +21,7 @@ import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Obj.Any;
+export type OnCreateHandler = (object: Obj.Any) => void;
 
 export type FormCellEditorProps = {
   fieldProjection: FieldProjection;
@@ -122,10 +122,11 @@ export const FormCellEditor = ({
 
   const handleCreate = useCallback(
     (values: any) => {
-      if (!schema || !onCreate) {
+      if (!schema) {
         return;
       }
-      const object = onCreate?.(schema, values);
+      const object = Obj.make(schema, values);
+      onCreate?.(object);
       const ref = Ref.make(object);
       const path = fieldProjection.field.path;
       setDeep(originalRow, [path], ref);
@@ -185,14 +186,13 @@ export const FormCellEditor = ({
               onSave={handleSave}
               {...formProps}
               onQueryRefOptions={handleQueryRefOptions}
-              {...(schema &&
-                onCreate && {
-                  onCreate: handleCreate,
-                  createSchema: schema,
-                  createInitialValuePath: fieldProjection.field.referencePath,
-                  createOptionIcon: 'ph--plus--regular',
-                  createOptionLabel,
-                })}
+              {...(schema && {
+                onCreate: handleCreate,
+                createSchema: schema,
+                createInitialValuePath: fieldProjection.field.referencePath,
+                createOptionIcon: 'ph--plus--regular',
+                createOptionLabel,
+              })}
             />
           </Popover.Viewport>
         </Popover.Content>

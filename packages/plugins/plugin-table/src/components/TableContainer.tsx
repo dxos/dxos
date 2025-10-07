@@ -7,7 +7,7 @@ import { Match } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { Filter, type Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -16,7 +16,6 @@ import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import {
-  type OnCreateHandler,
   Table,
   type TableController,
   type TableFeatures,
@@ -112,12 +111,10 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     tableRef.current?.update?.();
   }, []);
 
-  const handleCreate: OnCreateHandler = useCallback(
-    (schema: any, values: any) => {
+  const handleCreate = useCallback(
+    (object: Obj.Any) => {
       invariant(space);
-      const obj = Obj.make(schema, values);
-      // TODO(thure): `LiveMarker` doesn’t satisfy `Obj.Any`, why?
-      return space.db.add(obj as Obj.Any);
+      return space.db.add(object);
     },
     [space],
   );
