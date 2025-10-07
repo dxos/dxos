@@ -12,17 +12,10 @@ import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
 
 /**
- * TODO(burdon): Public API (move comments here).
+ * Public database API.
  */
-// TODO(wittjosiah): Rename?
-//  https://ts.dev/style/#naming-style
-//  ClientApi? ClientProtocol?
+// TODO(wittjosiah): Rename Database (not product name).
 export interface Echo extends MulticastObservable<Space[]>, Queryable {
-  /**
-   * Resolves when the default space is available.
-   */
-  waitUntilReady(): Promise<void>;
-
   /**
    * Observable which indicates when the default space is available.
    */
@@ -49,6 +42,11 @@ export interface Echo extends MulticastObservable<Space[]>, Queryable {
    * Returns the default space.
    */
   get default(): Space;
+
+  /**
+   * Resolves when the default space is available.
+   */
+  waitUntilReady(): Promise<void>;
 
   /**
    * Creates a new space.

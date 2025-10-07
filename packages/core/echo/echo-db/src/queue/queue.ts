@@ -61,6 +61,7 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
           }),
         ),
       );
+
       if (thisRefreshId !== this._refreshId) {
         return;
       }
@@ -152,18 +153,6 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
     return this._refResolver;
   }
 
-  // Odd way to define method's types from a typedef.
-  declare query: QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) {
-    assertArgument(options === undefined, 'options', 'not supported');
-    queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return new QueryResult(new QueueQueryContext(this), queryOrFilter);
-  }
-
   /**
    * Insert into queue with optimistic update.
    */
@@ -219,6 +208,18 @@ export class QueueImpl<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any
       this._signal.notifyWrite();
       this.updated.emit();
     }
+  }
+
+  // Odd way to define method's types from a typedef.
+  declare query: QueryFn;
+  static {
+    this.prototype.query = this.prototype._query;
+  }
+
+  private _query(queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) {
+    assertArgument(options === undefined, 'options', 'not supported');
+    queryOrFilter = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
+    return new QueryResult(new QueueQueryContext(this), queryOrFilter);
   }
 
   /**

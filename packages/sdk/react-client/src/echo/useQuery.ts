@@ -38,7 +38,7 @@ interface UseQueryFn {
  * Create subscription.
  */
 export const useQuery: UseQueryFn = (
-  // TODO(burdon): Remove Space and just requre Queryable.
+  // TODO(burdon): Remove Space and just requre Queryable?
   resource: Space | Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
