@@ -39,7 +39,6 @@ import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } fro
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
-import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
@@ -428,7 +427,6 @@ const TableMain = forwardRef<TableController, TableMainProps>(
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        {client && <CreateRefPanel client={client} model={model} modals={modals} />}
       </Grid.Root>
     );
   },
