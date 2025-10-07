@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -29,30 +29,22 @@ export type EditorProps = ThemedClassName<
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
   ({ classNames, id, extensions = [], value, moveToEnd, onChange, ...props }, forwardedRef) => {
-    const initialized = useRef(false);
-    const prevChange = useRef<string | undefined>(value);
-
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
         extensions: [
           extensions,
-          // TODO(wittjosiah): Better way to do this?
           EditorView.updateListener.of((update) => {
-            const nextValue = update.state.doc.toString();
-            if (!initialized.current && nextValue === value) {
-              initialized.current = true;
-              prevChange.current = nextValue;
-            } else if (initialized.current && nextValue !== prevChange.current) {
-              prevChange.current = nextValue;
-              // TODO(wittjosiah): Omitted from deps due to update causing initial value to be cleared.
-              onChange?.(nextValue);
+            const startValue = update.startState.doc.toString();
+            const value = update.state.doc.toString();
+            if (startValue !== value) {
+              onChange?.(value);
             }
           }),
         ],
         ...props,
       }),
-      [id, extensions],
+      [id, extensions, onChange],
     );
 
     // External controller.

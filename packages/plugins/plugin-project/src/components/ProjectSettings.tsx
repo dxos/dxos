@@ -63,20 +63,20 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
   );
 
   const updateViewQuery = useCallback(
-    async (newQueryString: string) => {
+    async (queryString: string) => {
       if (!view || !space || view.query.kind === 'ast') {
         return;
       }
 
-      view.query.grammar = newQueryString;
-      const newQuery = evalQuery(newQueryString);
+      view.query.grammar = queryString;
+      const newQuery = evalQuery(queryString);
       const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
       if (!newSchema) {
         return;
       }
 
       const newView = createView({
-        query: newQueryString,
+        query: newQuery,
         jsonSchema: Type.toJsonSchema(newSchema),
         presentation: Obj.make(Type.Expando, {}),
       });

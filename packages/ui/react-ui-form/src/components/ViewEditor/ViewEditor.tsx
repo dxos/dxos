@@ -208,10 +208,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
                 const density = useDensityContext();
                 const elevation = useElevationContext();
 
-                const handleChange = useCallback(
-                  (text: string) => props.onValueChange('string', text),
-                  [props.onValueChange],
-                );
+                // TODO(wittjosiah): Including props.onValueChange in deps causes infinite loop.
+                const handleChange = useCallback((text: string) => props.onValueChange('string', text), []);
 
                 const extensions = useMemo(
                   () => [
