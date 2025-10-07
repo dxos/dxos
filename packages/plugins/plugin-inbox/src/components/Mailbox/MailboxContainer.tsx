@@ -58,9 +58,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     setFilter(parser.build(queryText));
   }, [queryText]);
 
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, Filter.tag('eng'));
-  // const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-  console.log(JSON.stringify(filter), messages.length);
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
