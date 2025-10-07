@@ -103,6 +103,10 @@ export const generator = () => ({
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
+          const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
+          const organizationsQueryString = `${contactsQueryString}.reference("organization")`;
+          const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+
           const researchPrompt = space.db.add(
             Prompt.make({
               name: 'Research',
@@ -141,24 +145,29 @@ export const generator = () => ({
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
+            queryString:
+              'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const contactsView = createView({
             name: 'Contacts',
             query: contactsQuery,
+            queryString: contactsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Person),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
             query: organizationsQuery,
+            queryString: organizationsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Organization),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
             query: notesQuery,
+            queryString: notesQueryString,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });

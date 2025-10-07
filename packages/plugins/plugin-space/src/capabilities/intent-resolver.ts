@@ -406,7 +406,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        const typename = typenameFromQuery(view.query);
+        const typename = typenameFromQuery(view.query.ast);
         invariant(typename);
         const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
