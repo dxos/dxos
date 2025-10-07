@@ -2,30 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { QueryBuilder } from '@dxos/echo-query';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
-import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, Icon } from '@dxos/react-ui';
-import {
-  type QueryItem,
-  SearchBox,
-  type SearchBoxController,
-  type SearchBoxProps,
-  itemIsTag,
-  itemIsText,
-} from '@dxos/react-ui-components';
+import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
+import { ElevationProvider } from '@dxos/react-ui';
+import { QueryEditor } from '@dxos/react-ui-components';
+import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
-import { useMailboxModel } from './model';
 import { useMailboxToolbarActions, useTagFilterVisibility } from './toolbar';
 
 export type MailboxContainerProps = {
@@ -39,10 +34,9 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;
 
-  const model = useMailboxModel(mailbox.queue.dxn);
-
-  const queryEditorRef = useRef<SearchBoxController>(null);
+  const queryEditorRef = useRef<EditorController>(null);
   const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
+
   useEffect(() => {
     let t: NodeJS.Timeout;
     if (tagFilterState === 'controlled' && queryEditorRef.current) {
@@ -51,24 +45,26 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     return () => clearTimeout(t);
   }, [tagFilterState]);
 
-  const setTagFilterVisible = useCallback(
-    (visible: boolean) => {
-      if (!visible) {
-        model.clearSelectedTags();
-        model.clearTextFilters();
-      }
-      filterDispatch('toggle_from_toolbar');
-    },
-    [model, filterDispatch],
-  );
+  const setTagFilterVisible = useCallback(() => {
+    filterDispatch('toggle_from_toolbar');
+  }, [filterDispatch]);
 
-  const menu = useMailboxToolbarActions(mailbox, model, tagFilterVisible, setTagFilterVisible);
+  const menu = useMailboxToolbarActions(mailbox, tagFilterVisible, setTagFilterVisible);
+
+  const [filter, setFilter] = useState<Filter.Any | null>();
+  const [queryText, setQueryText] = useState<string>('');
+  const parser = useMemo(() => new QueryBuilder(), []);
+  useEffect(() => {
+    setFilter(parser.build(queryText));
+  }, [queryText]);
+
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
         case 'current': {
-          const message = model.messages.find((message) => message.id === action.messageId);
+          const message = messages.find((message) => message.id === action.messageId);
           void dispatch(
             createIntent(InboxAction.SelectMessage, {
               mailboxId: id,
@@ -90,45 +86,12 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
         case 'select-tag': {
           log.info('select-tag', { label: action.label });
           filterDispatch('tag_selected_from_message');
-          model.selectTag(action.label);
+          setQueryText((prevQueryText) => `${prevQueryText} #${action.label}`);
           break;
         }
       }
     },
-    [id, dispatch, model.messages, model, filterDispatch],
-  );
-
-  const handleQueryEditorChange = useCallback(
-    (items: QueryItem[]) => {
-      // Clear existing filters
-      model.clearSelectedTags();
-      model.clearTextFilters();
-
-      // Handle tag items
-      const labels = items.filter(itemIsTag).map(({ label }) => label);
-      labels.forEach((label) => model.selectTag(label));
-
-      // Handle text items
-      const textFilters = items
-        .filter(itemIsText)
-        .filter(({ content }) => /\w/.test(content))
-        .map(({ content }) => content);
-      model.setTextFilters(textFilters);
-
-      if (labels.length === 0 && textFilters.length === 0) {
-        filterDispatch('all_tags_cleared');
-      }
-    },
-    [model, filterDispatch],
-  );
-
-  const handleSearch = useCallback<NonNullable<SearchBoxProps['onSearch']>>(
-    (text, ids) =>
-      model.availableTags
-        .filter((tag) => tag.label.toLowerCase().includes(text.toLowerCase()))
-        .filter((tag) => !ids.includes(tag.label))
-        .map((tag) => ({ id: tag.label, label: tag.label, hue: tag.hue as any })),
-    [model.availableTags],
+    [id, dispatch, messages, filterDispatch],
   );
 
   const gridLayout = useMemo(
@@ -148,15 +111,14 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       </ElevationProvider>
 
       {tagFilterVisible.value && (
-        <div role='none' className='pli-1 pbs-[1px] border-be bs-8 flex items-center border-separator'>
-          <Icon role='presentation' icon='ph--tag--bold' classNames='mr-1 opacity-30' aria-label='tags icon' size={4} />
-          <SearchBox ref={queryEditorRef} onSearch={handleSearch} onChange={handleQueryEditorChange} />
+        <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
+          <QueryEditor space={getSpace(mailbox)} onChange={setQueryText} value={queryText} ref={queryEditorRef} />
         </div>
       )}
 
-      {model.messages && model.messages.length > 0 ? (
+      {messages && messages.length > 0 ? (
         <MailboxComponent
-          messages={model.messages}
+          messages={messages}
           id={id}
           onAction={handleAction}
           currentMessageId={currentMessageId}
