@@ -71,7 +71,13 @@ class ObservabilityImpl implements Observability {
 
       const cleanups = yield* Effect.all(this._dataProviders.map((provider) => provider(this)));
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
-    });
+    }).pipe(
+      Effect.catchAll((error) => {
+        log.catch(error);
+        this._initialized = false;
+        return Effect.succeed(undefined);
+      }),
+    );
   }
 
   close(): Effect.Effect<void> {
@@ -130,7 +136,7 @@ class ObservabilityImpl implements Observability {
    */
   addDataProvider(dataProvider: DataProvider): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      this._addDataProvider(dataProvider);
+      this._dataProviders.push(dataProvider);
       const cleanup = yield* dataProvider(this);
       if (cleanup) {
         this._subscriptions.add(cleanup);
@@ -246,3 +252,9 @@ export const addDataProvider = (dataProvider: DataProvider) =>
     observability._addDataProvider(dataProvider);
     return observability;
   });
+
+export const initialize = Effect.fn(function* (_observability: Effect.Effect<Observability>) {
+  const observability = yield* _observability;
+  yield* observability.initialize();
+  return observability;
+});

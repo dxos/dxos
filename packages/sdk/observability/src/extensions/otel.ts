@@ -14,6 +14,8 @@ import { isObservabilityDisabled, storeObservabilityDisabled } from '../storage'
 
 import { stubExtension } from './stub';
 
+// TODO(wittjosiah): Environment & release version attributes.
+
 export type ExtensionsOptions = {
   serviceName: string;
   serviceVersion: string;

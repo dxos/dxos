@@ -6,8 +6,11 @@ import { Effect } from 'effect';
 import { type PostHogConfig } from 'posthog-js';
 
 import { type Config } from '@dxos/config';
+import { log } from '@dxos/log';
 
 import { type Extension } from '../observability-extension';
+
+import { stubExtension } from './stub';
 
 export type ExtensionsOptions = { config: Config; posthog?: Partial<PostHogConfig> };
 
@@ -18,6 +21,12 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const { default: posthog } = yield* Effect.promise(() => import('posthog-js'));
   const apiKey = config.get('runtime.app.env.DX_POSTHOG_API_KEY');
   const api_host = config.get('runtime.app.env.DX_POSTHOG_API_HOST');
+  const feedbackSurveyId = config.get('runtime.app.env.DX_POSTHOG_FEEDBACK_SURVEY_ID');
+
+  if (!apiKey || !api_host) {
+    log.warn('Missing POSTHOG_API_KEY or POSTHOG_API_HOST');
+    return stubExtension;
+  }
 
   return {
     initialize: Effect.fn(function* () {
@@ -64,8 +73,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         kind: 'feedback',
         // TODO(wittjosiah): Support custom surveys.
         captureUserFeedback: (form) => {
-          posthog.getActiveMatchingSurveys((surveys) => {
-            const survey = surveys[0];
+          posthog.getSurveys((surveys) => {
+            const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
+            if (!survey) {
+              log.error('Missing feedback survey', { feedbackSurveyId });
+              return;
+            }
+
             // https://posthog.com/docs/surveys/implementing-custom-surveys
             posthog.capture('survey sent', {
               $survey_id: survey.id,

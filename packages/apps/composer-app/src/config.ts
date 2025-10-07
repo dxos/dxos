@@ -35,5 +35,6 @@ export const initializeObservability = async (config: Config) =>
     Observability.addExtension(ObservabilityExtension.PostHog.extensions({ config })),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
     Observability.addDataProvider(ObservabilityProvider.Storage.provider),
+    Observability.initialize,
     Effect.runPromise,
   );
