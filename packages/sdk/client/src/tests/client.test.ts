@@ -129,6 +129,48 @@ describe('Client', () => {
     }
   });
 
+  test('leveldb is cleared after client.reset', async () => {
+    const config = new Config({
+      version: 1,
+      runtime: {
+        client: {
+          storage: { persistent: true, dataRoot },
+        },
+      },
+    });
+    const testBuilder = new TestBuilder(config);
+
+    const services = testBuilder.createLocalClientServices();
+    const client = new Client({ services });
+
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+    await client.halo.createIdentity({ displayName: 'reset-check' });
+    await client.spaces.waitUntilReady();
+
+    // Reset should clear LevelDB contents.
+    await client.destroy();
+
+    // Verify: open the LevelDB at the same root and ensure it has no keys.
+    const { createLevel } = await import('@dxos/client-services');
+    {
+      const level = await createLevel({ persistent: true, dataRoot } as any);
+      const keys = await level.keys().all();
+      expect(keys.length).not.toEqual(0);
+      await level.close();
+    }
+
+    await client.initialize();
+    await client.reset();
+
+    {
+      const level = await createLevel({ persistent: true, dataRoot } as any);
+      const keys = await level.keys().all();
+      expect(keys.length).toEqual(0);
+      await level.close();
+    }
+  });
+
   test('objects are being synced between clients', async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
