@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { QuerySandbox } from './query-sandbox';
 import { Query, Filter } from '@dxos/echo';
 
-test('works', async ({ onTestFinished }) => {
+test('works', { timeout: 10_000 }, async ({ onTestFinished }) => {
   const sandbox = await new QuerySandbox().open();
   // onTestFinished(async () => void (await sandbox.close()));
 

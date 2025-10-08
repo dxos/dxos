@@ -51,9 +51,7 @@ export class QuerySandbox extends Resource {
     ).dispose();
 
     using query = unwrapResult(context, context.evalCode(queryCode));
-    console.log({ query: context.dump(query) });
-
-    return todo();
+    return context.dump(query).ast;
   }
 }
 
