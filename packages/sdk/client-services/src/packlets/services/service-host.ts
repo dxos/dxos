@@ -410,7 +410,7 @@ export class ClientServicesHost {
     await this._serviceContext?.close();
     // Clear LevelDB contents to remove all persisted Echo/Automerge/index data.
     try {
-      await this._level?.clear();
+      await this._level!.clear();
     } catch (err) {
       log.warn('failed to clear leveldb during reset', { err });
     }
