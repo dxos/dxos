@@ -11,6 +11,7 @@ import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
 import { Ref } from '@dxos/echo-schema';
 import { live } from '@dxos/live-object';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -130,14 +131,8 @@ describe('Client', () => {
   });
 
   test('leveldb is cleared after client.reset', async () => {
-    const config = new Config({
-      version: 1,
-      runtime: {
-        client: {
-          storage: { persistent: true, dataRoot },
-        },
-      },
-    });
+    const storageConfig = { persistent: true, dataRoot } satisfies Runtime.Client.Storage;
+    const config = new Config({ version: 1, runtime: { client: { storage: storageConfig } } });
     const testBuilder = new TestBuilder(config);
 
     const services = testBuilder.createLocalClientServices();
@@ -154,7 +149,7 @@ describe('Client', () => {
     const { createLevel } = await import('@dxos/client-services');
     // Level DB should have keys after client is closed.
     {
-      const level = await createLevel({ persistent: true, dataRoot });
+      const level = await createLevel(storageConfig);
       const keys = await level.keys().all();
       expect(keys.length).not.toEqual(0);
       await level.close();
@@ -166,7 +161,7 @@ describe('Client', () => {
 
     // Verify: open the LevelDB at the same root and ensure it has no keys.
     {
-      const level = await createLevel({ persistent: true, dataRoot });
+      const level = await createLevel(storageConfig);
       const keys = await level.keys().all();
       expect(keys.length).toEqual(0);
       await level.close();
