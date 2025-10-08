@@ -726,7 +726,6 @@ export const WithProject: Story = {
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
-      console.log(dxos, blueyard);
       space.db.add(
         Relation.make(ResearchOn, {
           [Relation.Source]: dxosResearch,
