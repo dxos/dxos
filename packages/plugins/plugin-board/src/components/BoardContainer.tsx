@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, getSpace } from '@dxos/client/echo';
+import { Filter, Ref, getSpace } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
@@ -57,9 +57,26 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
-  const handleSelect = useCallback((id: string) => {
-    // TODO
-  }, []);
+  const handleSelect = useCallback(
+    (id: string) => {
+      if (!pickerState) return;
+
+      // Find the selected object by id from the space
+      const selectedObject = allObjects.find((obj) => obj.id === id);
+      if (!selectedObject) return;
+
+      // Create a reference to the selected object and add it to the board
+      const ref = Ref.make(selectedObject);
+      board.items.push(ref);
+
+      // Set the layout position for the new item
+      board.layout.cells[id] = pickerState.position;
+
+      // Close the picker
+      setPickerState(null);
+    },
+    [pickerState, allObjects, board],
+  );
 
   // TODO(burdon): Use intents so can be undone.
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
