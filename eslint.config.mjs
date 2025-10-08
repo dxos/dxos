@@ -185,6 +185,7 @@ export default tseslint.config(
       'require-yield': 'off',
 
       // React
+      // https://github.com/jsx-eslint/eslint-plugin-react/tree/master/docs/rules
       'react/display-name': 'off',
       'react/function-component-definition': [
         'error',
@@ -194,13 +195,13 @@ export default tseslint.config(
         },
       ],
       'react/jsx-first-prop-new-line': ['error', 'multiline-multiprop'],
-      'react/jsx-sort-props': [
-        'warn',
-        {
-          callbacksLast: true,
-          noSortAlphabetically: true,
-        },
-      ],
+      // 'react/jsx-sort-props': [
+      //   'warn',
+      //   {
+      //     callbacksLast: true,
+      //     noSortAlphabetically: true,
+      //   },
+      // ],
       'react/jsx-tag-spacing': [
         'error',
         {
