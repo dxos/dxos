@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
@@ -12,6 +13,7 @@ import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
+import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
@@ -22,7 +24,6 @@ import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
-import { useMailboxToolbarActions, useTagFilterVisibility } from './toolbar';
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
@@ -37,21 +38,40 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const queryEditorRef = useRef<EditorController>(null);
-  const { tagFilterState, tagFilterVisible, dispatch: filterDispatch } = useTagFilterVisibility();
+  const [tagFilterVisible, setTagFilterVisible] = useState(false);
 
-  useEffect(() => {
-    let t: NodeJS.Timeout;
-    if (tagFilterState === 'controlled' && queryEditorRef.current) {
-      t = setTimeout(() => queryEditorRef.current?.focus());
-    }
-    return () => clearTimeout(t);
-  }, [tagFilterState]);
-
-  const setTagFilterVisible = useCallback(() => {
-    filterDispatch('toggle_from_toolbar');
-  }, [filterDispatch]);
-
-  const menu = useMailboxToolbarActions(mailbox, tagFilterVisible, setTagFilterVisible);
+  const actions = useMenuActions(
+    useMemo(
+      () =>
+        Rx.make(() =>
+          MenuBuilder.make()
+            .root({
+              label: ['mailbox toolbar title', { ns: meta.id }],
+            })
+            .action(
+              'filter',
+              {
+                type: 'filter',
+                icon: 'ph--magnifying-glass--regular',
+                label: ['mailbox toolbar filter by tags', { ns: meta.id }],
+              },
+              () => setTagFilterVisible(true),
+            )
+            // TODO(wittjosiah): Not implemented.
+            // .action(
+            //   'assistant',
+            //   {
+            //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
+            //     icon: 'ph--sparkle--regular',
+            //     type: 'assistant',
+            //   },
+            //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+            // )
+            .build(),
+        ),
+      [],
+    ),
+  );
 
   const [filter, setFilter] = useState<Filter.Any | null>();
   const [queryText, setQueryText] = useState<string>('');
@@ -64,6 +84,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
+      console.log(action);
       switch (action.type) {
         case 'current': {
           const message = messages.find((message) => message.id === action.messageId);
@@ -82,12 +103,9 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           break;
         }
         case 'select': {
-          log.info('select', { messageId: action.messageId });
           break;
         }
         case 'select-tag': {
-          log.info('select-tag', { action });
-          filterDispatch('tag_selected_from_message');
           setQueryText((prevQueryText) => `${prevQueryText} #${action.label}`);
           break;
         }
@@ -98,26 +116,32 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
         }
       }
     },
-    [id, messages, dispatch, filterDispatch],
+    [id, messages, dispatch],
   );
 
-  const gridLayout = useMemo(
-    () =>
-      tagFilterVisible.value
-        ? 'grid grid-rows-[var(--toolbar-size)_min-content_1fr]'
-        : 'grid grid-rows-[var(--toolbar-size)_1fr]',
-    [tagFilterVisible.value],
-  );
+  const handleCancel = useCallback(() => {
+    setTagFilterVisible(false);
+    setQueryText('');
+    setFilter(null);
+  }, []);
 
+  // TODO(burdon): Generalize drawer layout.
   return (
-    <StackItem.Content classNames={['relative', gridLayout]} layoutManaged toolbar>
+    <StackItem.Content
+      classNames={[
+        'relative grid',
+        tagFilterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
+      ]}
+      layoutManaged
+      toolbar
+    >
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...menu} attendableId={id}>
+        <MenuProvider {...actions} attendableId={id}>
           <ToolbarMenu />
         </MenuProvider>
       </ElevationProvider>
 
-      {tagFilterVisible.value && (
+      {tagFilterVisible && (
         <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
           <QueryEditor
             ref={queryEditorRef}
@@ -128,10 +152,16 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           />
           <IconButton
             disabled={!filter}
-            label={t('save folder button')}
+            label={t('mailbox toolbar save button label')}
             icon='ph--folder-plus--regular'
             iconOnly
             onClick={() => filter && handleAction({ type: 'save', filter })}
+          />
+          <IconButton
+            label={t('mailbox toolbar clear button label')}
+            icon='ph--x--regular'
+            iconOnly
+            onClick={() => handleCancel()}
           />
         </div>
       )}
