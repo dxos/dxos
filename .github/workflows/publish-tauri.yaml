@@ -267,7 +267,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 16.1
+          xcode-version: 16.2
 
       - name: Setup Apple API key
         run: |
