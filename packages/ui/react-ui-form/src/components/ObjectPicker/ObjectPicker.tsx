@@ -5,14 +5,14 @@
 import { type Schema } from 'effect';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 
 import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
 
-export type ObjectPickerContentProps = {
+export type ObjectPickerContentProps = ThemedClassName<{
   options: QueryTag[];
   onSelect: (id: string) => void;
   selectedIds?: string[];
@@ -21,7 +21,7 @@ export type ObjectPickerContentProps = {
   createOptionIcon?: string;
   createInitialValuePath?: string;
   onCreate?: (values: any) => void;
-};
+}>;
 
 const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (

@@ -128,7 +128,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
-        <ObjectPicker.Content options={options} onSelect={handleSelect} />
+        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-max-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
     </Board.Root>
