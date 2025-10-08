@@ -15502,6 +15502,15 @@ importers:
         specifier: ^2.7.1
         version: 2.7.1
 
+  vendor/quickjs:
+    dependencies:
+      '@jitl/quickjs-wasmfile-release-sync':
+        specifier: ^0.31.0
+        version: 0.31.0
+      quickjs-emscripten:
+        specifier: 0.31.0
+        version: 0.31.0
+
 packages:
 
   3d-force-graph@1.78.2:
