@@ -70,7 +70,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       board.items.push(ref);
 
       // Set the layout position for the new item
-      board.layout.cells[id] = pickerState.position;
+      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
 
       // Close the picker
       setPickerState(null);
@@ -113,7 +113,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
           );
         }}
       >
-        <StackItem.Content toolbar>
+        <StackItem.Content toolbar classNames='overflow-hidden'>
           <Board.Toolbar />
           <Board.Container>
             <Board.Viewport classNames='border-none'>
@@ -128,7 +128,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
-        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-max-width' />
+        <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
     </Board.Root>

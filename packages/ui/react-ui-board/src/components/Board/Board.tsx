@@ -265,7 +265,7 @@ const BoardBackdrop = (props: BoardBackdropProps) => {
           key={index}
           position={position}
           rect={rect}
-          onAddClick={(event) => onAdd?.(event.target as HTMLButtonElement, position)}
+          onAddClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement, position)}
         />
       ))}
     </div>
@@ -357,7 +357,7 @@ const BoardToolbar = ({ classNames }: BoardToolbarProps) => {
           icon='ph--plus--regular'
           iconOnly
           label={t('button add')}
-          onClick={(event) => onAdd?.(event.target as HTMLButtonElement)}
+          onClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement)}
         />
       )}
     </Toolbar.Root>
