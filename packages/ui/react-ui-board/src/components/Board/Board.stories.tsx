@@ -27,7 +27,7 @@ const DefaultStory = ({ layout: _layout, items: _items, ...props }: StoryProps) 
   const controller = useRef<BoardController>(null);
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
-    (position = { x: 0, y: 0 }) => {
+    (_element, position = { x: 0, y: 0 }) => {
       const id = items.length.toString();
       setItems([...items, { id, title: 'New item' }]);
       setLayout((layout) => ({ ...layout, cells: { ...layout.cells, [id]: position } }));

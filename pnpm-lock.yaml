@@ -14767,6 +14767,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../lit-ui
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
