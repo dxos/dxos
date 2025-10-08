@@ -131,7 +131,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
             label={t('save folder button')}
             icon='ph--folder-plus--regular'
             iconOnly
-            onClick={() => handleAction({ type: 'save', filter })}
+            onClick={() => filter && handleAction({ type: 'save', filter })}
           />
         </div>
       )}
