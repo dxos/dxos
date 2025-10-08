@@ -3,22 +3,18 @@
 //
 
 import * as Match from 'effect/Match';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
-import { raise, todo } from '@dxos/debug';
-import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
-// import type { getTypeReference } from '@dxos/echo-schema';
+import { raise } from '@dxos/debug';
+import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
-import type * as Ref from '../Ref';
+import * as Ref from '../Ref';
 import type * as Type from '../Type';
-
-const getTypeReference = (value: any) => todo() as any;
-
-const isRef = (value: any) => true;
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
@@ -391,11 +387,11 @@ class FilterClass implements Filter<any> {
   }
 
   static ids(...ids: ObjectId[]): Filter<any> {
-    // assertArgument(
-    //   ids.every((id) => ObjectId.isValid(id)),
-    //   'ids',
-    //   'ids must be valid',
-    // );
+    assertArgument(
+      ids.every((id) => ObjectId.isValid(id)),
+      'ids',
+      'ids must be valid',
+    );
 
     if (ids.length === 0) {
       return Filter.nothing();
@@ -425,7 +421,7 @@ class FilterClass implements Filter<any> {
     assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
     return new FilterClass({
       type: 'object',
-      typename: typename,
+      typename: DXN.fromTypename(typename).toString(),
       props: {},
     });
   }
@@ -472,15 +468,14 @@ class FilterClass implements Filter<any> {
   }
 
   static eq<T>(value: T): Filter<T> {
-    if (!isRef(value) && typeof value === 'object' && value !== null) {
+    if (!Ref.isRef(value) && typeof value === 'object' && value !== null) {
       throw new TypeError('Cannot use object as a value for eq filter');
     }
 
     return new FilterClass({
       type: 'compare',
       operator: 'eq',
-      // value: isRef(value) ? value.noInline().encode() : value,
-      value,
+      value: Ref.isRef(value) ? value.noInline().encode() : value,
     });
   }
 
@@ -582,15 +577,15 @@ type RefPropKey<T> = keyof T & string;
 
 const propsFilterToAst = (predicates: Filter.Props<any>): Pick<QueryAST.FilterObject, 'id' | 'props'> => {
   let idFilter: readonly ObjectId[] | undefined;
-  // if ('id' in predicates) {
-  //   assertArgument(
-  //     typeof predicates.id === 'string' || Array.isArray(predicates.id),
-  //     'predicates.id',
-  //     'invalid id filter',
-  //   );
-  //   idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
-  //   Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
-  // }
+  if ('id' in predicates) {
+    assertArgument(
+      typeof predicates.id === 'string' || Array.isArray(predicates.id),
+      'predicates.id',
+      'invalid id filter',
+    );
+    idFilter = typeof predicates.id === 'string' ? [predicates.id] : predicates.id;
+    Schema.Array(ObjectId).pipe(Schema.validateSync)(idFilter);
+  }
 
   return {
     id: idFilter,
@@ -611,7 +606,7 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
       throw new Error('Array predicates are not yet supported.');
     }),
     Match.when(
-      (predicate: any) => !isRef(predicate) && typeof predicate === 'object' && predicate !== null,
+      (predicate: any) => !Ref.isRef(predicate) && typeof predicate === 'object' && predicate !== null,
       (predicate) => {
         const nestedProps = Object.fromEntries(
           Object.entries(predicate).map(([key, value]) => [key, processPredicate(value)]),
