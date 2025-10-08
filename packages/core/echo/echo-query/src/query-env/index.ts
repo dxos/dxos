@@ -2,17 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { NonEmptyArray } from 'effect/Array';
-import type { Simplify } from 'effect/Schema';
 import type { Schema } from 'effect';
-import { assertArgument } from '@dxos/invariant';
 
-import { raise } from '@dxos/debug';
-import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
-import type { DXN, ObjectId } from '@dxos/keys';
-
-import type { Ref, Type, Filter, Order, Query } from '@dxos/echo';
+import type { Filter, Order, Query, Ref } from '@dxos/echo';
 import type * as Echo from '@dxos/echo';
+import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
+import { assertArgument } from '@dxos/invariant';
+import type { DXN, ObjectId } from '@dxos/keys';
 
 class OrderClass implements Echo.Order<any> {
   private static variance: Echo.Order<any>['~Order'] = {} as Echo.Order<any>['~Order'];

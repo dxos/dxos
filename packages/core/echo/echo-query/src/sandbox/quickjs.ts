@@ -1,4 +1,8 @@
-import { QuickJSContext, QuickJSHandle, SuccessOrFail } from '@dxos/vendor-quickjs';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type QuickJSContext, type QuickJSHandle, type SuccessOrFail } from '@dxos/vendor-quickjs';
 
 /**
  * Unwraps a result and throws the underlying error.

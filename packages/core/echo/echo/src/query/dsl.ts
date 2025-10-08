@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { NonEmptyArray } from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import type { NonEmptyArray } from 'effect/Array';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';

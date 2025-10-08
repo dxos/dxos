@@ -1,7 +1,13 @@
-import envCode from '#query-env?raw';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { Resource } from '@dxos/context';
-import { type QueryAST, Query } from '@dxos/echo';
+import { Query, type QueryAST } from '@dxos/echo';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
+
+import envCode from '#query-env?raw';
+
 import { unwrapResult } from './quickjs';
 
 /**

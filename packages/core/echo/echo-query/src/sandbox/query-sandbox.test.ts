@@ -1,6 +1,12 @@
-import { expect, test, describe, beforeAll, afterAll } from 'vitest';
+//
+// Copyright 2025 DXOS.org
+//
+
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+
+import { Filter, Order, Query } from '@dxos/echo';
+
 import { QuerySandbox } from './query-sandbox';
-import { Query, Filter, Order } from '@dxos/echo';
 
 describe('QuerySandbox', () => {
   const sandbox = new QuerySandbox();

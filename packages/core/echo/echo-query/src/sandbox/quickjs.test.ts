@@ -1,5 +1,11 @@
-import { createQuickJS } from '@dxos/vendor-quickjs';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { expect, test } from 'vitest';
+
+import { createQuickJS } from '@dxos/vendor-quickjs';
+
 import { unwrapResult } from './quickjs';
 
 test('works', async () => {

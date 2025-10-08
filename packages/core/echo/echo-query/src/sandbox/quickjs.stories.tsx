@@ -27,7 +27,7 @@ const QuickJSDemo = () => {
       };
     };
 
-    initQuickJS();
+    void initQuickJS();
   }, []);
 
   const runCode = useCallback(() => {
