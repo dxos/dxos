@@ -86,10 +86,11 @@ export type TableMainProps = {
   ignoreAttention?: boolean;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
+  testId?: string;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick, testId }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
@@ -422,6 +423,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onClick={handleGridClick}
           onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
+          {...(testId && { 'data-testid': testId })}
           ref={setDxGrid}
         />
         <RowActionsMenu model={model} modals={modals} />

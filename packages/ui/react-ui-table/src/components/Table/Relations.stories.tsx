@@ -4,15 +4,17 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type DxGrid } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 
@@ -93,8 +95,10 @@ const DefaultStory = () => {
           model={orgModel}
           schema={DataType.Organization}
           presentation={orgPresentation}
+          onCreate={fn()}
           client={client}
           ignoreAttention
+          testId='relations-0'
         />
       </TableComponent.Root>
       <TableComponent.Root>
@@ -102,8 +106,10 @@ const DefaultStory = () => {
           model={contactModel}
           schema={DataType.Person}
           presentation={contactPresentation}
+          onCreate={fn()}
           client={client}
           ignoreAttention
+          testId='relations-1'
         />
       </TableComponent.Root>
     </div>
@@ -124,7 +130,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     controls: { disable: true },
-    translations,
+    translations: [...translations, ...formTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -135,95 +141,121 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-
-    // Wait for both tables to load
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const body = within(document.body);
 
     // Get all dx-grid elements (should have 2 - one for each table)
-    const grids = canvasElement.querySelectorAll('dx-grid');
-    await expect(grids.length).toBe(2);
+    const firstGrid = await canvas.findByTestId('relations-0', undefined, { timeout: 30_000 });
+    const secondGrid = await canvas.findByTestId('relations-1', undefined, { timeout: 30_000 });
 
     // Focus on the second table (Person/contacts table)
-    const secondGrid = grids[1];
     await expect(secondGrid).toBeVisible();
 
-    // Wait for the grid to be ready
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     // Scroll to the relations column (column 4) - this mimics the scrollToColumn call
-    const gridElement = secondGrid as any;
-    if (gridElement.scrollToColumn) {
-      gridElement.scrollToColumn(4);
-    }
+    (secondGrid.closest('dx-grid') as DxGrid).scrollToColumn(4);
 
     // Wait for scroll to complete
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Find and click the target cell (first row, relations column)
     const targetCell = secondGrid.querySelector('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="4"]');
-    await expect(targetCell).toBeTruthy();
+    await expect(targetCell).toBeVisible();
 
     // Click to focus the cell
-    await userEvent.click(targetCell as Element);
+    await userEvent.click(targetCell as HTMLElement);
+    await expect(targetCell).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    // Look for the combobox that should appear in edit mode
+    const combobox = await body.findByRole('combobox', undefined, { timeout: 5000 });
+    await userEvent.click(combobox);
+
+    const searchField = await body.findByPlaceholderText('Search…');
+    await userEvent.click(searchField);
+
+    // Get the first organization name from the first table to search for
+    const orgCell = firstGrid.querySelector(
+      '[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content',
+    ) as HTMLElement;
+
+    const orgName = orgCell.textContent;
+    // Type the first 4 characters to search
+    await userEvent.type(searchField, orgName.substring(0, 4));
+
+    // Wait for search results
+    // await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Look for an option to select
+    const option = await body.findAllByRole('option');
+    await expect(option[0]).toBeVisible();
+
+    // Press Enter to select
+    await userEvent.keyboard('{Enter}');
+
+    // Wait for selection to process
+    // await new Promise((resolve) => setTimeout(resolve, 300));
+
+    // Look for and click save button
+    const saveButton = await body.findByTestId('save-button');
+    await userEvent.click(saveButton);
+
+    // Wait for save to complete
+    // await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Verify the relation was set (cell should now contain the org name)
+    await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
+
+    // Test object creation (new relations) - equivalent to "new relations work as expected" test
+    // Find a different cell to test object creation (second row, relations column)
+    const newTargetCell = secondGrid.querySelector(
+      '[data-dx-grid-plane="grid"] [aria-rowindex="1"][aria-colindex="4"]',
+    );
+    await expect(newTargetCell).toBeTruthy();
+
+    // Click to focus the cell
+    await userEvent.click(newTargetCell as Element);
 
     // Wait a moment then press Enter to enter edit mode
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    // await new Promise((resolve) => setTimeout(resolve, 200));
     await userEvent.keyboard('{Enter}');
 
     // Wait for edit mode to activate
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Look for the combobox that should appear in edit mode
-    const combobox = canvas.queryByRole('combobox');
-    if (combobox) {
-      await userEvent.click(combobox);
+    const newCombobox = await body.findByRole('combobox');
+    await userEvent.click(newCombobox);
 
-      // Wait for the search field to appear
-      await new Promise((resolve) => setTimeout(resolve, 300));
+    // Wait for the search field to appear
+    // await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const searchField = canvas.queryByPlaceholderText('Search...');
-      if (searchField) {
-        await userEvent.click(searchField);
+    const newSearchField = await body.findByPlaceholderText('Search…');
+    await userEvent.click(newSearchField);
 
-        // Get the first organization name from the first table to search for
-        const firstGrid = grids[0];
-        const orgCell = firstGrid.querySelector(
-          '[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content',
-        );
+    // Type a new object name (this will create a new object)
+    const newOrgName = 'Sally';
+    await userEvent.type(newSearchField, newOrgName);
 
-        if (orgCell?.textContent) {
-          const orgName = orgCell.textContent;
-          // Type the first 4 characters to search
-          await userEvent.type(searchField, orgName.substring(0, 4));
+    // Wait for search results
+    // await new Promise((resolve) => setTimeout(resolve, 500));
 
-          // Wait for search results
-          await new Promise((resolve) => setTimeout(resolve, 500));
+    // Look for an option to select (should be the create new option)
+    const newOption = await body.findAllByRole('option');
+    await expect(newOption[0]).toBeVisible();
 
-          // Look for an option to select
-          const option = canvas.queryByRole('option');
-          if (option) {
-            await expect(option).toBeVisible();
+    // Press Enter to select/create
+    await userEvent.keyboard('{Enter}');
 
-            // Press Enter to select
-            await userEvent.keyboard('{Enter}');
+    // Wait for creation to process
+    // await new Promise((resolve) => setTimeout(resolve, 300));
 
-            // Wait for selection to process
-            await new Promise((resolve) => setTimeout(resolve, 300));
+    // Look for and click save button
+    const newSaveButton = await body.findByTestId('save-button');
+    await userEvent.click(newSaveButton);
 
-            // Look for and click save button
-            const saveButton = canvas.queryByTestId('save-button');
-            if (saveButton) {
-              await userEvent.click(saveButton);
+    // Wait for save to complete
+    // await new Promise((resolve) => setTimeout(resolve, 500));
 
-              // Wait for save to complete
-              await new Promise((resolve) => setTimeout(resolve, 500));
-
-              // Verify the relation was set (cell should now contain the org name)
-              await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
-            }
-          }
-        }
-      }
-    }
+    // Verify the new object was created and relation was set
+    await expect(newTargetCell).toHaveTextContent(newOrgName);
   },
 };
