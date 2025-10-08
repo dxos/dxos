@@ -82,7 +82,7 @@ export default defineFunction({
           const messageDetails = yield* getMessage(userId, message.id);
           const created = new Date(parseInt(messageDetails.internalDate)).toISOString();
           const from = messageDetails.payload.headers.find((h: any) => h.name === 'From');
-          const sender = from && parseEmailString(from.value);
+          const sender = from && parseFromHeader(from.value);
           // TODO(wittjosiah): Improve parsing of email contents.
           const content =
             messageDetails.payload.body?.data ??
@@ -147,17 +147,17 @@ const getUrl = (userId: string, messageId?: string, params?: Record<string, any>
 /**
  * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
  */
-const parseEmailString = (emailString: string): { name?: string; email: string } | undefined => {
-  const match = emailString.match(/^([^<]+?)\s*<([^>]+@[^>]+)>$/);
+const parseFromHeader = (value: string): { name?: string; email: string } | undefined => {
+  const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
+  const removeOuterQuotes = (str: string) => str.replace(/^['"]|['"]$/g, '');
+  const match = value.match(EMAIL_REGEX);
   if (match) {
     const [, name, email] = match;
     return {
-      name: name.trim(),
+      name: removeOuterQuotes(name.trim()),
       email: email.trim(),
     };
   }
-
-  return undefined;
 };
 
 //

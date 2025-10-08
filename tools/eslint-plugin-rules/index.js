@@ -23,7 +23,7 @@ const plugin = {
   configs: {
     recommended: {
       plugins: {
-        'dxos-plugin': plugin,
+        'dxos-plugin': null,
       },
       rules: {
         'dxos-plugin/header': 'error',
@@ -34,5 +34,9 @@ const plugin = {
     },
   },
 };
+
+Object.assign(plugin.configs.recommended.plugins, {
+  'dxos-plugin': plugin,
+});
 
 export default plugin;
