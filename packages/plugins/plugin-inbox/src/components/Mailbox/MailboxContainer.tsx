@@ -38,51 +38,49 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const currentMessageId = state[id]?.id;
 
   const queryEditorRef = useRef<EditorController>(null);
-  const [tagFilterVisible, setTagFilterVisible] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
 
-  const [filter, setFilter] = useState<Filter.Any | null>();
   const [queryText, setQueryText] = useState<string>('');
+  const [filter, setFilter] = useState<Filter.Any | null>();
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
   const parser = useMemo(() => new QueryBuilder(), []);
   useEffect(() => {
     setFilter(parser.build(queryText));
   }, [queryText]);
 
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-
-  const actions = useMenuActions(
-    useMemo(
-      () =>
-        Rx.make(() =>
-          MenuBuilder.make()
-            .root({
-              label: ['mailbox toolbar title', { ns: meta.id }],
-            })
-            .action(
-              'filter',
-              {
-                type: 'filter',
-                icon: 'ph--magnifying-glass--regular',
-                label: ['mailbox toolbar filter by tags', { ns: meta.id }],
-              },
-              () => {
-                setTagFilterVisible(true);
-              },
-            )
-            // TODO(wittjosiah): Not implemented.
-            // .action(
-            //   'assistant',
-            //   {
-            //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
-            //     icon: 'ph--sparkle--regular',
-            //     type: 'assistant',
-            //   },
-            //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
-            // )
-            .build(),
-        ),
-      [],
-    ),
+  const menu = useMemo(
+    () =>
+      Rx.make(
+        MenuBuilder.make()
+          .root({
+            label: ['mailbox toolbar title', { ns: meta.id }],
+          })
+          .action(
+            'filter',
+            {
+              type: 'filter',
+              icon: 'ph--magnifying-glass--regular',
+              label: ['mailbox toolbar filter by tags', { ns: meta.id }],
+            },
+            () => {
+              setFilterVisible(true);
+            },
+          )
+          // TODO(wittjosiah): Not implemented.
+          // .action(
+          //   'assistant',
+          //   {
+          //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
+          //     icon: 'ph--sparkle--regular',
+          //     type: 'assistant',
+          //   },
+          //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+          // )
+          .build(),
+      ),
+    [],
   );
+  const actions = useMenuActions(menu);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -122,7 +120,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   );
 
   const handleCancel = useCallback(() => {
-    setTagFilterVisible(false);
+    setFilterVisible(false);
     setQueryText('');
     setFilter(null);
   }, []);
@@ -132,7 +130,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     <StackItem.Content
       classNames={[
         'relative grid',
-        tagFilterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
+        filterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
       ]}
       layoutManaged
       toolbar
@@ -143,7 +141,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
         </MenuProvider>
       </ElevationProvider>
 
-      {tagFilterVisible && (
+      {filterVisible && (
         <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
           <QueryEditor
             ref={queryEditorRef}
