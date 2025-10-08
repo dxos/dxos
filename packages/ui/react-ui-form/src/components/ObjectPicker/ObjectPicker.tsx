@@ -57,8 +57,9 @@ const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContent
       setSearchString('');
     }, []);
 
-    // TODO(thure): The following workarounds are necessary because `onSelect` is called after the Popover is already
-    //  closed. Augment/refactor CmdK, if possible, to facilitate stopping event default & propagation.
+    // TODO(thure): The following click and keydown handlers are necessary because `onSelect` is called after the
+    //  Popover is already closed. Augment/refactor CmdK, if possible, to facilitate stopping event default
+    //  and propagation.
 
     const handleClick = useCallback(
       (event: MouseEvent) => {
@@ -135,7 +136,7 @@ const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContent
                   {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
                 </PopoverCombobox.Item>
               ))}
-              {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && (
+              {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
                 <PopoverCombobox.Item value='__create__' classNames='flex items-center gap-2'>
                   <Icon icon={createOptionIcon} />
                   {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
