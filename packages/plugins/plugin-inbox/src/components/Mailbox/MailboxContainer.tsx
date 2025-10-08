@@ -40,6 +40,15 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
   const queryEditorRef = useRef<EditorController>(null);
   const [tagFilterVisible, setTagFilterVisible] = useState(false);
 
+  const [filter, setFilter] = useState<Filter.Any | null>();
+  const [queryText, setQueryText] = useState<string>('');
+  const parser = useMemo(() => new QueryBuilder(), []);
+  useEffect(() => {
+    setFilter(parser.build(queryText));
+  }, [queryText]);
+
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
+
   const actions = useMenuActions(
     useMemo(
       () =>
@@ -55,7 +64,9 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
                 icon: 'ph--magnifying-glass--regular',
                 label: ['mailbox toolbar filter by tags', { ns: meta.id }],
               },
-              () => setTagFilterVisible(true),
+              () => {
+                setTagFilterVisible(true);
+              },
             )
             // TODO(wittjosiah): Not implemented.
             // .action(
@@ -72,15 +83,6 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       [],
     ),
   );
-
-  const [filter, setFilter] = useState<Filter.Any | null>();
-  const [queryText, setQueryText] = useState<string>('');
-  const parser = useMemo(() => new QueryBuilder(), []);
-  useEffect(() => {
-    setFilter(parser.build(queryText));
-  }, [queryText]);
-
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -145,24 +147,27 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
         <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
           <QueryEditor
             ref={queryEditorRef}
+            autoFocus
             classNames='grow'
             space={getSpace(mailbox)}
             value={queryText}
             onChange={setQueryText}
           />
-          <IconButton
-            disabled={!filter}
-            label={t('mailbox toolbar save button label')}
-            icon='ph--folder-plus--regular'
-            iconOnly
-            onClick={() => filter && handleAction({ type: 'save', filter })}
-          />
-          <IconButton
-            label={t('mailbox toolbar clear button label')}
-            icon='ph--x--regular'
-            iconOnly
-            onClick={() => handleCancel()}
-          />
+          <div className='flex gap-1 items-center'>
+            <IconButton
+              disabled={!filter}
+              label={t('mailbox toolbar save button label')}
+              icon='ph--folder-plus--regular'
+              iconOnly
+              onClick={() => filter && handleAction({ type: 'save', filter })}
+            />
+            <IconButton
+              label={t('mailbox toolbar clear button label')}
+              icon='ph--x--regular'
+              iconOnly
+              onClick={() => handleCancel()}
+            />
+          </div>
         </div>
       )}
 
