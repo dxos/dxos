@@ -71,7 +71,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
         }
         case 'select-tag': {
           // TODO(burdon): Check if tag already exists.
-          setQueryText((prevQueryText) => `${prevQueryText} #${action.label}`);
+          setQueryText((prevQueryText) => `${prevQueryText} #${action.label} `);
           setFilterVisible(true);
           queryEditorRef.current?.focus();
           break;
@@ -110,16 +110,15 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
       {filterVisible && (
         <div role='none' className='flex is-full overflow-hidden items-center p-1 gap-1 border-be border-separator'>
-          <div className='grow overflow-hidden'>
-            <QueryEditor
-              ref={queryEditorRef}
-              autoFocus
-              space={getSpace(mailbox)}
-              value={queryText}
-              onChange={setQueryText}
-            />
-          </div>
-          <div className='flex gap-1 items-center'>
+          <QueryEditor
+            ref={queryEditorRef}
+            classNames='grow overflow-hidden'
+            autoFocus
+            space={getSpace(mailbox)}
+            value={queryText}
+            onChange={setQueryText}
+          />
+          <div role='none' className='flex gap-1 items-center'>
             <IconButton
               disabled={!filter}
               label={t('mailbox toolbar save button label')}
