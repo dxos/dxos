@@ -8,8 +8,7 @@ import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { type Tag, sortTags } from '../components';
-import { Mailbox } from '../types';
+import { Mailbox, type Tag, sortTags } from '../types';
 
 const TAGS: Tag[] = [
   { label: 'important', hue: 'green' },

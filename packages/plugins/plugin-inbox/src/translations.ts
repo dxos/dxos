@@ -53,6 +53,9 @@ export const translations = [
         'mailbox toolbar sort newest': 'Sort: Newest first',
         'mailbox toolbar filter by tags': 'Filter by tags',
 
+        'mailbox toolbar save button label': 'Save',
+        'mailbox toolbar clear button label': 'Clear',
+
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',
         'message header view mode plain only': 'Plain',
