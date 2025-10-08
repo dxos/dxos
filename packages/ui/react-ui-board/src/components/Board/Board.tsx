@@ -8,6 +8,7 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
+  type MouseEvent,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -61,7 +62,7 @@ type BoardContextValue = {
   onSelect?: (id: string) => void;
   onDelete?: (id: string) => void;
   onMove?: (id: string, position: Position) => void;
-  onAdd?: (position?: Position) => void;
+  onAdd?: (anchor: HTMLButtonElement, position?: Position) => void;
 };
 
 const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>('BoardContext');
@@ -260,7 +261,12 @@ const BoardBackdrop = (props: BoardBackdropProps) => {
   return (
     <div className='absolute inset-0'>
       {cells.map(({ position, rect }, index) => (
-        <BoardDropTarget key={index} position={position} rect={rect} onAddClick={() => onAdd?.(position)} />
+        <BoardDropTarget
+          key={index}
+          position={position}
+          rect={rect}
+          onAddClick={(event) => onAdd?.(event.target as HTMLButtonElement, position)}
+        />
       ))}
     </div>
   );
@@ -271,7 +277,7 @@ BoardBackdrop.displayName = 'Board.Backdrop';
 type BoardDropTargetProps = {
   position: Position;
   rect: Rect;
-  onAddClick?: () => void;
+  onAddClick?: (event: MouseEvent) => void;
 };
 
 const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) => {
@@ -347,7 +353,12 @@ const BoardToolbar = ({ classNames }: BoardToolbarProps) => {
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
-        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd?.()} />
+        <Toolbar.IconButton
+          icon='ph--plus--regular'
+          iconOnly
+          label={t('button add')}
+          onClick={(event) => onAdd?.(event.target as HTMLButtonElement)}
+        />
       )}
     </Toolbar.Root>
   );
