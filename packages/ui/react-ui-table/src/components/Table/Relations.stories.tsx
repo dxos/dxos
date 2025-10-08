@@ -3,12 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { type Schema } from 'effect';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type DxGrid } from '@dxos/lit-grid';
+import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -87,6 +89,14 @@ const DefaultStory = () => {
   const client = useClient();
   const { model: orgModel, presentation: orgPresentation } = useTestModel(DataType.Organization, 50);
   const { model: contactModel, presentation: contactPresentation } = useTestModel(DataType.Person, 50);
+  const { space } = useClientProvider();
+
+  const handleCreate = useCallback(
+    (schema: Schema.Schema.AnyNoContext, values: any) => {
+      return client.spaces.default.db.add(live(schema, values));
+    },
+    [space],
+  );
 
   return (
     <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
@@ -95,7 +105,7 @@ const DefaultStory = () => {
           model={orgModel}
           schema={DataType.Organization}
           presentation={orgPresentation}
-          onCreate={fn()}
+          onCreate={handleCreate}
           client={client}
           ignoreAttention
           testId='relations-0'
@@ -106,7 +116,7 @@ const DefaultStory = () => {
           model={contactModel}
           schema={DataType.Person}
           presentation={contactPresentation}
-          onCreate={fn()}
+          onCreate={handleCreate}
           client={client}
           ignoreAttention
           testId='relations-1'

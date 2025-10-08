@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { EntityKind, FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
+import { FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
@@ -21,7 +21,7 @@ import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-export type OnCreateHandler = (object: Obj.Any) => void;
+export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Parameters<typeof Ref.make>[0];
 
 export type FormCellEditorProps = {
   fieldProjection: FieldProjection;
@@ -52,7 +52,7 @@ export const FormCellEditor = ({
   const anchorRef = useRef<HTMLButtonElement | null>(null);
 
   const getSchema = useCallback(
-    (typeAnnotation: TypeAnnotation) => {
+    (typeAnnotation: Pick<TypeAnnotation, 'typename'>) => {
       const space = getSpace(model!.view);
       invariant(space);
 
@@ -120,24 +120,6 @@ export const FormCellEditor = ({
     [fieldProjection.field.path, onSave, contextEditing, originalRow],
   );
 
-  const handleCreate = useCallback(
-    (values: any) => {
-      if (!schema) {
-        return;
-      }
-      const object = Obj.make(schema, values);
-      onCreate?.(object);
-      const ref = Ref.make(object);
-      const path = fieldProjection.field.path;
-      setDeep(originalRow, [path], ref);
-      contextEditing?.cellElement?.focus();
-      setEditing(null);
-      setLocalEditing(false);
-      onSave?.();
-    },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow, schema, onCreate],
-  );
-
   useEffect(() => {
     if (contextEditing && contextEditing.cellElement) {
       anchorRef.current = (contextEditing.cellElement as HTMLElement).querySelector(
@@ -170,16 +152,35 @@ export const FormCellEditor = ({
 
   const createSchema = useMemo(() => {
     if (fieldProjection.props.format === FormatEnum.Ref && fieldProjection.props.referenceSchema) {
-      // TODO(thure): Is there any better way to resolve this?
       const { schema: refSchema } = getSchema({
-        kind: EntityKind.Object,
         typename: fieldProjection.props.referenceSchema,
-        version: '0.1.0', // Default version, should be derived, but how to do that.
       });
-      return refSchema;
+      if (!refSchema) {
+        return null;
+      }
+      const omit = Schema.omit<any, any, ['id']>('id');
+      return omit(refSchema);
     }
     return null;
   }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
+
+  const handleCreate = useCallback(
+    (values: any) => {
+      if (schema && onCreate) {
+        const objectWithId = onCreate(schema, values);
+        if (objectWithId) {
+          const ref = Ref.make(objectWithId);
+          const path = fieldProjection.field.path;
+          setDeep(originalRow, [path], ref);
+        }
+      }
+      contextEditing?.cellElement?.focus();
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, createSchema, onCreate],
+  );
 
   if (!editing) {
     return null;

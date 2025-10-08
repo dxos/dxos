@@ -3,13 +3,14 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Match } from 'effect';
+import { Match, type Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, type Obj, Type } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { live } from '@dxos/live-object';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -112,9 +113,9 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   }, []);
 
   const handleCreate = useCallback(
-    (object: Obj.Any) => {
+    (schema: Schema.Schema.AnyNoContext, values: any) => {
       invariant(space);
-      return space.db.add(object);
+      return space.db.add(live(schema, values));
     },
     [space],
   );
