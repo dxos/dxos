@@ -670,6 +670,7 @@ describe('ProjectionModel', () => {
     });
 
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projectionModel.normalizeView();
     const initialSchema = mutable.snapshot;
 
     // Verify only the included fields are in the view.
@@ -772,6 +773,7 @@ describe('ProjectionModel', () => {
 
     // Create projection.
     const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projectionModel.normalizeView();
 
     // Verify all schema fields were hidden.
     expect(projectionModel.hiddenFields).to.exist;
@@ -808,7 +810,8 @@ describe('ProjectionModel', () => {
     });
 
     // Initialize projection.
-    let projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    const projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projectionModel.normalizeView();
 
     // Verify title is in hiddenFields.
     expect(projectionModel.hiddenFields).to.have.length(1);
@@ -816,9 +819,7 @@ describe('ProjectionModel', () => {
 
     // Modify the schema - add a field.
     mutable.jsonSchema.properties!.status = { type: 'string' };
-
-    // Create new projection model to trigger normalization.
-    projectionModel = new ProjectionModel(mutable.jsonSchema, view.projection);
+    projectionModel.normalizeView();
 
     // Verify status was added to hiddenFields.
     expect(projectionModel.hiddenFields).to.have.length(2);

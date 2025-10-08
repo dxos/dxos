@@ -35,8 +35,10 @@ export const Editor = forwardRef<EditorController, EditorProps>(
         extensions: [
           extensions,
           EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              onChange?.(update.state.doc.toString());
+            const startValue = update.startState.doc.toString();
+            const value = update.state.doc.toString();
+            if (startValue !== value) {
+              onChange?.(value);
             }
           }),
         ],

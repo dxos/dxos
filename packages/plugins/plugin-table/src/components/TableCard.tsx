@@ -29,7 +29,7 @@ export const TableCard = ({ role, view }: TableCardProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
