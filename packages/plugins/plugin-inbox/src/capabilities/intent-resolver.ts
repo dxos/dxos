@@ -19,7 +19,6 @@ import {
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo-schema';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';
@@ -38,14 +37,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
-      resolve: ({ spaceId, name }) => ({
-        data: {
-          object: Obj.make(Mailbox.Mailbox, {
-            name,
-            // TODO(dmaretskyi): Use space.queues.create() instead.
-            queue: Ref.fromDXN(createQueueDXN(spaceId)),
-          }),
-        },
+      resolve: ({ space, name }) => ({
+        data: { object: Mailbox.make({ name, space }) },
       }),
     }),
     createResolver({
@@ -69,6 +62,7 @@ export default (context: PluginContext) =>
         }
       },
     }),
+    //
     createResolver({
       intent: InboxAction.ExtractContact,
       resolve: async ({ space, message }) => {

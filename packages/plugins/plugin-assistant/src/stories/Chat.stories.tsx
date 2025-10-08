@@ -357,10 +357,10 @@ export const WithMail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -380,8 +380,7 @@ export const WithGmail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -706,10 +705,10 @@ export const WithProject: Story = {
         person.notes = 'Project';
       });
 
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
 
       const dxosResearch = space.db.add(
         Markdown.makeDocument({
