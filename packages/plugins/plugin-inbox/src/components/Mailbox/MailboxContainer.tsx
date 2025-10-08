@@ -73,6 +73,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           // TODO(burdon): Check if tag already exists.
           setQueryText((prevQueryText) => `${prevQueryText} #${action.label}`);
           setFilterVisible(true);
+          queryEditorRef.current?.focus();
           break;
         }
         case 'save': {
