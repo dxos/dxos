@@ -147,7 +147,7 @@ describe('Client', () => {
     await client.destroy();
 
     const { createLevel } = await import('@dxos/client-services');
-    // Level DB should have keys after client is closed.
+    // Level DB should have data in it after client is closed.
     {
       const level = await createLevel(storageConfig);
       const keys = await level.keys().all();
@@ -159,7 +159,7 @@ describe('Client', () => {
     await client.initialize();
     await client.reset();
 
-    // Verify: open the LevelDB at the same root and ensure it has no keys.
+    // Level DB should have no data in it after client is reset.
     {
       const level = await createLevel(storageConfig);
       const keys = await level.keys().all();
