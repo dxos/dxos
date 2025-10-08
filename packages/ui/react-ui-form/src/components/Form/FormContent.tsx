@@ -52,6 +52,8 @@ export const FormField = ({
   createOptionLabel,
   createOptionIcon,
   onCreate,
+  createSchema,
+  createInitialValuePath,
   lookupComponent,
   Custom,
 }: FormFieldProps) => {
@@ -121,6 +123,8 @@ export const FormField = ({
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
         onCreate={onCreate}
+        createSchema={createSchema}
+        createInitialValuePath={createInitialValuePath}
         {...inputProps}
       />
     );
