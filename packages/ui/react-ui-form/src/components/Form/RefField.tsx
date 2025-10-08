@@ -3,7 +3,7 @@
 //
 
 import { type Schema, type SchemaAST } from 'effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import {
   type EchoSchema,
@@ -17,7 +17,7 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { SearchBoxItem } from '@dxos/react-ui-components';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
@@ -90,11 +90,36 @@ export const RefField = ({
     setSearchString('');
   }, []);
 
-  const handleCreateClick = useCallback(() => {
-    if (refTypeInfo && searchString.length > 0) {
-      setShowForm(true);
-    }
-  }, [refTypeInfo, searchString]);
+  // TODO(thure): The following workarounds are necessary because `onSelect` is called after the Popover is already
+  //  closed. Augment/refactor CmdK, if possible, to facilitate stopping event default & propagation.
+
+  const handleClick = useCallback(
+    (event: MouseEvent) => {
+      if (createSchema && (event.target as HTMLElement).closest('[data-value="__create__"]')) {
+        event.stopPropagation();
+        event.preventDefault();
+        setShowForm(true);
+      }
+    },
+    [createSchema],
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (
+        event.key === 'Enter' &&
+        createSchema &&
+        (event.currentTarget as HTMLElement).querySelector(
+          '[role="option"][aria-selected="true"][data-value="__create__"]',
+        )
+      ) {
+        event.stopPropagation();
+        event.preventDefault();
+        setShowForm(true);
+      }
+    },
+    [createSchema],
+  );
 
   if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
@@ -239,16 +264,18 @@ export const RefField = ({
               filter={(value, search) =>
                 value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0
               }
+              onClickCapture={handleClick}
+              onKeyDownCapture={handleKeyDown}
             >
               {showForm && createSchema ? (
-                <div className='md:is-64'>
+                <Popover.Viewport>
                   <Form
                     schema={createSchema}
                     values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
                     onSave={handleFormSave}
                     onCancel={handleFormCancel}
                   />
-                </div>
+                </Popover.Viewport>
               ) : (
                 <>
                   <PopoverCombobox.Input
@@ -269,12 +296,8 @@ export const RefField = ({
                         {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
                       </PopoverCombobox.Item>
                     ))}
-                    {searchString.length > 0 && createOptionLabel && createOptionIcon && onCreate && (
-                      <PopoverCombobox.Item
-                        value='__create__'
-                        onSelect={handleCreateClick}
-                        classNames='flex items-center gap-2'
-                      >
+                    {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && (
+                      <PopoverCombobox.Item value='__create__' classNames='flex items-center gap-2'>
                         <Icon icon={createOptionIcon} />
                         {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
                       </PopoverCombobox.Item>
