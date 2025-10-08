@@ -7,10 +7,9 @@ import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type DxGrid } from '@dxos/lit-grid';
-import { live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
@@ -93,7 +92,7 @@ const DefaultStory = () => {
 
   const handleCreate = useCallback(
     (schema: Schema.Schema.AnyNoContext, values: any) => {
-      return client.spaces.default.db.add(live(schema, values));
+      return client.spaces.default.db.add(Obj.make(schema, values));
     },
     [space],
   );
