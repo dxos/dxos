@@ -195,6 +195,7 @@ export const Default: Story = {
     await userEvent.click(saveButton);
 
     // Check that clicking the save button calls onCreate with expected values
+    // TODO(thure): Debug this.
     // await expect(mockHandleCreate).toHaveBeenCalledWith({
     //   fullName: unrelatedTerm,
     // });
