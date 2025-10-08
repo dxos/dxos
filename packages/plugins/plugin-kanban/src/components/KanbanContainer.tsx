@@ -22,7 +22,7 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
   const [projection, setProjection] = useState<ProjectionModel>();
   const space = getSpace(view);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
 
   const jsonSchema = useMemo(() => {
     if (!cardSchema) {

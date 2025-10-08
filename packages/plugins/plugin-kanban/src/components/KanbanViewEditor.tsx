@@ -17,13 +17,15 @@ type KanbanViewEditorProps = { view: DataType.View };
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
-  const currentTypename = view.query ? typenameFromQuery(view.query) : undefined;
+  const currentTypename = view.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
 
   const projection = useMemo(() => {
     if (schema) {
       const jsonSchema = schema instanceof EchoSchema ? schema.jsonSchema : Type.toJsonSchema(schema);
-      return new ProjectionModel(jsonSchema, view.projection);
+      const projection = new ProjectionModel(jsonSchema, view.projection);
+      projection.normalizeView();
+      return projection;
     }
   }, [view.projection, JSON.stringify(schema)]);
 

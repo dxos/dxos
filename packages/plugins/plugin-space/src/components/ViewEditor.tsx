@@ -20,7 +20,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   const handleUpdateQuery = useCallback(
@@ -29,7 +29,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       invariant(Type.isMutable(schema));
 
       const newQuery = Query.select(Filter.typename(typename));
-      view.query = newQuery.ast;
+      view.query.ast = newQuery.ast;
       schema.updateTypename(typename);
     },
     [view, schema],

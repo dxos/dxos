@@ -22,6 +22,7 @@ export {
   DocAccessor,
   type EchoDatabase,
   Query,
+  type Queryable,
   Filter,
   type Hypergraph,
   type IDocHandle,

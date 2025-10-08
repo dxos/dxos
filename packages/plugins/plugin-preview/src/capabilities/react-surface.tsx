@@ -52,12 +52,12 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            typenameFromQuery(view.query.ast) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            typenameFromQuery(view.query.ast) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 

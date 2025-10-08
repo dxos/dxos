@@ -44,18 +44,21 @@ export const Default: Story = {};
 
 export const Complex: Story = {
   args: {
+    autoFocus: true,
     value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
   },
 };
 
 export const Relation: Story = {
   args: {
+    autoFocus: true,
     value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
+    autoFocus: true,
     value: 'type:dxos.org/type/Person #investor #new',
   },
 };

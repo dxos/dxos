@@ -36,7 +36,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
   const space = getSpace(view);
   const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
-  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 

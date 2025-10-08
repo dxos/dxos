@@ -351,9 +351,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   // Odd way to define methods types from a typedef.
-  /**
-   * Query all spaces.
-   */
   declare query: QueryFn;
   static {
     this.prototype.query = this.prototype._query;

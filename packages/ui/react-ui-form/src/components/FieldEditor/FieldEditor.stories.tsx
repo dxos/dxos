@@ -29,6 +29,8 @@ const DefaultStory = (props: FieldEditorProps) => {
 
   // Expose objects on window for test access.
   useEffect(() => {
+    props.projection.normalizeView();
+
     if (typeof window !== 'undefined') {
       (window as any)[FIELD_EDITOR_DEBUG_SYMBOL] = {
         props,

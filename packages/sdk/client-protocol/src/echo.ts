@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { QueryFn } from '@dxos/echo-db';
+import type { Queryable } from '@dxos/echo-db';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -12,17 +12,10 @@ import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
 
 /**
- * TODO(burdon): Public API (move comments here).
+ * Public database API.
  */
-// TODO(wittjosiah): Rename?
-//   https://ts.dev/style/#naming-style
-//   ClientApi? ClientProtocol?
-export interface Echo extends MulticastObservable<Space[]> {
-  /**
-   * Resolves when the default space is available.
-   */
-  waitUntilReady(): Promise<void>;
-
+// TODO(wittjosiah): Rename Database (not product name).
+export interface Echo extends MulticastObservable<Space[]>, Queryable {
   /**
    * Observable which indicates when the default space is available.
    */
@@ -51,6 +44,11 @@ export interface Echo extends MulticastObservable<Space[]> {
   get default(): Space;
 
   /**
+   * Resolves when the default space is available.
+   */
+  waitUntilReady(): Promise<void>;
+
+  /**
    * Creates a new space.
    */
   create(meta?: PropertiesTypeProps): Promise<Space>;
@@ -66,11 +64,4 @@ export interface Echo extends MulticastObservable<Space[]> {
   join(invitation: Invitation | string): AuthenticatingInvitation;
 
   joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
-
-  /**
-   * Query all spaces.
-   * @param filter
-   * @param options
-   */
-  query: QueryFn;
 }

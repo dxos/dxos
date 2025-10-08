@@ -10,6 +10,7 @@ import {
   Editor,
   type EditorController,
   type EditorProps,
+  EditorView,
   type Extension,
   createBasicExtensions,
   createThemeExtensions,
@@ -35,13 +36,23 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
-        createBasicExtensions({ readOnly: readonly, placeholder: t('query placeholder') }),
+        EditorView.domEventHandlers({
+          keydown: (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              return true;
+            }
+
+            return false;
+          },
+        }),
+        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode }),
         query({ space }),
       ],
       [space, readonly],
     );
 
-    return <Editor value={value} extensions={extensions} {...props} ref={forwardedRef} />;
+    return <Editor {...props} moveToEnd value={value} extensions={extensions} ref={forwardedRef} />;
   },
 );

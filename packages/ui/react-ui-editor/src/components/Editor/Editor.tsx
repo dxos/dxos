@@ -18,6 +18,7 @@ export type EditorController = {
 export type EditorProps = ThemedClassName<
   {
     value?: string;
+    moveToEnd?: boolean;
     onChange?: (value: string) => void;
   } & Omit<UseTextEditorProps, 'initialValue'>
 >;
@@ -27,15 +28,17 @@ export type EditorProps = ThemedClassName<
  * NOTE: This shouold not be used with the automerge extension.
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
-  ({ classNames, id, extensions = [], value, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions = [], value, moveToEnd, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
         extensions: [
           extensions,
           EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              onChange?.(update.state.doc.toString());
+            const startValue = update.startState.doc.toString();
+            const value = update.state.doc.toString();
+            if (startValue !== value) {
+              onChange?.(value);
             }
           }),
         ],
@@ -60,11 +63,12 @@ export const Editor = forwardRef<EditorController, EditorProps>(
         requestAnimationFrame(() => {
           view?.dispatch({
             changes: { from: 0, to: view.state.doc.length, insert: value },
+            selection: moveToEnd ? { anchor: value?.length ?? 0 } : undefined,
           });
         });
       }
-    }, [view, value]);
+    }, [view, value, moveToEnd]);
 
-    return <div role='none' className={mx(classNames)} {...focusAttributes} ref={parentRef} />;
+    return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;
   },
 );

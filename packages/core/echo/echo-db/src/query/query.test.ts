@@ -31,7 +31,7 @@ faker.seed(1);
 type ObjectProps = {
   value?: number;
   properties?: {
-    tags?: string[];
+    tags?: { label: string }[];
   };
 };
 
@@ -55,7 +55,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          properties: { tags: tags.slice(i) },
+          properties: { tags: tags.slice(i).map((tag) => ({ label: tag })) },
         }),
       ),
     )
@@ -63,7 +63,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          properties: { tags: tags.slice(i + 1) },
+          properties: { tags: tags.slice(i + 1).map((tag) => ({ label: tag })) },
         }),
       ),
     );

@@ -31,7 +31,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const schema = getSpace(view)?.db.schemaRegistry.getSchema(typenameFromQuery(view.query)!);
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(typenameFromQuery(view.query.ast)!);
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 

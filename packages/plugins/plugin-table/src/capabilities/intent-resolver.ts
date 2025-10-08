@@ -64,7 +64,7 @@ export default (context: PluginContext) =>
       resolve: async ({ view, data }) => {
         const space = getSpace(view);
         invariant(space);
-        const typename = view.query ? typenameFromQuery(view.query) : undefined;
+        const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
         invariant(typename);
         const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
