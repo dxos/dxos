@@ -20,9 +20,6 @@ const plugin = {
     header,
     'no-empty-promise-catch': noEmptyPromiseCatch,
   },
-};
-
-Object.assign(plugin, {
   configs: {
     recommended: {
       plugins: {
@@ -31,11 +28,11 @@ Object.assign(plugin, {
       rules: {
         'dxos-plugin/header': 'error',
         'dxos-plugin/no-empty-promise-catch': 'error',
-        // TODO(dmaretskyi): Tured off due to large number of errors and no auto-fix.
+        // TODO(dmaretskyi): Turned off due to large number of errors and no auto-fix.
         // 'dxos-plugin/comment': 'error',
       },
     },
   },
-});
+};
 
 export default plugin;
