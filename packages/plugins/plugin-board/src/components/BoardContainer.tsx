@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface, useIntentDispatcher } from '@dxos/app-framework';
-import { getSpace } from '@dxos/client/echo';
+import { Surface } from '@dxos/app-framework';
+import { Filter, getSpace } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
+import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
-import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import { ObjectPicker } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
@@ -22,16 +23,27 @@ export type BoardContainerProps = {
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
-type PickerState = Pick<ObjectPickerContentProps, 'options' | 'selectedIds'> & {
+type PickerState = {
   position: Position;
 };
 
 export const BoardContainer = ({ board }: BoardContainerProps) => {
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const controller = useRef<BoardController>(null);
   const items = useSignalsMemo(() => board.items.map((ref) => ref.target).filter(isNonNullable), [board]);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
+
+  // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board
+  const allObjects = useQuery(getSpace(board), Filter.everything());
+  const options = useMemo(
+    () =>
+      allObjects.map((obj) => ({
+        id: obj.id,
+        label: obj.name || obj.title || obj.id,
+        hue: 'neutral' as const,
+      })),
+    [allObjects],
+  );
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
     async (anchor, position = DEFAULT_POSITION) => {
@@ -40,16 +52,14 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       addTriggerRef.current = anchor;
       setPickerState({
         position,
-        options: [
-          /*TODO*/
-        ],
-        selectedIds: [
-          /*TODO*/
-        ],
       });
     },
-    [board, controller, dispatch],
+    [board],
   );
+
+  const handleSelect = useCallback((id: string) => {
+    // TODO
+  }, []);
 
   // TODO(burdon): Use intents so can be undone.
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
@@ -81,12 +91,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             nextOpen
               ? {
                   position: DEFAULT_POSITION,
-                  options: [
-                    /*TODO*/
-                  ],
-                  selectedIds: [
-                    /*TODO*/
-                  ],
                 }
               : null,
           );
@@ -107,7 +111,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
-        {/* TODO(thure): Add ObjectPicker.Content */}
+        <ObjectPicker.Content options={options} onSelect={handleSelect} />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
     </Board.Root>
