@@ -25,7 +25,15 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: moonrepo/setup-toolchain@v0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
 
       - name: Install semver
         run: pnpm install -g semver
