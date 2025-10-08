@@ -62,7 +62,6 @@ export default (context: PluginContext) =>
         }
       },
     }),
-    //
     createResolver({
       intent: InboxAction.ExtractContact,
       resolve: async ({ space, message }) => {

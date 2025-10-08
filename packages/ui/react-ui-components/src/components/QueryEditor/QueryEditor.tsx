@@ -30,6 +30,7 @@ export type QueryEditorProps = ThemedClassName<
 /**
  * Query editor with decorations and autocomplete.
  */
+// TODO(wittjosiah): Rename to FilterEditor.
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ space, value, readonly, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);

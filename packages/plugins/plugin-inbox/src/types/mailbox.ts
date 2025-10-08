@@ -35,7 +35,6 @@ export const Mailbox = Schema.Struct({
   }),
   ItemAnnotation.set(true),
 );
-
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'savedFilters'> & {
@@ -48,5 +47,9 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'savedFilters'
  */
 export const make = ({ space, ...props }: MailboxProps) => {
   const queue = space.queues.create();
-  return Obj.make(Mailbox, { queue: Ref.fromDXN(queue.dxn), savedFilters: [], ...props });
+  return Obj.make(Mailbox, {
+    queue: Ref.fromDXN(queue.dxn),
+    savedFilters: [],
+    ...props,
+  });
 };

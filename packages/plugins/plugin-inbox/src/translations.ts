@@ -38,6 +38,7 @@ export const translations = [
         'message label': 'Message',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
+        'inbox label': 'Inbox',
 
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
@@ -55,6 +56,8 @@ export const translations = [
 
         'mailbox toolbar save button label': 'Save',
         'mailbox toolbar clear button label': 'Clear',
+        'unnamed saved filter label': 'Filter name',
+        'save filter label': 'Save',
 
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',

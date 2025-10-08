@@ -42,15 +42,6 @@ export namespace InboxAction {
     output: Schema.Void,
   }) {}
 
-  export class SaveFilter extends Schema.TaggedClass<SaveFilter>()(`${INBOX_ACTION}/save-filter`, {
-    input: Schema.Struct({
-      object: Mailbox,
-      name: Schema.String,
-      filter: Schema.String,
-    }),
-    output: Schema.Void,
-  }) {}
-
   export class ExtractContact extends Schema.TaggedClass<ExtractContact>()(`${INBOX_ACTION}/extract-contact`, {
     input: Schema.Struct({
       space: SpaceSchema,
