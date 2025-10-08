@@ -96,7 +96,7 @@ export type MailboxProps = {
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
+export const Mailbox = ({ id, role, messages, currentMessageId, onAction, ignoreAttention }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
   const [_, setRow, rowRef] = useStateWithRef<number>(-1);
