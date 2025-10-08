@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
-import { createUrl, getPart, parseEmailString as parseFromHeader, stripNewlines, turndown } from './util';
+import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
