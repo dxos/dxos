@@ -3034,9 +3034,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@jitl/quickjs-wasmfile-release-sync':
-        specifier: ^0.31.0
-        version: 0.31.0
+      '@dxos/vendor-quickjs':
+        specifier: workspace:*
+        version: link:../../../../vendor/quickjs
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -3049,9 +3049,6 @@ importers:
       '@orama/orama':
         specifier: ^3.1.7
         version: 3.1.7
-      quickjs-emscripten:
-        specifier: 0.31.0
-        version: 0.31.0
     devDependencies:
       '@dxos/echo-generator':
         specifier: workspace:*

@@ -10,6 +10,9 @@
   ],
   "references": [
     {
+      "path": "../../../../vendor/quickjs"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {

@@ -28,11 +28,11 @@
     "@dxos/echo": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "^1.2.2",
     "@lezer/lezer": "^1.1.2",
     "@lezer/lr": "^1.4.2",
-    "@orama/orama": "^3.1.7",
-    "@dxos/vendor-quickjs": "workspace:*"
+    "@orama/orama": "^3.1.7"
   },
   "devDependencies": {
     "@dxos/echo-generator": "workspace:*",
