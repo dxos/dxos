@@ -3034,9 +3034,15 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std

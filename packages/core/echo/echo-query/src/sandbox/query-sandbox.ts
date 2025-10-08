@@ -1,7 +1,6 @@
 import envCode from '#query-env?raw';
 import { Resource } from '@dxos/context';
-import { todo } from '@dxos/debug';
-import type { QueryAST } from '@dxos/echo';
+import { type QueryAST, Query } from '@dxos/echo';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 import { unwrapResult } from './quickjs';
 
@@ -51,7 +50,12 @@ export class QuerySandbox extends Resource {
     ).dispose();
 
     using query = unwrapResult(context, context.evalCode(queryCode));
-    return context.dump(query).ast;
+    const result = context.dump(query);
+    if ('~Filter' in result) {
+      return Query.select(result).ast;
+    } else {
+      return result.ast;
+    }
   }
 }
 
@@ -63,30 +67,3 @@ const getQuickJS = () => {
   }
   return quickJS;
 };
-
-const mockEnvCode = `export const Query = {
-  select(filter) {
-    return {
-      ast: {
-        type: 'select',
-        filter: filter.ast,
-      },
-    };
-  },
-};
-
-export const Filter = {
-  typename(typename) {
-    return {
-      ast: {
-        type: 'type',
-        typename,
-      },
-    };
-  },
-}
-
-export const Order = {
-}
-
-`;
