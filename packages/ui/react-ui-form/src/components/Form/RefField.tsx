@@ -274,6 +274,7 @@ export const RefField = ({
                     values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
                     onSave={handleFormSave}
                     onCancel={handleFormCancel}
+                    testId='create-referenced-object-form'
                   />
                 </Popover.Viewport>
               ) : (

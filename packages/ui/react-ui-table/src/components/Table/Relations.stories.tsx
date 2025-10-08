@@ -181,9 +181,6 @@ export const Default: Story = {
     // Type the first 4 characters to search
     await userEvent.type(searchField, orgName.substring(0, 4));
 
-    // Wait for search results
-    // await new Promise((resolve) => setTimeout(resolve, 500));
-
     // Look for an option to select
     const option = await body.findAllByRole('option');
     await expect(option[0]).toBeVisible();
@@ -191,15 +188,9 @@ export const Default: Story = {
     // Press Enter to select
     await userEvent.keyboard('{Enter}');
 
-    // Wait for selection to process
-    // await new Promise((resolve) => setTimeout(resolve, 300));
-
     // Look for and click save button
     const saveButton = await body.findByTestId('save-button');
     await userEvent.click(saveButton);
-
-    // Wait for save to complete
-    // await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Verify the relation was set (cell should now contain the org name)
     await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
@@ -214,29 +205,18 @@ export const Default: Story = {
     // Click to focus the cell
     await userEvent.click(newTargetCell as Element);
 
-    // Wait a moment then press Enter to enter edit mode
-    // await new Promise((resolve) => setTimeout(resolve, 200));
     await userEvent.keyboard('{Enter}');
-
-    // Wait for edit mode to activate
-    // await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Look for the combobox that should appear in edit mode
     const newCombobox = await body.findByRole('combobox');
     await userEvent.click(newCombobox);
 
-    // Wait for the search field to appear
-    // await new Promise((resolve) => setTimeout(resolve, 300));
-
     const newSearchField = await body.findByPlaceholderText('Search…');
     await userEvent.click(newSearchField);
 
     // Type a new object name (this will create a new object)
-    const newOrgName = 'Sally';
+    const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
-
-    // Wait for search results
-    // await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Look for an option to select (should be the create new option)
     const newOption = await body.findAllByRole('option');
@@ -245,15 +225,10 @@ export const Default: Story = {
     // Press Enter to select/create
     await userEvent.keyboard('{Enter}');
 
-    // Wait for creation to process
-    // await new Promise((resolve) => setTimeout(resolve, 300));
-
     // Look for and click save button
-    const newSaveButton = await body.findByTestId('save-button');
-    await userEvent.click(newSaveButton);
-
-    // Wait for save to complete
-    // await new Promise((resolve) => setTimeout(resolve, 500));
+    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form');
+    const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
+    await userEvent.click(saveObjectButton);
 
     // Verify the new object was created and relation was set
     await expect(newTargetCell).toHaveTextContent(newOrgName);

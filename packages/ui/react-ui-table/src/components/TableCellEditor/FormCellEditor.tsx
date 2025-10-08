@@ -6,7 +6,7 @@ import { type Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
+import { EntityKind, FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
@@ -168,6 +168,19 @@ export const FormCellEditor = ({
     setLocalEditing(nextOpen);
   }, []);
 
+  const createSchema = useMemo(() => {
+    if (fieldProjection.props.format === FormatEnum.Ref && fieldProjection.props.referenceSchema) {
+      // TODO(thure): Is there any better way to resolve this?
+      const { schema: refSchema } = getSchema({
+        kind: EntityKind.Object,
+        typename: fieldProjection.props.referenceSchema,
+        version: '0.1.0', // Default version, should be derived, but how to do that.
+      });
+      return refSchema;
+    }
+    return null;
+  }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
+
   if (!editing) {
     return null;
   }
@@ -186,9 +199,9 @@ export const FormCellEditor = ({
               onSave={handleSave}
               {...formProps}
               onQueryRefOptions={handleQueryRefOptions}
-              {...(schema && {
+              {...(createSchema && {
                 onCreate: handleCreate,
-                createSchema: schema,
+                createSchema,
                 createInitialValuePath: fieldProjection.field.referencePath,
                 createOptionIcon: 'ph--plus--regular',
                 createOptionLabel,
