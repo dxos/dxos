@@ -10,6 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType } from '@dxos/echo-schema';
 import { type DxGrid } from '@dxos/lit-grid';
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
