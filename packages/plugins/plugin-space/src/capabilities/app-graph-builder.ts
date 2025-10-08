@@ -538,7 +538,9 @@ export default (context: PluginContext) => {
               const filteredViews = get(
                 rxFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
-                  views.filter((view) => typenameFromQuery(view.query) === Type.getTypename(schema as Type.Obj.Any)),
+                  views.filter(
+                    (view) => typenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                  ),
                 ),
               );
               const deletable = filteredViews.length === 0;
@@ -585,7 +587,7 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(rxFromQuery(query))
-                .filter((view) => typenameFromQuery(view.query) === typename)
+                .filter((view) => typenameFromQuery(view.query.ast) === typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>
@@ -666,7 +668,7 @@ export default (context: PluginContext) => {
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query) === object.typename)),
+                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query.ast) === object.typename)),
                 );
                 deletable = filteredViews.length === 0;
               }

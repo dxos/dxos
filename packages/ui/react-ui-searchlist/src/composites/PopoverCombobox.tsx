@@ -101,7 +101,7 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
           forceMount,
         }}
         classNames={[
-          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr] overflow-hidden',
+          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
           classNames,
         ]}
         id={modalId}

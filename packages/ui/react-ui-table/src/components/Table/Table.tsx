@@ -35,11 +35,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
-import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
+import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
-import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
@@ -85,11 +84,13 @@ export type TableMainProps = {
   client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
+  onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
+  testId?: string;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick, testId }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
@@ -406,6 +407,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           schema={schema}
           onFocus={handleFocus}
           onSave={handleSave}
+          onCreate={onCreate}
           client={client}
         />
         <Grid.Content
@@ -421,12 +423,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onClick={handleGridClick}
           onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
+          {...(testId && { 'data-testid': testId })}
           ref={setDxGrid}
         />
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        {client && <CreateRefPanel client={client} model={model} modals={modals} />}
       </Grid.Root>
     );
   },
