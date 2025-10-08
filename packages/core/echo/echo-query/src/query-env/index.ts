@@ -330,7 +330,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  static type(schema: Schema.Schema.All, predicates?: Echo.Filter.Props<unknown>): Query<any> {
+  static type(schema: Schema.Schema.All | string, predicates?: Echo.Filter.Props<unknown>): Query<any> {
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
@@ -396,7 +396,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -405,7 +405,7 @@ class QueryClass implements Echo.Query<any> {
     });
   }
 
-  targetOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,

@@ -1,8 +1,6 @@
-import { createQuickJS, setDebugMode } from '@dxos/vendor-quickjs';
+import { createQuickJS } from '@dxos/vendor-quickjs';
 import { expect, test } from 'vitest';
 import { unwrapResult } from './quickjs';
-
-setDebugMode(true);
 
 test('works', async () => {
   const QuickJS = await createQuickJS();
