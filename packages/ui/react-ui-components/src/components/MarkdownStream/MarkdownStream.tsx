@@ -87,7 +87,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           preview(),
           xmlTags({ registry, setWidgets }),
           streamer(streamerOptions),
-          autoScroll(),
+          autoScroll({}),
         ],
       };
     }, [themeMode, registry]);
