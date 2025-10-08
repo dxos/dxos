@@ -7,6 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { type Filter } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -83,7 +84,8 @@ const renderMessageCell = (message: DataType.Message, now: Date, _current?: bool
 export type MailboxAction =
   | { type: 'current'; messageId: string }
   | { type: 'select'; messageId: string }
-  | { type: 'select-tag'; label: string };
+  | { type: 'select-tag'; label: string }
+  | { type: 'save'; filter: Filter.Any };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 

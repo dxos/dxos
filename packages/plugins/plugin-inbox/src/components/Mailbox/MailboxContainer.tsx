@@ -9,7 +9,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
-import { ElevationProvider } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
@@ -17,6 +17,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
 import { InboxCapabilities } from '../../capabilities';
+import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { EmptyMailboxContent } from './EmptyMailboxContent';
@@ -29,6 +30,7 @@ export type MailboxContainerProps = {
 };
 
 export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
+  const { t } = useTranslation(meta.id);
   const id = fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -84,14 +86,19 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           break;
         }
         case 'select-tag': {
-          log.info('select-tag', { label: action.label });
+          log.info('select-tag', { action });
           filterDispatch('tag_selected_from_message');
           setQueryText((prevQueryText) => `${prevQueryText} #${action.label}`);
           break;
         }
+        case 'save': {
+          // TODO(burdon): Implement.
+          log.info('save', { action });
+          break;
+        }
       }
     },
-    [id, dispatch, messages, filterDispatch],
+    [id, messages, dispatch, filterDispatch],
   );
 
   const gridLayout = useMemo(
@@ -112,7 +119,20 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
       {tagFilterVisible.value && (
         <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
-          <QueryEditor space={getSpace(mailbox)} onChange={setQueryText} value={queryText} ref={queryEditorRef} />
+          <QueryEditor
+            ref={queryEditorRef}
+            classNames='grow'
+            space={getSpace(mailbox)}
+            value={queryText}
+            onChange={setQueryText}
+          />
+          <IconButton
+            disabled={!filter}
+            label={t('save folder button')}
+            icon='ph--folder-plus--regular'
+            iconOnly
+            onClick={() => handleAction({ type: 'save', filter })}
+          />
         </div>
       )}
 
