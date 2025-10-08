@@ -5,64 +5,57 @@
 import { type Schema } from 'effect';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { type ReferenceAnnotationValue } from '@dxos/echo-schema';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 
-import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
+import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
 
 export type ObjectPickerContentProps = {
-  refTypeInfo?: ReferenceAnnotationValue;
-  onQueryRefOptions?: QueryRefOptions;
+  options: QueryTag[];
   selectedIds: string[];
-  onToggleSelect: (id: string) => void;
-  searchString: string;
-  onSearchStringChange: (value: string) => void;
+  onSelect: (id: string) => void;
   createSchema?: Schema.Schema.AnyNoContext;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
   createInitialValuePath?: string;
-  onFormSave: (values: any) => void;
+  onCreate?: (values: any) => void;
 };
 
 const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
-      refTypeInfo,
-      onQueryRefOptions,
+      options,
       selectedIds,
-      onToggleSelect,
-      searchString,
-      onSearchStringChange,
+      onSelect,
       createSchema,
       createOptionLabel,
       createOptionIcon,
       createInitialValuePath,
-      onFormSave,
+      onCreate,
       ...props
     },
     ref,
   ) => {
     const { t } = useTranslation(translationKey);
-    const { options: availableOptions } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
 
+    const [searchString, setSearchString] = useState('');
     const [showForm, setShowForm] = useState(false);
 
     const handleFormSave = useCallback(
       (values: any) => {
-        onFormSave(values);
+        onCreate?.(values);
         setShowForm(false);
-        onSearchStringChange('');
+        setSearchString('');
       },
-      [onFormSave, onSearchStringChange],
+      [onCreate],
     );
 
     const handleFormCancel = useCallback(() => {
       setShowForm(false);
-      onSearchStringChange('');
-    }, [onSearchStringChange]);
+      setSearchString('');
+    }, []);
 
     // TODO(thure): The following workarounds are necessary because `onSelect` is called after the Popover is already
     //  closed. Augment/refactor CmdK, if possible, to facilitate stopping event default & propagation.
@@ -97,11 +90,11 @@ const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContent
 
     const labelById = useMemo(
       () =>
-        availableOptions.reduce((acc: Record<string, string>, option) => {
+        options.reduce((acc: Record<string, string>, option) => {
           acc[option.id.toLowerCase()] = option.label.toLowerCase();
           return acc;
         }, {}),
-      [availableOptions],
+      [options],
     );
 
     return (
@@ -127,15 +120,15 @@ const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContent
             <PopoverCombobox.Input
               placeholder={t('ref field combobox input placeholder')}
               value={searchString}
-              onValueChange={onSearchStringChange}
+              onValueChange={setSearchString}
               autoFocus
             />
             <PopoverCombobox.List>
-              {availableOptions.map((option) => (
+              {options.map((option) => (
                 <PopoverCombobox.Item
                   key={option.id}
                   value={option.id}
-                  onSelect={() => onToggleSelect(option.id)}
+                  onSelect={() => onSelect(option.id)}
                   classNames='flex items-center gap-2'
                 >
                   <span className='grow'>{option.label}</span>

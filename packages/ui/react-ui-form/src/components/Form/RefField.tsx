@@ -3,7 +3,7 @@
 //
 
 import { type Schema, type SchemaAST } from 'effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   type EchoSchema,
@@ -70,14 +70,6 @@ export const RefField = ({
     [ast],
   );
   const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
-  const [searchString, setSearchString] = useState('');
-
-  const handleFormSave = useCallback(
-    (values: any) => {
-      onCreate?.(values);
-    },
-    [onCreate],
-  );
 
   if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
@@ -211,17 +203,14 @@ export const RefField = ({
               </Button>
             </ObjectPicker.Trigger>
             <ObjectPicker.Content
-              refTypeInfo={refTypeInfo}
-              onQueryRefOptions={onQueryRefOptions}
+              options={availableOptions}
               selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              searchString={searchString}
-              onSearchStringChange={setSearchString}
+              onSelect={toggleSelect}
               createSchema={createSchema}
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon}
               createInitialValuePath={createInitialValuePath}
-              onFormSave={handleFormSave}
+              onCreate={onCreate}
             />
           </ObjectPicker.Root>
         )}
