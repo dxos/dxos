@@ -1,0 +1,10 @@
+id: vendor-quickjs
+type: library
+language: typescript
+tags:
+  - vendor
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
