@@ -22,9 +22,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { type Tag } from '../../types';
 import { getMessageProps } from '../util';
-
-import { type Tag } from './model';
 
 const ROW_SIZES = {
   DEFAULT: 60,

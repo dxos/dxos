@@ -22,8 +22,8 @@ import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 
-import { EmptyMailboxContent } from './EmptyMailboxContent';
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
+import { MailboxEmpty } from './MailboxEmpty';
 
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
@@ -178,7 +178,7 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           role={role}
         />
       ) : (
-        <EmptyMailboxContent mailbox={mailbox} />
+        <MailboxEmpty mailbox={mailbox} />
       )}
     </StackItem.Content>
   );

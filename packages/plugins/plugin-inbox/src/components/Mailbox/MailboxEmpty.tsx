@@ -13,7 +13,7 @@ import { DataType } from '@dxos/schema';
 import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
-export const EmptyMailboxContent = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
+export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const space = getSpace(mailbox);
   const tokens = useQuery(space, Filter.type(DataType.AccessToken));
   const { t } = useTranslation(meta.id);
