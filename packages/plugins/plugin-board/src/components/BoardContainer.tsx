@@ -82,10 +82,10 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
               ? {
                   position: DEFAULT_POSITION,
                   options: [
-                    /**/
+                    /*TODO*/
                   ],
                   selectedIds: [
-                    /**/
+                    /*TODO*/
                   ],
                 }
               : null,
