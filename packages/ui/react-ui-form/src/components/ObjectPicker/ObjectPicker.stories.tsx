@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -25,6 +26,9 @@ const createPerson = () =>
   Obj.make(DataType.Person, {
     fullName: faker.person.fullName(),
   });
+
+const omitId = Schema.omit<any, any, ['id']>('id');
+const personSchema = omitId(DataType.Person);
 
 // Mock functions for testing
 const mockHandleSelect = fn();
@@ -61,6 +65,7 @@ const DefaultStory = () => {
 
   const handleCreateCallback = useCallback(
     (values: any) => {
+      console.log('[on create]', values);
       if (!space) return;
       const newPerson = space.db.add(Obj.make(DataType.Person, values));
       mockHandleCreate(values);
@@ -80,7 +85,7 @@ const DefaultStory = () => {
         <ObjectPicker.Content
           options={options}
           onSelect={mockHandleSelect}
-          createSchema={DataType.Person}
+          createSchema={personSchema}
           createOptionLabel={['create new person label', { ns: 'os' }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
@@ -195,9 +200,8 @@ export const Default: Story = {
     await userEvent.click(saveButton);
 
     // Check that clicking the save button calls onCreate with expected values
-    // TODO(thure): Debug this.
-    // await expect(mockHandleCreate).toHaveBeenCalledWith({
-    //   fullName: unrelatedTerm,
-    // });
+    await expect(mockHandleCreate).toHaveBeenCalledWith({
+      fullName: unrelatedTerm,
+    });
   },
 };
