@@ -29,7 +29,9 @@
   ],
   "dependencies": {
     "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-quickjs": "workspace:*",

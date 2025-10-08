@@ -21,7 +21,7 @@ tasks:
       - src/parser/gen/query.terms.ts
       - src/parser/gen/query.ts
   prebuild-query-env:
-    script: esbuild src/query-env/index.ts --bundle --outdir=dist/query-env
+    script: pnpm esbuild src/query-env/index.ts --bundle --outdir=dist/query-env --format=esm
     deps:
       - ^:compile
     inputs:

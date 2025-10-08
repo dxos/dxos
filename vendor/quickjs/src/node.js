@@ -4,8 +4,8 @@
 
 export * from 'quickjs-emscripten';
 
-import { getQuickJS } from 'quickjs-emscripten';
+import { newQuickJSWASMModule, DEBUG_SYNC } from 'quickjs-emscripten';
 
 export const createQuickJS = () => {
-  return getQuickJS();
+  return newQuickJSWASMModule(DEBUG_SYNC);
 };

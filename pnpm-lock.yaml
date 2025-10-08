@@ -3028,9 +3028,15 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../../common/errors
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
