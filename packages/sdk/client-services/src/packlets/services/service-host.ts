@@ -408,6 +408,12 @@ export class ClientServicesHost {
     this._resetting = true;
     this._statusUpdate.emit();
     await this._serviceContext?.close();
+    // Clear LevelDB contents to remove all persisted Echo/Automerge/index data.
+    try {
+      await this._level?.clear();
+    } catch (err) {
+      log.warn('failed to clear leveldb during reset', { err });
+    }
     await this._storage!.reset();
     log.info('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
