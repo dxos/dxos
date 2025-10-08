@@ -3025,6 +3025,9 @@ importers:
 
   packages/core/echo/echo-query:
     dependencies:
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo

@@ -3,20 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { newQuickJSWASMModuleFromVariant, newVariant, RELEASE_SYNC } from 'quickjs-emscripten';
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-expect-error - ?url returns a URL resolving to the given asset.
-import wasmLocation from '@jitl/quickjs-wasmfile-release-sync/wasm?url';
-
-const variant = newVariant(RELEASE_SYNC, {
-  wasmLocation,
-});
-
-async function load() {
-  return await newQuickJSWASMModuleFromVariant(variant);
-}
+import { createQuickJS } from '@dxos/vendor-quickjs';
 
 const QuickJSDemo = () => {
   const [globalName, setGlobalName] = useState('world');
@@ -28,7 +17,7 @@ const QuickJSDemo = () => {
 
   useEffect(() => {
     const initQuickJS = async () => {
-      const QuickJS = await load();
+      const QuickJS = await createQuickJS();
       const vm = QuickJS.newContext();
       setVmInstance(vm);
       setVmReady(true);

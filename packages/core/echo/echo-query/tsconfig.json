@@ -13,6 +13,9 @@
       "path": "../../../../vendor/quickjs"
     },
     {
+      "path": "../../../common/context"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {

@@ -1,5 +1,5 @@
 import { createQuickJS } from '@dxos/vendor-quickjs';
-import { test } from 'vitest';
+import { expect, test } from 'vitest';
 
 test('works', async ({ onTestFinished }) => {
   const QuickJS = await createQuickJS();
@@ -13,10 +13,10 @@ test('works', async ({ onTestFinished }) => {
 
   const result = vm.evalCode(`"Hello " + NAME + "!"`);
   if (result.error) {
-    console.log('Execution failed:', vm.dump(result.error));
-    result.error.dispose();
+    throw new Error('Execution failed:', vm.dump(result.error));
   } else {
     console.log('Success:', vm.dump(result.value));
+    expect(vm.dump(result.value)).toBe('Hello world!');
     result.value.dispose();
   }
 });
