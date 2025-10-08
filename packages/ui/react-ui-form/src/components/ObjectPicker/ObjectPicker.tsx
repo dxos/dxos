@@ -14,8 +14,8 @@ import { Form } from '../Form';
 
 export type ObjectPickerContentProps = {
   options: QueryTag[];
-  selectedIds: string[];
   onSelect: (id: string) => void;
+  selectedIds?: string[];
   createSchema?: Schema.Schema.AnyNoContext;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
@@ -133,7 +133,7 @@ const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContent
                   classNames='flex items-center gap-2'
                 >
                   <span className='grow'>{option.label}</span>
-                  {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
+                  {selectedIds?.includes(option.id) && <Icon icon='ph--check--regular' />}
                 </PopoverCombobox.Item>
               ))}
               {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
