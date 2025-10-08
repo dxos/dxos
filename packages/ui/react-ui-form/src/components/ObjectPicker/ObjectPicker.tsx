@@ -156,5 +156,6 @@ ObjectPickerContent.displayName = 'ObjectPickerContent';
 export const ObjectPicker = {
   Root: PopoverCombobox.Root,
   Trigger: PopoverCombobox.Trigger,
+  VirtualTrigger: PopoverCombobox.VirtualTrigger,
   Content: ObjectPickerContent,
 };
