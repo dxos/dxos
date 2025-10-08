@@ -48,43 +48,10 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
     setFilter(parser.build(queryText));
   }, [queryText]);
 
-  const menu = useMemo(
-    () =>
-      Rx.make(
-        MenuBuilder.make()
-          .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
-          })
-          .action(
-            'filter',
-            {
-              type: 'filter',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter by tags', { ns: meta.id }],
-            },
-            () => {
-              setFilterVisible(true);
-            },
-          )
-          // TODO(wittjosiah): Not implemented.
-          // .action(
-          //   'assistant',
-          //   {
-          //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
-          //     icon: 'ph--sparkle--regular',
-          //     type: 'assistant',
-          //   },
-          //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
-          // )
-          .build(),
-      ),
-    [],
-  );
-  const actions = useMenuActions(menu);
+  const actions = useActions(setFilterVisible);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
-      console.log(action);
       switch (action.type) {
         case 'current': {
           const message = messages.find((message) => message.id === action.messageId);
@@ -182,4 +149,41 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       )}
     </StackItem.Content>
   );
+};
+
+const useActions = (setFilterVisible: (visible: boolean) => void) => {
+  const menu = useMemo(
+    () =>
+      Rx.make(
+        MenuBuilder.make()
+          .root({
+            label: ['mailbox toolbar title', { ns: meta.id }],
+          })
+          .action(
+            'filter',
+            {
+              type: 'filter',
+              icon: 'ph--magnifying-glass--regular',
+              label: ['mailbox toolbar filter by tags', { ns: meta.id }],
+            },
+            () => {
+              setFilterVisible(true);
+            },
+          )
+          // TODO(wittjosiah): Not implemented.
+          // .action(
+          //   'assistant',
+          //   {
+          //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
+          //     icon: 'ph--sparkle--regular',
+          //     type: 'assistant',
+          //   },
+          //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
+          // )
+          .build(),
+      ),
+    [],
+  );
+
+  return useMenuActions(menu);
 };
