@@ -74,23 +74,28 @@ export const messageToObject = (last?: DataType.Message) =>
     const text = Buffer.from(data, 'base64').toString('utf-8');
     const markdown = stripNewlines(turndown.turndown(text));
 
-    return Obj.make(DataType.Message, {
-      id: Type.ObjectId.random(),
-      created,
-      sender,
-      blocks: [
-        {
-          _tag: 'text',
-          text: markdown,
+    return Obj.make(
+      DataType.Message,
+      {
+        id: Type.ObjectId.random(),
+        created,
+        sender,
+        blocks: [
+          {
+            _tag: 'text',
+            text: markdown,
+          },
+        ],
+        properties: {
+          threadId: message.threadId,
+          snippet: message.snippet,
+          subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
         },
-      ],
-      properties: {
-        threadId: message.threadId,
-        labels: message.labelIds,
-        snippet: message.snippet,
-        subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
       },
-    });
+      {
+        tags: [...message.labelIds],
+      },
+    );
   });
 
 /**
