@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-// TODO(burdon): Move to sdk/schema.
+// TODO(burdon): Move to echo-protocol?
 
 export const Tag = Schema.Struct({
   label: Schema.String,

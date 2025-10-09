@@ -6,6 +6,8 @@ import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
 import { Filter } from '@dxos/echo';
 
+import { type Tag } from '../tag';
+
 import { QueryDSL } from './gen';
 
 /**
@@ -15,7 +17,10 @@ import { QueryDSL } from './gen';
  * To modify the functionality, create a minimal breaking test and direct the LLM to fix either the grammar or builder.
  */
 export class QueryBuilder {
-  constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
+  constructor(
+    private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true }),
+    tags?: Record<string, Tag>,
+  ) {}
 
   /**
    * Check valid input.

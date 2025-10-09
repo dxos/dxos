@@ -4,11 +4,9 @@
 
 import { Schema } from 'effect';
 
-import { type DXN, Obj, Ref, Type } from '@dxos/echo';
+import { type DXN, Obj, Ref, type Tag, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
-
-import { Tag } from './tag';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {

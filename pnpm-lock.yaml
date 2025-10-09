@@ -2695,6 +2695,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../echo-query
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema

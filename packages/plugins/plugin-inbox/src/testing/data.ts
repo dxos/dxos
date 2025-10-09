@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, type Tag } from '@dxos/echo';
 import { type WithId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { Mailbox, type Tag } from '../types';
+import { Mailbox } from '../types';
 
 export const TAGS: (Tag & WithId)[] = [
   { id: 'tag_1', label: 'important', hue: 'green' },

@@ -7,7 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { type Filter } from '@dxos/echo';
+import { type Filter, type Tag } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -22,7 +22,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { type Tag } from '../../types';
 import { getMessageProps } from '../util';
 
 const ROW_SIZES = {
