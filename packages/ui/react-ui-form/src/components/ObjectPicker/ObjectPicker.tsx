@@ -3,7 +3,7 @@
 //
 
 import { type Schema } from 'effect';
-import React, { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
+import { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
@@ -14,16 +14,16 @@ import { Form } from '../Form';
 
 export type ObjectPickerContentProps = ThemedClassName<{
   options: QueryTag[];
-  onSelect: (id: string) => void;
   selectedIds?: string[];
   createSchema?: Schema.Schema.AnyNoContext;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
   createInitialValuePath?: string;
+  onSelect: (id: string) => void;
   onCreate?: (values: any) => void;
 }>;
 
-const ObjectPickerContent = React.forwardRef<HTMLDivElement, ObjectPickerContentProps>(
+const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
       options,

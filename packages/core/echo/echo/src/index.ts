@@ -14,4 +14,3 @@ export { DXN } from '@dxos/keys';
 export { Filter, Order, Query } from './query';
 export { QueryAST } from '@dxos/echo-protocol';
 export { type Live } from '@dxos/live-object';
-export { type Tag } from '@dxos/echo-query';
