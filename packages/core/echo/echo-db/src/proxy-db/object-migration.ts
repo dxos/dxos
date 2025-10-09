@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 
 import type { Type } from '@dxos/echo';
-import { getSchemaDXN } from '@dxos/echo-schema';
+import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 
 import type { AnyLiveObject } from '../echo-handler';

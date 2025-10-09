@@ -5,7 +5,7 @@
 import { type CleanupFn, Event } from '@dxos/async';
 import { StackTrace } from '@dxos/debug';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -109,6 +109,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
+// TODO(dmaretskyi): Change to Obj.Any
 export class QueryResult<T extends BaseObject = BaseObject> {
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();

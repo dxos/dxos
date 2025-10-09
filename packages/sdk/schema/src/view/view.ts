@@ -19,7 +19,7 @@ import {
   type RuntimeSchemaRegistry,
   TypeEnum,
   toEffectSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -324,7 +324,7 @@ export const createViewFromSpace = async ({
   invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
-    space.db.add(live(schema, {}));
+    space.db.add(Obj.make(schema, {}));
   });
 
   return {

@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';

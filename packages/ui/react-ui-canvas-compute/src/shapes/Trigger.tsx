@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { ObjectId, Ref } from '@dxos/echo-schema';
+import { ObjectId, Ref } from '@dxos/echo/internal';
 import {
   type EmailTrigger,
   EmailTriggerOutput,

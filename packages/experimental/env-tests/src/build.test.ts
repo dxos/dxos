@@ -17,7 +17,7 @@ describe('build tests', () => {
         // NOTE: They also need to be added to package.json of this package.
         '@dxos/echo-db',
         '@dxos/conductor',
-        '@dxos/echo-schema',
+        '@dxos/echo',
         '@dxos/keys',
         '@dxos/log',
       ],

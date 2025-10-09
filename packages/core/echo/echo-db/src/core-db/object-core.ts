@@ -17,7 +17,7 @@ import {
   encodeReference,
   isEncodedReference,
 } from '@dxos/echo-protocol';
-import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo-schema';
+import { EntityKind, ObjectId, type ObjectMeta } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { isLiveObject } from '@dxos/live-object';

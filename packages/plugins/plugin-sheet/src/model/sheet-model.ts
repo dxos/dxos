@@ -23,7 +23,7 @@ import {
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

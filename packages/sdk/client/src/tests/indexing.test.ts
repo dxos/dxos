@@ -8,7 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, PropertiesType, type Space } from '@dxos/client-protocol';
 import { type AnyLiveObject, Filter, type QueryResult } from '@dxos/echo-db';
-import { Expando, Ref } from '@dxos/echo-schema';
+import { Expando, Ref } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
@@ -17,45 +17,46 @@ import { StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { Client } from '../client';
 import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
+import { Obj } from '@dxos/echo';
 
 describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
-      live(ContactType, {
+      Obj.make(ContactType, {
         name: 'Alice',
         identifiers: [],
       }),
-      live(ContactType, {
+      Obj.make(ContactType, {
         name: 'Bob',
         identifiers: [],
       }),
-      live(ContactType, {
+      Obj.make(ContactType, {
         name: 'Catherine',
         identifiers: [],
       }),
     ],
     documents: [
-      live(DocumentType, {
+      Obj.make(DocumentType, {
         title: 'DXOS Design Doc',
         content: Ref.make(
-          live(TextV0Type, {
+          Obj.make(TextV0Type, {
             content: 'Very important design document',
           }),
         ),
       }),
-      live(DocumentType, {
+      Obj.make(DocumentType, {
         title: 'ECHO Architecture',
         content: Ref.make(
-          live(TextV0Type, {
+          Obj.make(TextV0Type, {
             content: 'Very important architecture document',
           }),
         ),
       }),
     ],
     expandos: [
-      live(Expando, { org: 'DXOS' }), //
-      live(Expando, { name: 'Mykola' }),
-      live(Expando, { height: 185 }),
+      Obj.make(Expando, { org: 'DXOS' }), //
+      Obj.make(Expando, { name: 'Mykola' }),
+      Obj.make(Expando, { height: 185 }),
     ],
   });
 
@@ -77,7 +78,7 @@ describe('Index queries', () => {
     return objectsInDataBase;
   };
 
-  const matchObjects = async (query: QueryResult, objects: AnyLiveObject<any>[]) => {
+  const matchObjects = async (query: QueryResult<any>, objects: AnyLiveObject<any>[]) => {
     const receivedIndexedObject = new Trigger<AnyLiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {

@@ -49,13 +49,13 @@
       "path": "../../sdk/config"
     },
     {
+      "path": "../echo/echo"
+    },
+    {
       "path": "../echo/echo-db"
     },
     {
       "path": "../echo/echo-generator"
-    },
-    {
-      "path": "../echo/echo-schema"
     },
     {
       "path": "../halo/credentials"

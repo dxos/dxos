@@ -38,6 +38,7 @@ import { InvitationsProxy } from '../invitations';
 
 import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
+import { Obj } from '@dxos/echo';
 
 const ENABLE_AGENT_QUERY_SOURCE = false;
 
@@ -309,7 +310,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(live(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
+    spaceProxy.db.add(Obj.make(PropertiesType, meta ?? {}), { placeIn: 'root-doc' });
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

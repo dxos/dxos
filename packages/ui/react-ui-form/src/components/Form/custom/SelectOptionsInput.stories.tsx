@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useState } from 'react';
 
-import { type SelectOption, SelectOptionSchema } from '@dxos/echo-schema';
+import { type SelectOption, SelectOptionSchema } from '@dxos/echo/internal';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../../translations';

@@ -7,7 +7,7 @@ import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
-import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo-schema';
+import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo/internal';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

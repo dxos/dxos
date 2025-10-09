@@ -5,7 +5,7 @@
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { Schema } from 'effect';
 
-import { type HasId, ObjectId } from '@dxos/echo-schema';
+import { type HasId, ObjectId } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 

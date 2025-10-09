@@ -15,7 +15,7 @@ import {
   getType,
   getTypename,
   isDeleted,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';

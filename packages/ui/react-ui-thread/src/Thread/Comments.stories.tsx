@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/echo-db';
-import { Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';

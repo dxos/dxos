@@ -5,6 +5,7 @@
 import { Schema, type SchemaAST } from 'effect';
 import { describe, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

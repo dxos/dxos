@@ -14,7 +14,7 @@ import {
   getValue,
   setValue,
   toEffectSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { getSnapshot, isLiveObject } from '@dxos/live-object';

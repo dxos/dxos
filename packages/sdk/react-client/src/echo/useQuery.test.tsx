@@ -10,6 +10,7 @@ import { Expando, Filter, live } from '@dxos/client/echo';
 import { createClient, createClientContextProvider } from '../testing/util';
 
 import { useQuery } from './useQuery';
+import { Obj, Type } from '@dxos/echo';
 
 describe('useQuery', () => {
   // TODO(dmaretskyi): Fix this test.
@@ -19,9 +20,9 @@ describe('useQuery', () => {
     const wrapper = await createClientContextProvider(client);
 
     // Create 3 test objects: Alice, Bob, Charlie.
-    const alice = live(Expando, { name: 'Alice' });
-    const bob = live(Expando, { name: 'Bob' });
-    const charlie = live(Expando, { name: 'Charlie' });
+    const alice = Obj.make(Type.Expando, { name: 'Alice' });
+    const bob = Obj.make(Type.Expando, { name: 'Bob' });
+    const charlie = Obj.make(Type.Expando, { name: 'Charlie' });
 
     space!.db.add(alice);
     space!.db.add(bob);
@@ -82,7 +83,7 @@ describe('useQuery', () => {
     const wrapper = await createClientContextProvider(client);
 
     // Create 10 test objects: 1, 2, 3, ..., 10.
-    const objects = Array.from({ length: 10 }, (_, i) => live(Expando, { value: i + 1 }));
+    const objects = Array.from({ length: 10 }, (_, i) => Obj.make(Type.Expando, { value: i + 1 }));
 
     objects.forEach((obj) => space!.db.add(obj));
     await space!.db.flush();

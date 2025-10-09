@@ -5,16 +5,14 @@
 import { type Schema } from 'effect';
 import React, { useMemo, useState } from 'react';
 
-import { type Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
-
 import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
-
 import { useProject } from './Project';
 
 export type ViewColumnProps = {

@@ -13,9 +13,6 @@
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/effect"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
@@ -29,12 +26,6 @@
     },
     {
       "path": "../../../common/util"
-    },
-    {
-      "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
     },
     {
       "path": "../echo-signals"

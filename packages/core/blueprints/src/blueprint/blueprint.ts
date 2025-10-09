@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { ToolId } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { Template } from '../template';
