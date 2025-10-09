@@ -8,6 +8,7 @@ import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
@@ -21,6 +22,7 @@ export type ComputeGraphPlugin = {
 
 export type ComputeGraphOptions = {
   plugins?: ComputeGraphPlugin[];
+  computeRuntime?: AutomationCapabilities.ComputeRuntimeProvider;
 } & Partial<FunctionContextOptions> &
   Partial<ConfigParams>;
 
@@ -41,12 +43,10 @@ export const defaultPlugins: ComputeGraphPlugin[] = [
  * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
  *
  * NOTE: The ComputeGraphRegistry manages the hierarchy of resources via its root Context.
- * NOTE: The package.json file defines the packaged #hyperformula module.
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
   private readonly _graphs = new Map<SpaceId, ComputeGraph>();
-
   private readonly _options: ComputeGraphOptions;
 
   constructor(options: ComputeGraphOptions = { plugins: defaultPlugins }) {
@@ -74,7 +74,10 @@ export class ComputeGraphRegistry extends Resource {
   createGraph(space: Space): ComputeGraph {
     invariant(!this._graphs.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
     const hf = HyperFormula.buildEmpty(this._options);
-    const graph = new ComputeGraph(hf, space, this._options);
+    invariant(this._options.computeRuntime, 'ComputeRuntime is required');
+    const runtime = this._options.computeRuntime.getRuntime(space.id);
+
+    const graph = new ComputeGraph(hf, runtime, space, this._options);
     this._graphs.set(space.id, graph);
     return graph;
   }
