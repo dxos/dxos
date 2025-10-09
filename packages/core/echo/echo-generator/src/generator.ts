@@ -20,6 +20,7 @@ import {
   type TestObjectProvider,
   type TestSchemaMap,
 } from './types';
+import { Obj } from '@dxos/echo';
 
 /**
  * Typed object generator.
@@ -53,7 +54,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     }
 
     const schema = this.getSchema(type);
-    return schema ? live(schema, data) : live(data);
+    return schema ? Obj.make(schema, data) : live(data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
