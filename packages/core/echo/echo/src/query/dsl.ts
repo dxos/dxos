@@ -207,6 +207,9 @@ type Intersection<Types extends readonly unknown[]> = Types extends [infer First
 interface FilterAPI {
   is(value: unknown): value is Filter<any>;
 
+  /** Construct a filter from an ast. */
+  fromAst(ast: QueryAST.Filter): Filter<any>;
+
   /**
    * Filter that matches all objects.
    */
@@ -357,6 +360,10 @@ class FilterClass implements Filter<any> {
 
   static is(value: unknown): value is Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
+  }
+
+  static fromAst(ast: QueryAST.Filter): Filter<any> {
+    return new FilterClass(ast);
   }
 
   static everything(): FilterClass {
