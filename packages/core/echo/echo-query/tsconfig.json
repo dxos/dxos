@@ -20,9 +20,6 @@
     },
     {
       "path": "../echo"
-    },
-    {
-      "path": "../echo-generator"
     }
   ]
 }
