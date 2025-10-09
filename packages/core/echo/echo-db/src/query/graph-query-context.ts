@@ -16,6 +16,7 @@ import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 
+import type { Obj } from '@dxos/echo';
 import type { QueryContext, QueryResultEntry, QueryRunOptions } from './query-result';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 
@@ -202,7 +203,7 @@ export class SpaceQuerySource implements QuerySource {
     });
   };
 
-  async run(query: QueryAST.Query): Promise<QueryResultEntry<AnyLiveObject<any>>[]> {
+  async run(query: QueryAST.Query): Promise<QueryResultEntry<Obj.Any>[]> {
     if (!this._isValidSourceForQuery(query)) {
       return [];
     }
@@ -228,7 +229,7 @@ export class SpaceQuerySource implements QuerySource {
     });
 
     // Dedup
-    const map = new Map<string, QueryResultEntry<AnyLiveObject<any>>>();
+    const map = new Map<string, QueryResultEntry<Obj.Any>>();
     for (const result of results) {
       map.set(result.id, result);
     }
@@ -236,7 +237,7 @@ export class SpaceQuerySource implements QuerySource {
     return [...map.values()];
   }
 
-  getResults(): QueryResultEntry<AnyLiveObject<any>>[] {
+  getResults(): QueryResultEntry<Obj.Any>[] {
     if (!this._query) {
       return [];
     }
@@ -279,7 +280,7 @@ export class SpaceQuerySource implements QuerySource {
   private _queryWorkingSet(
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
-  ): QueryResultEntry<AnyLiveObject<any>>[] {
+  ): QueryResultEntry<Obj.Any>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
@@ -300,7 +301,7 @@ export class SpaceQuerySource implements QuerySource {
     return true;
   }
 
-  private _mapCoreToResult(core: ObjectCore): QueryResultEntry<AnyLiveObject<any>> {
+  private _mapCoreToResult(core: ObjectCore): QueryResultEntry<Obj.Any> {
     return {
       id: core.id,
       spaceId: this.spaceId,

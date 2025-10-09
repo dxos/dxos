@@ -472,6 +472,17 @@ describe('Query', () => {
       const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
+
+    test('tags', async () => {
+      const { db } = await builder.createDatabase();
+
+      const _a = db.add(Obj.make(Type.Expando, { name: 'a' }));
+      const b = db.add(Obj.make(Type.Expando, { name: 'b', [Obj.Meta]: { tags: ['important'] } }));
+      const c = db.add(Obj.make(Type.Expando, { name: 'c', [Obj.Meta]: { tags: ['important', 'investor'] } }));
+
+      const { objects } = await db.query(Query.select(Filter.tag('important'))).run();
+      expect(objects).toEqual([b, c]);
+    });
   });
 
   describe('Traversal', () => {

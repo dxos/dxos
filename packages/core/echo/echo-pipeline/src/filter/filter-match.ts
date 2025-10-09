@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
+import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
+import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
-import { getDeep } from '@dxos/util';
+import { log } from '@dxos/log';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -67,14 +67,8 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'tag': {
-      // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
-      const tags = getDeep(obj.doc.data, ['properties', 'tags']);
-      return (
-        Array.isArray(tags) &&
-        tags?.some((tag) => {
-          return typeof tag === 'object' && tag.label === filter.tag;
-        })
-      );
+      const tags = ObjectStructure.getTags(obj.doc);
+      return tags.some((tag) => tag === filter.tag);
     }
 
     case 'text-search': {
@@ -154,14 +148,8 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     }
 
     case 'tag': {
-      // TODO(burdon): This currently works for Message (inbox); generalize (move tags to meta).
-      const tags = getDeep(obj, ['properties', 'tags']);
-      return (
-        Array.isArray(tags) &&
-        tags?.some((tag) => {
-          return typeof tag === 'object' && tag.label === filter.tag;
-        })
-      );
+      const tags = obj[ATTR_META]?.tags ?? [];
+      return tags.some((tag) => tag === filter.tag);
     }
 
     case 'text-search': {
