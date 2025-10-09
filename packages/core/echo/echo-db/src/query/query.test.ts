@@ -30,15 +30,13 @@ faker.seed(1);
 
 type ObjectProps = {
   value?: number;
-  properties?: {
-    tags?: { label: string }[];
-  };
+  [Obj.Meta]?: { tags?: string[] };
 };
 
 const tags = ['red', 'green', 'blue'];
 
 const createTestObject = (props: ObjectProps = {}) => {
-  return live(Expando, { title: faker.commerce.productName(), ...props });
+  return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
 };
 
 const createTestObjects = () => {
@@ -55,7 +53,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          properties: { tags: tags.slice(i).map((tag) => ({ label: tag })) },
+          [Obj.Meta]: { tags: tags.slice(i) },
         }),
       ),
     )
@@ -63,7 +61,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          properties: { tags: tags.slice(i + 1).map((tag) => ({ label: tag })) },
+          [Obj.Meta]: { tags: tags.slice(i + 1) },
         }),
       ),
     );
