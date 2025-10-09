@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type { Blockstore } from 'interface-blockstore';
 import React, { type ChangeEvent, useEffect, useState } from 'react';
@@ -12,6 +10,7 @@ import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -20,7 +19,6 @@ import {
   processEditorPayload,
   useTextEditor,
 } from '@dxos/react-ui-editor';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { create as createBlockstore } from '../blockstore';
 import { upload } from '../helpers';
@@ -96,7 +94,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-wnfs/image',
   render: DefaultStory,
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true }), withTheme, withLayout()],
+  decorators: [withTheme, withClientProvider({ createIdentity: true, createSpace: true })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

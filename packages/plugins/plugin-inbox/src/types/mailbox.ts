@@ -4,10 +4,12 @@
 
 import { Schema } from 'effect';
 
-import { type DXN, Obj, Ref, Type } from '@dxos/echo';
+import { type Space } from '@dxos/client/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
+// TODO(burdon): Implement as labels?
 export enum MessageState {
   NONE = 0,
   ARCHIVED = 1,
@@ -15,9 +17,17 @@ export enum MessageState {
   SPAM = 3,
 }
 
+// TODO(burdon): Rename MessageBox? (not email specific).
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
+  // TODO(wittjosiah): Factor out to relation?
+  savedFilters: Schema.Array(
+    Schema.Struct({
+      name: Schema.String,
+      filter: Schema.String,
+    }),
+  ),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Mailbox',
@@ -25,17 +35,21 @@ export const Mailbox = Schema.Struct({
   }),
   ItemAnnotation.set(true),
 );
-
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {
-  queue: DXN;
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'savedFilters'> & {
+  space: Space;
+  savedFilters?: { name: string; filter: string }[];
 };
 
 /**
  * Make a mailbox object.
  */
-export const make = (props: MailboxProps) => {
-  const queue = Ref.fromDXN(props.queue);
-  return Obj.make(Mailbox, { ...props, queue });
+export const make = ({ space, ...props }: MailboxProps) => {
+  const queue = space.queues.create();
+  return Obj.make(Mailbox, {
+    queue: Ref.fromDXN(queue.dxn),
+    savedFilters: [],
+    ...props,
+  });
 };

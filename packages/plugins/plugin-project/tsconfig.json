@@ -39,7 +39,13 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/functions"
     },
     {
       "path": "../../devtools/devtools"

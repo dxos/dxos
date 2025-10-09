@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
 import '@dxos/lit-ui';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -11,10 +10,9 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { editorWidth } from '@dxos/react-ui-editor';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 import { keyToFallback } from '@dxos/util';
 
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from './MarkdownStream';
@@ -82,10 +80,10 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 
   return (
     <div
-      className={mx('grid is-full')}
+      className={mx('flex flex-col bs-full is-full')}
       style={userHue ? ({ '--user-fill': `var(--dx-${userHue}Fill)` } as CSSProperties) : undefined}
     >
-      <Toolbar.Root classNames='border-be border-separator'>
+      <Toolbar.Root classNames='border-be border-subduedSeparator'>
         <Toolbar.Button disabled={streaming} onClick={() => setStreaming(true)}>
           Start
         </Toolbar.Button>
@@ -105,9 +103,9 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: editorWidth })],
+  decorators: [withTheme],
   parameters: {
-    layout: 'centered',
+    layout: 'column',
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
@@ -12,14 +10,14 @@ import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ContactType, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
 
-import { TriggerEditor } from './TriggerEditor';
+import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
-const DefaultStory = () => {
+const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   const spaces = useSpaces();
   const space = spaces[1];
   const [trigger, setTrigger] = useState<FunctionTrigger>();
@@ -38,7 +36,7 @@ const DefaultStory = () => {
 
   return (
     <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} />
+      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} {...props} />
     </div>
   );
 };
@@ -48,6 +46,7 @@ const meta = {
   component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -66,10 +65,9 @@ const meta = {
         });
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
-    withTheme,
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;
@@ -79,3 +77,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const ReadonlySpec: Story = {
+  args: {
+    readonlySpec: true,
+  },
+};

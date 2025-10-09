@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -16,8 +14,9 @@ import { PluginDetail } from './PluginDetail';
 const meta = {
   title: 'plugins/plugin-registry/PluginDetail',
   component: PluginDetail,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'justify-center' })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof PluginDetail>;

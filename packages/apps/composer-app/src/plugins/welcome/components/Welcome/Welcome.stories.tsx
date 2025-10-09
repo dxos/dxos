@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
 import '@fontsource/poiret-one';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -11,7 +10,7 @@ import React, { useState } from 'react';
 import { useIdentity } from '@dxos/react-client/halo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AlertDialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 

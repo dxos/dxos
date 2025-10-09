@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 import { Chess } from '../types';
@@ -17,8 +15,9 @@ import { ChessboardArticle } from './ChessboardArticle';
 const meta = {
   title: 'plugins/plugin-chess/Chessboard',
   component: ChessboardArticle,
-  decorators: [withClientProvider({ createIdentity: true }), withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme, withClientProvider({ createIdentity: true })],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof ChessboardArticle>;

@@ -13,13 +13,45 @@ import { QueryBuilder } from './query-builder';
 // TODO(burdon): Ref/Relation traversal.
 
 describe('query', () => {
-  it('should parse a simple query', ({ expect }) => {
+  it('parse', ({ expect }) => {
     const queryParser = QueryDSL.Parser.configure({ strict: true });
 
-    type Test = { query: string; expected: string[] };
+    type Test = { input: string; expected: string[] };
     const tests: Test[] = [
+      // Tags
       {
-        query: 'type:dxos.org/type/Person',
+        input: '#foo',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag'],
+      },
+      {
+        input: '#foo AND #bar',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'And', 'Filter', 'TagFilter', 'Tag'],
+      },
+      {
+        input: '#foo #bar',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Filter', 'TagFilter', 'Tag'],
+      },
+      // Text
+      {
+        input: '"foo"',
+        expected: ['Query', 'Filter', 'TextFilter', 'String'],
+      },
+      {
+        input: '"foo" OR "bar"',
+        expected: ['Query', 'Filter', 'TextFilter', 'String', 'Or', 'Filter', 'TextFilter', 'String'],
+      },
+      // Mixed
+      {
+        input: '#foo AND "bar"',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'And', 'Filter', 'TextFilter', 'String'],
+      },
+      {
+        input: '#foo "bar"',
+        expected: ['Query', 'Filter', 'TagFilter', 'Tag', 'Filter', 'TextFilter', 'String'],
+      },
+      // Type
+      {
+        input: 'type:dxos.org/type/Person',
         expected: [
           'Query',
           // type:dxos.org/type/Person
@@ -31,7 +63,7 @@ describe('query', () => {
         ],
       },
       {
-        query: '{ name: "DXOS" }',
+        input: '{ name: "DXOS" }',
         expected: [
           'Query',
           // { name: "DXOS" }
@@ -39,7 +71,6 @@ describe('query', () => {
           'ObjectLiteral',
           '{',
           'ObjectProperty',
-          'PropertyKey',
           'Identifier',
           ':',
           'Value',
@@ -48,7 +79,7 @@ describe('query', () => {
         ],
       },
       {
-        query: '{ value: 100 }',
+        input: '{ value: 100 }',
         expected: [
           'Query',
           // { value: 100 }
@@ -56,7 +87,6 @@ describe('query', () => {
           'ObjectLiteral',
           '{',
           'ObjectProperty',
-          'PropertyKey',
           'Identifier',
           ':',
           'Value',
@@ -65,7 +95,7 @@ describe('query', () => {
         ],
       },
       {
-        query: '{ value: true }',
+        input: '{ value: true }',
         expected: [
           'Query',
           // { value: true }
@@ -73,7 +103,6 @@ describe('query', () => {
           'ObjectLiteral',
           '{',
           'ObjectProperty',
-          'PropertyKey',
           'Identifier',
           ':',
           'Value',
@@ -82,7 +111,7 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
+        input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
         expected: [
           'Query',
           // type:dxos.org/type/Person
@@ -102,7 +131,7 @@ describe('query', () => {
         ],
       },
       {
-        query: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
+        input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
         expected: [
           'Query',
           '(',
@@ -127,7 +156,6 @@ describe('query', () => {
           'ObjectLiteral',
           '{',
           'ObjectProperty',
-          'PropertyKey',
           'Identifier',
           ':',
           'Value',
@@ -136,7 +164,7 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Person => type:dxos.org/type/Organization',
+        input: 'type:dxos.org/type/Person -> type:dxos.org/type/Organization',
         expected: [
           'Query',
           // type:dxos.org/type/Person
@@ -156,7 +184,7 @@ describe('query', () => {
         ],
       },
       {
-        query: 'type:dxos.org/type/Organization <= type:dxos.org/type/Person',
+        input: 'type:dxos.org/type/Organization <- type:dxos.org/type/Person',
         expected: [
           'Query',
           // type:dxos.org/type/Organization
@@ -178,7 +206,7 @@ describe('query', () => {
       {
         // Persons for Organizations with name "DXOS"
         // TODO(burdon): Filter relations.
-        query: '((type:dxos.org/type/Organization AND { name: "DXOS" }) => type:dxos.org/type/Person)',
+        input: '((type:dxos.org/type/Organization AND { name: "DXOS" }) -> type:dxos.org/type/Person)',
         expected: [
           'Query',
           '(',
@@ -193,7 +221,6 @@ describe('query', () => {
           'ObjectLiteral',
           '{',
           'ObjectProperty',
-          'PropertyKey',
           'Identifier',
           ':',
           'Value',
@@ -210,14 +237,35 @@ describe('query', () => {
           ')',
         ],
       },
+      {
+        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        expected: [
+          'Query',
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          'And',
+          'Filter',
+          'ObjectLiteral',
+          '{',
+          'ObjectProperty',
+          'Identifier',
+          ':',
+          'Value',
+          'String',
+          '}',
+        ],
+      },
     ];
 
-    for (const { query, expected } of tests) {
+    for (const { input, expected } of tests) {
       let tree: Tree;
       try {
-        tree = queryParser.parse(query);
+        tree = queryParser.parse(input);
       } catch (err) {
-        console.error(query, err);
+        console.error(new Error(`Failed to parse: ${input}`, { cause: err }));
         continue;
       }
 
@@ -226,19 +274,45 @@ describe('query', () => {
       do {
         result.push(cursor.node.name);
       } while (cursor.next());
-      expect(result).toEqual(expected);
+      expect(result, input).toEqual(expected);
     }
   });
 
-  it('should build a query', ({ expect }) => {
+  it('build', ({ expect }) => {
     const queryBuilder = new QueryBuilder();
 
+    // TODO(burdon): Test "not"
     type Test = { input: string; expected: Filter.Any };
     const tests: Test[] = [
+      // Types
       {
         input: 'type:dxos.org/type/Person',
         expected: Filter.typename('dxos.org/type/Person'),
       },
+      // Tags
+      {
+        input: '#foo',
+        expected: Filter.tag('foo'),
+      },
+      {
+        input: '#foo AND #bar',
+        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
+      },
+      {
+        input: '#foo #bar',
+        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
+      },
+      // Text
+      {
+        input: '"test"',
+        expected: Filter.text('test'),
+      },
+      // Mixed
+      {
+        input: '#foo "test"',
+        expected: Filter.and(Filter.tag('foo'), Filter.text('test')),
+      },
+      // Props
       {
         input: '{ name: "DXOS" }',
         expected: Filter.props({ name: 'DXOS' }),
@@ -258,11 +332,29 @@ describe('query', () => {
           Filter.props({ name: 'DXOS' }),
         ),
       },
+      {
+        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+      },
+      // TODO(burdon): Convert Query/Filter expr to AST.
+      // TODO(burdon): Person -> Organization (many-to-many relation).
+      // Get Research Note objects for Organization objects for Person objects with jobTitle.
+      //
+      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:ResearchOn]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
+      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:ResearchOn]- type:ResearchNote
+      //
+      // {
+      //   input: '',
+      //   expected: Query.select(Filter.typename('dxos.org/type/Person', { jobTitle: 'investor' }))
+      //     .reference('organization')
+      //     .targetOf(Relation.of('dxos.org/relation/ResearchOn')) // TODO(burdon): Invert?
+      //     .source(),
+      // },
     ];
 
     tests.forEach(({ input, expected }) => {
-      const query = queryBuilder.build(input);
-      expect(query).toEqual(expected);
+      const result = queryBuilder.build(input);
+      expect(result, JSON.stringify({ input, result, expected }, null, 2)).toEqual(expected);
     });
   });
 });

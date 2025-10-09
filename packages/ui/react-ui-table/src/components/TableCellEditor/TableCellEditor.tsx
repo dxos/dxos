@@ -28,7 +28,7 @@ import { type FieldProjection } from '@dxos/schema';
 import { type ModalController, type TableModel } from '../../model';
 
 import { CellValidationMessage } from './CellValidationMessage';
-import { FormCellEditor } from './FormCellEditor';
+import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
 /**
  * Option to create new object/value.
@@ -40,6 +40,7 @@ export type TableCellEditorProps = {
   modals?: ModalController;
   schema?: Schema.AnyNoContext;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
+  onCreate?: OnCreateHandler;
   onSave?: () => void;
   client?: Client;
 };
@@ -53,6 +54,7 @@ export const TableValueEditor = ({
   schema,
   onFocus,
   onSave,
+  onCreate,
   client,
   __gridScope,
 }: GridScopedProps<TableCellEditorProps>) => {
@@ -83,6 +85,7 @@ export const TableValueEditor = ({
         schema={schema}
         __gridScope={__gridScope}
         onSave={onSave}
+        onCreate={onCreate}
         client={client}
         modals={modals}
       />

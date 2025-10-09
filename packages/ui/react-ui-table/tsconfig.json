@@ -72,10 +72,16 @@
       "path": "../lit-grid"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-components"
     },
     {
       "path": "../react-ui-editor"
@@ -88,9 +94,6 @@
     },
     {
       "path": "../react-ui-menu"
-    },
-    {
-      "path": "../react-ui-query-editor"
     },
     {
       "path": "../react-ui-searchlist"

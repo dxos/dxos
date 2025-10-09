@@ -107,13 +107,13 @@
     "@lezer/generator": "^1.7.1",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~19.2.0",
-    "@types/react-dom": "~19.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
     "@types/react-window": "^1.8.8",
-    "effect": "3.18.1",
+    "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.7"
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

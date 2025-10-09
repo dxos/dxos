@@ -38,7 +38,9 @@
     "@dxos/async": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-query": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
@@ -54,7 +56,7 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
     "@radix-ui/react-context": "1.1.1",
-    "effect": "3.18.1"
+    "effect": "3.18.3"
   },
   "devDependencies": {
     "@dxos/plugin-attention": "workspace:*",
@@ -66,11 +68,11 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
-    "@types/react": "~19.2.0",
-    "@types/react-dom": "~19.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
-    "vite": "7.1.7"
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",

@@ -18,7 +18,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type ReferencesOptions, references as referencesExtension } from './references';
 
@@ -51,15 +51,14 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         extensions: [
           createThemeExtensions({ themeMode }),
           createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
-          autocomplete({ onSubmit, onSuggest, onCancel }),
-          references ? referencesExtension({ provider: references.provider }) : [],
           createBasicExtensions({
             bracketMatching: false,
             lineWrapping,
             placeholder,
           }),
-          // TODO(thure): Surely this should not be unique to ChatEditor, iirc we have several instances of CM where Tab
-          //  should move focus.
+          autocomplete({ onSubmit, onSuggest, onCancel }),
+          references ? referencesExtension({ provider: references.provider }) : [],
+          // TODO(burdon): Standardize.
           keymap.of([
             {
               key: 'Tab',
@@ -79,7 +78,7 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
             },
           ]),
           extensions,
-        ].filter(isNonNullable),
+        ].filter(isTruthy),
       }),
       [themeMode, extensions, onSubmit, onSuggest, onCancel],
     );

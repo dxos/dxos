@@ -45,6 +45,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -76,9 +79,6 @@
     },
     {
       "path": "../react-ui-pickers"
-    },
-    {
-      "path": "../react-ui-query-editor"
     },
     {
       "path": "../react-ui-searchlist"

@@ -2,21 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { Button, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl, sizes } from './TextCrawl';
 
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
   component: TextCrawl,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
@@ -46,15 +44,15 @@ export const Cyclic: Story = {
 export const Demo: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>([]);
-
     return (
-      <div className='flex flex-col w-96 gap-4'>
-        <TextCrawl classNames='px-2 border border-separator rounded-md' lines={lines} autoAdvance />
-        <div>
+      <div className='flex flex-col is-[20rem] gap-4 p-1'>
+        <Toolbar.Root>
           <Button onClick={() => setLines((lines) => [...lines, `${lines.length + 1}. ${faker.lorem.paragraph()}`])}>
             Add
           </Button>
-        </div>
+          <Button onClick={() => setLines([])}>Reset</Button>
+        </Toolbar.Root>
+        <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance />
       </div>
     );
   },

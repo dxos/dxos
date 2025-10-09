@@ -8,12 +8,11 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Domino, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CommandMenuGroup,
   CommandMenuProvider,
   type DNDOptions,
-  Domino,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
@@ -77,16 +76,18 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback(
+  const getMenu = useCallback<UseCommandMenuOptions['getMenu']>(
     (trigger: string, query?: string) => {
       switch (trigger) {
-        case '@':
+        case '@': {
           return onLinkQuery?.(query) ?? [];
+        }
         case '/':
-        default:
+        default: {
           return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
+        }
       }
     },
     [onLinkQuery, slashCommandGroups],
@@ -101,7 +102,7 @@ export const MarkdownEditor = ({
         delay: 3_000,
         content: () =>
           Domino.of('div')
-            .child(
+            .children(
               Domino.of('span').text('Press'),
               ...trigger.map((text) =>
                 Domino.of('span')
@@ -114,9 +115,10 @@ export const MarkdownEditor = ({
       },
       getMenu,
     };
-  }, [getMenu]);
+  }, [onLinkQuery, getMenu]);
 
-  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
+  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
+
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (

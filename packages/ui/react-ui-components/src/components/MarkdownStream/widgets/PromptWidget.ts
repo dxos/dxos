@@ -4,7 +4,7 @@
 
 import { WidgetType } from '@codemirror/view';
 
-import { Domino } from '@dxos/react-ui-editor';
+import { Domino } from '@dxos/react-ui';
 
 /**
  * Simple prompt widget.
@@ -20,7 +20,7 @@ export class PromptWidget extends WidgetType {
   override toDOM(): HTMLElement {
     return Domino.of('div')
       .classNames('flex justify-end')
-      .child(Domino.of('div').classNames('pli-3 plb-2 bg-[--user-fill] rounded-sm').text(this.text))
+      .children(Domino.of('div').classNames('pli-3 plb-2 bg-[--user-fill] rounded-sm').text(this.text))
       .build();
   }
 

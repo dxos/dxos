@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef } from 'react';
 
@@ -17,6 +15,7 @@ import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { List, ListItem } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { seedTestData } from '@dxos/schema/testing';
@@ -93,6 +92,7 @@ const OrganizationItem = ({ organization }: { organization: DataType.Organizatio
 const meta = {
   title: 'plugins/plugin-inbox/Popover',
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -102,11 +102,11 @@ const meta = {
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
+            const mailbox = Mailbox.make({ space });
             const { emails } = await seedTestData(space);
-            const queueDxn = space.queues.create().dxn;
+            const queueDxn = mailbox.queue.dxn;
             const queue = space.queues.get<DataType.Message>(queueDxn);
             await queue.append(emails);
-            const mailbox = Mailbox.make({ queue: queueDxn });
             space.db.add(mailbox);
           },
         }),

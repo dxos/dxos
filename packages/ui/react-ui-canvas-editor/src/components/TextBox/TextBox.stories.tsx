@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextBox, type TextBoxProps } from './TextBox';
 
@@ -23,7 +21,7 @@ const meta = {
   title: 'ui/react-ui-canvas-editor/TextBox',
   component: TextBox,
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },

@@ -21,9 +21,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { type Tag } from '../../types';
 import { getMessageProps } from '../util';
-
-import { type Tag } from './model';
 
 const ROW_SIZES = {
   DEFAULT: 60,
@@ -83,7 +82,8 @@ const renderMessageCell = (message: DataType.Message, now: Date, _current?: bool
 export type MailboxAction =
   | { type: 'current'; messageId: string }
   | { type: 'select'; messageId: string }
-  | { type: 'select-tag'; label: string };
+  | { type: 'select-tag'; label: string }
+  | { type: 'save'; filter: string };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
@@ -204,7 +204,14 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
   }, [messages]);
 
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
+    <div
+      role='none'
+      className={mx(
+        'flex flex-col [&_.dx-grid]:grow',
+        role !== 'section' && '[&_.dx-grid]:bs-0',
+        role === 'story' && 'bs-full',
+      )}
+    >
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(

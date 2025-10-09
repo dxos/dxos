@@ -7,11 +7,17 @@ import { useEffect, useState } from 'react';
 import { type TypeAnnotation } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type QueryTag } from '@dxos/react-ui-query-editor';
+import { type Palette } from '@dxos/react-ui-types';
 import { type MaybePromise } from '@dxos/util';
 
 export type RefOption = { dxn: DXN; label?: string };
 export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<RefOption[]>;
+
+export type QueryTag = {
+  id: string;
+  label: string;
+  hue?: Palette;
+};
 
 type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQueryRefOptions?: QueryRefOptions };
 

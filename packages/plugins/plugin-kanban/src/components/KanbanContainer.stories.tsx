@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -20,13 +18,13 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban';
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -51,7 +49,7 @@ const StorybookKanban = () => {
   const views = useQuery(space, Filter.type(DataType.View));
   const [view, setView] = useState<DataType.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
-  const typename = view?.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   useEffect(() => {
@@ -105,7 +103,7 @@ const StorybookKanban = () => {
       invariant(view);
 
       schema.updateTypename(typename);
-      view.query = Query.select(Filter.typename(typename)).ast;
+      view.query.ast = Query.select(Filter.typename(typename)).ast;
     },
     [view, schema],
   );
@@ -147,9 +145,8 @@ const meta = {
   title: 'plugins/plugin-kanban/Kanban',
   component: StorybookKanban,
   render: () => <StorybookKanban />,
-  parameters: { translations },
   decorators: [
-    withLayout({ fullscreen: true }),
+    withTheme,
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -183,6 +180,10 @@ const meta = {
       ],
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof StorybookKanban>;
 
 export default meta;

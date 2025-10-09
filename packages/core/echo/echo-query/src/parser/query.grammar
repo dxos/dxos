@@ -5,45 +5,52 @@
 @top Query { expression }
 
 expression {
+  Filter |
   !Not Not expression |
+  expression !ImplicitAnd expression |
   expression !And And expression |
   expression !Or Or expression |
   expression !Relation Relation expression |
-  "(" expression ")" |
-  Filter
+  "(" expression ")"
 }
-
-// Boolean logic
 
 Not { 
-  @specialize<Identifier, "NOT"> 
+  @specialize<Identifier, "NOT" | "not" | "!">
 }
 And { 
-  @specialize<Identifier, "AND">
+  @specialize<Identifier, "AND" | "and">
 }
 Or { 
-  @specialize<Identifier, "OR">
+  @specialize<Identifier, "OR" | "or">
 }
 
 Relation {
   ArrowRight | ArrowLeft
 }
 
-// Filter
+//
+// Filters
+//
 
 Filter {
-  ObjectLiteral |
+  TagFilter |
+  TextFilter |
   TypeFilter |
-  PropertyFilter
+  PropertyFilter |
+  ObjectLiteral
 }
 
-// Type
+TagFilter {
+  Tag
+}
+
+TextFilter {
+  String
+}
 
 TypeFilter {
   @specialize[@name=TypeKeyword]<Identifier, "type"> ":" Identifier
 }
-
-// Property
 
 PropertyFilter {
   PropertyPath ":" Value
@@ -53,22 +60,13 @@ PropertyPath {
   Identifier ("." Identifier)*
 }
 
-// Object
-
 ObjectLiteral {
   "{" (ObjectProperty ("," ObjectProperty)*)? "}"
 }
 
 ObjectProperty {
-  PropertyKey ":" Value
+  Identifier ":" Value
 }
-
-PropertyKey {
-  Identifier |
-  String
-}
-
-// Array
 
 ArrayLiteral {
   "[" (Value ("," Value)*)? "]"
@@ -85,7 +83,13 @@ Value {
 
 @tokens {
   // Supports variables and DXNs
-  Identifier { $[a-zA-Z_]$[a-zA-Z0-9_./\-]* }
+  Identifier { 
+    $[a-zA-Z_]$[a-zA-Z0-9_./\-]* 
+  }
+
+  Tag {
+    "#" $[a-zA-Z0-9_\-]+
+  }
 
   String { 
     '"' (!["\\] | "\\" _)* '"' |
@@ -100,9 +104,9 @@ Value {
 
   Null { "null" }
 
-  ArrowRight { "=>" | "->" }
-  ArrowLeft { "<=" | "<-" }
-  
+  ArrowRight { "->" }
+  ArrowLeft { "<-" }
+
   space { @whitespace+ }
 
   "{" "}" "[" "]" "(" ")"
@@ -113,6 +117,7 @@ Value {
 
 @precedence {
   Not @right,
+  ImplicitAnd @left,
   And @left,
   Or @left,
   Relation @left

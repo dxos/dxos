@@ -2,29 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SchemaAST } from 'effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import { type Schema, type SchemaAST } from 'effect';
+import React, { useCallback, useMemo } from 'react';
 
 import {
+  type EchoSchema,
   Expando,
   Ref,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
-  type TypeAnnotation,
   getTypeAnnotation,
 } from '@dxos/echo-schema';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
-import { DxAnchor } from '@dxos/lit-ui/react';
+import { DxAnchor, DxTagPickerItem } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { QueryEditorItem } from '@dxos/react-ui-query-editor';
-import { PopoverCombobox } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
-import { type MaybePromise, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 import { translationKey } from '../../translations';
+import { ObjectPicker } from '../ObjectPicker';
 
 import { TextInput } from './Defaults';
 import { InputHeader, type InputProps } from './Input';
@@ -32,10 +31,13 @@ import { InputHeader, type InputProps } from './Input';
 export type RefFieldProps = InputProps & {
   ast?: SchemaAST.AST;
   array?: boolean;
-  onQueryRefOptions?: QueryRefOptions;
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
-  onCreateFromQuery?: (type: TypeAnnotation, query: string) => MaybePromise<void>;
+  onCreate?: (values: any) => void;
+  createSchema?: Schema.Schema.AnyNoContext;
+  createInitialValuePath?: string;
+  onQueryRefOptions?: QueryRefOptions;
+  schema?: EchoSchema;
 };
 
 // TODO(thure): Is this a standard that should be better canonized?
@@ -52,11 +54,13 @@ export const RefField = ({
   array,
   ast,
   getValue,
-  onBlur,
-  onQueryRefOptions,
   createOptionLabel,
   createOptionIcon,
-  onCreateFromQuery,
+  onBlur,
+  onCreate,
+  createSchema,
+  createInitialValuePath,
+  onQueryRefOptions,
   onValueChange,
   ...restInputProps
 }: RefFieldProps) => {
@@ -138,15 +142,6 @@ export const RefField = ({
 
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
-  const labelById = useMemo(
-    () =>
-      availableOptions.reduce((acc: Record<string, string>, option) => {
-        acc[option.id.toLowerCase()] = option.label.toLowerCase();
-        return acc;
-      }, {}),
-    [availableOptions],
-  );
-  const [query, setQuery] = useState('');
   const toggleSelect = useCallback(
     (id: string) => {
       if (array) {
@@ -179,13 +174,13 @@ export const RefField = ({
             ))
           )
         ) : (
-          <PopoverCombobox.Root>
-            <PopoverCombobox.Trigger asChild>
+          <ObjectPicker.Root>
+            <ObjectPicker.Trigger asChild>
               <Button variant='ghost' classNames='is-full text-start gap-2'>
                 <div role='none' className='grow'>
                   {items?.length ? (
                     items?.map((item) => (
-                      <QueryEditorItem
+                      <DxTagPickerItem
                         key={item.id}
                         itemId={item.id}
                         label={item.label}
@@ -206,44 +201,18 @@ export const RefField = ({
                 </div>
                 <Icon size={3} icon='ph--caret-down--bold' />
               </Button>
-            </PopoverCombobox.Trigger>
-            <PopoverCombobox.Content
-              filter={(value, search) =>
-                value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0
-              }
-            >
-              <PopoverCombobox.Input
-                placeholder={'Search...'}
-                value={query}
-                onValueChange={(v) => setQuery(v)}
-                autoFocus
-              />
-              <PopoverCombobox.List>
-                {availableOptions.map((option) => (
-                  <PopoverCombobox.Item
-                    key={option.id}
-                    value={option.id}
-                    onSelect={() => toggleSelect(option.id)}
-                    classNames='flex items-center gap-2'
-                  >
-                    <span className='grow'>{option.label}</span>
-                    {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
-                  </PopoverCombobox.Item>
-                ))}
-                {query.length > 0 && createOptionLabel && createOptionIcon && onCreateFromQuery && (
-                  <PopoverCombobox.Item
-                    value='__create__'
-                    onSelect={() => onCreateFromQuery?.(refTypeInfo, query)}
-                    classNames='flex items-center gap-2'
-                  >
-                    <Icon icon={createOptionIcon} />
-                    {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
-                  </PopoverCombobox.Item>
-                )}
-              </PopoverCombobox.List>
-              <PopoverCombobox.Arrow />
-            </PopoverCombobox.Content>
-          </PopoverCombobox.Root>
+            </ObjectPicker.Trigger>
+            <ObjectPicker.Content
+              options={availableOptions}
+              selectedIds={selectedIds}
+              onSelect={toggleSelect}
+              createSchema={createSchema}
+              createOptionLabel={createOptionLabel}
+              createOptionIcon={createOptionIcon}
+              createInitialValuePath={createInitialValuePath}
+              onCreate={onCreate}
+            />
+          </ObjectPicker.Root>
         )}
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}

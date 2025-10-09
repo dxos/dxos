@@ -27,6 +27,8 @@ import {
   MailboxObjectSettings,
   MessageCard,
   MessageContainer,
+  POPOVER_SAVE_FILTER,
+  PopoverSaveFilter,
   RelatedContacts,
   RelatedMessages,
 } from '../components';
@@ -38,8 +40,16 @@ export default () =>
     createSurface({
       id: `${meta.id}/mailbox`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: Mailbox.Mailbox } => Obj.instanceOf(Mailbox.Mailbox, data.subject),
-      component: ({ data, role }) => <MailboxContainer mailbox={data.subject} role={role} />,
+      filter: (data): data is { attendableId?: string; subject: Mailbox.Mailbox; properties: { filter?: string } } =>
+        Obj.instanceOf(Mailbox.Mailbox, data.subject),
+      component: ({ data, role }) => (
+        <MailboxContainer
+          mailbox={data.subject}
+          role={role}
+          attendableId={data.attendableId}
+          filter={data.properties.filter}
+        />
+      ),
     }),
     createSurface({
       id: `${meta.id}/message`,
@@ -70,6 +80,19 @@ export default () =>
       role: ['card', 'card--intrinsic', 'card--extrinsic', 'card--popover', 'card--transclusion'],
       filter: (data): data is { subject: DataType.Message } => Obj.instanceOf(DataType.Message, data?.subject),
       component: ({ data: { subject: message }, role }) => <MessageCard message={message} role={role} />,
+    }),
+    createSurface({
+      id: POPOVER_SAVE_FILTER,
+      role: 'card--popover',
+      filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
+        data.component === POPOVER_SAVE_FILTER &&
+        data.props !== null &&
+        typeof data.props === 'object' &&
+        'mailbox' in data.props &&
+        'filter' in data.props &&
+        Obj.instanceOf(Mailbox.Mailbox, data.props.mailbox) &&
+        typeof data.props.filter === 'string',
+      component: ({ data }) => <PopoverSaveFilter mailbox={data.props.mailbox} filter={data.props.filter} />,
     }),
     createSurface({
       id: `${meta.id}/mailbox/companion/settings`,
@@ -147,12 +170,12 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceContactTable = currentSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Person.typename &&
+            typenameFromQuery(view.query.ast) === DataType.Person.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceContactTable = defaultSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Person.typename &&
+            typenameFromQuery(view.query.ast) === DataType.Person.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 

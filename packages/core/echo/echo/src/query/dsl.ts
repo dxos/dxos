@@ -12,6 +12,7 @@ import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
 
@@ -206,6 +207,9 @@ type Intersection<Types extends readonly unknown[]> = Types extends [infer First
 interface FilterAPI {
   is(value: unknown): value is Filter<any>;
 
+  /** Construct a filter from an ast. */
+  fromAst(ast: QueryAST.Filter): Filter<any>;
+
   /**
    * Filter that matches all objects.
    */
@@ -239,6 +243,11 @@ interface FilterAPI {
    * Filter by fully qualified type DXN.
    */
   typeDXN(dxn: DXN): Filter<any>;
+
+  /**
+   * Filter by tag.
+   */
+  tag(tag: string): Filter<Obj.Any>;
 
   /**
    * Filter by properties.
@@ -353,6 +362,10 @@ class FilterClass implements Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
+  static fromAst(ast: QueryAST.Filter): Filter<any> {
+    return new FilterClass(ast);
+  }
+
   static everything(): FilterClass {
     return new FilterClass({
       type: 'object',
@@ -425,6 +438,13 @@ class FilterClass implements Filter<any> {
       type: 'object',
       typename: dxn.toString(),
       props: {},
+    });
+  }
+
+  static tag(tag: string): Filter<any> {
+    return new FilterClass({
+      type: 'tag',
+      tag,
     });
   }
 

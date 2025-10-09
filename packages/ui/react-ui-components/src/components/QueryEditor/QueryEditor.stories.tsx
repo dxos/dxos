@@ -2,33 +2,63 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 
-import { QueryEditor } from './QueryEditor';
+import { translations } from '../../translations';
+
+import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
   component: QueryEditor,
+  render: (args: QueryEditorProps) => {
+    const [space] = useSpaces();
+    return (
+      <QueryEditor classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm' {...args} space={space} />
+    );
+  },
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
+    withClientProvider({
+      types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
+      createIdentity: true,
+    }),
   ],
+  parameters: {
+    layout: 'centered',
+    translations,
+  },
 } satisfies Meta<typeof QueryEditor>;
 
 export default meta;
 
-type Story = StoryObj<typeof QueryEditor>;
+type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: () => {
-    const { space } = useClientProvider();
-    return <QueryEditor space={space} />;
+export const Default: Story = {};
+
+export const Complex: Story = {
+  args: {
+    autoFocus: true,
+    value: '#important OR type:dxos.org/type/Person AND { title:"DXOS", value: true }',
+  },
+};
+
+export const Relation: Story = {
+  args: {
+    autoFocus: true,
+    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
+  },
+};
+
+export const Tags: Story = {
+  args: {
+    autoFocus: true,
+    value: 'type:dxos.org/type/Person #investor #new',
   },
 };

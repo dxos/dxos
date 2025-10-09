@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Effect, Fiber, Layer } from 'effect';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -13,10 +11,10 @@ import { faker } from '@dxos/random';
 import { useQueue, useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Popover } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { PreviewPopoverProvider, usePreviewPopover } from '@dxos/react-ui-editor/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { createMessageGenerator } from '../../testing';
 import { translations } from '../../translations';
@@ -100,12 +98,11 @@ const meta = {
   component: ChatThread,
   render: DefaultStory,
   decorators: [
-    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
-    withLayout({ fullscreen: true }),
     withTheme,
+    withClientProvider({ createIdentity: true, createSpace: true, types: [DataType.Organization, DataType.Person] }),
   ],
   parameters: {
-    layout: 'fullscreen', // TODO(burdon): Replace withLayout.
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof ChatThread>;

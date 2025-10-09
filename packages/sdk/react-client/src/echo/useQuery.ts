@@ -4,7 +4,16 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import { type Echo, Filter, type Live, Query, type Queue, type Space, isSpace } from '@dxos/client/echo';
+import {
+  type Echo,
+  Filter,
+  type Live,
+  Query,
+  type Queryable,
+  type Queue,
+  type Space,
+  isSpace,
+} from '@dxos/client/echo';
 
 const EMPTY_ARRAY: never[] = [];
 
@@ -29,21 +38,20 @@ interface UseQueryFn {
  * Create subscription.
  */
 export const useQuery: UseQueryFn = (
-  spaceOrEcho: Space | Echo | Queue<any> | undefined,
+  // TODO(burdon): Remove Space and just requre Queryable?
+  resource: Space | Queryable | undefined,
   queryOrFilter: Query.Any | Filter.Any,
   deps?: any[],
 ): Live<unknown>[] => {
   const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
 
   const { getObjects, subscribe } = useMemo(() => {
-    let subscribed = false;
-    const queryResult =
-      spaceOrEcho === undefined
-        ? undefined
-        : isSpace(spaceOrEcho)
-          ? spaceOrEcho.db.query(query)
-          : spaceOrEcho.query(query);
+    let queryResult = undefined;
+    if (resource) {
+      queryResult = isSpace(resource) ? resource.db.query(query) : resource.query(query);
+    }
 
+    let subscribed = false;
     return {
       getObjects: () => (subscribed && queryResult ? queryResult.objects : EMPTY_ARRAY),
       subscribe: (cb: () => void) => {
@@ -55,7 +63,7 @@ export const useQuery: UseQueryFn = (
         };
       },
     };
-  }, [spaceOrEcho, JSON.stringify(query.ast), ...(deps ?? [])]);
+  }, [resource, JSON.stringify(query.ast), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes; make sure it is stable.

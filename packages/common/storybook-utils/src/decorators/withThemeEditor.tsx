@@ -5,7 +5,7 @@
 import { type Decorator } from '@storybook/react';
 import React, { memo } from 'react';
 
-import { ThemeEditor } from '../components';
+import { ThemeEditor } from '../components/ThemeEditor';
 
 /**
  * Show theme editor.

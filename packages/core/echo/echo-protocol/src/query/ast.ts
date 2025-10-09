@@ -46,6 +46,9 @@ const FilterObject_ = Schema.Struct({
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
 export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
 
+/**
+ * Compare.
+ */
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
   operator: Schema.Literal('eq', 'neq', 'gt', 'gte', 'lt', 'lte'),
@@ -54,6 +57,9 @@ const FilterCompare_ = Schema.Struct({
 export interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
 export const FilterCompare: Schema.Schema<FilterCompare> = FilterCompare_;
 
+/**
+ * In.
+ */
 const FilterIn_ = Schema.Struct({
   type: Schema.Literal('in'),
   values: Schema.Array(Schema.Any),
@@ -61,6 +67,9 @@ const FilterIn_ = Schema.Struct({
 export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
+/**
+ * Contains.
+ */
 const FilterContains_ = Schema.Struct({
   type: Schema.Literal('contains'),
   value: Schema.Any,
@@ -72,6 +81,19 @@ export interface FilterContains extends Schema.Schema.Type<typeof FilterContains
  */
 export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
 
+/**
+ * Filters objects that have certain tag.
+ */
+const FilterTag_ = Schema.Struct({
+  type: Schema.Literal('tag'),
+  tag: Schema.String, // TODO(burdon): Make OR-collection?
+});
+export interface FilterTag extends Schema.Schema.Type<typeof FilterTag_> {}
+export const FilterTag: Schema.Schema<FilterTag> = FilterTag_;
+
+/**
+ * Range.
+ */
 const FilterRange_ = Schema.Struct({
   type: Schema.Literal('range'),
   from: Schema.Any,
@@ -80,6 +102,9 @@ const FilterRange_ = Schema.Struct({
 export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
 export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
+/**
+ * Text search.
+ */
 const FilterTextSearch_ = Schema.Struct({
   type: Schema.Literal('text-search'),
   text: Schema.String,
@@ -88,6 +113,9 @@ const FilterTextSearch_ = Schema.Struct({
 export interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
 export const FilterTextSearch: Schema.Schema<FilterTextSearch> = FilterTextSearch_;
 
+/**
+ * Not.
+ */
 const FilterNot_ = Schema.Struct({
   type: Schema.Literal('not'),
   filter: Schema.suspend(() => Filter),
@@ -95,6 +123,9 @@ const FilterNot_ = Schema.Struct({
 export interface FilterNot extends Schema.Schema.Type<typeof FilterNot_> {}
 export const FilterNot: Schema.Schema<FilterNot> = FilterNot_;
 
+/**
+ * And.
+ */
 const FilterAnd_ = Schema.Struct({
   type: Schema.Literal('and'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
@@ -102,6 +133,9 @@ const FilterAnd_ = Schema.Struct({
 export interface FilterAnd extends Schema.Schema.Type<typeof FilterAnd_> {}
 export const FilterAnd: Schema.Schema<FilterAnd> = FilterAnd_;
 
+/**
+ * Or.
+ */
 const FilterOr_ = Schema.Struct({
   type: Schema.Literal('or'),
   filters: Schema.Array(Schema.suspend(() => Filter)),
@@ -109,13 +143,17 @@ const FilterOr_ = Schema.Struct({
 export interface FilterOr extends Schema.Schema.Type<typeof FilterOr_> {}
 export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 
+/**
+ * Union of filters.
+ */
 export const Filter = Schema.Union(
   FilterObject,
-  FilterTextSearch,
   FilterCompare,
   FilterIn,
   FilterContains,
+  FilterTag,
   FilterRange,
+  FilterTextSearch,
   FilterNot,
   FilterAnd,
   FilterOr,
