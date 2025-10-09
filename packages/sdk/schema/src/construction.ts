@@ -12,7 +12,7 @@ import {
   TypedObject,
   formatToType,
 } from '@dxos/echo/internal';
-import { createEchoSchema } from '@dxos/live-object/testing';
+import { createEchoSchema } from '@dxos/echo/testing';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 

@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 import { type Schema } from 'effect';
 
-import { EchoSchema, StoredSchema, getSchemaTypename, toJsonSchema, live } from '@dxos/echo/internal';
+import { EchoSchema, StoredSchema, getSchemaTypename, toJsonSchema, live } from '../internal';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 
