@@ -3,11 +3,12 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { SchemaAST } from 'effect';
+import { Effect, SchemaAST } from 'effect';
 
-import { Filter, getMeta } from '@dxos/client/echo';
+import { Filter } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo-schema';
-import { FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { ComputeEventLogger, FunctionInvocationService, FunctionType, TracingService } from '@dxos/functions';
+import { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';
@@ -55,25 +56,29 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
           this.context.createSubscription(ast.procedureName, unsubscribe);
         }
 
-        const body: Record<string, any> = {};
+        const runtime = this.context.runtime;
+        const functionDef = FunctionDefinition.deserialize(fn);
+        // If input schema exists, construct an object from args using the schema props order, otherwise pass { args }.
+        let input: any;
         if (fn.inputSchema) {
           const schema = toEffectSchema(fn.inputSchema);
-          SchemaAST.getPropertySignatures(schema.ast).forEach(({ name }, index) => {
-            body[name.toString()] = args[index];
+          const props = SchemaAST.getPropertySignatures(schema.ast);
+          input = {} as any;
+          props.forEach(({ name }, index) => {
+            input[name.toString()] = args[index];
           });
         } else {
-          body.args = args.filter(isNonNullable);
+          input = { args: args.filter(isNonNullable) };
         }
-        const id = getUserFunctionIdInMetadata(getMeta(fn));
-        const response = await fetch(`${this.context.remoteFunctionUrl}/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const result = await response.text();
-        log('function executed', { result });
-
-        return result;
+        const result = runtime.runPromise(
+          Effect.gen(function* () {
+            return yield* FunctionInvocationService.invokeFunction(functionDef, input);
+          }).pipe(
+            Effect.provide(ComputeEventLogger.layerFromTracing),
+            Effect.provide(TracingService.layerNoop),
+          ),
+        );
+        return result as any;
       };
 
     return this.runAsyncFunction(ast, state, handler(true), { ttl: FUNCTION_TTL });

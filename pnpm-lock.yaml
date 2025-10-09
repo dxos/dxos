@@ -2568,6 +2568,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-automation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
@@ -9263,6 +9266,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
