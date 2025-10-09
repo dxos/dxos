@@ -2282,7 +2282,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/ai':
         specifier: workspace:*
         version: link:../ai
@@ -2736,7 +2736,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -2833,7 +2833,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
@@ -2870,7 +2870,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -3113,7 +3113,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4622,7 +4622,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -5011,7 +5011,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -6331,7 +6331,7 @@ importers:
         version: 1.2.13(workerize-loader@2.0.2(webpack@5.88.2(@swc/core@1.13.5(@swc/helpers@0.5.17))(esbuild@0.25.10)))
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -6666,7 +6666,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7580,7 +7580,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@codemirror/search':
         specifier: ^6.5.11
         version: 6.5.11
@@ -9425,7 +9425,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9561,7 +9561,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -11145,7 +11145,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -11335,7 +11335,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -11595,7 +11595,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@automerge/automerge-repo':
         specifier: 2.3.1
         version: 2.3.1
@@ -13319,7 +13319,7 @@ importers:
     dependencies:
       '@automerge/automerge':
         specifier: 3.1.1
-        version: 3.1.1
+        version: 3.1.2
       '@codemirror/autocomplete':
         specifier: ^6.19.0
         version: 6.19.0
@@ -15631,6 +15631,9 @@ packages:
 
   '@automerge/automerge@3.1.1':
     resolution: {integrity: sha512-x7tZiMBLk4/SKYimVEVl1/wPntT9buGvLOWCey9ZcH8JUsB0dgm49C0S7Ojzgvflcs2hc/YjiXRPcFeFkinIgw==}
+
+  '@automerge/automerge@3.1.2':
+    resolution: {integrity: sha512-rAZRLAMrboBJGMmZXPOfYiwkmHXho6RjhUOIrlmf+Buukt/DN1oee8kHfpI3U4etetvGgqf5JaFVbydQpKT/Vg==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -29810,8 +29813,8 @@ packages:
   ogl@1.0.11:
     resolution: {integrity: sha512-kUpC154AFfxi16pmZUK4jk3J+8zxwTWGPo03EoYA8QPbzikHoaC82n6pNTbd+oEaJonaE8aPWBlX7ad9zrqLsA==}
 
-  ohash@1.1.4:
-    resolution: {integrity: sha512-FlDryZAahJmEF3VR3w1KogSEdWX3WhA5GPakFx4J81kEAiHyLMpdLLElS8n8dfNadMgAne/MywcvmogzscVt4g==}
+  ohash@1.1.6:
+    resolution: {integrity: sha512-TBu7PtV8YkAZn0tSxobKY2n2aAQva936lhRrj6957aDaCf9IEtqsKbgMzXE/F/sjqYOwmrukeORHNLe5glk7Cg==}
 
   ohash@2.0.11:
     resolution: {integrity: sha512-RdR9FQrFwNBNXAr4GixM8YaRZRJ5PUWbKYbE5eOsrwAjJW0q2REGcf79oYPsLyskQCZG1PLN+S/K1V00joZAoQ==}
@@ -34494,6 +34497,8 @@ snapshots:
       - supports-color
 
   '@automerge/automerge@3.1.1': {}
+
+  '@automerge/automerge@3.1.2': {}
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -51803,7 +51808,7 @@ snapshots:
 
   ogl@1.0.11: {}
 
-  ohash@1.1.4: {}
+  ohash@1.1.6: {}
 
   ohash@2.0.11: {}
 
@@ -55697,7 +55702,7 @@ snapshots:
   unenv-nightly@2.0.0-20241009-125958-e8ea22f:
     dependencies:
       defu: 6.1.4
-      ohash: 1.1.4
+      ohash: 1.1.6
       pathe: 1.1.2
       ufo: 1.6.1
 
