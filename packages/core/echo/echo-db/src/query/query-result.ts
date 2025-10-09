@@ -109,6 +109,7 @@ export type QueryRunOptions = {
 /**
  * Predicate based query.
  */
+// TODO(dmaretskyi): Change to Obj.Any
 export class QueryResult<T extends BaseObject = BaseObject> {
   private readonly _query: Query<T>;
   private readonly _signal = compositeRuntime.createSignal();
