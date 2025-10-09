@@ -38,6 +38,7 @@ import { createDocAccessor } from './doc-accessor';
 import { type AnyLiveObject, createObject, isEchoObject } from './echo-handler';
 import { getObjectCore } from './echo-handler';
 import { getDatabaseFromObject } from './util';
+import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
@@ -683,6 +684,16 @@ describe('Reactive Object with ECHO database', () => {
         name: 'John',
         worksAt: encodeReference(Reference.localObjectReference(org.id)),
       });
+    });
+
+    test('tags', async () => {
+      const { db } = await builder.createDatabase();
+
+      const org = db.add(Obj.make(Type.Expando, { name: 'DXOS', [Obj.Meta]: { tags: ['important'] } }));
+
+      log.info('', { acc: createDocAccessor(org, []).handle.doc() });
+
+      expect(Obj.getMeta(org).tags).toEqual(['important']);
     });
   });
 
