@@ -33,7 +33,7 @@ export default defineConfig({
         '@dxos/client/mesh',
         '@dxos/client-protocol',
         '@dxos/client-services',
-        '@dxos/echo-schema',
+        '@dxos/echo/internal',
         '@dxos/echo-db',
         '@dxos/protocols',
         '@dxos/react-client',

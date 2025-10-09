@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { updateCounter } from '@dxos/echo/internal/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/live-object/testing';

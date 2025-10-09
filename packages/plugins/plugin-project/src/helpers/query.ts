@@ -11,7 +11,7 @@ import {
   type ReferenceAnnotationValue,
   getTypeAnnotation,
   unwrapOptional,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';

@@ -39,7 +39,7 @@ const createTestObject = (props: ObjectProps = {}) => {
 };
 
 const createTestObjects = () => {
-  return new Array<Live<Expando>>()
+  return new Array<Expando>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
       range(3).map(() =>

@@ -10,6 +10,7 @@ import { UntypedReactiveHandler } from './untyped-handler';
  * Creates a reactive object from a plain Javascript object.
  */
 // TODO(dmaretskyi): Could mutate original object making it unusable.
+// NOTE: Use Obj.make for creating typed objects.
 export const live: {
   <T extends object>(obj: T): Live<T>;
 } = <T extends object>(obj?: T): Live<T> => {

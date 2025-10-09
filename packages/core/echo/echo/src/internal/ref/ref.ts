@@ -62,7 +62,7 @@ export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => 
   };
 };
 
-export const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
+export const RefTypeId: unique symbol = Symbol('@dxos/echo/internal/Ref');
 
 /**
  * Reference Schema.

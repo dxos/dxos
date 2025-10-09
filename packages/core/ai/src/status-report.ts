@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { GeneratorAnnotation } from '@dxos/echo-schema';
+import { GeneratorAnnotation } from '@dxos/echo/internal';
 import { ObjectId } from '@dxos/keys';
 
 /**
