@@ -4,7 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React from 'react';
+import React, { type KeyboardEvent, useCallback, useRef } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import {
   Capabilities,
@@ -66,6 +67,15 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
 
 const StoryPlank = ({ attendableId }: { attendableId: string }) => {
   const attentionAttrs = useAttentionAttributes(attendableId);
+  const rootElement = useRef<HTMLDivElement | null>(null);
+
+  // NOTE(thure): This is the same workaround as in Plank, but that component is out of scope for this story.
+  // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.target === event.currentTarget && event.key === 'Escape') {
+      rootElement.current?.closest('main')?.focus();
+    }
+  }, []);
 
   return (
     <StackItem.Root
@@ -73,6 +83,8 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       {...attentionAttrs}
       classNames='bg-baseSurface border-ie border-separator'
       size={30}
+      onKeyDown={handleKeyDown}
+      ref={rootElement}
     >
       <StoryPlankHeading attendableId={attendableId} />
       <StackItem.Content toolbar>
@@ -157,7 +169,51 @@ export default meta;
 
 type Story = StoryObj<typeof NavTreeContainer>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Find the element with treegrid role and click on its parent
+    const treegridElement = await canvas.findByRole('treegrid');
+    const treegridParent = treegridElement.parentElement;
+    if (treegridParent) {
+      await userEvent.click(treegridParent);
+    }
+
+    // Press Escape
+    await userEvent.keyboard('{Escape}');
+
+    // Confirm that focus is on an element with attribute data-main-landmark="0"
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
+
+    // Press Tab
+    await userEvent.keyboard('{Tab}');
+
+    // Confirm that focus is now on an element with data-main-landmark="1"
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '1');
+
+    // Press Tab
+    await userEvent.keyboard('{Tab}');
+
+    // Confirm that focus is now on an element with data-main-landmark="0"
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
+
+    // Press Shift-Tab
+    await userEvent.keyboard('{Shift>}{Tab}{/Shift}');
+
+    // Press Enter
+    await userEvent.keyboard('{Enter}');
+
+    // Confirm that focus is now on an element with data-attendable-id="space-0:object-0"
+    await expect(document.activeElement).toHaveAttribute('data-attendable-id', 'space-0:object-0');
+
+    // Press Escape
+    await userEvent.keyboard('{Escape}');
+
+    // Confirm that focus is now on an element with data-main-landmark="1"
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '1');
+  },
+};
 
 // TODO(wittjosiah): Deduplicate plugins/capabilities with default story.
 export const WithClient: Story = {
