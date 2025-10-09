@@ -5,7 +5,6 @@
 import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo-schema';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
-import { log } from '@dxos/log';
 
 export type MatchedObject = {
   id: ObjectId;

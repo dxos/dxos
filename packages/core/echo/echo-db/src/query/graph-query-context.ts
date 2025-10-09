@@ -6,6 +6,7 @@ import { isNotUndefined } from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
+import type { Obj } from '@dxos/echo';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { type ObjectId } from '@dxos/echo-schema';
@@ -16,7 +17,6 @@ import { type AnyLiveObject } from '../echo-handler';
 import { prohibitSignalActions } from '../guarded-scope';
 import { type EchoDatabaseImpl } from '../proxy-db';
 
-import type { Obj } from '@dxos/echo';
 import type { QueryContext, QueryResultEntry, QueryRunOptions } from './query-result';
 import { getTargetSpacesForQuery, isSimpleSelectionQuery } from './util';
 

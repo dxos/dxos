@@ -12,9 +12,9 @@ import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
-import type * as Obj from '../Obj';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
 // TODO(dmaretskyi): Undirected relation traversals.
