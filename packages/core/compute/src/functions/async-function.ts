@@ -5,12 +5,13 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type CleanupFn, debounce } from '@dxos/async';
-import { type Space } from '@dxos/client/echo';
+import type { Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { type RawInterpreterValue, type SimpleCellAddress } from '@dxos/vendor-hyperformula';
-import { type InterpreterState } from '@dxos/vendor-hyperformula';
-import { type InterpreterValue } from '@dxos/vendor-hyperformula';
-import { type ProcedureAst } from '@dxos/vendor-hyperformula';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import type { RawInterpreterValue, SimpleCellAddress } from '@dxos/vendor-hyperformula';
+import type { InterpreterState } from '@dxos/vendor-hyperformula';
+import type { InterpreterValue } from '@dxos/vendor-hyperformula';
+import type { ProcedureAst } from '@dxos/vendor-hyperformula';
 import { CellError, EmptyValue, ErrorType, FunctionPlugin, type HyperFormula } from '@dxos/vendor-hyperformula';
 
 // TODO(burdon): Create API gateways:
@@ -33,14 +34,12 @@ export type FunctionOptions = {
 export type FunctionContextOptions = {
   defaultTtl: number;
   debounceDelay: number;
-  remoteFunctionUrl: string;
   onUpdate?: (update: FunctionUpdateEvent) => void;
 };
 
-export const defaultFunctionContextOptions: FunctionContextOptions = {
+export const defaultFunctionContextOptions: Pick<FunctionContextOptions, 'defaultTtl' | 'debounceDelay'> = {
   defaultTtl: 5_000,
   debounceDelay: 200,
-  remoteFunctionUrl: 'https://edge.dxos.workers.dev/functions', // TODO(burdon): Config.
 };
 
 /**
@@ -77,6 +76,7 @@ export class FunctionContext {
 
   constructor(
     private readonly _hf: HyperFormula,
+    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
     private readonly _space: Space | undefined,
     _options?: Partial<FunctionContextOptions>,
   ) {
@@ -93,12 +93,12 @@ export class FunctionContext {
     return this._space;
   }
 
-  get remoteFunctionUrl() {
-    return this._options.remoteFunctionUrl;
-  }
-
   get info() {
     return { cache: this._cache.size, invocations: this._invocations };
+  }
+
+  get runtime() {
+    return this._runtime;
   }
 
   flush(): void {
