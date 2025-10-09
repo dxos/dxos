@@ -128,7 +128,10 @@ export const generator = () => ({
             enabled: true,
             spec: {
               kind: 'subscription',
-              query: organizationsQuery.ast,
+              query: {
+                string: organizationsQueryString,
+                ast: organizationsQuery.ast,
+              },
             },
             function: Ref.make(serializeFunction(agent)),
             input: {
@@ -229,7 +232,11 @@ export const generator = () => ({
           const { canvasModel, computeModel } = createQueueSinkPreset(
             space,
             'subscription',
-            (triggerSpec) => (triggerSpec.query = Query.select(Filter.typename('dxos.org/type/Chess')).ast),
+            (triggerSpec) =>
+              (triggerSpec.query = {
+                string: 'Query.select(Filter.typename("dxos.org/type/Chess"))',
+                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
+              }),
             'type',
           );
           return addToSpace(PresetName.OBJECT_CHANGE_QUEUE, space, canvasModel, computeModel);
