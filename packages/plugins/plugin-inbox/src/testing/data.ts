@@ -11,12 +11,12 @@ import { DataType } from '@dxos/schema';
 import { Mailbox, type Tag, sortTags } from '../types';
 
 const TAGS: Tag[] = [
-  { label: 'important', hue: 'green' },
-  { label: 'investor', hue: 'purple' },
-  { label: 'team', hue: 'green' },
-  { label: 'eng', hue: 'blue' },
-  { label: 'work', hue: 'emerald' },
-  { label: 'personal', hue: 'pink' },
+  { id: 'tag-1', label: 'important', hue: 'green' },
+  { id: 'tag-2', label: 'investor', hue: 'purple' },
+  { id: 'tag-3', label: 'team', hue: 'green' },
+  { id: 'tag-4', label: 'eng', hue: 'blue' },
+  { id: 'tag-5', label: 'work', hue: 'emerald' },
+  { id: 'tag-6', label: 'personal', hue: 'pink' },
 ];
 
 export const createMessages = (count = 10) => {

@@ -12,6 +12,7 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
+import { type Tag } from '../../types';
 import { Mailbox } from '../../types/mailbox';
 
 import { getMessage, listLabels, listMessages, messageToObject } from './api';
@@ -38,9 +39,8 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
-      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
       const labels = yield* listLabels(userId);
-      const labelMap = new Map(labels.labels.map((label) => [label.id, label.name]));
+      const labelMap = new Map<string, Tag>(labels.labels.map((label) => [label.id, label]));
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);

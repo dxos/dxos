@@ -8,6 +8,8 @@ import { type DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
+import { Tag } from './tag';
+
 // TODO(burdon): Implement as labels?
 export enum MessageState {
   NONE = 0,
@@ -20,6 +22,7 @@ export enum MessageState {
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
+  tags: Schema.optional(Schema.Record({ key: Schema.String, value: Tag })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Mailbox',
