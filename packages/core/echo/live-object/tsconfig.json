@@ -16,6 +16,15 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/node-std"
+    },
+    {
       "path": "../../../common/util"
     },
     {
