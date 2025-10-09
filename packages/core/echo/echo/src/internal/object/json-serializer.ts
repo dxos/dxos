@@ -13,7 +13,7 @@ import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 import { EntityKind } from '../ast';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import { type AnyEchoObject } from '../types';
-import { defineHiddenProperty } from '../../../../live-object/src/define-hidden-property';
+import { defineHiddenProperty } from '@dxos/live-object';
 
 import { setSchema } from './accessors';
 import { ObjectMetaSchema } from './meta';
