@@ -30,8 +30,6 @@ import { Mailbox } from '../../types';
 
 import { Mailbox as MailboxComponent } from './Mailbox';
 
-// TODO(burdon): Tag filter should be by ID.
-
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
   return <MailboxComponent role='story' id='story' messages={messages} ignoreAttention tags={TAGS_MAP} />;
