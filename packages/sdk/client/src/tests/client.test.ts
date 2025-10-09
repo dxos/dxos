@@ -15,6 +15,7 @@ import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
 import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
+import { Obj } from '@dxos/echo';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';
@@ -171,15 +172,15 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(live(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(Obj.make(ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      live(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(live(TextV0Type, { content: text })) }],
+      Obj.make(MessageType, {
+        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(Obj.make(TextV0Type, { content: text })) }],
       }),
     );
     thread2.messages.push(Ref.make(message));
