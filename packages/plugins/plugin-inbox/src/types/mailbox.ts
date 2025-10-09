@@ -22,7 +22,9 @@ export enum MessageState {
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
-  tags: Schema.optional(Schema.Record({ key: Schema.String, value: Tag })),
+  // Tags mapped from labels.
+  // TODO(burdon): Reconcile with Space tags.
+  tags: Schema.mutable(Schema.Record({ key: Schema.String, value: Tag })),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Mailbox',
@@ -33,8 +35,9 @@ export const Mailbox = Schema.Struct({
 
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'tags'> & {
   queue: DXN;
+  tags?: Record<string, Tag>;
 };
 
 /**
@@ -42,5 +45,5 @@ type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {
  */
 export const make = (props: MailboxProps) => {
   const queue = Ref.fromDXN(props.queue);
-  return Obj.make(Mailbox, { ...props, queue });
+  return Obj.make(Mailbox, { tags: {}, ...props, queue });
 };

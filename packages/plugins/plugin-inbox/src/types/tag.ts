@@ -7,7 +7,6 @@ import { Schema } from 'effect';
 // TODO(burdon): Move to sdk/schema.
 
 export const Tag = Schema.Struct({
-  id: Schema.String,
   label: Schema.String,
   hue: Schema.optional(Schema.String),
 });

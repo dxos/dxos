@@ -12,7 +12,6 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
-import { type Tag } from '../../types';
 import { Mailbox } from '../../types/mailbox';
 
 import { getMessage, listLabels, listMessages, messageToObject } from './api';
@@ -39,9 +38,14 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
-      const labels = yield* listLabels(userId);
-      const labelMap = new Map<string, Tag>(labels.labels.map((label) => [label.id, label]));
+      // Sync labels.
+      // TODO(burdon): Use hash for default color.
+      const { labels } = yield* listLabels(userId);
+      labels.forEach((label) => {
+        mailbox.tags[label.id] = { label: label.name };
+      });
 
+      // Sync messages.
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
@@ -67,7 +71,7 @@ export default defineFunction({
             pipe(
               // Retrieve details.
               getMessage(userId, message.id),
-              Effect.flatMap(messageToObject(last, labelMap)),
+              Effect.flatMap(messageToObject(last)),
             ),
           ),
           Effect.all,

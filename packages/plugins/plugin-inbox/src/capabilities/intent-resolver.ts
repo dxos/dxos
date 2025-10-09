@@ -44,6 +44,7 @@ export default (context: PluginContext) =>
             name,
             // TODO(dmaretskyi): Use space.queues.create() instead.
             queue: Ref.fromDXN(createQueueDXN(spaceId)),
+            tags: {},
           }),
         },
       }),

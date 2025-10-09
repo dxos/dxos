@@ -3,21 +3,24 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
+import { type WithId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { Mailbox, type Tag, sortTags } from '../types';
+import { Mailbox, type Tag } from '../types';
 
-const TAGS: Tag[] = [
-  { id: 'tag-1', label: 'important', hue: 'green' },
-  { id: 'tag-2', label: 'investor', hue: 'purple' },
-  { id: 'tag-3', label: 'team', hue: 'green' },
-  { id: 'tag-4', label: 'eng', hue: 'blue' },
-  { id: 'tag-5', label: 'work', hue: 'emerald' },
-  { id: 'tag-6', label: 'personal', hue: 'pink' },
+export const TAGS: (Tag & WithId)[] = [
+  { id: 'tag_1', label: 'important', hue: 'green' },
+  { id: 'tag_2', label: 'investor', hue: 'purple' },
+  { id: 'tag_3', label: 'team', hue: 'green' },
+  { id: 'tag_4', label: 'eng', hue: 'blue' },
+  { id: 'tag_5', label: 'work', hue: 'emerald' },
+  { id: 'tag_6', label: 'personal', hue: 'pink' },
 ];
+
+export const TAGS_MAP = TAGS.reduce((acc, tag) => ({ ...acc, [tag.id]: { label: tag.label, hue: tag.hue } }), {});
 
 export const createMessages = (count = 10) => {
   const text = faker.lorem.paragraph();
@@ -38,7 +41,10 @@ export const createMessages = (count = 10) => {
         properties: {
           subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
           snippet: text,
-          tags: faker.helpers.uniqueArray(TAGS, faker.number.int(3)).sort(sortTags),
+          tags: faker.helpers.uniqueArray(
+            TAGS.map((tag) => tag.id),
+            faker.number.int(3),
+          ),
         },
       }),
     {
@@ -86,8 +92,10 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
-  const tags = faker.helpers.randomSubset(TAGS, { min: 0, max: TAGS.length });
-  tags.sort(sortTags);
+  const tags = faker.helpers.randomSubset(
+    TAGS.map((tag) => tag.id),
+    { min: 0, max: TAGS.length },
+  );
 
   return Obj.make(DataType.Message, {
     created: faker.date.recent().toISOString(),
@@ -116,7 +124,7 @@ export const initializeMailbox = async (space: Space, messageCount = 30) => {
   const queueDxn = space.queues.create().dxn;
   const queue = space.queues.get<DataType.Message>(queueDxn);
   await queue.append([...Array(messageCount)].map(() => createMessage(space)));
-  const mailbox = Mailbox.make({ queue: queueDxn });
+  const mailbox = Mailbox.make({ queue: queueDxn, tags: TAGS_MAP });
   space.db.add(mailbox);
   return mailbox;
 };

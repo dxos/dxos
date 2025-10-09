@@ -4,15 +4,21 @@
 
 import { Schema } from 'effect';
 
-import { Tag } from '../../types';
-
 //
 // https://gmail.googleapis.com/gmail/v1/users/{userId}/labels
 // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/list
 //
 
+export const Label = Schema.Struct({
+  id: Schema.String,
+  type: Schema.String,
+  name: Schema.String,
+});
+
+export type Label = Schema.Schema.Type<typeof Label>;
+
 export const LabelsResponse = Schema.Struct({
-  labels: Schema.Array(Tag),
+  labels: Schema.Array(Label),
 });
 
 export type LabelsResponse = Schema.Schema.Type<typeof LabelsResponse>;

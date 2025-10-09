@@ -138,11 +138,12 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
       {messages && messages.length > 0 ? (
         <MailboxComponent
-          messages={messages}
           id={id}
-          onAction={handleAction}
-          currentMessageId={currentMessageId}
           role={role}
+          messages={messages}
+          tags={mailbox.tags}
+          currentMessageId={currentMessageId}
+          onAction={handleAction}
         />
       ) : (
         <MailboxEmpty mailbox={mailbox} />

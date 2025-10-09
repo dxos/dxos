@@ -10,8 +10,6 @@ import { withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { type Tag } from '../../types';
-
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
 import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './util';
 
@@ -54,7 +52,7 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
 /**
  * Transforms Gmail message to ECHO message object.
  */
-export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, Tag>) =>
+export const messageToObject = (last?: DataType.Message) =>
   Effect.fn(function* (message: MessageDetails) {
     // Skip the message if it's the same as the last message.
     const created = new Date(parseInt(message.internalDate)).toISOString();
@@ -76,14 +74,6 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     const text = Buffer.from(data, 'base64').toString('utf-8');
     const markdown = stripNewlines(turndown.turndown(text));
 
-    const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
-    const snippet = message.snippet;
-
-    // TODO(burdon): Store labels by id.
-    const labels = labelMap
-      ? message.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
-      : message.labelIds;
-
     return Obj.make(DataType.Message, {
       id: Type.ObjectId.random(),
       created,
@@ -96,9 +86,9 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
       ],
       properties: {
         threadId: message.threadId,
-        labels,
-        snippet,
-        subject,
+        labels: message.labelIds,
+        snippet: message.snippet,
+        subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
       },
     });
   });

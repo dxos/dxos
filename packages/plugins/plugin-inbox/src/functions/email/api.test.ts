@@ -36,8 +36,8 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
       const labels = yield* listLabels(userId);
-      expect(labels).to.exist;
       console.log(JSON.stringify(labels, null, 2));
+      expect(labels).to.exist;
     }, Effect.provide(TestLayer)),
   );
 
