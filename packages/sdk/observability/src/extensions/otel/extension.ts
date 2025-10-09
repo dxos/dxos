@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { Effect, Ref } from 'effect';
 
 import { type Config } from '@dxos/config';
@@ -16,8 +18,12 @@ import { stubExtension } from '../stub';
 // TODO(wittjosiah): Environment & release version attributes.
 
 export type ExtensionsOptions = {
+  /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
   serviceName: string;
+  /** For the OTEL, the version of the entity for which signals (metrics or trace) are collected. */
   serviceVersion: string;
+  /** For the OTEL, the environment of the entity for which signals (metrics or trace) are collected. */
+  environment: string;
   config: Config;
   endpoint?: string;
   headers?: Record<string, string>;
@@ -29,6 +35,7 @@ export type ExtensionsOptions = {
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
   serviceName,
   serviceVersion,
+  environment,
   config,
   endpoint: _endpoint,
   headers: _headers,
@@ -50,10 +57,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const endpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
-    : config.get('runtime.app.env.DX_OTEL_ENDPOINT');
+    : config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT;
   const unparsedHeaders = isNode()
     ? (process.env.DX_OTEL_HEADERS ?? _headers ?? buildSecrets.OTEL_HEADERS)
-    : config.get('runtime.app.env.DX_OTEL_HEADERS');
+    : config.values.runtime?.app?.env?.DX_OTEL_HEADERS;
   const headers = parseHeaders(unparsedHeaders);
 
   if (!endpoint || !headers) {
@@ -61,12 +68,19 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     return stubExtension;
   }
 
+  const resource = defaultResource().merge(
+    resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: serviceName,
+      [ATTR_SERVICE_VERSION]: serviceVersion,
+      'deployment.environment': environment,
+    }),
+  );
+
   const logs = logsEnabled
     ? new OtelLogs({
         endpoint,
         headers,
-        serviceName,
-        serviceVersion,
+        resource,
         getTags: () => Object.fromEntries(tags),
         logLevel: LogLevel.VERBOSE,
         includeSharedWorkerLogs: false,
@@ -77,8 +91,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     ? new OtelMetrics({
         endpoint,
         headers,
-        serviceName,
-        serviceVersion,
+        resource,
         getTags: () => Object.fromEntries(tags),
       })
     : undefined;
@@ -87,8 +100,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     ? new OtelTraces({
         endpoint,
         headers,
-        serviceName,
-        serviceVersion,
+        resource,
         getTags: () => Object.fromEntries(tags),
       })
     : undefined;

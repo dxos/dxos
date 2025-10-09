@@ -4,9 +4,8 @@
 
 import { SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
-import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
   type LogConfig,
@@ -34,25 +33,22 @@ export class OtelLogs {
   private _loggerProvider: LoggerProvider;
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
-    const resource = defaultResource().merge(
-      resourceFromAttributes({
-        [ATTR_SERVICE_NAME]: this.options.serviceName,
-        [ATTR_SERVICE_VERSION]: this.options.serviceVersion,
-      }),
-    );
     const logExporter = new OTLPLogExporter({
       url: this.options.endpoint + '/v1/logs',
       headers: this.options.headers,
       concurrencyLimit: 10, // an optional limit on pending requests
     });
     this._loggerProvider = new LoggerProvider({
-      resource,
+      resource: this.options.resource,
       processors: [new BatchLogRecordProcessor(logExporter)],
     });
   }
 
   public readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
-    const logger = this._loggerProvider.getLogger('dxos-observability', this.options.serviceVersion);
+    const logger = this._loggerProvider.getLogger(
+      'dxos-observability',
+      this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
+    );
 
     if (
       entry.level < this.options.logLevel ||

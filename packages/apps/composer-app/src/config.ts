@@ -28,6 +28,7 @@ export const initializeObservability = async (config: Config) =>
         // TODO(wittjosiah): Make APP_KEY "composer"?
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
+        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         config,
       }),
     ),
