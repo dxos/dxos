@@ -3044,6 +3044,9 @@ importers:
         specifier: ^3.1.7
         version: 3.1.7
     devDependencies:
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../echo-generator
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
