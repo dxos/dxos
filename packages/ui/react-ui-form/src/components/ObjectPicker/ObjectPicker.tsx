@@ -28,11 +28,11 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     {
       options,
       selectedIds,
-      onSelect,
       createSchema,
       createOptionLabel,
       createOptionIcon,
       createInitialValuePath,
+      onSelect,
       onCreate,
       ...props
     },

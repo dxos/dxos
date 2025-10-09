@@ -37,9 +37,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-query"
-    },
-    {
       "path": "../echo-schema"
     },
     {
