@@ -6,6 +6,8 @@ tags:
   - pack
 tasks:
   compile:
+    deps:
+      - prebuild
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
@@ -28,3 +30,6 @@ tasks:
       - src/query-env/*
     outputs:
       - dist/query-env/*
+  test:
+    deps:
+      - prebuild
