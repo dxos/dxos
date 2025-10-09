@@ -14,6 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, Clipboard, Input, useAsyncEffect, useControlledState, useTranslation } from '@dxos/react-ui';
 import { DataType } from '@dxos/schema';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -283,7 +284,3 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
     </div>
   );
 };
-
-// TODO(wittjosiah): Factor out.
-// From https://stackoverflow.com/a/67243723/2804332
-const kebabize = (str: string) => str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase());

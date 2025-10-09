@@ -190,13 +190,15 @@ const PlankComponent = memo(
     const data = useMemo(
       () =>
         node && {
+          attendableId: id,
           subject: node.data,
           companionTo: primary?.data,
+          properties: node.properties,
           variant,
           path,
           popoverAnchorId,
         },
-      [node, node?.data, path, popoverAnchorId, primary?.data, variant],
+      [node, node?.data, node?.properties, path, popoverAnchorId, primary?.data, variant],
     );
 
     // TODO(wittjosiah): Change prop to accept a component.
