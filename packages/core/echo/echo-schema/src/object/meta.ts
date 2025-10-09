@@ -25,7 +25,9 @@ export const ObjectMetaSchema = Schema.Struct({
    * Tags are arbitrary application-defined strings.
    * ECHO makes no assumptions about the tag structure.
    */
-  tags: Schema.mutable(Schema.Array(Schema.String)),
+  // TODO(dmaretskyi): Has to be optional for compatibility with old data.
+  // Defaulting to an empty array is possible but requires a bit more work.
+  tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
 });
 
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
