@@ -6,10 +6,10 @@ import { Effect, Ref } from 'effect';
 
 import { type Config } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
-import { isNode } from '@dxos/util';
+import { isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
-import { type Extension } from '../../observability-extension';
+import { type Extension, type ExtensionApi } from '../../observability-extension';
 import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
 
@@ -20,7 +20,10 @@ export type ExtensionsOptions = {
   serviceVersion: string;
   config: Config;
   endpoint?: string;
-  authorizationHeader?: string;
+  headers?: Record<string, string>;
+  logs?: boolean;
+  metrics?: boolean;
+  traces?: boolean;
 };
 
 export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension> = Effect.fn(function* ({
@@ -28,12 +31,19 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   serviceVersion,
   config,
   endpoint: _endpoint,
-  authorizationHeader: _authorizationHeader,
+  headers: _headers,
+  // TODO(wittjosiah): Logging integration.
+  //   - logger should run even if observability is disabled
+  //   - logs should be cached locally in a circular buffer
+  //   - logs should be flushed to the server if user opts to include them in a bug report
+  logs: logsEnabled = false,
+  metrics: metricsEnabled = true,
+  traces: tracesEnabled = true,
 }) {
   const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
+  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
   const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
 
-  // TODO(wittjosiah): Isomorphic storage.
   const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
   const enabledRef = yield* Ref.make(!cachedDisabled);
   const tags = new Map<string, string>();
@@ -41,37 +51,56 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const endpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
     : config.get('runtime.app.env.DX_OTEL_ENDPOINT');
-  const authorizationHeader = isNode()
-    ? (process.env.DX_OTEL_AUTHORIZATION ?? _authorizationHeader ?? buildSecrets.OTEL_AUTHORIZATION)
-    : config.get('runtime.app.env.DX_OTEL_AUTHORIZATION');
+  const unparsedHeaders = isNode()
+    ? (process.env.DX_OTEL_HEADERS ?? _headers ?? buildSecrets.OTEL_HEADERS)
+    : config.get('runtime.app.env.DX_OTEL_HEADERS');
+  const headers = parseHeaders(unparsedHeaders);
 
-  if (!endpoint || !authorizationHeader) {
-    log.warn('Missing OTEL_ENDPOINT or OTEL_AUTHORIZATION');
+  if (!endpoint || !headers) {
+    log.warn('Missing OTEL_ENDPOINT or OTEL_HEADERS');
     return stubExtension;
   }
 
-  const logs = new OtelLogs({
-    endpoint,
-    authorizationHeader,
-    serviceName,
-    serviceVersion,
-    getTags: () => Object.fromEntries(tags),
-    logLevel: LogLevel.VERBOSE,
-    includeSharedWorkerLogs: false,
-  });
+  const logs = logsEnabled
+    ? new OtelLogs({
+        endpoint,
+        headers,
+        serviceName,
+        serviceVersion,
+        getTags: () => Object.fromEntries(tags),
+        logLevel: LogLevel.VERBOSE,
+        includeSharedWorkerLogs: false,
+      })
+    : undefined;
 
-  const traces = new OtelTraces({
-    endpoint,
-    authorizationHeader,
-    serviceName,
-    serviceVersion,
-    getTags: () => Object.fromEntries(tags),
-  });
+  const metrics = metricsEnabled
+    ? new OtelMetrics({
+        endpoint,
+        headers,
+        serviceName,
+        serviceVersion,
+        getTags: () => Object.fromEntries(tags),
+      })
+    : undefined;
+
+  const traces = tracesEnabled
+    ? new OtelTraces({
+        endpoint,
+        headers,
+        serviceName,
+        serviceVersion,
+        getTags: () => Object.fromEntries(tags),
+      })
+    : undefined;
 
   return {
     initialize: Effect.fn(function* () {
-      log.runtimeConfig.processors.push(logs.logProcessor);
-      traces.start();
+      if (logs) {
+        log.runtimeConfig.processors.push(logs.logProcessor);
+      }
+      if (traces) {
+        traces.start();
+      }
     }),
     enable: Effect.fn(function* () {
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
@@ -81,8 +110,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, true));
       yield* Ref.update(enabledRef, () => false);
     }),
-    close: () => Effect.promise(() => logs.close()),
-    flush: () => Effect.promise(() => logs.flush()),
+    close: () => Effect.promise(async () => logs?.close()),
+    flush: () => Effect.promise(async () => logs?.flush()),
     setTags: (incomingTags) => {
       for (const [key, value] of Object.entries(incomingTags)) {
         tags.set(key, value);
@@ -91,6 +120,28 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     get enabled() {
       return Ref.get(enabledRef).pipe(Effect.runSync);
     },
-    apis: [{ kind: 'logs' }, { kind: 'traces' }],
+    apis: [
+      logs ? ({ kind: 'logs' } satisfies ExtensionApi) : undefined,
+      metrics
+        ? ({
+            kind: 'metrics',
+            gauge: (name, value, tags) => metrics.gauge(name, value, tags),
+            increment: (name, value, tags) => metrics.increment(name, value, tags),
+            distribution: (name, value, tags) => metrics.distribution(name, value, tags),
+          } satisfies ExtensionApi)
+        : undefined,
+      traces ? ({ kind: 'traces' } satisfies ExtensionApi) : undefined,
+    ].filter(isNonNullable),
   };
 });
+
+const parseHeaders = (unparsedHeaders: string): Record<string, string> => {
+  return unparsedHeaders.split(';').reduce((acc: Record<string, string>, header) => {
+    const [key, ...rest] = header.split(':');
+    if (key && rest.length > 0) {
+      acc[key.trim().toLowerCase()] = rest.join(':').trim();
+    }
+
+    return acc;
+  }, {});
+};

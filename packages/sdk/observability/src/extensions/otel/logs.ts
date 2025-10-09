@@ -16,9 +16,10 @@ import {
   getContextFromEntry,
   getRelativeFilename,
 } from '@dxos/log';
-import { jsonlogify } from '@dxos/util';
 
 import { type OtelOptions, setDiagLogger } from './otel';
+
+const FLATTEN_DEPTH = 1;
 
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
@@ -41,9 +42,7 @@ export class OtelLogs {
     );
     const logExporter = new OTLPLogExporter({
       url: this.options.endpoint + '/v1/logs',
-      headers: {
-        Authorization: this.options.authorizationHeader,
-      },
+      headers: this.options.headers,
       concurrencyLimit: 10, // an optional limit on pending requests
     });
     this._loggerProvider = new LoggerProvider({
@@ -52,7 +51,7 @@ export class OtelLogs {
     });
   }
 
-  public readonly logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
+  public readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
     const logger = this._loggerProvider.getLogger('dxos-observability', this.options.serviceVersion);
 
     if (
@@ -62,16 +61,17 @@ export class OtelLogs {
       return;
     }
 
-    const record = {
-      ...entry,
+    const attributes = {
+      ...this.options.getTags(),
       ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
-      context: jsonlogify(getContextFromEntry(entry)),
+      ...(entry.error ? { error: entry.error.stack } : {}),
+      ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
     };
 
     logger.emit({
       severityNumber: convertLevel(entry.level),
-      body: JSON.stringify(record),
-      attributes: this.options.getTags(),
+      body: entry.message,
+      attributes,
     });
   };
 
@@ -99,4 +99,31 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
     default:
       return SeverityNumber.ERROR;
   }
+};
+
+// TODO(wittjosiah): Reconcile logging utils w/ EDGE.
+const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: number = 1) => {
+  if (!object) {
+    return {};
+  }
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(object)) {
+    if (value === undefined) {
+      continue;
+    }
+    const newKey = keyPrefix ? `${keyPrefix}${key}` : key;
+    if (typeof value === 'object') {
+      if (!value || Array.isArray(value) || depth > FLATTEN_DEPTH) {
+        result[newKey] = JSON.stringify(value);
+      } else {
+        const flattened = stringifyValues(value, `${newKey}_`, depth + 1);
+        for (const [flattenedKey, flattenedValue] of Object.entries(flattened)) {
+          result[flattenedKey] = flattenedValue;
+        }
+      }
+    } else {
+      result[newKey] = String(value);
+    }
+  }
+  return result;
 };

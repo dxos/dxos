@@ -16,7 +16,7 @@ tasks:
       - scripts/inject_api_keys.mjs
       - $DX_IPDATA_API_KEY
       - $DX_OTEL_ENDPOINT
-      - $DX_OTEL_AUTHORIZATION
+      - $DX_OTEL_HEADERS
       - $NODE_ENV
     outputs:
       - src/cli-observability-secrets.json

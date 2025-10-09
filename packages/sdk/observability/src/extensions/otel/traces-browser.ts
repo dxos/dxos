@@ -7,7 +7,7 @@ import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
-import { BatchSpanProcessor, ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
@@ -30,13 +30,10 @@ export class OtelTraces {
     const tracerProvider = new WebTracerProvider({
       resource,
       spanProcessors: [
-        new SimpleSpanProcessor(new ConsoleSpanExporter()),
         new BatchSpanProcessor(
           new OTLPTraceExporter({
             url: this.options.endpoint + '/v1/traces',
-            headers: {
-              Authorization: this.options.authorizationHeader,
-            },
+            headers: this.options.headers,
             concurrencyLimit: 10, // an optional limit on pending requests
           }),
         ),

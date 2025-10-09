@@ -8,8 +8,6 @@ import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 
-import { APP_KEY } from './constants';
-
 export const setupConfig = async () => {
   const sources = [await Storage(), Envs(), Local(), Defaults()];
   // Not available in the worker.
@@ -27,7 +25,8 @@ export const initializeObservability = async (config: Config) =>
     Observability.make(),
     Observability.addExtension(
       ObservabilityExtension.Otel.extensions({
-        serviceName: APP_KEY,
+        // TODO(wittjosiah): Make APP_KEY "composer"?
+        serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
         config,
       }),

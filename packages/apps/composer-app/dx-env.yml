@@ -10,14 +10,6 @@ REMOTE_SOURCE:
   path: runtime.client.remoteSource
   type: string
 
-AGENT_HOSTING_TYPE:
-  path: runtime.services.agentHosting.type
-  type: string
-
-AGENT_HOSTING_SERVER:
-  path: runtime.services.agentHosting.server
-  type: string
-
 IPFS_API_SECRET:
   path: runtime.services.ipfs.serverAuthSecret
   type: string
@@ -26,8 +18,8 @@ DX_OTEL_ENDPOINT:
   path: runtime.app.env.DX_OTEL_ENDPOINT
   type: string
 
-DX_OTEL_AUTHORIZATION:
-  path: runtime.app.env.DX_OTEL_AUTHORIZATION
+DX_OTEL_HEADERS:
+  path: runtime.app.env.DX_OTEL_HEADERS
   type: string
 
 DX_EDGE_BASE_URL:

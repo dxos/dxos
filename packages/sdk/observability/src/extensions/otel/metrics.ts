@@ -33,9 +33,7 @@ export class OtelMetrics {
     const grafanaMetricReader = new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
         url: this.options.endpoint + '/v1/metrics',
-        headers: {
-          Authorization: this.options.authorizationHeader,
-        },
+        headers: this.options.headers,
       }),
       exportIntervalMillis: EXPORT_INTERVAL,
     });
