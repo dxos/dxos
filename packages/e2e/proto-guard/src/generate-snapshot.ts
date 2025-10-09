@@ -20,6 +20,7 @@ import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registr
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
 import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
+import { Obj, Type } from '@dxos/echo';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.
@@ -97,9 +98,9 @@ const main = async () => {
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(live(Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(Type.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
-      live(Todo, {
+      Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
@@ -118,10 +119,10 @@ const main = async () => {
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
-    const object = space.db.add(live(dynamicSchema, {}));
+    const object = space.db.add(Obj.make(dynamicSchema, {}));
     dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
     object.name = 'Test';
-    object.todo = live(Todo, { name: 'Test todo' });
+    object.todo = Obj.make(Todo, { name: 'Test todo' });
     await space.db.flush();
 
     // space.db.add(live(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));

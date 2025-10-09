@@ -4,11 +4,10 @@
 
 import { type AnyLiveObject } from '@dxos/echo-db';
 import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo/internal';
-import { GraphModel } from '@dxos/graph';
-import { Graph, type GraphNode, createEdgeId } from '@dxos/graph';
-import { live } from '@dxos/live-object';
+import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
+import { Obj } from '@dxos/echo';
 import { getSchemaProperties } from '../properties';
 
 /**
@@ -18,7 +17,7 @@ import { getSchemaProperties } from '../properties';
 export const createGraph = <T extends BaseObject>(
   objects: AnyLiveObject<T>[],
 ): GraphModel<GraphNode.Required<AnyLiveObject<T>>> => {
-  const graph = new GraphModel<GraphNode.Required<AnyLiveObject<T>>>(live(Graph, { nodes: [], edges: [] }));
+  const graph = new GraphModel<GraphNode.Required<AnyLiveObject<T>>>(Obj.make(Graph, { nodes: [], edges: [] }));
 
   // Map objects.
   objects.forEach((object) => {

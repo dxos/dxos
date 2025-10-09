@@ -16,6 +16,7 @@ import { live } from '@dxos/live-object';
 import { ROOT_ID } from './graph';
 import { GraphBuilder, createExtension, rxFromSignal } from './graph-builder';
 import { rxFromQuery } from './testing';
+import { Type, Obj } from '@dxos/echo';
 
 registerSignalsRuntime();
 
@@ -174,15 +175,15 @@ describe('signals integration', () => {
       const registry = Registry.make();
       await using peer = await dbBuilder.createPeer();
       await using db = await peer.createDatabase();
-      db.add(live(Expando, { name: 'a' }));
-      db.add(live(Expando, { name: 'b' }));
+      db.add(Obj.make(Type.Expando, { name: 'a' }));
+      db.add(Obj.make(Type.Expando, { name: 'b' }));
 
       const builder = new GraphBuilder({ registry });
       builder.addExtension(
         createExtension({
           id: 'expando',
           connector: () => {
-            const query = db.query(Filter.type(Expando));
+            const query = db.query(Filter.type(Type.Expando));
 
             return Rx.make((get) => {
               const objects = get(rxFromQuery(query));
@@ -205,7 +206,7 @@ describe('signals integration', () => {
       graph.expand(ROOT_ID);
       expect(count).to.eq(2);
 
-      const object = db.add(live(Expando, { name: 'c' }));
+      const object = db.add(Obj.make(Type.Expando, { name: 'c' }));
       await db.flush();
       expect(count).to.eq(3);
 

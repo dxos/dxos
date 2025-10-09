@@ -313,7 +313,7 @@ export const createViewFromSpace = async ({
   invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
-    space.db.add(live(schema, {}));
+    space.db.add(Obj.make(schema, {}));
   });
 
   return {
