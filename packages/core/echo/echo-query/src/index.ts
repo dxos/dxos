@@ -3,4 +3,3 @@
 //
 
 export * from './parser';
-export * from './tag';

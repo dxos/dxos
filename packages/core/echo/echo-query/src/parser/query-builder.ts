@@ -4,9 +4,7 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { Filter } from '@dxos/echo';
-
-import { type Tag } from '../tag';
+import { Filter, type Tag } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 

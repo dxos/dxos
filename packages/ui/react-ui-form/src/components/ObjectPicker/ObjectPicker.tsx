@@ -3,7 +3,7 @@
 //
 
 import { type Schema } from 'effect';
-import { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { PopoverCombobox } from '@dxos/react-ui-searchlist';
