@@ -7,7 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { type Tag } from '@dxos/echo';
+import { Obj, type Tag } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -66,7 +66,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
       <div class="message__abstract__body">
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
-          ${((tags && message.properties?.tags) ?? [])
+          ${((tags && Obj.getMeta(message).tags) ?? [])
             .map((tagId: string) => tags![tagId])
             .filter(Boolean)
             .map(

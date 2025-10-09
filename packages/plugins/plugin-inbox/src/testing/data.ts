@@ -26,27 +26,32 @@ export const createMessages = (count = 10) => {
   const text = faker.lorem.paragraph();
   return faker.helpers.multiple(
     () =>
-      Obj.make(DataType.Message, {
-        created: faker.date.recent().toISOString(),
-        sender: {
-          identityDid: IdentityDid.random(),
-          name: faker.person.fullName(),
-        },
-        blocks: [
-          {
-            _tag: 'text',
-            text,
+      Obj.make(
+        DataType.Message,
+        {
+          created: faker.date.recent().toISOString(),
+          sender: {
+            identityDid: IdentityDid.random(),
+            name: faker.person.fullName(),
           },
-        ],
-        properties: {
-          subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-          snippet: text,
+          blocks: [
+            {
+              _tag: 'text',
+              text,
+            },
+          ],
+          properties: {
+            subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+            snippet: text,
+          },
+        },
+        {
           tags: faker.helpers.uniqueArray(
             TAGS.map((tag) => tag.id),
             faker.number.int(3),
           ),
         },
-      }),
+      ),
     {
       count,
     },
@@ -97,24 +102,29 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     { min: 0, max: TAGS.length },
   );
 
-  return Obj.make(DataType.Message, {
-    created: faker.date.recent().toISOString(),
-    sender: {
-      identityDid: IdentityDid.random(),
-      email: faker.internet.email(),
-      name: faker.person.fullName(),
+  return Obj.make(
+    DataType.Message,
+    {
+      created: faker.date.recent().toISOString(),
+      sender: {
+        identityDid: IdentityDid.random(),
+        email: faker.internet.email(),
+        name: faker.person.fullName(),
+      },
+      // First block plain text (with links stripped), second block enriched text (with links).
+      blocks: [
+        { _tag: 'text', text },
+        { _tag: 'text', text: enrichedText },
+      ],
+      properties: {
+        subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+        snippet: text,
+      },
     },
-    // First block plain text (with links stripped), second block enriched text (with links).
-    blocks: [
-      { _tag: 'text', text },
-      { _tag: 'text', text: enrichedText },
-    ],
-    properties: {
-      subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-      snippet: text,
+    {
       tags,
     },
-  });
+  );
 };
 
 /**

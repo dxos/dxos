@@ -47,12 +47,12 @@ export class QueryBuilder {
   /**
    * Build a query from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): Filter.Any {
+  buildQuery(tree: Tree, input: string): Filter.Any | null {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
     if (cursor.node.name !== 'Query') {
-      return Filter.nothing();
+      return null;
     }
 
     // Check if Query has multiple children (binary expression).
@@ -83,7 +83,7 @@ export class QueryBuilder {
   /**
    * Parse an expression node.
    */
-  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any {
+  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any | null {
     const nodeName = cursor.node.name;
 
     switch (nodeName) {
@@ -94,7 +94,7 @@ export class QueryBuilder {
         // Move past NOT token to the expression.
         cursor.nextSibling();
         const notFilter = this._parseExpression(cursor, input);
-        return Filter.not(notFilter);
+        return notFilter ? Filter.not(notFilter) : null;
       }
 
       case 'And':
@@ -204,15 +204,25 @@ export class QueryBuilder {
             // Parse the expression inside parentheses as a subtree.
             const subInput = input.slice(exprStart, exprEnd);
             const subTree = this._parser.parse(subInput);
-            filters.push(this.buildQuery(subTree, subInput));
+            const subFilter = this.buildQuery(subTree, subInput);
+            if (subFilter) {
+              filters.push(subFilter);
+            }
           } else {
             // Simple parenthesized expression.
-            filters.push(this._parseExpression(cursor, input));
+            const subFilter = this._parseExpression(cursor, input);
+            if (subFilter) {
+              filters.push(subFilter);
+            }
+
             // Skip until we find the closing parenthesis.
             while (cursor.nextSibling() && cursor.node.name !== ')') {}
           }
         } else if (nodeName !== ')') {
-          filters.push(this._parseExpression(cursor, input));
+          const subFilter = this._parseExpression(cursor, input);
+          if (subFilter) {
+            filters.push(subFilter);
+          }
         }
       } while (cursor.nextSibling());
 
@@ -233,12 +243,12 @@ export class QueryBuilder {
   /**
    * Parse a Filter node.
    */
-  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any {
+  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any | null {
     if (!cursor.firstChild()) {
       return Filter.nothing();
     }
 
-    let result = Filter.nothing();
+    let result: Filter.Any | null = null;
     const filterType = cursor.node.name;
     switch (filterType) {
       case 'TagFilter':
@@ -401,11 +411,11 @@ export class QueryBuilder {
   /**
    * Parse a TagFilter node (#tag).
    */
-  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
+  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | null {
     invariant(this._tags);
     const str = this._getNodeText(cursor, input).slice(1).toLowerCase();
     const [key] = Object.entries(this._tags!).find(([, value]) => value.label.toLowerCase() === str) ?? [];
-    return key ? Filter.tag(key) : Filter.nothing();
+    return key ? Filter.tag(key) : null;
   }
 
   /**

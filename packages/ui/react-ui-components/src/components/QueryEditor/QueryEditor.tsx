@@ -39,7 +39,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
         Prec.highest(
           keymap.of([
             {

@@ -66,7 +66,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
                 range = { from: node.from + 1, to: node.to };
                 return {
                   ...range,
-                  filter: true,
+                  filter: false,
                   options: tags.map((tag) => ({ label: tag })),
                 };
               }
