@@ -12,6 +12,7 @@ import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
 
@@ -246,7 +247,7 @@ interface FilterAPI {
   /**
    * Filter by tag.
    */
-  tag(tag: string): Filter<any>;
+  tag(tag: string): Filter<Obj.Any>;
 
   /**
    * Filter by properties.

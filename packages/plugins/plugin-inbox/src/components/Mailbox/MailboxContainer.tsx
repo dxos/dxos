@@ -73,11 +73,11 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
           );
           break;
         }
-        case 'select': {
-          break;
-        }
         case 'select-tag': {
-          setFilterText((prevFilterText) => `${prevFilterText} #${action.label}`);
+          // TODO(burdon): Check if tag already exists.
+          setFilterText((prevFilterText) => `${prevFilterText} #${action.label} `);
+          setFilterVisible(true);
+          filterEditorRef.current?.focus();
           break;
         }
         case 'save': {
@@ -125,16 +125,16 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
       </ElevationProvider>
 
       {filterVisible && (
-        <div role='none' className='flex is-full items-center p-1 pis-2 border-be border-separator'>
+        <div role='none' className='flex is-full overflow-hidden items-center p-1 gap-1 border-be border-separator'>
           <QueryEditor
             ref={filterEditorRef}
+            classNames='grow overflow-hidden'
             autoFocus
-            classNames='grow'
             space={getSpace(mailbox)}
             value={filterText}
             onChange={setFilterText}
           />
-          <div className='flex gap-1 items-center'>
+          <div role='none' className='flex gap-1 items-center'>
             <IconButton
               ref={saveFilterButtonRef}
               disabled={!filter}
@@ -181,7 +181,7 @@ const useActions = (setFilterVisible: (visible: boolean) => void) => {
             {
               type: 'filter',
               icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter by tags', { ns: meta.id }],
+              label: ['mailbox toolbar filter', { ns: meta.id }],
             },
             () => {
               setFilterVisible(true);

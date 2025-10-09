@@ -3,7 +3,7 @@
 //
 
 import { type Schema, type SchemaAST } from 'effect';
-import React, { type KeyboardEvent, type MouseEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   type EchoSchema,
@@ -17,16 +17,15 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';
 import { DxAnchor, DxTagPickerItem } from '@dxos/lit-ui/react';
-import { Button, Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type QueryRefOptions, useQueryRefOptions } from '../../hooks';
 import { translationKey } from '../../translations';
+import { ObjectPicker } from '../ObjectPicker';
 
 import { TextInput } from './Defaults';
-import { Form } from './Form';
 import { InputHeader, type InputProps } from './Input';
 
 export type RefFieldProps = InputProps & {
@@ -71,54 +70,6 @@ export const RefField = ({
     [ast],
   );
   const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
-
-  const [showForm, setShowForm] = useState(false);
-  const [searchString, setSearchString] = useState('');
-
-  const handleFormSave = useCallback(
-    (values: any) => {
-      onCreate?.(values);
-      setShowForm(false);
-      setSearchString('');
-    },
-    [refTypeInfo, onCreate],
-  );
-
-  const handleFormCancel = useCallback(() => {
-    setShowForm(false);
-    setSearchString('');
-  }, []);
-
-  // TODO(thure): The following workarounds are necessary because `onSelect` is called after the Popover is already
-  //  closed. Augment/refactor CmdK, if possible, to facilitate stopping event default & propagation.
-
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
-      if (createSchema && (event.target as HTMLElement).closest('[data-value="__create__"]')) {
-        event.stopPropagation();
-        event.preventDefault();
-        setShowForm(true);
-      }
-    },
-    [createSchema],
-  );
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (
-        event.key === 'Enter' &&
-        createSchema &&
-        (event.currentTarget as HTMLElement).querySelector(
-          '[role="option"][aria-selected="true"][data-value="__create__"]',
-        )
-      ) {
-        event.stopPropagation();
-        event.preventDefault();
-        setShowForm(true);
-      }
-    },
-    [createSchema],
-  );
 
   if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
@@ -191,14 +142,6 @@ export const RefField = ({
 
   const items = handleGetValue();
   const selectedIds = useMemo(() => items.map((i: any) => i.id), [items]);
-  const labelById = useMemo(
-    () =>
-      availableOptions.reduce((acc: Record<string, string>, option) => {
-        acc[option.id.toLowerCase()] = option.label.toLowerCase();
-        return acc;
-      }, {}),
-    [availableOptions],
-  );
   const toggleSelect = useCallback(
     (id: string) => {
       if (array) {
@@ -231,8 +174,8 @@ export const RefField = ({
             ))
           )
         ) : (
-          <PopoverCombobox.Root>
-            <PopoverCombobox.Trigger asChild>
+          <ObjectPicker.Root>
+            <ObjectPicker.Trigger asChild>
               <Button variant='ghost' classNames='is-full text-start gap-2'>
                 <div role='none' className='grow'>
                   {items?.length ? (
@@ -258,56 +201,18 @@ export const RefField = ({
                 </div>
                 <Icon size={3} icon='ph--caret-down--bold' />
               </Button>
-            </PopoverCombobox.Trigger>
-            <PopoverCombobox.Content
-              filter={(value, search) =>
-                value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0
-              }
-              onClickCapture={handleClick}
-              onKeyDownCapture={handleKeyDown}
-            >
-              {showForm && createSchema ? (
-                <Popover.Viewport>
-                  <Form
-                    schema={createSchema}
-                    values={createInitialValuePath ? { [createInitialValuePath]: searchString } : {}}
-                    onSave={handleFormSave}
-                    onCancel={handleFormCancel}
-                    testId='create-referenced-object-form'
-                  />
-                </Popover.Viewport>
-              ) : (
-                <>
-                  <PopoverCombobox.Input
-                    placeholder={t('ref field combobox input placeholder')}
-                    value={searchString}
-                    onValueChange={(v) => setSearchString(v)}
-                    autoFocus
-                  />
-                  <PopoverCombobox.List>
-                    {availableOptions.map((option) => (
-                      <PopoverCombobox.Item
-                        key={option.id}
-                        value={option.id}
-                        onSelect={() => toggleSelect(option.id)}
-                        classNames='flex items-center gap-2'
-                      >
-                        <span className='grow'>{option.label}</span>
-                        {selectedIds.includes(option.id) && <Icon icon='ph--check--regular' />}
-                      </PopoverCombobox.Item>
-                    ))}
-                    {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && (
-                      <PopoverCombobox.Item value='__create__' classNames='flex items-center gap-2'>
-                        <Icon icon={createOptionIcon} />
-                        {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
-                      </PopoverCombobox.Item>
-                    )}
-                  </PopoverCombobox.List>
-                </>
-              )}
-              <PopoverCombobox.Arrow />
-            </PopoverCombobox.Content>
-          </PopoverCombobox.Root>
+            </ObjectPicker.Trigger>
+            <ObjectPicker.Content
+              options={availableOptions}
+              selectedIds={selectedIds}
+              onSelect={toggleSelect}
+              createSchema={createSchema}
+              createOptionLabel={createOptionLabel}
+              createOptionIcon={createOptionIcon}
+              createInitialValuePath={createInitialValuePath}
+              onCreate={onCreate}
+            />
+          </ObjectPicker.Root>
         )}
       </div>
       {inputOnly && <Input.DescriptionAndValidation>{error}</Input.DescriptionAndValidation>}

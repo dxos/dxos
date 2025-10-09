@@ -68,8 +68,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
-    "@types/react": "~19.2.0",
-    "@types/react-dom": "~19.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "vite": "7.1.9"
