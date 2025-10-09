@@ -33,7 +33,6 @@ export const modules = [
   'sdk/*/src/**',
   'ui/*/src/**',
   'ui/primitives/*/src/**',
-  'core/echo/echo-query/src/**',
 ];
 
 // NOTE: Storybook test depends on relative paths.
