@@ -6,7 +6,7 @@ import { SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
   type LogConfig,
@@ -35,8 +35,8 @@ export class OtelLogs {
     setDiagLogger(options.consoleDiagLogLevel);
     const resource = defaultResource().merge(
       resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
-        [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
+        [ATTR_SERVICE_NAME]: this.options.serviceName,
+        [ATTR_SERVICE_VERSION]: this.options.serviceVersion,
       }),
     );
     const logExporter = new OTLPLogExporter({

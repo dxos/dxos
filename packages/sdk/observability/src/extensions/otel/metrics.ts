@@ -6,7 +6,7 @@ import { type Meter } from '@opentelemetry/api';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
 import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
@@ -25,8 +25,8 @@ export class OtelMetrics {
     setDiagLogger(options.consoleDiagLogLevel);
     const resource = defaultResource().merge(
       resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
-        [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
+        [ATTR_SERVICE_NAME]: this.options.serviceName,
+        [ATTR_SERVICE_VERSION]: this.options.serviceVersion,
       }),
     );
 

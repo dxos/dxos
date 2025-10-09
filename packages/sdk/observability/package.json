@@ -18,7 +18,7 @@
   },
   "browser": {
     "./src/storage/node.ts": "./src/storage/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
+    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
