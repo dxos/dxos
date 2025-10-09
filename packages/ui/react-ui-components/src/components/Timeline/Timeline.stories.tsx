@@ -2,22 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { LogLevel } from '@dxos/log';
+import { LogLevel, log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { type ScrollController, useExecutionGraph } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout, withTheme } from '@dxos/storybook-utils';
 
+import { research } from './testing';
 import { type Commit, Timeline } from './Timeline';
 
 faker.seed(1);
@@ -139,13 +138,10 @@ const generateCommit = (
 const meta = {
   title: 'ui/react-ui-components/Timeline',
   component: Timeline,
-  decorators: [
-    withTheme,
-    withLayout({
-      Container: ColumnContainer,
-      fullscreen: true,
-    }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Timeline>;
 
 export default meta;
@@ -221,14 +217,33 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
+const slice = 0;
 export const ExecutionGraph: Story = {
   render: () => {
     const space = useSpace();
     const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
-      await queue?.append(testExecutionGraph);
+      const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));
+      if (slice > 0) {
+        await queue?.append(objects.slice(0, slice));
+        return;
+      }
+
+      let i = 0;
+      const interval = setInterval(async () => {
+        const obj = objects[i];
+        await queue?.append([obj]);
+
+        i++;
+        if (i >= objects.length) {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
     }, [queue]);
-    const { branches, commits } = useExecutionGraph(queue, true);
+    const { branches, commits } = useExecutionGraph(queue);
+    log.info('execution graph', { branches, commits });
     return <Timeline branches={branches} commits={commits} />;
   },
   decorators: [withClientProvider({ createIdentity: true })],
@@ -311,6 +326,7 @@ const toolCalls = [
         name: 'dxos_org_function_create_research_note',
         input:
           '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nKey contact identified: @dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T\\n\\n<object><dxn>dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T</dxn></object>"}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -343,6 +359,7 @@ const toolCalls = [
         name: 'dxos_org_function_create_research_note',
         input:
           '{"target":"01K616WQVB7MJJPYXFKCAND1KC","name":"DXOS Organization Research Summary","content":"Based on my research, DXOS is a technology organization focused on building decentralized collaboration tools and infrastructure. Their website at https://dxos.org showcases their commitment to creating open-source solutions for distributed computing and peer-to-peer applications.\\n\\nThe organization appears to be working on innovative approaches to data synchronization, local-first software, and collaborative computing paradigms that prioritize user privacy and data sovereignty. Their technology stack likely includes modern web technologies with a focus on distributed systems architecture.\\n\\nDXOS represents an emerging trend in software development that challenges traditional centralized architectures by promoting local-first, peer-to-peer solutions that give users more control over their data and computing resources."}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -363,6 +380,7 @@ const toolCalls = [
 
 const testExecutionGraph = [
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:39.014Z',
     message: 'Running Research',
   }),
   Obj.make(DataType.Message, {
@@ -394,6 +412,7 @@ const testExecutionGraph = [
         name: 'dxos_org_function_research',
         input:
           '{"query":"DXOS organization dxos.org","mockSearch":true,"researchInstructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
+        providerExecuted: false,
       },
       {
         _tag: 'summary',
@@ -422,12 +441,14 @@ const testExecutionGraph = [
         name: 'dxos_org_function_research',
         result:
           '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:dxos.org/type/Person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
+        providerExecuted: false,
       },
     ],
     properties: {},
   }),
   toolCalls[0],
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:44.267Z',
     parentMessage: toolCalls[0].id,
     toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
     message: 'Creating research note...',
@@ -443,12 +464,14 @@ const testExecutionGraph = [
         toolCallId: 'toolu_0135wZiFUzdmKpPFzeEXxt6e',
         name: 'dxos_org_function_create_research_note',
         error: 'FUNCTION_ERROR: Function invocation error\ncaused by:\nOBJECT_NOT_FOUND: Object not found',
+        providerExecuted: false,
       },
     ],
     properties: {},
   }),
   toolCalls[1],
   Obj.make(AgentStatus, {
+    created: '2025-09-25T19:51:59.934Z',
     parentMessage: toolCalls[1].id,
     toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
     message: 'Creating research note...',
@@ -464,6 +487,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01XVw86GhNb2Y7piyykdePdQ',
         name: 'dxos_org_function_create_research_note',
         error: 'FUNCTION_ERROR: Function invocation error\ncaused by:\nOBJECT_NOT_FOUND: Object not found',
+        providerExecuted: false,
       },
     ],
     properties: {},

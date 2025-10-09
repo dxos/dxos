@@ -123,8 +123,8 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-space-created`,
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
-      contributes(SpaceCapabilities.OnSpaceCreated, ({ space, rootCollection }) =>
-        createIntent(ThreadAction.OnSpaceCreated, { space, rootCollection }),
+      contributes(SpaceCapabilities.onCreateSpace, ({ space, rootCollection }) =>
+        createIntent(ThreadAction.onCreateSpace, { space, rootCollection }),
       ),
   }),
   defineModule({

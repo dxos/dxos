@@ -26,7 +26,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace();
   const map = view.presentation.target as Map.Map | undefined;
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);

@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { Domino } from '../util';
+import { Domino } from '@dxos/react-ui';
 
 const lineHeight = 24;
 
@@ -24,7 +24,7 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
   let isThrottled = false;
   let isPinned = true;
   let timeout: NodeJS.Timeout | undefined;
-  let buttonContainer: HTMLDivElement;
+  let buttonContainer: HTMLDivElement | undefined;
   let lastScrollTop = 0;
   let scrollCounter = 0;
 
@@ -50,28 +50,6 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
   };
 
   return [
-    // Scroll button.
-    ViewPlugin.fromClass(
-      class {
-        constructor(view: EditorView) {
-          const scroller = view.scrollDOM.parentElement;
-          buttonContainer = Domino.of('div')
-            .classNames(true && 'cm-scroll-button transition-opacity duration-300 opacity-0')
-            .child(
-              Domino.of('button')
-                .classNames('dx-button bg-accentSurface')
-                .data('density', 'fine')
-                .child(Domino.of<any>('dx-icon').attr('icon', 'ph--arrow-down--regular'))
-                .on('click', () => {
-                  scrollToBottom(view);
-                }),
-            )
-            .build();
-          scroller?.appendChild(buttonContainer);
-        }
-      },
-    ),
-
     // Update listener for logging when scrolling is needed.
     EditorView.updateListener.of((update) => {
       // Listen for effects.
@@ -83,10 +61,9 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
         }
       });
 
+      // Maybe scroll if doc changed and pinned.
       if (update.docChanged && isPinned && !isThrottled) {
         const distanceFromBottom = calcDistance(update.view.scrollDOM);
-
-        // Keep pinned.
         if (distanceFromBottom >= overscroll) {
           isThrottled = true;
           requestAnimationFrame(() => {
@@ -96,6 +73,7 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
           // Reset throttle.
           setTimeout(() => {
             isThrottled = false;
+            scrollToBottom(update.view);
           }, throttle);
         }
       }
@@ -126,6 +104,29 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
       },
     }),
 
+    // Scroll button.
+    ViewPlugin.fromClass(
+      class {
+        constructor(view: EditorView) {
+          const scroller = view.scrollDOM.parentElement;
+          buttonContainer = Domino.of('div')
+            .classNames(true && 'cm-scroll-button transition-opacity duration-300 opacity-0')
+            .children(
+              Domino.of('button')
+                .classNames('dx-button bg-accentSurface')
+                .data('density', 'fine')
+                .children(Domino.of<any>('dx-icon').attr('icon', 'ph--arrow-down--regular'))
+                .on('click', () => {
+                  scrollToBottom(view);
+                }),
+            )
+            .build();
+          scroller?.appendChild(buttonContainer);
+        }
+      },
+    ),
+
+    // Styles.
     EditorView.theme({
       '.cm-scroller': {
         paddingBottom: `${overscroll}px`,
@@ -138,7 +139,6 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
         display: 'none',
       },
 
-      // TODO(burdon): IconButton.
       '.cm-scroll-button': {
         position: 'absolute',
         bottom: '0.5rem',

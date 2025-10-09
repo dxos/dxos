@@ -272,6 +272,7 @@ const ChatPrompt = ({
 
   return (
     <div
+      role='group'
       className={mx(
         'is-full flex flex-col density-fine',
         outline && [
@@ -280,7 +281,7 @@ const ChatPrompt = ({
         classNames,
       )}
     >
-      <div className='flex gap-2'>
+      <div role='none' className='flex gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
 
         <ChatEditor
@@ -294,7 +295,7 @@ const ChatPrompt = ({
         />
       </div>
 
-      <div className='flex pbs-2 items-center'>
+      <div role='none' className='flex pbs-2 items-center'>
         <ChatOptions
           space={space}
           blueprintRegistry={processor.blueprintRegistry}
@@ -317,6 +318,7 @@ const ChatPrompt = ({
         >
           {online !== undefined && (
             <Input.Root>
+              <Input.Label srOnly>{t('online switch label')}</Input.Label>
               <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
             </Input.Root>
           )}

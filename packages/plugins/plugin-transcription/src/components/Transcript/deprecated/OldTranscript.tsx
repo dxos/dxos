@@ -144,7 +144,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
     [hasAttention, ignoreAttention],
   );
 
-  const abortControllerRef = useRef<AbortController>();
+  const abortControllerRef = useRef<AbortController>(null);
 
   const handleResize = useCallback(
     async ({ entry }: { entry: { target: HTMLDivElement } | null }) => {
@@ -242,7 +242,7 @@ export const Transcript: FC<TranscriptViewProps> = ({ classNames, blocks, attend
           ref={setDxGrid}
         />
       </Grid.Root>
-      <div role='none' {...{ inert: '' }} aria-hidden className={measureClasses} ref={measureRef} />
+      <div role='none' {...{ inert: true }} aria-hidden className={measureClasses} ref={measureRef} />
       <IconButton
         icon='ph--arrow-line-down--regular'
         iconOnly

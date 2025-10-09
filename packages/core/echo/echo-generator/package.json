@@ -25,7 +25,7 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge": "3.1.2",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
@@ -33,9 +33,8 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.17.7"
+    "effect": "3.18.3"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*"

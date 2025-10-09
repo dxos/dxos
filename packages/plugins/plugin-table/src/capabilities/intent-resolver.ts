@@ -25,7 +25,7 @@ import { TableAction } from '../types';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: TableAction.OnSpaceCreated,
+      intent: TableAction.onCreateSpace,
       resolve: ({ space }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -64,7 +64,7 @@ export default (context: PluginContext) =>
       resolve: async ({ view, data }) => {
         const space = getSpace(view);
         invariant(space);
-        const typename = view.query ? typenameFromQuery(view.query) : undefined;
+        const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
         invariant(typename);
         const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);

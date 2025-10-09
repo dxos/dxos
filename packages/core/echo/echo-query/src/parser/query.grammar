@@ -1,0 +1,124 @@
+//
+// lezer Query grammar
+//
+
+@top Query { expression }
+
+expression {
+  Filter |
+  !Not Not expression |
+  expression !ImplicitAnd expression |
+  expression !And And expression |
+  expression !Or Or expression |
+  expression !Relation Relation expression |
+  "(" expression ")"
+}
+
+Not { 
+  @specialize<Identifier, "NOT" | "not" | "!">
+}
+And { 
+  @specialize<Identifier, "AND" | "and">
+}
+Or { 
+  @specialize<Identifier, "OR" | "or">
+}
+
+Relation {
+  ArrowRight | ArrowLeft
+}
+
+//
+// Filters
+//
+
+Filter {
+  TagFilter |
+  TextFilter |
+  TypeFilter |
+  PropertyFilter |
+  ObjectLiteral
+}
+
+TagFilter {
+  Tag
+}
+
+TextFilter {
+  String
+}
+
+TypeFilter {
+  @specialize[@name=TypeKeyword]<Identifier, "type"> ":" Identifier
+}
+
+PropertyFilter {
+  PropertyPath ":" Value
+}
+
+PropertyPath {
+  Identifier ("." Identifier)*
+}
+
+ObjectLiteral {
+  "{" (ObjectProperty ("," ObjectProperty)*)? "}"
+}
+
+ObjectProperty {
+  Identifier ":" Value
+}
+
+ArrayLiteral {
+  "[" (Value ("," Value)*)? "]"
+}
+
+Value {
+  String |
+  Number |
+  Boolean |
+  Null |
+  ObjectLiteral |
+  ArrayLiteral
+}
+
+@tokens {
+  // Supports variables and DXNs
+  Identifier { 
+    $[a-zA-Z_]$[a-zA-Z0-9_./\-]* 
+  }
+
+  Tag {
+    "#" $[a-zA-Z0-9_\-]+
+  }
+
+  String { 
+    '"' (!["\\] | "\\" _)* '"' |
+    "'" (!['\\] | "\\" _)* "'"
+  }
+
+  Number { 
+    "-"? @digit+ ("." @digit+)? (("e" | "E") ("+" | "-")? @digit+)?
+  }
+
+  Boolean { "true" | "false" }
+
+  Null { "null" }
+
+  ArrowRight { "->" }
+  ArrowLeft { "<-" }
+
+  space { @whitespace+ }
+
+  "{" "}" "[" "]" "(" ")"
+  ":" ","  "."
+}
+
+@skip { space }
+
+@precedence {
+  Not @right,
+  ImplicitAnd @left,
+  And @left,
+  Or @left,
+  Relation @left
+}

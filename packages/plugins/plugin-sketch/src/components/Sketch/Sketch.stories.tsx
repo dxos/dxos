@@ -2,16 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
+import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
@@ -26,7 +25,7 @@ const createSketch = (content: SerializedStore<TLRecord> = {}): DiagramType => {
 };
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState<DiagramType>(createSketch(data.v2));
+  const [sketch, setSketch] = useState<DiagramType>(createObject(createSketch(data.v2)));
 
   const handleClear = () => {
     const sketch = createSketch();
@@ -68,7 +67,7 @@ const meta = {
   title: 'plugins/plugin-sketch/Sketch',
   component: Sketch as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',
   },

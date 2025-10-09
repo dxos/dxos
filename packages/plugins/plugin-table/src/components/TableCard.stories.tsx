@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -13,12 +11,12 @@ import { FormatEnum } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
@@ -45,12 +43,12 @@ const meta = {
   title: 'plugins/plugin-table/Card',
   render: DefaultStory,
   decorators: [
-    // TODO(burdon): Should not require space.
+    withTheme, // TODO(burdon): Should not require space.
     withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
@@ -94,8 +92,6 @@ const meta = {
     withPluginManager({
       plugins: [IntentPlugin()],
     }),
-    withTheme,
-    withLayout(),
   ],
   parameters: {
     layout: 'centered',

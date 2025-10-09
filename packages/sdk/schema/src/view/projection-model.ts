@@ -52,10 +52,7 @@ export class ProjectionModel {
     // TODO(burdon): Pass in boolean readonly?
     private readonly _baseSchema: Live<JsonSchemaType>,
     private readonly _projection: Live<Projection>,
-  ) {
-    this.normalizeView();
-    this.migrateSingleSelectStoredFormat();
-  }
+  ) {}
 
   /**
    * The base schema of the data being projected.
@@ -128,7 +125,9 @@ export class ProjectionModel {
     const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? { format: FormatEnum.None };
     const { type: schemaType, format: schemaFormat = FormatEnum.None, annotations, ...rest } = jsonProperty;
 
-    const { typename: referenceSchema } = getSchemaReference(jsonProperty) ?? {};
+    const unwrappedProperty =
+      'allOf' in jsonProperty && jsonProperty.allOf?.length ? jsonProperty.allOf[0] : jsonProperty;
+    const { typename: referenceSchema } = getSchemaReference(unwrappedProperty) ?? {};
     const type = referenceSchema ? TypeEnum.Ref : (schemaType as TypeEnum);
 
     const format =
@@ -353,7 +352,7 @@ export class ProjectionModel {
    * 1. Removing fields that no longer exist in the schema
    * 2. Adding missing schema properties as hidden fields
    */
-  private normalizeView(): void {
+  normalizeView(): void {
     untracked(() => {
       // Get all properties from the schema.
       const schemaProperties = new Set(Object.keys(this._baseSchema.properties ?? {}));
@@ -381,33 +380,6 @@ export class ProjectionModel {
         }
       }
     });
-  }
-
-  /**
-   * @deprecated TODO(ZaymonFC): Remove this migration code in a future release once all data is migrated.
-   * Migrate legacy single-select format to new format.
-   */
-  private migrateSingleSelectStoredFormat(): void {
-    invariant(this._baseSchema.properties);
-
-    for (const field of this.allFields) {
-      const jsonProperty: JsonSchemaType = this._baseSchema.properties[field.path] ?? {
-        format: FormatEnum.None,
-      };
-      const { format: schemaFormat = FormatEnum.None, oneOf } = jsonProperty;
-      if (schemaFormat !== FormatEnum.SingleSelect) {
-        continue;
-      }
-
-      const hasLegacyOptions =
-        oneOf !== undefined && oneOf?.length !== 0 && oneOf?.every((p) => typeof p.const === 'string');
-      if (hasLegacyOptions) {
-        const options = (oneOf as any[]).map(({ const: id, title, color }) => ({ id, title, color }));
-        log('migrating legacy single-select format', options);
-        makeSingleSelectAnnotations(jsonProperty, options);
-        jsonProperty.oneOf = [];
-      }
-    }
   }
 }
 

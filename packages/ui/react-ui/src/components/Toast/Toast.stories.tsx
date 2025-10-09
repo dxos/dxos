@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useState } from 'react';
 
@@ -51,7 +49,6 @@ const meta = {
   component: Toast as any,
   render: DefaultStory,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

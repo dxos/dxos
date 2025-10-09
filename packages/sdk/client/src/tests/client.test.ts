@@ -11,6 +11,7 @@ import { Config } from '@dxos/config';
 import { Filter } from '@dxos/echo-db';
 import { Ref } from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
+import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
@@ -127,6 +128,44 @@ describe('Client', () => {
       // expect(client.halo.identity).to.exist;
       // await client.spaces.waitUntilReady();
       // await client.destroy();
+    }
+  });
+
+  test('leveldb is cleared after client.reset', async () => {
+    const storageConfig = { persistent: true, dataRoot } satisfies Runtime.Client.Storage;
+    const config = new Config({ version: 1, runtime: { client: { storage: storageConfig } } });
+    const testBuilder = new TestBuilder(config);
+
+    const services = testBuilder.createLocalClientServices();
+    const client = new Client({ services });
+
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+    await client.halo.createIdentity({ displayName: 'reset-check' });
+    await client.spaces.waitUntilReady();
+
+    // Close client.
+    await client.destroy();
+
+    const { createLevel } = await import('@dxos/client-services');
+    // Level DB should have data in it after client is closed.
+    {
+      const level = await createLevel(storageConfig);
+      const keys = await level.keys().all();
+      expect(keys.length).not.toEqual(0);
+      await level.close();
+    }
+
+    // Reset should clear LevelDB contents.
+    await client.initialize();
+    await client.reset();
+
+    // Level DB should have no data in it after client is reset.
+    {
+      const level = await createLevel(storageConfig);
+      const keys = await level.keys().all();
+      expect(keys.length).toEqual(0);
+      await level.close();
     }
   });
 

@@ -28,6 +28,7 @@ export const translations = [
         'show field label': 'Show field',
         'hide field label': 'Hide field',
         'delete field label': 'Delete field',
+        'ref field combobox input placeholder': 'Search…',
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',
 
@@ -48,7 +49,7 @@ export const translations = [
         'format hostname': 'Hostname',
         'format integer': 'Integer',
         'format json': 'JSON',
-        'format latlng': 'Geopoint',
+        'format lnglat': 'Geopoint',
         'format markdown': 'Markdown',
         'format percent': 'Percent',
         'format ref': 'Reference',

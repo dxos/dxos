@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { DXOS } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Ghost, type GhostProps } from './Ghost';
 
@@ -28,7 +26,10 @@ const meta = {
   title: 'ui/react-ui-sfx/Ghost',
   component: Ghost,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: 'bg-black' })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<GhostProps>;
 
 export default meta;

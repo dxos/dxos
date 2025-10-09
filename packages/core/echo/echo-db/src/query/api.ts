@@ -1,6 +1,7 @@
 //
 // Copyright 2025 DXOS.org
 //
+
 import { Filter, Query } from '@dxos/echo';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live } from '@dxos/live-object';
@@ -18,6 +19,13 @@ export interface QueryFn {
   // TODO(dmaretskyi): Remove query options.
   <Q extends Query.Any>(query: Q, options?: QueryOptions | undefined): QueryResult<Live<Query.Type<Q>>>;
   <F extends Filter.Any>(filter: F, options?: QueryOptions | undefined): QueryResult<Live<Filter.Type<F>>>;
+}
+
+/**
+ * Common interface for Echo and Queue.
+ */
+export interface Queryable {
+  query: QueryFn;
 }
 
 /**
@@ -81,24 +89,24 @@ type NormalizeQueryOptions = {
 };
 
 export const normalizeQuery = (
-  query_: unknown | undefined,
+  queryParam: unknown | undefined,
   userOptions: QueryOptions | undefined,
   opts?: NormalizeQueryOptions,
 ) => {
   let query: Query.Any;
 
-  if (Query.is(query_)) {
-    query = query_;
-  } else if (Filter.is(query_)) {
-    query = Query.select(query_);
-  } else if (query_ === undefined) {
+  if (Query.is(queryParam)) {
+    query = queryParam;
+  } else if (Filter.is(queryParam)) {
+    query = Query.select(queryParam);
+  } else if (queryParam === undefined) {
     query = Query.select(Filter.everything());
-  } else if (typeof query_ === 'object' && query_ !== null) {
-    query = Query.select(Filter._props(query_));
-  } else if (typeof query_ === 'function') {
+  } else if (typeof queryParam === 'object' && queryParam !== null) {
+    query = Query.select(Filter.props(queryParam));
+  } else if (typeof queryParam === 'function') {
     throw new TypeError('Functions are not supported as queries');
   } else {
-    log.error('Invalid query', { query: query_ });
+    log.error('Invalid query', { query: queryParam });
     throw new TypeError('Invalid query');
   }
 

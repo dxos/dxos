@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo/internal';
+import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
+import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
@@ -19,11 +19,11 @@ export type MatchedObject = {
 export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): boolean => {
   switch (filter.type) {
     case 'object': {
-      // Check typename if specified
+      // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
         if (!obj.doc.system?.type?.['/']) {
-          // Objects with no type are considered to be expando objects
+          // Objects with no type are considered to be expando objects.
           const expectedDXN = DXN.parse(filter.typename).asTypeDXN();
           if (expectedDXN?.type !== EXPANDO_TYPENAME) {
             return false;
@@ -31,19 +31,18 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         } else {
           const actualDXN = DXN.parse(obj.doc.system.type['/']);
           const expectedDXN = DXN.parse(filter.typename);
-
           if (!compareTypename(expectedDXN, actualDXN)) {
             return false;
           }
         }
       }
 
-      // Check IDs if specified
+      // Check IDs if specified.
       if (filter.id && filter.id.length > 0 && !filter.id.includes(obj.id)) {
         return false;
       }
 
-      // Check properties
+      // Check properties.
       if (filter.props) {
         for (const [key, valueFilter] of Object.entries(filter.props)) {
           const value = obj.doc.data[key];
@@ -53,7 +52,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         }
       }
 
-      // Check foreign keys if specified
+      // Check foreign keys if specified.
       if (filter.foreignKeys && filter.foreignKeys.length > 0) {
         const hasMatchingKey = filter.foreignKeys.some((filterKey) =>
           obj.doc.meta.keys.some((objKey) => objKey.source === filterKey.source && objKey.id === filterKey.id),
@@ -66,8 +65,13 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       return true;
     }
 
+    case 'tag': {
+      const tags = ObjectStructure.getTags(obj.doc);
+      return tags.some((tag) => tag === filter.tag);
+    }
+
     case 'text-search': {
-      // TODO: Implement text search
+      // TODO(???): Implement text search.
       return false;
     }
 
@@ -88,6 +92,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
   }
 };
 
+// TODO(burdon): Reconcile with filterMatchObject.
 export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON): boolean => {
   switch (filter.type) {
     case 'object': {
@@ -103,7 +108,6 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
         } else {
           const actualDXN = DXN.parse(obj['@type']);
           const expectedDXN = DXN.parse(filter.typename);
-
           if (!compareTypename(expectedDXN, actualDXN)) {
             return false;
           }
@@ -140,6 +144,11 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       }
 
       return true;
+    }
+
+    case 'tag': {
+      const tags = obj[ATTR_META]?.tags ?? [];
+      return tags.some((tag) => tag === filter.tag);
     }
 
     case 'text-search': {

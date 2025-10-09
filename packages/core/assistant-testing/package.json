@@ -44,29 +44,25 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.25.2",
-    "@effect/platform": "^0.90.2",
-    "dfx": "^0.124.1",
+    "@effect/ai": "0.29.1",
+    "@effect/ai-anthropic": "0.19.2",
+    "@effect/experimental": "0.56.0",
+    "@effect/platform": "^0.92.1",
+    "dfx": "^0.126.0",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "@effect/ai-anthropic": "^0.16.1",
-    "@effect/ai-openai": "^0.29.1",
-    "@effect/cluster": "0.47.0",
-    "@effect/experimental": "0.54.5",
-    "@effect/platform": "0.90.2",
-    "@effect/platform-node": "0.95.0",
-    "@effect/rpc": "0.68.4",
-    "@effect/sql": "0.44.1",
-    "@effect/workflow": "0.8.3",
-    "effect": "3.17.7",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "@effect/ai-openai": "0.32.1",
+    "@effect/sql": "0.46.0",
+    "@effect/workflow": "0.11.3",
+    "effect": "3.18.3",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0"
   },
   "peerDependencies": {
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -25,7 +25,6 @@ import {
   type StorageKey,
   interpretAsDocumentId,
 } from '@automerge/automerge-repo';
-import { exportBundle } from '@automerge/automerge-repo-bundles';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -39,7 +38,7 @@ import { objectPointerCodec } from '@dxos/protocols';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, range } from '@dxos/util';
+import { ComplexSet, bufferToArray, isNonNullable, range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
@@ -343,7 +342,7 @@ export class AutomergeHost extends Resource {
     });
     if (headsToWait.length > 0) {
       await Promise.all(
-        headsToWait.map(async (entry, index) => {
+        headsToWait.map(async (entry) => {
           const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
@@ -499,10 +498,12 @@ export class AutomergeHost extends Resource {
   async flush({ documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
-    const loadedDocuments = documentIds?.filter((documentId): documentId is DocumentId => {
-      const handle = this._repo.handles[documentId as DocumentId];
-      return handle && handle.isReady();
-    });
+    const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
+      (documentId): documentId is DocumentId => {
+        const handle = this._repo.handles[documentId as DocumentId];
+        return handle && handle.isReady();
+      },
+    );
     await this._repo.flush(loadedDocuments);
   }
 
@@ -720,16 +721,25 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const handles = documentIds.map((documentId) => this._repo.handles[documentId]);
-    const bundle = exportBundle(this._repo, handles);
-    await this._echoNetworkAdapter.pushBundle(
-      peerId,
-      Array.from(bundle.docs.entries()).map(([documentId, doc]) => ({
+    const docs = documentIds.map((documentId) => {
+      const handle = this._repo.handles[documentId];
+      if (!handle || !handle.isReady()) {
+        log.warn('document not ready, skipping', { documentId });
+        return;
+      }
+      const doc = handle.doc();
+      if (!doc) {
+        log.warn('document not available, skipping', { documentId });
+        return;
+      }
+      return {
         documentId,
-        data: doc.data,
-        heads: doc.heads,
-      })),
-    );
+        data: save(doc),
+        heads: getHeads(doc),
+      };
+    });
+
+    await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
   }
 
   private async _pullInBundles(

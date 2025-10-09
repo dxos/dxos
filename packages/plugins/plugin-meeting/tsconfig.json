@@ -127,6 +127,9 @@
       "path": "../plugin-assistant"
     },
     {
+      "path": "../plugin-attention"
+    },
+    {
       "path": "../plugin-client"
     },
     {

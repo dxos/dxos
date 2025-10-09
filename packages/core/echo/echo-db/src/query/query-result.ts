@@ -111,7 +111,6 @@ export type QueryRunOptions = {
  */
 // TODO(dmaretskyi): Change to Obj.Any
 export class QueryResult<T extends BaseObject = BaseObject> {
-  private readonly _query: Query<T>;
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
@@ -123,10 +122,8 @@ export class QueryResult<T extends BaseObject = BaseObject> {
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
-    query: Query<T>,
+    private readonly _query: Query<T>,
   ) {
-    this._query = query;
-
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
         // Clear `prohibitSignalActions` to allow the signal to be emitted.
@@ -136,7 +133,8 @@ export class QueryResult<T extends BaseObject = BaseObject> {
         });
       }
     });
-    this._queryContext.update(query.ast);
+
+    this._queryContext.update(this._query.ast);
 
     this._diagnostic = {
       isActive: this._isActive,

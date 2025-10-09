@@ -25,7 +25,16 @@ import React, {
 import { type Node } from '@dxos/app-graph';
 import { invariant } from '@dxos/invariant';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { Icon, ListItem, ScrollArea, Tooltip, toLocalizedString, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import {
+  Icon,
+  ListItem,
+  ScrollArea,
+  type ThemedClassName,
+  Tooltip,
+  toLocalizedString,
+  useMediaQuery,
+  useTranslation,
+} from '@dxos/react-ui';
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import type { StackItemRearrangeHandler } from '@dxos/react-ui-stack';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -113,23 +122,31 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
         ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
         : type !== 'collection'
           ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
-          : { onClick: handleClick };
-
-    const Root = type === 'collection' ? 'h2' : type === 'tab' ? Tabs.TabPrimitive : 'button';
+          : { onClick: handleClick, role: 'button' };
 
     return (
       <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
-        <Root
+        <Tabs.TabPrimitive
           {...(rootProps as any)}
           data-type={type}
           className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
           ref={forwardedRef}
         >
           {children}
-        </Root>
+        </Tabs.TabPrimitive>
       </Tooltip.Trigger>
     );
   },
+);
+
+export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
+  <div
+    role='none'
+    className={mx(
+      'hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie',
+      classNames,
+    )}
+  />
 );
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
@@ -211,10 +228,7 @@ const L0Item = ({ item, parent, path, pinned, onRearrange }: L0ItemProps) => {
       >
         <ItemAvatar item={item} />
       </div>
-      <div
-        role='none'
-        className='hidden group-aria-selected/l0item:block absolute inline-start-0 inset-block-2 is-1 bg-accentSurface rounded-ie'
-      />
+      <L0ItemActiveTabIndicator />
       <span id={`${item.id}__label`} className='sr-only'>
         {localizedString}
       </span>
@@ -229,7 +243,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--dx-${hue}SurfaceText)` } };
-    return <Icon icon={item.properties.icon} size={5} {...hueFgStyle} />;
+    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
@@ -317,20 +331,22 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
       <MenuProvider>
         <DropdownMenu.Root group={parent} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <DropdownMenu.Trigger
-              data-testid='spacePlugin.addSpace'
-              className={mx(l0ItemRoot, 'grid place-items-center')}
-            >
-              <div
-                role='none'
-                className={mx(
-                  l0ItemContent,
-                  'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
-                )}
+            <Tabs.TabPrimitive value='options' asChild role='button'>
+              <DropdownMenu.Trigger
+                data-testid='spacePlugin.addSpace'
+                className={mx(l0ItemRoot, 'grid place-items-center dx-focus-ring-group')}
               >
-                <Icon icon='ph--list--regular' size={5} />
-              </div>
-            </DropdownMenu.Trigger>
+                <div
+                  role='none'
+                  className={mx(
+                    l0ItemContent,
+                    'is-[--rail-action] bs-[--rail-action] group-hover/l0item:bg-hoverSurface',
+                  )}
+                >
+                  <Icon icon='ph--list--regular' size={5} />
+                </div>
+              </DropdownMenu.Trigger>
+            </Tabs.TabPrimitive>
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
@@ -382,7 +398,6 @@ export const L0Menu = ({ menuActions, topLevelItems, pinnedItems, userAccountIte
           </L0ItemRoot>
         </div>
       )}
-
       <div
         role='none'
         className='hidden [body[data-platform="darwin"]_&]:block absolute block-start-0 is-[calc(var(--l0-size)-1px)] bs-[calc(40px+0.25rem)]'

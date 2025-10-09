@@ -68,10 +68,12 @@ const View_ = Schema.Struct({
 
   /**
    * Query used to retrieve data.
-   * This includes the base type that the view schema (above) references.
-   * It may include predicates that represent a persistent "drill-down" query.
+   * Can be a user-provided query grammar string or a query AST.
    */
-  query: QueryAST.Query,
+  query: Schema.Struct({
+    string: Schema.optional(Schema.String),
+    ast: QueryAST.Query,
+  }).pipe(Schema.mutable),
 
   /**
    * @deprecated Prefer ordering in query.
@@ -96,14 +98,16 @@ export const View: Schema.Schema<View, ViewEncoded> = View_;
 
 /** @deprecated */
 // TODO(wittjosiah): Try to remove. Use full query instead.
-export const typenameFromQuery = (query: QueryAST.Query) =>
-  query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
+export const typenameFromQuery = (query: QueryAST.Query) => {
+  return query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
+};
 
 export const createFieldId = () => PublicKey.random().truncate();
 
 type CreateViewProps = {
   name?: string;
   query: Query.Any;
+  queryString?: string;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -119,6 +123,7 @@ type CreateViewProps = {
 export const createView = ({
   name,
   query,
+  queryString,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -127,7 +132,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: query.ast,
+    query: { string: queryString, ast: query.ast },
     projection: {
       schema: overrideSchema,
       fields: [],
@@ -136,6 +141,7 @@ export const createView = ({
   });
 
   const projection = new ProjectionModel(jsonSchema, view.projection);
+  projection.normalizeView();
   const schema = toEffectSchema(jsonSchema);
   const shouldIncludeId = include?.find((field) => field === 'id') !== undefined;
   const properties = getSchemaProperties(schema.ast, {}, shouldIncludeId);
@@ -204,6 +210,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
 export const createViewWithReferences = async ({
   name,
   query,
+  queryString,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -212,9 +219,10 @@ export const createViewWithReferences = async ({
   registry,
   echoRegistry,
 }: CreateViewWithReferencesProps): Promise<Live<View>> => {
-  const view = await createView({
+  const view = createView({
     name,
     query,
+    queryString,
     jsonSchema,
     overrideSchema,
     presentation,
@@ -281,7 +289,10 @@ export const createViewWithReferences = async ({
   return view;
 };
 
-export type CreateViewFromSpaceProps = Omit<CreateViewWithReferencesProps, 'query' | 'jsonSchema' | 'registry'> & {
+export type CreateViewFromSpaceProps = Omit<
+  CreateViewWithReferencesProps,
+  'query' | 'queryString' | 'jsonSchema' | 'registry'
+> & {
   client?: Client;
   space: Space;
   typename?: string;

@@ -92,7 +92,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(readTasks.name), ToolId.make(updateTasks.name)],
+  tools: [ToolId.make(readTasks.key), ToolId.make(updateTasks.key)],
 });
 
 export default blueprint;

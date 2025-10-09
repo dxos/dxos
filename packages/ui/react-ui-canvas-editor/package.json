@@ -40,7 +40,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@codemirror/lang-json": "^6.0.2",
     "@codemirror/state": "^6.5.2",
-    "@codemirror/view": "^6.38.2",
+    "@codemirror/view": "^6.38.4",
     "@dxos/conductor": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -54,7 +54,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-core": "^1.12.1",
     "@radix-ui/react-context": "1.1.1",
     "bind-event-listener": "^3.0.0",
     "d3": "^7.9.0",
@@ -71,19 +71,19 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "7.1.7"
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

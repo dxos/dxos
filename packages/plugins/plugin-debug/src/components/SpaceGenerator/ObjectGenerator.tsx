@@ -22,7 +22,7 @@ import { range } from '@dxos/util';
 const generator: ValueGenerator = faker as any;
 
 const findViewByTypename = async (views: DataType.View[], typename: string) => {
-  return views.find((view) => typenameFromQuery(view.query) === typename);
+  return views.find((view) => typenameFromQuery(view.query.ast) === typename);
 };
 
 export type ObjectGenerator<T extends Obj.Any> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;

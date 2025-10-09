@@ -159,21 +159,21 @@ describe('Experimental API review', () => {
   });
 
   test.skip('type narrowing', () => {
-    const a: Obj.Any | Relation.Any = null as any;
+    const any: Obj.Any | Relation.Any = null as any;
 
     {
-      if (Obj.isObject(a)) {
-        a;
+      if (Obj.isObject(any)) {
+        any;
       } else {
-        a;
+        any;
       }
     }
 
     {
-      if (Relation.isRelation(a)) {
-        a;
+      if (Relation.isRelation(any)) {
+        any;
       } else {
-        a;
+        any;
       }
     }
   });

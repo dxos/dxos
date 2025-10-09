@@ -111,15 +111,15 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "typedoc": "0.28.1"
   },
   "peerDependencies": {
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",

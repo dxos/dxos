@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Option, pipe } from 'effect';
@@ -25,9 +23,9 @@ import { faker } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Icon, IconButton, Input, Select } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Path, Tree } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/react-ui-theme';
-import { withTheme } from '@dxos/storybook-utils';
 import { byPosition, isNonNullable, safeParseInt } from '@dxos/util';
 
 import { type ExpandableGraph, ROOT_ID } from '../graph';
@@ -250,14 +248,14 @@ const Controls = ({ children }: PropsWithChildren) => {
 const meta = {
   title: 'sdk/app-graph/EchoGraph',
   decorators: [
+    withTheme,
     withClientProvider({
       createIdentity: true,
-      onIdentityCreated: async ({ client }) => {
+      onCreateIdentity: async ({ client }) => {
         await client.spaces.create();
         await client.spaces.create();
       },
     }),
-    withTheme,
   ],
 } satisfies Meta<typeof Registry>;
 

@@ -53,7 +53,7 @@ export const FPS = ({ classNames, width = 60, height = 30, bar = 'bg-cyan-500' }
     },
   );
 
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
   const tick = () => {
     dispatch();
     requestRef.current = requestAnimationFrame(tick);

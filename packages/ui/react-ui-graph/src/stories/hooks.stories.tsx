@@ -2,15 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
 import { log } from '@dxos/log';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SVG } from '../components';
 import {
@@ -46,8 +44,8 @@ const Component = ({
   grid: showGrid = false,
 }: ComponentProps) => {
   const context = useSvgContext();
-  const graphRef = useRef<SVGGElement>();
-  const markersRef = useRef<SVGGElement>();
+  const graphRef = useRef<SVGGElement>(null);
+  const markersRef = useRef<SVGGElement>(null);
   const grid = useGrid({ visible: showGrid });
   const zoom = useZoom();
 
@@ -154,7 +152,10 @@ const DefaultStory = ({ children, ...props }: ComponentProps) => {
 const meta = {
   title: 'ui/react-ui-graph/hooks',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

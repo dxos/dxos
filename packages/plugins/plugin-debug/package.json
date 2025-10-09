@@ -26,7 +26,7 @@
   "dependencies": {
     "@antv/graphlib": "^2.0.4",
     "@antv/layout": "^1.2.13",
-    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge": "3.1.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant-testing": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -74,7 +74,7 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-core": "^1.12.1",
     "@tldraw/tldraw": "^3.0.0",
     "date-fns": "^3.3.1",
     "react-json-tree": "^0.18.0",
@@ -85,14 +85,14 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.90.2",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "7.1.7"
+    "@effect-rx/rx-react": "0.42.4",
+    "@effect/platform": "0.92.1",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/random": "workspace:*",
@@ -101,8 +101,8 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0"
   },
   "publishConfig": {
     "access": "public"

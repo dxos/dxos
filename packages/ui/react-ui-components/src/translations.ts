@@ -12,6 +12,7 @@ export const translations = [
       [translationKey]: {
         'scroll-down.button': 'Scroll down',
         'no commits message': 'No events yet',
+        'query placeholder': 'Enter query (e.g., "type:")',
       },
     },
   },

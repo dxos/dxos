@@ -23,15 +23,18 @@ jobs:
       version: ${{ steps.bump-version.outputs.version }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '24'
+          node-version: 24
 
       - name: Install semver
-        run: npm install -g semver
+        run: pnpm install -g semver
 
       - name: Install jq
         run: |
@@ -136,7 +139,7 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Linux dependencies
         if: matrix.os == 'depot-ubuntu-24.04-4'
@@ -238,7 +241,7 @@ jobs:
     runs-on: depot-macos-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: tecolicom/actions-use-homebrew-tools@v1
         with:
@@ -264,7 +267,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: 16.1
+          xcode-version: 16.4
 
       - name: Setup Apple API key
         run: |
@@ -328,7 +331,7 @@ jobs:
     runs-on: depot-ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Linux dependencies
         run: |

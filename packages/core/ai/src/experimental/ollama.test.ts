@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel } from '@effect/ai';
+import { LanguageModel } from '@effect/ai';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import { preprocessPrompt } from '../AiPreprocessor';
 import { tapHttpErrors } from '../testing';
 
 import { processMessages } from './testing';
@@ -26,7 +26,7 @@ describe('ollama', () => {
   it.effect(
     'streaming',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const history: DataType.Message[] = [];
         history.push(
           Obj.make(DataType.Message, {
@@ -36,10 +36,11 @@ describe('ollama', () => {
           }),
         );
 
-        const prompt = yield* preprocessAiInput(history);
-        const blocks = yield* AiLanguageModel.streamText({
-          prompt,
+        const prompt = yield* preprocessPrompt(history, {
           system: 'You are a helpful assistant.',
+        });
+        const blocks = yield* LanguageModel.streamText({
+          prompt,
           disableToolCallResolution: true,
         }).pipe(parseResponse(), Stream.runCollect, Effect.map(Chunk.toArray));
         const message = Obj.make(DataType.Message, {
@@ -65,7 +66,7 @@ describe('ollama', () => {
   it.effect(
     'tools',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         yield* processMessages({
           messages: [
             Obj.make(DataType.Message, {

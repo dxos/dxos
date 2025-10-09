@@ -8,6 +8,7 @@ import { type DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
+// TODO(burdon): Implement as labels?
 export enum MessageState {
   NONE = 0,
   ARCHIVED = 1,
@@ -15,6 +16,7 @@ export enum MessageState {
   SPAM = 3,
 }
 
+// TODO(burdon): Rename MessageBox? (not email specific).
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
@@ -25,6 +27,7 @@ export const Mailbox = Schema.Struct({
   }),
   ItemAnnotation.set(true),
 );
+
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue'> & {

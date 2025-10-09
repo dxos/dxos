@@ -5,11 +5,12 @@
 import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
-import { StackPlugin } from '@dxos/plugin-stack';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager, INITIAL_URL } from './app-manager';
 import { INITIAL_OBJECT_COUNT } from './constants';
-import { Markdown } from './plugins';
+import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');

@@ -57,20 +57,21 @@
     "react-joyride": "^2.7.2"
   },
   "devDependencies": {
+    "@dxos/plugin-storybook-layout": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.90.2",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "@effect-rx/rx-react": "0.42.4",
+    "@effect/platform": "0.92.1",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "react-floater": "0.7.9",
     "type-fest": "4.10.1",
-    "vite": "7.1.7"
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
@@ -78,8 +79,8 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

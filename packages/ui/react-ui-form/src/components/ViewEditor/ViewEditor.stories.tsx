@@ -2,20 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo/internal';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { QueryParser, createFilter } from '@dxos/react-ui-components';
-import { type DataType, ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
+import { type DataType, type ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -29,13 +27,14 @@ export type ViewEditorDebugObjects = {
   projection: ProjectionModel;
 };
 
-type StoryProps = Pick<ViewEditorProps, 'readonly' | 'kind'>;
+type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: StoryProps) => {
   const space = useSpace();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<DataType.View>();
-  const [projection, setProjection] = useState<ProjectionModel>();
+  const projectionRef = useRef<ProjectionModel>(null);
+
   useAsyncEffect(async () => {
     if (space) {
       const TestSchema = Schema.Struct({
@@ -49,65 +48,92 @@ const DefaultStory = (props: StoryProps) => {
         }),
       );
 
-      const [schema] = await space.db.schemaRegistry.register([TestSchema]);
+      const AlternateSchema = Schema.Struct({
+        title: Schema.String,
+        description: Schema.String,
+        completed: Schema.Boolean,
+      }).pipe(
+        Type.Obj({
+          typename: 'example.com/type/Alternate',
+          version: '0.1.0',
+        }),
+      );
+
+      const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = createView({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
+        queryString: 'Query.select(Filter.type(TestSchema))',
         jsonSchema: toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
-      const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
-      setSchema(schema);
+      setSchema(testSchema);
       setView(view);
-      setProjection(projection);
     }
   }, [space]);
 
   const updateViewQuery = useCallback(
-    (newQueryString: string) => {
-      if (!schema || !view) {
+    async (queryString: string, target?: string) => {
+      if (!schema || !view || !space) {
         return;
       }
 
-      if (props.kind === 'advanced') {
-        try {
-          const parser = new QueryParser(newQueryString);
-          // TODO(wittjosiah): When this fails it should show validation errors in the UI.
-          const newQuery = Query.select(createFilter(parser.parse()));
-          view.query = newQuery.ast;
+      if (props.mode === 'query') {
+        view.query.string = queryString;
 
-          const typename = typenameFromQuery(newQuery.ast);
-          if (typename) {
-            schema.updateTypename(typename);
-          }
-        } catch {}
+        const builder = new QueryBuilder();
+        const filter = builder.build(queryString) ?? Filter.nothing();
+        const queue = target && DXN.tryParse(target) ? target : undefined;
+        const newQuery = queue ? Query.select(filter).options({ queues: [queue] }) : Query.select(filter);
+        view.query.ast = newQuery.ast;
+
+        const typename = typenameFromQuery(newQuery.ast);
+        const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
+        if (!newSchema) {
+          return;
+        }
+
+        const newView = createView({
+          query: newQuery,
+          jsonSchema: newSchema.jsonSchema,
+          presentation: Obj.make(Type.Expando, {}),
+        });
+        view.projection = Obj.getSnapshot(newView).projection;
+        setSchema(() => newSchema);
       } else {
-        const typename = newQueryString;
+        const typename = queryString;
         const newQuery = Query.select(Filter.typename(typename));
-        view.query = newQuery.ast;
+        view.query.ast = newQuery.ast;
         schema.updateTypename(typename);
       }
     },
     [view, schema],
   );
 
-  const handleDelete = useCallback((property: string) => projection?.deleteFieldProjection(property), [projection]);
+  const handleDelete = useCallback(
+    (property: string) => projectionRef.current?.deleteFieldProjection(property),
+    [projectionRef],
+  );
 
   // Expose objects on window for test access.
   useEffect(() => {
-    if (typeof window !== 'undefined' && schema && view && projection) {
-      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = { schema, view, projection } satisfies ViewEditorDebugObjects;
+    if (typeof window !== 'undefined' && schema && view && projectionRef.current) {
+      (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] = {
+        schema,
+        view,
+        projection: projectionRef.current,
+      } satisfies ViewEditorDebugObjects;
     }
-  }, [schema, view, projection]);
+  }, [schema, view]);
 
   // NOTE(ZaymonFC): This looks awkward but it resolves an infinite parsing issue with sb.
   const json = useMemo(
-    () => JSON.parse(JSON.stringify({ schema, view, projection })),
-    [JSON.stringify(schema), JSON.stringify(view), JSON.stringify(projection)],
+    () => JSON.parse(JSON.stringify({ schema, view, projection: projectionRef.current })),
+    [JSON.stringify(schema), JSON.stringify(view)],
   );
 
-  if (!schema || !view || !projection) {
+  if (!schema || !view) {
     return <div />;
   }
 
@@ -115,10 +141,11 @@ const DefaultStory = (props: StoryProps) => {
     <TestLayout json={json}>
       <TestPanel>
         <ViewEditor
+          ref={projectionRef}
           schema={schema}
           view={view}
           registry={space?.db.schemaRegistry}
-          kind={props.kind}
+          mode={props.mode}
           readonly={props.readonly}
           onQueryChanged={updateViewQuery}
           onDelete={handleDelete}
@@ -131,16 +158,11 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [
-    withClientProvider({
-      createSpace: true,
-    }),
-    withLayout({
-      fullscreen: true,
-    }),
-    withTheme,
-  ],
-  parameters: { translations },
+  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -150,9 +172,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Readonly: Story = {
-  args: { readonly: true },
+  args: {
+    readonly: true,
+  },
 };
 
-export const Advanced: Story = {
-  args: { kind: 'advanced' },
+export const QueryMode: Story = {
+  args: {
+    mode: 'query',
+  },
 };

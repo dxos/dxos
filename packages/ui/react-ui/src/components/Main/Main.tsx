@@ -240,7 +240,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
           onKeyDown={handleKeyDown}
-          {...(state === 'closed' && { inert: 'true' })}
+          {...(state === 'closed' && { inert: true })}
           ref={ref}
         >
           {children}

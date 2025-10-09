@@ -90,47 +90,8 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'esbuild-plugin-raw': {
-      packageJson.peerDependencies['esbuild'] = '0.25.6';
-      break;
-    }
-
-    case 'ink':
-    case 'ink-select-input':
-    case 'ink-syntax-highlight':
-    case 'ink-text-input':
-    case 'react-reconciler': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @dxos/presenter
-    case '@react-pdf/renderer': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @storybook/react transitive dep
-    case 'react-element-to-jsx-string': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      packageJson.peerDependencies['react-dom'] = '^18.0.0';
-      break;
-    }
-
-    // @storybook/addon-essentials transitive deps
-    case 'react-inspector':
-    case '@mdx-js/react':
-    // https://github.com/FezVrasta/react-resize-aware/issues/59
-    case 'react-resize-aware': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      break;
-    }
-
-    // @dxos/devtools
-    case 'react-vis':
-    case 'react-motion': {
-      packageJson.peerDependencies['react'] = '^18.0.0';
-      packageJson.peerDependencies['react-dom'] = '^18.0.0';
+    case 'detective-typescript': {
+      packageJson.dependencies['@typescript-eslint/typescript-estree'] = '8.39.0';
       break;
     }
 

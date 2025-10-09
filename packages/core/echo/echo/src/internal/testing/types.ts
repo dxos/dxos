@@ -97,6 +97,7 @@ export namespace Testing {
       name: Schema.String,
       username: Schema.String,
       email: Schema.String,
+      phoneNumbers: Schema.optional(Schema.Array(Schema.Struct({ label: Schema.String, number: Schema.String }))),
       tasks: Schema.suspend((): Schema.mutable<Schema.Array$<Ref$<Task>>> => Schema.mutable(Schema.Array(Ref(Task)))),
       address: Schema.Struct({
         city: Schema.optional(Schema.String),

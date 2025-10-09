@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiTool } from '@effect/ai';
+import { type Tool } from '@effect/ai';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';
@@ -33,7 +33,7 @@ export type ToolBlockProps = {
 export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const getToolCaption = (tool?: AiTool.Any, status?: AgentStatus) => {
+  const getToolCaption = (tool?: Tool.Any, status?: AgentStatus) => {
     if (!tool) {
       return t('calling tool label');
     }
@@ -42,9 +42,9 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   };
 
   const items = useMemo(() => {
-    let lastToolCall: { tool: AiTool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
+    let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
-    const tools: AiTool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
+    const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
       .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
       .map((block) => {

@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
+import { WebSearchToolkit } from '@dxos/assistant-testing';
 import { Filter, Obj, Ref, SchemaNotFoundError, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -17,8 +18,8 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class Toolkit extends AiToolkit.make(
-  AiTool.make('add-to-context', {
+class AssistantToolkit extends Toolkit.make(
+  Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
     `,
@@ -29,9 +30,10 @@ class Toolkit extends AiToolkit.make(
     },
     success: Schema.Void,
     failure: Schema.Never,
-  }).addRequirement<AiContextService | DatabaseService>(), // TODO(burdon): Define standard contract.
+    dependencies: [AiContextService, DatabaseService],
+  }),
 
-  AiTool.make('get-schemas', {
+  Tool.make('get-schemas', {
     description: trim`
       Retrieves schemas definitions.
     `,
@@ -44,7 +46,7 @@ class Toolkit extends AiToolkit.make(
     failure: Schema.Never,
   }),
 
-  AiTool.make('add-schema', {
+  Tool.make('add-schema', {
     description: trim`
       Adds a schema to the space.
       The name will be used when displayed to the user.
@@ -59,7 +61,7 @@ class Toolkit extends AiToolkit.make(
     failure: Schema.Never,
   }),
 
-  AiTool.make('create-record', {
+  Tool.make('create-record', {
     description: trim`
       Creates a new record and adds it to the current space.
       Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
@@ -74,7 +76,7 @@ class Toolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    AssistantToolkit.toLayer({
       'add-to-context': Effect.fnUntraced(function* ({ id }) {
         const { binder } = yield* AiContextService;
         const { db } = yield* DatabaseService;
@@ -158,6 +160,7 @@ class Toolkit extends AiToolkit.make(
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, AssistantToolkit),
+  contributes(Capabilities.ToolkitHandler, AssistantToolkit.layer(context)),
+  contributes(Capabilities.Toolkit, WebSearchToolkit),
 ];

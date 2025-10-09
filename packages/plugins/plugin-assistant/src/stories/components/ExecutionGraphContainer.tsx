@@ -20,7 +20,7 @@ export const ExecutionGraphContainer = ({ space, traceQueue }: ComponentProps & 
     useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??
     [];
   const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target ?? chats.at(-1)?.traceQueue?.target;
-  const { branches, commits } = useExecutionGraph(queue, true);
+  const { branches, commits } = useExecutionGraph(queue);
 
   return (
     <div className='flex flex-col h-full'>

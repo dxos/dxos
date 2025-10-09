@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { IntentPlugin } from '@dxos/app-framework';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
@@ -16,13 +16,13 @@ const meta = {
   title: 'plugins/plugin-preview/Card',
   render: Defaultstory,
   decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      classNames: 'flex flex-col justify-center',
-    }),
+    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withPluginManager({ plugins: [IntentPlugin()] }),
   ],
-  parameters: { translations },
+  parameters: {
+    layout: 'column',
+    translations,
+  },
   tags: ['cards'],
 } satisfies Meta<typeof Defaultstory>;
 

@@ -91,6 +91,7 @@ export class QueryPlanner {
   // TODO(dmaretskyi): If the tip of the query ast is a [select, ...filter] shape we can reorder the filters so the query is most efficient.
   private _generateSelectionFromFilter(filter: QueryAST.Filter, context: GenerationContext): QueryPlan.Plan {
     switch (filter.type) {
+      // Props
       case 'object': {
         if (
           context.selectionInverted &&
@@ -165,6 +166,26 @@ export class QueryPlanner {
           ]);
         }
       }
+
+      // Tag
+      case 'tag': {
+        return QueryPlan.Plan.make([
+          {
+            _tag: 'SelectStep',
+            spaces: context.selectionSpaces,
+            selector: {
+              _tag: 'WildcardSelector',
+            },
+          },
+          ...this._generateDeletedHandlingSteps(context),
+          {
+            _tag: 'FilterStep',
+            filter: { ...filter },
+          },
+        ]);
+      }
+
+      // Text
       case 'text-search': {
         return QueryPlan.Plan.make([
           {
@@ -179,12 +200,16 @@ export class QueryPlanner {
           ...this._generateDeletedHandlingSteps(context),
         ]);
       }
+
+      // Compare
       case 'compare':
         throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'in':
         throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
       case 'range':
         throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+
+      // Boolean
       case 'not':
         return this._generateSelectionFromFilter(filter.filter, {
           ...context,
@@ -195,10 +220,11 @@ export class QueryPlanner {
       case 'or':
         // Optimized case
         if (filter.filters.every(isTrivialTypenameFilter)) {
-          const typenames = filter.filters.map((f) => {
-            invariant(f.type === 'object' && f.typename !== null);
-            return f.typename;
+          const typenames = filter.filters.map((filter) => {
+            invariant(filter.type === 'object' && filter.typename !== null);
+            return filter.typename;
           });
+
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',

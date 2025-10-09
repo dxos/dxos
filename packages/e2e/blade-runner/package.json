@@ -35,10 +35,10 @@
     "run-tests": "moon run blade-runner:build && node ./dist/lib/node-esm/main.mjs"
   },
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
-    "@automerge/automerge-repo": "2.3.0-alpha.0",
-    "@automerge/automerge-repo-network-websocket": "2.3.0-alpha.0",
-    "@automerge/automerge-repo-storage-indexeddb": "2.3.0-alpha.0",
+    "@automerge/automerge": "3.1.2",
+    "@automerge/automerge-repo": "2.3.1",
+    "@automerge/automerge-repo-network-websocket": "2.3.1",
+    "@automerge/automerge-repo-storage-indexeddb": "2.3.1",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -74,7 +74,7 @@
     "@dxos/util": "workspace:*",
     "chartjs-node-canvas": "^4.1.6",
     "debug": "^4.3.4",
-    "effect": "3.17.7",
+    "effect": "3.18.3",
     "esbuild": "0.25.10",
     "esbuild-plugin-wasm": "^1.1.0",
     "ioredis": "^5.3.2",

@@ -71,12 +71,14 @@
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.25.2",
+    "@effect/ai": "0.29.1",
+    "@effect/experimental": "0.56.0",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.9.0",
+    "@preact/signals-core": "^1.12.1",
     "date-fns": "^3.3.1"
   },
   "devDependencies": {
+    "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -84,13 +86,13 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect-rx/rx-react": "0.38.0",
-    "@effect/platform": "0.90.2",
-    "@types/react": "~18.2.0",
-    "effect": "3.17.7",
+    "@effect-rx/rx-react": "0.42.4",
+    "@effect/platform": "0.92.1",
+    "@types/react": "~19.2.2",
+    "effect": "3.18.3",
     "preact": "~10.11.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "tailwindcss": "~3.4.1"
   },
   "peerDependencies": {
@@ -99,8 +101,8 @@
     "@effect-rx/rx-react": "^0.34.1",
     "@effect/platform": "^0.80.12",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

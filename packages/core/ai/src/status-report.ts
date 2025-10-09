@@ -5,6 +5,7 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
+import { GeneratorAnnotation } from '@dxos/echo-schema';
 import { ObjectId } from '@dxos/keys';
 
 /**
@@ -17,7 +18,10 @@ export const AgentStatus = Schema.Struct({
   // See {@link TracingService.TraceContext}
   parentMessage: Schema.optional(ObjectId),
   toolCallId: Schema.optional(Schema.String),
-
+  created: Schema.String.pipe(
+    Schema.annotations({ description: 'ISO date string when the status was sent.' }),
+    GeneratorAnnotation.set('date.iso8601'),
+  ),
   message: Schema.String,
 }).pipe(
   Type.Obj({

@@ -48,7 +48,7 @@ describe('graph', () => {
   it.effect.skip(
     'calculator',
     Effect.fn(
-      function* ({ expect: _ }) {
+      function* (_) {
         const session = new AiSession();
         const toolkit = yield* Toolkit;
         const response = yield* session.run({

@@ -2,7 +2,9 @@ type: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -28,3 +30,6 @@ tasks:
       mergeArgs: replace
     outputs:
       - dist/plugin/
+  test:
+    inputs:
+      - .storybook/*

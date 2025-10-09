@@ -47,6 +47,10 @@ export const NavTree = ({ id, root, ...props }: NavTreeProps) => {
   const path = useMemo(() => [id], [id]);
 
   return (
+    // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
+    //  it uses RovingFocus and doesn’t support moving focus to an item that is not a tab. Assess whether this situation
+    //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
+    //  not use `react-ui-tabs` at all.
     <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative'>
       <L0Menu
         menuActions={topLevelActions}

@@ -2,17 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, String, pipe } from 'effect';
+import { Schema } from 'effect';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { StoredSchema } from '@dxos/echo/internal';
+import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
-import { getSchemaProperties } from '../properties';
-import { Testing } from '../testing';
+import { DataType } from '../common';
 
+import { ProjectionModel } from './projection-model';
 import { createView, createViewWithReferences } from './view';
 
 describe('Projection', () => {
@@ -26,50 +26,74 @@ describe('Projection', () => {
     await builder.close();
   });
 
-  test('create view from TypedObject', async ({ expect }) => {
-    const schema = Testing.Contact;
-    const presentation = Obj.make(Type.Expando, {});
+  test('create view from schema', async ({ expect }) => {
+    const schema = DataType.Person;
+    const jsonSchema = Type.toJsonSchema(schema);
+
+    const registry = new RuntimeSchemaRegistry();
+    registry.addSchema([DataType.Person, DataType.Organization]);
+
     const view = await createViewWithReferences({
       query: Query.select(Filter.type(schema)),
-      jsonSchema: Type.toJsonSchema(schema),
-      presentation,
+      jsonSchema,
+      presentation: Obj.make(Type.Expando, {}),
+      registry,
     });
-    assert(view.query.type === 'select');
-    assert(view.query.filter.type === 'object');
-    expect(view.query.filter.typename).to.eq(Type.getDXN(schema)?.toString());
-    expect(view.projection.fields.map((f) => f.path)).to.deep.eq([
-      'name',
+    assert(view.query.ast.type === 'select');
+    assert(view.query.ast.filter.type === 'object');
+    expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
+    const visibleFields = view.projection.fields.filter((f) => f.visible);
+    expect(visibleFields.map((f) => f.path)).to.deep.eq([
+      'fullName',
+      'preferredName',
+      'nickname',
       'image',
-      'email',
-      // 'address',
       'organization',
+      'jobTitle',
+      'department',
+      'notes',
+      'birthday',
     ]);
 
-    const props = getSchemaProperties(schema.ast);
-    const labels = props.map((p) => pipe(p.name ?? p.title, String.capitalize));
-    expect(labels).to.deep.eq([
-      'Name',
-      'Image',
-      'Email',
-      // 'Address',
-      'Organization',
-    ]);
+    const projection = new ProjectionModel(jsonSchema, view.projection);
+
+    {
+      const { props } = projection.getFieldProjection(projection.getFieldId('fullName')!);
+      expect(props).to.deep.eq({
+        property: 'fullName',
+        title: 'Full Name',
+        type: TypeEnum.String,
+        format: FormatEnum.String,
+      });
+    }
+
+    {
+      const { props } = projection.getFieldProjection(projection.getFieldId('organization')!);
+      expect(props).to.deep.eq({
+        property: 'organization',
+        title: 'Organization',
+        type: TypeEnum.Ref,
+        format: FormatEnum.Ref,
+        referencePath: 'name',
+        referenceSchema: 'dxos.org/type/Organization',
+      });
+    }
   });
 
   test('static schema definitions with references', async ({ expect }) => {
-    const organization = Obj.make(Testing.Organization, { name: 'DXOS', website: 'https://dxos.org' });
-    const contact = Obj.make(Testing.Contact, {
-      name: 'Alice',
-      email: 'alice@example.com',
+    const organization = Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' });
+    const contact = Obj.make(DataType.Person, {
+      fullName: 'Alice',
+      emails: [{ value: 'alice@example.com' }],
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(Testing.Organization),
-      contact: Type.toJsonSchema(Testing.Contact),
+      organization: Type.toJsonSchema(DataType.Organization),
+      contact: Type.toJsonSchema(DataType.Person),
     });
     log('objects', { organization, contact });
-    expect(Obj.getTypename(organization)).to.eq(Testing.Organization.typename);
-    expect(Obj.getTypename(contact)).to.eq(Testing.Contact.typename);
+    expect(Obj.getTypename(organization)).to.eq(DataType.Organization.typename);
+    expect(Obj.getTypename(contact)).to.eq(DataType.Person.typename);
   });
 
   test('maintains field order during initialization', async ({ expect }) => {

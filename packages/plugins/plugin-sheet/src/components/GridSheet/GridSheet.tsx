@@ -77,7 +77,7 @@ export const GridSheet = () => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const rangeController = useRef<RangeController>();
+  const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
@@ -308,7 +308,7 @@ export const GridSheet = () => {
 
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
-    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
+    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}

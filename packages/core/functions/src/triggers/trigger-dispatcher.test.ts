@@ -18,11 +18,10 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '../services';
-import { FunctionImplementationResolver, LocalFunctionExecutionService } from '../services/local-function-execution';
 import { TestDatabaseLayer } from '../testing';
 import { FunctionTrigger } from '../types';
 
@@ -35,17 +34,17 @@ const TestLayer = pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
+      CredentialsService.layerConfig([]),
+      FunctionInvocationService.layerTestMocked({ functions: [reply] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
+      FetchHttpClient.layer,
       TestDatabaseLayer({
         types: [FunctionType, FunctionTrigger, DataType.Person, DataType.Task],
       }),
-      CredentialsService.layerConfig([]),
-      LocalFunctionExecutionService.layerLive,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
-      FetchHttpClient.layer,
     ),
   ),
-  Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [reply] })),
 );
 
 const TestTriggerDispatcherLayer = Layer.provideMerge(

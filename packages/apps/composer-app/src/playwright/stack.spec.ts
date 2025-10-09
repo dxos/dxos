@@ -4,11 +4,12 @@
 
 import { expect, test } from '@playwright/test';
 
-import { StackPlugin } from '@dxos/plugin-stack';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager } from './app-manager';
 import { INITIAL_OBJECT_COUNT } from './constants';
-import { Markdown, Stack } from './plugins';
+import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
   let host: AppManager;

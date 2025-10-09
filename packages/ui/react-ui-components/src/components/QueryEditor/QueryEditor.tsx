@@ -2,74 +2,57 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef, useMemo } from 'react';
 
-import { type Space } from '@dxos/client-protocol';
-import { useThemeContext } from '@dxos/react-ui';
+import { type Space } from '@dxos/client/echo';
+import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
+  Editor,
+  type EditorController,
+  type EditorProps,
   EditorView,
-  autocomplete,
+  type Extension,
   createBasicExtensions,
   createThemeExtensions,
-  useTextEditor,
 } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
-import { isNonNullable } from '@dxos/util';
 
-import { useMatcherExtension } from '../../hooks';
+import { translationKey } from '../../translations';
 
-export type QueryEditorProps = {
-  space?: Space;
-  classNames?: string;
-  autoFocus?: boolean;
-  lineWrapping?: boolean;
-  placeholder?: string;
-  initialValue?: string;
-  onChange?: (text: string) => void;
-  onSubmit?: (text: string) => boolean | void;
-  onSuggest?: (text: string) => string[];
-  onCancel?: () => void;
-};
+import { query } from './query-extension';
 
-// TODO(wittjosiah): Factor out.
+export type QueryEditorProps = ThemedClassName<
+  {
+    space?: Space;
+    readonly?: boolean;
+  } & EditorProps
+>;
 
-export const QueryEditor = ({
-  space,
-  classNames,
-  autoFocus,
-  lineWrapping,
-  placeholder,
-  initialValue,
-  onChange,
-  onSubmit,
-  onSuggest,
-  onCancel,
-}: QueryEditorProps) => {
-  const { themeMode } = useThemeContext();
-  const extensions = useMatcherExtension(space);
+/**
+ * Query editor with decorations and autocomplete.
+ */
+export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
+  ({ space, value, readonly, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { themeMode } = useThemeContext();
+    const extensions = useMemo<Extension[]>(
+      () => [
+        EditorView.domEventHandlers({
+          keydown: (event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              return true;
+            }
 
-  const { parentRef } = useTextEditor(
-    () => ({
-      initialValue,
-      autoFocus,
-      extensions: [
+            return false;
+          },
+        }),
+        createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode }),
-        autocomplete({ onSubmit, onSuggest, onCancel }),
-        createBasicExtensions({
-          bracketMatching: false,
-          lineWrapping,
-          placeholder,
-        }),
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            onChange?.(update.state.doc.toString());
-          }
-        }),
-        extensions,
-      ].filter(isNonNullable),
-    }),
-    [themeMode, extensions, onSubmit, onSuggest, onCancel],
-  );
+        query({ space }),
+      ],
+      [space, readonly],
+    );
 
-  return <div ref={parentRef} className={mx('is-full', classNames)} />;
-};
+    return <Editor {...props} moveToEnd value={value} extensions={extensions} ref={forwardedRef} />;
+  },
+);

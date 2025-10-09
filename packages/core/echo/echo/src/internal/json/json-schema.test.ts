@@ -21,7 +21,7 @@ import {
 import { Email, FormatAnnotation, FormatEnum } from '../formats';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../json-schema';
 import { EchoObject, TypedObject } from '../object';
-import { Ref, createSchemaReference, getSchemaReference } from '../ref';
+import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../ref';
 import { StoredSchema } from '../schema';
 import { Testing, prepareAstForCompare } from '../testing';
 
@@ -146,7 +146,15 @@ describe('effect-to-json', () => {
 
   test('handles suspend -- Contact schema serialization', () => {
     const schema = toJsonSchema(Testing.Contact);
-    expect(Object.keys(schema.properties!)).toEqual(['id', 'name', 'username', 'email', 'tasks', 'address']);
+    expect(Object.keys(schema.properties!)).toEqual([
+      'id',
+      'name',
+      'username',
+      'email',
+      'phoneNumbers',
+      'tasks',
+      'address',
+    ]);
   });
 
   test('reference property by ref', () => {
@@ -181,14 +189,19 @@ describe('effect-to-json', () => {
           type: 'string',
         },
         organization: {
-          $id: '/schemas/echo/ref',
-          description: 'Contact organization',
-          reference: {
-            schema: {
-              $ref: 'dxn:type:example.com/type/Organization',
+          allOf: [
+            {
+              $id: '/schemas/echo/ref',
+              $ref: '/schemas/echo/ref',
+              reference: {
+                schema: {
+                  $ref: 'dxn:type:example.com/type/Organization',
+                },
+                schemaVersion: '0.1.0',
+              },
             },
-            schemaVersion: '0.1.0',
-          },
+          ],
+          description: 'Contact organization',
         },
       },
       required: ['name', 'organization', 'id'],
@@ -601,6 +614,39 @@ describe('json-to-effect', () => {
       }
     `);
   });
+
+  test('schema with optional referece', () => {
+    const TestSchema = Schema.Struct({
+      contact: Schema.optional(Ref(Testing.Contact)),
+    });
+    const jsonSchema = toJsonSchema(TestSchema);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "contact": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:type:example.com/type/Contact",
+              },
+              "schemaVersion": "0.1.0",
+            },
+          },
+        },
+        "propertyOrder": [
+          "contact",
+        ],
+        "required": [],
+        "type": "object",
+      }
+    `);
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
+  });
 });
 
 describe('reference', () => {
@@ -609,6 +655,7 @@ describe('reference', () => {
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
       $id: '/schemas/echo/ref',
+      $ref: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
@@ -623,14 +670,19 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ title: 'My custom title' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       title: 'My custom title',
     });
   });
@@ -639,15 +691,34 @@ describe('reference', () => {
     const schema = Ref(Testing.Contact).annotations({ description: 'My custom description' });
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: '/schemas/echo/ref',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      reference: {
-        schema: {
-          $ref: 'dxn:type:example.com/type/Contact',
+      allOf: [
+        {
+          $id: '/schemas/echo/ref',
+          $ref: '/schemas/echo/ref',
+          reference: {
+            schema: {
+              $ref: 'dxn:type:example.com/type/Contact',
+            },
+            schemaVersion: '0.1.0',
+          },
         },
-        schemaVersion: '0.1.0',
-      },
+      ],
       description: 'My custom description',
+    });
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+  });
+
+  test('serialize and deserialize', () => {
+    const schema = Ref(Testing.Contact);
+    const jsonSchema = toJsonSchema(schema);
+    const deserializedSchema = toEffectSchema(jsonSchema);
+    const refAst = getReferenceAst(deserializedSchema.ast);
+    expect(refAst).toEqual({
+      typename: Testing.Contact.typename,
+      version: Testing.Contact.version,
     });
   });
 });

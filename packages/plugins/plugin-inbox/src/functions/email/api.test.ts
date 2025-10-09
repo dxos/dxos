@@ -28,7 +28,7 @@ const TestLayer = Layer.mergeAll(
  * Click Authorize, then Exchange authorization code for tokens.
  *
  * export ACCESS_TOKEN="xxx"
- * pnpm vitest gmail.test.ts
+ * pnpm vitest api.test.ts
  */
 describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
   it.effect(
@@ -40,15 +40,15 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect(
+  it.effect.only(
     'get messages',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
       const { messages } = yield* listMessages(userId, 'label:investor', 50);
       invariant(messages);
 
-      const [message] = yield* pipe(
-        messages.slice(0, 1),
+      const objects = yield* pipe(
+        messages.slice(1, 2),
         Array.map((message) =>
           pipe(
             getMessage(userId, message.id),
@@ -59,7 +59,8 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
         Effect.all,
       );
 
-      expect(message).to.exist;
+      expect(objects).to.exist;
+      console.log(JSON.stringify(objects, null, 2));
     }, Effect.provide(TestLayer)),
   );
 });

@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Decorator, type Meta, type StoryFn, type StoryObj } from '@storybook/react-vite';
+import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
 
@@ -36,8 +34,8 @@ const DefaultStory = ({ objects, ...props }: StoryProps) => {
   );
 };
 
-const SearchContextDecorator = (): Decorator => {
-  return (Story: StoryFn) => (
+const withSearchContext = (): Decorator => {
+  return (Story) => (
     <SearchContextProvider>
       <Story />
     </SearchContextProvider>
@@ -58,15 +56,9 @@ const meta = {
   title: 'plugins/plugin-search/Search',
   component: Searchbar,
   render: DefaultStory,
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-    }),
-    SearchContextDecorator(),
-  ],
+  decorators: [withTheme, withSearchContext()],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'column',
   },
 } satisfies Meta<typeof Searchbar>;
 

@@ -40,6 +40,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/random"
+    },
+    {
       "path": "../../../common/test-utils"
     },
     {

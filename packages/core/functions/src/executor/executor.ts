@@ -10,6 +10,9 @@ import { runAndForwardErrors } from '@dxos/effect';
 import type { FunctionContext, FunctionDefinition } from '../handler';
 import type { ServiceContainer, Services } from '../services';
 
+/**
+ * @deprecated Use `FunctionInvocationService`
+ */
 export class FunctionExecutor {
   constructor(private readonly _services: ServiceContainer) {}
 

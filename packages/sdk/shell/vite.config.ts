@@ -3,20 +3,25 @@
 //
 
 import ReactPlugin from '@vitejs/plugin-react';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+
+import { createConfig as createTestConfig } from '../../../vitest.base.config';
+
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 // https://vitejs.dev/config
 export default defineConfig({
-  root: __dirname,
+  root: dirname,
   build: {
     outDir: 'dist/bundle',
     sourcemap: true,
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: path.resolve(dirname, 'src/index.ts'),
       name: 'Shell',
       fileName: 'shell',
     },
@@ -43,11 +48,11 @@ export default defineConfig({
   },
   plugins: [
     ThemePlugin({
-      root: __dirname,
+      root: dirname,
       content: [
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        resolve(__dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
-        resolve(__dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
+        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        path.resolve(dirname, './node_modules/@dxos/react-ui/dist/**/*.mjs'),
+        path.resolve(dirname, './node_modules/@dxos/react-ui-theme/dist/**/*.mjs'),
       ],
     }),
     // https://github.com/preactjs/signals/issues/269
@@ -66,12 +71,13 @@ export default defineConfig({
           }
         }
 
-        const outDir = join(__dirname, 'dist/bundle');
+        const outDir = path.join(dirname, 'dist/bundle');
         if (!existsSync(outDir)) {
           mkdirSync(outDir);
         }
-        writeFileSync(join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
+        writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },
     },
   ],
+  ...createTestConfig({ dirname, node: true, storybook: true }),
 });

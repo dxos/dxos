@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { Effect, Schema } from 'effect';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
@@ -12,8 +12,8 @@ import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-class Toolkit extends AiToolkit.make(
-  AiTool.make('open-item', {
+class DeckToolkit extends Toolkit.make(
+  Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
     `,
@@ -25,7 +25,7 @@ class Toolkit extends AiToolkit.make(
   }),
 ) {
   static layer = (context: PluginContext) =>
-    Toolkit.toLayer({
+    DeckToolkit.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
           const state = context.getCapability(DeckCapabilities.DeckState);
@@ -50,6 +50,6 @@ class Toolkit extends AiToolkit.make(
 }
 
 export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, Toolkit),
-  contributes(Capabilities.ToolkitHandler, Toolkit.layer(context)),
+  contributes(Capabilities.Toolkit, DeckToolkit),
+  contributes(Capabilities.ToolkitHandler, DeckToolkit.layer(context)),
 ];

@@ -32,10 +32,15 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.12.1",
+    "effect": "3.18.3"
   },
   "devDependencies": {
-    "@preact/signals-core": "^1.9.0"
+    "@preact/signals-core": "^1.12.1"
   },
   "publishConfig": {
     "access": "public"

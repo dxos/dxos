@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '../../testing';
@@ -14,7 +12,6 @@ const meta = {
   title: 'ui/react-ui-core/Link',
   component: Link,
   decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
 } satisfies Meta<typeof Link>;
 
 export default meta;

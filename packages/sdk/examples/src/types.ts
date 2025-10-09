@@ -4,9 +4,14 @@
 
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo/internal';
+import { Type } from '@dxos/echo';
 
-export class TaskType extends TypedObject({ typename: 'dxos.docs.Task', version: '0.1.0' })({
+export const TaskType = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}) {}
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/example/Task',
+    version: '0.1.0',
+  }),
+);

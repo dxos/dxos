@@ -188,6 +188,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             toolCallId: '1234',
             name: 'search',
             input: JSON.stringify({}),
+            providerExecuted: false,
           },
         ]),
         createMessage('user', [
@@ -196,6 +197,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             toolCallId: '1234',
             name: 'search',
             result: 'This is a tool result.',
+            providerExecuted: false,
           },
         ]),
       ]),
@@ -218,6 +220,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             toolCallId: '4567',
             name: 'create',
             input: JSON.stringify({}),
+            providerExecuted: false,
           },
         ]),
         createMessage('user', [
@@ -226,6 +229,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             toolCallId: '4567',
             name: 'create',
             result: 'This is a tool result.',
+            providerExecuted: false,
           },
         ]),
         createMessage('assistant', [

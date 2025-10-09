@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback, useState } from 'react';
@@ -12,9 +10,9 @@ import { ContactType } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
 import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { live } from '@dxos/live-object';
-import { withSurfaceVariantsLayout } from '@dxos/react-ui/testing';
+import { Tooltip } from '@dxos/react-ui';
+import { withSurfaceVariantsLayout, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel } from '../testing';
@@ -40,11 +38,13 @@ const DefaultStory = <T extends BaseObject = any>({
 
   if (debug) {
     return (
-      <TestLayout json={{ values, schema: schema.ast }}>
-        <TestPanel>
-          <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
-        </TestPanel>
-      </TestLayout>
+      <Tooltip.Provider>
+        <TestLayout json={{ values, schema: schema.ast }}>
+          <TestPanel>
+            <Form<T> schema={schema} values={values} onSave={handleSave} {...props} />
+          </TestPanel>
+        </TestLayout>
+      </Tooltip.Provider>
     );
   }
 
@@ -67,24 +67,6 @@ const RefStory = <T extends BaseObject = any>(props: StoryProps<T>) => {
   return <DefaultStory<T> onQueryRefOptions={onQueryRefOptions} {...props} />;
 };
 
-const meta = {
-  title: 'ui/react-ui-form/Form',
-  component: Form as any,
-  render: DefaultStory,
-  decorators: [withLayout({ fullscreen: true }), withTheme],
-  parameters: {
-    translations,
-  },
-  argTypes: {
-    readonly: {
-      control: 'boolean',
-      description: 'Readonly',
-    },
-  },
-} satisfies Meta<StoryProps<any>>;
-
-export default meta;
-
 const AddressSchema = Schema.Struct({
   street: Schema.optional(Schema.String.annotations({ title: 'Street' })),
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),
@@ -102,10 +84,28 @@ const ContactSchema = Schema.Struct({
 
 type ContactSchema = Schema.Schema.Type<typeof ContactSchema>;
 
-type Story = StoryObj<StoryProps<any>>;
+const meta = {
+  title: 'ui/react-ui-form/Form',
+  component: Form as any,
+  render: DefaultStory,
+  decorators: [withTheme, withSurfaceVariantsLayout()],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+  argTypes: {
+    readonly: {
+      control: 'boolean',
+      description: 'Readonly',
+    },
+  },
+} satisfies Meta<StoryProps<any>>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withSurfaceVariantsLayout(), withTheme],
   args: {
     schema: ContactSchema,
     values: {

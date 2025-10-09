@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
+import { createObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { useThemeContext } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
   EditorToolbar,
@@ -31,7 +31,6 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 faker.seed(101);
 
@@ -41,7 +40,7 @@ type StoryProps = {
 
 const DefaultStory = ({ content = '' }: StoryProps) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(DataType.makeText(content));
+  const [text] = useState(createObject(DataType.makeText(content)));
   const toolbarState = useEditorToolbarState({ viewMode: 'preview' });
   const formattingObserver = useFormattingState(toolbarState);
   const { parentRef, view } = useTextEditor(() => {
@@ -101,8 +100,9 @@ const meta = {
   title: 'plugins/plugin-markdown/Toolbar',
   component: EditorToolbar as any,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

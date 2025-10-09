@@ -12,6 +12,7 @@ import { getTypeReference } from '../internal';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
 
@@ -241,11 +242,14 @@ interface FilterAPI {
   typeDXN(dxn: DXN): Filter<any>;
 
   /**
-   * Filter by properties.
-   *
-   * INTERNAL API: Do not use.
+   * Filter by tag.
    */
-  _props<T>(props: Filter.Props<T>): Filter<T>;
+  tag(tag: string): Filter<Obj.Any>;
+
+  /**
+   * Filter by properties.
+   */
+  props<T>(props: Filter.Props<T>): Filter<T>;
 
   /**
    * Full-text or vector search.
@@ -430,10 +434,14 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  /**
-   * @internal
-   */
-  static _props<T>(props: Filter.Props<T>): Filter<T> {
+  static tag(tag: string): Filter<any> {
+    return new FilterClass({
+      type: 'tag',
+      tag,
+    });
+  }
+
+  static props<T>(props: Filter.Props<T>): Filter<T> {
     return new FilterClass({
       type: 'object',
       typename: null,
@@ -675,7 +683,7 @@ class QueryClass implements Query<any> {
       return new QueryClass({
         type: 'filter',
         selection: this.ast,
-        filter: FilterClass._props(filter).ast,
+        filter: FilterClass.props(filter).ast,
       });
     }
   }

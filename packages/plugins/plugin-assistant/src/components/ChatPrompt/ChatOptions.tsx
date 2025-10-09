@@ -9,13 +9,13 @@ import { type Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useItemTypes } from '../../hooks';
 import { meta } from '../../meta';
 
-const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-[25rem] max-is-[--text-content]';
+const panelClassNames = 'is-[calc(100dvw-.5rem)] sm:is-max md:is-72 max-is-[--text-content]';
 
 export type ChatOptionsProps = {
   space: Space;
@@ -65,12 +65,12 @@ export const ChatOptions = ({
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list'>
+            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
               <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
-                <Tabs.Tabpanel value='blueprints'>
+                <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                   <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
                 </Tabs.Tabpanel>
-                <Tabs.Tabpanel value='model'>
+                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
                   <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                 </Tabs.Tabpanel>
                 <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
@@ -98,7 +98,7 @@ const BlueprintsPanel = ({
 }: Pick<ChatOptionsProps, 'blueprintRegistry' | 'space' | 'context'>) => {
   const { t } = useTranslation(meta.id);
 
-  const blueprints = useBlueprints({ blueprintRegistry });
+  const blueprints = useBlueprints({ blueprintRegistry, space });
   const activeBlueprints = useActiveBlueprints({ context });
   const { onUpdateBlueprint } = useBlueprintHandlers({ space, context, blueprintRegistry });
 
@@ -120,7 +120,7 @@ const BlueprintsPanel = ({
           );
         })}
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' />
+      <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-cardSpacingChrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -131,24 +131,16 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   return (
-    <ul role='listbox' className='plb-cardSpacingChrome'>
+    <Listbox.Root value={preset} onValueChange={onPresetChange} autoFocus>
       {presets?.map(({ id, label }) => {
-        const isActive = preset === id;
         return (
-          <li
-            role='option'
-            key={id}
-            aria-selected={isActive}
-            tabIndex={0}
-            className='overflow-hidden dx-focus-ring flex gap-2 p-1 pis-2 pie-2 items-center rounded-sm select-none cursor-pointer hover:bg-hoverOverlay'
-            onClick={() => onPresetChange?.(id)}
-          >
-            <div className='grow truncate'>{label}</div>
-            <Icon icon='ph--check--regular' classNames={[!isActive && 'invisible']} />
-          </li>
+          <Listbox.Option key={id} value={id}>
+            <Listbox.OptionLabel>{label}</Listbox.OptionLabel>
+            <Listbox.OptionIndicator />
+          </Listbox.Option>
         );
       })}
-    </ul>
+    </Listbox.Root>
   );
 };
 
@@ -184,8 +176,8 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
   const { objects: contextObjects, onUpdateObject } = useContextObjects({ space, context });
 
   return (
-    <SearchList.Root classNames='pis-2 pie-2'>
-      <SearchList.Content classNames='plb-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
+    <SearchList.Root>
+      <SearchList.Content classNames='p-cardSpacingChrome [&:has([cmdk-list-sizer]:empty)]:plb-0'>
         {objects.length ? (
           objects.map((object) => {
             const label = Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id;
@@ -207,7 +199,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
         )}
       </SearchList.Content>
 
-      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 mbe-cardSpacingChrome'>
+      <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 pli-cardSpacingChrome mbe-cardSpacingChrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
           <Select.Portal>
@@ -226,7 +218,7 @@ const ObjectsPanel = ({ space, context }: Pick<ChatOptionsProps, 'space' | 'cont
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' />
+        <SearchList.Input placeholder={t('search placeholder')} classNames='mbe-0' autoFocus />
       </div>
     </SearchList.Root>
   );

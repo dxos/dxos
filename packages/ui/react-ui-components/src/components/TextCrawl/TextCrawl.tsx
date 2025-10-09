@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
-import { type ThemedClassName, useDynamicRef } from '@dxos/react-ui';
+import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
@@ -45,15 +45,19 @@ export const TextCrawl = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const linesLength = useDynamicRef(lines.length);
   const lastRoll = useRef(Date.now());
-  const [index, setIndex] = useState(indexParam);
+  const [index, setIndex, indexRef] = useStateWithRef(indexParam);
 
-  // Index
+  // Index.
   useEffect(() => {
     setIndex(indexParam);
   }, [indexParam]);
 
   // Auto-advance.
   useEffect(() => {
+    if (lines.length < indexRef.current) {
+      setIndex(0);
+    }
+
     if (!autoAdvance) {
       setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
       return;

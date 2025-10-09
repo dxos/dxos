@@ -15,7 +15,7 @@ import { meta } from '../meta';
 /**
  * Handle scrolling and selection of the current thread in a markdown editor.
  */
-export const useSelectCurrentThread = (editorView: EditorView | undefined, documentId: string) => {
+export const useSelectCurrentThread = (editorView: EditorView | null, documentId: string) => {
   const scrollIntoViewResolver = useMemo(
     () =>
       createResolver({

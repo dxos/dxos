@@ -13,7 +13,7 @@ import {
   SummaryWidget,
   ToggleContainer,
 } from '@dxos/react-ui-components';
-import { type XmlWidgetProps, type XmlWidgetRegistry } from '@dxos/react-ui-editor';
+import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 
@@ -32,11 +32,6 @@ const Fallback = ({ _tag, ...props }: XmlWidgetProps<MessageThreadContext>) => {
   );
 };
 
-const getTextChild = (children: any[]): string | null => {
-  const child = children?.[0];
-  return typeof child === 'string' ? child : null;
-};
-
 /**
  * Custom XML tags registry.
  */
@@ -48,14 +43,14 @@ export const componentRegistry: XmlWidgetRegistry = {
   ['prompt' as const]: {
     block: true,
     factory: (props) => {
-      const text = getTextChild(props.children);
+      const text = getXmlTextChild(props.children);
       return text ? new PromptWidget(text) : null;
     },
   },
   ['reference' as const]: {
     block: false,
     factory: (props) => {
-      const text = getTextChild(props.children);
+      const text = getXmlTextChild(props.children);
       return text && props.ref ? new ReferenceWidget(text, props.ref) : null;
     },
   },
@@ -63,7 +58,7 @@ export const componentRegistry: XmlWidgetRegistry = {
     block: true,
     factory: (props) => {
       const options = props.children
-        ?.map((option: any) => option._tag === 'option' && getTextChild(option.children))
+        ?.map((option: any) => option._tag === 'option' && getXmlTextChild(option.children))
         .filter(Boolean);
       return options?.length ? new SelectWidget(options) : null;
     },
@@ -71,14 +66,14 @@ export const componentRegistry: XmlWidgetRegistry = {
   ['suggestion' as const]: {
     block: true,
     factory: (props) => {
-      const text = getTextChild(props.children);
+      const text = getXmlTextChild(props.children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
   ['summary' as const]: {
     block: true,
     factory: (props) => {
-      const text = getTextChild(props.children);
+      const text = getXmlTextChild(props.children);
       return text ? new SummaryWidget(text) : null;
     },
   },

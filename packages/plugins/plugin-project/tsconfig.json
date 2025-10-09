@@ -21,16 +21,25 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
     },
     {
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/assistant-testing"
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../devtools/devtools"
@@ -48,7 +57,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-list"
     },
     {
       "path": "../../ui/react-ui-stack"

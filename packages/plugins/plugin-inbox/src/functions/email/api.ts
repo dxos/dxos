@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
-import { createUrl, parseEmailString, stripNewlines, turndown } from './util';
+import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
@@ -61,9 +61,8 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     }
 
     const from = message.payload.headers.find(({ name }) => name === 'From');
-    const sender = from && parseEmailString(from.value);
-    const data =
-      message.payload.body?.data ?? message.payload.parts?.find(({ mimeType }) => mimeType === 'text/plain')?.body.data;
+    const sender = from && parseFromHeader(from.value);
+    const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
 
     // Skip the message if content or sender is missing.
     // TODO(wittjosiah): This comparison should be done via foreignId probably.
@@ -76,7 +75,7 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     const markdown = stripNewlines(turndown.turndown(text));
 
     const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
-    const snippet = message.snippet; // TODO(burdon): Remove <https://foo.com> tags.
+    const snippet = message.snippet;
     const labels = labelMap
       ? message.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
       : message.labelIds;

@@ -272,7 +272,7 @@ export const registry: Record<NodeType, Executable> = {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({
-                    typename: typenameFromQuery(container.query),
+                    typename: typenameFromQuery(container.query.ast),
                   })
                   .first(),
               );

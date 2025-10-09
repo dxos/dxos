@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiResponse } from '@effect/ai';
-import { Effect, Function, Predicate, Stream } from 'effect';
+import { type Response } from '@effect/ai';
+import { Effect, Function, Option, Predicate, Stream } from 'effect';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -51,7 +51,7 @@ export interface ParseResponseCallbacks {
   /**
    * Called on every part received from the stream.
    */
-  onPart: (part: AiResponse.Part) => Effect.Effect<void>;
+  onPart: (part: Response.StreamPart<any>) => Effect.Effect<void>;
 
   /**
    * Called on every partial or completed content block.
@@ -79,7 +79,7 @@ export interface ParseResponseOptions extends ParseResponseCallbacks {
 }
 
 /**
- * Transforms the AiResponse stream into a stream of complete ContentBlock messages.
+ * Transforms the Response stream into a stream of complete ContentBlock messages.
  * Partial blocks are emitted to support streaming to the UI.
  */
 export const parseResponse =
@@ -90,7 +90,7 @@ export const parseResponse =
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
   }: Partial<ParseResponseOptions> = {}) =>
-  <E, R>(input: Stream.Stream<AiResponse.AiResponse, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
+  <E, R>(input: Stream.Stream<Response.StreamPart<any>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
       Effect.fnUntraced(function* (emit) {
         const transformer = new StreamTransform();
@@ -104,12 +104,21 @@ export const parseResponse =
 
         /** Current partial block used to accumulate content. */
         let current: StreamBlock | undefined;
+        let block: ContentBlock.Any | undefined;
         let blocks = 0;
         let parts = 0;
         let toolCalls = 0;
 
+        const emitPartialContentBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
+          yield* onBlock({ ...block });
+          blocks++;
+        });
+
         const emitFullBlock = Effect.fnUntraced(function* (block: ContentBlock.Any) {
           log('block', { block });
+          if (block.pending === false) {
+            delete block.pending;
+          }
           yield* onBlock(block);
           emit.single(block);
           blocks++;
@@ -119,7 +128,7 @@ export const parseResponse =
           const content = makeContentBlock(block, { parseReasoningTags });
           if (content) {
             content.pending = true;
-            yield* onBlock(content);
+            yield* emitPartialContentBlock(content);
           }
         });
 
@@ -141,152 +150,220 @@ export const parseResponse =
         yield* onBegin();
         yield* Stream.runForEach(
           input,
-          Effect.fnUntraced(function* (response) {
-            for (const part of response.parts) {
-              log('part', { tag: part._tag, part });
-              yield* onPart(part);
-              switch (part._tag) {
-                case 'TextPart': {
-                  const chunks = transformer.transform(part.text);
-                  for (const chunk of chunks) {
-                    log('text_chunk', { type: current?.type, chunk });
-                    switch (current?.type) {
-                      //
-                      // XML Fragment.
-                      //
-                      case 'tag': {
-                        if (chunk.type === 'tag') {
-                          if (chunk.selfClosing) {
-                            current.content.push(chunk);
-                          } else if (chunk.closing) {
-                            if (tagStack.length > 0) {
-                              const top = tagStack.pop();
-                              invariant(top && top.type === 'tag');
-                              log('pop', { top });
-                              top.content.push(current);
-                              current = top;
-                            } else {
-                              yield* emitStreamBlock(current);
-                              current = undefined;
-                            }
-                          } else {
-                            tagStack.push(current);
-                            current = chunk;
-                          }
-                        } else {
-                          // Append text.
-                          if (current.content.length === 0) {
-                            current.content.push(chunk);
-                          } else {
-                            const last = current.content.at(-1);
-                            invariant(last);
-                            if (last.type === 'text') {
-                              last.content += chunk.content;
-                            } else {
-                              current.content.push(chunk);
-                            }
-                          }
-                        }
-                        break;
-                      }
+          Effect.fnUntraced(function* (part) {
+            log('part', { type: part.type, part });
+            yield* onPart(part);
+            switch (part.type) {
+              case 'text-start': {
+                // no-op
+                break;
+              }
 
-                      //
-                      // Text Fragment.
-                      //
-                      case 'text': {
-                        if (chunk.type === 'tag') {
-                          yield* emitStreamBlock(current);
-                          if (chunk.selfClosing) {
-                            yield* emitStreamBlock(chunk);
+              case 'text-delta': {
+                const chunks = transformer.transform(part.delta);
+                for (const chunk of chunks) {
+                  log('text_chunk', { type: current?.type, chunk });
+                  switch (current?.type) {
+                    //
+                    // XML Fragment.
+                    //
+                    case 'tag': {
+                      if (chunk.type === 'tag') {
+                        if (chunk.selfClosing) {
+                          current.content.push(chunk);
+                        } else if (chunk.closing) {
+                          if (tagStack.length > 0) {
+                            const top = tagStack.pop();
+                            invariant(top && top.type === 'tag');
+                            log('pop', { top });
+                            top.content.push(current);
+                            current = top;
+                          } else {
+                            yield* emitStreamBlock(current);
                             current = undefined;
-                          } else {
-                            current = chunk;
                           }
                         } else {
-                          // Append text.
-                          current.content += chunk.content;
+                          tagStack.push(current);
+                          current = chunk;
                         }
-                        break;
+                      } else {
+                        // Append text.
+                        if (current.content.length === 0) {
+                          current.content.push(chunk);
+                        } else {
+                          const last = current.content.at(-1);
+                          invariant(last);
+                          if (last.type === 'text') {
+                            last.content += chunk.content;
+                          } else {
+                            current.content.push(chunk);
+                          }
+                        }
                       }
+                      break;
+                    }
 
-                      //
-                      // No current chunk.
-                      //
-                      default: {
-                        if (chunk.type === 'tag' && chunk.selfClosing) {
+                    //
+                    // Text Fragment.
+                    //
+                    case 'text': {
+                      if (chunk.type === 'tag') {
+                        yield* emitStreamBlock(current);
+                        if (chunk.selfClosing) {
                           yield* emitStreamBlock(chunk);
+                          current = undefined;
                         } else {
                           current = chunk;
                         }
+                      } else {
+                        // Append text.
+                        current.content += chunk.content;
+                      }
+                      break;
+                    }
+
+                    //
+                    // No current chunk.
+                    //
+                    default: {
+                      if (chunk.type === 'tag' && chunk.selfClosing) {
+                        yield* emitStreamBlock(chunk);
+                      } else {
+                        current = chunk;
                       }
                     }
                   }
-
-                  if (current) {
-                    yield* emitPartialBlock(current);
-                  }
-                  break;
                 }
 
-                case 'ToolCallPart': {
-                  yield* flushText();
-                  yield* emitFullBlock({
-                    _tag: 'toolCall',
-                    toolCallId: part.id,
-                    name: part.name,
-                    input: JSON.stringify(part.params),
-                  } satisfies ContentBlock.ToolCall);
-                  toolCalls++;
-                  break;
+                if (current) {
+                  yield* emitPartialBlock(current);
                 }
+                break;
+              }
 
-                case 'ReasoningPart': {
-                  yield* flushText();
-                  const block: ContentBlock.Reasoning = {
-                    _tag: 'reasoning',
-                    reasoningText: part.reasoningText,
-                  };
-                  if (part.signature) {
-                    block.signature = part.signature;
-                  }
-                  yield* emitFullBlock(block);
-                  break;
-                }
+              case 'text-end': {
+                yield* flushText();
+                break;
+              }
 
-                case 'RedactedReasoningPart': {
-                  yield* flushText();
-                  yield* emitFullBlock({
-                    _tag: 'reasoning',
-                    redactedText: part.redactedText,
-                  } satisfies ContentBlock.Reasoning);
-                  break;
-                }
+              case 'tool-params-start': {
+                // NOTE: Effect-ai outputs both streamed and parsed tool calls. We ignore the streamed version for now.
+                // invariant(!block);
+                // block = {
+                //   _tag: 'toolCall',
+                //   toolCallId: part.id,
+                //   name: part.name,
+                //   input: '',
+                //   pending: true,
+                //   providerExecuted: part.providerExecuted,
+                // } satisfies ContentBlock.ToolCall;
+                // yield* onBlock(block);
+                break;
+              }
 
-                case 'MetadataPart': {
-                  yield* flushText();
-                  summary.model = part.model;
-                  log('metadata', { metadata: part });
-                  break;
-                }
+              case 'tool-params-delta': {
+                // invariant(block?._tag === 'toolCall');
+                // block.input += part.delta;
+                // yield* onBlock(block);
+                break;
+              }
 
-                case 'FinishPart': {
-                  yield* flushText();
-                  const { inputTokens, outputTokens, totalTokens } = part.usage;
-                  summary.duration = Date.now() - start;
-                  summary.message = 'OK'; // part.reason;
-                  summary.toolCalls = toolCalls;
-                  summary.usage = {
-                    inputTokens,
-                    outputTokens,
-                    totalTokens,
-                  };
-                  yield* emitFullBlock({
-                    ...summary,
-                    _tag: 'summary',
-                  } satisfies ContentBlock.Summary);
-                  log('finish', { finish: part });
-                  break;
+              case 'tool-params-end': {
+                // invariant(block?._tag === 'toolCall');
+                // block.pending = false;
+                // yield* emitFullBlock(block);
+                // block = undefined;
+                break;
+              }
+
+              case 'tool-call': {
+                yield* emitFullBlock({
+                  _tag: 'toolCall',
+                  toolCallId: part.id,
+                  name: part.name,
+                  input: JSON.stringify(part.params),
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolCall);
+                toolCalls++;
+                break;
+              }
+
+              case 'tool-result': {
+                yield* emitFullBlock({
+                  _tag: 'toolResult',
+                  toolCallId: part.id,
+                  name: part.name,
+                  result: JSON.stringify(part.result),
+                  providerExecuted: part.providerExecuted,
+                } satisfies ContentBlock.ToolResult);
+                break;
+              }
+
+              case 'reasoning-start': {
+                invariant(!block);
+                block = {
+                  _tag: 'reasoning',
+                  reasoningText: '',
+                  pending: true,
+                } satisfies ContentBlock.Reasoning;
+                if (part.metadata.anthropic?.type === 'thinking') {
+                  block.signature = part.metadata.anthropic.signature;
                 }
+                if (part.metadata.anthropic?.type === 'redacted_thinking') {
+                  block.redactedText = part.metadata.anthropic.redactedData;
+                }
+                yield* emitPartialContentBlock(block);
+                break;
+              }
+              case 'reasoning-delta': {
+                invariant(block?._tag === 'reasoning');
+                block.reasoningText += part.delta;
+                yield* emitPartialContentBlock(block);
+                break;
+              }
+              case 'reasoning-end': {
+                invariant(block?._tag === 'reasoning');
+                block.pending = false;
+                yield* emitFullBlock(block);
+                block = undefined;
+                break;
+              }
+
+              case 'source': {
+                yield* flushText();
+                // TODO(dmaretskyi): Handle sources.
+                break;
+              }
+
+              case 'response-metadata': {
+                yield* flushText();
+                summary.model = Option.getOrUndefined(part.modelId);
+                log('metadata', { metadata: part });
+                break;
+              }
+
+              case 'finish': {
+                yield* flushText();
+                const { inputTokens, outputTokens, totalTokens } = part.usage;
+                summary.duration = Date.now() - start;
+                summary.message = 'OK'; // part.reason;
+                summary.toolCalls = toolCalls;
+                summary.usage = {
+                  inputTokens,
+                  outputTokens,
+                  totalTokens,
+                };
+                yield* emitFullBlock({
+                  ...summary,
+                  _tag: 'summary',
+                } satisfies ContentBlock.Summary);
+                log('finish', { finish: part });
+                break;
+              }
+
+              default: {
+                log.warn('llm stream part ignored', { part: part.type });
+                break;
               }
             }
 

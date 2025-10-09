@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
@@ -12,7 +10,7 @@ import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ContactType, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -48,11 +46,12 @@ const meta = {
   component: TriggerEditor as any,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       createIdentity: true,
       createSpace: true,
       types: [FunctionType, FunctionTrigger, ContactType],
-      onSpaceCreated: ({ space }) => {
+      onCreateSpace: ({ space }) => {
         for (const fn of functions) {
           space.db.add(Obj.make(FunctionType, fn));
         }
@@ -66,10 +65,9 @@ const meta = {
         });
       },
     }),
-    withLayout({ fullscreen: true, classNames: 'flex justify-center m-2' }),
-    withTheme,
   ],
   parameters: {
+    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

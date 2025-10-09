@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback } from 'react';
 
@@ -11,8 +9,8 @@ import { Config, PublicKey } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Button } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { useClient } from '../client';
 import { withClientProvider } from '../testing';
@@ -127,15 +125,6 @@ const Test = () => {
   );
 };
 
-const meta = {
-  title: 'sdk/react-client/Passkeys',
-  render: Test,
-} satisfies Meta<typeof Config>;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
 const config = new Config({
   runtime: {
     client: {
@@ -156,6 +145,14 @@ const config = new Config({
   },
 });
 
-export const Default: Story = {
+const meta = {
+  title: 'sdk/react-client/Passkeys',
+  render: Test,
   decorators: [withClientProvider({ config }), withTheme],
-};
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

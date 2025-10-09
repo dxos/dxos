@@ -13,7 +13,8 @@ import { trim } from '@dxos/util';
  * Summarize a transcript of a meeting.
  */
 export default defineFunction({
-  name: 'dxos.org/function/transcription/summarize',
+  key: 'dxos.org/function/transcription/summarize',
+  name: 'Summarize',
   description: 'Summarize a transcript of a meeting.',
   inputSchema: Schema.Struct({
     transcript: Schema.String.annotations({

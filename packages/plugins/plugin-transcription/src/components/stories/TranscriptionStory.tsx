@@ -19,7 +19,7 @@ export const TranscriptionStory: FC<{
   disabled?: boolean;
   running: boolean;
   onRunningChange: Dispatch<SetStateAction<boolean>>;
-  audioRef?: RefObject<HTMLAudioElement>;
+  audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   const space = useSpace();
 

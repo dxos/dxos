@@ -6,6 +6,7 @@ tags:
   - ts-test
   - typedoc
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -17,3 +18,6 @@ tasks:
       - '--entryPoint=src/mesh/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--entryPoint=src/worker.ts'
+  test:
+    inputs:
+      - .storybook/*

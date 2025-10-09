@@ -30,6 +30,7 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-query": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -43,12 +44,12 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/react-ui-tag-picker": "workspace:*",
     "@dxos/react-ui-types": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
     "@preact-signals/safe-react": "^0.9.0",
+    "@preact/signals-react": "^3.2.0",
     "@radix-ui/react-context": "1.1.1",
     "date-fns": "^3.3.1",
     "jsonpath": "^1.1.1"
@@ -61,20 +62,20 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/jsonpath": "^0.2.4",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
     "fast-check": "^3.19.0",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "7.1.7"
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
-import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { type Meta } from '@storybook/react-vite';
 import React, { type JSX, type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
-import { modalSurface, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
 
@@ -104,27 +102,6 @@ const data: TreeNodeData[] = [
     ],
   },
 ];
-
-export const Default = () => {
-  return <Container sidebar={<Sidebar mutate />} />;
-};
-
-export const Visitor = () => {
-  const [items] = useState(data);
-  const root = items[0];
-  const [openItems] = useState<ItemMap>({ [root.children![0].id]: true });
-  return (
-    <div className='flex flex-col'>
-      {Array.from(visitor(root, openItems)).map(({ node: { id, title }, depth }) => (
-        <div key={id} className='grid grid-cols-[40px_400px_400px] font-mono'>
-          <div>{depth}</div>
-          <div>{id}</div>
-          <div>{title}</div>
-        </div>
-      ))}
-    </div>
-  );
-};
 
 const Sidebar = ({ mutate }: { mutate?: boolean }) => {
   const [items, setItems] = useState(data);
@@ -226,9 +203,31 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme, withLayout({ fullscreen: true, classNames: modalSurface })],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof Tree>;
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+export const Default = () => {
+  return <Container sidebar={<Sidebar mutate />} />;
+};
+
+export const Visitor = () => {
+  const [items] = useState(data);
+  const root = items[0];
+  const [openItems] = useState<ItemMap>({ [root.children![0].id]: true });
+  return (
+    <div className='flex flex-col'>
+      {Array.from(visitor(root, openItems)).map(({ node: { id, title }, depth }) => (
+        <div key={id} className='grid grid-cols-[40px_400px_400px] font-mono'>
+          <div>{depth}</div>
+          <div>{id}</div>
+          <div>{title}</div>
+        </div>
+      ))}
+    </div>
+  );
+};

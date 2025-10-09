@@ -11,7 +11,8 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { MarkdownTasks, type TaskOperation } from './task-list';
 
 export default defineFunction({
-  name: 'dxos.org/function/markdown/update-tasks',
+  key: 'dxos.org/function/markdown/update-tasks',
+  name: 'Update markdown',
   description: 'Creates and updates tasks in markdown documents.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

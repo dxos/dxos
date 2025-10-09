@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, AiLanguageModel, type AiTool, type AiToolkit } from '@effect/ai';
+import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
 import { Chunk, Effect, type Schema, Stream } from 'effect';
 
 import {
-  type AiInputPreprocessingError,
   AiParser,
   AiPreprocessor,
   type AiToolNotFoundError,
+  type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
   callTool,
@@ -24,25 +24,24 @@ import { DataType } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
-import { mapAiError } from './error-handling';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 
-export type AiSessionRunError = AiError.AiError | AiInputPreprocessingError | AiToolNotFoundError | AiAssistantError;
+export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
 export type AiSessionRunRequirements =
-  | AiLanguageModel.AiLanguageModel
+  | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
   | TracingService;
 
-export type AiSessionRunParams<Tools extends AiTool.Any> = {
+export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[];
   blueprints?: Blueprint.Blueprint[];
-  toolkit?: AiToolkit.ToHandler<Tools>;
+  toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver;
 };
 
@@ -71,7 +70,7 @@ export class AiSession {
 
   constructor(private readonly _options: AiSessionOptions = {}) {}
 
-  run = <Tools extends AiTool.Any>({
+  run = <Tools extends Record<string, Tool.Any>>({
     prompt,
     system: systemTemplate,
     history = [],
@@ -109,21 +108,16 @@ export class AiSession {
           objects: objects?.length ?? 0,
         });
 
-        const prompt = yield* AiPreprocessor.preprocessAiInput([...this._history, ...this._pending]);
+        const prompt = yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system });
 
         // Execute the stream request.
-        const blocks = yield* AiLanguageModel.streamText({
+        // logDump('prompt', Prompt.Prompt.pipe(Schema.encodeSync)(prompt));
+        const blocks = yield* LanguageModel.streamText({
           prompt,
-          system,
           toolkit,
           disableToolCallResolution: true,
         }).pipe(
-          Stream.catchTag(
-            'AiError',
-            Effect.fnUntraced(function* (err) {
-              return yield* Effect.fail(yield* mapAiError(err));
-            }),
-          ),
+          // TOOD(dmaretskyi): Error mapping.
           AiParser.parseResponse({
             onBegin: () => observer.onBegin(),
             onBlock: (block) => observer.onBlock(block),
@@ -171,7 +165,7 @@ export class AiSession {
         yield* submitMessage(
           Obj.make(DataType.Message, {
             created: new Date().toISOString(),
-            sender: { role: 'user' },
+            sender: { role: 'tool' },
             blocks: toolResults,
           }),
         );
@@ -187,7 +181,7 @@ export class AiSession {
   // TODO(burdon): Implement or remove.
   async runStructured<S extends Schema.Schema.AnyNoContext>(
     _schema: S,
-    _options: AiSessionRunParams<AiTool.Any>,
+    _options: AiSessionRunParams<any>,
   ): Promise<Schema.Schema.Type<S>> {
     return todo();
     // const parser = structuredOutputParser(schema);
@@ -201,3 +195,12 @@ export class AiSession {
 
 const createSnippet = (text: string, len = 32) =>
   text.length <= len * 2 ? text : [text.slice(0, len), '...', text.slice(-len)].join('');
+
+// TODO(dmaretskyi): Extract as a general util.
+const logDump = (message: string, data: unknown) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { writeFileSync } = require('node:fs');
+  const path = `/tmp/log-data-${Date.now()}.json`;
+  writeFileSync(path, JSON.stringify(data, null, 2));
+  log.info(message, { path });
+};

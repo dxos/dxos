@@ -1,6 +1,6 @@
 # https://moonrepo.dev/docs/proto/config
 
-node = "20.12.1"
+node = "20.19.5"
 pnpm = "10.13.1"
 
 # Upgrading moon: https://moonrepo.dev/docs/install#upgrading
@@ -8,3 +8,6 @@ pnpm = "10.13.1"
 #  This is only for compability purposes (i.e., supporting Cloudflare Pages deploys).
 #  It is expected that developers will be using moon via proto, but they should be kept in sync.
 moon = "latest"
+
+[settings]
+auto-install = true
