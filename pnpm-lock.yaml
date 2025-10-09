@@ -11679,7 +11679,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.1)
+        version: 0.92.1(effect@3.18.3)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -11757,8 +11757,8 @@ importers:
         specifier: ^4.0.5
         version: 4.0.9
       effect:
-        specifier: 3.18.1
-        version: 3.18.1
+        specifier: 3.18.3
+        version: 3.18.3
       sentry-testkit:
         specifier: ^5.0.5
         version: 5.0.5
@@ -25813,9 +25813,6 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.18.1:
-    resolution: {integrity: sha512-5aJ7yRlvvkBplMSnhPyol7WYvPenvau12asO3HJhG/126SySWV9D8bscGTbV52XxtC5bwO/VUd5ffjE6uep/1A==}
-
   effect@3.18.3:
     resolution: {integrity: sha512-CmsQdMJdcBk+HigAtiNYb0Fp2xHtZmHjuCgYXDF74IGCCk+4EvQwQG4oHwG4XLFSqQ9eTIOIJ/+4FOYP05aBHg==}
 
@@ -36685,13 +36682,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform@0.92.1(effect@3.18.1)':
-    dependencies:
-      effect: 3.18.1
-      find-my-way-ts: 0.1.6
-      msgpackr: 1.11.4
-      multipasta: 0.2.7
-
   '@effect/platform@0.92.1(effect@3.18.3)':
     dependencies:
       effect: 3.18.3
@@ -46630,11 +46620,6 @@ snapshots:
       semver: 7.7.2
 
   ee-first@1.1.1: {}
-
-  effect@3.18.1:
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      fast-check: 3.23.1
 
   effect@3.18.3:
     dependencies:
