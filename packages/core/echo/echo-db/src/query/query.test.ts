@@ -472,6 +472,35 @@ describe('Query', () => {
       const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
       expect(objects).toEqual([hasManager]);
     });
+
+    test.only('query by typename', async () => {
+      let rootUrl: AutomergeUrl;
+      let spaceKey: PublicKey;
+      let contact: Live<Testing.Contact>;
+      let kv = createTestLevel();
+
+      {
+        const peer = await builder.createPeer({ kv });
+        const db = await peer.createDatabase();
+        rootUrl = db.rootUrl as AutomergeUrl;
+        spaceKey = db.spaceKey as PublicKey;
+
+        db.graph.schemaRegistry.addSchema([Testing.Contact]);
+        contact = db.add(live(Testing.Contact, { name: 'Alice' }));
+        await db.flush();
+        await peer.close();
+      }
+
+      {
+        const peer = await builder.createPeer({ kv });
+        const db = await peer.openDatabase(spaceKey, rootUrl);
+        const contact2 = await db.query(Filter.typename(Testing.Contact.typename)).first();
+        expect(contact2?.name).toEqual(contact.name);
+        contact2.name = 'Bob';
+        await db.flush();
+        await peer.close();
+      }
+    });
   });
 
   describe('Traversal', () => {
