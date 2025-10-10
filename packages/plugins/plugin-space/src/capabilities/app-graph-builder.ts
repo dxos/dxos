@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const typename = getgetTypenameFromQuery(collection.query);
+              const typename = getTypenameFromQuery(collection.query);
               return typename && space ? Option.some({ typename, space }) : Option.none();
             }),
             Option.map(({ typename, space }) => {
@@ -494,7 +494,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
-              getgetTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
+              getTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -539,7 +539,7 @@ export default (context: PluginContext) => {
                 rxFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
                   views.filter(
-                    (view) => getgetTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                    (view) => getTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
                   ),
                 ),
               );
@@ -663,14 +663,12 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.QueryCollection, object) &&
-                  getgetTypenameFromQuery(object.query) === DataType.StoredSchema.typename
+                  getTypenameFromQuery(object.query) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() =>
-                    views.filter((view) => getgetTypenameFromQuery(view.query.ast) === object.typename),
-                  ),
+                  rxFromSignal(() => views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename)),
                 );
                 deletable = filteredViews.length === 0;
               }
