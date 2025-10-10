@@ -215,7 +215,7 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: getHashColor(node.data?.type ?? node.type)?.color,
+                    color: getHashColor(node.data?.type ?? node.type)?.hue,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
@@ -223,7 +223,7 @@ const DefaultStory = ({
                 }),
                 edge: (edge: GraphLayoutEdge<TestNode>) => ({
                   data: {
-                    color: getHashColor(edge.data?.type ?? edge.type)?.color,
+                    color: getHashColor(edge.data?.type ?? edge.type)?.hue,
                   },
                 }),
               }}

@@ -69,7 +69,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
             .filter(filterLabel)
-            .map((tagId: string) => ({ hue: getHashColor(tagId).color, ...tags![tagId] }))
+            .map((tagId: string) => ({ hue: getHashColor(tagId).hue, ...tags![tagId] }))
             .filter(Boolean)
             .map(
               ({ label, hue }) => trim`

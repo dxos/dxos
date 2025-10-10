@@ -3,7 +3,7 @@
 //
 
 export type Color = {
-  color: string; // Rename "hue"?
+  hue: string;
   text: string;
   bg: string;
   tag: string;
@@ -13,105 +13,105 @@ export type Color = {
 // NOTE: Don't include blue/red which are used as system colors.
 export const colors: Color[] = [
   {
-    color: 'orange',
+    hue: 'orange',
     bg: 'bg-orangeFill',
     text: 'text-orangeFill',
     tag: 'bg-orangeSurface',
     border: 'border-orangeFill',
   },
   {
-    color: 'amber',
+    hue: 'amber',
     bg: 'bg-amberFill',
     text: 'text-amberFill',
     tag: 'bg-amberSurface',
     border: 'border-amberFill',
   },
   {
-    color: 'yellow',
+    hue: 'yellow',
     bg: 'bg-yellowFill',
     text: 'text-yellowFill',
     tag: 'bg-yellowSurface',
     border: 'border-yellowFill',
   },
   {
-    color: 'lime',
+    hue: 'lime',
     bg: 'bg-limeFill',
     text: 'text-limeFill',
     tag: 'bg-limeSurface',
     border: 'border-limeFill',
   },
   {
-    color: 'green',
+    hue: 'green',
     bg: 'bg-greenFill',
     text: 'text-greenFill',
     tag: 'bg-greenSurface',
     border: 'border-greenFill',
   },
   {
-    color: 'emerald',
+    hue: 'emerald',
     bg: 'bg-emeraldFill',
     text: 'text-emeraldFill',
     tag: 'bg-emeraldSurface',
     border: 'border-emeraldFill',
   },
   {
-    color: 'teal',
+    hue: 'teal',
     bg: 'bg-tealFill',
     text: 'text-tealFill',
     tag: 'bg-tealSurface',
     border: 'border-tealFill',
   },
   {
-    color: 'cyan',
+    hue: 'cyan',
     bg: 'bg-cyanFill',
     text: 'text-cyanFill',
     tag: 'bg-cyanSurface',
     border: 'border-cyanFill',
   },
   {
-    color: 'sky',
+    hue: 'sky',
     bg: 'bg-skyFill',
     text: 'text-skyFill',
     tag: 'bg-skySurface',
     border: 'border-skyFill',
   },
   {
-    color: 'indigo',
+    hue: 'indigo',
     bg: 'bg-indigoFill',
     text: 'text-indigoFill',
     tag: 'bg-indigoSurface',
     border: 'border-indigoFill',
   },
   {
-    color: 'violet',
+    hue: 'violet',
     bg: 'bg-violetFill',
     text: 'text-violetFill',
     tag: 'bg-violetSurface',
     border: 'border-violetFill',
   },
   {
-    color: 'purple',
+    hue: 'purple',
     bg: 'bg-purpleFill',
     text: 'text-purpleFill',
     tag: 'bg-purpleSurface',
     border: 'border-purpleFill',
   },
   {
-    color: 'fuchsia',
+    hue: 'fuchsia',
     bg: 'bg-fuchsiaFill',
     text: 'text-fuchsiaFill',
     tag: 'bg-fuchsiaSurface',
     border: 'border-fuchsiaFill',
   },
   {
-    color: 'rose',
+    hue: 'rose',
     bg: 'bg-roseFill',
     text: 'text-roseFill',
     tag: 'bg-roseSurface',
     border: 'border-roseFill',
   },
   {
-    color: 'pink',
+    hue: 'pink',
     bg: 'bg-pinkFill',
     text: 'text-pinkFill',
     tag: 'bg-pinkSurface',
@@ -123,7 +123,7 @@ export const colors: Color[] = [
 export const getHashColor = (type: string | undefined): Color => {
   if (!type) {
     return {
-      color: 'neutral',
+      hue: 'neutral',
       bg: 'bg-neutralFill',
       text: 'text-neutralFill',
       tag: 'bg-neutralSurface',

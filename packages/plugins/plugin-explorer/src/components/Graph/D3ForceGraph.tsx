@@ -85,7 +85,7 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
               const obj = node.data?.data.object;
               return {
                 data: {
-                  color: getHashColor(obj && Obj.getTypename(obj))?.color,
+                  color: getHashColor(obj && Obj.getTypename(obj))?.hue,
                 },
                 classes: {
                   'dx-selected': selection.contains(node.id),
