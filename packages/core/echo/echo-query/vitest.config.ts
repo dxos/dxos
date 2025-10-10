@@ -10,4 +10,9 @@ import { createConfig } from '../../../../vitest.base.config';
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
   node: true,
+
+  // TODO(dmaretskyi): Browser test fail on CI for mysterious reasons.
+  // browser: {
+  //   browsers: ['chromium'],
+  // },
 });
