@@ -182,7 +182,7 @@ const RawTreeItem = <T extends HasId = any>({
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
 
-  const handleOpenChange = useCallback(
+  const handleOpenToggle = useCallback(
     () => onOpenChange?.({ item, path, open: !open }),
     [onOpenChange, item, path, open],
   );
@@ -190,30 +190,25 @@ const RawTreeItem = <T extends HasId = any>({
   const handleSelect = useCallback(
     (option = false) => {
       if (isBranch) {
-        handleOpenChange();
+        handleOpenToggle();
       } else {
         rowRef.current?.focus();
         onSelect?.({ item, path, current: !current, option });
       }
     },
-    [item, path, current, isBranch, handleOpenChange, onSelect],
+    [item, path, current, isBranch, handleOpenToggle, onSelect],
   );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowRight':
-          isBranch && !open && handleOpenChange();
-          break;
         case 'ArrowLeft':
-          isBranch && open && handleOpenChange();
-          break;
-        case ' ':
-          handleSelect(event.altKey);
+          isBranch && handleOpenToggle();
           break;
       }
     },
-    [isBranch, open, handleOpenChange, handleSelect],
+    [isBranch, open, handleOpenToggle, handleSelect],
   );
 
   return (
@@ -252,7 +247,7 @@ const RawTreeItem = <T extends HasId = any>({
           style={paddingIndentation(level)}
         >
           <Treegrid.Cell classNames='flex items-center'>
-            <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenChange} />
+            <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading
               ref={buttonRef}
               label={label}
