@@ -45,7 +45,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
 
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const [filter, setFilter] = useState<Filter.Any | null>(null);
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything()).reverse();
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
   useEffect(() => {
     setFilter(parser.build(filterText));
@@ -185,6 +185,15 @@ const useActions = (setFilterVisible: (visible: boolean) => void) => {
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
+          .action(
+            'sort',
+            {
+              type: 'sort',
+              icon: true ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
+              label: ['mailbox toolbar sort', { ns: meta.id }],
+            },
+            () => {},
+          )
           .action(
             'filter',
             {
