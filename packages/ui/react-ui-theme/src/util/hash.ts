@@ -11,6 +11,8 @@ export type Color = {
 };
 
 // NOTE: Don't include blue/red which are used as system colors.
+// NOTE: Cordinated with `tag.css`.
+// https://github.com/dxos/dxos/blob/main/packages/ui/react-ui-theme/src/styles/layers/tag.css
 export const colors: Color[] = [
   {
     hue: 'orange',
