@@ -6,8 +6,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#query-env": "./dist/query-env/index.js"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -25,10 +28,15 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/context": "workspace:*",
+    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "^1.2.2",
     "@lezer/lezer": "^1.1.2",
     "@lezer/lr": "^1.4.2",
