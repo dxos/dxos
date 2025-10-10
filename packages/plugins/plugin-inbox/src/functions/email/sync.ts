@@ -38,21 +38,20 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
+      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
+
       // Sync labels.
-      // TODO(burdon): Use hash for default color.
       const { labels } = yield* listLabels(userId);
       labels.forEach((label) => {
         mailbox.tags[label.id] = { label: label.name };
       });
 
-      // Sync messages.
-      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
       do {
-        // Request messages.
+        // Sync messages.
         // TODO(burdon): Query from Oldest to Newest (due to queue order).
         const objects = yield* Effect.tryPromise(() => queue.queryObjects());
         const last = objects.at(-1);

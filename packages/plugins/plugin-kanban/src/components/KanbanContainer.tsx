@@ -12,7 +12,7 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Kanban, useKanbanModel } from '@dxos/react-ui-kanban';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { KanbanAction } from '../types';
 
@@ -22,7 +22,7 @@ export const KanbanContainer = ({ view }: { view: DataType.View; role: string })
   const [projection, setProjection] = useState<ProjectionModel>();
   const space = getSpace(view);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
 
   const jsonSchema = useMemo(() => {
     if (!cardSchema) {

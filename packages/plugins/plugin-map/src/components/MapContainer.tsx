@@ -11,7 +11,7 @@ import { useControlledState } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { type GeoMarker, type MapRootProps } from '@dxos/react-ui-geo';
 import { StackItem } from '@dxos/react-ui-stack';
-import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
 import { type Map } from '../types';
@@ -36,7 +36,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
   const space = getSpace(view);
   const map = _map ?? (view?.presentation.target as Map.Map | undefined);
 
-  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const objects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
 

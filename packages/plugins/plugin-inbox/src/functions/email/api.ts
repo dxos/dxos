@@ -17,6 +17,25 @@ import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './
 
 const API_URL = 'https://gmail.googleapis.com/gmail/v1';
 
+export const SYSTEM_LABELS = [
+  'CATEGORY_PERSONAL',
+  'CATEGORY_SOCIAL',
+  'CATEGORY_PROMOTIONS',
+  'CATEGORY_UPDATES',
+  'CATEGORY_FORUMS',
+  'CHAT',
+  'DRAFT',
+  'INBOX',
+  'IMPORTANT',
+  'SENT',
+  'SPAM',
+  'STARRED',
+  'TRASH',
+  'UNREAD',
+];
+
+export const filterLabel = (label: string) => !SYSTEM_LABELS.includes(label);
+
 /**
  * Lists the labels in the user's mailbox.
  * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.labels/list
