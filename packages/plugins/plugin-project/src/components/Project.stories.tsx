@@ -125,7 +125,7 @@ const MutationsStory = () => {
   );
 };
 
-const meta: Meta<typeof Project> = {
+const meta = {
   title: 'plugins/plugin-project/Project',
   decorators: [
     withTheme,
@@ -163,7 +163,7 @@ const meta: Meta<typeof Project> = {
     layout: 'fullscreen',
     translations,
   },
-};
+} satisfies Meta<typeof Project>;
 
 export default meta;
 
