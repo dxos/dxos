@@ -11,8 +11,8 @@ import { Schema } from 'effect';
 
 export const Label = Schema.Struct({
   id: Schema.String,
-  name: Schema.String,
   type: Schema.String,
+  name: Schema.String,
 });
 
 export type Label = Schema.Schema.Type<typeof Label>;

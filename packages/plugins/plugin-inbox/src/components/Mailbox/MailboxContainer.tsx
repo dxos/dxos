@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { QueryBuilder } from '@dxos/echo-query';
 import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
@@ -21,6 +21,7 @@ import { type DataType } from '@dxos/schema';
 import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
+import { POPOVER_SAVE_FILTER } from '../PopoverSaveFilter';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
 import { MailboxEmpty } from './MailboxEmpty';
@@ -28,25 +29,28 @@ import { MailboxEmpty } from './MailboxEmpty';
 export type MailboxContainerProps = {
   mailbox: Mailbox.Mailbox;
   role?: string;
+  attendableId?: string;
+  filter?: string;
 };
 
-export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
+export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterParam }: MailboxContainerProps) => {
   const { t } = useTranslation(meta.id);
-  const id = fullyQualifiedId(mailbox);
+  const id = attendableId ?? fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const currentMessageId = state[id]?.id;
 
-  const queryEditorRef = useRef<EditorController>(null);
+  const filterEditorRef = useRef<EditorController>(null);
+  const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const [queryText, setQueryText] = useState<string>('');
-  const [filter, setFilter] = useState<Filter.Any | null>();
+  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
+  const [filter, setFilter] = useState<Filter.Any | null>(null);
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-  const parser = useMemo(() => new QueryBuilder(), []);
+  const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
   useEffect(() => {
-    setFilter(parser.build(queryText));
-  }, [queryText]);
+    setFilter(parser.build(filterText));
+  }, [filterText]);
 
   const actions = useActions(setFilterVisible);
 
@@ -70,26 +74,45 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
           break;
         }
         case 'select-tag': {
-          // TODO(burdon): Check if tag already exists.
-          setQueryText((prevQueryText) => `${prevQueryText} #${action.label} `);
+          setFilterText((prevFilterText) => {
+            // Check if tag already exists.
+            const tags = prevFilterText.split(/\s+/).filter(Boolean);
+            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
+              return prevFilterText;
+            }
+
+            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
+          });
           setFilterVisible(true);
-          queryEditorRef.current?.focus();
+          filterEditorRef.current?.focus();
           break;
         }
         case 'save': {
           // TODO(burdon): Implement.
           log.info('save', { action });
+          void dispatch(
+            createIntent(LayoutAction.UpdatePopover, {
+              part: 'popover',
+              subject: POPOVER_SAVE_FILTER,
+              options: {
+                state: true,
+                variant: 'virtual',
+                anchor: saveFilterButtonRef.current,
+                props: { mailbox, filter: action.filter },
+              },
+            }),
+          );
           break;
         }
       }
     },
-    [id, messages, dispatch],
+    [id, mailbox, messages, dispatch],
   );
 
   const handleCancel = useCallback(() => {
     setFilterVisible(false);
-    setQueryText('');
-    setFilter(null);
+    setFilterText(filterParam ?? '');
+    setFilter(parser.build(filterParam ?? ''));
   }, []);
 
   // TODO(burdon): Generalize drawer layout.
@@ -109,22 +132,27 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
       </ElevationProvider>
 
       {filterVisible && (
-        <div role='none' className='flex is-full overflow-hidden items-center p-1 gap-1 border-be border-separator'>
+        <div
+          role='none'
+          className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
+        >
           <QueryEditor
-            ref={queryEditorRef}
-            classNames='grow overflow-hidden'
+            ref={filterEditorRef}
+            classNames='min-is-0 pis-1'
             autoFocus
             space={getSpace(mailbox)}
-            value={queryText}
-            onChange={setQueryText}
+            tags={mailbox.tags}
+            value={filterText}
+            onChange={setFilterText}
           />
-          <div role='none' className='flex gap-1 items-center'>
+          <div role='none' className='flex shrink-0 gap-1 items-center'>
             <IconButton
+              ref={saveFilterButtonRef}
               disabled={!filter}
               label={t('mailbox toolbar save button label')}
               icon='ph--folder-plus--regular'
               iconOnly
-              onClick={() => filter && handleAction({ type: 'save', filter })}
+              onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
             />
             <IconButton
               label={t('mailbox toolbar clear button label')}
@@ -138,11 +166,12 @@ export const MailboxContainer = ({ mailbox, role }: MailboxContainerProps) => {
 
       {messages && messages.length > 0 ? (
         <MailboxComponent
-          messages={messages}
           id={id}
-          onAction={handleAction}
-          currentMessageId={currentMessageId}
           role={role}
+          messages={messages}
+          tags={mailbox.tags}
+          currentMessageId={currentMessageId}
+          onAction={handleAction}
         />
       ) : (
         <MailboxEmpty mailbox={mailbox} />

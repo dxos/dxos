@@ -41,3 +41,10 @@ export function trim(strings: TemplateStringsArray, ...values: any[]) {
   // Remove that indent from all lines.
   return lines.map((l) => l.slice(minIndent)).join('\n');
 }
+
+// From https://stackoverflow.com/a/67243723/2804332
+/**
+ * Converts a string to kebab case.
+ */
+export const kebabize = (str: string) =>
+  str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs) => (ofs ? '-' : '') + $.toLowerCase());

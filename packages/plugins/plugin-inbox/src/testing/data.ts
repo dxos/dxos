@@ -2,45 +2,55 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, type Tag } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { Mailbox, type Tag, sortTags } from '../types';
+import { Mailbox } from '../types';
 
-const TAGS: Tag[] = [
-  { label: 'important', hue: 'green' },
-  { label: 'investor', hue: 'purple' },
-  { label: 'team', hue: 'green' },
-  { label: 'eng', hue: 'blue' },
-  { label: 'work', hue: 'emerald' },
-  { label: 'personal', hue: 'pink' },
+export const TAGS: Tag[] = [
+  { id: 'tag_1', label: 'important', hue: 'green' },
+  { id: 'tag_2', label: 'investor', hue: 'purple' },
+  { id: 'tag_3', label: 'team', hue: 'green' },
+  { id: 'tag_4', label: 'eng', hue: 'cyan' },
+  { id: 'tag_5', label: 'work', hue: 'emerald' },
+  { id: 'tag_6', label: 'personal', hue: 'pink' },
 ];
+
+export const TAGS_MAP = TAGS.reduce((acc, tag) => ({ ...acc, [tag.id]: { label: tag.label, hue: tag.hue } }), {});
 
 export const createMessages = (count = 10) => {
   const text = faker.lorem.paragraph();
   return faker.helpers.multiple(
     () =>
-      Obj.make(DataType.Message, {
-        created: faker.date.recent().toISOString(),
-        sender: {
-          identityDid: IdentityDid.random(),
-          name: faker.person.fullName(),
-        },
-        blocks: [
-          {
-            _tag: 'text',
-            text,
+      Obj.make(
+        DataType.Message,
+        {
+          created: faker.date.recent().toISOString(),
+          sender: {
+            identityDid: IdentityDid.random(),
+            name: faker.person.fullName(),
           },
-        ],
-        properties: {
-          subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-          snippet: text,
-          tags: faker.helpers.uniqueArray(TAGS, faker.number.int(3)).sort(sortTags),
+          blocks: [
+            {
+              _tag: 'text',
+              text,
+            },
+          ],
+          properties: {
+            subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+            snippet: text,
+          },
         },
-      }),
+        {
+          tags: faker.helpers.uniqueArray(
+            TAGS.map((tag) => tag.id),
+            faker.number.int(3),
+          ),
+        },
+      ),
     {
       count,
     },
@@ -86,37 +96,44 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
-  const tags = faker.helpers.randomSubset(TAGS, { min: 0, max: TAGS.length });
-  tags.sort(sortTags);
+  const tags = faker.helpers.randomSubset(
+    TAGS.map((tag) => tag.id),
+    { min: 0, max: TAGS.length },
+  );
 
-  return Obj.make(DataType.Message, {
-    created: faker.date.recent().toISOString(),
-    sender: {
-      identityDid: IdentityDid.random(),
-      email: faker.internet.email(),
-      name: faker.person.fullName(),
+  return Obj.make(
+    DataType.Message,
+    {
+      created: faker.date.recent().toISOString(),
+      sender: {
+        identityDid: IdentityDid.random(),
+        email: faker.internet.email(),
+        name: faker.person.fullName(),
+      },
+      // First block plain text (with links stripped), second block enriched text (with links).
+      blocks: [
+        { _tag: 'text', text },
+        { _tag: 'text', text: enrichedText },
+      ],
+      properties: {
+        subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
+        snippet: text,
+      },
     },
-    // First block plain text (with links stripped), second block enriched text (with links).
-    blocks: [
-      { _tag: 'text', text },
-      { _tag: 'text', text: enrichedText },
-    ],
-    properties: {
-      subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-      snippet: text,
+    {
       tags,
     },
-  });
+  );
 };
 
 /**
  * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, messageCount = 30) => {
-  const queueDxn = space.queues.create().dxn;
+  const mailbox = Mailbox.make({ space, tags: TAGS_MAP });
+  const queueDxn = mailbox.queue.dxn;
   const queue = space.queues.get<DataType.Message>(queueDxn);
   await queue.append([...Array(messageCount)].map(() => createMessage(space)));
-  const mailbox = Mailbox.make({ queue: queueDxn });
   space.db.add(mailbox);
   return mailbox;
 };

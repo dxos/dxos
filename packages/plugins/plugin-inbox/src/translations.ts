@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -38,6 +39,7 @@ export const translations = [
         'message label': 'Message',
         'no integrations label': 'No integrations configured',
         'manage integrations button label': 'Manage Integrations',
+        'inbox label': 'Inbox',
 
         'mailbox sync label': 'Mailbox Sync',
         'mailbox object settings configure sync button label': 'Configure sync',
@@ -55,6 +57,8 @@ export const translations = [
 
         'mailbox toolbar save button label': 'Save',
         'mailbox toolbar clear button label': 'Clear',
+        'save filter placeholder': 'Filter name',
+        'save filter button': 'Save',
 
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',
@@ -65,4 +69,5 @@ export const translations = [
       },
     },
   },
+  ...componentsTranslations,
 ] as const satisfies Resource[];

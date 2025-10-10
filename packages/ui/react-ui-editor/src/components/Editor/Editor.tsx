@@ -44,7 +44,7 @@ export const Editor = forwardRef<EditorController, EditorProps>(
         ],
         ...props,
       }),
-      [id, extensions, onChange],
+      [id, extensions],
     );
 
     // External controller.

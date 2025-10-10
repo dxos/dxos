@@ -362,7 +362,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query));
+              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>

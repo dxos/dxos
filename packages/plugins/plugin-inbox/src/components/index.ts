@@ -5,6 +5,7 @@
 import { lazy } from 'react';
 
 export * from './Mailbox';
+export * from './PopoverSaveFilter';
 export * from './Related';
 
 export const EventsContainer = lazy(() => import('./Calendar'));

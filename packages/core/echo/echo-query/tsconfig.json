@@ -1,13 +1,9 @@
 {
   "extends": "../../../../tsconfig.base.json",
   "compilerOptions": {
-    "types": [
-      "@dxos/typings"
-    ]
+    "types": ["@dxos/typings"]
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "references": [
     {
       "path": "../../../../vendor/quickjs"
@@ -20,6 +16,9 @@
     },
     {
       "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/invariant"
