@@ -17,7 +17,7 @@ import {
 import { Ref, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, createDefaultSchema, typenameFromQuery } from '@dxos/schema';
+import { DataType, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -102,7 +102,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
               label: (object: DataType.QueryCollection) => [
                 'typename label',
                 {
-                  ns: typenameFromQuery(object.query),
+                  ns: getTypenameFromQuery(object.query),
                   count: 2,
                   defaultValue: 'New smart collection',
                 },

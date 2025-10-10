@@ -18,10 +18,11 @@ import {
   gridSeparatorBlockEnd,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { getHashColor, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { filterLabel } from '../../functions/email/api';
 import { getMessageProps } from '../util';
 
 const ROW_SIZES = {
@@ -67,11 +68,12 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
-            .map((tagId: string) => tags![tagId])
+            .filter(filterLabel)
+            .map((tagId: string) => ({ id: tagId, ...tags![tagId] }))
             .filter(Boolean)
             .map(
-              ({ label, hue }: Tag) => trim`
-                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
+              ({ id, label, hue }: Tag & { id: string }) => trim`
+                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue ?? getHashColor(id).color}">${label}</span>
               `,
             )
             .join('\n')}
