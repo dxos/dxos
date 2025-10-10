@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -91,13 +91,6 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       onChange: propsOnOpenChange,
       defaultProp: defaultOpen,
     });
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
-    const arrowGroupAttrs = useArrowNavigationGroup({
-      axis: 'horizontal',
-      tabbable: false,
-      circular: false,
-      memorizeCurrent: false,
-    });
 
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
@@ -106,15 +99,11 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           aria-level={level}
           className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
-          tabIndex={0}
-          {...focusableGroupAttrs}
           {...props}
           id={id}
           ref={forwardedRef}
         >
-          <div role='none' className='contents' {...arrowGroupAttrs}>
-            {children}
-          </div>
+          {children}
         </Root>
       </TreegridRowProvider>
     );
