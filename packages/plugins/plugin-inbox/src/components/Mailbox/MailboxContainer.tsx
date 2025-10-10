@@ -41,23 +41,57 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
 
   const filterEditorRef = useRef<EditorController>(null);
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const [ascending, setAscending] = useState(true);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
+  const sortedMessages = useMemo(() => (ascending ? messages : [...messages.reverse()]), [messages, ascending]);
+
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
   useEffect(() => {
     setFilter(parser.build(filterText));
   }, [filterText]);
 
-  const actions = useActions(setFilterVisible);
+  // TODO(burdon): Reactivity?
+  const menu = useMemo(
+    () =>
+      Rx.make(
+        MenuBuilder.make()
+          .root({
+            label: ['mailbox toolbar title', { ns: meta.id }],
+          })
+          .action(
+            'sort',
+            {
+              type: 'sort',
+              icon: ascending ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
+              label: ['mailbox toolbar sort', { ns: meta.id }],
+            },
+            () => setAscending((prev) => !prev),
+          )
+          .action(
+            'filter',
+            {
+              type: 'filter',
+              icon: 'ph--magnifying-glass--regular',
+              label: ['mailbox toolbar filter', { ns: meta.id }],
+            },
+            () => setFilterVisible(true),
+          )
+          .build(),
+      ),
+    [ascending],
+  );
+
+  const actions = useMenuActions(menu);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
         case 'current': {
-          const message = messages.find((message) => message.id === action.messageId);
+          const message = sortedMessages.find((message) => message.id === action.messageId);
           void dispatch(
             createIntent(InboxAction.SelectMessage, {
               mailboxId: id,
@@ -103,7 +137,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
         }
       }
     },
-    [id, mailbox, messages, dispatch],
+    [id, mailbox, sortedMessages, dispatch],
   );
 
   const handleCancel = useCallback(() => {
@@ -161,11 +195,11 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
         </div>
       )}
 
-      {messages && messages.length > 0 ? (
+      {sortedMessages && sortedMessages.length > 0 ? (
         <MailboxComponent
           id={id}
           role={role}
-          messages={messages}
+          messages={sortedMessages}
           tags={mailbox.tags}
           currentMessageId={currentMessageId}
           onAction={handleAction}
@@ -175,41 +209,4 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
       )}
     </StackItem.Content>
   );
-};
-
-const useActions = (setFilterVisible: (visible: boolean) => void) => {
-  const menu = useMemo(
-    () =>
-      Rx.make(
-        MenuBuilder.make()
-          .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
-          })
-          .action(
-            'filter',
-            {
-              type: 'filter',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter', { ns: meta.id }],
-            },
-            () => {
-              setFilterVisible(true);
-            },
-          )
-          // TODO(wittjosiah): Not implemented.
-          // .action(
-          //   'assistant',
-          //   {
-          //     label: ['mailbox toolbar run mailbox ai', { ns: meta.id }],
-          //     icon: 'ph--sparkle--regular',
-          //     type: 'assistant',
-          //   },
-          //   () => dispatchPromise(createIntent(InboxAction.RunAssistant, { mailbox })),
-          // )
-          .build(),
-      ),
-    [],
-  );
-
-  return useMenuActions(menu);
 };
