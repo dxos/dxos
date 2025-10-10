@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 
 import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry';
 
-export type TestBuilderOptions = ClientOptions & ComputeGraphOptions;
+export type TestBuilderOptions = ClientOptions & Partial<ComputeGraphOptions>;
 
 // TODO(burdon): Reconcile with @dxos/client/testing.
 export class TestBuilder extends Resource {
@@ -43,7 +43,11 @@ export class TestBuilder extends Resource {
       this._client = undefined;
     });
 
-    const registry = new ComputeGraphRegistry(this._options);
+    const registry = new ComputeGraphRegistry({
+      ...this._options,
+      // Provide a default runtime provider for tests if not supplied.
+      computeRuntime: this._options.computeRuntime ?? createMockedComputeRuntimeProvider(),
+    });
     await registry.open();
     this._registry = registry;
     this._ctx.onDispose(async () => {

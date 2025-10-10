@@ -22,11 +22,11 @@ export type ComputeGraphPlugin = {
 
 export type ComputeGraphOptions = {
   plugins?: ComputeGraphPlugin[];
-  computeRuntime?: AutomationCapabilities.ComputeRuntimeProvider;
+  computeRuntime: AutomationCapabilities.ComputeRuntimeProvider;
 } & Partial<FunctionContextOptions> &
   Partial<ConfigParams>;
 
-export const defaultOptions: ComputeGraphOptions = {
+export const defaultOptions: Partial<ComputeGraphOptions> = {
   licenseKey: 'gpl-v3',
 };
 
