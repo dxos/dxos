@@ -15,9 +15,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { functions } from '../../testing';
 import { translations } from '../../translations';
 
-import { TriggerEditor } from './TriggerEditor';
+import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
-const DefaultStory = () => {
+const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   const spaces = useSpaces();
   const space = spaces[1];
   const [trigger, setTrigger] = useState<FunctionTrigger>();
@@ -36,7 +36,7 @@ const DefaultStory = () => {
 
   return (
     <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} />
+      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} {...props} />
     </div>
   );
 };
@@ -77,3 +77,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const ReadonlySpec: Story = {
+  args: {
+    readonlySpec: true,
+  },
+};

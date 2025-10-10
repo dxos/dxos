@@ -8,6 +8,7 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
+  type MouseEvent,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -61,7 +62,7 @@ type BoardContextValue = {
   onSelect?: (id: string) => void;
   onDelete?: (id: string) => void;
   onMove?: (id: string, position: Position) => void;
-  onAdd?: (position?: Position) => void;
+  onAdd?: (anchor: HTMLButtonElement, position?: Position) => void;
 };
 
 const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>('BoardContext');
@@ -264,8 +265,7 @@ const BoardBackdrop = (props: BoardBackdropProps) => {
           key={index}
           position={position}
           rect={rect}
-          // TODO(burdon): Menu.
-          onClick={onAdd ? () => onAdd(position) : undefined}
+          onAddClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement, position)}
         />
       ))}
     </div>
@@ -277,10 +277,10 @@ BoardBackdrop.displayName = 'Board.Backdrop';
 type BoardDropTargetProps = {
   position: Position;
   rect: Rect;
-  onClick?: () => void;
+  onAddClick?: (event: MouseEvent) => void;
 };
 
-const BoardDropTarget = ({ position, rect, onClick }: BoardDropTargetProps) => {
+const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) => {
   const { t } = useTranslation(translationKey);
 
   const [active, setActive] = useState(false);
@@ -313,7 +313,7 @@ const BoardDropTarget = ({ position, rect, onClick }: BoardDropTargetProps) => {
         active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
       )}
     >
-      {onClick && (
+      {onAddClick && (
         // TODO(burdon): Make this pluggable so that the container can provide a menu trigger.
         <IconButton
           icon='ph--plus--regular'
@@ -321,7 +321,7 @@ const BoardDropTarget = ({ position, rect, onClick }: BoardDropTargetProps) => {
           iconOnly
           label={t('button add')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
-          onClick={onClick}
+          onClick={onAddClick}
         />
       )}
     </div>
@@ -353,7 +353,12 @@ const BoardToolbar = ({ classNames }: BoardToolbarProps) => {
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
-        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('button add')} onClick={() => onAdd()} />
+        <Toolbar.IconButton
+          icon='ph--plus--regular'
+          iconOnly
+          label={t('button add')}
+          onClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement)}
+        />
       )}
     </Toolbar.Root>
   );

@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import { Schema } from 'effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
+import { FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Popover } from '@dxos/react-ui';
 import { Form, type FormProps } from '@dxos/react-ui-form';
-import { cellQuery, parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
@@ -21,15 +21,18 @@ import { type ModalController, type TableModel } from '../../model';
 import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
-type FormCellEditorProps = {
+export type OnCreateHandler = (schema: Schema.Schema.AnyNoContext, values: any) => Parameters<typeof Ref.make>[0];
+
+export type FormCellEditorProps = {
   fieldProjection: FieldProjection;
   model?: TableModel;
   schema?: Schema.Schema.AnyNoContext;
   onSave?: () => void;
+  onCreate?: OnCreateHandler;
   client?: Client;
   modals?: ModalController;
   __gridScope: any;
-} & Omit<FormProps<any>, 'values' | 'schema'>;
+} & Omit<FormProps<any>, 'values' | 'schema' | 'onCreate'>;
 
 const createOptionLabel = ['create new object label', { ns: translationKey }] as [string, { ns: string }];
 
@@ -40,6 +43,7 @@ export const FormCellEditor = ({
   onSave,
   client,
   modals,
+  onCreate,
   __gridScope,
   ...formProps
 }: FormCellEditorProps) => {
@@ -48,7 +52,7 @@ export const FormCellEditor = ({
   const anchorRef = useRef<HTMLButtonElement | null>(null);
 
   const getSchema = useCallback(
-    (typeAnnotation: TypeAnnotation) => {
+    (typeAnnotation: Pick<TypeAnnotation, 'typename'>) => {
       const space = getSpace(model!.view);
       invariant(space);
 
@@ -116,36 +120,6 @@ export const FormCellEditor = ({
     [fieldProjection.field.path, onSave, contextEditing, originalRow],
   );
 
-  const handleCreate = useCallback(
-    (object: any) => {
-      const ref = Ref.make(object);
-      const path = fieldProjection.field.path;
-      setDeep(originalRow, [path], ref);
-      contextEditing?.cellElement?.focus();
-      setEditing(null);
-      setLocalEditing(false);
-      onSave?.();
-    },
-    [fieldProjection.field.path, onSave, contextEditing, originalRow],
-  );
-
-  const handleCreateFromQuery = useCallback(
-    async (typeAnnotation: TypeAnnotation, query: string) => {
-      if (model && modals && contextEditing?.index) {
-        setLocalEditing(false);
-        modals.openCreateRef(
-          typeAnnotation.typename,
-          document.querySelector(cellQuery(contextEditing.index, gridId)),
-          {
-            [fieldProjection.field.referencePath!]: query,
-          },
-          handleCreate,
-        );
-      }
-    },
-    [model, modals, client, contextEditing?.index, gridId, fieldProjection, handleSave],
-  );
-
   useEffect(() => {
     if (contextEditing && contextEditing.cellElement) {
       anchorRef.current = (contextEditing.cellElement as HTMLElement).querySelector(
@@ -176,6 +150,38 @@ export const FormCellEditor = ({
     setLocalEditing(nextOpen);
   }, []);
 
+  const createSchema = useMemo(() => {
+    if (fieldProjection.props.format === FormatEnum.Ref && fieldProjection.props.referenceSchema) {
+      const { schema: refSchema } = getSchema({
+        typename: fieldProjection.props.referenceSchema,
+      });
+      if (!refSchema) {
+        return null;
+      }
+      const omit = Schema.omit<any, any, ['id']>('id');
+      return omit(refSchema);
+    }
+    return null;
+  }, [fieldProjection.props.format, fieldProjection.props.referenceSchema, getSchema]);
+
+  const handleCreate = useCallback(
+    (values: any) => {
+      if (schema && onCreate) {
+        const objectWithId = onCreate(schema, values);
+        if (objectWithId) {
+          const ref = Ref.make(objectWithId);
+          const path = fieldProjection.field.path;
+          setDeep(originalRow, [path], ref);
+        }
+      }
+      contextEditing?.cellElement?.focus();
+      setEditing(null);
+      setLocalEditing(false);
+      onSave?.();
+    },
+    [fieldProjection.field.path, onSave, contextEditing, originalRow, createSchema, onCreate],
+  );
+
   if (!editing) {
     return null;
   }
@@ -194,9 +200,13 @@ export const FormCellEditor = ({
               onSave={handleSave}
               {...formProps}
               onQueryRefOptions={handleQueryRefOptions}
-              onCreateFromQuery={handleCreateFromQuery}
-              createOptionIcon='ph--plus--regular'
-              createOptionLabel={createOptionLabel}
+              {...(createSchema && {
+                onCreate: handleCreate,
+                createSchema,
+                createInitialValuePath: fieldProjection.field.referencePath,
+                createOptionIcon: 'ph--plus--regular',
+                createOptionLabel,
+              })}
             />
           </Popover.Viewport>
         </Popover.Content>

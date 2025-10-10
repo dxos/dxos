@@ -5,4 +5,5 @@
 export * from './ControlSection';
 export * from './FieldEditor';
 export * from './Form';
+export * from './ObjectPicker';
 export * from './ViewEditor';

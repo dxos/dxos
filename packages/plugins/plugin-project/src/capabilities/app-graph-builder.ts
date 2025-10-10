@@ -16,7 +16,7 @@ import { meta } from '../meta';
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
-      id: `${meta.id}/invocations`,
+      id: `${meta.id}/triggers`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -30,6 +30,16 @@ export default (context: PluginContext) =>
                 properties: {
                   label: ['project invocations label', { ns: meta.id }],
                   icon: 'ph--clock-countdown--regular',
+                  disposition: 'hidden',
+                },
+              },
+              {
+                id: [node.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
+                type: PLANK_COMPANION_TYPE,
+                data: 'automation',
+                properties: {
+                  label: ['project automation label', { ns: meta.id }],
+                  icon: 'ph--lightning--regular',
                   disposition: 'hidden',
                 },
               },

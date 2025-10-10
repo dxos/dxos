@@ -8,8 +8,7 @@ import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { type Tag, sortTags } from '../components';
-import { Mailbox } from '../types';
+import { Mailbox, type Tag, sortTags } from '../types';
 
 const TAGS: Tag[] = [
   { label: 'important', hue: 'green' },
@@ -114,10 +113,10 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
  * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, messageCount = 30) => {
-  const queueDxn = space.queues.create().dxn;
+  const mailbox = Mailbox.make({ space });
+  const queueDxn = mailbox.queue.dxn;
   const queue = space.queues.get<DataType.Message>(queueDxn);
   await queue.append([...Array(messageCount)].map(() => createMessage(space)));
-  const mailbox = Mailbox.make({ queue: queueDxn });
   space.db.add(mailbox);
   return mailbox;
 };

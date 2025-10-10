@@ -75,7 +75,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Mailbox.Mailbox,
-          getIntent: (_, options) => createIntent(InboxAction.CreateMailbox, { spaceId: options.space.id }),
+          getIntent: (_, options) => createIntent(InboxAction.CreateMailbox, { space: options.space }),
         }),
       ),
       contributes(

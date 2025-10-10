@@ -219,7 +219,7 @@ export class EchoHost extends Resource {
    * Flush all pending writes to the underlying storage.
    */
   async flush(): Promise<void> {
-    await this._automergeHost.repo.flush();
+    await this._automergeHost.flush();
   }
 
   /**

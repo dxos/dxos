@@ -112,8 +112,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@types/react": "~19.2.0",
-    "@types/react-dom": "~19.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "typedoc": "0.28.1"

@@ -1013,7 +1013,7 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
     setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
     setRelationSourceAndTarget(target, core, schema);
 
-    if (meta && meta.keys.length > 0) {
+    if (meta && metaNotEmpty(meta)) {
       target[symbolInternals].core.setMeta(meta);
     }
 
@@ -1036,6 +1036,8 @@ export const createObject = <T extends BaseObject>(obj: T): AnyLiveObject<T> => 
     return proxy;
   }
 };
+
+const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags && meta.tags.length > 0);
 
 /**
  * @internal

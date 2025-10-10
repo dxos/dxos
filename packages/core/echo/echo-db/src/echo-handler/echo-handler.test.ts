@@ -27,6 +27,7 @@ import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { live } from '@dxos/live-object';
+import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
@@ -683,6 +684,16 @@ describe('Reactive Object with ECHO database', () => {
         name: 'John',
         worksAt: encodeReference(Reference.localObjectReference(org.id)),
       });
+    });
+
+    test('tags', async () => {
+      const { db } = await builder.createDatabase();
+
+      const org = db.add(Obj.make(Type.Expando, { name: 'DXOS', [Obj.Meta]: { tags: ['important'] } }));
+
+      log.info('', { acc: createDocAccessor(org, []).handle.doc() });
+
+      expect(Obj.getMeta(org).tags).toEqual(['important']);
     });
   });
 

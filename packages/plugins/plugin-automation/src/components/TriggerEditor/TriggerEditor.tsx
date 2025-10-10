@@ -8,7 +8,12 @@ import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
-import { type CustomInputMap, Form, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { Input, useDensityContext, useElevationContext, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Editor, createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { type CustomInputMap, Form, InputHeader, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
+import { inputTheme, mx } from '@dxos/react-ui-theme';
+
+import { meta } from '../../meta';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -16,17 +21,19 @@ import { SpecSelector } from './SpecSelector';
 export type TriggerEditorProps = {
   space: Space;
   trigger: FunctionTrigger;
+  // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
+  readonlySpec?: boolean;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
 };
 
-export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEditorProps) => {
+export const TriggerEditor = ({ space, trigger, readonlySpec, onSave, onCancel }: TriggerEditorProps) => {
   const handleSave = (values: FunctionTrigger) => {
     onSave?.(values);
   };
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-  const Custom = useCustomInputs(space, handleRefQueryLookup);
+  const Custom = useCustomInputs({ space, readonlySpec, onQueryRefOptions: handleRefQueryLookup });
 
   return (
     <Form
@@ -41,7 +48,16 @@ export const TriggerEditor = ({ space, trigger, onSave, onCancel }: TriggerEdito
   );
 };
 
-const useCustomInputs = (space: Space, onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions']) => {
+const useCustomInputs = ({
+  space,
+  readonlySpec,
+  onQueryRefOptions,
+}: {
+  space: Space;
+  readonlySpec?: boolean;
+  onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions'];
+}) => {
+  const { t } = useTranslation(meta.id);
   const functions = useQuery(space, Filter.type(FunctionType));
   const workflows = useQuery(space, Filter.type(ComputeGraph));
   const scripts = useQuery(space, Filter.type(ScriptType));
@@ -80,14 +96,54 @@ const useCustomInputs = (space: Space, onQueryRefOptions: FunctionInputEditorPro
       },
 
       // Spec selector.
-      ['spec.kind' as const]: SpecSelector,
+      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec ? 'disabled-input' : false} />,
+
+      // TODO(wittjosiah): Copied from ViewEditor.
+      // Query input editor.
+      ['spec.query' as const]: (props) => {
+        const { themeMode } = useThemeContext();
+        const density = useDensityContext();
+        const elevation = useElevationContext();
+        const value = props.getValue() as any;
+
+        // TODO(wittjosiah): Including props.onValueChange in deps causes infinite loop.
+        const handleChange = useCallback(
+          (text: string) => props.onValueChange('object', { ...value, string: text }),
+          [],
+        );
+
+        const extensions = useMemo(
+          () => [
+            createBasicExtensions({ readOnly: readonlySpec, placeholder: t('query placeholder') }),
+            createThemeExtensions({ themeMode }),
+          ],
+          [],
+        );
+
+        // TODO(wittjosiah): This is probably not the right way to do these styles.
+        return (
+          <Input.Root>
+            <InputHeader label={props.label} />
+            <Editor
+              classNames={mx(
+                inputTheme.input({ density, elevation }),
+                'flex items-center',
+                'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
+              )}
+              extensions={extensions}
+              value={value.string}
+              onChange={handleChange}
+            />
+          </Input.Root>
+        );
+      },
 
       // Function input editor.
       ['input' as const]: (props) => (
         <FunctionInputEditor {...props} functions={functions} onQueryRefOptions={onQueryRefOptions} />
       ),
     }),
-    [workflows, scripts, functions],
+    [workflows, scripts, functions, readonlySpec],
   );
 };
 

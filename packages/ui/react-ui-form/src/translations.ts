@@ -28,6 +28,7 @@ export const translations = [
         'show field label': 'Show field',
         'hide field label': 'Hide field',
         'delete field label': 'Delete field',
+        'ref field combobox input placeholder': 'Search…',
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',
 

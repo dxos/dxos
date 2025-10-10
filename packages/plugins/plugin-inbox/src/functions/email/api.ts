@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
-import { createUrl, getPart, parseEmailString, stripNewlines, turndown } from './util';
+import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
@@ -61,7 +61,7 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     }
 
     const from = message.payload.headers.find(({ name }) => name === 'From');
-    const sender = from && parseEmailString(from.value);
+    const sender = from && parseFromHeader(from.value);
     const data = message.payload.body?.data ?? getPart(message, 'text/html') ?? getPart(message, 'text/plain');
 
     // Skip the message if content or sender is missing.

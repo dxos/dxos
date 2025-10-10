@@ -4,7 +4,6 @@
 
 import { MailboxContainer } from './MailboxContainer';
 
-export * from './model';
 export { MailboxObjectSettings } from './MailboxObjectSettings';
 
 export default MailboxContainer;

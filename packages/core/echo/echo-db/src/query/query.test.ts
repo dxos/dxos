@@ -30,15 +30,13 @@ faker.seed(1);
 
 type ObjectProps = {
   value?: number;
-  properties?: {
-    tags?: { label: string }[];
-  };
+  [Obj.Meta]?: { tags?: string[] };
 };
 
 const tags = ['red', 'green', 'blue'];
 
 const createTestObject = (props: ObjectProps = {}) => {
-  return live(Expando, { title: faker.commerce.productName(), ...props });
+  return Obj.make(Type.Expando, { title: faker.commerce.productName(), ...props });
 };
 
 const createTestObjects = () => {
@@ -55,7 +53,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          properties: { tags: tags.slice(i).map((tag) => ({ label: tag })) },
+          [Obj.Meta]: { tags: tags.slice(i) },
         }),
       ),
     )
@@ -63,7 +61,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          properties: { tags: tags.slice(i + 1).map((tag) => ({ label: tag })) },
+          [Obj.Meta]: { tags: tags.slice(i + 1) },
         }),
       ),
     );
@@ -471,6 +469,17 @@ describe('Query', () => {
 
       const { objects } = await db.query(Filter.type(Testing.HasManager)).run();
       expect(objects).toEqual([hasManager]);
+    });
+
+    test('tags', async () => {
+      const { db } = await builder.createDatabase();
+
+      const _a = db.add(Obj.make(Type.Expando, { name: 'a' }));
+      const b = db.add(Obj.make(Type.Expando, { name: 'b', [Obj.Meta]: { tags: ['important'] } }));
+      const c = db.add(Obj.make(Type.Expando, { name: 'c', [Obj.Meta]: { tags: ['important', 'investor'] } }));
+
+      const { objects } = await db.query(Query.select(Filter.tag('important'))).run();
+      expect(objects).toEqual([b, c]);
     });
   });
 

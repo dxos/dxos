@@ -28,6 +28,7 @@ export const translations = [
         'editing tab label': 'Edit',
         'views label': 'Views',
         'project invocations label': 'Invocations',
+        'project automation label': 'Automations',
         'toggle expand label': 'Toggle expand',
         'delete view label': 'Delete view',
         'add view label': 'Add view',

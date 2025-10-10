@@ -31,17 +31,18 @@ export const createUrl = (parts: (string | undefined)[], params: Record<string, 
   return url;
 };
 
-const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
-
-export const parseEmailString = (emailString: string): { name?: string; email: string } | undefined => {
-  const match = emailString.match(EMAIL_REGEX);
+/**
+ * Parses an email string in the format "Name <email@example.com>" into separate name and email components.
+ */
+export const parseFromHeader = (value: string): { name?: string; email: string } | undefined => {
+  const EMAIL_REGEX = /^([^<]+?)\s*<([^>]+@[^>]+)>$/;
+  const removeOuterQuotes = (str: string) => str.replace(/^['"]|['"]$/g, '');
+  const match = value.match(EMAIL_REGEX);
   if (match) {
     const [, name, email] = match;
     return {
-      name: name.trim(),
+      name: removeOuterQuotes(name.trim()),
       email: email.trim(),
     };
   }
-
-  return undefined;
 };

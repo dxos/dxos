@@ -357,10 +357,10 @@ export const WithMail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -380,8 +380,7 @@ export const WithGmail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -612,7 +611,10 @@ export const WithChessTrigger: Story = {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(Chess.Game)).ast,
+            query: {
+              string: 'Query.select(Filter.type(Chess.Game))',
+              ast: Query.select(Filter.type(Chess.Game)).ast,
+            },
           },
           input: {
             id: '{{event.changedObjectId}}',
@@ -706,10 +708,10 @@ export const WithProject: Story = {
         person.notes = 'Project';
       });
 
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
 
       const dxosResearch = space.db.add(
         Markdown.makeDocument({
@@ -745,6 +747,10 @@ export const WithProject: Story = {
       const organizationsQuery = contactsQuery.sourceOf(DataType.Employer, { active: true }).target();
       const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
 
+      const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { notes: "Project" }))';
+      const organizationsQueryString = `${contactsQueryString}.sourceOf(DataType.Employer, { active: true }).target()`;
+      const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+
       const researchPrompt = space.db.add(
         Prompt.make({
           name: 'Research',
@@ -765,7 +771,10 @@ export const WithProject: Story = {
         enabled: true,
         spec: {
           kind: 'subscription',
-          query: organizationsQuery.ast,
+          query: {
+            string: organizationsQueryString,
+            ast: organizationsQuery.ast,
+          },
         },
         input: {
           prompt: Ref.make(researchPrompt),
@@ -781,24 +790,29 @@ export const WithProject: Story = {
         ).options({
           queues: [mailbox.queue.dxn.toString()],
         }),
+        queryString:
+          'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("Project") } }))',
         jsonSchema: Type.toJsonSchema(DataType.Message),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const contactsView = createView({
         name: 'Contacts',
         query: contactsQuery,
+        queryString: contactsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Person),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const organizationsView = createView({
         name: 'Organizations',
         query: organizationsQuery,
+        queryString: organizationsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Organization),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const notesView = createView({
         name: 'Notes',
         query: notesQuery,
+        queryString: notesQueryString,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });

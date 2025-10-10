@@ -46,7 +46,9 @@ export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type
 
 export const Meta: unique symbol = EchoSchema.MetaId as any;
 
-// TODO(dmaretskyi): Expose Meta = EchoSchema.MetaId.
+const DEFAULT_META: EchoSchema.ObjectMeta = {
+  keys: [],
+};
 
 /**
  * Creates new object.
@@ -73,7 +75,8 @@ export const make = <S extends Type.Obj.Any>(
   );
 
   if (props[EchoSchema.MetaId] != null) {
-    meta = props[EchoSchema.MetaId] as any;
+    // Set default fields on meta on creation
+    meta = { ...structuredClone(DEFAULT_META), ...props[EchoSchema.MetaId] };
     delete props[EchoSchema.MetaId];
   }
 

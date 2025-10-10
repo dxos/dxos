@@ -54,11 +54,11 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   }, [contacts, message?.sender.email, hasEmail, existingContact]);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-
   const handleExtractContact = useCallback(() => {
     if (!space || !message) {
       return;
     }
+
     void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
   }, [space, message, dispatch]);
 

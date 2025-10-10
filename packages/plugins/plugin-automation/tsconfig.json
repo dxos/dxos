@@ -63,7 +63,13 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"

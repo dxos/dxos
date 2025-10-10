@@ -33,7 +33,13 @@ export type FormFieldProps = {
   Custom?: Partial<Record<string, InputComponent>>;
 } & Pick<
   RefFieldProps,
-  'readonly' | 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'
+  | 'readonly'
+  | 'onQueryRefOptions'
+  | 'createOptionLabel'
+  | 'createOptionIcon'
+  | 'onCreate'
+  | 'createSchema'
+  | 'createInitialValuePath'
 >;
 
 export const FormField = ({
@@ -45,7 +51,9 @@ export const FormField = ({
   onQueryRefOptions,
   createOptionLabel,
   createOptionIcon,
-  onCreateFromQuery,
+  onCreate,
+  createSchema,
+  createInitialValuePath,
   lookupComponent,
   Custom,
 }: FormFieldProps) => {
@@ -114,7 +122,9 @@ export const FormField = ({
         onQueryRefOptions={onQueryRefOptions}
         createOptionLabel={createOptionLabel}
         createOptionIcon={createOptionIcon}
-        onCreateFromQuery={onCreateFromQuery}
+        onCreate={onCreate}
+        createSchema={createSchema}
+        createInitialValuePath={createInitialValuePath}
         {...inputProps}
       />
     );
@@ -188,7 +198,7 @@ export const FormField = ({
             onQueryRefOptions={onQueryRefOptions}
             createOptionLabel={createOptionLabel}
             createOptionIcon={createOptionIcon}
-            onCreateFromQuery={onCreateFromQuery}
+            onCreate={onCreate}
             Custom={Custom}
             lookupComponent={lookupComponent}
           />
@@ -222,7 +232,15 @@ export type FormFieldsProps = ThemedClassName<
     Custom?: Partial<Record<string, InputComponent>>;
     onQueryRefOptions?: QueryRefOptions;
   } & Pick<FormFieldProps, 'readonly'> &
-    Pick<RefFieldProps, 'onQueryRefOptions' | 'createOptionLabel' | 'createOptionIcon' | 'onCreateFromQuery'>
+    Pick<
+      RefFieldProps,
+      | 'onQueryRefOptions'
+      | 'createOptionLabel'
+      | 'createOptionIcon'
+      | 'onCreate'
+      | 'createSchema'
+      | 'createInitialValuePath'
+    >
 >;
 
 export const FormFields = forwardRef<HTMLDivElement, FormFieldsProps>(

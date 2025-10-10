@@ -184,6 +184,7 @@ const meta: Meta<typeof ProjectContainer> = {
               });
               return message;
             });
+
             await messageQueue.append(messages);
           },
         }),

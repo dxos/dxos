@@ -3,11 +3,11 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Match } from 'effect';
+import { Match, type Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -111,6 +111,14 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     tableRef.current?.update?.();
   }, []);
 
+  const handleCreate = useCallback(
+    (schema: Schema.Schema.AnyNoContext, values: any) => {
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
+    },
+    [space],
+  );
+
   const model = useTableModel({
     view,
     schema: jsonSchema,
@@ -161,6 +169,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
           model={model}
           presentation={presentation}
           schema={schema}
+          onCreate={handleCreate}
           onRowClick={handleRowClick}
         />
       </Table.Root>

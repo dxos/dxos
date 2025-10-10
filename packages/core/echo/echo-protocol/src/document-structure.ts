@@ -153,6 +153,10 @@ export const ObjectStructure = Object.freeze({
     return references;
   },
 
+  getTags: (object: ObjectStructure): string[] => {
+    return object.meta.tags ?? [];
+  },
+
   makeObject: ({
     type,
     data,
@@ -214,6 +218,13 @@ export type ObjectMeta = {
    * Foreign keys.
    */
   keys: ForeignKey[];
+
+  /**
+   * Tags.
+   *
+   * NOTE: Optional for backwards compatibilty.
+   */
+  tags?: string[];
 };
 
 /**

@@ -128,7 +128,13 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
     case 'webhook':
       return { kind: 'webhook', method: 'POST' } satisfies WebhookTrigger;
     case 'subscription':
-      return { kind: 'subscription', query: Query.select(Filter.nothing()).ast } satisfies SubscriptionTrigger;
+      return {
+        kind: 'subscription',
+        query: {
+          string: 'Query.select(Filter.nothing())',
+          ast: Query.select(Filter.nothing()).ast,
+        },
+      } satisfies SubscriptionTrigger;
     case 'email':
       return { kind: 'email' } satisfies EmailTrigger;
     case 'queue': {

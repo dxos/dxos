@@ -451,7 +451,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -493,7 +495,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -529,7 +533,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -577,7 +583,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Task)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Task)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -624,7 +632,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
           input: {
             objectId: '{{event.changedObjectId}}',

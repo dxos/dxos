@@ -4,9 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-import { type DataType } from '@dxos/schema';
+import { type ProjectContainerProps } from './ProjectContainer';
+import { type ProjectSettingsProps } from './ProjectSettings';
 
-export const ProjectContainer = lazy<ComponentType<{ project: DataType.Project; role: string }>>(
-  () => import('./ProjectContainer'),
-);
-export const ProjectSettings = lazy<ComponentType<{ project: DataType.Project }>>(() => import('./ProjectSettings'));
+export const ProjectContainer = lazy<ComponentType<ProjectContainerProps>>(() => import('./ProjectContainer'));
+export const ProjectSettings = lazy<ComponentType<ProjectSettingsProps>>(() => import('./ProjectSettings'));

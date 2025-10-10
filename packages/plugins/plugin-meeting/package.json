@@ -89,7 +89,7 @@
     "@dxos/test-utils": "workspace:*",
     "@effect-rx/rx-react": "0.42.4",
     "@effect/platform": "0.92.1",
-    "@types/react": "~19.2.0",
+    "@types/react": "~19.2.2",
     "effect": "3.18.3",
     "preact": "~10.11.0",
     "react": "~19.2.0",

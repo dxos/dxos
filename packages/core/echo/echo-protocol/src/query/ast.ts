@@ -82,7 +82,7 @@ export interface FilterContains extends Schema.Schema.Type<typeof FilterContains
 export const FilterContains: Schema.Schema<FilterContains> = FilterContains_;
 
 /**
- * Tag.
+ * Filters objects that have certain tag.
  */
 const FilterTag_ = Schema.Struct({
   type: Schema.Literal('tag'),

@@ -9,6 +9,8 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { kebabize } from '@dxos/util';
 
 import { meta } from '../meta';
 import { Mailbox } from '../types';
@@ -17,6 +19,49 @@ import { InboxCapabilities } from './capabilities';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
+    createExtension({
+      id: `${meta.id}/mailbox-filters`,
+      connector: (node) =>
+        Rx.make((get) =>
+          pipe(
+            get(node),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Mailbox.Mailbox, node.data) &&
+              node.data.savedFilters.length > 0 &&
+              node.properties.filter === undefined
+                ? Option.some(node.data)
+                : Option.none(),
+            ),
+            Option.map((mailbox) =>
+              get(
+                rxFromSignal(() => [
+                  {
+                    id: `${fullyQualifiedId(mailbox)}-unfiltered`,
+                    type: Mailbox.Mailbox.typename,
+                    data: mailbox,
+                    properties: {
+                      label: ['inbox label', { ns: meta.id }],
+                      icon: 'ph--tray--regular',
+                      filter: null,
+                    },
+                  },
+                  ...mailbox.savedFilters.map(({ name, filter }) => ({
+                    id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}`,
+                    type: Mailbox.Mailbox.typename,
+                    data: mailbox,
+                    properties: {
+                      label: name,
+                      icon: 'ph--tray--regular',
+                      filter,
+                    },
+                  })),
+                ]),
+              ),
+            ),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
     createExtension({
       id: `${meta.id}/mailbox-message`,
       connector: (node) =>

@@ -13,10 +13,21 @@ import { type DataType } from '@dxos/schema';
 import { type ItemProps, Project } from './Project';
 
 const ProjectItem = ({ item, projectionModel }: ItemProps) => {
-  return <Surface role='card--intrinsic' data={{ subject: item, projection: projectionModel }} limit={1} />;
+  return (
+    <Surface
+      role='card--intrinsic'
+      data={{
+        subject: item,
+        projection: projectionModel,
+      }}
+      limit={1}
+    />
+  );
 };
 
-export const ProjectContainer = ({ project }: { project: DataType.Project; role: string }) => {
+export type ProjectContainerProps = { project: DataType.Project; role: string };
+
+export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const id = fullyQualifiedId(project);
 
@@ -32,8 +43,9 @@ export const ProjectContainer = ({ project }: { project: DataType.Project; role:
   );
 
   return (
-    <StackItem.Content>
+    <StackItem.Content toolbar>
       <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
+        <Project.Menu />
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>

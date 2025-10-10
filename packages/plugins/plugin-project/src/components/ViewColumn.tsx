@@ -5,7 +5,7 @@
 import { type Schema } from 'effect';
 import React, { useMemo, useState } from 'react';
 
-import { type Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -34,7 +34,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     if (!view) {
       return Query.select(Filter.nothing());
     } else {
-      return Query.fromAst(view.query.ast);
+      // NOTE: Snapshot is required to prevent signal read in prohibited scope.
+      return Query.fromAst(Obj.getSnapshot(view).query.ast);
     }
   }, [view?.query.ast]);
 

@@ -147,6 +147,7 @@ export interface ObjectJSON {
 
 export interface ObjectMetaJSON {
   keys: ForeignKey[];
+  tags?: string[];
 }
 
 // NOTE: Keep as `function` to avoid type inference issues.
