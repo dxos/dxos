@@ -20,9 +20,7 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { live } from '@dxos/live-object';
 import { AttentionPlugin } from '@dxos/plugin-attention';
-import { ClientPlugin } from '@dxos/plugin-client';
 import { GraphPlugin } from '@dxos/plugin-graph';
-import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
@@ -212,48 +210,5 @@ export const Default: Story = {
 
     // Confirm that focus is now on an element with data-main-landmark="1"
     await expect(document.activeElement).toHaveAttribute('data-main-landmark', '1');
-  },
-};
-
-// TODO(wittjosiah): Deduplicate plugins/capabilities with default story.
-export const WithClient: Story = {
-  decorators: [
-    withPluginManager({
-      plugins: [
-        ClientPlugin({
-          onClientInitialized: async ({ client }) => {
-            await client.halo.createIdentity();
-          },
-        }),
-        SpacePlugin({}),
-        GraphPlugin(),
-        IntentPlugin(),
-        SettingsPlugin(),
-        AttentionPlugin(),
-
-        // UI
-        ThemePlugin({ tx: defaultTx }),
-        NavTreePlugin(),
-        StorybookLayoutPlugin({ initialState: { sidebarState: 'expanded' } }),
-      ],
-      capabilities: (context) => [
-        contributes(StoryState, live({ tab: 'space-0' })),
-        contributes(Capabilities.IntentResolver, [
-          createResolver({
-            intent: LayoutAction.UpdateLayout,
-            filter: (data): data is Schema.Schema.Type<typeof LayoutAction.SwitchWorkspace.fields.input> =>
-              Schema.is(LayoutAction.SwitchWorkspace.fields.input)(data),
-            resolve: ({ subject }) => {
-              const state = context.getCapability(StoryState);
-              state.tab = subject;
-            },
-          }),
-        ]),
-      ],
-    }),
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
   },
 };
