@@ -9,12 +9,13 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { templates } from '../templates';
 import { deployScript } from '../util/deploy';
 
-describe('plugin-script e2e: deploy and invoke', () => {
+describe('Deployed Functions', () => {
   test('deploys function and invokes it via EDGE', { timeout: 120_000 }, async () => {
     const config = new Config({
       version: 1,
@@ -55,6 +56,7 @@ describe('plugin-script e2e: deploy and invoke', () => {
     const cleanedId = (functionId ?? '').replace(/^\//, '');
     const input = { msg: 'hello' };
     const result = await edgeClient.invokeFunction({ functionId: cleanedId }, input);
+    log.info('>>> result', { result });
     expect(result).toEqual({ success: true, data: { msg: 'hello' } });
 
     await client.destroy();
