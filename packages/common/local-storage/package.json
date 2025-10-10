@@ -25,7 +25,6 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -37,8 +36,7 @@
     "effect": "3.18.3"
   },
   "devDependencies": {
-    "@dxos/async": "workspace:*",
-    "react": "~19.2.0"
+    "@dxos/async": "workspace:*"
   },
   "peerDependencies": {
     "effect": "^3.13.3",

@@ -22,6 +22,7 @@
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
+    "knip": "knip",
     "lint": "moon run :lint -- --fix",
     "lint-changed": "moon :lint --affected --remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
@@ -29,8 +30,7 @@
     "pre-ci": "./scripts/pre-ci.mjs",
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "test": "MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism",
-    "toolbox": "vite-node tools/toolbox/src/main.ts",
-    "knip": "knip"
+    "toolbox": "vite-node tools/toolbox/src/main.ts"
   },
   "dependencies": {
     "tslib": "^2.8.1"
