@@ -45,7 +45,7 @@ export default (context: PluginContext) =>
                       filter: null,
                     },
                   },
-                  ...mailbox.filters.map(({ name, filter }) => ({
+                  ...mailbox.filters?.map(({ name, filter }) => ({
                     id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}`,
                     type: `${Mailbox.Mailbox.typename}-filter`,
                     data: mailbox,
