@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ChromaticPalette } from '../../../react-ui-types/src';
+import { type ChromaticPalette } from '@dxos/react-ui-types';
 
 export type Color = {
   hue: ChromaticPalette;
