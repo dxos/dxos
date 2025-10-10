@@ -21,45 +21,15 @@ export const TAGS: Tag[] = [
 
 export const TAGS_MAP = TAGS.reduce((acc, tag) => ({ ...acc, [tag.id]: { label: tag.label, hue: tag.hue } }), {});
 
-export const createMessages = (count = 10) => {
-  const text = faker.lorem.paragraph();
-  return faker.helpers.multiple(
-    () =>
-      Obj.make(
-        DataType.Message,
-        {
-          created: faker.date.recent().toISOString(),
-          sender: {
-            identityDid: IdentityDid.random(),
-            name: faker.person.fullName(),
-          },
-          blocks: [
-            {
-              _tag: 'text',
-              text,
-            },
-          ],
-          properties: {
-            subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-            snippet: text,
-          },
-        },
-        {
-          tags: faker.helpers.uniqueArray(
-            TAGS.map((tag) => tag.id),
-            faker.number.int(3),
-          ),
-        },
-      ),
-    {
-      count,
-    },
-  );
-};
-
 type CreateOptions = {
   paragraphs: number;
   links: number;
+};
+
+export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
+  return faker.helpers
+    .multiple(() => createMessage(space, options), { count })
+    .sort((a, b) => b.created.localeCompare(a.created));
 };
 
 /**
@@ -96,11 +66,6 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
     text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
   }
 
-  const tags = faker.helpers.randomSubset(
-    TAGS.map((tag) => tag.id),
-    { min: 0, max: TAGS.length },
-  );
-
   return Obj.make(
     DataType.Message,
     {
@@ -121,7 +86,10 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
       },
     },
     {
-      tags,
+      tags: faker.helpers.randomSubset(
+        TAGS.map((tag) => tag.id),
+        { min: 0, max: TAGS.length },
+      ),
     },
   );
 };
@@ -129,11 +97,10 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
 /**
  * Initializes a mailbox with messages in the given space.
  */
-export const initializeMailbox = async (space: Space, messageCount = 30) => {
+export const initializeMailbox = async (space: Space, count = 30) => {
   const mailbox = Mailbox.make({ space, tags: TAGS_MAP });
-  const queueDxn = mailbox.queue.dxn;
-  const queue = space.queues.get<DataType.Message>(queueDxn);
-  await queue.append([...Array(messageCount)].map(() => createMessage(space)));
+  const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
+  await queue.append(createMessages(count, space));
   space.db.add(mailbox);
   return mailbox;
 };
