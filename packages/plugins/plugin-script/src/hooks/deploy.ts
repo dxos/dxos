@@ -64,7 +64,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'deploy',
-      label: [state.deploying ? 'pending label' : 'deploy label', { ns: meta.id }],
+      label: [state.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
       icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: state.deploying,
       classNames: state.deploying ? '[&_svg]:animate-spin' : '',
