@@ -13,7 +13,7 @@ import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type DataType, type ProjectionModel, createView, typenameFromQuery } from '@dxos/schema';
+import { type DataType, type ProjectionModel, createView, getTypenameFromQuery } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -88,7 +88,7 @@ const DefaultStory = (props: StoryProps) => {
         const newQuery = queue ? Query.select(filter).options({ queues: [queue] }) : Query.select(filter);
         view.query.ast = newQuery.ast;
 
-        const typename = typenameFromQuery(newQuery.ast);
+        const typename = getTypenameFromQuery(newQuery.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
         if (!newSchema) {
           return;

@@ -33,7 +33,7 @@ export type MailboxContainerProps = {
   filter?: string;
 };
 
-export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFilter }: MailboxContainerProps) => {
+export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterParam }: MailboxContainerProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
@@ -44,10 +44,10 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const [filterText, setFilterText] = useState<string>(savedFilter ?? '');
+  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-  const parser = useMemo(() => new QueryBuilder(), []);
+  const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
   useEffect(() => {
     setFilter(parser.build(filterText));
   }, [filterText]);
@@ -74,8 +74,15 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
           break;
         }
         case 'select-tag': {
-          // TODO(burdon): Check if tag already exists.
-          setFilterText((prevFilterText) => `${prevFilterText} #${action.label} `);
+          setFilterText((prevFilterText) => {
+            // Check if tag already exists.
+            const tags = prevFilterText.split(/\s+/).filter(Boolean);
+            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
+              return prevFilterText;
+            }
+
+            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
+          });
           setFilterVisible(true);
           filterEditorRef.current?.focus();
           break;
@@ -104,8 +111,8 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
 
   const handleCancel = useCallback(() => {
     setFilterVisible(false);
-    setFilterText(savedFilter ?? '');
-    setFilter(parser.build(savedFilter ?? ''));
+    setFilterText(filterParam ?? '');
+    setFilter(parser.build(filterParam ?? ''));
   }, []);
 
   // TODO(burdon): Generalize drawer layout.
@@ -125,16 +132,20 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
       </ElevationProvider>
 
       {filterVisible && (
-        <div role='none' className='flex is-full overflow-hidden items-center p-1 gap-1 border-be border-separator'>
+        <div
+          role='none'
+          className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
+        >
           <QueryEditor
             ref={filterEditorRef}
-            classNames='grow overflow-hidden'
+            classNames='min-is-0 pis-1'
             autoFocus
             space={getSpace(mailbox)}
+            tags={mailbox.tags}
             value={filterText}
             onChange={setFilterText}
           />
-          <div role='none' className='flex gap-1 items-center'>
+          <div role='none' className='flex shrink-0 gap-1 items-center'>
             <IconButton
               ref={saveFilterButtonRef}
               disabled={!filter}
@@ -155,11 +166,12 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: savedFil
 
       {messages && messages.length > 0 ? (
         <MailboxComponent
-          messages={messages}
           id={id}
-          onAction={handleAction}
-          currentMessageId={currentMessageId}
           role={role}
+          messages={messages}
+          tags={mailbox.tags}
+          currentMessageId={currentMessageId}
+          onAction={handleAction}
         />
       ) : (
         <MailboxEmpty mailbox={mailbox} />

@@ -12,7 +12,7 @@ import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { live } from '@dxos/live-object';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 
 import {
@@ -272,7 +272,7 @@ export const registry: Record<NodeType, Executable> = {
               const schema = yield* Effect.promise(async () =>
                 db.schemaRegistry
                   .query({
-                    typename: typenameFromQuery(container.query.ast),
+                    typename: getTypenameFromQuery(container.query.ast),
                   })
                   .first(),
               );

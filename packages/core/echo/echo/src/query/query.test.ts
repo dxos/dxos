@@ -13,7 +13,7 @@ import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
 
-import { Filter, Order, Query } from './dsl';
+import { Filter, Order, Query } from './query';
 
 //
 // Example schema

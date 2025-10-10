@@ -26,7 +26,7 @@ import {
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -41,7 +41,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);

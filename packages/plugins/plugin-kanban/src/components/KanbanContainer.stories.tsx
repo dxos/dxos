@@ -24,7 +24,7 @@ import { Kanban as KanbanComponent, useKanbanModel } from '@dxos/react-ui-kanban
 import { Kanban } from '@dxos/react-ui-kanban/types';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { translations } from '../translations';
 
@@ -49,7 +49,7 @@ const StorybookKanban = () => {
   const views = useQuery(space, Filter.type(DataType.View));
   const [view, setView] = useState<DataType.View>();
   const [projection, setProjection] = useState<ProjectionModel>();
-  const typename = view?.query ? typenameFromQuery(view.query.ast) : undefined;
+  const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   useEffect(() => {

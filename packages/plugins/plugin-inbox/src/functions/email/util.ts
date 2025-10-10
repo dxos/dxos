@@ -16,7 +16,6 @@ export const turndown = new TurndownService({}).remove('script').remove('style')
 
 // TODO(burdon): Replace legal disclaimers, etc.
 export const stripNewlines = (str: string) => {
-  console.log(str);
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return str.trim().replace(WHITESPACE, '\n\n');
 };

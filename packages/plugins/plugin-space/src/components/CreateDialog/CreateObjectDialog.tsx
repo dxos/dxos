@@ -20,7 +20,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../capabilities';
@@ -59,7 +59,7 @@ export const CreateObjectDialog = ({
   const space = isSpace(target) ? target : getSpace(target);
   const queryCollections = useQuery(space, Query.type(DataType.QueryCollection));
   const hiddenTypenames = queryCollections
-    .map((collection) => typenameFromQuery(collection.query))
+    .map((collection) => getTypenameFromQuery(collection.query))
     .filter(isNonNullable);
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(

@@ -194,17 +194,18 @@ export const keyToFallback = (key: PublicKey) => hexToFallback(key.toHex());
 // TODO(wittjosiah): Support non-hex strings (e.g. DIDs, UUIDs, etc.)
 export const hexToFallback = (hex: string) => toFallback(parseInt(hex, 16));
 
+// TODO(burdon): Rename?
 export const toFallback = (hash: number): FallbackValue => {
-  // Calculate total possible combinations of emoji and hue pairs
+  // Calculate total possible combinations of emoji and hue pairs.
   const totalCombinations = idEmoji.length * idHue.length;
 
-  // Get a deterministic index within the range of all possible combinations
+  // Get a deterministic index within the range of all possible combinations.
   const combinationIndex = hash % totalCombinations;
 
-  // Calculate which emoji to use based on the combination index
+  // Calculate which emoji to use based on the combination index.
   const emojiIndex = Math.floor(combinationIndex / idHue.length);
 
-  // Calculate which hue to use based on the combination index
+  // Calculate which hue to use based on the combination index.
   const hueIndex = combinationIndex % idHue.length;
 
   return {

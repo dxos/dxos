@@ -24,7 +24,7 @@ import { render } from '@dxos/storybook-utils';
 
 import { InboxCapabilities } from '../../capabilities';
 import { InboxPlugin } from '../../InboxPlugin';
-import { createMessages } from '../../testing';
+import { TAGS_MAP, createMessages } from '../../testing';
 import { initializeMailbox } from '../../testing';
 import { Mailbox } from '../../types';
 
@@ -32,7 +32,7 @@ import { Mailbox as MailboxComponent } from './Mailbox';
 
 const DefaultStory = () => {
   const [messages] = useState(() => createMessages(100));
-  return <MailboxComponent id='story' messages={messages} ignoreAttention role='story' />;
+  return <MailboxComponent role='story' id='story' messages={messages} ignoreAttention tags={TAGS_MAP} />;
 };
 
 const WithCompanionStory = () => {

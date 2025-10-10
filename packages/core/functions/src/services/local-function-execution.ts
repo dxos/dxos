@@ -16,7 +16,7 @@ import { DatabaseService } from './database';
 import { type ComputeEventLogger } from './event-logger';
 import { QueueService } from './queues';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
-import type { Services } from './service-container';
+import { type Services } from './service-container';
 import { type TracingService } from './tracing';
 
 /**
@@ -76,7 +76,7 @@ const invokeFunction = (
   input: any,
 ): Effect.Effect<unknown, never, Services> =>
   Effect.gen(function* () {
-    // Assert input matches schema
+    // Assert input matches schema.
     try {
       const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
       (assertInput as any)(input);
@@ -92,7 +92,7 @@ const invokeFunction = (
       },
     };
 
-    log.info('Invoking function', { name: functionDef.name, input });
+    log.info('invoking function', { name: functionDef.name, input });
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
@@ -116,9 +116,9 @@ const invokeFunction = (
       ),
     );
 
-    log.info('Function completed', { name: functionDef.name, input, data });
+    log.info('completed', { function: functionDef.name, input, data });
 
-    // Assert output matches schema
+    // Assert output matches schema.
     try {
       const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
       (assertOutput as any)(data);

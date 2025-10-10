@@ -29,7 +29,7 @@ import {
   type FieldType,
   ProjectionModel,
   VIEW_FIELD_LIMIT,
-  typenameFromQuery,
+  getTypenameFromQuery,
 } from '@dxos/schema';
 
 import { translationKey } from '../../translations';
@@ -82,7 +82,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
     const serializedQuery = Match.value(mode).pipe(
-      Match.when('schema', () => typenameFromQuery(view.query.ast)),
+      Match.when('schema', () => getTypenameFromQuery(view.query.ast)),
       Match.when('query', () => {
         if (view.query.string) {
           return view.query.string;

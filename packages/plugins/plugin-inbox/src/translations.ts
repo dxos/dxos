@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -56,8 +57,8 @@ export const translations = [
 
         'mailbox toolbar save button label': 'Save',
         'mailbox toolbar clear button label': 'Clear',
-        'unnamed saved filter label': 'Filter name',
-        'save filter label': 'Save',
+        'save filter placeholder': 'Filter name',
+        'save filter button': 'Save',
 
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',
@@ -68,4 +69,5 @@ export const translations = [
       },
     },
   },
+  ...componentsTranslations,
 ] as const satisfies Resource[];

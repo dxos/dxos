@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
-import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 import { SpaceAction } from '../types';
 
@@ -20,7 +20,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query.ast) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   const handleUpdateQuery = useCallback(

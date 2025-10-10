@@ -39,7 +39,7 @@ const meta: Meta<typeof MarkdownCard> = {
     translations,
   },
   tags: ['cards'],
-} satisfies Meta<typeof MarkdownCard>;
+};
 
 export default meta;
 

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { next as am } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 
 import { type Halo, type Space } from '@dxos/client-protocol';
@@ -22,7 +22,7 @@ import { SpaceState, getMeta } from '../echo';
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
 
-exposeModule('@automerge/automerge', am);
+exposeModule('@automerge/automerge', A);
 
 /**
  * A hook bound to window.__DXOS__.
@@ -129,20 +129,18 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
-      // eslint-disable-next-line no-console
+
       console.table(
         diagnostics.map((diagnostic) => ({
           ...diagnostic,
           get fetch() {
             queueMicrotask(async () => {
-              // eslint-disable-next-line no-console
               const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
               if (error) {
                 log.error(`Error fetching diagnostic ${diagnostic.id}: ${error}`);
                 return;
               }
 
-              // eslint-disable-next-line no-console
               console.table(data);
             });
             return undefined;

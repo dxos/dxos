@@ -23,7 +23,7 @@ import {
 import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
@@ -145,7 +145,7 @@ const getQueryCollectionNodePartials = ({
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const typename = typenameFromQuery(collection.query);
+  const typename = getTypenameFromQuery(collection.query);
   return {
     icon: typename && resolve(typename)?.icon,
     acceptPersistenceClass: new Set(['echo']),
@@ -523,7 +523,7 @@ export const constructObjectActions = ({
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === typenameFromQuery(queryCollection.query))
+    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
@@ -577,7 +577,7 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection ? typenameFromQuery(queryCollection.query) : undefined,
+                    typename: queryCollection ? getTypenameFromQuery(queryCollection.query) : undefined,
                   }),
                 );
               } else {

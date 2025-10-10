@@ -17,18 +17,20 @@ import { MetaId } from './model';
 //
 
 // TODO(dmaretskyi): Rename to ObjectMeta
-export const ObjectMetaSchema = Schema.Struct({
-  keys: Schema.mutable(Schema.Array(ForeignKey)),
+export const ObjectMetaSchema = Schema.mutable(
+  Schema.Struct({
+    keys: Schema.mutable(Schema.Array(ForeignKey)),
 
-  /**
-   * A set of tags.
-   * Tags are arbitrary application-defined strings.
-   * ECHO makes no assumptions about the tag structure.
-   */
-  // TODO(dmaretskyi): Has to be optional for compatibility with old data.
-  // Defaulting to an empty array is possible but requires a bit more work.
-  tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
-});
+    /**
+     * A set of tags.
+     * Tags are arbitrary application-defined strings.
+     * ECHO makes no assumptions about the tag structure.
+     */
+    // TODO(dmaretskyi): Has to be optional for compatibility with old data.
+    // Defaulting to an empty array is possible but requires a bit more work.
+    tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  }),
+);
 
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
@@ -41,8 +43,8 @@ export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b
  * @deprecated Use {@link getMeta}.
  */
 // TODO(dmaretskyi): Remove.
-export const getObjectMeta = (object: any): ObjectMeta => {
-  return getMeta(object);
+export const getObjectMeta = (obj: any): ObjectMeta => {
+  return getMeta(obj);
 };
 
 /*

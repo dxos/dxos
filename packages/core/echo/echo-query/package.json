@@ -26,6 +26,7 @@
   ],
   "dependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "^1.2.2",

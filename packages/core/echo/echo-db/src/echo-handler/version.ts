@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { next as Automerge } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 
 import type { Live } from '@dxos/live-object';
 
@@ -28,5 +28,6 @@ export const getVersion = (obj: Live<any>): ObjectVersion => {
   if (!doc) {
     return { heads: [] };
   }
-  return { heads: Automerge.getHeads(doc) };
+
+  return { heads: A.getHeads(doc) };
 };

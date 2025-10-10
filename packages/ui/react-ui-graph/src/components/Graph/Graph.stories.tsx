@@ -12,7 +12,7 @@ import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashColor, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 
 import { Pulsar } from '../../fx';
 import {
@@ -215,7 +215,7 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: getHashColor(node.data?.type ?? node.type)?.color,
+                    color: getHashStyles(node.data?.type ?? node.type)?.hue,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
@@ -223,7 +223,7 @@ const DefaultStory = ({
                 }),
                 edge: (edge: GraphLayoutEdge<TestNode>) => ({
                   data: {
-                    color: getHashColor(edge.data?.type ?? edge.type)?.color,
+                    color: getHashStyles(edge.data?.type ?? edge.type)?.hue,
                   },
                 }),
               }}

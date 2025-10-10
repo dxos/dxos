@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentPropsWithRef,
@@ -30,7 +29,6 @@ export const StackItemHeading = ({
   ...props
 }: StackItemHeadingProps) => {
   const { orientation } = useStack();
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
 
   const Root = asChild ? Slot : 'div';
 
@@ -38,10 +36,8 @@ export const StackItemHeading = ({
     <Root
       role='heading'
       {...props}
-      tabIndex={0}
-      {...focusableGroupAttrs}
       className={mx(
-        'flex items-center dx-focus-ring-inset-over-all relative !border-is-0 bg-headerSurface',
+        'flex items-center !border-is-0 bg-headerSurface',
         separateOnScroll
           ? 'border-transparent [[data-scroll-separator="true"]_&]:border-subduedSeparator'
           : 'border-subduedSeparator',

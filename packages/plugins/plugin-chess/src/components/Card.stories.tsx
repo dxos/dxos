@@ -18,7 +18,7 @@ type DefaultStoryProps = {
   game: Chess.Game;
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta = {
   title: 'plugins/plugin-chess/Card',
   render: ({ role, game }) => (
     <CardContainer icon={pluginMeta.icon} role={role}>
@@ -34,7 +34,7 @@ const meta: Meta<DefaultStoryProps> = {
     layout: 'centered',
   },
   tags: ['cards'],
-};
+} satisfies Meta<DefaultStoryProps>;
 
 export default meta;
 

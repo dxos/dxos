@@ -98,8 +98,12 @@ export const View: Schema.Schema<View, ViewEncoded> = View_;
 
 /** @deprecated */
 // TODO(wittjosiah): Try to remove. Use full query instead.
-export const typenameFromQuery = (query: QueryAST.Query) => {
-  return query.type === 'select' ? (query.filter.type === 'object' ? (query.filter.typename?.slice(9) ?? '') : '') : '';
+export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
+  return query?.type === 'select'
+    ? query.filter.type === 'object'
+      ? (query.filter.typename?.slice(9) ?? '')
+      : ''
+    : '';
 };
 
 export const createFieldId = () => PublicKey.random().truncate();

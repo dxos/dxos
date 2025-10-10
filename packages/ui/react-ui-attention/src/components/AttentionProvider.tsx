@@ -79,6 +79,9 @@ const RootAttentionProvider = ({
 >) => {
   const attention = useDefaultValue(propsAttention, () => new AttentionManager());
   const handleFocus = (event: FocusEvent) => {
+    // NOTE(thure): Use the following to debug focus movement across the app:
+    // console.log('[focus]', event.relatedTarget, event.target);
+
     const selector = [
       '[data-attendable-id]',
       ...Array.from(document.querySelectorAll('[aria-controls]')).map(
@@ -96,7 +99,7 @@ const RootAttentionProvider = ({
     }
   };
 
-  // NOTE(thure): Use the following to debug the macOS package issue #8540
+  // NOTE(thure): Use the following to debug the macOS package issue #8540:
 
   // const [startEl, setStartEl] = useState<HTMLElement | null>(null);
   // const [endEl, setEndEl] = useState<HTMLElement | null>(null);

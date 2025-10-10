@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@automerge/automerge';
+import { next as A, type Doc } from '@automerge/automerge';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -13,9 +13,9 @@ import { log } from '@dxos/log';
 export const migrateDocument = <T>(source: Doc<any>, targetData: T): Doc<T> => {
   log('begin migration', { source, targetData });
 
-  const clonedDoc = am.clone(source);
+  const clonedDoc = A.clone(source);
 
-  const changedDoc = am.change(clonedDoc, (applyTo) => {
+  const changedDoc = A.change(clonedDoc, (applyTo) => {
     const coalesce = (applyTo: any, targetData: any) => {
       invariant(typeof applyTo === 'object' && applyTo !== null);
       invariant(typeof targetData === 'object' && targetData !== null);

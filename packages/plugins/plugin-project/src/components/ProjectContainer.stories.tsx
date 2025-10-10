@@ -49,7 +49,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta<typeof ProjectContainer> = {
+const meta = {
   title: 'plugins/plugin-project/ProjectContainer',
   render: DefaultStory,
   decorators: [
@@ -205,7 +205,7 @@ const meta: Meta<typeof ProjectContainer> = {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
   },
-};
+} satisfies Meta<typeof ProjectContainer>;
 
 export default meta;
 
