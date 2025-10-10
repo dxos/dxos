@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
+import { Rx, useRxValue } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
@@ -41,11 +41,14 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
 
   const filterEditorRef = useRef<EditorController>(null);
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
-  const [ascending, setAscending] = useState(true);
+  // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
+  const ascendingRx = useRxState(false);
+  const ascending = useRxValue(ascendingRx);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const [filter, setFilter] = useState<Filter.Any | null>(null);
+  // TODO(wittjosiah): Queues don't support query ordering.
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
   const sortedMessages = useMemo(() => (ascending ? messages : [...messages.reverse()]), [messages, ascending]);
 
@@ -54,38 +57,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
     setFilter(parser.build(filterText));
   }, [filterText]);
 
-  // TODO(burdon): Reactivity?
-  const menu = useMemo(
-    () =>
-      Rx.make(
-        MenuBuilder.make()
-          .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
-          })
-          .action(
-            'sort',
-            {
-              type: 'sort',
-              icon: ascending ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
-              label: ['mailbox toolbar sort', { ns: meta.id }],
-            },
-            () => setAscending((prev) => !prev),
-          )
-          .action(
-            'filter',
-            {
-              type: 'filter',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter', { ns: meta.id }],
-            },
-            () => setFilterVisible(true),
-          )
-          .build(),
-      ),
-    [ascending],
-  );
-
-  const actions = useMenuActions(menu);
+  const actions = useMailboxActions({ ascending: ascendingRx, onFilterToggle: setFilterVisible });
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -209,4 +181,47 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
       )}
     </StackItem.Content>
   );
+};
+
+// TODO(wittjosiah): Factor out.
+const useRxState = <T,>(initialValue: T) => useMemo(() => Rx.make(initialValue), [initialValue]);
+
+const useMailboxActions = ({
+  ascending,
+  onFilterToggle,
+}: {
+  ascending: Rx.Writable<boolean>;
+  onFilterToggle: (visible: boolean) => void;
+}) => {
+  const menu = useMemo(
+    () =>
+      Rx.make((context) =>
+        MenuBuilder.make()
+          .root({
+            label: ['mailbox toolbar title', { ns: meta.id }],
+          })
+          .action(
+            'sort',
+            {
+              type: 'sort',
+              icon: context.get(ascending) ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
+              label: ['mailbox toolbar sort', { ns: meta.id }],
+            },
+            () => context.set(ascending, !context.get(ascending)),
+          )
+          .action(
+            'filter',
+            {
+              type: 'filter',
+              icon: 'ph--magnifying-glass--regular',
+              label: ['mailbox toolbar filter', { ns: meta.id }],
+            },
+            () => onFilterToggle(true),
+          )
+          .build(),
+      ),
+    [ascending],
+  );
+
+  return useMenuActions(menu);
 };
