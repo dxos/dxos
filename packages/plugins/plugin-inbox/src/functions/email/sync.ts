@@ -43,7 +43,7 @@ export default defineFunction({
       // Sync labels.
       const { labels } = yield* listLabels(userId);
       labels.forEach((label) => {
-        mailbox.tags[label.id] = { label: label.name };
+        (mailbox.tags ??= {})[label.id] = { label: label.name };
       });
 
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);

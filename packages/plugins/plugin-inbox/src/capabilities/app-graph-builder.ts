@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Mailbox.Mailbox, node.data) &&
-              node.data.filters.length > 0 &&
+              node.data.filters?.length > 0 &&
               node.properties.filter === undefined
                 ? Option.some(node.data)
                 : Option.none(),
