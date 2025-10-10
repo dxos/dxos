@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Filter, type Tag } from '@dxos/echo';
+import { type Filter, type TagMap } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -17,13 +17,11 @@ import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: Record<string, Tag> = {
+const tags: TagMap = {
   ['tag_1' as const]: { label: 'Important' },
   ['tag_2' as const]: { label: 'Investor' },
   ['tag_3' as const]: { label: 'New' },
 };
-
-const tagNames = Object.values(tags).map((t) => t.label);
 
 const meta = {
   title: 'ui/react-ui-components/QueryEditor',
@@ -72,7 +70,7 @@ export const Complex: Story = {
   args: {
     autoFocus: true,
     value: '#important OR type:dxos.org/type/Person AND { title: "DXOS", value: true }',
-    tags: tagNames,
+    tags,
   },
 };
 
@@ -80,7 +78,7 @@ export const Relation: Story = {
   args: {
     autoFocus: true,
     value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
-    tags: tagNames,
+    tags,
   },
 };
 
@@ -88,6 +86,6 @@ export const Tags: Story = {
   args: {
     autoFocus: true,
     value: 'type:dxos.org/type/Person #investor #new',
-    tags: tagNames,
+    tags,
   },
 };

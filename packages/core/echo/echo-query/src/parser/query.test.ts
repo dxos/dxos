@@ -5,7 +5,7 @@
 import { type Tree } from '@lezer/common';
 import { describe, it } from 'vitest';
 
-import { Filter, Tag } from '@dxos/echo';
+import { Filter, TagInfo } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
@@ -280,8 +280,8 @@ describe('query', () => {
 
   it('build', ({ expect }) => {
     const queryBuilder = new QueryBuilder({
-      tag_1: Tag.make({ label: 'foo' }),
-      tag_2: Tag.make({ label: 'bar' }),
+      tag_1: TagInfo.make({ label: 'foo' }),
+      tag_2: TagInfo.make({ label: 'bar' }),
     });
 
     // TODO(burdon): Test "not"

@@ -11,15 +11,15 @@ import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
 import { type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashColor } from '@dxos/react-ui-theme';
+import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  space?: Space;
-  tags?: string[];
+  space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
+  tags?: TagMap;
 };
 
 /**
@@ -31,7 +31,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
-    decorations(),
+    decorations({ tags }),
     autocompletion({
       activateOnTyping: true,
       override: [
@@ -67,7 +67,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
                 return {
                   ...range,
                   filter: true,
-                  options: tags.map((tag) => ({ label: tag })),
+                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
                 };
               }
 
@@ -83,6 +83,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
       onComplete: ({ line }: TypeaheadContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
+          // TODO(burdon): Get suggestion from parser.
           return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
         }
       },
@@ -95,7 +96,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
 /**
  * Decorations
  */
-const decorations = (): Extension => {
+const decorations = ({ tags }: QueryOptions): Extension => {
   const buildDecorations = (state: EditorState) => {
     const hasFocus = state.field(focusField);
     const isInside = (node: SyntaxNodeRef) => {
@@ -140,13 +141,16 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const tag = node.node.getChild(QueryDSL.Node.Tag);
-            if (tag) {
+            const tagNode = node.node.getChild(QueryDSL.Node.Tag);
+            if (tagNode) {
+              const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
+              const tag = findTagByLabel(tags, label);
+              const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(state.sliceDoc(tag.from + 1, tag.to)),
+                  widget: new TagWidget(label, hue),
                   atomic: true,
                 }),
               );
@@ -284,7 +288,10 @@ class TypeWidget extends WidgetType {
  * Tag
  */
 class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
+  constructor(
+    private readonly _str: string,
+    private readonly _hue: string,
+  ) {
     super();
   }
 
@@ -293,11 +300,13 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border } = getHashColor(this._str);
+    const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
       Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
+      Domino.of('span')
+        .classNames(['flex items-center pis-1 pie-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .text(this._str),
     );
   }
 }

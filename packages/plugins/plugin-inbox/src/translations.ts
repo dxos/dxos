@@ -3,6 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
 import { meta } from './meta';
 import { Calendar, Mailbox } from './types';
@@ -68,4 +69,5 @@ export const translations = [
       },
     },
   },
+  ...componentsTranslations,
 ] as const satisfies Resource[];
