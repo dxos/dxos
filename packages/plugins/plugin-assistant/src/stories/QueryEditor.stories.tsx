@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -28,7 +28,6 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   const [space] = useSpaces();
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
-  // TODO(burdon): Catch invalid filter error.
   const objects = useQuery(space, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
   const model = useGraphModel(space, filter);
 
@@ -69,7 +68,14 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   );
 };
 
-const meta = {
+const tags: Record<string, Tag> = {
+  ['tag_1' as const]: Tag.make({ label: 'Red' }),
+  ['tag_2' as const]: Tag.make({ label: 'Green' }),
+  ['tag_3' as const]: Tag.make({ label: 'Blue' }),
+};
+
+// TODO(burdon): Standardize.
+const meta: Meta<typeof QueryEditor> = {
   title: 'plugins/plugin-assistant/QueryEditor',
   component: QueryEditor,
   render: render(DefaultStory),
@@ -81,11 +87,14 @@ const meta = {
       onCreateIdentity: async ({ client }) => {
         const space = client.spaces.default;
         const createObjects = createObjectFactory(space.db, generator);
-        await createObjects([
+        const objects = await createObjects([
           { type: DataType.Organization, count: 30 },
-          { type: DataType.Person, count: 50 },
           { type: DataType.Project, count: 20 },
+          { type: DataType.Person, count: 50 },
         ]);
+        objects.forEach((obj) => {
+          Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+        });
       },
     }),
   ],
@@ -93,7 +102,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof QueryEditor>;
+};
 
 export default meta;
 

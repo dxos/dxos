@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as am } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import { describe, expect, test } from 'vitest';
 
 import { migrateDocument } from './migrate-document';
@@ -12,17 +12,17 @@ describe('migrateDocument', () => {
     const source = { text: 'Hello, world!', version: 1 };
     const target = { text: 'Hello, DXOS!', version: 2 };
 
-    const migrated = migrateDocument(am.from(source), target);
+    const migrated = migrateDocument(A.from(source), target);
     expect(migrated).to.deep.eq(target);
   });
 
   test('preserves text cursors', () => {
-    const source = am.from({ content: { text: 'Hello, world!' }, version: 1 });
-    const cursor = am.getCursor(source, ['content', 'text'], 7);
-    expect(am.getCursorPosition(source, ['content', 'text'], cursor)).to.eq(7);
+    const source = A.from({ content: { text: 'Hello, world!' }, version: 1 });
+    const cursor = A.getCursor(source, ['content', 'text'], 7);
+    expect(A.getCursorPosition(source, ['content', 'text'], cursor)).to.eq(7);
 
     const migrated = migrateDocument(source, { content: { text: 'Hello, world!' }, version: 2 });
-    expect(am.getCursorPosition(migrated, ['content', 'text'], cursor)).to.eq(7);
+    expect(A.getCursorPosition(migrated, ['content', 'text'], cursor)).to.eq(7);
   });
 
   // TODO(dmaretskyi): This requires using `am.updateText`.
@@ -32,7 +32,7 @@ describe('migrateDocument', () => {
     const source = { content: { text: 'Hello, world!', done: false }, version: 1 };
     const target = { content: { text: 'Hello, world!', done: true }, version: 2 };
 
-    const migrated = migrateDocument(am.from(source), target);
+    const migrated = migrateDocument(A.from(source), target);
     expect(migrated).to.deep.eq(target);
   });
 
@@ -52,7 +52,7 @@ describe('migrateDocument', () => {
       version: 2,
     };
 
-    const migrated = migrateDocument(am.from(source), target);
+    const migrated = migrateDocument(A.from(source), target);
     expect(migrated).to.deep.eq(target);
     expect(migrated.content.length).to.eq(2);
   });
@@ -69,7 +69,7 @@ describe('migrateDocument', () => {
       version: 2,
     };
 
-    const migrated = migrateDocument(am.from(source), target);
+    const migrated = migrateDocument(A.from(source), target);
     expect(migrated).to.deep.eq(target);
     expect(migrated.content.length).to.eq(2);
   });

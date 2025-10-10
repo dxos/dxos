@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Mailbox.Mailbox, node.data) &&
-              node.data.savedFilters.length > 0 &&
+              node.data.filters.length > 0 &&
               node.properties.filter === undefined
                 ? Option.some(node.data)
                 : Option.none(),
@@ -45,7 +45,7 @@ export default (context: PluginContext) =>
                       filter: null,
                     },
                   },
-                  ...mailbox.savedFilters.map(({ name, filter }) => ({
+                  ...mailbox.filters.map(({ name, filter }) => ({
                     id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}`,
                     type: Mailbox.Mailbox.typename,
                     data: mailbox,

@@ -5,7 +5,7 @@
 import { type Tree } from '@lezer/common';
 import { describe, it } from 'vitest';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Tag } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
 import { QueryBuilder } from './query-builder';
@@ -279,7 +279,10 @@ describe('query', () => {
   });
 
   it('build', ({ expect }) => {
-    const queryBuilder = new QueryBuilder();
+    const queryBuilder = new QueryBuilder({
+      tag_1: Tag.make({ label: 'foo' }),
+      tag_2: Tag.make({ label: 'bar' }),
+    });
 
     // TODO(burdon): Test "not"
     type Test = { input: string; expected: Filter.Any };
@@ -292,15 +295,15 @@ describe('query', () => {
       // Tags
       {
         input: '#foo',
-        expected: Filter.tag('foo'),
+        expected: Filter.tag('tag_1'),
       },
       {
         input: '#foo AND #bar',
-        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
+        expected: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
       },
       {
         input: '#foo #bar',
-        expected: Filter.and(Filter.tag('foo'), Filter.tag('bar')),
+        expected: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
       },
       // Text
       {
@@ -310,7 +313,7 @@ describe('query', () => {
       // Mixed
       {
         input: '#foo "test"',
-        expected: Filter.and(Filter.tag('foo'), Filter.text('test')),
+        expected: Filter.and(Filter.tag('tag_1'), Filter.text('test')),
       },
       // Props
       {

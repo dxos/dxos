@@ -52,7 +52,7 @@ export const getMessage = Effect.fn(function* (userId: string, messageId: string
 /**
  * Transforms Gmail message to ECHO message object.
  */
-export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, string>) =>
+export const messageToObject = (last?: DataType.Message) =>
   Effect.fn(function* (message: MessageDetails) {
     // Skip the message if it's the same as the last message.
     const created = new Date(parseInt(message.internalDate)).toISOString();
@@ -74,29 +74,28 @@ export const messageToObject = (last?: DataType.Message, labelMap?: Map<string, 
     const text = Buffer.from(data, 'base64').toString('utf-8');
     const markdown = stripNewlines(turndown.turndown(text));
 
-    const subject = message.payload.headers.find(({ name }) => name === 'Subject')?.value;
-    const snippet = message.snippet;
-    const labels = labelMap
-      ? message.labelIds.map((labelId) => labelMap.get(labelId)).filter(Boolean)
-      : message.labelIds;
-
-    return Obj.make(DataType.Message, {
-      id: Type.ObjectId.random(),
-      created,
-      sender,
-      blocks: [
-        {
-          _tag: 'text',
-          text: markdown,
+    return Obj.make(
+      DataType.Message,
+      {
+        id: Type.ObjectId.random(),
+        created,
+        sender,
+        blocks: [
+          {
+            _tag: 'text',
+            text: markdown,
+          },
+        ],
+        properties: {
+          threadId: message.threadId,
+          snippet: message.snippet,
+          subject: message.payload.headers.find(({ name }) => name === 'Subject')?.value,
         },
-      ],
-      properties: {
-        threadId: message.threadId,
-        labels,
-        snippet,
-        subject,
       },
-    });
+      {
+        tags: [...message.labelIds],
+      },
+    );
   });
 
 /**

@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Obj, Ref, Tag, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
@@ -21,8 +21,11 @@ export enum MessageState {
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
+  // Tags mapped from labels.
+  // TODO(burdon): Reconcile with Space tags.
+  tags: Schema.mutable(Schema.Record({ key: Schema.String, value: Tag })),
   // TODO(wittjosiah): Factor out to relation?
-  savedFilters: Schema.Array(
+  filters: Schema.Array(
     Schema.Struct({
       name: Schema.String,
       filter: Schema.String,
@@ -35,21 +38,21 @@ export const Mailbox = Schema.Struct({
   }),
   ItemAnnotation.set(true),
 );
+
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'savedFilters'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters' | 'tags'> & {
   space: Space;
-  savedFilters?: { name: string; filter: string }[];
+  filters?: { name: string; filter: string }[];
+  tags?: Record<string, Tag>;
 };
 
-/**
- * Make a mailbox object.
- */
 export const make = ({ space, ...props }: MailboxProps) => {
   const queue = space.queues.create();
   return Obj.make(Mailbox, {
     queue: Ref.fromDXN(queue.dxn),
-    savedFilters: [],
+    filters: [],
+    tags: {},
     ...props,
   });
 };
