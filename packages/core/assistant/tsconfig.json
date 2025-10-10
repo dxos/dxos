@@ -12,9 +12,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -22,9 +19,6 @@
     },
     {
       "path": "../../common/errors"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -57,13 +51,7 @@
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-protocol"
-    },
-    {
       "path": "../echo/echo-schema"
-    },
-    {
-      "path": "../echo/live-object"
     },
     {
       "path": "../functions"

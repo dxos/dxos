@@ -23,9 +23,6 @@
       "path": "../crypto"
     },
     {
-      "path": "../debug"
-    },
-    {
       "path": "../invariant"
     },
     {
