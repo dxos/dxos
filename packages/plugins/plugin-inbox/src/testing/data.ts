@@ -3,7 +3,6 @@
 //
 
 import { Obj, Ref, type Tag } from '@dxos/echo';
-import { type WithId } from '@dxos/echo-schema';
 import { IdentityDid } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
@@ -11,11 +10,11 @@ import { DataType } from '@dxos/schema';
 
 import { Mailbox } from '../types';
 
-export const TAGS: (Tag & WithId)[] = [
+export const TAGS: Tag[] = [
   { id: 'tag_1', label: 'important', hue: 'green' },
   { id: 'tag_2', label: 'investor', hue: 'purple' },
   { id: 'tag_3', label: 'team', hue: 'green' },
-  { id: 'tag_4', label: 'eng', hue: 'blue' },
+  { id: 'tag_4', label: 'eng', hue: 'cyan' },
   { id: 'tag_5', label: 'work', hue: 'emerald' },
   { id: 'tag_6', label: 'personal', hue: 'pink' },
 ];

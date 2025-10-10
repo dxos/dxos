@@ -15,10 +15,10 @@ import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { type Color, getHashColor } from '@dxos/react-ui-theme';
+import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  space?: Space; // TODO(burdon): Replace with schema registry lookup.
+  space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
   tags?: TagMap;
 };
 
@@ -83,6 +83,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
       onComplete: ({ line }: TypeaheadContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
+          // TODO(burdon): Get suggestion from parser.
           return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
         }
       },
@@ -143,12 +144,13 @@ const decorations = ({ tags }: QueryOptions): Extension => {
             const tagNode = node.node.getChild(QueryDSL.Node.Tag);
             if (tagNode) {
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
-              const tag = findTagByLabel(tags, label); // TODO(burdon): dx-tag.
+              const tag = findTagByLabel(tags, label);
+              const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(label, tag ? getHashColor(tag.id) : undefined),
+                  widget: new TagWidget(label, hue),
                   atomic: true,
                 }),
               );
@@ -288,7 +290,7 @@ class TypeWidget extends WidgetType {
 class TagWidget extends WidgetType {
   constructor(
     private readonly _str: string,
-    private readonly _color?: Color,
+    private readonly _hue: string,
   ) {
     super();
   }
@@ -298,11 +300,13 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border } = this._color ?? getHashColor(this._str);
+    const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
       Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
+      Domino.of('span')
+        .classNames(['flex items-center pis-1 pie-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .text(this._str),
     );
   }
 }

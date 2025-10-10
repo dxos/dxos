@@ -18,7 +18,7 @@ import {
   gridSeparatorBlockEnd,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { getHashColor, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -69,7 +69,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
             .filter(filterLabel)
-            .map((tagId: string) => ({ hue: getHashColor(tagId).hue, ...tags![tagId] }))
+            .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
             .filter(Boolean)
             .map(
               ({ label, hue }) => trim`

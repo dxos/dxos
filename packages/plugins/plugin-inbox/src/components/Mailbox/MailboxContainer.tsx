@@ -81,7 +81,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
               return prevFilterText;
             }
 
-            return [prevFilterText.trim(), '#' + action.label].join(' ') + ' ';
+            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
           setFilterVisible(true);
           filterEditorRef.current?.focus();
