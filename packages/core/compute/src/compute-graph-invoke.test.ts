@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Layer, ManagedRuntime, Schema } from 'effect';
+import { Schema } from 'effect';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
-import { FunctionDefinition, FunctionInvocationService, FunctionType } from '@dxos/functions';
+import { FunctionDefinition, FunctionType } from '@dxos/functions';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
-import { createMockedComputeRuntimeProvider, TestBuilder } from './testing';
+import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
 describe.only('ComputeGraph invocation via FunctionInvocationService', () => {
   let testBuilder: TestBuilder;
