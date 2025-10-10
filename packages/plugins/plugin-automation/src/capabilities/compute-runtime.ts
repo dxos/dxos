@@ -37,7 +37,7 @@ export default async (context: PluginContext) => {
 };
 
 class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilities.ComputeRuntimeProvider {
-  readonly #runtimes = new Map<SpaceId, ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>>();
+  readonly #runtimes = new Map<SpaceId, AutomationCapabilities.ComputeRuntime>();
   readonly #context: PluginContext;
 
   constructor(context: PluginContext) {
@@ -52,7 +52,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
     this.#runtimes.clear();
   }
 
-  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never> {
+  getRuntime(spaceId: SpaceId): AutomationCapabilities.ComputeRuntime {
     if (this.#runtimes.has(spaceId)) {
       return this.#runtimes.get(spaceId)!;
     }

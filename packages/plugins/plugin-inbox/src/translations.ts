@@ -59,6 +59,7 @@ export const translations = [
         'mailbox toolbar clear button label': 'Clear',
         'save filter placeholder': 'Filter name',
         'save filter button': 'Save',
+        'delete filter label': 'Delete filter',
 
         'message header view mode plain': 'Plain',
         'message header view mode enriched': 'Enriched',

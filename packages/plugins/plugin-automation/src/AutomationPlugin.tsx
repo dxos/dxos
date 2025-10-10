@@ -7,6 +7,7 @@ import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, ComputeRuntime, IntentResolver, ReactSurface } from './capabilities';
+import { AutomationEvents } from './events';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -39,6 +40,7 @@ export const AutomationPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/compute-runtime`,
     activatesOn: ClientEvents.ClientReady,
+    activatesAfter: [AutomationEvents.ComputeRuntimeReady],
     activate: ComputeRuntime,
   }),
 ]);

@@ -7,7 +7,7 @@ import React from 'react';
 import { type Obj } from '@dxos/echo';
 import { Clipboard, Input, Toolbar } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugObjectPanelProps = {
   object: Obj.Any;
@@ -26,9 +26,7 @@ export const DebugObjectPanel = ({ object }: DebugObjectPanelProps) => {
             <Clipboard.IconButton value={dxn} />
           </Input.Root>
         </Toolbar.Root>
-        <SyntaxHighlighter language='json' classNames='text-xs'>
-          {JSON.stringify(object, null, 2)}
-        </SyntaxHighlighter>
+        <Json data={object} />
       </StackItem.Content>
     </Clipboard.Provider>
   );

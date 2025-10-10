@@ -649,7 +649,9 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data);
-              return space && Obj.isObject(node.data) ? Option.some({ space, object: node.data }) : Option.none();
+              return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+                ? Option.some({ space, object: node.data })
+                : Option.none();
             }),
             Option.flatMap(({ space, object }) => {
               const isSchema = Obj.instanceOf(DataType.StoredSchema, object);

@@ -5,5 +5,6 @@
 export { AutomationCapabilities } from './capabilities';
 export * from './components';
 export * from './meta';
+export * from './events';
 
 export * from './AutomationPlugin';

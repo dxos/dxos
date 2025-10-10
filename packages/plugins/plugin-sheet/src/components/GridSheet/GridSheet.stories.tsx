@@ -7,6 +7,7 @@ import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { testFunctionPlugins } from '@dxos/compute/testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -42,7 +43,7 @@ const meta = {
   decorators: [
     withTheme,
     withClientProvider({ types: [SheetType], createSpace: true }),
-    withComputeGraphDecorator(),
+    withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
       plugins: [IntentPlugin()],
     }),

@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Match, Schema } from 'effect';
 import type { NonEmptyArray } from 'effect/Array';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
@@ -87,7 +88,7 @@ export interface Query<T> {
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
   referencedBy<S extends Schema.Schema.All>(
-    target: S,
+    target: S | string,
     key: RefPropKey<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -98,7 +99,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   sourceOf<S extends Schema.Schema.All>(
-    relation: S,
+    relation: S | string,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -109,7 +110,7 @@ export interface Query<T> {
    * @param predicates - Predicates to filter the relation objects.
    */
   targetOf<S extends Schema.Schema.All>(
-    relation: S,
+    relation: S | string,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -161,7 +162,7 @@ interface QueryAPI {
    * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
    */
   type<S extends Schema.Schema.All>(
-    schema: S,
+    schema: S | string,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
 
@@ -230,7 +231,7 @@ interface FilterAPI {
    * Filter by type.
    */
   type<S extends Schema.Schema.All>(
-    schema: S,
+    schema: S | string,
     props?: Filter.Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
 
@@ -413,10 +414,10 @@ class FilterClass implements Filter<any> {
   }
 
   static type<S extends Schema.Schema.All>(
-    schema: S,
+    schema: S | string,
     props?: Filter.Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>> {
-    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+    const dxn = getTypeDXNFromSpecifier(schema);
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
@@ -464,8 +465,11 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static foreignKeys<S extends Schema.Schema.All>(schema: S, keys: ForeignKey[]): Filter<Schema.Schema.Type<S>> {
-    const dxn = getTypeReference(schema)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+  static foreignKeys<S extends Schema.Schema.All>(
+    schema: S | string,
+    keys: ForeignKey[],
+  ): Filter<Schema.Schema.Type<S>> {
+    const dxn = getTypeDXNFromSpecifier(schema);
     return new FilterClass({
       type: 'object',
       typename: dxn.toString(),
@@ -648,7 +652,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  static type(schema: Schema.Schema.All, predicates?: Filter.Props<unknown>): Query<any> {
+  static type(schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Query<any> {
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema, predicates).ast,
@@ -703,8 +707,8 @@ class QueryClass implements Query<any> {
     });
   }
 
-  referencedBy(target: Schema.Schema.All, key: string): Query<any> {
-    const dxn = getTypeReference(target)?.toDXN() ?? raise(new TypeError('Target schema has no DXN'));
+  referencedBy(target: Schema.Schema.All | string, key: string): Query<any> {
+    const dxn = getTypeDXNFromSpecifier(target);
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
@@ -713,7 +717,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -722,7 +726,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  targetOf(relation: Schema.Schema.All, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -765,3 +769,17 @@ class QueryClass implements Query<any> {
 }
 
 export const Query: QueryAPI = QueryClass;
+
+/**
+ * @param input schema or a typename string
+ * @return type DXN
+ */
+const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
+  if (Schema.isSchema(input)) {
+    return getTypeReference(input)?.toDXN() ?? raise(new TypeError('Schema has no DXN'));
+  } else {
+    assertArgument(typeof input === 'string', 'input');
+    assertArgument(!input.startsWith('dxn:'), 'input');
+    return DXN.fromTypename(input);
+  }
+};

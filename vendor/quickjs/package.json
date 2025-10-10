@@ -1,0 +1,28 @@
+{
+  "name": "@dxos/vendor-quickjs",
+  "version": "0.8.3",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/types.d.ts",
+      "node": "./src/node.js",
+      "browser": "./src/browser.js",
+      "default": "./src/node.js"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@jitl/quickjs-wasmfile-release-sync": "^0.31.0",
+    "quickjs-emscripten": "0.31.0"
+  },
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -36,8 +36,9 @@ export namespace AutomationCapabilities {
     | ToolResolverService
     | ToolExecutionService;
 
+  export type ComputeRuntime = ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>;
   export interface ComputeRuntimeProvider {
-    getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
+    getRuntime(spaceId: SpaceId): ComputeRuntime;
   }
 
   /**
