@@ -36,11 +36,12 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
       const labels = yield* listLabels(userId);
+      console.log(JSON.stringify(labels, null, 2));
       expect(labels).to.exist;
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect.only(
+  it.effect(
     'get messages',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
@@ -49,13 +50,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
 
       const objects = yield* pipe(
         messages.slice(1, 2),
-        Array.map((message) =>
-          pipe(
-            getMessage(userId, message.id),
-            // Effect.tap((message) => console.log(message)),
-            Effect.flatMap(messageToObject()),
-          ),
-        ),
+        Array.map((message) => pipe(getMessage(userId, message.id), Effect.flatMap(messageToObject()))),
         Effect.all,
       );
 

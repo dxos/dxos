@@ -4,7 +4,8 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { Filter } from '@dxos/echo';
+import { Filter, type Tag } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 
 import { QueryDSL } from './gen';
 
@@ -15,7 +16,9 @@ import { QueryDSL } from './gen';
  * To modify the functionality, create a minimal breaking test and direct the LLM to fix either the grammar or builder.
  */
 export class QueryBuilder {
-  constructor(private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true })) {}
+  private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true });
+
+  constructor(private readonly _tags?: Record<string, Tag>) {}
 
   /**
    * Check valid input.
@@ -44,12 +47,12 @@ export class QueryBuilder {
   /**
    * Build a query from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): Filter.Any {
+  buildQuery(tree: Tree, input: string): Filter.Any | null {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
     if (cursor.node.name !== 'Query') {
-      return Filter.nothing();
+      return null;
     }
 
     // Check if Query has multiple children (binary expression).
@@ -80,7 +83,7 @@ export class QueryBuilder {
   /**
    * Parse an expression node.
    */
-  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any {
+  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any | null {
     const nodeName = cursor.node.name;
 
     switch (nodeName) {
@@ -91,7 +94,7 @@ export class QueryBuilder {
         // Move past NOT token to the expression.
         cursor.nextSibling();
         const notFilter = this._parseExpression(cursor, input);
-        return Filter.not(notFilter);
+        return notFilter ? Filter.not(notFilter) : null;
       }
 
       case 'And':
@@ -201,15 +204,25 @@ export class QueryBuilder {
             // Parse the expression inside parentheses as a subtree.
             const subInput = input.slice(exprStart, exprEnd);
             const subTree = this._parser.parse(subInput);
-            filters.push(this.buildQuery(subTree, subInput));
+            const subFilter = this.buildQuery(subTree, subInput);
+            if (subFilter) {
+              filters.push(subFilter);
+            }
           } else {
             // Simple parenthesized expression.
-            filters.push(this._parseExpression(cursor, input));
+            const subFilter = this._parseExpression(cursor, input);
+            if (subFilter) {
+              filters.push(subFilter);
+            }
+
             // Skip until we find the closing parenthesis.
             while (cursor.nextSibling() && cursor.node.name !== ')') {}
           }
         } else if (nodeName !== ')') {
-          filters.push(this._parseExpression(cursor, input));
+          const subFilter = this._parseExpression(cursor, input);
+          if (subFilter) {
+            filters.push(subFilter);
+          }
         }
       } while (cursor.nextSibling());
 
@@ -230,17 +243,18 @@ export class QueryBuilder {
   /**
    * Parse a Filter node.
    */
-  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any {
+  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any | null {
     if (!cursor.firstChild()) {
       return Filter.nothing();
     }
 
+    let result: Filter.Any | null = null;
     const filterType = cursor.node.name;
-    let result: Filter.Any;
-
     switch (filterType) {
       case 'TagFilter':
-        result = this._parseTagFilter(cursor, input);
+        if (this._tags) {
+          result = this._parseTagFilter(cursor, input);
+        }
         break;
 
       case 'TextFilter':
@@ -397,9 +411,11 @@ export class QueryBuilder {
   /**
    * Parse a TagFilter node (#tag).
    */
-  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any {
-    const tag = this._getNodeText(cursor, input);
-    return Filter.tag(tag.slice(1));
+  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | null {
+    invariant(this._tags);
+    const str = this._getNodeText(cursor, input).slice(1).toLowerCase();
+    const [key] = Object.entries(this._tags!).find(([, value]) => value.label.toLowerCase() === str) ?? [];
+    return key ? Filter.tag(key) : null;
   }
 
   /**

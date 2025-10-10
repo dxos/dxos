@@ -7,6 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { Obj, type Tag } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -21,7 +22,6 @@ import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { type Tag } from '../../types';
 import { getMessageProps } from '../util';
 
 const ROW_SIZES = {
@@ -36,7 +36,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, _current?: boolean) => {
+const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: Record<string, Tag>) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -66,7 +66,9 @@ const renderMessageCell = (message: DataType.Message, now: Date, _current?: bool
       <div class="message__abstract__body">
         <div class="message__snippet">${subject}</div>
         <div class="message__tags">
-          ${(message.properties?.tags ?? [])
+          ${((tags && Obj.getMeta(message).tags) ?? [])
+            .map((tagId: string) => tags![tagId])
+            .filter(Boolean)
             .map(
               ({ label, hue }: Tag) => trim`
                 <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
@@ -91,12 +93,13 @@ export type MailboxProps = {
   id: string;
   role?: string;
   messages: DataType.Message[];
+  tags?: Record<string, Tag>;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
+export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
   const [_, setRow, rowRef] = useStateWithRef<number>(-1);
@@ -174,7 +177,7 @@ export const Mailbox = ({ id, role, messages, currentMessageId, ignoreAttention,
               const current = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, current),
+                accessoryHtml: renderMessageCell(messages[row], now, current, tags),
                 className: mx('message', current && 'message--current'),
               };
             }

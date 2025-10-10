@@ -3,6 +3,7 @@
 //
 
 export * from './errors';
+export { Filter, Order, Query, Tag } from './query';
 
 export * as Key from './Key';
 export * as Obj from './Obj';
@@ -10,7 +11,6 @@ export * as Ref from './Ref';
 export * as Relation from './Relation';
 export * as Type from './Type';
 
-export { DXN } from '@dxos/keys';
-export { Filter, Order, Query } from './query';
 export { QueryAST } from '@dxos/echo-protocol';
+export { DXN } from '@dxos/keys';
 export { type Live } from '@dxos/live-object';
