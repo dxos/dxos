@@ -38,10 +38,14 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
-      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
-      const labels = yield* listLabels(userId);
-      const labelMap = new Map(labels.labels.map((label) => [label.id, label.name]));
+      // Sync labels.
+      // TODO(burdon): Use hash for default color.
+      const { labels } = yield* listLabels(userId);
+      labels.forEach((label) => {
+        mailbox.tags[label.id] = { label: label.name };
+      });
 
+      // Sync messages.
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
@@ -67,7 +71,7 @@ export default defineFunction({
             pipe(
               // Retrieve details.
               getMessage(userId, message.id),
-              Effect.flatMap(messageToObject(last, labelMap)),
+              Effect.flatMap(messageToObject(last)),
             ),
           ),
           Effect.all,
