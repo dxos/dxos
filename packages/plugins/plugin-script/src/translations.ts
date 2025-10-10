@@ -60,6 +60,7 @@ export const translations = [
         'function panel label': 'Debug Function',
         'script test label': 'Test',
         'script logs label': 'Logs',
+
         'deployment dialog title': 'Default Scripts',
         'deployment dialog scripts found message_one':
           'We found the following script template for your new integration:',
@@ -70,6 +71,7 @@ export const translations = [
         'deployment dialog deploy functions pending button label_one': 'Deploying script',
         'deployment dialog deploy functions pending button label_other': 'Deploying scripts',
         'deployment dialog skip button label': 'Skip',
+
         'script deployment toast label_one': 'Script deployed',
         'script deployment toast label_other': 'Scripts deployed',
         'script deployment toast description_one': 'Your script has been deployed successfully.',
