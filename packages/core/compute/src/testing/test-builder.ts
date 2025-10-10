@@ -8,6 +8,8 @@ import { invariant } from '@dxos/invariant';
 
 import { type ComputeGraphOptions, ComputeGraphRegistry } from '../compute-graph-registry';
 
+import { createMockedComputeRuntimeProvider } from './test-runtime';
+
 export type TestBuilderOptions = ClientOptions & Partial<ComputeGraphOptions>;
 
 // TODO(burdon): Reconcile with @dxos/client/testing.
