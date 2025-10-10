@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ManagedRuntime } from 'effect';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type CleanupFn, debounce } from '@dxos/async';
 import type { Space } from '@dxos/client/echo';
+import { type FunctionInvocationService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import type { RawInterpreterValue, SimpleCellAddress } from '@dxos/vendor-hyperformula';
 import type { InterpreterState } from '@dxos/vendor-hyperformula';
 import type { InterpreterValue } from '@dxos/vendor-hyperformula';
@@ -76,7 +77,7 @@ export class FunctionContext {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
+    private readonly _runtime: ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>,
     private readonly _space: Space | undefined,
     _options?: Partial<FunctionContextOptions>,
   ) {

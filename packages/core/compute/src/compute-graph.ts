@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ManagedRuntime } from 'effect';
+
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo-schema';
-import { FunctionType } from '@dxos/functions';
+import { type FunctionInvocationService, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
@@ -68,7 +69,7 @@ export class ComputeGraph extends Resource {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
+    private readonly _runtime: ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
