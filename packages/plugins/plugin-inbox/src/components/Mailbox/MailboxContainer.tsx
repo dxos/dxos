@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { QueryBuilder } from '@dxos/echo-query';
-import { log } from '@dxos/log';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, useTranslation } from '@dxos/react-ui';
@@ -88,8 +87,6 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
           break;
         }
         case 'save': {
-          // TODO(burdon): Implement.
-          log.info('save', { action });
           void dispatch(
             createIntent(LayoutAction.UpdatePopover, {
               part: 'popover',
