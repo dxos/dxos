@@ -19,7 +19,7 @@ export const PopoverSaveFilter = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const handleDone = useCallback(() => {
-    mailbox.filters.push({ name, filter });
+    (mailbox.filters ??= []).push({ name, filter });
     void dispatch(
       createIntent(LayoutAction.UpdatePopover, {
         part: 'popover',

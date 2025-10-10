@@ -74,10 +74,9 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
   const copyAction = createMenuAction<DeployActionProperties>(
     'copy',
     async () => {
-      if (!state.functionUrl) {
-        return;
+      if (state.functionUrl) {
+        await navigator.clipboard.writeText(state.functionUrl);
       }
-      await navigator.clipboard.writeText(state.functionUrl);
     },
     {
       type: 'copy',
@@ -117,9 +116,9 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 };
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
+  const client = useClient();
   const space = getSpace(script);
   const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
-  const client = useClient();
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
-  return { space, fn, client, existingFunctionId };
+  return { client, space, fn, existingFunctionId };
 };
