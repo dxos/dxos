@@ -7,6 +7,7 @@ import { format, subDays } from 'date-fns';
 import { Array, Chunk, Console, Effect, Ref, Schema, Stream, pipe } from 'effect';
 import { isNotNullable } from 'effect/Predicate';
 
+import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
@@ -21,10 +22,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
-    // TODO(wittjosiah): Make this an artifact id.
-    mailboxId: Schema.String.annotations({
-      description: 'The DXN ID of the mailbox object.',
-    }),
+    mailboxId: ArtifactId,
     userId: Schema.optional(Schema.String),
     after: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
     pageSize: Schema.optional(Schema.Number),

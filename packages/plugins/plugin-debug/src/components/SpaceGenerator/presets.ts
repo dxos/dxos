@@ -116,7 +116,7 @@ export const generator = () => ({
             },
             function: Ref.make(serializeFunction(sync)),
             input: {
-              mailboxId: mailbox.id,
+              mailboxId: Obj.getDXN(mailbox).toString(),
             },
           });
           space.db.add(emailSyncTrigger);
