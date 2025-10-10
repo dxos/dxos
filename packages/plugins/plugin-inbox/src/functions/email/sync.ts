@@ -21,6 +21,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
+    // TODO(wittjosiah): Make this an artifact id.
     mailboxId: Schema.String.annotations({
       description: 'The DXN ID of the mailbox object.',
     }),
