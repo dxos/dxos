@@ -44,17 +44,21 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
   const [ascending, setAscending] = useState(true);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const [filter, setFilter] = useState<Filter.Any | null>(null);
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-  const sortedMessages = useMemo(() => (ascending ? messages : [...messages.reverse()]), [messages, ascending]);
+  const messages: DataType.Message[] = useQuery(
+    mailbox.queue.target,
+    // TODO(burdon): Query not supported on queues?
+    // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
+    filter ?? Filter.everything(),
+  );
+  const sortedMessages = useMemo(() => (ascending ? messages : [...messages].reverse()), [messages, ascending]);
 
+  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
   useEffect(() => {
     setFilter(parser.build(filterText));
   }, [filterText]);
 
-  // TODO(burdon): Reactivity?
   const menu = useMemo(
     () =>
       Rx.make(
@@ -78,7 +82,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
               icon: 'ph--magnifying-glass--regular',
               label: ['mailbox toolbar filter', { ns: meta.id }],
             },
-            () => setFilterVisible(true),
+            () => setFilterVisible((prev) => !prev),
           )
           .build(),
       ),
