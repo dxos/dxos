@@ -10,14 +10,14 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 const Component = () => <div>Test</div>;
 
-const meta: Meta<typeof Component> = {
+const meta = {
   title: 'example/Story',
   component: Component,
   decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },
-};
+} satisfies Meta<typeof Component>;
 
 export default meta;
 

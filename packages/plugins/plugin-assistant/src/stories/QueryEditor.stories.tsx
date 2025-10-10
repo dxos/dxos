@@ -74,7 +74,6 @@ const tags: Record<string, Tag> = {
   ['tag_3' as const]: Tag.make({ label: 'Blue' }),
 };
 
-// TODO(burdon): Standardize.
 const meta: Meta<typeof QueryEditor> = {
   title: 'plugins/plugin-assistant/QueryEditor',
   component: QueryEditor,

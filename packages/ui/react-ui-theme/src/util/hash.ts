@@ -3,7 +3,7 @@
 //
 
 export type Color = {
-  color: string;
+  color: string; // Rename "hue"?
   text: string;
   bg: string;
   tag: string;
