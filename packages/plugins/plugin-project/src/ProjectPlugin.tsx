@@ -38,7 +38,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: DataType.Project,
-          getIntent: () => createIntent(Project.Create),
+          getIntent: (_, options) => createIntent(Project.Create, { space: options.space }),
         }),
       ),
   }),
