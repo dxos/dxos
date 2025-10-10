@@ -74,7 +74,7 @@ const tags: Record<string, Tag> = {
   ['tag_3' as const]: Tag.make({ label: 'Blue' }),
 };
 
-const meta = {
+const meta: Meta<typeof QueryEditor> = {
   title: 'plugins/plugin-assistant/QueryEditor',
   component: QueryEditor,
   render: render(DefaultStory),
@@ -101,7 +101,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof QueryEditor>;
+};
 
 export default meta;
 
