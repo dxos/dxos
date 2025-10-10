@@ -9,5 +9,3 @@ import { meta } from './meta';
 export namespace AutomationEvents {
   export const ComputeRuntimeReady = defineEvent(`${meta.id}/event/compute-runtime-ready`);
 }
-
-
