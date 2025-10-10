@@ -35,7 +35,6 @@ export const defaultPlugins: ComputeGraphPlugin[] = [
 
 export const defaultOptions: Partial<ComputeGraphOptions> = {
   licenseKey: 'gpl-v3',
-  plugins: defaultPlugins,
 };
 
 /**
@@ -53,6 +52,7 @@ export class ComputeGraphRegistry extends Resource {
   constructor(options: ComputeGraphOptions) {
     super();
     this._options = defaultsDeep({}, options, defaultOptions);
+    this._options.plugins = this._options.plugins ?? defaultPlugins;
     this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
