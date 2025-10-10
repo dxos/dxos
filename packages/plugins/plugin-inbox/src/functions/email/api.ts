@@ -32,6 +32,7 @@ export const SYSTEM_LABELS = [
   'STARRED',
   'TRASH',
   'UNREAD',
+  'YELLOW_STAR',
 ];
 
 export const filterLabel = (label: string) => !SYSTEM_LABELS.includes(label);
