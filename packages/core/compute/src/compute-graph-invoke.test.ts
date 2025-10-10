@@ -3,7 +3,7 @@
 //
 
 import { Schema } from 'effect';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
@@ -12,18 +12,8 @@ import { FunctionDefinition, FunctionType } from '@dxos/functions';
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
-describe.only('ComputeGraph invocation via FunctionInvocationService', () => {
-  let testBuilder: TestBuilder;
-
-  beforeEach(async () => {
-    // Provide FunctionType so ECHO can store function objects.
-    testBuilder = new TestBuilder({ types: [FunctionType] });
-    await testBuilder.open();
-  });
-
+describe('ComputeGraph invocation via FunctionInvocationService', () => {
   test('invokes user function through compute graph', async () => {
-    const space = await testBuilder.client.spaces.create();
-
     // Define a simple function: add(a, b) => a + b.
     const add = FunctionDefinition.make({
       key: 'add',
@@ -34,16 +24,27 @@ describe.only('ComputeGraph invocation via FunctionInvocationService', () => {
       handler: ({ data }) => data.a + data.b,
     });
 
-    // Compute runtime provider for this test.
     const computeRuntime = createMockedComputeRuntimeProvider({ functions: [add] });
+    const testBuilder = new TestBuilder({ types: [FunctionType], computeRuntime });
+    await testBuilder.open();
+    onTestFinished(async () => {
+      await testBuilder.close();
+    });
+
+    const space = await testBuilder.client.spaces.create();
 
     // Register Edge function plugin and runtime in the registry.
     const registry = new ComputeGraphRegistry({ plugins: defaultPlugins, computeRuntime });
     await registry.open();
-    testBuilder.ctx.onDispose(() => registry.close());
+    onTestFinished(async () => {
+      await registry.close();
+    });
 
     const graph = registry.createGraph(space);
     await graph.open();
+    onTestFinished(async () => {
+      await graph.close();
+    });
 
     // Create a function object in ECHO with binding that maps to DX calls.
     const functionObj = FunctionDefinition.serialize(add);
