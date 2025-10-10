@@ -28,7 +28,6 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   const [space] = useSpaces();
   const builder = useMemo(() => new QueryBuilder(), []);
   const [filter, setFilter] = useState<Filter.Any>(Filter.everything());
-  // TODO(burdon): Catch invalid filter error.
   const objects = useQuery(space, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
   const model = useGraphModel(space, filter);
 
