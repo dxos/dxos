@@ -5,7 +5,7 @@
 import { Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Obj, Ref, TagInfo, type TagMap, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
@@ -23,7 +23,7 @@ export const Mailbox = Schema.Struct({
   queue: Type.Ref(Queue),
   // Tags mapped from labels.
   // TODO(burdon): Reconcile with Space tags.
-  tags: Schema.mutable(Schema.Record({ key: Schema.String, value: Tag })),
+  tags: Schema.mutable(Schema.Record({ key: Schema.String, value: TagInfo })),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -44,7 +44,7 @@ export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters' | 'tags'> & {
   space: Space;
   filters?: { name: string; filter: string }[];
-  tags?: Record<string, Tag>;
+  tags?: TagMap;
 };
 
 export const make = ({ space, ...props }: MailboxProps) => {

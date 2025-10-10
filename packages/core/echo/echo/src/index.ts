@@ -3,7 +3,7 @@
 //
 
 export * from './errors';
-export { Filter, Order, Query, Tag } from './query';
+export * from './query';
 
 export * as Key from './Key';
 export * as Obj from './Obj';

@@ -48,7 +48,6 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
-  const tags = useMemo(() => Object.values(mailbox.tags).map((tag) => tag.label), [mailbox.tags]);
   useEffect(() => {
     setFilter(parser.build(filterText));
   }, [filterText]);
@@ -75,8 +74,15 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
           break;
         }
         case 'select-tag': {
-          // TODO(burdon): Check if tag already exists.
-          setFilterText((prevFilterText) => `${prevFilterText} #${action.label} `);
+          setFilterText((prevFilterText) => {
+            // Check if tag already exists.
+            const tags = prevFilterText.split(/\s+/).filter(Boolean);
+            if (tags.at(-1)?.toLowerCase() === '#' + action.label.toLowerCase()) {
+              return prevFilterText;
+            }
+
+            return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
+          });
           setFilterVisible(true);
           filterEditorRef.current?.focus();
           break;
@@ -135,7 +141,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
             classNames='min-is-0 pis-1'
             autoFocus
             space={getSpace(mailbox)}
-            tags={tags}
+            tags={mailbox.tags}
             value={filterText}
             onChange={setFilterText}
           />

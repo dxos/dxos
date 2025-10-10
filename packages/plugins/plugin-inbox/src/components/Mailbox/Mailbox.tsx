@@ -7,7 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { Obj, type Tag } from '@dxos/echo';
+import { Obj, type TagMap } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -18,7 +18,7 @@ import {
   gridSeparatorBlockEnd,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { getHashColor, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -37,7 +37,7 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: Record<string, Tag>) => {
+const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: TagMap) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
@@ -69,11 +69,11 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
         <div class="message__tags">
           ${((tags && Obj.getMeta(message).tags) ?? [])
             .filter(filterLabel)
-            .map((tagId: string) => ({ id: tagId, ...tags![tagId] }))
+            .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
             .filter(Boolean)
             .map(
-              ({ id, label, hue }: Tag & { id: string }) => trim`
-                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue ?? getHashColor(id).color}">${label}</span>
+              ({ label, hue }) => trim`
+                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
               `,
             )
             .join('\n')}
@@ -95,7 +95,7 @@ export type MailboxProps = {
   id: string;
   role?: string;
   messages: DataType.Message[];
-  tags?: Record<string, Tag>;
+  tags?: TagMap;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;
