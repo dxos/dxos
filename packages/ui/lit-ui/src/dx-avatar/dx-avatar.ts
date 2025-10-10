@@ -191,7 +191,7 @@ export class DxAvatar extends LitElement {
                 font-size=${this.size === 'px' ? '200%' : this.size * fontScale}
                 mask=${`url(#${this.maskId})`}
               >
-                ${getInitials(this.fallback)}
+                ${/\p{Emoji}/u.test(this.fallback) ? this.fallback : getInitials(this.fallback)}
               </text>`
         }
         ${
@@ -226,7 +226,7 @@ const getInitials = (label = ''): string[] => {
   return label
     .trim()
     .split(/\s+/)
-    .map((str) => str.replace(/[^\p{L}\p{N}\p{Emoji}\s]/gu, ''))
+    .map((str) => str.replace(/[^\p{L}\p{N}\s]/gu, ''))
     .filter(Boolean)
     .slice(0, 2)
     .map((word) => word[0].toUpperCase());
