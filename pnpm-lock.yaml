@@ -2532,6 +2532,9 @@ importers:
 
   packages/core/compute:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -2568,6 +2571,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-automation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols
@@ -9290,6 +9296,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
