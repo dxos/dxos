@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Obj, Tag } from '@dxos/echo';
+import { Obj, TagInfo, type TagMap } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
@@ -68,10 +68,10 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   );
 };
 
-const tags: Record<string, Tag> = {
-  ['tag_1' as const]: Tag.make({ label: 'Red' }),
-  ['tag_2' as const]: Tag.make({ label: 'Green' }),
-  ['tag_3' as const]: Tag.make({ label: 'Blue' }),
+const tags: TagMap = {
+  ['tag_1' as const]: TagInfo.make({ label: 'Red' }),
+  ['tag_2' as const]: TagInfo.make({ label: 'Green' }),
+  ['tag_3' as const]: TagInfo.make({ label: 'Blue' }),
 };
 
 const meta: Meta<typeof QueryEditor> = {

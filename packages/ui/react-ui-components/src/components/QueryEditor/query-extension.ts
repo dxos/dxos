@@ -11,15 +11,15 @@ import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
 import { type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashColor } from '@dxos/react-ui-theme';
+import { type Color, getHashColor } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  space?: Space;
-  tags?: string[];
+  space?: Space; // TODO(burdon): Replace with schema registry lookup.
+  tags?: TagMap;
 };
 
 /**
@@ -31,7 +31,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
-    decorations(),
+    decorations({ tags }),
     autocompletion({
       activateOnTyping: true,
       override: [
@@ -67,7 +67,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
                 return {
                   ...range,
                   filter: true,
-                  options: tags.map((tag) => ({ label: tag })),
+                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
                 };
               }
 
@@ -95,7 +95,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
 /**
  * Decorations
  */
-const decorations = (): Extension => {
+const decorations = ({ tags }: QueryOptions): Extension => {
   const buildDecorations = (state: EditorState) => {
     const hasFocus = state.field(focusField);
     const isInside = (node: SyntaxNodeRef) => {
@@ -140,13 +140,15 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const tag = node.node.getChild(QueryDSL.Node.Tag);
-            if (tag) {
+            const tagNode = node.node.getChild(QueryDSL.Node.Tag);
+            if (tagNode) {
+              const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
+              const tag = findTagByLabel(tags, label); // TODO(burdon): dx-tag.
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(state.sliceDoc(tag.from + 1, tag.to)),
+                  widget: new TagWidget(label, tag ? getHashColor(tag.id) : undefined),
                   atomic: true,
                 }),
               );
@@ -284,7 +286,10 @@ class TypeWidget extends WidgetType {
  * Tag
  */
 class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
+  constructor(
+    private readonly _str: string,
+    private readonly _color?: Color,
+  ) {
     super();
   }
 
@@ -293,7 +298,7 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border } = getHashColor(this._str);
+    const { bg, border } = this._color ?? getHashColor(this._str);
     return container(
       border,
       Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
