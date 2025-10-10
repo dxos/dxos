@@ -25,7 +25,7 @@ const levelStyles = new Map<number, string>([
 export const treegridRoot: ComponentFunction<TreegridStyleProps> = (_, ...etc) => mx('grid', ...etc);
 
 export const treegridRow: ComponentFunction<TreegridStyleProps> = ({ level = 1 }, ...etc) =>
-  mx('contents dx-focus-ring-inset', levelStyles.get(Math.min(Math.max(Math.round(level), 1), 8)), ...etc);
+  mx('contents', levelStyles.get(Math.min(Math.max(Math.round(level), 1), 8)), ...etc);
 
 export const treegridCell: ComponentFunction<TreegridStyleProps> = ({ indent }, ...etc) =>
   mx(indent && 'indent', ...etc);

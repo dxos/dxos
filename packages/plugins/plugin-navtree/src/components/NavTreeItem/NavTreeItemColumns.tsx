@@ -38,35 +38,43 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
     <DensityProvider density={density}>
       <div role='none' className='contents app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
-          <NavTreeItemAction
-            testId={primaryAction.properties?.testId}
-            label={toLocalizedString(primaryAction.properties?.label, t)}
-            icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
-            parent={item}
-            monolithic={isAction(primaryAction)}
-            menuActions={isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction.id]}
-            menuType={primaryAction.properties?.menuType}
-            caller={NAV_TREE_ITEM}
-          />
+          <Treegrid.Cell classNames='contents'>
+            <NavTreeItemAction
+              testId={primaryAction.properties?.testId}
+              label={toLocalizedString(primaryAction.properties?.label, t)}
+              icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
+              parent={item}
+              monolithic={isAction(primaryAction)}
+              menuActions={isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction.id]}
+              menuType={primaryAction.properties?.menuType}
+              caller={NAV_TREE_ITEM}
+            />
+          </Treegrid.Cell>
         ) : (
-          <Treegrid.Cell />
+          <Treegrid.Cell role='none' />
         )}
         <ActionRoot>
           {actions.length > 0 ? (
-            <NavTreeItemAction
-              testId={`navtree.treeItem.actionsLevel${level}`}
-              label={t('tree item actions label')}
-              icon='ph--dots-three-vertical--regular'
-              parent={item}
-              menuActions={actions}
-              menuType='dropdown'
-              caller={NAV_TREE_ITEM}
-            />
+            <Treegrid.Cell classNames='contents'>
+              <NavTreeItemAction
+                testId={`navtree.treeItem.actionsLevel${level}`}
+                label={t('tree item actions label')}
+                icon='ph--dots-three-vertical--regular'
+                parent={item}
+                menuActions={actions}
+                menuType='dropdown'
+                caller={NAV_TREE_ITEM}
+              />
+            </Treegrid.Cell>
           ) : (
-            <Treegrid.Cell />
+            <Treegrid.Cell role='none' />
           )}
         </ActionRoot>
-        {ItemEnd && <ItemEnd node={item} open={open} />}
+        {ItemEnd && (
+          <Treegrid.Cell classNames='contents'>
+            <ItemEnd node={item} open={open} />
+          </Treegrid.Cell>
+        )}
       </div>
     </DensityProvider>
   );

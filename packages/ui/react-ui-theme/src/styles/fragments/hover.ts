@@ -8,6 +8,7 @@
 export const hoverColors = 'transition-colors duration-100 linear hover:bg-hoverSurface';
 
 export const ghostHover = 'hover:bg-hoverSurface';
+export const ghostFocusWithin = 'focus-within:bg-hoverSurface';
 export const subtleHover = 'hover:bg-hoverOverlay';
 
 export const hoverableControls =
