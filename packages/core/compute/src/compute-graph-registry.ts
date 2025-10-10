@@ -26,16 +26,17 @@ export type ComputeGraphOptions = {
 } & Partial<FunctionContextOptions> &
   Partial<ConfigParams>;
 
-export const defaultOptions: Partial<ComputeGraphOptions> = {
-  licenseKey: 'gpl-v3',
-};
-
 export const defaultPlugins: ComputeGraphPlugin[] = [
   {
     plugin: EdgeFunctionPlugin,
     translations: EdgeFunctionPluginTranslations,
   },
 ];
+
+export const defaultOptions: Partial<ComputeGraphOptions> = {
+  licenseKey: 'gpl-v3',
+  plugins: defaultPlugins,
+};
 
 /**
  * Manages a collection of ComputeGraph instances for each space.
@@ -49,7 +50,7 @@ export class ComputeGraphRegistry extends Resource {
   private readonly _graphs = new Map<SpaceId, ComputeGraph>();
   private readonly _options: ComputeGraphOptions;
 
-  constructor(options: ComputeGraphOptions = { plugins: defaultPlugins }) {
+  constructor(options: ComputeGraphOptions) {
     super();
     this._options = defaultsDeep({}, options, defaultOptions);
     this._options.plugins?.forEach(({ plugin, translations }) => {
