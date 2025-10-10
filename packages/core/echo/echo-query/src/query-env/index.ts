@@ -41,6 +41,10 @@ class FilterClass implements Echo.Filter<any> {
     return typeof value === 'object' && value !== null && '~Filter' in value;
   }
 
+  static fromAst(ast: QueryAST.Filter): Filter<any> {
+    return new FilterClass(ast);
+  }
+
   static everything(): FilterClass {
     return new FilterClass({
       type: 'object',
