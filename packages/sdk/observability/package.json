@@ -14,37 +14,13 @@
       "types": "./dist/types/src/index.d.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
-    },
-    "./segment": {
-      "source": "./src/segment/index.ts",
-      "types": "./dist/types/src/segment/index.d.ts",
-      "browser": "./dist/lib/browser/segment/index.mjs",
-      "node": "./dist/lib/node-esm/segment/index.mjs"
-    },
-    "./sentry": {
-      "source": "./src/sentry/index.ts",
-      "types": "./dist/types/src/sentry/index.d.ts",
-      "browser": "./dist/lib/browser/sentry/index.mjs",
-      "node": "./dist/lib/node-esm/sentry/index.mjs"
     }
   },
   "browser": {
-    "./src/segment/node.ts": "./src/segment/browser.ts",
-    "./src/sentry/node.ts": "./src/sentry/browser.ts",
-    "./testing/testkit/index.ts": "./testing/testkit/browser.ts",
-    "./src/otel/traces.ts": "./src/otel/traces-browser.ts"
+    "./src/storage/node.ts": "./src/storage/browser.ts",
+    "./src/extensions/otel/traces.ts": "./src/extensions/otel/traces-browser.ts"
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "segment": [
-        "dist/types/src/segment/index.d.ts"
-      ],
-      "sentry": [
-        "dist/types/src/sentry/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist",
     "src"
@@ -67,6 +43,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/platform": "0.92.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/api-logs": "^0.203.0",
     "@opentelemetry/auto-instrumentations-web": "^0.51.0",
@@ -87,14 +64,19 @@
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",
+    "posthog-js": "^1.261.6",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@sentry/types": "^8.8.0",
     "@types/debug": "^4.1.10",
     "@types/js-yaml": "^4.0.5",
+    "effect": "3.18.3",
     "sentry-testkit": "^5.0.5",
     "zone.js": ">=0.11.4 <0.12.0-0 || >=0.13.0 <0.14.0-0 || >=0.14.0 <0.15.0-0"
+  },
+  "peerDependencies": {
+    "effect": "^3.13.3"
   },
   "publishConfig": {
     "access": "public"

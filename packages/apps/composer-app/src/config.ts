@@ -2,8 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Remote } from '@dxos/client';
+import { Effect, pipe } from 'effect';
+
+import { DXOS_VERSION, Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 
 export const setupConfig = async () => {
   const sources = [await Storage(), Envs(), Local(), Defaults()];
@@ -16,3 +19,22 @@ export const setupConfig = async () => {
 
   return new Config(...sources);
 };
+
+export const initializeObservability = async (config: Config) =>
+  pipe(
+    Observability.make(),
+    Observability.addExtension(
+      ObservabilityExtension.Otel.extensions({
+        // TODO(wittjosiah): Make APP_KEY "composer"?
+        serviceName: 'composer',
+        serviceVersion: DXOS_VERSION,
+        environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
+        config,
+      }),
+    ),
+    Observability.addExtension(ObservabilityExtension.PostHog.extensions({ config })),
+    Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),
+    Observability.addDataProvider(ObservabilityProvider.Storage.provider),
+    Observability.initialize,
+    Effect.runPromise,
+  );

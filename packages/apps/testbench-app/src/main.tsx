@@ -9,8 +9,9 @@ import React, { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 
-import { initializeAppObservability } from '@dxos/observability';
-import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
+// TODO(wittjosiah): Restore observability.
+// import { initializeAppObservability } from '@dxos/observability';
+import { type Client, ClientProvider } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -22,10 +23,10 @@ import { translations } from './translations';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 
-void initializeAppObservability({
-  namespace: 'testbench.dxos.org',
-  config: new Config(Defaults()),
-});
+// void initializeAppObservability({
+//   namespace: 'testbench.dxos.org',
+//   config: new Config(Defaults()),
+// });
 
 const router = createBrowserRouter([
   {

@@ -4,9 +4,8 @@
 
 import { SeverityNumber } from '@opentelemetry/api-logs';
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http';
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor, LoggerProvider } from '@opentelemetry/sdk-logs';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import {
   type LogConfig,
@@ -16,9 +15,10 @@ import {
   getContextFromEntry,
   getRelativeFilename,
 } from '@dxos/log';
-import { jsonlogify } from '@dxos/util';
 
 import { type OtelOptions, setDiagLogger } from './otel';
+
+const FLATTEN_DEPTH = 1;
 
 export type OtelLogOptions = OtelOptions & {
   logLevel: LogLevel;
@@ -33,27 +33,22 @@ export class OtelLogs {
   private _loggerProvider: LoggerProvider;
   constructor(private readonly options: OtelLogOptions) {
     setDiagLogger(options.consoleDiagLogLevel);
-    const resource = defaultResource().merge(
-      resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
-        [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
-      }),
-    );
     const logExporter = new OTLPLogExporter({
       url: this.options.endpoint + '/v1/logs',
-      headers: {
-        Authorization: this.options.authorizationHeader,
-      },
+      headers: this.options.headers,
       concurrencyLimit: 10, // an optional limit on pending requests
     });
     this._loggerProvider = new LoggerProvider({
-      resource,
+      resource: this.options.resource,
       processors: [new BatchLogRecordProcessor(logExporter)],
     });
   }
 
-  public readonly logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
-    const logger = this._loggerProvider.getLogger('dxos-observability', this.options.serviceVersion);
+  public readonly logProcessor: LogProcessor = (_config: LogConfig, entry: LogEntry) => {
+    const logger = this._loggerProvider.getLogger(
+      'dxos-observability',
+      this.options.resource.attributes[ATTR_SERVICE_VERSION]?.toString(),
+    );
 
     if (
       entry.level < this.options.logLevel ||
@@ -62,16 +57,17 @@ export class OtelLogs {
       return;
     }
 
-    const record = {
-      ...entry,
+    const attributes = {
+      ...this.options.getTags(),
       ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
-      context: jsonlogify(getContextFromEntry(entry)),
+      ...(entry.error ? { error: entry.error.stack } : {}),
+      ...stringifyValues(getContextFromEntry(entry), 'ctx_'),
     };
 
     logger.emit({
       severityNumber: convertLevel(entry.level),
-      body: JSON.stringify(record),
-      attributes: this.options.getTags(),
+      body: entry.message,
+      attributes,
     });
   };
 
@@ -99,4 +95,31 @@ const convertLevel = (level: LogLevel): SeverityNumber => {
     default:
       return SeverityNumber.ERROR;
   }
+};
+
+// TODO(wittjosiah): Reconcile logging utils w/ EDGE.
+const stringifyValues = (object: object | undefined, keyPrefix?: string, depth: number = 1) => {
+  if (!object) {
+    return {};
+  }
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(object)) {
+    if (value === undefined) {
+      continue;
+    }
+    const newKey = keyPrefix ? `${keyPrefix}${key}` : key;
+    if (typeof value === 'object') {
+      if (!value || Array.isArray(value) || depth > FLATTEN_DEPTH) {
+        result[newKey] = JSON.stringify(value);
+      } else {
+        const flattened = stringifyValues(value, `${newKey}_`, depth + 1);
+        for (const [flattenedKey, flattenedValue] of Object.entries(flattened)) {
+          result[flattenedKey] = flattenedValue;
+        }
+      }
+    } else {
+      result[newKey] = String(value);
+    }
+  }
+  return result;
 };

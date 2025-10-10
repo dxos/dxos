@@ -8,10 +8,7 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
-import { initializeAppObservability } from '@dxos/observability';
 import { meta as debugMeta } from '@dxos/plugin-debug';
-
-const namespace = `${debugMeta.id}/devtools`;
 
 const main = async () => {
   const enter =
@@ -26,7 +23,6 @@ const main = async () => {
   const searchParams = new URLSearchParams(window.location.search);
   const target = searchParams.get('target');
   const config = new Config(target ? Remote(target) : {}, Defaults());
-  void initializeAppObservability({ namespace, config });
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

@@ -15,7 +15,7 @@ export namespace ObservabilityCapabilities {
   };
   export const State = defineCapability<State>(`${meta.id}/capability/state`);
 
-  export const Observability = defineCapability<Observability>(`${meta.id}/capability/observability`);
+  export const Observability = defineCapability<Observability.Observability>(`${meta.id}/capability/observability`);
 }
 
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.

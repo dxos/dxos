@@ -14,7 +14,6 @@ import {
   definePlugin,
 } from '@dxos/app-framework';
 import { log } from '@dxos/log';
-import { captureException } from '@dxos/observability/sentry';
 
 import { meta } from './meta';
 import { translations } from './translations';
@@ -59,7 +58,6 @@ export const PwaPlugin = definePlugin(meta, () => [
             }),
           ),
         onRegisterError: (err) => {
-          captureException(err);
           log.error(err);
         },
       });

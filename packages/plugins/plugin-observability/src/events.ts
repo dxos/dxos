@@ -7,6 +7,7 @@ import { Events, defineEvent } from '@dxos/app-framework';
 import { meta } from './meta';
 
 export namespace ObservabilityEvents {
+  export const ObservabilityReady = defineEvent(`${meta.id}/event/observability-ready`);
   export const StateReady = Events.createStateEvent(meta.id);
 }
 

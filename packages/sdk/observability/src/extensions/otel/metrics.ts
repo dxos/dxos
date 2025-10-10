@@ -4,9 +4,7 @@
 
 import { type Meter } from '@opentelemetry/api';
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 import { log } from '@dxos/log';
 import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
@@ -23,25 +21,17 @@ export class OtelMetrics {
     // TODO: improve error handling/logging
     //  https://github.com/open-telemetry/opentelemetry-js/issues/4823
     setDiagLogger(options.consoleDiagLogLevel);
-    const resource = defaultResource().merge(
-      resourceFromAttributes({
-        [SEMRESATTRS_SERVICE_NAME]: this.options.serviceName,
-        [SEMRESATTRS_SERVICE_VERSION]: this.options.serviceVersion,
-      }),
-    );
 
     const grafanaMetricReader = new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
         url: this.options.endpoint + '/v1/metrics',
-        headers: {
-          Authorization: this.options.authorizationHeader,
-        },
+        headers: this.options.headers,
       }),
       exportIntervalMillis: EXPORT_INTERVAL,
     });
 
     this._meterProvider = new MeterProvider({
-      resource,
+      resource: this.options.resource,
       readers: [grafanaMetricReader],
     });
     this._meter = this._meterProvider.getMeter('dxos-observability');

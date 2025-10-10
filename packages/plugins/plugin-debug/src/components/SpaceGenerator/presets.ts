@@ -102,6 +102,7 @@ export const generator = () => ({
           const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+          console.log(notesQuery);
 
           const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
           const organizationsQueryString = `${contactsQueryString}.reference("organization")`;

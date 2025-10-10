@@ -19,11 +19,10 @@ import {
   QueryPlugin,
   parseAddress,
 } from '@dxos/agent';
-import { Trigger, asyncTimeout, runInContext, scheduleTaskInterval } from '@dxos/async';
+import { Trigger, asyncTimeout } from '@dxos/async';
 import { AgentAlreadyRunningError } from '@dxos/cli-base';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base';
 
@@ -172,21 +171,21 @@ export default class Start extends BaseCommand<typeof Start> {
 
     this.log('Agent started... (ctrl-c to exit)');
 
-    await this._sendTelemetry();
-    const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
-    if (!platform) {
-      this.log('failed to get platform, could not initialize observability');
-    } else {
-      if (this._observability?.enabled) {
-        await this._observability.initialize();
-        await this._observability.setIdentityTags(this._agent.client!.services.services);
-        await this._observability.startNetworkMetrics(this._agent.client!.services.services);
-        await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
-        await this._observability.startRuntimeMetrics(this._agent.client!);
-        // initAgentMetrics(this._ctx, this._observability, this._startTime);
-        // initClientMetrics(this._ctx, this._observability, this._agent!);
-      }
-    }
+    // await this._sendTelemetry();
+    // const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
+    // if (!platform) {
+    //   this.log('failed to get platform, could not initialize observability');
+    // } else {
+    //   if (this._observability?.enabled) {
+    //     await this._observability.initialize();
+    //     await this._observability.setIdentityTags(this._agent.client!.services.services);
+    //     await this._observability.startNetworkMetrics(this._agent.client!.services.services);
+    //     await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
+    //     await this._observability.startRuntimeMetrics(this._agent.client!);
+    //     // initAgentMetrics(this._ctx, this._observability, this._startTime);
+    //     // initClientMetrics(this._ctx, this._observability, this._agent!);
+    //   }
+    // }
 
     if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
@@ -218,23 +217,23 @@ export default class Start extends BaseCommand<typeof Start> {
     }, system);
   }
 
-  private async _sendTelemetry(): Promise<void> {
-    const sendTelemetry = async () => {
-      // TODO(nf): move to observability
-      const installationId = this._observability?.getTag('installationId');
-      const did = this._observability?.getTag('did');
-      this._observability?.track({
-        installationId: installationId?.value,
-        did: did?.value,
-        action: 'cli.command.run.agent',
-        properties: {
-          profile: this.flags.profile,
-          duration: this.duration,
-        },
-      });
-    };
+  // private async _sendTelemetry(): Promise<void> {
+  //   const sendTelemetry = async () => {
+  //     // TODO(nf): move to observability
+  //     const installationId = this._observability?.getTag('installationId');
+  //     const did = this._observability?.getTag('did');
+  //     this._observability?.track({
+  //       installationId: installationId?.value,
+  //       did: did?.value,
+  //       action: 'cli.command.run.agent',
+  //       properties: {
+  //         profile: this.flags.profile,
+  //         duration: this.duration,
+  //       },
+  //     });
+  //   };
 
-    runInContext(this._ctx, sendTelemetry);
-    scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
-  }
+  //   runInContext(this._ctx, sendTelemetry);
+  //   scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
+  // }
 }
