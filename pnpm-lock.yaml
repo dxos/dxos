@@ -2532,6 +2532,9 @@ importers:
 
   packages/core/compute:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

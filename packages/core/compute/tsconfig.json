@@ -55,6 +55,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../ai"
+    },
+    {
       "path": "../echo/echo"
     },
     {

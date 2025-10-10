@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ManagedRuntime } from 'effect';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
 import { HyperFormula } from '@dxos/vendor-hyperformula';
 
@@ -20,9 +21,13 @@ export type ComputeGraphPlugin = {
   translations: FunctionTranslationsPackage;
 };
 
+export type FunctionsRuntimeProvider = {
+  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>;
+};
+
 export type ComputeGraphOptions = {
   plugins?: ComputeGraphPlugin[];
-  computeRuntime: AutomationCapabilities.ComputeRuntimeProvider;
+  computeRuntime: FunctionsRuntimeProvider;
 } & Partial<FunctionContextOptions> &
   Partial<ConfigParams>;
 

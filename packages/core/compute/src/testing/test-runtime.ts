@@ -2,11 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ManagedRuntime } from 'effect';
+import { Layer, ManagedRuntime } from 'effect';
 
+import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
-import { type AutomationCapabilities } from '@dxos/plugin-automation';
+import {
+  CredentialsService,
+  DatabaseService,
+  type FunctionDefinition,
+  FunctionInvocationService,
+  QueueService,
+} from '@dxos/functions';
+
+import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
 
 /**
  * Minimal compute runtime provider for tests and Storybook.
@@ -14,8 +22,16 @@ import { type AutomationCapabilities } from '@dxos/plugin-automation';
  */
 export const createMockedComputeRuntimeProvider = ({
   functions,
-}: { functions?: FunctionDefinition<any, any>[] } = {}): AutomationCapabilities.ComputeRuntimeProvider => {
+}: { functions?: FunctionDefinition<any, any>[] } = {}): FunctionsRuntimeProvider => {
   return {
-    getRuntime: (_spaceId: SpaceId) => ManagedRuntime.make(FunctionInvocationService.layerTest({ functions }) as any),
+    getRuntime: (_spaceId: SpaceId) =>
+      ManagedRuntime.make(
+        FunctionInvocationService.layerTest({ functions }).pipe(
+          Layer.provide(AiService.notAvailable),
+          Layer.provide(CredentialsService.configuredLayer([])),
+          Layer.provide(DatabaseService.notAvailable),
+          Layer.provide(QueueService.notAvailable),
+        ),
+      ),
   };
 };
