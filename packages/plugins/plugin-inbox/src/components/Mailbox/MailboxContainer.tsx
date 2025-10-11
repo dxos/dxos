@@ -226,7 +226,7 @@ const useMailboxActions = ({
           )
           .build(),
       ),
-    [],
+    [descending, filterVisible],
   );
 
   return useMenuActions(menu);
