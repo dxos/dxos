@@ -9,14 +9,10 @@ import { type MessageDetails } from './types';
 export const getPart = (message: MessageDetails, part: string) =>
   message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;
 
-export const isHTML = (str: string) => {
-  return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
-};
-
 /**
  * https://www.npmjs.com/package/turndown
  */
-const turndown = new TurndownService({
+export const turndown = new TurndownService({
   bulletListMarker: '-',
 })
   .remove('script')
@@ -38,14 +34,28 @@ const turndown = new TurndownService({
     },
   });
 
-export const toMarkdown = (html: string) => turndown.turndown(html).replace(/\\--/g, '---');
+export const toMarkdown = (html: string): string => turndown.turndown(html);
 
-export const normalizeText = (text: string) => (isHTML(text) ? toMarkdown(text) : stripNewlines(text));
+export const isHTML = (str: string): boolean => {
+  return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
+};
+
+export const stripWhitespace = (str: string): string => {
+  const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
+  return (
+    str
+      .trim()
+      // Replace multiple newlines with double newlines.
+      .replace(WHITESPACE, '\n\n')
+      // Replace old-school sign-off dash with horizontal rule.
+      .replace(/\\--/g, '---')
+  );
+};
 
 // TODO(burdon): Replace legal disclaimers, etc.
-export const stripNewlines = (str: string) => {
-  const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
-  return str.trim().replace(WHITESPACE, '\n\n');
+export const normalizeText = (text: string): string => {
+  const str = isHTML(text) ? toMarkdown(text) : text;
+  return stripWhitespace(str);
 };
 
 // TODO(burdon): Reconcile with @dxos/util.
