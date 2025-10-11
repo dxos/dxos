@@ -71,9 +71,9 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "^0.19.2",
-    "@effect/ai-openai": "0.32.1",
+    "@effect/ai": "0.31.0",
+    "@effect/ai-anthropic": "^0.21.0",
+    "@effect/ai-openai": "0.34.0",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
     "@effect/platform-node": "^0.98.3",
@@ -85,7 +85,7 @@
   },
   "devDependencies": {
     "@types/parsimmon": "^1.10.9",
-    "effect": "3.18.3"
+    "effect": "3.18.4"
   },
   "peerDependencies": {
     "effect": "^3.13.3"
