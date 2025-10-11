@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx } from '@effect-rx/rx-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Rx, useRxValue } from '@effect-rx/rx-react';
+import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -41,8 +41,6 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
 
   const filterEditorRef = useRef<EditorController>(null);
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
-  const [descending, setDescending] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
 
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const messages: DataType.Message[] = useQuery(
@@ -51,6 +49,10 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
     filter ?? Filter.everything(),
   );
+
+  // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
+  const descendingRx = useRxState(false);
+  const descending = useRxValue(descendingRx);
   const sortedMessages = useMemo(() => (descending ? [...messages].reverse() : messages), [messages, descending]);
 
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
@@ -59,37 +61,8 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     setFilter(parser.build(filterText));
   }, [filterText]);
 
-  const menu = useMemo(
-    () =>
-      Rx.make(
-        MenuBuilder.make()
-          .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
-          })
-          .action(
-            'sort',
-            {
-              type: 'sort',
-              icon: descending ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-              label: ['mailbox toolbar sort', { ns: meta.id }],
-            },
-            () => setDescending((prev) => !prev),
-          )
-          .action(
-            'filter',
-            {
-              type: 'filter',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter', { ns: meta.id }],
-            },
-            () => setFilterVisible((prev) => !prev),
-          )
-          .build(),
-      ),
-    [descending],
-  );
-
-  const actions = useMenuActions(menu);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const actions = useMailboxActions({ descending: descendingRx, onFilterToggle: setFilterVisible });
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -213,4 +186,47 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
       )}
     </StackItem.Content>
   );
+};
+
+// TODO(wittjosiah): Factor out.
+const useRxState = <T,>(initialValue: T) => useMemo(() => Rx.make(initialValue), [initialValue]);
+
+const useMailboxActions = ({
+  descending,
+  onFilterToggle,
+}: {
+  descending: Rx.Writable<boolean>;
+  onFilterToggle: Dispatch<SetStateAction<boolean>>;
+}) => {
+  const menu = useMemo(
+    () =>
+      Rx.make((context) =>
+        MenuBuilder.make()
+          .root({
+            label: ['mailbox toolbar title', { ns: meta.id }],
+          })
+          .action(
+            'sort',
+            {
+              type: 'sort',
+              icon: context.get(descending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
+              label: ['mailbox toolbar sort', { ns: meta.id }],
+            },
+            () => context.set(descending, !context.get(descending)),
+          )
+          .action(
+            'filter',
+            {
+              type: 'filter',
+              icon: 'ph--magnifying-glass--regular',
+              label: ['mailbox toolbar filter', { ns: meta.id }],
+            },
+            () => onFilterToggle((prev) => !prev),
+          )
+          .build(),
+      ),
+    [],
+  );
+
+  return useMenuActions(menu);
 };
