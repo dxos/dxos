@@ -26,13 +26,13 @@ import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbo
 import { MailboxEmpty } from './MailboxEmpty';
 
 export type MailboxContainerProps = {
-  mailbox: Mailbox.Mailbox;
-  role?: string;
   attendableId?: string;
+  role?: string;
+  mailbox: Mailbox.Mailbox;
   filter?: string;
 };
 
-export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterParam }: MailboxContainerProps) => {
+export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterParam }: MailboxContainerProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
@@ -110,6 +110,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
           );
           break;
         }
+
         case 'select-tag': {
           setFilterText((prevFilterText) => {
             // Check if tag already exists.
@@ -124,6 +125,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
           filterEditorRef.current?.focus();
           break;
         }
+
         case 'save': {
           void dispatch(
             createIntent(LayoutAction.UpdatePopover, {
@@ -150,54 +152,52 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
     setFilter(parser.build(filterParam ?? ''));
   }, []);
 
-  // TODO(burdon): Generalize drawer layout.
   return (
     <StackItem.Content
       classNames={[
         'relative grid',
         filterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
       ]}
-      layoutManaged
       toolbar
+      layoutManaged
     >
       <ElevationProvider elevation='positioned'>
         <MenuProvider {...actions} attendableId={id}>
           <ToolbarMenu />
+          {filterVisible && (
+            <div
+              role='none'
+              className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
+            >
+              <QueryEditor
+                ref={filterEditorRef}
+                classNames='min-is-0 pis-1'
+                autoFocus
+                space={getSpace(mailbox)}
+                tags={mailbox.tags}
+                value={filterText}
+                onChange={setFilterText}
+              />
+              <div role='none' className='flex shrink-0 gap-1 items-center'>
+                <IconButton
+                  ref={saveFilterButtonRef}
+                  disabled={!filter}
+                  label={t('mailbox toolbar save button label')}
+                  icon='ph--folder-plus--regular'
+                  iconOnly
+                  onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                />
+                <IconButton
+                  label={t('mailbox toolbar clear button label')}
+                  icon='ph--x--regular'
+                  iconOnly
+                  onClick={() => handleCancel()}
+                />
+              </div>
+            </div>
+          )}
         </MenuProvider>
       </ElevationProvider>
-
-      {filterVisible && (
-        <div
-          role='none'
-          className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
-        >
-          <QueryEditor
-            ref={filterEditorRef}
-            classNames='min-is-0 pis-1'
-            autoFocus
-            space={getSpace(mailbox)}
-            tags={mailbox.tags}
-            value={filterText}
-            onChange={setFilterText}
-          />
-          <div role='none' className='flex shrink-0 gap-1 items-center'>
-            <IconButton
-              ref={saveFilterButtonRef}
-              disabled={!filter}
-              label={t('mailbox toolbar save button label')}
-              icon='ph--folder-plus--regular'
-              iconOnly
-              onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-            />
-            <IconButton
-              label={t('mailbox toolbar clear button label')}
-              icon='ph--x--regular'
-              iconOnly
-              onClick={() => handleCancel()}
-            />
-          </div>
-        </div>
-      )}
 
       {sortedMessages && sortedMessages.length > 0 ? (
         <MailboxComponent
