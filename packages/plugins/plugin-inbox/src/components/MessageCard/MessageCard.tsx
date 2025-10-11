@@ -9,7 +9,7 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { getMessageProps } from '../util';
+import { getMessageProps } from '../../util';
 
 export type MessageCardProps = {
   message: DataType.Message;
