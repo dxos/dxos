@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Scrapers (e.g., ScrapeGraphAI).
+
 export type Contact = {
   email: string;
   body: string;
@@ -15,8 +17,6 @@ export type ParsedSignature = {
   name?: string;
   company?: string;
 };
-
-// TODO(burdon): Scrapers (e.g., ScrapeGraphAI).
 
 /**
  * Parses an email signature body to extract name and company information.
