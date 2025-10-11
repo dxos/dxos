@@ -84,7 +84,10 @@ const RawTreeItem = <T extends HasId = any>({
 
   const { useItems, getProps, isOpen, isCurrent } = useTree();
   const items = useItems(item);
-  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
+  const { id, parentOf, label, className, headingClassName, icon, iconClassName, disabled, testId } = getProps(
+    item,
+    _path,
+  );
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
@@ -249,13 +252,14 @@ const RawTreeItem = <T extends HasId = any>({
           <Treegrid.Cell classNames='flex items-center'>
             <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading
-              ref={buttonRef}
-              label={label}
-              icon={icon}
-              className={headingClassName}
               disabled={disabled}
               current={current}
+              label={label}
+              className={headingClassName}
+              icon={icon}
+              iconClassName={iconClassName}
               onSelect={handleSelect}
+              ref={buttonRef}
             />
           </Treegrid.Cell>
           {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
