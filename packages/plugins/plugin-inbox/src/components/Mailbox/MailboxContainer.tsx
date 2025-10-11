@@ -51,12 +51,9 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
-  const messages: DataType.Message[] = useQuery(
-    mailbox.queue.target,
-    // TODO(burdon): Query not supported on queues?
-    // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
-    filter ?? Filter.everything(),
-  );
+  // TODO(burdon): Query not supported on queues?
+  // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
+  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
   const sortedMessages = useMemo(() => (isDescending ? [...messages].reverse() : messages), [messages, isDescending]);
 
   // Parse filter.
