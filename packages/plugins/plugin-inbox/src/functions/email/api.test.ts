@@ -45,7 +45,8 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     'get messages',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
-      const { messages } = yield* listMessages(userId, 'label:investor', 50);
+      // const { messages } = yield* listMessages(userId, 'label:investor', 50);
+      const { messages } = yield* listMessages(userId, 'maline', 50);
       invariant(messages);
 
       const objects = yield* pipe(
@@ -56,6 +57,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
 
       expect(objects).to.exist;
       console.log(JSON.stringify(objects, null, 2));
+      console.log((objects?.[0]?.blocks?.[0] as any)?.text);
     }, Effect.provide(TestLayer)),
   );
 });

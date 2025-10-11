@@ -9,6 +9,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { Mailbox } from '../types';
+import { sortByCreated } from '../util';
 
 export const TAGS: Tag[] = [
   { id: 'tag_1', label: 'important', hue: 'green' },
@@ -29,7 +30,8 @@ type CreateOptions = {
 export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
   return faker.helpers
     .multiple(() => createMessage(space, options), { count })
-    .sort((a, b) => b.created.localeCompare(a.created));
+    .sort(sortByCreated(false))
+    .reverse();
 };
 
 /**

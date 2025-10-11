@@ -21,6 +21,7 @@ import { type DataType } from '@dxos/schema';
 import { InboxCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
+import { sortByCreated } from '../../util';
 import { POPOVER_SAVE_FILTER } from '../PopoverSaveFilter';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbox';
@@ -41,22 +42,22 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const currentMessageId = state[id]?.id;
 
   const filterEditorRef = useRef<EditorController>(null);
-  const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
-  // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
-  const [sortDescending, isSortDescending] = useRxState(false);
-  const [filterVisible, isFilterVisible, setFilterVisible] = useRxState(false);
-  const menuActions = useMailboxActions({ sortDescending, filterVisible });
+  // Menu state.
+  const sortDescending = useRxState(true);
+  const filterVisible = useRxState(false);
+  const menuActions = useMailboxActions({ sortDescending: sortDescending.rx, filterVisible: filterVisible.rx });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any | null>(null);
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
-  // TODO(burdon): Query not supported on queues?
-  // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
+  // TODO(burdon): Query not supported on queues.
+  //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
   const sortedMessages = useMemo(
-    () => (isSortDescending ? [...messages].reverse() : messages),
-    [messages, isSortDescending],
+    () => [...messages].sort(sortByCreated(sortDescending.value)),
+    [messages, sortDescending.value],
   );
 
   // Parse filter.
@@ -93,7 +94,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
 
             return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
-          setFilterVisible(true);
+          filterVisible.set(true);
           filterEditorRef.current?.focus();
           break;
         }
@@ -106,7 +107,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
               options: {
                 state: true,
                 variant: 'virtual',
-                anchor: saveFilterButtonRef.current,
+                anchor: filterSaveButtonRef.current,
                 props: { mailbox, filter: action.filter },
               },
             }),
@@ -119,24 +120,24 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   );
 
   const handleCancel = useCallback(() => {
-    setFilterVisible(false);
+    filterVisible.set(false);
     setFilterText(filterParam ?? '');
     setFilter(parser.build(filterParam ?? ''));
   }, []);
 
   return (
     <StackItem.Content
-      classNames={[
-        'relative grid',
-        isFilterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
-      ]}
       toolbar
       layoutManaged
+      classNames={[
+        'relative grid',
+        filterVisible.value ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
+      ]}
     >
       <ElevationProvider elevation='positioned'>
         <MenuProvider {...menuActions} attendableId={id}>
           <ToolbarMenu />
-          {isFilterVisible && (
+          {filterVisible.value && (
             <div
               role='none'
               className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
@@ -152,7 +153,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
               />
               <div role='none' className='flex shrink-0 gap-1 items-center'>
                 <IconButton
-                  ref={saveFilterButtonRef}
+                  ref={filterSaveButtonRef}
                   disabled={!filter}
                   label={t('mailbox toolbar save button label')}
                   icon='ph--folder-plus--regular'
@@ -187,14 +188,6 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   );
 };
 
-// TODO(wittjosiah): Factor out.
-const useRxState = <T,>(initialValue: T): [Rx.Writable<T>, T, (value: T | ((value: T) => T)) => void] => {
-  const rx = useMemo(() => Rx.make(initialValue), [initialValue]);
-  const value = useRxValue(rx);
-  const setter = useRxSet(rx);
-  return [rx, value, setter];
-};
-
 const useMailboxActions = ({
   sortDescending,
   filterVisible,
@@ -210,7 +203,7 @@ const useMailboxActions = ({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
           .action(
-            'sortDescending',
+            'sortAscending',
             {
               type: 'sortDescending',
               icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
@@ -233,4 +226,19 @@ const useMailboxActions = ({
   );
 
   return useMenuActions(menu);
+};
+
+// TODO(wittjosiah): Factor out.
+
+type RxState<T> = {
+  rx: Rx.Writable<T>;
+  value: T;
+  set: (value: T | ((value: T) => T)) => void;
+};
+
+const useRxState = <T,>(initialValue: T): RxState<T> => {
+  const rx = useMemo(() => Rx.make(initialValue), [initialValue]);
+  const value = useRxValue(rx);
+  const set = useRxSet(rx);
+  return useMemo(() => ({ rx, value, set }), [rx, value, set]);
 };

@@ -23,7 +23,7 @@ import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { filterLabel } from '../../functions/email/api';
-import { getMessageProps } from '../util';
+import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
   DEFAULT: 60,
