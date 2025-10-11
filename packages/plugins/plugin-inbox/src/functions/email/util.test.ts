@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createUrl, stripNewlines, turndown } from './util';
+import { createUrl, stripNewlines, toMarkdown } from './util';
 
 describe('util', () => {
   test('createUrl', ({ expect }) => {
@@ -20,7 +20,7 @@ describe('util', () => {
   test('markdown', ({ expect }) => {
     const text =
       'Another quick reminder to kindly complete this short questionnaire <https://blueyard.typeform.com/to/OLmO8o4k> to indicate your preferred Day.';
-    const markdown = stripNewlines(turndown.turndown(text));
+    const markdown = toMarkdown(text);
     expect(markdown).to.equal(
       'Another quick reminder to kindly complete this short questionnaire to indicate your preferred Day.',
     );
