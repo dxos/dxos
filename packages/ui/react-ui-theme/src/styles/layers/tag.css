@@ -12,7 +12,7 @@
   }
 
   .dx-tag--anchor {
-    @apply inline cursor-pointer pli-1 plb-0.5 border border-separator rounded-sm transition-colors;
+    @apply inline cursor-pointer pli-1 plb-0.5 border border-separator rounded-sm bg-groupSurface transition-colors;
 
     &:hover {
       @apply bg-hoverSurface;

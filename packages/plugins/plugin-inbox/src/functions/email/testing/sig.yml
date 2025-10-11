@@ -1,0 +1,40 @@
+contacts:
+  - email: success@vouch.us
+    body: |
+      Frank Rodriguez (he/him)
+      Client Manager, Horizon
+      844.488.6728
+
+  - email: ymaline@citrincooperman.com
+    body: |
+      CITRIN COOPERMAN
+
+      Yaakov Maline
+      Director
+
+      212.832.0400 | 212.331.7472 (Direct) | 212.371.1159 (Fax)
+      50 Rockefeller Plaza, New York, NY 10020 ymaline@citrincooperman.com <mailto:ymaline@citrincooperman.com>
+
+  - email: mahern@kirkconsult.com
+    body: |
+      Thanks,
+      Madeline
+
+      Madeline Ahern
+      mahern@kirkconsult.com
+      (510) 393-7703
+
+  - email: mscheriff@kirkconsult.com
+    body: |
+      Morgan Scheriff
+      Kirk Consulting LLC
+      (631) 387-1655
+
+  - email: patrick@dispersion.xyz
+    body: |
+      Patrick Chang
+      Founder, Managing Partner
+      Dispersion Capital
+      patrick@dispersion.xyz
+      calendly.com/patrickchang
+      dispersion.xyz

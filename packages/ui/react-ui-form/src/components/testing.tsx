@@ -13,9 +13,9 @@ type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 
 export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
   return (
-    <div className='w-full h-full grid grid-cols-[1fr_1fr] gap-2 overflow-hidden'>
+    <div className='is-full bs-full grid grid-cols-[1fr_1fr] gap-2 overflow-hidden'>
       <div className={mx('p-4 justify-center overflow-y-auto', classNames)}>{children}</div>
-      <JsonFilter data={json} classNames='w-full text-xs' testId='debug' />
+      <JsonFilter data={json} classNames='is-full text-xs' testId='debug' />
     </div>
   );
 };

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createUrl, stripNewlines, toMarkdown } from './util';
+import { createUrl, stripWhitespace, toMarkdown } from './util';
 
 describe('util', () => {
   test('createUrl', ({ expect }) => {
@@ -14,7 +14,7 @@ describe('util', () => {
 
   test('stripNewlines', ({ expect }) => {
     const text = 'aaa\n \n \n \n\n \nbbb';
-    expect(stripNewlines(text)).to.equal('aaa\n\nbbb');
+    expect(stripWhitespace(text)).to.equal('aaa\n\nbbb');
   });
 
   test('markdown', ({ expect }) => {

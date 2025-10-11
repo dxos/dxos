@@ -9,18 +9,19 @@ import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
 //   rather than just making the item unselectable.
-export type NavTreeItemHeadingProps = {
+export type TreeItemHeadingProps = {
   label: Label;
-  icon?: string;
   className?: string;
+  icon?: string;
+  iconClassName?: string;
   disabled?: boolean;
   current?: boolean;
   onSelect?: (option: boolean) => void;
 };
 
 export const TreeItemHeading = memo(
-  forwardRef<HTMLButtonElement, NavTreeItemHeadingProps>(
-    ({ label, icon, className, disabled, current, onSelect }, forwardedRef) => {
+  forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
+    ({ label, className, icon, iconClassName, disabled, current, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
 
       const handleSelect = useCallback(
@@ -64,7 +65,7 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames='mlb-1' />}
+            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames={['mlb-1', iconClassName]} />}
             <span className='flex-1 is-0 truncate text-start text-sm font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

@@ -112,12 +112,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {
         id: node.id,
-        label: node.properties.label ?? node.id,
         parentOf,
-        icon: node.properties.icon,
         disabled: node.properties.disabled,
-        className: mx(node.properties.modified && 'italic', node.properties.className),
+        label: node.properties.label ?? node.id,
+        className: mx(node.properties.className, node.properties.modified && 'italic'), // TODO(burdon): Italic?
         headingClassName: node.properties.headingClassName,
+        icon: node.properties.icon,
+        iconClassName: node.properties.iconClassName,
         testId: node.properties.testId,
       };
     },

@@ -70,7 +70,7 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
         role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
       )}
     >
-      <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
+      <MessageHeader message={message} viewMode={viewMode} contact={contactDxn} />
       <div role='none' className={mx(role === 'section' ? 'contents' : 'p-2 overflow-hidden')}>
         <div
           role='none'
