@@ -124,6 +124,7 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
 
 export const EditorToolbar = memo(({ classNames, attendableId, role, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
+
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...menuProps} attendableId={attendableId}>

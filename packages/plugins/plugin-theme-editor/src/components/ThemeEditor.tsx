@@ -56,6 +56,7 @@ export const ThemeEditor = () => {
   const [key, setKey] = useState(0);
   const creator = useMemo(() => toolbarCreator(() => setKey((key) => key + 1)), []);
   const menu = useMenuActions(creator);
+
   return (
     <StackItem.Content toolbar>
       <MenuProvider {...menu} attendableId={themeEditorId}>

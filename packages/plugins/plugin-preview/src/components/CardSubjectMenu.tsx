@@ -31,6 +31,7 @@ const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
   result.nodes.forEach(({ id: target }) => {
     result.edges.push({ source: 'root', target });
   });
+
   return useMenuActions(Rx.make(result));
 };
 

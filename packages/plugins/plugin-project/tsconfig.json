@@ -93,6 +93,9 @@
       "path": "../plugin-inbox"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-preview"
     },
     {

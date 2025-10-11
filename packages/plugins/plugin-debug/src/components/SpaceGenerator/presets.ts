@@ -99,7 +99,7 @@ export const generator = () => ({
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
 
         const objects = range(n, () => {
-          // TODO(wittjosiah): Move filter to another property.
+          // TODO(wittjosiah): Move filter to a tag.
           const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();

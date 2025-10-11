@@ -39,7 +39,13 @@ export const FunctionInputEditor = ({
   useOnTransition(
     // Clear function parameter input when the function changes.
     selectedFunctionValue,
-    (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
+    (prevValue) => {
+      if (!Ref.isRef(prevValue) || !Ref.isRef(selectedFunctionValue)) {
+        return false;
+      }
+
+      return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
+    },
     (currValue) => currValue !== undefined,
     () => onValueChange('object', {}),
   );

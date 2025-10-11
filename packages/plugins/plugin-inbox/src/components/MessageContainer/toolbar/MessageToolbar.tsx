@@ -76,7 +76,6 @@ export const useMessageToolbarActions = (
 
             nodes.push(extractContactAction);
             edges.push({ source: 'root', target: extractContactAction.id });
-
             return { nodes, edges };
           }),
         ),

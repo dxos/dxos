@@ -48,7 +48,9 @@ export const useDidTransition = <T>(
  * Executes a callback function when a specified transition occurs in a value.
  *
  * This function utilizes the `useDidTransition` hook to monitor changes in `currentValue`.
- * When `currentValue` transitions from `fromValue` to `toValue`, the provided `callback` function is executed. */
+ * When `currentValue` transitions from `fromValue` to `toValue`, the provided `callback` function is executed.
+ */
+// TODO(wittjosiah): Seems overwrought.
 export const useOnTransition = <T>(
   currentValue: T,
   fromValue: T | ((value: T) => boolean),

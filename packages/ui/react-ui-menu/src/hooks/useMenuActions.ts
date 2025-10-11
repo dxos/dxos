@@ -38,7 +38,10 @@ const edgesArrayToRecord = (edges: Edge[]): Record<string, Edges> => {
 
 export type ActionGraphNodes = NodeArg<any>[];
 export type ActionGraphEdges = Edge[];
-export type ActionGraphProps = { nodes: ActionGraphNodes; edges: ActionGraphEdges };
+export type ActionGraphProps = {
+  nodes: ActionGraphNodes;
+  edges: ActionGraphEdges;
+};
 
 export const useMenuActions = (props: Rx.Rx<ActionGraphProps>) => {
   const registry = useContext(RegistryContext);
