@@ -42,7 +42,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const currentMessageId = state[id]?.id;
 
   const filterEditorRef = useRef<EditorController>(null);
-  const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   // Menu state.
   const sortDescending = useRxState(true);
@@ -107,7 +107,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
               options: {
                 state: true,
                 variant: 'virtual',
-                anchor: saveFilterButtonRef.current,
+                anchor: filterSaveButtonRef.current,
                 props: { mailbox, filter: action.filter },
               },
             }),
@@ -153,7 +153,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
               />
               <div role='none' className='flex shrink-0 gap-1 items-center'>
                 <IconButton
-                  ref={saveFilterButtonRef}
+                  ref={filterSaveButtonRef}
                   disabled={!filter}
                   label={t('mailbox toolbar save button label')}
                   icon='ph--folder-plus--regular'
