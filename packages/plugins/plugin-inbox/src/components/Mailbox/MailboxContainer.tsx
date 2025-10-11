@@ -41,7 +41,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
 
   const filterEditorRef = useRef<EditorController>(null);
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
-  const [ascending, setAscending] = useState(true);
+  const [descending, setDescending] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
 
   const [filter, setFilter] = useState<Filter.Any | null>(null);
@@ -51,7 +51,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
     // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
     filter ?? Filter.everything(),
   );
-  const sortedMessages = useMemo(() => (ascending ? messages : [...messages].reverse()), [messages, ascending]);
+  const sortedMessages = useMemo(() => (descending ? [...messages].reverse() : messages), [messages, descending]);
 
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
@@ -70,10 +70,10 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
             'sort',
             {
               type: 'sort',
-              icon: ascending ? 'ph--sort-ascending--regular' : 'ph--sort-descending--regular',
+              icon: descending ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
               label: ['mailbox toolbar sort', { ns: meta.id }],
             },
-            () => setAscending((prev) => !prev),
+            () => setDescending((prev) => !prev),
           )
           .action(
             'filter',
@@ -86,7 +86,7 @@ export const MailboxContainer = ({ mailbox, role, attendableId, filter: filterPa
           )
           .build(),
       ),
-    [ascending],
+    [descending],
   );
 
   const actions = useMenuActions(menu);
