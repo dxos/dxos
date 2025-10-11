@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Rx, useRxValue } from '@effect-rx/rx-react';
-import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Rx, useRxSet } from '@effect-rx/rx-react';
+import { useRxValue } from '@effect-rx/rx-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -42,27 +43,25 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const filterEditorRef = useRef<EditorController>(null);
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
 
+  // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
+  const [descending, isDescending] = useRxState(false);
+  const [filterVisible, isFilterVisible, setFilterVisible] = useRxState(false);
+  const menuActions = useMailboxActions({ descending, filterVisible });
+
+  // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any | null>(null);
+  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   const messages: DataType.Message[] = useQuery(
     mailbox.queue.target,
     // TODO(burdon): Query not supported on queues?
     // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
     filter ?? Filter.everything(),
   );
+  const sortedMessages = useMemo(() => (isDescending ? [...messages].reverse() : messages), [messages, isDescending]);
 
-  // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
-  const descendingRx = useRxState(false);
-  const descending = useRxValue(descendingRx);
-  const sortedMessages = useMemo(() => (descending ? [...messages].reverse() : messages), [messages, descending]);
-
-  const [filterText, setFilterText] = useState<string>(filterParam ?? '');
+  // Parse filter.
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
-  useEffect(() => {
-    setFilter(parser.build(filterText));
-  }, [filterText]);
-
-  const [filterVisible, setFilterVisible] = useState(false);
-  const actions = useMailboxActions({ descending: descendingRx, onFilterToggle: setFilterVisible });
+  useEffect(() => setFilter(parser.build(filterText)), [filterText]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -129,15 +128,15 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     <StackItem.Content
       classNames={[
         'relative grid',
-        filterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
+        isFilterVisible ? 'grid-rows-[var(--toolbar-size)_min-content_1fr]' : 'grid-rows-[var(--toolbar-size)_1fr]',
       ]}
       toolbar
       layoutManaged
     >
       <ElevationProvider elevation='positioned'>
-        <MenuProvider {...actions} attendableId={id}>
+        <MenuProvider {...menuActions} attendableId={id}>
           <ToolbarMenu />
-          {filterVisible && (
+          {isFilterVisible && (
             <div
               role='none'
               className='grid grid-cols-[1fr_min-content] is-full items-center p-1 gap-1 border-be border-separator'
@@ -189,14 +188,19 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
 };
 
 // TODO(wittjosiah): Factor out.
-const useRxState = <T,>(initialValue: T) => useMemo(() => Rx.make(initialValue), [initialValue]);
+const useRxState = <T,>(initialValue: T): [Rx.Writable<T>, T, (value: T | ((value: T) => T)) => void] => {
+  const rx = useMemo(() => Rx.make(initialValue), [initialValue]);
+  const value = useRxValue(rx);
+  const setter = useRxSet(rx);
+  return [rx, value, setter];
+};
 
 const useMailboxActions = ({
   descending,
-  onFilterToggle,
+  filterVisible,
 }: {
   descending: Rx.Writable<boolean>;
-  onFilterToggle: Dispatch<SetStateAction<boolean>>;
+  filterVisible: Rx.Writable<boolean>;
 }) => {
   const menu = useMemo(
     () =>
@@ -221,7 +225,7 @@ const useMailboxActions = ({
               icon: 'ph--magnifying-glass--regular',
               label: ['mailbox toolbar filter', { ns: meta.id }],
             },
-            () => onFilterToggle((prev) => !prev),
+            () => context.set(filterVisible, !context.get(filterVisible)),
           )
           .build(),
       ),
