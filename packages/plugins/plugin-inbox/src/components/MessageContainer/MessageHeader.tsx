@@ -9,7 +9,7 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { formatDateTime } from '../util';
+import { formatDateTime } from '../../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 

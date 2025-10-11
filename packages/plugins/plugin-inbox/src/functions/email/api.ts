@@ -35,6 +35,7 @@ export const SYSTEM_LABELS = [
   'YELLOW_STAR',
 ];
 
+// TODO(burdon): Factor out.
 export const filterLabel = (label: string) => !SYSTEM_LABELS.includes(label);
 
 /**
