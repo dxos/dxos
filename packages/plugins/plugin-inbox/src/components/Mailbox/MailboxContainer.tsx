@@ -44,9 +44,9 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const saveFilterButtonRef = useRef<HTMLButtonElement>(null);
 
   // TODO(wittjosiah): Find a better pattern for declaring this sort of inline state.
-  const [descending, isDescending] = useRxState(false);
+  const [sortDescending, isSortDescending] = useRxState(false);
   const [filterVisible, isFilterVisible, setFilterVisible] = useRxState(false);
-  const menuActions = useMailboxActions({ descending, filterVisible });
+  const menuActions = useMailboxActions({ sortDescending, filterVisible });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any | null>(null);
@@ -54,7 +54,10 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   // TODO(burdon): Query not supported on queues?
   // Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
   const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
-  const sortedMessages = useMemo(() => (isDescending ? [...messages].reverse() : messages), [messages, isDescending]);
+  const sortedMessages = useMemo(
+    () => (isSortDescending ? [...messages].reverse() : messages),
+    [messages, isSortDescending],
+  );
 
   // Parse filter.
   const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
@@ -193,10 +196,10 @@ const useRxState = <T,>(initialValue: T): [Rx.Writable<T>, T, (value: T | ((valu
 };
 
 const useMailboxActions = ({
-  descending,
+  sortDescending,
   filterVisible,
 }: {
-  descending: Rx.Writable<boolean>;
+  sortDescending: Rx.Writable<boolean>;
   filterVisible: Rx.Writable<boolean>;
 }) => {
   const menu = useMemo(
@@ -207,18 +210,18 @@ const useMailboxActions = ({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
           .action(
-            'sort',
+            'sortDescending',
             {
-              type: 'sort',
-              icon: context.get(descending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
+              type: 'sortDescending',
+              icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
               label: ['mailbox toolbar sort', { ns: meta.id }],
             },
-            () => context.set(descending, !context.get(descending)),
+            () => context.set(sortDescending, !context.get(sortDescending)),
           )
           .action(
-            'filter',
+            'filterVisible',
             {
-              type: 'filter',
+              type: 'filterVisible',
               icon: 'ph--magnifying-glass--regular',
               label: ['mailbox toolbar filter', { ns: meta.id }],
             },
@@ -226,7 +229,7 @@ const useMailboxActions = ({
           )
           .build(),
       ),
-    [descending, filterVisible],
+    [sortDescending, filterVisible],
   );
 
   return useMenuActions(menu);
