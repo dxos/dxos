@@ -12,6 +12,8 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 
+import { translations } from '../../translations';
+
 import { ScriptToolbar } from './ScriptToolbar';
 
 const meta = {
@@ -19,6 +21,13 @@ const meta = {
   component: ScriptToolbar,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
+  parameters: {
+    layout: {
+      type: 'centered',
+      className: 'is-prose',
+    },
+    translations,
+  },
 } satisfies Meta<typeof ScriptToolbar>;
 
 export default meta;
@@ -27,11 +36,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    state: {},
     script: Obj.make(ScriptType, {
       name: 'test',
       description: 'test',
       source: Ref.make(DataType.makeText('test')),
     }),
-    state: {},
   },
 };

@@ -27,6 +27,27 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
+export type ScriptToolbarProps = ThemedClassName<{
+  role?: string;
+  script: ScriptType;
+  state: ScriptToolbarState;
+}>;
+
+export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
+  const { t } = useTranslation(meta.id);
+  const options = useDeployDeps({ script });
+  const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
+  const actions = useMenuActions(menu);
+
+  return (
+    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+      <MenuProvider {...actions} attendableId={fullyQualifiedId(script)}>
+        <ToolbarMenu classNames={classNames} />
+      </MenuProvider>
+    </ElevationProvider>
+  );
+};
+
 const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions): Rx.Rx<ActionGraphProps> =>
   Rx.make((get) =>
     get(
@@ -42,27 +63,3 @@ const createToolbarActions = ({ state, script, ...options }: CreateDeployOptions
       }),
     ),
   );
-
-export type ScriptToolbarProps = ThemedClassName<{
-  role?: string;
-  script: ScriptType;
-  state: ScriptToolbarState;
-}>;
-
-export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
-  const { t } = useTranslation(meta.id);
-  const options = useDeployDeps({ script });
-  const toolbarCreator = useMemo(
-    () => createToolbarActions({ state, script, t, ...options }),
-    [state, script, options, t],
-  );
-  const menu = useMenuActions(toolbarCreator);
-
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menu} attendableId={fullyQualifiedId(script)}>
-        <ToolbarMenu classNames={classNames} />
-      </MenuProvider>
-    </ElevationProvider>
-  );
-};

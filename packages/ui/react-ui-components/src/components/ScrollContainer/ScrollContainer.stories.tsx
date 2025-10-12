@@ -56,7 +56,7 @@ const meta = {
   parameters: {
     layout: {
       type: 'column',
-      classNames: 'w-[30rem]',
+      className: 'w-[30rem]',
     },
   },
 } satisfies Meta<typeof DefaultStory>;

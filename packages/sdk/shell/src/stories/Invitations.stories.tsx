@@ -235,7 +235,7 @@ export const Default: Story = {
   parameters: {
     layout: {
       type: 'fullscreen',
-      classNames: 'grid grid-cols-3',
+      className: 'grid grid-cols-3',
     },
     chromatic: {
       disableSnapshot: true,

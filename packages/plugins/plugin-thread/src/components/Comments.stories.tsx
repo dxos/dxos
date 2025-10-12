@@ -80,7 +80,7 @@ const meta = {
   parameters: {
     layout: {
       type: 'column',
-      classNames: 'overflow-y-scroll',
+      className: 'overflow-y-scroll',
     },
     translations,
   },

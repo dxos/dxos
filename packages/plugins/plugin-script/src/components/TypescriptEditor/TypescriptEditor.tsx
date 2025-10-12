@@ -22,7 +22,6 @@ import {
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
-  folding,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -68,16 +67,19 @@ export const TypescriptEditor = ({
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],
-        folding(),
+
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
 
         // TODO(burdon): Factor out.
         javascript({ typescript: true }),
+
         // https://github.com/val-town/codemirror-ts
         keymap.of(completionKeymap),
+
         autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
         keymap.of(lintKeymap),
+
         env && [
           tsFacet.of({ env, path: `/src/${id}.ts` }),
           tsSync(),
@@ -89,6 +91,7 @@ export const TypescriptEditor = ({
     [id, extensions, themeMode, inputMode, selection, scrollTo],
   );
 
+  // TODO(brudon): Use editor.
   return (
     <div
       ref={parentRef}
