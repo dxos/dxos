@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Filter, type Tag, type TagMap, createTagList } from '@dxos/echo';
+import { Filter, type Tag } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+import { translationKey } from '../../translations';
 
 import { Picker } from './Picker';
 
@@ -17,6 +20,7 @@ export type QueryBuilderProps = ThemedClassName<{
 }>;
 
 export const QueryBuilder = ({ classNames, types, tags, onFilterChange }: QueryBuilderProps) => {
+  const { t } = useTranslation(translationKey);
   const [type, setType] = useState<string | null>(null);
   const [tag, setTag] = useState<string | null>(null);
 
@@ -28,8 +32,8 @@ export const QueryBuilder = ({ classNames, types, tags, onFilterChange }: QueryB
 
   return (
     <div className={mx('grid grid-cols-2 gap-2', classNames)}>
-      {types && <Picker placeholder='Type' values={types} value={type} onChange={setType} />}
-      {tags && <Picker placeholder='Tag' values={tags} value={tag} onChange={setTag} />}
+      {types && <Picker placeholder={t('picker type placeholder')} values={types} value={type} onChange={setType} />}
+      {tags && <Picker placeholder={t('picker tag placeholder')} values={tags} value={tag} onChange={setTag} />}
     </div>
   );
 };

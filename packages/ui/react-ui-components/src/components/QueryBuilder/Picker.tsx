@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Select, useTranslation } from '@dxos/react-ui';
 
@@ -25,6 +25,7 @@ export const Picker = <T extends { id: string; label: string }>({
   onChange,
 }: PickerProps<T>) => {
   const { t } = useTranslation(translationKey);
+  const sorted = useMemo(() => values?.sort(({ label: a }, { label: b }) => a.localeCompare(b)) ?? [], [values]);
 
   return (
     <Select.Root value={value ?? NULL} onValueChange={(value) => onChange?.(value === NULL ? null : value)}>
@@ -36,7 +37,7 @@ export const Picker = <T extends { id: string; label: string }>({
               <Select.Item value={NULL}>
                 <Select.ItemText>{t('picker none')}</Select.ItemText>
               </Select.Item>
-              {values?.map(({ id, label }) => (
+              {sorted.map(({ id, label }) => (
                 <Select.Item key={id} value={id}>
                   <Select.ItemText>{label}</Select.ItemText>
                 </Select.Item>

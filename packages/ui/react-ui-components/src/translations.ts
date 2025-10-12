@@ -15,6 +15,8 @@ export const translations = [
         'query placeholder': 'Enter query (e.g., "type:")',
         'picker select': 'Select',
         'picker none': 'None',
+        'picker type placeholder': 'Type',
+        'picker tag placeholder': 'Tag',
       },
     },
   },
