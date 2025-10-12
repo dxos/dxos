@@ -28,7 +28,7 @@ const meta = {
   component: QueryEditor,
   render: (args: QueryEditorProps) => {
     const [space] = useSpaces();
-    const [filter, setFilter] = useState<Filter.Any | null>(null);
+    const [filter, setFilter] = useState<Filter.Any>();
     const builder = useMemo(() => new QueryBuilder(tags), []);
     const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
       setFilter(builder.build(value));
