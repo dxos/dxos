@@ -5,7 +5,7 @@
 import { type ComponentType, lazy } from 'react';
 
 import { type ProjectContainerProps } from './ProjectContainer';
-import { type ProjectSettingsProps } from './ProjectSettings';
+import { type ProjectObjectSettingsProps } from './ProjectSettings';
 
 export const ProjectContainer = lazy<ComponentType<ProjectContainerProps>>(() => import('./ProjectContainer'));
-export const ProjectSettings = lazy<ComponentType<ProjectSettingsProps>>(() => import('./ProjectSettings'));
+export const ProjectObjectSettings = lazy<ComponentType<ProjectObjectSettingsProps>>(() => import('./ProjectSettings'));
