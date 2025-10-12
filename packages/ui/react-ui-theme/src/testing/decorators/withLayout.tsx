@@ -13,7 +13,7 @@ export type LayoutType = 'fullscreen' | 'column' | 'centered';
  * parameters: {
  *   layout: {
  *     type: 'fullscreen' | 'column' | 'centered'
- *     classNames?: string
+ *     className?: string
  *   }
  * }
  */
@@ -22,7 +22,7 @@ export type LayoutOptions =
   | {
       type: LayoutType;
       scroll?: boolean;
-      classNames?: string;
+      className?: string;
     };
 
 /**
@@ -32,13 +32,13 @@ export const withLayout: Decorator = (Story, context) => {
   const {
     parameters: { layout },
   } = context;
-  const { type, classNames, scroll } = typeof layout === 'object' ? layout : { type: layout };
+  const { type, className, scroll } = typeof layout === 'object' ? layout : { type: layout };
 
   switch (type) {
     // Fullscreen.
     case 'fullscreen':
       return (
-        <div role='none' className={mx('fixed inset-0 flex flex-col overflow-hidden bg-baseSurface', classNames)}>
+        <div role='none' className={mx('fixed inset-0 flex flex-col overflow-hidden bg-baseSurface', className)}>
           <Story />
         </div>
       );
@@ -51,7 +51,7 @@ export const withLayout: Decorator = (Story, context) => {
             role='none'
             className={mx(
               'flex flex-col bs-full is-[40rem] bg-baseSurface border-is border-ie border-subduedSeparator',
-              classNames,
+              className,
               scroll ? 'overflow-y-auto' : 'overflow-hidden',
             )}
           >
@@ -64,7 +64,7 @@ export const withLayout: Decorator = (Story, context) => {
     case 'centered':
       return (
         <div role='none' className={mx('fixed inset-0 grid place-items-center bg-deckSurface')}>
-          <div role='none' className={mx('contents bg-baseSurface', classNames)}>
+          <div role='none' className={mx('bg-baseSurface', className ?? 'contents')}>
             <Story />
           </div>
         </div>
