@@ -50,7 +50,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const menuActions = useMailboxActions({ sortDescending: sortDescending.rx, filterVisible: filterVisible.rx });
 
   // Filter and messages.
-  const [filter, setFilter] = useState<Filter.Any | null>(null);
+  const [filter, setFilter] = useState<Filter.Any>();
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
