@@ -19,6 +19,7 @@ import { DataType } from '@dxos/schema';
 // TODO(wittjosiah): Factor out and add tests.
 
 // TODO(wittjosiah): Support arbitrary imports.
+// TODO(burdon): Translate filters.
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval

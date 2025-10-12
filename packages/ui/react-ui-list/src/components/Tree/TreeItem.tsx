@@ -29,10 +29,10 @@ import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
 
-type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
-
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
+
+type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 export const TreeDataSchema = Schema.Struct({
   id: Schema.String,
@@ -66,13 +66,13 @@ export type TreeItemProps<T extends HasId = any> = {
 const RawTreeItem = <T extends HasId = any>({
   item,
   path: _path,
+  levelOffset = 2,
   last,
   draggable: _draggable,
   renderColumns: Columns,
   canDrop,
   onOpenChange,
   onSelect,
-  levelOffset = 2,
 }: TreeItemProps<T>) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -192,7 +192,9 @@ const RawTreeItem = <T extends HasId = any>({
 
   const handleSelect = useCallback(
     (option = false) => {
-      if (isBranch) {
+      // TODO(burdon): Display stack.
+      const toggle = true;
+      if (isBranch && toggle) {
         handleOpenToggle();
       } else {
         rowRef.current?.focus();

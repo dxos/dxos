@@ -35,24 +35,24 @@ export class QueryBuilder {
   /**
    * Build a query from the input string.
    */
-  build(input: string): Filter.Any | null {
+  build(input: string): Filter.Any | undefined {
     try {
       const tree = this._parser.parse(input);
       return this.buildQuery(tree, input);
     } catch {
-      return null;
+      return undefined;
     }
   }
 
   /**
    * Build a query from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): Filter.Any | null {
+  buildQuery(tree: Tree, input: string): Filter.Any | undefined {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
     if (cursor.node.name !== 'Query') {
-      return null;
+      return undefined;
     }
 
     // Check if Query has multiple children (binary expression).
@@ -83,7 +83,7 @@ export class QueryBuilder {
   /**
    * Parse an expression node.
    */
-  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any | null {
+  private _parseExpression(cursor: TreeCursor, input: string): Filter.Any | undefined {
     const nodeName = cursor.node.name;
 
     switch (nodeName) {
@@ -94,7 +94,7 @@ export class QueryBuilder {
         // Move past NOT token to the expression.
         cursor.nextSibling();
         const notFilter = this._parseExpression(cursor, input);
-        return notFilter ? Filter.not(notFilter) : null;
+        return notFilter ? Filter.not(notFilter) : undefined;
       }
 
       case 'And':
@@ -243,12 +243,12 @@ export class QueryBuilder {
   /**
    * Parse a Filter node.
    */
-  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any | null {
+  private _parseFilter(cursor: TreeCursor, input: string): Filter.Any | undefined {
     if (!cursor.firstChild()) {
       return Filter.nothing();
     }
 
-    let result: Filter.Any | null = null;
+    let result: Filter.Any | undefined = undefined;
     const filterType = cursor.node.name;
     switch (filterType) {
       case 'TagFilter':
@@ -411,11 +411,11 @@ export class QueryBuilder {
   /**
    * Parse a TagFilter node (#tag).
    */
-  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | null {
+  private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | undefined {
     invariant(this._tags);
     const str = this._getNodeText(cursor, input).slice(1).toLowerCase();
     const [key] = Object.entries(this._tags!).find(([, value]) => value.label.toLowerCase() === str) ?? [];
-    return key ? Filter.tag(key) : null;
+    return key ? Filter.tag(key) : undefined;
   }
 
   /**

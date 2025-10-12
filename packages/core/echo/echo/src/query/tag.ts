@@ -24,6 +24,11 @@ export type TagMap = Record<string, TagInfo>;
 
 export const sortTags = ({ label: a }: TagInfo, { label: b }: TagInfo) => a.localeCompare(b);
 
+export const createTagList = (tags: TagMap): Tag[] =>
+  Object.entries(tags)
+    .map(([id, tag]) => ({ ...tag, id }))
+    .sort(sortTags);
+
 export const findTagByLabel = (tags: Record<string, TagInfo> | undefined, name: string): Tag | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;

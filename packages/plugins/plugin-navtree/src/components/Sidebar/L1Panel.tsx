@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
@@ -58,7 +58,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       {...(!open && { inert: true })}
     >
       {item.id === currentItemId && (
-        <>
+        <DensityProvider density='fine'>
           <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
@@ -85,7 +85,7 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
               />
             )}
           </div>
-        </>
+        </DensityProvider>
       )}
     </Tabs.Tabpanel>
   );

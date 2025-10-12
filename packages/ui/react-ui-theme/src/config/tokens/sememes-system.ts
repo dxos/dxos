@@ -273,14 +273,15 @@ const aliasDefs: Record<string, Partial<Record<SememeKey, SememeName>>> = {
     modal: 'hoverSurfaceModal',
   },
 
-  // TODO(thure): rename uses of this token to `focusSurface` and remove this alias.
+  // TODO(thure): Rename uses of this token to `focusSurface` and remove this alias.
   attention: {
     root: 'focusSurface',
   },
 
   // In “master-detail” patterns, the background of the item in the list which is enumerated in the adjacent view.
+  // TODO(burdon): Review tokens.
   currentRelated: {
-    root: 'accentSurfaceRelated',
+    root: 'modalSurface',
   },
 
   // Borders and dividers.

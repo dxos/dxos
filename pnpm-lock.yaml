@@ -6821,6 +6821,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -6854,6 +6857,9 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
       '@dxos/react-ui-graph':
         specifier: workspace:*
         version: link:../../ui/react-ui-graph
