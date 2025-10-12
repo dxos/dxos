@@ -26,7 +26,7 @@ const meta = {
   parameters: {
     layout: {
       type: 'fullscreen',
-      classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+      className: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
     },
   },
 } satisfies Meta<typeof Main>;
