@@ -81,10 +81,11 @@ export const NavTreeItemMonolithicAction = ({
       label={baseLabel}
       disabled={disabled}
       onClick={(event) => {
+        event.stopPropagation();
         if (disabled) {
           return;
         }
-        event.stopPropagation();
+
         void invoke?.(caller ? { parent, caller } : { parent });
       }}
       data-testid={testId}
