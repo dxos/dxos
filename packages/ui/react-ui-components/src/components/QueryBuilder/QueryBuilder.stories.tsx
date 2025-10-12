@@ -17,12 +17,6 @@ import { translations } from '../../translations';
 
 import { QueryBuilder, type QueryBuilderProps } from './QueryBuilder';
 
-const tags = createTagList({
-  ['tag_1' as const]: { label: 'Important' },
-  ['tag_2' as const]: { label: 'Investor' },
-  ['tag_3' as const]: { label: 'New' },
-});
-
 const types = [
   // TODO(burdon): Get label from annotation.
   { id: Type.getTypename(DataType.Organization), label: 'Organization' },
@@ -30,6 +24,12 @@ const types = [
   { id: Type.getTypename(DataType.Project), label: 'Project' },
   { id: Type.getTypename(DataType.Employer), label: 'Employer' },
 ];
+
+const tags = createTagList({
+  ['tag_1' as const]: { label: 'Important' },
+  ['tag_2' as const]: { label: 'Investor' },
+  ['tag_3' as const]: { label: 'New' },
+});
 
 const meta = {
   title: 'ui/react-ui-components/QueryBuilder',
