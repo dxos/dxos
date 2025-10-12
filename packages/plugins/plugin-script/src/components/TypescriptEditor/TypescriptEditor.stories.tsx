@@ -46,10 +46,10 @@ const DefaultStory = (props: TypescriptEditorProps) => {
 
   return (
     <StackItem.Content toolbar classNames='overflow-hidden'>
+      {/* <ScriptToolbar script={script} state={{}} /> */}
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
       </Toolbar.Root>
-      {/* <ScriptToolbar script={script} state={{}} /> */}
       <div className='flex flex-col bs-full text-sm overflow-hidden'>
         <TypescriptEditor
           {...props}
