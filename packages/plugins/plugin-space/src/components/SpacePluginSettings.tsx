@@ -10,12 +10,12 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection, controlItemClasses } from '@dxos/react-ui-form';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SpaceAction, type SpaceSettingsProps } from '../types';
 import { getSpaceDisplayName } from '../util';
 
 export const SpacePluginSettings = ({ settings }: { settings: SpaceSettingsProps }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
   const { dispatchPromise: dispatch } = useIntentDispatcher();

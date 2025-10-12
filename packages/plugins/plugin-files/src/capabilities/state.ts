@@ -11,14 +11,14 @@ import { scheduledEffect } from '@dxos/echo-signals/core';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../util';
 
 import { FileCapabilities } from './capabilities';
 
 export default async (context: PluginContext) => {
-  const state = new LocalStorageStore<FilesState>(FILES_PLUGIN, {
+  const state = new LocalStorageStore<FilesState>(meta.id, {
     exportRunning: false,
     files: [],
     current: undefined,
@@ -26,11 +26,11 @@ export default async (context: PluginContext) => {
 
   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
   const attention = context.getCapability(AttentionCapabilities.Attention);
-  const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(FILES_PLUGIN)!.value;
+  const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
 
   const subscriptions = new SubscriptionList();
 
-  const value = await localforage.getItem<FileSystemHandle[]>(FILES_PLUGIN);
+  const value = await localforage.getItem<FileSystemHandle[]>(meta.id);
   if (Array.isArray(value) && settings.openLocalFiles) {
     await Promise.all(
       value.map(async (handle) => {
@@ -72,7 +72,7 @@ export default async (context: PluginContext) => {
       }
 
       const fileHandles = state.values.files.map((file) => file.handle).filter(Boolean);
-      void localforage.setItem(FILES_PLUGIN, fileHandles);
+      void localforage.setItem(meta.id, fileHandles);
     }),
   );
 
@@ -97,13 +97,13 @@ export default async (context: PluginContext) => {
     ),
   );
 
-  state.values.rootHandle = (await localforage.getItem(`${FILES_PLUGIN}/rootHandle`)) ?? undefined;
+  state.values.rootHandle = (await localforage.getItem(`${meta.id}/rootHandle`)) ?? undefined;
 
   subscriptions.add(
     effect(() => {
       const rootHandle = state.values.rootHandle;
       if (rootHandle) {
-        void localforage.setItem(`${FILES_PLUGIN}/rootHandle`, rootHandle);
+        void localforage.setItem(`${meta.id}/rootHandle`, rootHandle);
       }
     }),
   );

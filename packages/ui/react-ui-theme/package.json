@@ -7,24 +7,44 @@
   "license": "MIT",
   "author": "DXOS.org",
   "sideEffects": true,
+  "type": "module",
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/browser/index.mjs"
     },
+    "./esbuild-plugin": {
+      "source": "./src/plugins/esbuild-plugin.ts",
+      "types": "./dist/types/src/plugins/esbuild-plugin.d.ts",
+      "import": "./dist/plugin/node-esm/plugins/esbuild-plugin.mjs",
+      "require": "./dist/plugin/node-cjs/plugins/esbuild-plugin.cjs"
+    },
     "./plugin": {
       "source": "./src/plugins/plugin.ts",
       "types": "./dist/types/src/plugins/plugin.d.ts",
       "import": "./dist/plugin/node-esm/plugins/plugin.mjs",
       "require": "./dist/plugin/node-cjs/plugins/plugin.cjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "default": "./dist/lib/browser/testing/index.mjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/types/src/plugins/plugin.d.ts"
+      ],
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
     }
   },
   "files": [
     "dist",
-    "src",
-    "plugin.js",
-    "plugin.d.ts"
+    "src"
   ],
   "scripts": {
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
@@ -56,8 +76,8 @@
     "@dxos/react-ui-types": "workspace:*",
     "@types/lodash.merge": "^4.6.6",
     "@types/postcss-import": "^14.0.3",
-    "esbuild": "0.25.6",
-    "vite": "7.1.1"
+    "esbuild": "0.25.10",
+    "vite": "7.1.9"
   },
   "publishConfig": {
     "access": "public"

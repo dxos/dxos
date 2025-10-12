@@ -35,6 +35,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -47,12 +48,13 @@
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
-    "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.7",
+    "@preact/signals-core": "^1.12.1",
+    "effect": "3.18.3",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {

@@ -13,7 +13,7 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { INBOX_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { InboxAction, type Mailbox } from '../../types';
 
 import { Message } from './Message';
@@ -28,7 +28,7 @@ export type MessageContainerProps = {
 };
 
 export const MessageContainer = ({ space, message, inMailbox, role }: MessageContainerProps) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const hasEnrichedContent = useMemo(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
@@ -40,7 +40,6 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   }, [hasEnrichedContent]);
 
   const viewMode = useSignal<ViewMode>(initialViewMode);
-
   const hasEmail = useComputed(() => !!message?.sender.email);
   const contacts = useQuery(space, Filter.type(DataType.Person));
   const existingContact = useSignal<DataType.Person | undefined>(undefined);
@@ -55,11 +54,11 @@ export const MessageContainer = ({ space, message, inMailbox, role }: MessageCon
   }, [contacts, message?.sender.email, hasEmail, existingContact]);
 
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-
   const handleExtractContact = useCallback(() => {
     if (!space || !message) {
       return;
     }
+
     void dispatch(createIntent(InboxAction.ExtractContact, { space, message }));
   }, [space, message, dispatch]);
 

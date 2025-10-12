@@ -7,7 +7,7 @@
 
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
-export const useIsFocused = (inputRef: RefObject<HTMLInputElement>) => {
+export const useIsFocused = (inputRef: RefObject<HTMLInputElement | null>) => {
   const [isFocused, setIsFocused] = useState<boolean | undefined>(undefined);
   const isFocusedRef = useRef<boolean | undefined>(isFocused);
 

@@ -10,13 +10,13 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { StackMain } from '../components';
-import { STACK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default () =>
   contributes(
     Capabilities.ReactSurface,
     createSurface({
-      id: `${STACK_PLUGIN}/article`,
+      id: `${meta.id}/article`,
       role: 'article',
       filter: (data): data is { id?: string; subject: DataType.Collection } =>
         Obj.instanceOf(DataType.Collection, data.subject),

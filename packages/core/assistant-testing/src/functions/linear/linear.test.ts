@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer } from 'effect';
@@ -16,8 +16,7 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
+  FunctionInvocationService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
@@ -27,8 +26,8 @@ import { LINEAR_ID_KEY, default as fetchLinearIssues } from './sync-issues';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([], Toolkit.make()),
+  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -40,9 +39,10 @@ const TestLayer = Layer.mergeAll(
         storagePath: testStoragePath({ name: 'feed-test-13' }),
       }),
       CredentialsService.layerConfig([{ service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') }]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
+      FunctionInvocationService.layerTestMocked({ functions: [fetchLinearIssues] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
       FetchHttpClient.layer,
     ),
   ),
@@ -52,10 +52,10 @@ describe('Linear', { timeout: 600_000 }, () => {
   it.effect(
     'sync',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         yield* DatabaseService.flush({ indexes: true });
 
-        yield* LocalFunctionExecutionService.invokeFunction(fetchLinearIssues, {
+        yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
 

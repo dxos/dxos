@@ -45,6 +45,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -85,9 +88,6 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

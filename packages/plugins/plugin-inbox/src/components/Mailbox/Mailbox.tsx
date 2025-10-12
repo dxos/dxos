@@ -4,28 +4,29 @@
 
 import './mailbox.css';
 
-import React, { type MouseEvent, type WheelEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
+import { Obj, type TagMap } from '@dxos/echo';
+import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type DxGridAxisMeta,
   type DxGridPlaneCells,
   Grid,
   type GridContentProps,
   gridSeparatorBlockEnd,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { getFirstTwoRenderableChars, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
-import { getMessageProps } from '../util';
-
-import { type Tag } from './model';
+import { filterLabel } from '../../functions/email/api';
+import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
-  DEFAULT: 56,
-  WITH_TAG: 76,
+  DEFAULT: 60,
 };
 
 const messageRowDefault = {
@@ -36,12 +37,13 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: boolean) => {
+const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: TagMap) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
+  // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
   return trim`
     <button
-      class="message__thumb dx-focus-ring-inset"
+      class="message__thumb dx-focus-ring-inset opacity-70"
       data-inbox-action="select-message"
       data-message-id="${id}"
     >
@@ -50,7 +52,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
         hueVariant="surface"
         variant="square"
         size="10"
-        fallback="${from ? getFirstTwoRenderableChars(from).join('') : '?'}"
+        fallback="${from}"
       ></dx-avatar>
     </button>
     <button
@@ -58,42 +60,51 @@ const renderMessageCell = (message: DataType.Message, now: Date, _isCurrent?: bo
       data-inbox-action="current-message"
       data-message-id="${id}"
     >
-      <p class="message__abstract__heading">
+      <div class="message__abstract__heading">
         <span class="message__abstract__from">${from}</span>
         <span class="message__abstract__date">${date}</span>
-      </p>
-      <p class="message__abstract__body">${subject}</p>
-    ${
-      message.properties?.tags
-        ? `<div class="message__tag-row">
-            ${message.properties.tags.map((tag: Tag) => `<div class="dx-tag message__tag-row__item" data-label="${tag.label}" data-hue=${tag.hue}>${tag?.label}</div>`).join('')}
-          </div>`
-        : ''
-    }
-    </button>`;
+      </div>
+      <div class="message__abstract__body">
+        <div class="message__snippet">${subject}</div>
+        <div class="message__tags">
+          ${((tags && Obj.getMeta(message).tags) ?? [])
+            .filter(filterLabel)
+            .map((tagId: string) => ({ hue: getHashStyles(tagId).hue, ...tags![tagId] }))
+            .filter(Boolean)
+            .map(
+              ({ label, hue }) => trim`
+                <span class="dx-tag message__tags-item" data-label="${label}" data-hue="${hue}">${label}</span>
+              `,
+            )
+            .join('\n')}
+        </div>
+      </div>
+    </button>
+  `;
 };
 
-const messageCellClassName = 'message';
-
 export type MailboxAction =
-  | { type: 'select'; messageId: string }
   | { type: 'current'; messageId: string }
-  | { type: 'tag-select'; label: string };
+  | { type: 'select'; messageId: string }
+  | { type: 'select-tag'; label: string }
+  | { type: 'save'; filter: string };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
 export type MailboxProps = {
   id: string;
-  messages: DataType.Message[];
-  ignoreAttention?: boolean;
-  currentMessageId?: string;
-  onAction?: MailboxActionHandler;
   role?: string;
+  messages: DataType.Message[];
+  tags?: TagMap;
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
 };
 
-export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttention, role }: MailboxProps) => {
+export const Mailbox = ({ id, role, messages, tags, currentMessageId, ignoreAttention, onAction }: MailboxProps) => {
   const { hasAttention } = useAttention(id);
   const [columnDefault, setColumnDefault] = useState(messageColumnDefault);
+  const [_, setRow, rowRef] = useStateWithRef<number>(-1);
 
   const handleResize = useCallback<OnResizeCallback>(
     ({ width }) => width && setColumnDefault({ grid: { size: width } }),
@@ -104,21 +115,12 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     onResize: handleResize,
   });
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      if (!ignoreAttention && !hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention, ignoreAttention],
-  );
-
-  const handleClick = useCallback(
-    (event: MouseEvent) => {
+  const handleClick = useCallback<NonNullable<GridContentProps['onClick']>>(
+    (event) => {
       const target = event.target as HTMLElement;
       const label = target.getAttribute('data-label');
       if (label) {
-        onAction?.({ type: 'tag-select', label });
+        onAction?.({ type: 'select-tag', label });
         return;
       }
 
@@ -139,6 +141,33 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
     [onAction],
   );
 
+  const handleKeyUp = useCallback<NonNullable<GridContentProps['onKeyUp']>>(
+    (event) => {
+      switch (event.key) {
+        case ' ':
+        case 'Enter': {
+          if (rowRef.current !== -1) {
+            const messageId = messages[rowRef.current]?.id;
+            if (messageId) {
+              onAction?.({ type: 'current', messageId });
+            }
+          }
+          break;
+        }
+      }
+    },
+    [messages, onAction],
+  );
+
+  const handleWheel = useCallback<NonNullable<GridContentProps['onWheelCapture']>>(
+    (event) => {
+      if (!ignoreAttention && !hasAttention) {
+        event.stopPropagation();
+      }
+    },
+    [hasAttention, ignoreAttention],
+  );
+
   const getCells = useCallback<NonNullable<GridContentProps['getCells']>>(
     (range, plane) => {
       if (messages) {
@@ -147,42 +176,47 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           case 'grid': {
             const cells: DxGridPlaneCells = {};
             for (let row = range.start.row; row <= range.end.row && row < messages.length; row++) {
-              const isCurrent = currentMessageId === messages[row].id;
+              const current = currentMessageId === messages[row].id;
               cells[toPlaneCellIndex({ col: 0, row })] = {
                 readonly: true,
-                accessoryHtml: renderMessageCell(messages[row], now, isCurrent),
-                className: `${messageCellClassName}${isCurrent ? ' message--current' : ''}`,
+                accessoryHtml: renderMessageCell(messages[row], now, current, tags),
+                className: mx('message', current && 'message--current'),
               };
             }
             return cells;
           }
         }
       }
+
       return {} as DxGridPlaneCells;
     },
     [messages, currentMessageId],
   );
 
-  const gridRows = useMemo(() => {
-    return messages.reduce(
+  const rows = useMemo<DxGridAxisMeta>(() => {
+    const rows = messages.reduce(
       (acc, _, idx) => {
-        const message = messages[idx];
-        const hasTags = message.properties?.tags && message.properties.tags.length > 0;
-
         acc[idx] = {
-          size: hasTags ? ROW_SIZES.WITH_TAG : ROW_SIZES.DEFAULT,
+          size: ROW_SIZES.DEFAULT,
         };
 
         return acc;
       },
       {} as Record<number, { size: number }>,
     );
+
+    return { grid: rows };
   }, [messages]);
 
-  const rows = useMemo(() => ({ grid: gridRows }), [gridRows]);
-
   return (
-    <div role='none' className={mx('flex flex-col [&_.dx-grid]:grow', role !== 'section' && '[&_.dx-grid]:bs-0')}>
+    <div
+      role='none'
+      className={mx(
+        'flex flex-col [&_.dx-grid]:grow',
+        role !== 'section' && '[&_.dx-grid]:bs-0',
+        role === 'story' && 'bs-full',
+      )}
+    >
       <Grid.Root id={`${id}__grid`}>
         <Grid.Content
           className={mx(
@@ -195,10 +229,13 @@ export const Mailbox = ({ messages, id, currentMessageId, onAction, ignoreAttent
           rowDefault={messageRowDefault}
           rows={rows}
           getCells={getCells}
+          focusIndicatorVariant='stack'
+          onSelect={(ev) => setRow(ev.minRow)}
           onClick={handleClick}
+          onKeyUp={handleKeyUp}
           onWheelCapture={handleWheel}
         />
-        <div role='none' {...{ inert: '' }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
+        <div role='none' {...{ inert: true }} aria-hidden className='absolute inset-inline-0' ref={measureRef} />
       </Grid.Root>
     </div>
   );

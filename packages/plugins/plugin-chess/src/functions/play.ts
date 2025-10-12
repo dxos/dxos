@@ -11,7 +11,8 @@ import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Chess } from '../types';
 
 export default defineFunction({
-  name: 'dxos.org/function/chess/play',
+  key: 'dxos.org/function/chess/play',
+  name: 'Play',
   description: 'Uses the chess engine to play the next move.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

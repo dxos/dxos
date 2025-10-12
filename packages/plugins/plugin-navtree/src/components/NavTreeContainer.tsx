@@ -25,7 +25,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { arrayMove, byPosition } from '@dxos/util';
 
 import { NavTreeCapabilities } from '../capabilities';
-import { NAVTREE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FlattenedActions, type NavTreeItemGraphNode } from '../types';
 import { getChildren, getParent, resolveMigrationOperation } from '../util';
 
@@ -103,7 +103,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
   const layout = useLayout();
-  const { navigationSidebarState } = useSidebars(NAVTREE_PLUGIN);
+  const { navigationSidebarState } = useSidebars(meta.id);
 
   const getProps = useCallback(
     (node: Node, path: string[]): TreeItemDataProps => {
@@ -112,12 +112,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {
         id: node.id,
-        label: node.properties.label ?? node.id,
         parentOf,
-        icon: node.properties.icon,
         disabled: node.properties.disabled,
-        className: mx(node.properties.modified && 'italic', node.properties.className),
+        label: node.properties.label ?? node.id,
+        className: mx(node.properties.className, node.properties.modified && 'italic'), // TODO(burdon): Italic?
         headingClassName: node.properties.headingClassName,
+        icon: node.properties.icon,
+        iconClassName: node.properties.iconClassName,
         testId: node.properties.testId,
       };
     },

@@ -26,7 +26,7 @@ import {
 } from '@dxos/shell/react';
 import { hexToEmoji } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK } from '../util';
 
@@ -47,7 +47,7 @@ export type MembersContainerProps = {
 };
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const config = useConfig();
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const invitations = useSpaceInvitations(space.key);
@@ -75,7 +75,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       inviteOne: {
         label: t('invite one label', { ns: 'os' }),
         description: t('invite one description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--user-plus--regular' size={5} />,
+        icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
           const { data: invitation } = await dispatch(
@@ -97,7 +97,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
       inviteMany: {
         label: t('invite many label', { ns: 'os' }),
         description: t('invite many description', { ns: 'os' }),
-        icon: () => <Icon icon='ph--users-three--regular' size={5} />,
+        icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
           const { data: invitation } = await dispatch(
@@ -230,7 +230,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: SPACE_PLUGIN })}</p>
+      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] mlb-2 gap-2'>
         <div role='none' className='is-full aspect-square relative text-description'>
           <QR

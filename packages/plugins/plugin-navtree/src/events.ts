@@ -4,8 +4,8 @@
 
 import { Events } from '@dxos/app-framework';
 
-import { NAVTREE_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace NavTreeEvents {
-  export const StateReady = Events.createStateEvent(NAVTREE_PLUGIN);
+  export const StateReady = Events.createStateEvent(meta.id);
 }

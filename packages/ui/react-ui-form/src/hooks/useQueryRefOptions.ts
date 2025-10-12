@@ -7,11 +7,17 @@ import { useEffect, useState } from 'react';
 import { type TypeAnnotation } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type TagPickerItemData } from '@dxos/react-ui-tag-picker';
+import { type Palette } from '@dxos/react-ui-types';
 import { type MaybePromise } from '@dxos/util';
 
 export type RefOption = { dxn: DXN; label?: string };
 export type QueryRefOptions = (type: TypeAnnotation) => MaybePromise<RefOption[]>;
+
+export type QueryTag = {
+  id: string;
+  label: string;
+  hue?: Palette;
+};
 
 type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQueryRefOptions?: QueryRefOptions };
 
@@ -20,7 +26,7 @@ type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQuer
  * Used internally within forms to fetch and format reference options for reference fields.
  */
 export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryRefOptionsProps) => {
-  const [options, setOptions] = useState<TagPickerItemData[]>([]);
+  const [options, setOptions] = useState<QueryTag[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

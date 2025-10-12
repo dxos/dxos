@@ -46,7 +46,7 @@ export const createThreadPlugins = async () => [
       },
     }),
   }),
-  SpacePlugin(),
+  SpacePlugin({}),
   IntentPlugin(),
   SettingsPlugin(),
   GraphPlugin(),

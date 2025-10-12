@@ -12,8 +12,13 @@ import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
 import { FunctionType } from '../schema';
-import { ComputeEventLogger, DatabaseService, QueueService, type Services, TracingService } from '../services';
-import { LocalFunctionExecutionService } from '../services/local-function-execution';
+import {
+  ComputeEventLogger,
+  DatabaseService,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '../services';
 import {
   type EventType,
   FunctionTrigger,
@@ -71,11 +76,12 @@ interface ScheduledTrigger {
 
 // TODO(dmaretskyi): Refactor service management.
 type TriggerDispatcherServices =
-  | Exclude<Services, ComputeEventLogger | TracingService>
-  | LocalFunctionExecutionService
+  | FunctionInvocationService
   // TODO(dmaretskyi): Move those into layer deps.
   | TriggerStateStore
-  | InvocationTracer;
+  | InvocationTracer
+  | QueueService
+  | DatabaseService;
 
 export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
   TriggerDispatcher,
@@ -239,7 +245,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         const inputData = this._prepareInputData(trigger, event);
 
         // Invoke the function
-        return yield* LocalFunctionExecutionService.invokeFunction(functionDef, inputData).pipe(
+        return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
           Effect.provide(
             ComputeEventLogger.layerFromTracing.pipe(
               Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
@@ -356,7 +362,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
 
-              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query));
+              const { objects } = yield* DatabaseService.runQuery(Query.fromAst(spec.query.ast));
 
               const state: TriggerState = yield* TriggerStateStore.getState(trigger.id).pipe(
                 Effect.catchTag('TRIGGER_STATE_NOT_FOUND', () =>

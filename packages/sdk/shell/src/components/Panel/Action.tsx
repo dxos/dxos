@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Placeholder } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type FC, type SetStateAction, forwardRef } from 'react';
+import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
 
 import { Button, type ButtonProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
-import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
@@ -16,7 +15,7 @@ export type LargeButtonProps = ButtonProps & {
 export type ActionMenuItem = {
   label: string;
   description: string;
-  icon: FC<IconProps> | string;
+  icon: string;
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
@@ -32,7 +31,7 @@ const defaultActions = {
   noopAction: {
     label: 'No-op',
     description: '',
-    icon: Placeholder,
+    icon: 'ph--placeholder--regular',
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
@@ -72,12 +71,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon &&
-          (typeof activeAction.icon === 'string' ? (
-            <Icon icon={activeAction.icon} size={5} />
-          ) : (
-            <activeAction.icon className={getSize(5)} />
-          ))}
+        {activeAction.icon && <Icon icon={activeAction.icon} size={5} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
@@ -102,12 +96,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon &&
-                      (typeof action.icon === 'string' ? (
-                        <Icon icon={action.icon} size={5} />
-                      ) : (
-                        <action.icon className={getSize(5)} />
-                      ))}
+                    {action.icon && <Icon icon={action.icon} size={5} />}
                     <div role='none' className='flex-1 min-is-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (

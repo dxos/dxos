@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -70,7 +71,10 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     },
     [propsOnKeyDown],
   );
-  const focusableGroupAttrs = window ? {} : { tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } };
+
+  // TODO(thure): This was disconnected once before in #8818, if this should change again to support the browser
+  //  extension, please ensure the change doesn’t break web, desktop and mobile.
+  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
     onKeyDown: handleKeyDown,
@@ -218,10 +222,15 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     useSwipeToDismiss(swipeToDismiss ? ref : noopRef, {
       onDismiss: () => onStateChange?.('closed'),
     });
+    // NOTE(thure): This is a workaround for something further down the tree grabbing focus on Escape. Adding this
+    //   intervention to `Tabs.Root` or `Tabs.Tabpenel` instances is somehow ineffectual.
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Escape') {
-          ((event.target as HTMLDivElement).closest('[data-tabster]') as HTMLDivElement)?.focus();
+        const focusGroupParent = (event.target as HTMLElement).closest('[data-tabster]');
+        if (event.key === 'Escape' && focusGroupParent) {
+          event.preventDefault();
+          event.stopPropagation();
+          (focusGroupParent as HTMLElement).focus();
         }
         props.onKeyDown?.(event);
       },
@@ -239,8 +248,8 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', 'main__sidebar', {}, classNames)}
-          onKeyDown={handleKeyDown}
-          {...(state === 'closed' && { inert: 'true' })}
+          onKeyDownCapture={handleKeyDown}
+          {...(state === 'closed' && { inert: true })}
           ref={ref}
         >
           {children}

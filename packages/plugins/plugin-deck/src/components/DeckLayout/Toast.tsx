@@ -14,7 +14,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 // TODO(wittjosiah): Render remaining duration as a progress bar within the toast.
 export const Toast = ({
@@ -29,7 +29,7 @@ export const Toast = ({
   onAction,
   onOpenChange,
 }: LayoutAction.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>

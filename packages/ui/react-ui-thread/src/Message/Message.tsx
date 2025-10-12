@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwa
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, keymap, listener, useTextEditor } from '@dxos/react-ui-editor';
 import { focusRing, mx } from '@dxos/react-ui-theme';
-import { hexToEmoji, hexToHue, isNotFalsy } from '@dxos/util';
+import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '../translations';
 import { type MessageMetadata } from '../types';
@@ -156,7 +156,7 @@ export const MessageTextbox = ({
           },
         }),
         extensions,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
       ...editorProps,
     }),
     [id, extensions],

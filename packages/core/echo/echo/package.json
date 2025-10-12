@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -38,6 +38,12 @@
       "types": "./dist/types/src/Ref.d.ts",
       "browser": "./dist/lib/browser/Ref.mjs",
       "node": "./dist/lib/node-esm/Ref.mjs"
+    },
+    "./query": {
+      "source": "./src/query/index.ts",
+      "types": "./dist/types/src/query/index.d.ts",
+      "browser": "./dist/lib/browser/query/index.mjs",
+      "node": "./dist/lib/node-esm/query/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/types.ts",
@@ -83,8 +89,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.9.0",
-    "effect": "3.17.7"
+    "@preact/signals-core": "^1.12.1",
+    "effect": "3.18.3"
   },
   "publishConfig": {
     "access": "public"

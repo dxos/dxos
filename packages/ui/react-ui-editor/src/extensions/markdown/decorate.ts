@@ -447,6 +447,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               },
             }),
           );
+
           if (!editing) {
             atomicDeco.add(
               marks[1].from,

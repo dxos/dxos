@@ -9,13 +9,13 @@ import { createRoot } from 'react-dom/client';
 
 import { DevtoolsApp } from '@dxos/devtools';
 import { initializeAppObservability } from '@dxos/observability';
+import { meta as debugMeta } from '@dxos/plugin-debug';
 
-const namespace = 'devtools';
+const namespace = `${debugMeta.id}/devtools`;
 
 const main = async () => {
   const enter =
-    localStorage.getItem('dxos.org/plugin/debug/devtools') === 'true' ||
-    window.confirm('Continue to DXOS developer tools?');
+    localStorage.getItem(`${debugMeta.id}/devtools`) === 'true' || window.confirm('Continue to DXOS developer tools?');
   if (!enter) {
     window.location.pathname = '/';
     return;

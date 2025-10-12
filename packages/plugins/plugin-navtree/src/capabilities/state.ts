@@ -9,11 +9,11 @@ import { type Live } from '@dxos/echo';
 import { live } from '@dxos/live-object';
 import { Path } from '@dxos/react-ui-list';
 
-import { NAVTREE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { NavTreeCapabilities } from './capabilities';
 
-const KEY = `${NAVTREE_PLUGIN}/state/v1`;
+const KEY = `${meta.id}/state/v1`;
 
 const getInitialState = () => {
   const stringified = localStorage.getItem(KEY);

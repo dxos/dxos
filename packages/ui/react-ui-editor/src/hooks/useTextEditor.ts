@@ -17,7 +17,7 @@ import {
 } from 'react';
 
 import { log } from '@dxos/log';
-import { type MaybeProvider, getProviderValue, isNotFalsy } from '@dxos/util';
+import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
 import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
 import { debugDispatcher } from '../util';
@@ -35,8 +35,8 @@ export type CursorInfo = {
 
 export type UseTextEditor = {
   // TODO(burdon): Rename.
-  parentRef: RefObject<HTMLDivElement>;
-  view?: EditorView;
+  parentRef: RefObject<HTMLDivElement | null>;
+  view: EditorView | null;
   focusAttributes?: TabsterTypes.TabsterDOMAttribute & {
     tabIndex: 0;
     onKeyUp: KeyboardEventHandler<HTMLDivElement>;
@@ -66,11 +66,11 @@ export const useTextEditor = (
 
   // NOTE: Increments by 2 in strict mode.
   const [instanceId] = useState(() => `text-editor-${++instanceCount}`);
-  const [view, setView] = useState<EditorView>();
+  const [view, setView] = useState<EditorView | null>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let view: EditorView;
+    let view: EditorView | null = null;
     if (parentRef.current) {
       log('create', { id, instanceId, doc: initialValue?.length ?? 0 });
 
@@ -96,7 +96,7 @@ export const useTextEditor = (
           EditorView.exceptionSink.of((err) => {
             log.catch(err);
           }),
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
       });
 
       // https://codemirror.net/docs/ref/#view.EditorViewConfig

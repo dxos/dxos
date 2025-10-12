@@ -55,7 +55,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/platform": "0.90.2",
+    "@effect/platform": "0.92.1",
     "@preact-signals/safe-react": "^0.9.0",
     "chess.js": "^1.0.0"
   },
@@ -68,22 +68,23 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@effect/ai": "0.25.2",
+    "@effect/ai": "0.29.1",
+    "@effect/experimental": "0.56.0",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
-    "effect": "3.17.7",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
     "lodash.defaultsdeep": "^4.6.1",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
-    "vite": "7.1.1"
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "effect": "^3.13.3",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "publishConfig": {
     "access": "public"

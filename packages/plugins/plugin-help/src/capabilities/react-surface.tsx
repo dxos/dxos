@@ -7,17 +7,17 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 
 import { SHORTCUTS_DIALOG, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from '../components';
-import { HELP_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${HELP_PLUGIN}/hints`,
+      id: `${meta.id}/hints`,
       role: 'hints',
       component: () => <ShortcutsHints />,
     }),
     createSurface({
-      id: `${HELP_PLUGIN}/keyshortcuts`,
+      id: `${meta.id}/keyshortcuts`,
       role: 'keyshortcuts',
       component: () => <ShortcutsList />,
     }),

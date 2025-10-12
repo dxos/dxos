@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer } from 'effect';
@@ -11,21 +11,15 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 
 import { default as fetchDiscordMessages } from './fetch-messages';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([], Toolkit.make()),
+  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -33,10 +27,11 @@ const TestLayer = Layer.mergeAll(
       AiServiceTestingPreset('direct'),
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
       FetchHttpClient.layer,
+      FunctionInvocationService.layerTestMocked({ functions: [fetchDiscordMessages] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
     ),
   ),
 );
@@ -47,8 +42,8 @@ describe('Feed', { timeout: 600_000 }, () => {
   it.effect(
     'fetch discord messages',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
-        const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
+      function* (_) {
+        const messages = yield* FunctionInvocationService.invokeFunction(fetchDiscordMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',

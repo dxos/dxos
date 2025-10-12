@@ -13,7 +13,7 @@ import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
-import { AUTOMATION_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
 
@@ -22,7 +22,7 @@ export type FunctionsPanelProps = {
 };
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
-  const { t } = useTranslation(AUTOMATION_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const functions = useQuery(space, Filter.type(FunctionType));
   const scripts = useQuery(space, Filter.type(ScriptType));
   const { dispatchPromise: dispatch } = useIntentDispatcher();

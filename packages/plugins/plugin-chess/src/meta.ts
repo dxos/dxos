@@ -5,10 +5,8 @@
 import { type PluginMeta } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-export const CHESS_PLUGIN = 'dxos.org/plugin/chess';
-
 export const meta: PluginMeta = {
-  id: CHESS_PLUGIN,
+  id: 'dxos.org/plugin/chess',
   name: 'Chess',
   description: trim`
     Play chess with friends or practice with the AI.

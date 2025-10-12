@@ -14,7 +14,7 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
-import { INBOX_PLUGIN } from '../../../meta';
+import { meta } from '../../../meta';
 import { type ViewMode } from '../MessageHeader';
 
 /**
@@ -35,7 +35,7 @@ const createViewModeAction = (viewMode: Signal<ViewMode>): MenuAction => {
       viewMode.value = viewMode.value === 'plain' ? 'enriched' : 'plain';
     },
     {
-      label: [label, { ns: INBOX_PLUGIN }],
+      label: [label, { ns: meta.id }],
       icon,
     },
   );
@@ -56,7 +56,7 @@ export const useMessageToolbarActions = (
             const edges = [];
 
             const rootGroup = createMenuItemGroup('root', {
-              label: ['mailbox toolbar label', { ns: INBOX_PLUGIN }],
+              label: ['mailbox toolbar label', { ns: meta.id }],
             });
             nodes.push(rootGroup);
 
@@ -68,15 +68,14 @@ export const useMessageToolbarActions = (
 
             const extractContactAction = createMenuAction('extractContact', onExtractContact, {
               label: existingContact.value
-                ? ['contact already exists label', { ns: INBOX_PLUGIN }]
-                : ['extract contact label', { ns: INBOX_PLUGIN }],
+                ? ['contact already exists label', { ns: meta.id }]
+                : ['extract contact label', { ns: meta.id }],
               icon: 'ph--user-plus--regular',
               disabled: !!existingContact.value,
             });
 
             nodes.push(extractContactAction);
             edges.push({ source: 'root', target: extractContactAction.id });
-
             return { nodes, edges };
           }),
         ),

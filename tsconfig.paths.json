@@ -134,7 +134,6 @@
       "@dxos/react-ui-syntax-highlighter": ["packages/ui/react-ui-syntax-highlighter/src/index.ts"],
       "@dxos/react-ui-table": ["packages/ui/react-ui-table/src/index.ts"],
       "@dxos/react-ui-tabs": ["packages/ui/react-ui-tabs/src/index.ts"],
-      "@dxos/react-ui-tag-picker": ["packages/ui/react-ui-tag-picker/src/index.ts"],
       "@dxos/react-ui-text-tooltip": ["packages/ui/react-ui-text-tooltip/src/index.ts"],
       "@dxos/react-ui-thread": ["packages/ui/react-ui-thread/src/index.ts"],
       "@dxos/react-ui-types": ["packages/ui/react-ui-types/src/index.ts"]

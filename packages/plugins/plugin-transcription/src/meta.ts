@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const TRANSCRIPTION_PLUGIN = 'dxos.org/plugin/transcription';
-
 export const meta: PluginMeta = {
-  id: TRANSCRIPTION_PLUGIN,
+  id: 'dxos.org/plugin/transcription',
   name: 'Transcription',
   description: 'Voice transcription.',
   icon: 'ph--microphone--regular',

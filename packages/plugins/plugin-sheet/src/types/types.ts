@@ -4,7 +4,7 @@
 
 import { Schema } from 'effect';
 
-import { SHEET_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SheetModel } from '../model';
 
 import { type CellValue, RowColumnMeta, SheetType } from './schema';
@@ -20,7 +20,7 @@ export type CreateSheetOptions = {
 } & Partial<SheetSize>;
 
 export namespace SheetAction {
-  const SHEET_ACTION = `${SHEET_PLUGIN}/action`;
+  const SHEET_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${SHEET_ACTION}/create`, {
     input: Schema.Struct({

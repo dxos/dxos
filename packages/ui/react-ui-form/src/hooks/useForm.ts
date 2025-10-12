@@ -203,6 +203,7 @@ export const useForm = <T extends BaseObject>({
     [values],
   );
 
+  // TODO(wittjosiah): This is causing the entire form to re-render on every change.
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path: (string | number)[], type: SimpleType, value: any) => {
       const jsonPath = createJsonPath(path);

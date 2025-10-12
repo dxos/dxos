@@ -5,6 +5,8 @@
 import { Capabilities, contributes, defineCapability } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
+import { meta } from '../meta';
+
 export type LayoutState = {
   sidebarState?: 'expanded' | 'collapsed' | 'closed';
   complementarySidebarState?: 'expanded' | 'collapsed' | 'closed';
@@ -17,16 +19,16 @@ export type LayoutState = {
   /** Data to be passed to the dialog Surface. */
   dialogContent?: any;
 
-  popoverContent?: any;
   popoverOpen?: boolean;
   popoverSide?: 'top' | 'right' | 'bottom' | 'left';
   popoverVariant?: 'virtual' | 'react';
   popoverAnchor?: HTMLButtonElement;
   popoverAnchorId?: string;
+  popoverContent?: any;
 
   workspace: string;
 };
-export const LayoutState = defineCapability<LayoutState>('dxos.org/plugin/storybook-layout/state');
+export const LayoutState = defineCapability<LayoutState>(`${meta.id}/state`);
 
 const defaultState: LayoutState = {
   sidebarState: 'closed',

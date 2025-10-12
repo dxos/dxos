@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const DEBUG_PLUGIN = 'dxos.org/plugin/debug';
-
 export const meta: PluginMeta = {
-  id: DEBUG_PLUGIN,
+  id: 'dxos.org/plugin/debug',
   name: 'Debug',
   description:
     'The debug plugin is useful for troubleshooting inside of Composer. You can also use the Debug plugin to create test data inside of sheets or tables or explore pre-built automations. Non-technical users will likely not spend much time here, but this plugin is invaluable for developers and technical users.',

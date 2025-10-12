@@ -5,9 +5,9 @@
 import React, { type PropsWithChildren, forwardRef, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, useForwardedRef, useTrackProps } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import {
   type DOMRectBounds,
@@ -37,7 +37,6 @@ export type ChessboardProps = ThemedClassName<
  */
 const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
   ({ classNames, orientation, showLabels, debug, rows = 8, cols = 8 }, forwardedRef) => {
-    useTrackProps({ orientation, showLabels, debug }, Chessboard.displayName, false);
     const targetRef = useForwardedRef(forwardedRef);
     const { width, height } = useResizeDetector({ targetRef, refreshRate: 200 });
     const { model, promoting, onPromotion } = useGameboardContext<ChessModel>(Chessboard.displayName!);
@@ -94,7 +93,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
           const bounds = grid[locationToString(piece.location)];
           return { piece, bounds };
         })
-        .filter(isNotFalsy);
+        .filter(isTruthy);
     }, [grid, model?.pieces.value, promoting]);
 
     return (

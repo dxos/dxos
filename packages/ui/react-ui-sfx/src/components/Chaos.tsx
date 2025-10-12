@@ -2,6 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+// TODO(wittjosiah): Typing here broke when upgrading to React 19.
+// @ts-nocheck
+
 import { OrbitControls, PerspectiveCamera, Stats, useFBO } from '@react-three/drei';
 import { Canvas, createPortal, extend, useFrame } from '@react-three/fiber';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -100,7 +103,7 @@ export const Chaos = ({ classNames, active, options = defaultShaderOptions, debu
       <Canvas
         className={mx('transition-opacity opacity-0 duration-[1s]', init && 'opacity-100')}
         linear={true}
-        gl={(canvas) =>
+        gl={({ canvas }) =>
           new THREE.WebGLRenderer({
             canvas,
             alpha: true,
@@ -153,8 +156,8 @@ const Particles = ({
     return particles;
   }, [size]);
 
-  const renderRef = useRef<any>();
-  const simRef = useRef<any>();
+  const renderRef = useRef<any>(undefined);
+  const simRef = useRef<any>(undefined);
 
   // Pause if options changed.
   // TODO(burdon): Pause if re-rendering (e.g., due to dragging). Memoize?

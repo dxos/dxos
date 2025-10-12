@@ -7,9 +7,9 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
-import { KANBAN_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { KanbanAction } from '../types';
 
 export default (context: PluginContext) =>
@@ -31,7 +31,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: KanbanAction.DeleteCardField,
       resolve: async ({ view, fieldId, deletionData }, undo) => {
-        const schema = getSpace(view)?.db.schemaRegistry.getSchema(typenameFromQuery(view.query)!);
+        const schema = getSpace(view)?.db.schemaRegistry.getSchema(getTypenameFromQuery(view.query.ast)!);
         invariant(schema);
         const projection = new ProjectionModel(schema.jsonSchema, view.projection);
 
@@ -39,7 +39,7 @@ export default (context: PluginContext) =>
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['card field deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -59,7 +59,7 @@ export default (context: PluginContext) =>
           space.db.remove(card);
           return {
             undoable: {
-              message: ['card deleted label', { ns: KANBAN_PLUGIN }],
+              message: ['card deleted label', { ns: meta.id }],
               data: { card },
             },
           };

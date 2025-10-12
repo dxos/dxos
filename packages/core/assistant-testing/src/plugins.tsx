@@ -37,24 +37,6 @@ declare global {
 const isImage = (data: any): data is any => false;
 
 export const capabilities: AnyCapability[] = [
-  //
-  // Image
-  //
-  // contributes(
-  //   Capabilities.ArtifactDefinition,
-  //   defineArtifact({
-  //     id: 'artifact:dxos.org/plugin/image',
-  //     name: 'Image',
-  //     instructions: `
-  //       - When presenting an image, you must use an artifact.
-  //       - Nest the <image> tag inside the <artifact> tag.
-  //       - Image tags are always self-closing and must contain an id attribute.
-  //         (Example: <artifact><image id="unique_identifier" prompt="..." /></artifact>)
-  //     `,
-  //     schema: Schema.Struct({}), // TODO(burdon): Add schema.
-  //     tools: [],
-  //   }),
-  // ),
   contributes(
     Capabilities.ReactSurface,
     createSurface({

@@ -79,6 +79,9 @@
       "path": "../../core/echo/echo-protocol"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -167,9 +170,6 @@
     },
     {
       "path": "../../ui/react-ui-tabs"
-    },
-    {
-      "path": "../../ui/react-ui-tag-picker"
     },
     {
       "path": "../../ui/react-ui-theme"

@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { type Node, isActionLike } from '@dxos/plugin-graph';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { LocalFilesAction } from '../types';
 import {
   findFile,
@@ -101,7 +101,7 @@ export default (context: PluginContext) => {
         const { explore } = context.getCapability(Capabilities.AppGraph);
         const state = context.getCapability(FileCapabilities.MutableState);
         if (!state.rootHandle) {
-          return { intents: [createIntent(SettingsAction.Open, { plugin: FILES_PLUGIN })] };
+          return { intents: [createIntent(SettingsAction.Open, { plugin: meta.id })] };
         }
 
         const serializers = context.getCapabilities(Capabilities.AppGraphSerializer).flat();

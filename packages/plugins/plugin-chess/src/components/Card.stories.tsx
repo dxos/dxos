@@ -2,13 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
-import { withTheme } from '@dxos/storybook-utils';
 
 import { meta as pluginMeta } from '../meta';
 import { Chess } from '../types';
@@ -20,7 +18,7 @@ type DefaultStoryProps = {
   game: Chess.Game;
 };
 
-const meta: Meta<DefaultStoryProps> = {
+const meta = {
   title: 'plugins/plugin-chess/Card',
   render: ({ role, game }) => (
     <CardContainer icon={pluginMeta.icon} role={role}>
@@ -36,7 +34,7 @@ const meta: Meta<DefaultStoryProps> = {
     layout: 'centered',
   },
   tags: ['cards'],
-};
+} satisfies Meta<DefaultStoryProps>;
 
 export default meta;
 

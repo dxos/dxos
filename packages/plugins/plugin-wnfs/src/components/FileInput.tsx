@@ -10,7 +10,7 @@ import { findAnnotation } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { WNFS_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { WnfsAction } from '../types';
 
 export type FileInputProps = {
@@ -19,7 +19,7 @@ export type FileInputProps = {
 };
 
 export const FileInput = ({ schema, onChange }: FileInputProps) => {
-  const { t } = useTranslation(WNFS_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const accept = findAnnotation<Record<string, string[]>>(schema.ast, WnfsAction.UploadAnnotationId);
 
   const onDropAccepted = useCallback((files: File[]) => onChange?.(files[0]), [onChange]);

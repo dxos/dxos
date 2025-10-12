@@ -1,4 +1,27 @@
 .message {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &::after {
+    inset: 0;
+  }
+
+  &::before {
+    inset-block: 0;
+    inset-inline-end: 0;
+    inline-size: 0.25rem;
+  }
+
+  &:focus-visible::before {
+    inset-block: var(--dx-gridFocusIndicatorWidth);
+    inset-inline-end: var(--dx-gridFocusIndicatorWidth);
+  }
+
   &.message__card {
     @apply pli-cardSpacingChrome plb-cardSpacingChrome;
   }
@@ -9,28 +32,11 @@
 
   & > .dx-grid__cell__content,
   &.message__card {
-    @apply grid grid-cols-[3rem_1fr] gap-1 border-0;
-
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    &::after {
-      inset: 0;
-    }
-
-    &::before {
-      inset-block: 0;
-      inset-inline-end: 0;
-      inline-size: 0.25rem;
-    }
+    @apply grid grid-cols-[min-content_1fr];
   }
 
-  &.message--current > .dx-grid__cell__content {
+  &.message--current {
+    & > .dx-grid__cell__content,
     &::after {
       @apply bg-currentRelated;
     }
@@ -51,41 +57,40 @@
   }
 
   .message__thumb {
-    @apply flex text-start pli-1 plb-1.5;
+    @apply grid aspect-square place-items-center;
   }
 
   .message__abstract {
-    @apply text-start min-is-0 pie-1;
-
-    .message__abstract__body {
-      @apply truncate text-sm text-description;
-    }
+    @apply grid grid-rows-2 is-full min-is-0 overflow-hidden;
 
     .message__abstract__heading {
-      @apply flex gap-2 items-baseline;
+      @apply flex items-center;
 
       .message__abstract__from {
-        flex: 1 1 0;
-        @apply text-base font-medium truncate;
+        @apply flex flex-1 pis-1 truncate text-base text-indigoText font-medium;
       }
 
       .message__abstract__date {
-        @apply text-sm font-normal;
+        @apply pie-2 text-sm text-description font-normal;
       }
     }
-  }
 
-  .message__tag-row {
-    @apply flex flex-row mlb-0.5 gap-1 flex-nowrap is-full overflow-hidden;
-  }
+    .message__abstract__body {
+      @apply flex items-center overflow-hidden;
 
-  .message__tag-row__item {
-    @apply cursor-pointer;
-    transition-property: transform;
-    transition-duration: 80ms;
-  }
+      .message__snippet {
+        @apply text-left grow pis-1 pie-2 truncate text-sm text-description;
+      }
 
-  .message__tag-row__item:active {
-    transform: scale(0.97);
+      .message__tags {
+        @apply flex shrink-0 pie-1 gap-0.5 flex-nowrap overflow-hidden;
+
+        .message__tags-item {
+          @apply cursor-pointer;
+          transition-property: transform;
+          transition-duration: 80ms;
+        }
+      }
+    }
   }
 }

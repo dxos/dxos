@@ -23,11 +23,13 @@ import {
   type DxGridCells,
   DxGridCellsSelect,
   type DxGridFixedPlane,
+  type DxGridFocusIndicatorVariant,
   type DxGridFrozenAxes,
   type DxGridFrozenColsPlane,
   type DxGridFrozenPlane,
   type DxGridFrozenRowsPlane,
   type DxGridMode,
+  type DxGridOverscroll,
   type DxGridPlane,
   type DxGridPlaneCellIndex,
   type DxGridPlaneCells,
@@ -114,10 +116,13 @@ export class DxGrid extends LitElement {
   frozen: DxGridFrozenAxes = {};
 
   @property({ type: String })
-  overscroll: 'inline' | 'block' | 'trap' | undefined = undefined;
+  overscroll: DxGridOverscroll = undefined;
 
   @property({ type: String })
   activeRefs = '';
+
+  @property({ type: String })
+  focusIndicatorVariant: DxGridFocusIndicatorVariant = 'sheet';
 
   /**
    * When this function is defined, it is used first to try to get a value for a cell,
@@ -425,15 +430,13 @@ export class DxGrid extends LitElement {
   }
 
   private moveFocusIntoPlane(plane: DxGridPlane): void {
-    if (this.focusedCell.plane !== plane) {
-      const colPlane = resolveColPlane(plane);
-      const rowPlane = resolveRowPlane(plane);
-      this.focusedCell = {
-        plane,
-        col: colPlane === 'grid' ? this.visColMin : 0,
-        row: rowPlane === 'grid' ? this.visRowMin : 0,
-      };
-    }
+    const colPlane = resolveColPlane(plane);
+    const rowPlane = resolveRowPlane(plane);
+    this.focusedCell = {
+      plane,
+      col: colPlane === 'grid' ? this.visColMin : 0,
+      row: rowPlane === 'grid' ? this.visRowMin : 0,
+    };
     this.focusedCellElement()?.focus({ preventScroll: true });
   }
 
@@ -1507,6 +1510,7 @@ export class DxGrid extends LitElement {
         })}
         data-grid=${this.gridId}
         data-grid-mode=${this.mode}
+        data-grid-focus-indicator-variant=${this.focusIndicatorVariant}
         ?data-grid-select=${selection.visible}
         ${ref(this.gridRef)}
       >

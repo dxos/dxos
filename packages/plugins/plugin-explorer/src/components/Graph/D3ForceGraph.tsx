@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
@@ -15,7 +15,7 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
-import { getHashColor } from '@dxos/react-ui-theme';
+import { getHashStyles } from '@dxos/react-ui-theme';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -29,7 +29,7 @@ export type D3ForceGraphProps = ThemedClassName<
   } & Pick<GraphProps, 'drag'>
 >;
 
-export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selection: _selection, grid, ...props }) => {
+export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, ...props }: D3ForceGraphProps) => {
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(() => {
     if (context.current) {
@@ -85,7 +85,7 @@ export const D3ForceGraph: FC<D3ForceGraphProps> = ({ classNames, model, selecti
               const obj = node.data?.data.object;
               return {
                 data: {
-                  color: getHashColor(obj && Obj.getTypename(obj))?.color,
+                  color: getHashStyles(obj && Obj.getTypename(obj))?.hue,
                 },
                 classes: {
                   'dx-selected': selection.contains(node.id),

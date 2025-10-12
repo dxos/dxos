@@ -14,16 +14,16 @@ import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist'
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { useSearchResults } from '../hooks';
-import { SEARCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const SEARCH_DIALOG = `${SEARCH_PLUGIN}/SearchDialog`;
+export const SEARCH_DIALOG = `${meta.id}/SearchDialog`;
 
 type SearchListResultProps = {
   node: Node;
 } & Pick<SearchListItemProps, 'onSelect'>;
 
 const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ node, onSelect }, forwardedRef) => {
-  const { t } = useTranslation(SEARCH_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const label = toLocalizedString(node?.properties.label ?? 'never', t);
   return (
     <SearchList.Item
@@ -44,7 +44,7 @@ export type SearchDialogProps = {
 };
 
 export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
-  const { t } = useTranslation(SEARCH_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const layout = useLayout();
   const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])

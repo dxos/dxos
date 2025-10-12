@@ -43,9 +43,8 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
-    "@automerge/automerge-repo": "2.3.0-alpha.0",
-    "@automerge/automerge-repo-bundles": "2.3.0-alpha.0",
+    "@automerge/automerge": "3.1.2",
+    "@automerge/automerge-repo": "2.3.1",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -80,7 +79,7 @@
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
     "crc-32": "^1.2.2",
-    "effect": "3.17.7",
+    "effect": "3.18.3",
     "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },

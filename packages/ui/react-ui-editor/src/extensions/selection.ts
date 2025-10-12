@@ -7,7 +7,7 @@ import { EditorView, keymap } from '@codemirror/view';
 
 import { debounce } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { singleValueFacet } from '../util';
 
@@ -96,5 +96,5 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
           },
         },
       ]),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 };

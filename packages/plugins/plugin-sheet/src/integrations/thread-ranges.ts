@@ -23,7 +23,7 @@ import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo } from '@dxos/schema';
 
 import { useSheetContext } from '../components';
-import { SHEET_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
   return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
@@ -72,7 +72,7 @@ export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null
     [model.sheet, setActiveRefs],
   );
 
-  useIntentResolver(SHEET_PLUGIN, scrollIntoViewResolver);
+  useIntentResolver(meta.id, scrollIntoViewResolver);
 };
 
 export const useSelectThreadOnCellFocus = () => {

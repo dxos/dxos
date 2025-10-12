@@ -69,6 +69,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
@@ -99,6 +102,9 @@
       "path": "../../ui/react-ui-attention"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -112,9 +118,6 @@
     },
     {
       "path": "../../ui/react-ui-table"
-    },
-    {
-      "path": "../../ui/react-ui-tag-picker"
     },
     {
       "path": "../../ui/react-ui-theme"

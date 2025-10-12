@@ -62,7 +62,7 @@ export const FormProvider = ({
   ...formOptions
 }: PropsWithChildren<
   FormOptions<any> & {
-    formRef?: RefObject<HTMLDivElement>;
+    formRef?: RefObject<HTMLDivElement | null>;
     autoSave?: boolean;
   }
 >) => {

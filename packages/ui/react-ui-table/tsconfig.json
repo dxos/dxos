@@ -72,10 +72,16 @@
       "path": "../lit-grid"
     },
     {
+      "path": "../lit-ui"
+    },
+    {
       "path": "../react-ui"
     },
     {
       "path": "../react-ui-attention"
+    },
+    {
+      "path": "../react-ui-components"
     },
     {
       "path": "../react-ui-editor"
@@ -97,9 +103,6 @@
     },
     {
       "path": "../react-ui-syntax-highlighter"
-    },
-    {
-      "path": "../react-ui-tag-picker"
     },
     {
       "path": "../react-ui-theme"

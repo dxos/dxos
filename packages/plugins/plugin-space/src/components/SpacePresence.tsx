@@ -29,7 +29,7 @@ import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SpaceCapabilities } from '../capabilities';
 import { usePath } from '../hooks';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import type { ObjectViewerProps } from '../types';
 
 // TODO(thure): Get/derive these values from protocol
@@ -254,7 +254,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <Tooltip.Trigger asChild content={t('presence label', { count })} side='bottom'>

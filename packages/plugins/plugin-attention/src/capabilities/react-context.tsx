@@ -7,13 +7,13 @@ import React, { type PropsWithChildren } from 'react';
 import { Capabilities, contributes, useCapability } from '@dxos/app-framework';
 import { RootAttentionProvider, SelectionProvider } from '@dxos/react-ui-attention';
 
-import { ATTENTION_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { AttentionCapabilities } from './capabilities';
 
 export default () =>
   contributes(Capabilities.ReactContext, {
-    id: ATTENTION_PLUGIN,
+    id: meta.id,
     context: (props: PropsWithChildren) => {
       const attention = useCapability(AttentionCapabilities.Attention);
       const selection = useCapability(AttentionCapabilities.Selection);

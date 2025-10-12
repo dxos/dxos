@@ -12,7 +12,7 @@ import { styles } from './styles';
 // TODO(burdon): Reconcile with DebugPlugin.
 export const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
-  const errorRef = useRef<Error>();
+  const errorRef = useRef<Error>(null);
   useEffect(() => {
     const errorListener = (event: any) => {
       const error: Error = event.error ?? event.reason;
@@ -43,7 +43,7 @@ export const ErrorIndicator = () => {
       iconOnly
       label={errorRef.current?.message ?? 'No errors.'}
       onClick={() => {
-        errorRef.current = undefined;
+        errorRef.current = null;
         forceUpdate({});
       }}
       size={3}

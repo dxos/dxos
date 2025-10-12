@@ -2,13 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { withTheme } from '@dxos/react-ui/testing';
 import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useRope } from '../../hooks';
 
@@ -65,9 +63,12 @@ const Rope = () => {
 const meta = {
   title: 'ui/react-ui-canvas-editor/Rope',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
-    controls: { disable: true },
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
   },
 } satisfies Meta<typeof Canvas>;
 

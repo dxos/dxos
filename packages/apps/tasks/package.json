@@ -15,17 +15,17 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "react": "~18.2.0",
-    "react-dom": "~18.2.0",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
     "react-router-dom": "^6.4.0"
   },
   "devDependencies": {
-    "@types/react": "~18.2.0",
-    "@types/react-dom": "~18.2.0",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
     "autoprefixer": "^10.4.12",
     "postcss": "^8.4.41",
     "tailwindcss": "~3.4.1",
-    "vite": "7.1.1",
+    "vite": "7.1.9",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0",
     "workbox-window": "^7.3.0"

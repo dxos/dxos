@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const EXPLORER_PLUGIN = 'dxos.org/plugin/explorer';
-
 export const meta: PluginMeta = {
-  id: EXPLORER_PLUGIN,
+  id: 'dxos.org/plugin/explorer',
   name: 'Explorer',
   description: 'Install this plugin to view a hypergraph of all objects inside of your Space.',
   icon: 'ph--graph--regular',

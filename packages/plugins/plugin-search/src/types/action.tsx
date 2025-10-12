@@ -4,10 +4,10 @@
 
 import { Schema } from 'effect';
 
-import { SEARCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace SearchAction {
-  const SEARCH_ACTION = `${SEARCH_PLUGIN}/action`;
+  const SEARCH_ACTION = `${meta.id}/action`;
 
   export class OpenSearch extends Schema.TaggedClass<OpenSearch>()(`${SEARCH_ACTION}/open-search`, {
     input: Schema.Void,

@@ -5,10 +5,12 @@
 import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
+// TODO(wittjosiah): Importing this causes tests to fail.
+// import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager, INITIAL_URL } from './app-manager';
 import { INITIAL_OBJECT_COUNT } from './constants';
-import { Markdown } from './plugins';
+import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
@@ -75,14 +77,14 @@ test.describe('Basic tests', () => {
     }
 
     await host.openPluginRegistry();
-    await host.getPluginToggle('dxos.org/plugin/stack').click();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).toBeChecked();
+    await host.getPluginToggle(StackPlugin.meta.id).click();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).toBeChecked();
 
     await host.page.goto(INITIAL_URL + '?throw');
     await host.reset();
 
     await host.openPluginRegistry();
-    await expect(host.getPluginToggle('dxos.org/plugin/stack')).not.toBeChecked();
+    await expect(host.getPluginToggle(StackPlugin.meta.id)).not.toBeChecked();
   });
 
   test('reset device', async ({ browserName }) => {

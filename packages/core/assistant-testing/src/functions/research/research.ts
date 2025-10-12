@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
+import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { Array, Effect, Layer, Schema } from 'effect';
 
-import { AiService, ConsolePrinter, ToolId } from '@dxos/ai';
+import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
   AiSession,
   GenerationObserver,
@@ -14,7 +15,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
-import { DatabaseService, LocalFunctionExecutionService, TracingService, defineFunction } from '@dxos/functions';
+import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
@@ -30,7 +31,8 @@ import { ResearchDataTypes } from './types';
  * Exec external service and return the results as a Subgraph.
  */
 export default defineFunction({
-  name: 'dxos.org/function/research',
+  key: 'dxos.org/function/research',
+  name: 'Research',
   description:
     'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
   inputSchema: Schema.Struct({
@@ -81,10 +83,11 @@ export default defineFunction({
       const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
         onAppend: (dxns) => objectDXNs.push(...dxns),
       });
+      const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
 
       const toolkit = yield* createToolkit({
-        toolkit: AiToolkit.merge(LocalSearchToolkit, GraphWriterToolkit),
-        toolIds: [mockSearch ? ToolId.make(exaMockFunction.name) : ToolId.make(exaFunction.name)],
+        toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit, NativeWebSearch),
+        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.key) : ToolId.make(exaFunction.key)],
       }).pipe(
         Effect.provide(
           Layer.mergeAll(
@@ -121,13 +124,14 @@ export default defineFunction({
       Layer.mergeAll(
         AiService.model('@anthropic/claude-sonnet-4-0'),
         // TODO(dmaretskyi): Extract.
-        makeToolResolverFromFunctions([exaFunction, exaMockFunction], AiToolkit.make()),
-        makeToolExecutionServiceFromFunctions(
-          [exaFunction, exaMockFunction],
-          AiToolkit.make() as any,
-          Layer.empty as any,
+        makeToolResolverFromFunctions([exaFunction, exaMockFunction], Toolkit.make()),
+        makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
+      ).pipe(
+        Layer.provide(
+          // TODO(dmaretskyi): This should be provided by environment.
+          Layer.mergeAll(FunctionInvocationService.layerTestMocked({ functions: [exaFunction, exaMockFunction] })),
         ),
-      ).pipe(Layer.provide(LocalFunctionExecutionService.layer)),
+      ),
     ),
   ),
 });

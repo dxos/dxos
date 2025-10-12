@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
@@ -28,10 +26,10 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout } from '@dxos/storybook-utils';
 
 import { MarkdownPlugin } from '../MarkdownPlugin';
 import { translations } from '../translations';
@@ -60,11 +58,9 @@ const meta = {
   title: 'plugins/plugin-markdown/MarkdownContainer',
   render: DefaultStory,
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
-        AttentionPlugin(),
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
           onClientInitialized: async ({ client }) => {
@@ -72,12 +68,10 @@ const meta = {
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
-
             const queue = space.queues.create();
             const alice = Obj.make(DataType.Person, { fullName: 'Alice' });
             const acme = Obj.make(DataType.Organization, { name: 'ACME' });
             await queue.append([alice, acme]);
-
             const doc = Markdown.makeDocument({
               name: 'Test',
               content: `# Test\n\n![Alice](${Obj.getDXN(alice)})\n\n![ACME](${Obj.getDXN(acme)})`,
@@ -88,19 +82,23 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
-        SpacePlugin(),
-        SettingsPlugin(),
+        SpacePlugin({}),
+        GraphPlugin(),
         IntentPlugin(),
+        SettingsPlugin(),
+        // UI
+        ThemePlugin({ tx: defaultTx }),
+        AttentionPlugin(),
         MarkdownPlugin(),
         PreviewPlugin(),
-        GraphPlugin(),
+        StorybookLayoutPlugin({}),
       ],
     }),
-    withLayout({ fullscreen: true }),
   ],
   parameters: {
-    translations,
+    layout: 'fullscreen',
     controls: { disable: true },
+    translations,
   },
 } satisfies Meta<typeof Capabilities>;
 

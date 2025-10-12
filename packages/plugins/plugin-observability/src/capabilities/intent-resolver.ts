@@ -7,7 +7,7 @@ import { log } from '@dxos/log';
 import { getTelemetryIdentity, storeObservabilityDisabled } from '@dxos/observability';
 
 import { type ObservabilitySettingsProps } from '../components';
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ObservabilityAction } from '../types';
 
 import { ClientCapability, ObservabilityCapabilities } from './capabilities';
@@ -27,7 +27,7 @@ export default ({ context, namespace }: { context: PluginContext; namespace: str
         const observability = context.getCapability(ObservabilityCapabilities.Observability);
         const settings = context
           .getCapability(Capabilities.SettingsStore)
-          .getStore<ObservabilitySettingsProps>(OBSERVABILITY_PLUGIN)!.value;
+          .getStore<ObservabilitySettingsProps>(meta.id)!.value;
         settings.enabled = state ?? !settings.enabled;
         observability.track({
           ...getTelemetryIdentity(client),

@@ -1,15 +1,15 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import { type Resource } from '@dxos/react-ui';
 
-import { SETTINGS_PLUGIN } from './actions';
+import { meta } from './meta';
 
 export const translations = [
   {
     'en-US': {
-      [SETTINGS_PLUGIN]: {
+      [meta.id]: {
         'open settings label': 'Open settings',
         'app settings label': 'Settings',
         'custom plugins label': 'Plugins',

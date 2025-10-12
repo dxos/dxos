@@ -10,7 +10,7 @@ import { type ScriptType } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
-import { SCRIPT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type FormatActionProperties = { type: 'format' };
 
@@ -35,7 +35,7 @@ export const createFormat = (script: ScriptType) => {
       }
     },
     {
-      label: ['format label', { ns: SCRIPT_PLUGIN }],
+      label: ['format label', { ns: meta.id }],
       icon: 'ph--magic-wand--regular',
     },
   );

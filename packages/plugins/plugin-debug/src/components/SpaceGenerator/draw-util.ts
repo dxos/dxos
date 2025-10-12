@@ -16,7 +16,7 @@ import {
 import { type Editor, type SerializedStore, type TLRecord, createBindingId, createShapeId } from '@tldraw/tldraw';
 
 import { faker } from '@dxos/random';
-import { isNotFalsy, range } from '@dxos/util';
+import { isTruthy, range } from '@dxos/util';
 
 // TODO(burdon): Graph layout:
 //  - https://www.npmjs.com/package/@antv/layout (uses d3)
@@ -67,7 +67,7 @@ export const generateGraph = (): Graph<PlainObject, PlainObject> => {
         }
         return target;
       })
-      .filter(isNotFalsy);
+      .filter(isTruthy);
 
     for (const target of targets) {
       traverse(target);

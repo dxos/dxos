@@ -9,7 +9,7 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
 
 import { themeEditorId } from '../defs';
-import { THEME_EDITOR_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default (context: PluginContext) => {
   return contributes(Capabilities.AppGraphBuilder, [
@@ -28,7 +28,7 @@ export default (context: PluginContext) => {
                   type: themeEditorId,
                   data: themeEditorId,
                   properties: {
-                    label: ['theme editor label', { ns: THEME_EDITOR_PLUGIN }],
+                    label: ['theme editor label', { ns: meta.id }],
                     disposition: 'navigation',
                     icon: 'ph--palette--regular',
                   },

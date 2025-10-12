@@ -4,11 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-// TODO(burdon): Rename Guide? Help?
-export const HELP_PLUGIN = 'dxos.org/plugin/help';
-
 export const meta: PluginMeta = {
-  id: HELP_PLUGIN,
+  id: 'dxos.org/plugin/help',
   name: 'Help',
   icon: 'ph--info--regular',
 };

@@ -16,8 +16,8 @@ import React, {
   useState,
 } from 'react';
 
-import { type Client } from '@dxos/react-client';
 // TODO(wittjosiah): Remove dependency on react-client.
+import { type Client } from '@dxos/react-client';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridElement,
@@ -35,11 +35,10 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
-import { type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
+import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
-import { CreateRefPanel } from './CreateRefPanel';
 import { RowActionsMenu } from './RowActionsMenu';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
@@ -85,11 +84,13 @@ export type TableMainProps = {
   client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
+  onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
+  testId?: string;
 };
 
 const TableMain = forwardRef<TableController, TableMainProps>(
-  ({ model, presentation, ignoreAttention, schema, client, onRowClick }, forwardedRef) => {
+  ({ model, presentation, ignoreAttention, schema, client, onCreate, onRowClick, testId }, forwardedRef) => {
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(), []);
@@ -276,7 +277,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
     const handleFocus = useCallback<NonNullable<TableCellEditorProps['onFocus']>>(
       (increment, delta, cell) => {
         if (dxGrid && model) {
-          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1) {
+          if (cell?.plane === 'grid' && cell?.row >= model.getRowCount() - 1 && increment !== 'col') {
             handleInsertRowResult(draftRowCount < 1 ? model.insertRow() : 'final');
           } else if (cell?.plane === 'frozenRowsEnd' && increment === 'row') {
             handleSaveDraftRow(cell.row);
@@ -321,7 +322,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               void navigator.clipboard.readText().then((clipboardText) => {
                 try {
                   // Attempt to set the cell's content to clipboard content
-                  model.setCellData(cell, trim(clipboardText));
+                  model.setCellData(cell, trim(clipboardText).replace(/[\n\r]+/, ' '));
                   handleSave();
                 } catch {
                   // If validation fails, emit a DxEditRequest event with initialContent from clipboard
@@ -406,6 +407,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           schema={schema}
           onFocus={handleFocus}
           onSave={handleSave}
+          onCreate={onCreate}
           client={client}
         />
         <Grid.Content
@@ -421,12 +423,12 @@ const TableMain = forwardRef<TableController, TableMainProps>(
           onClick={handleGridClick}
           onKeyDownCapture={handleKeyDown}
           onWheelCapture={handleWheel}
+          {...(testId && { 'data-testid': testId })}
           ref={setDxGrid}
         />
         <RowActionsMenu model={model} modals={modals} />
         <ColumnActionsMenu model={model} modals={modals} />
         <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-        <CreateRefPanel model={model} modals={modals} />
       </Grid.Root>
     );
   },

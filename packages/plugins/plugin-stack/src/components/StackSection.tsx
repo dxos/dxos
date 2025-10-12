@@ -11,7 +11,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 
-import { STACK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type StackSectionItem } from '../types';
 
 import { CaretDownUp } from './CaretDownUp';
@@ -27,7 +27,7 @@ export const StackSection = ({
   object,
   metadata: { icon = 'ph--placeholder--regular' },
 }: StackSectionProps) => {
-  const { t } = useTranslation(STACK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attentionAttrs = useAttentionAttributes(id);

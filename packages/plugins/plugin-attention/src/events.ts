@@ -4,8 +4,8 @@
 
 import { defineEvent } from '@dxos/app-framework';
 
-import { ATTENTION_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export namespace AttentionEvents {
-  export const AttentionReady = defineEvent(`${ATTENTION_PLUGIN}/event/attention-ready`);
+  export const AttentionReady = defineEvent(`${meta.id}/event/attention-ready`);
 }

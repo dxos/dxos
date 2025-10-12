@@ -46,7 +46,9 @@ export type MakeProps<T extends Type.Obj.Any> = NoInfer<Props<Schema.Schema.Type
 
 export const Meta: unique symbol = EchoSchema.MetaId as any;
 
-// TODO(dmaretskyi): Expose Meta = EchoSchema.MetaId.
+const DEFAULT_META: EchoSchema.ObjectMeta = {
+  keys: [],
+};
 
 /**
  * Creates new object.
@@ -64,7 +66,7 @@ export const Meta: unique symbol = EchoSchema.MetaId as any;
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
-  meta?: EchoSchema.ObjectMeta,
+  meta?: Partial<EchoSchema.ObjectMeta>,
 ): LiveObject.Live<Schema.Schema.Type<S>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
@@ -73,11 +75,12 @@ export const make = <S extends Type.Obj.Any>(
   );
 
   if (props[EchoSchema.MetaId] != null) {
-    meta = props[EchoSchema.MetaId] as any;
+    // Set default fields on meta on creation
+    meta = { ...structuredClone(DEFAULT_META), ...props[EchoSchema.MetaId] };
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, meta);
+  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {
@@ -183,7 +186,6 @@ export const isDeleted = (obj: Any | Relation.Any): boolean => {
   return deleted;
 };
 
-// TODO(burdon): Rename "label"
 export const getLabel = (obj: Any | Relation.Any): string | undefined => {
   const schema = getSchema(obj);
   if (schema != null) {
@@ -196,6 +198,35 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   if (schema != null) {
     EchoSchema.setLabel(schema, obj, label);
   }
+};
+
+const compare = (a?: string, b?: string) => {
+  if (a == null) {
+    return b == null ? 0 : 1;
+  }
+
+  if (b == null) {
+    return -1;
+  }
+
+  return a.localeCompare(b);
+};
+
+export type Comparator = (a: Any, b: Any) => number;
+
+export const sortByLabel: Comparator = (a: Any, b: Any) => compare(getLabel(a), getLabel(b));
+export const sortByTypename: Comparator = (a: Any, b: Any) => compare(getTypename(a), getTypename(b));
+export const sort = (...comparators: Comparator[]): Comparator => {
+  return (a: Any, b: Any) => {
+    for (const comparator of comparators) {
+      const result = comparator(a, b);
+      if (result !== 0) {
+        return result;
+      }
+    }
+
+    return 0;
+  };
 };
 
 /**

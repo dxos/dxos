@@ -14,7 +14,7 @@ import { CollectionAction, SpaceAction } from '@dxos/plugin-space/types';
 import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
-import { THREAD_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ChannelType, ThreadAction, ThreadType } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
@@ -22,7 +22,7 @@ import { ThreadCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ThreadAction.OnSpaceCreated,
+      intent: ThreadAction.onCreateSpace,
       resolve: ({ space, rootCollection }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
@@ -190,7 +190,7 @@ export default (context: PluginContext) =>
 
           return {
             undoable: {
-              message: ['thread deleted label', { ns: THREAD_PLUGIN }],
+              message: ['thread deleted label', { ns: meta.id }],
               data: { thread, anchor },
             },
             intents: [
@@ -310,7 +310,7 @@ export default (context: PluginContext) =>
 
           return {
             undoable: {
-              message: ['message deleted label', { ns: THREAD_PLUGIN }],
+              message: ['message deleted label', { ns: meta.id }],
               data: { message, messageIndex },
             },
             intents: [

@@ -12,7 +12,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorSlots,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -41,18 +40,20 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
     if (viewMode === 'plain-only' || viewMode === 'plain') {
       return textBlocks[0]?.text || '';
     }
+
     // Otherwise show enriched content (second block).
     return textBlocks[1]?.text || '';
   }, [message.blocks, viewMode]);
 
-  // TODO(ZaymonFC): How to prevent caret and selection?
   const extensions = useMemo(() => {
     if (space) {
       return [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
+        createThemeExtensions({ themeMode, slots: {} }),
         createMarkdownExtensions(),
-        createThemeExtensions({ themeMode, slots: editorSlots }),
-        decorateMarkdown(),
+        decorateMarkdown({
+          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+        }),
         preview(),
       ];
     }
@@ -64,14 +65,17 @@ export const Message = ({ space, message, viewMode, contactDxn, role, classNames
   return (
     <div
       role='none'
-      className={mx('grid', role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]')}
+      className={mx(
+        'overflow-hidden grid',
+        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+      )}
     >
-      <MessageHeader message={message} viewMode={viewMode} contactDxn={contactDxn} />
-      <div role='none' className={role === 'section' ? 'contents' : 'relative'}>
+      <MessageHeader message={message} viewMode={viewMode} contact={contactDxn} />
+      <div role='none' className={mx(role === 'section' ? 'contents' : 'p-2 overflow-hidden')}>
         <div
           role='none'
           ref={parentRef}
-          className={mx(role !== 'section' && 'absolute inset-0', classNames)}
+          className={mx(role !== 'section' && 'flex bs-full overflow-hidden', classNames)}
           data-popover-collision-boundary={true}
         />
       </div>

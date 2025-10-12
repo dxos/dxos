@@ -10,7 +10,8 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out to space plugin.
 export default defineFunction({
-  name: 'dxos.org/function/assistant/list',
+  key: 'dxos.org/function/assistant/list',
+  name: 'Assistant list',
   description:
     // TODO(wittjosiah): Find a better way to prompt for looking up typenames before querying with them.
     trim`

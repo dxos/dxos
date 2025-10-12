@@ -128,6 +128,10 @@ export type DxGridSelectionProps = {
   visible?: boolean;
 };
 
+export type DxGridFocusIndicatorVariant = 'sheet' | 'stack';
+
+export type DxGridOverscroll = 'inline' | 'block' | 'trap' | undefined;
+
 export class DxAxisResize extends Event {
   public readonly axis: DxGridAxis;
   public readonly plane: 'grid' | DxGridFrozenPlane;

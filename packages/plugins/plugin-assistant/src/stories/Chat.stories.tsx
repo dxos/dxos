@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { type FC, useCallback } from 'react';
 
+import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
@@ -19,9 +18,10 @@ import {
   ResearchOn,
   agent,
 } from '@dxos/assistant-testing';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { FunctionTrigger, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
@@ -33,6 +33,8 @@ import { createLocationSchema } from '@dxos/plugin-map/testing';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { ProjectPlugin } from '@dxos/plugin-project';
+import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
+import { templates } from '@dxos/plugin-script/templates';
 import { TablePlugin } from '@dxos/plugin-table';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
@@ -41,6 +43,7 @@ import { Transcript } from '@dxos/plugin-transcription/types';
 import { useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { DataType, createView } from '@dxos/schema';
@@ -59,14 +62,15 @@ import {
   ChessContainer,
   CommentsContainer,
   type ComponentProps,
+  ExecutionGraphContainer,
   GraphContainer,
   InvocationsContainer,
-  LoggingContainer,
   MessageContainer,
   ProjectContainer,
   PromptContainer,
   ResearchInputStack,
   ResearchOutputStack,
+  ScriptContainer,
   TasksContainer,
   TokenManagerContainer,
   TriggersContainer,
@@ -189,6 +193,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 const storybook: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-assistant/Chat',
   render: render(DefaultStory),
+  decorators: [withTheme],
   parameters: {
     translations,
     controls: { disable: true },
@@ -244,6 +249,17 @@ export const Default: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer]],
+  },
+};
+
+export const WithWebSearch: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
+    config: config.remote,
+  }),
+  args: {
+    deckComponents: [[ChatContainer]],
+    blueprints: ['dxos.org/blueprint/web-search'],
   },
 };
 
@@ -341,10 +357,10 @@ export const WithMail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox();
       await queue.append(messages);
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -364,8 +380,7 @@ export const WithGmail: Story = {
     config: config.remote,
     types: [Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const queue = space.queues.create();
-      space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
+      space.db.add(Mailbox.make({ name: 'Mailbox', space }));
     },
     onChatCreated: async ({ space, binder }) => {
       const { objects } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
@@ -477,13 +492,13 @@ export const WithBoard: Story = {
 
 export const WithResearch: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), TablePlugin()],
-    config: config.persistent,
+    plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, LoggingContainer]],
+    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
 };
@@ -596,7 +611,10 @@ export const WithChessTrigger: Story = {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(Chess.Game)).ast,
+            query: {
+              string: 'Query.select(Filter.type(Chess.Game))',
+              ast: Query.select(Filter.type(Chess.Game)).ast,
+            },
           },
           input: {
             id: '{{event.changedObjectId}}',
@@ -615,7 +633,7 @@ export const WithChessTrigger: Story = {
 export const WithResearchQueue: Story = {
   decorators: getDecorators({
     plugins: [],
-    config: config.local,
+    config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph, ResearchInputQueue],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
@@ -658,9 +676,8 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     deckComponents: [
-      [ResearchInputStack],
-      [TriggersContainer, PromptContainer, InvocationsContainer, LoggingContainer, GraphContainer],
-      [ResearchOutputStack],
+      [ResearchInputStack, ResearchOutputStack],
+      [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
     ],
     blueprints: [RESEARCH_BLUEPRINT.key],
   },
@@ -691,10 +708,10 @@ export const WithProject: Story = {
         person.notes = 'Project';
       });
 
-      const queue = space.queues.create();
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      const queue = space.queues.get<DataType.Message>(mailbox.queue.dxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', queue: queue.dxn }));
 
       const dxosResearch = space.db.add(
         Markdown.makeDocument({
@@ -711,7 +728,6 @@ export const WithProject: Story = {
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
-      console.log(dxos, blueyard);
       space.db.add(
         Relation.make(ResearchOn, {
           [Relation.Source]: dxosResearch,
@@ -730,6 +746,10 @@ export const WithProject: Story = {
       const contactsQuery = Query.select(Filter.type(DataType.Person, { notes: 'Project' }));
       const organizationsQuery = contactsQuery.sourceOf(DataType.Employer, { active: true }).target();
       const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
+
+      const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { notes: "Project" }))';
+      const organizationsQueryString = `${contactsQueryString}.sourceOf(DataType.Employer, { active: true }).target()`;
+      const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -751,7 +771,10 @@ export const WithProject: Story = {
         enabled: true,
         spec: {
           kind: 'subscription',
-          query: organizationsQuery.ast,
+          query: {
+            string: organizationsQueryString,
+            ast: organizationsQuery.ast,
+          },
         },
         input: {
           prompt: Ref.make(researchPrompt),
@@ -767,24 +790,29 @@ export const WithProject: Story = {
         ).options({
           queues: [mailbox.queue.dxn.toString()],
         }),
+        queryString:
+          'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("Project") } }))',
         jsonSchema: Type.toJsonSchema(DataType.Message),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const contactsView = createView({
         name: 'Contacts',
         query: contactsQuery,
+        queryString: contactsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Person),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const organizationsView = createView({
         name: 'Organizations',
         query: organizationsQuery,
+        queryString: organizationsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Organization),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const notesView = createView({
         name: 'Notes',
         query: notesQuery,
+        queryString: notesQueryString,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
@@ -800,5 +828,55 @@ export const WithProject: Story = {
   args: {
     deckComponents: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
+  },
+};
+
+export const WithScript: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin(), ScriptPlugin()],
+    config: config.local,
+    types: [ScriptType, DataType.Text],
+    onInit: async ({ client, space }) => {
+      const { identityKey } = client.halo.identity.get()!;
+      await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+
+      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      invariant(template, 'Template not found');
+      invariant(template.name, 'Template name not found');
+
+      // Ensure at least one Script exists so the React surface can render.
+      const source = Obj.make(DataType.Text, {
+        content: template.source,
+      });
+      space.db.add(
+        Obj.make(ScriptType, {
+          name: template.name,
+          description: 'Function to get the exchange rates between two currencies.',
+          changed: true,
+          source: Ref.make(source),
+        }),
+      );
+
+      await space.db.flush();
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const bp = space.db.add(
+        Blueprint.make({
+          key: 'dxos.org/blueprint/forex',
+          name: 'Forex',
+          instructions: Template.make({
+            source: trim`
+            You can get the exchange rate between two currencies.
+          `,
+          }),
+          tools: [ToolId.make('dxos.org/script/forex-effect')],
+        }),
+      );
+
+      await binder.bind({ blueprints: [Ref.make(bp)] });
+    },
+  }),
+  args: {
+    deckComponents: [[ChatContainer], [ScriptContainer]],
   },
 };

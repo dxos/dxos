@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -21,10 +19,10 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
+import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useAudioFile, useQueueModelAdapter, useTranscriber } from '../../hooks';
 import { MessageNormalizer, getActorId } from '../../segments-normalization';
@@ -189,10 +187,9 @@ const AudioFile = ({
 const meta = {
   title: 'plugins/plugin-transcription/FileTranscription',
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
-        ThemePlugin({ tx: defaultTx }),
-        StorybookLayoutPlugin(),
         ClientPlugin({
           types: [TestItem, DataType.Person, DataType.Organization, Testing.DocumentType],
           onClientInitialized: async ({ client }) => {
@@ -202,17 +199,22 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+
+        // UI
+        ThemePlugin({ tx: defaultTx }),
         SettingsPlugin(),
         PreviewPlugin(),
-        IntentPlugin(),
         TranscriptionPlugin(),
+        StorybookLayoutPlugin({}),
       ],
       fireEvents: [Events.SetupAppGraph],
     }),
-    withTheme,
-    withLayout({ fullscreen: true, classNames: 'justify-center' }),
   ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta;
 
 export default meta;

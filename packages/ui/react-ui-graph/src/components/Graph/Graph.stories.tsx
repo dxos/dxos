@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { effect } from '@preact/signals-core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
@@ -11,10 +9,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getHashColor, mx } from '@dxos/react-ui-theme';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 
 import { Pulsar } from '../../fx';
 import {
@@ -217,7 +215,7 @@ const DefaultStory = ({
               attributes={{
                 node: (node: GraphLayoutNode<TestNode>) => ({
                   data: {
-                    color: getHashColor(node.data?.type ?? node.type)?.color,
+                    color: getHashStyles(node.data?.type ?? node.type)?.hue,
                   },
                   classes: {
                     'dx-selected': selection.contains(node.id),
@@ -225,7 +223,7 @@ const DefaultStory = ({
                 }),
                 edge: (edge: GraphLayoutEdge<TestNode>) => ({
                   data: {
-                    color: getHashColor(edge.data?.type ?? edge.type)?.color,
+                    color: getHashStyles(edge.data?.type ?? edge.type)?.hue,
                   },
                 }),
               }}
@@ -326,8 +324,9 @@ const Debug = ({
 const meta = {
   title: 'ui/react-ui-graph/Graph',
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ fullscreen: true })],
+  decorators: [withTheme],
   parameters: {
+    layout: 'fullscreen',
     controls: { disable: true },
   },
 } satisfies Meta<typeof DefaultStory>;

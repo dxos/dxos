@@ -12,18 +12,18 @@ import { Callout, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { type DataType } from '@dxos/schema';
-import { typenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 type RowDetailsPanelProps = { objectId: string; view: DataType.View };
 
 const ObjectDetailsPanel = ({ objectId, view }: RowDetailsPanelProps) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
 
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());

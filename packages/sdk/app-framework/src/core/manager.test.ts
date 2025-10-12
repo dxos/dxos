@@ -17,7 +17,7 @@ import { Events } from '../common';
 import { type PluginContext, contributes, defineCapability } from './capabilities';
 import { allOf, defineEvent, oneOf } from './events';
 import { PluginManager } from './manager';
-import { type Plugin, defineModule, definePlugin } from './plugin';
+import { Plugin, defineModule } from './plugin';
 
 registerSignalsRuntime();
 
@@ -43,7 +43,7 @@ describe('PluginManager', () => {
   });
 
   it('should be able to add and remove plugins', async () => {
-    const Test = definePlugin(testMeta, []);
+    const Test = new Plugin(testMeta, []);
     plugins = [Test];
 
     const manager = new PluginManager({ pluginLoader });
@@ -59,7 +59,7 @@ describe('PluginManager', () => {
       activatesOn: Events.Startup,
       activate: () => contributes(String, { string: 'hello' }),
     });
-    const Test = definePlugin(testMeta, [Hello]);
+    const Test = new Plugin(testMeta, [Hello]);
 
     const manager = new PluginManager({ plugins: [Test], core: [], pluginLoader });
     await manager.enable(testMeta.id);
@@ -76,7 +76,7 @@ describe('PluginManager', () => {
       activatesOn: Events.Startup,
       activate: () => contributes(String, { string: 'hello' }),
     });
-    const Test = definePlugin(testMeta, [Hello]);
+    const Test = new Plugin(testMeta, [Hello]);
 
     const manager = new PluginManager({ plugins: [Test], enabled: [Test.meta.id], pluginLoader });
     expect(manager.plugins).toEqual([Test]);
@@ -95,7 +95,7 @@ describe('PluginManager', () => {
       activatesOn: FailEvent,
       activate: async () => raise(new Error('test')),
     });
-    plugins = [definePlugin(testMeta, [Fail])];
+    plugins = [new Plugin(testMeta, [Fail])];
 
     const manager = new PluginManager({ pluginLoader });
     await manager.add(testMeta.id);
@@ -114,7 +114,7 @@ describe('PluginManager', () => {
       // TODO(wittjosiah): Test and catch more failure modes.
       activate: async () => async () => raise(new Error('test')),
     });
-    plugins = [definePlugin(testMeta, [Hello, Fail])];
+    plugins = [new Plugin(testMeta, [Hello, Fail])];
 
     const manager = new PluginManager({ pluginLoader });
     const activating = new Trigger<boolean>();
@@ -149,7 +149,7 @@ describe('PluginManager', () => {
         return contributes(String, { string: 'hello' });
       },
     });
-    plugins = [definePlugin(testMeta, [Hello])];
+    plugins = [new Plugin(testMeta, [Hello])];
 
     const manager = new PluginManager({ pluginLoader });
 
@@ -180,21 +180,21 @@ describe('PluginManager', () => {
   });
 
   it('should be able to fire custom activation events', async () => {
-    const Plugin1 = definePlugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
+    const Plugin1 = new Plugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
       defineModule({
         id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
-    const Plugin2 = definePlugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
+    const Plugin2 = new Plugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
       defineModule({
         id: 'dxos.org/test/plugin-2',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
-    const Plugin3 = definePlugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
+    const Plugin3 = new Plugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
       defineModule({
         id: 'dxos.org/test/plugin-3',
         activatesOn: CountEvent,
@@ -231,7 +231,7 @@ describe('PluginManager', () => {
         return contributes(String, { string: 'hello' });
       },
     });
-    plugins = [definePlugin(testMeta, [Hello])];
+    plugins = [new Plugin(testMeta, [Hello])];
 
     const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
@@ -257,7 +257,7 @@ describe('PluginManager', () => {
         return contributes(String, { string: 'hello' });
       },
     });
-    plugins = [definePlugin(testMeta, [Hello])];
+    plugins = [new Plugin(testMeta, [Hello])];
 
     const manager = new PluginManager({ pluginLoader });
     expect(manager.active).toEqual([]);
@@ -283,7 +283,7 @@ describe('PluginManager', () => {
       state.total = numbers.reduce((acc, n) => acc + n.number, 0);
     };
 
-    const Count = definePlugin({ id: 'dxos.org/test/count', name: 'Count' }, [
+    const Count = new Plugin({ id: 'dxos.org/test/count', name: 'Count' }, [
       defineModule({
         id: 'dxos.org/test/count',
         activatesOn: Events.Startup,
@@ -295,7 +295,7 @@ describe('PluginManager', () => {
       }),
     ]);
 
-    const Test = definePlugin(testMeta, [
+    const Test = new Plugin(testMeta, [
       defineModule({
         id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
@@ -353,7 +353,7 @@ describe('PluginManager', () => {
     const id = 'dxos.org/test/counter';
     const stateEvent = Events.createStateEvent(id);
 
-    const Test = definePlugin(testMeta, [
+    const Test = new Plugin(testMeta, [
       defineModule({
         id,
         activatesOn: Events.Startup,
@@ -390,21 +390,21 @@ describe('PluginManager', () => {
   });
 
   it('should be reactive', async () => {
-    const Plugin1 = definePlugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
+    const Plugin1 = new Plugin({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }, [
       defineModule({
         id: 'dxos.org/test/plugin-1',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 1 })],
       }),
     ]);
-    const Plugin2 = definePlugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
+    const Plugin2 = new Plugin({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }, [
       defineModule({
         id: 'dxos.org/test/plugin-2',
         activatesOn: CountEvent,
         activate: () => [contributes(Number, { number: 2 })],
       }),
     ]);
-    const Plugin3 = definePlugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
+    const Plugin3 = new Plugin({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }, [
       defineModule({
         id: 'dxos.org/test/plugin-3',
         activatesOn: CountEvent,

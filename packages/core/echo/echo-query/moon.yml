@@ -6,6 +6,30 @@ tags:
   - pack
 tasks:
   compile:
+    deps:
+      - prebuild
     args:
       - '--entryPoint=src/index.ts'
       - '--injectGlobals'
+  prebuild:
+    deps:
+      - echo-query:prebuild-lezer
+      - echo-query:prebuild-query-env
+  prebuild-lezer:
+    script: pnpm lezer-generator --typeScript ./src/parser/query.grammar -o ./src/parser/gen/query.ts
+    inputs:
+      - src/parser/query.grammar
+    outputs:
+      - src/parser/gen/query.terms.ts
+      - src/parser/gen/query.ts
+  prebuild-query-env:
+    script: pnpm esbuild src/query-env/index.ts --bundle --outdir=dist/query-env --format=esm
+    deps:
+      - ^:compile
+    inputs:
+      - src/query-env/*
+    outputs:
+      - dist/query-env/*
+  test:
+    deps:
+      - prebuild

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiTool, AiToolkit } from '@effect/ai';
+import { Tool, Toolkit } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
 import { Effect, Layer, Schema } from 'effect';
 
@@ -13,9 +13,8 @@ import { TestHelpers } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
-  LocalFunctionExecutionService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
@@ -23,8 +22,8 @@ import { type DataType } from '@dxos/schema';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
 
-class TestToolkit extends AiToolkit.make(
-  AiTool.make('random', {
+class TestToolkit extends Toolkit.make(
+  Tool.make('random', {
     description: 'Random number generator',
     parameters: {},
     success: Schema.Number,
@@ -32,7 +31,7 @@ class TestToolkit extends AiToolkit.make(
 ) {}
 
 // TODO(burdon): Create minimal toolkit.
-const toolkit = AiToolkit.merge(TestToolkit) as AiToolkit.Any as AiToolkit.AiToolkit<AiTool.Any>;
+const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;
 
 // TODO(burdon): Explain structure.
 const TestServicesLayer = Layer.mergeAll(
@@ -43,14 +42,16 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  LocalFunctionExecutionService.layer,
-  RemoteFunctionExecutionService.mockLayer,
+  FunctionInvocationService.layerTestMocked({ functions: [] }).pipe(
+    Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+    Layer.provideMerge(TracingService.layerNoop),
+  ),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], toolkit),
-  makeToolExecutionServiceFromFunctions([], toolkit, toolkit.toLayer({}) as any),
+  makeToolExecutionServiceFromFunctions(toolkit, toolkit.toLayer({}) as any),
   CredentialsService.layerFromDatabase(),
   ComputeEventLogger.layerFromTracing,
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);

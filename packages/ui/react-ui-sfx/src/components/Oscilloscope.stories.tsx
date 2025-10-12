@@ -2,18 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { Oscilloscope } from './Oscilloscope';
 
 const meta = {
   title: 'ui/react-ui-sfx/Oscilloscope',
   component: Oscilloscope,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
   parameters: {
     layout: 'centered',
   },

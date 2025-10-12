@@ -12,13 +12,13 @@ import { activeSurface, mx } from '@dxos/react-ui-theme';
 
 import { useGlobalSearch, useGlobalSearchResults } from '../hooks';
 import { useWebSearch } from '../hooks/useWebSearch';
-import { SEARCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { Searchbar } from './Searchbar';
 import { SearchResults } from './SearchResults';
 
 export const SearchMain: FC<ThemedClassName<{ space: Space }>> = ({ classNames, space }) => {
-  const { t } = useTranslation(SEARCH_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();

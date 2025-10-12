@@ -239,8 +239,8 @@ export class FeedWrapper<T extends {}> {
     return promisify(this._hypercore.put.bind(this._hypercore))(index, data, proof);
   }
 
-  putBuffer(...args: any[]) {
-    return promisify((this._hypercore as any).putBuffer.bind(this._hypercore) as any)(...args);
+  putBuffer(index: number, data: Buffer | Uint8Array, proof: Proof, peer: null): Promise<void> {
+    return promisify((this._hypercore as any)._putBuffer.bind(this._hypercore) as any)(index, data, proof, peer);
   }
 
   /**

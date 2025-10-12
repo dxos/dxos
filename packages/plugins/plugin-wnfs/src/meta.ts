@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const WNFS_PLUGIN = 'dxos.org/plugin/wnfs';
-
 export const meta: PluginMeta = {
-  id: WNFS_PLUGIN,
+  id: 'dxos.org/plugin/wnfs',
   name: 'WNFS',
   description: 'Manage and view files with via the Web Native File System (WNFS).',
   icon: 'ph--file-cloud--regular',

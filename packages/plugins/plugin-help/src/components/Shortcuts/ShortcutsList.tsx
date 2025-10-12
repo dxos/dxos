@@ -8,12 +8,12 @@ import { Keyboard } from '@dxos/keyboard';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { HELP_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 
 import { Key } from './Key';
 
 export const ShortcutsList = () => {
-  const { t } = useTranslation(HELP_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const bindings = Keyboard.singleton.getBindings();
 
   // TODO(burdon): Get shortcuts from TextEditor.

@@ -6,7 +6,7 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 import { type ModelName } from './model';
 
-export class AiInputPreprocessingError extends BaseError.extend(
+export class PromptPreprocessingError extends BaseError.extend(
   'AI_INPUT_PREPROCESSOR_ERROR',
   'AI Input preprocessing error',
 ) {}

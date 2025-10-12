@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SHEET_PLUGIN = 'dxos.org/plugin/sheet';
-
 export const meta: PluginMeta = {
-  id: SHEET_PLUGIN,
+  id: 'dxos.org/plugin/sheet',
   name: 'Sheet',
   description:
     'Sheets in Composer are simple spreadsheets which allow you to leverage custom functions inside of cell grids. Leverage more than 400 pre-built formulas like Sum, Average, Count, Max, Min along with many others. You can also deploy your own custom functions using the Scripts plugin. ',

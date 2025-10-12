@@ -12,11 +12,11 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 
-import { INBOX_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type Mailbox } from '../../types';
 
 export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) => {
-  const { t } = useTranslation(INBOX_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);
   const triggers = useQuery(space, Filter.type(FunctionTrigger));

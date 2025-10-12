@@ -3,7 +3,7 @@
 //
 
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
-import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types/types';
+import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type DiagramType } from '@dxos/plugin-sketch/types';
@@ -26,7 +26,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
   const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
   const [down, setDown] = useState<boolean>(false);
-  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>();
+  const excalidrawAPIRef = useRef<ExcalidrawImperativeAPI>(null);
   const adapter = useStoreAdapter(sketch, {
     onUpdate: ({ elements }) => {
       excalidrawAPIRef.current?.updateScene({ elements });

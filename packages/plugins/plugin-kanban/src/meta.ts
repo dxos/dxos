@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const KANBAN_PLUGIN = 'dxos.org/plugin/kanban';
-
 export const meta: PluginMeta = {
-  id: KANBAN_PLUGIN,
+  id: 'dxos.org/plugin/kanban',
   name: 'Kanban',
   description:
     'Kanban allows you to explore Table data in sorted columns defined by your custom schema. You can use Kanbans to track progress or trigger custom automations when cards are moved from one state to another.',

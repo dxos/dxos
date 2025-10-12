@@ -5,12 +5,12 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { Schema } from 'effect';
 
-import { SKETCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 import { DiagramType } from './diagram';
 
 export namespace SketchAction {
-  const SKETCH_ACTION = `${SKETCH_PLUGIN}/action`;
+  const SKETCH_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
     input: Schema.Struct({

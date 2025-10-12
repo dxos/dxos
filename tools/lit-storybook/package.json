@@ -12,16 +12,17 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
-    "@storybook/addon-docs": "^9.1.6",
-    "@storybook/addon-links": "^9.1.6",
-    "@storybook/addon-themes": "^9.1.6",
-    "@storybook/addon-vitest": "^9.1.6",
-    "@storybook/builder-vite": "^9.1.6",
-    "@storybook/web-components-vite": "^9.1.6",
+    "@storybook/addon-docs": "^9.1.10",
+    "@storybook/addon-links": "^9.1.10",
+    "@storybook/addon-themes": "^9.1.10",
+    "@storybook/addon-vitest": "^9.1.10",
+    "@storybook/builder-vite": "^9.1.10",
+    "@storybook/web-components-vite": "^9.1.10",
     "eslint-plugin-storybook": "^9.1.6",
-    "lit": "^3.2.0",
-    "storybook": "^9.1.6",
-    "vite": "7.1.1"
+    "lit": "^3.3.1",
+    "storybook": "^9.1.10",
+    "vite": "7.1.9"
   }
 }

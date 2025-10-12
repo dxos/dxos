@@ -5,9 +5,8 @@
 import { type Extension, StateEffect, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
-import { isNotFalsy } from '@dxos/util';
-
-import { Domino } from '../../util';
+import { Domino } from '@dxos/react-ui';
+import { isTruthy } from '@dxos/util';
 
 const BLINK_RATE = 2_000;
 
@@ -24,7 +23,7 @@ export const streamer = (options: StreamerOptions = {}): Extension => {
   return [
     options.cursor && cursor(),
     options.fadeIn && fadeIn(typeof options.fadeIn === 'object' ? options.fadeIn : {}),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 };
 
 /**
@@ -106,7 +105,7 @@ class CursorWidget extends WidgetType {
   toDOM() {
     return Domino.of('span')
       .style({ opacity: '0.8' })
-      .child(Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' }))
+      .children(Domino.of('span').text('\u258F').style({ animation: 'blink 2s infinite' }))
       .build();
   }
 }

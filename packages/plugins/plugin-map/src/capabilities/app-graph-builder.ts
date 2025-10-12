@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { DataType } from '@dxos/schema';
 
-import { MAP_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { Map, MapAction } from '../types';
 
 export default (context: PluginContext) =>
@@ -36,7 +36,7 @@ export default (context: PluginContext) =>
                   await dispatch(createIntent(MapAction.Toggle));
                 },
                 properties: {
-                  label: ['toggle type label', { ns: MAP_PLUGIN }],
+                  label: ['toggle type label', { ns: meta.id }],
                   icon: 'ph--compass--regular',
                 },
               },

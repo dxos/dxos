@@ -22,6 +22,7 @@ export {
   DocAccessor,
   type EchoDatabase,
   Query,
+  type Queryable,
   Filter,
   type Hypergraph,
   type IDocHandle,
@@ -69,10 +70,8 @@ export {
   SPACE_ID_LENGTH,
   EchoObjectSchema,
   ReactiveObjectSchema,
-  SpaceSchema,
   getSpace,
   getSyncSummary,
-  isSpace,
   parseFullyQualifiedId,
   parseId,
   type Progress,
@@ -80,3 +79,4 @@ export {
   type SpaceSyncStateMap,
 } from './util';
 export { importSpace } from './import';
+export { SpaceSchema, isSpace } from './space-proxy';

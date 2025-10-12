@@ -10,6 +10,21 @@
   ],
   "references": [
     {
+      "path": "../../../../vendor/quickjs"
+    },
+    {
+      "path": "../../../common/context"
+    },
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {
@@ -19,7 +34,13 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../echo"
+    },
+    {
       "path": "../echo-generator"
+    },
+    {
+      "path": "../echo-protocol"
     }
   ]
 }

@@ -10,7 +10,7 @@ import { Duration, Effect, Fiber, Match, Schedule, pipe } from 'effect';
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
-import { NATIVE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
@@ -54,12 +54,12 @@ export default (context: PluginContext) => {
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
           subject: {
-            id: `${NATIVE_PLUGIN}/update-ready`,
-            title: ['update ready label', { ns: NATIVE_PLUGIN }],
-            description: ['update ready description', { ns: NATIVE_PLUGIN }],
+            id: `${meta.id}/update-ready`,
+            title: ['update ready label', { ns: meta.id }],
+            description: ['update ready description', { ns: meta.id }],
             duration: Infinity,
-            actionLabel: ['update label', { ns: NATIVE_PLUGIN }],
-            actionAlt: ['update alt', { ns: NATIVE_PLUGIN }],
+            actionLabel: ['update label', { ns: meta.id }],
+            actionAlt: ['update alt', { ns: meta.id }],
             onAction: () => relaunch(),
           },
         }),

@@ -10,7 +10,7 @@ import { FormatEnum } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
-import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 import { type Map } from '../types';
 
@@ -26,7 +26,7 @@ export const MapViewEditor = ({ view }: MapViewEditorProps) => {
   const client = useClient();
   const space = getSpace();
   const map = view.presentation.target as Map.Map | undefined;
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const currentSchema = useSchema(client, space, typename);
 
   const [allSchemata, setAllSchemata] = useState<Type.Schema[]>([]);

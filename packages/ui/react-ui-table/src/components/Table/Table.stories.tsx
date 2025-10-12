@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { Schema } from 'effect';
 import React, { useCallback } from 'react';
@@ -22,11 +20,11 @@ import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { type Space, live } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
 
 import { useTestTableModel } from '../../testing';
 import { translations } from '../../translations';
@@ -82,7 +80,7 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(typename);
       invariant(view);
-      view.query = Query.select(Filter.typename(typename)).ast;
+      view.query.ast = Query.select(Filter.typename(typename)).ast;
     },
     [schema, view],
   );
@@ -160,21 +158,13 @@ type StoryProps = { rows?: number };
 const meta = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: {
-    translations,
-    layout: 'fullscreen',
-    controls: {
-      disable: true,
-    },
-  },
   decorators: [
     withTheme,
-    withLayout({ fullscreen: true }),
     withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const [schema] = await space.db.schemaRegistry.register([TestSchema]);
         const { view } = await Table.makeView({ client, space, typename: schema.typename });
         view.projection.fields = [
@@ -196,6 +186,13 @@ const meta = {
       },
     }),
   ],
+  parameters: {
+    layout: 'fullscreen',
+    controls: {
+      disable: true,
+    },
+    translations,
+  },
 } satisfies Meta<typeof TableComponent>;
 
 export default meta;
@@ -206,13 +203,12 @@ export const Default: Story = {};
 
 export const StaticSchema: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const { view } = await Table.makeView({ client, space, typename: Testing.Contact.typename });
         space.db.add(view);
 
@@ -223,9 +219,11 @@ export const StaticSchema: StoryObj = {
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 const ContactWithArrayOfEmails = Schema.Struct({
@@ -247,13 +245,12 @@ const ContactWithArrayOfEmails = Schema.Struct({
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table, Testing.Contact, Testing.Organization, ContactWithArrayOfEmails],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         const { view } = await Table.makeView({ client, space, typename: ContactWithArrayOfEmails.typename });
         space.db.add(view);
 
@@ -265,21 +262,22 @@ export const ArrayOfObjects: StoryObj = {
         ]);
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };
 
 export const Tags: Meta<StoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
-  parameters: { translations },
   decorators: [
     withClientProvider({
       types: [DataType.View, Table.Table],
       createIdentity: true,
       createSpace: true,
-      onSpaceCreated: async ({ client, space }) => {
+      onCreateSpace: async ({ client, space }) => {
         // Configure schema.
         const typename = 'example.com/SingleSelect';
         const selectOptions = [
@@ -321,7 +319,9 @@ export const Tags: Meta<StoryProps> = {
         });
       },
     }),
-    withLayout({ fullscreen: true }),
-    withTheme,
   ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 };

@@ -20,19 +20,15 @@ jobs:
           - name: eslint
             spec: 'eslint "@eslint/*" "@typescript-eslint/*" prettier "prettier-plugin-*"'
           - name: react
-            spec: 'react "react-dom" "@types/react" "@types/react-dom" "@testing-library/*"'
+            spec: 'react "react-dom" "react-is" "react-test-renderer" "@types/react" "@types/react-dom" "@testing-library/*"'
           - name: automerge
             spec: '"@automerge/*"'
           - name: jsdom
             spec: '"jsdom/*"'
-          - name: radix-ui
-            spec: '"@radix-ui/*"'
           - name: preact
             spec: '"@preact-signals/*" "@preact/signals*"'
           - name: tauri
             spec: '"@tauri-apps/*"'
-          - name: phosphor
-            spec: '"@phosphor-icons/*"'
           - name: codemirror
             spec: '"@codemirror/*" "codemirror-lang-*"'
           - name: esbuild
@@ -43,15 +39,17 @@ jobs:
             spec: '"@swc/*" "@swc-node/*"'
           - name: lit
             spec: 'lit "@lit/*"'
+          - name: ch-ui
+            spec: '"@ch-ui/*"'
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.12.1
+      image: ghcr.io/dxos/gh-actions:20.19.5
       credentials:
         username: dxos-bot
         password: ${{ secrets.CREATE_PR_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           lfs: true

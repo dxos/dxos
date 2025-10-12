@@ -8,6 +8,8 @@ import { Expando, S, create, defineFunction } from 'dxos:functions';
 import { randText } from 'https://esm.sh/@ngneat/falso@7.1.1?bundle=false';
 
 export default defineFunction({
+  key: 'dxos.org/script/data-generator',
+  name: 'Data Generator',
   inputSchema: S.Struct({
     documentAmount: S.optional(S.Number),
     textSize: S.optional(S.Number),

@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SKETCH_PLUGIN = 'dxos.org/plugin/sketch';
-
 export const meta: PluginMeta = {
-  id: SKETCH_PLUGIN,
+  id: 'dxos.org/plugin/sketch',
   name: 'Sketch',
   description: 'The Sketch plugin implements a digital whiteboard and diagram editor.',
   icon: 'ph--compass-tool--regular',

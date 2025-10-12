@@ -7,7 +7,7 @@ import { Schema } from 'effect';
 import { SpaceSchema } from '@dxos/react-client/echo';
 import { DataType, TypenameAnnotationId } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const CreateTableSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -22,9 +22,9 @@ export const CreateTableSchema = Schema.Struct({
 export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 
 export namespace TableAction {
-  const TABLE_ACTION = `${TABLE_PLUGIN}/action`;
+  const TABLE_ACTION = `${meta.id}/action`;
 
-  export class OnSpaceCreated extends Schema.TaggedClass<OnSpaceCreated>()(`${TABLE_ACTION}/on-space-created`, {
+  export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${TABLE_ACTION}/on-space-created`, {
     input: Schema.Struct({
       space: SpaceSchema,
     }),

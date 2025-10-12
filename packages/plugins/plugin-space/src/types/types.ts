@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { type BaseObject, EchoSchema, StoredSchema, type TypedObject } from '@dxos/echo-schema';
+import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -14,9 +14,10 @@ import { CancellableInvitationObservable, Invitation } from '@dxos/react-client/
 import { DataType, FieldSchema, TypenameAnnotationId } from '@dxos/schema';
 import { type ComplexMap } from '@dxos/util';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
+export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
+
 export const SPACE_TYPE = 'dxos.org/type/Space';
 
 export type ObjectViewerProps = {
@@ -105,8 +106,7 @@ export const SpaceForm = Schema.Struct({
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
-  // TODO(dmaretskyi): Change to Schema.Schema.AnyNoContext
-  objectSchema: TypedObject;
+  objectSchema: Schema.Schema.AnyNoContext;
   formSchema?: Schema.Schema<T, any>;
   hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;
@@ -114,7 +114,7 @@ export type ObjectForm<T extends BaseObject = BaseObject> = {
 
 export const defineObjectForm = <T extends BaseObject>(form: ObjectForm<T>) => form;
 
-export const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
+export const SPACE_ACTION = `${meta.id}/action`;
 
 export namespace SpaceAction {
   export class OpenCreateSpace extends Schema.TaggedClass<OpenCreateSpace>()(`${SPACE_ACTION}/open-create-space`, {

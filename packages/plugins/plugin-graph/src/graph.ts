@@ -8,9 +8,9 @@ import { Capabilities, type PluginContext, contributes } from '@dxos/app-framewo
 import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '@dxos/app-graph';
 
 // TODO(wittjosiah): Remove or restore graph caching.
-// import { GRAPH_PLUGIN } from './meta';
+// import { meta } from './meta';
 
-// const KEY = `${GRAPH_PLUGIN}/app-graph`;
+// const KEY = `${meta.id}/app-graph`;
 
 export default async (context: PluginContext) => {
   const registry = context.getCapability(Capabilities.RxRegistry);

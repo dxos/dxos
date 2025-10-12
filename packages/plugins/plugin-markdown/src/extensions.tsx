@@ -41,7 +41,7 @@ import {
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { MarkdownCapabilities } from './capabilities';
 import { type Markdown } from './types';
@@ -157,7 +157,7 @@ export const useExtensions = ({
           }),
         baseExtensions,
         pluginExtensions,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     [baseExtensions, pluginExtensions, document, document?.content?.target, text, id, space, identity],
   );
 };
@@ -178,7 +178,7 @@ const createBaseExtensions = ({
     selectionManager && selectionChange(selectionManager),
     settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings.folding && folding(),
-  ].filter(isNotFalsy);
+  ].filter(isTruthy);
 
   //
   // Markdown

@@ -71,7 +71,8 @@ export const LINEAR_TEAM_ID_KEY = 'linear.app/teamId';
 export const LINEAR_UPDATED_AT_KEY = 'linear.app/updatedAt';
 
 export default defineFunction({
-  name: 'dxos.org/function/linear/sync-issues',
+  key: 'dxos.org/function/linear/sync-issues',
+  name: 'Linear',
   description: 'Sync issues from Linear.',
   inputSchema: Schema.Struct({
     team: Schema.String.annotations({

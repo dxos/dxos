@@ -12,11 +12,11 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SPACE_TYPE, SpaceAction, type SpaceSettingsProps } from '../types';
 import {
   SHARED,
@@ -42,7 +42,7 @@ export default (context: PluginContext) => {
     type: SPACES,
     cacheable: ['label', 'role'],
     properties: {
-      label: ['spaces label', { ns: SPACE_PLUGIN }],
+      label: ['spaces label', { ns: meta.id }],
       icon: 'ph--planet--regular',
       testId: 'spacePlugin.spaces',
       role: 'branch',
@@ -77,7 +77,7 @@ export default (context: PluginContext) => {
   return contributes(Capabilities.AppGraphBuilder, [
     // Primary actions.
     createExtension({
-      id: `${SPACE_PLUGIN}/primary-actions`,
+      id: `${meta.id}/primary-actions`,
       position: 'hoist',
       actions: (node) =>
         Rx.make((get) =>
@@ -92,7 +92,7 @@ export default (context: PluginContext) => {
                   await dispatch(createIntent(SpaceAction.OpenCreateSpace));
                 },
                 properties: {
-                  label: ['create space label', { ns: SPACE_PLUGIN }],
+                  label: ['create space label', { ns: meta.id }],
                   icon: 'ph--plus--regular',
                   testId: 'spacePlugin.createSpace',
                   disposition: 'menu',
@@ -105,7 +105,7 @@ export default (context: PluginContext) => {
                   await dispatch(createIntent(SpaceAction.Join));
                 },
                 properties: {
-                  label: ['join space label', { ns: SPACE_PLUGIN }],
+                  label: ['join space label', { ns: meta.id }],
                   icon: 'ph--sign-in--regular',
                   testId: 'spacePlugin.joinSpace',
                   disposition: 'menu',
@@ -120,7 +120,7 @@ export default (context: PluginContext) => {
                   await dispatch(createIntent(SpaceAction.OpenMembers, { space }));
                 },
                 properties: {
-                  label: ['share space label', { ns: SPACE_PLUGIN }],
+                  label: ['share space label', { ns: meta.id }],
                   icon: 'ph--users--regular',
                   testId: 'spacePlugin.shareSpace',
                   keyBinding: {
@@ -138,7 +138,7 @@ export default (context: PluginContext) => {
                   await dispatch(createIntent(SpaceAction.OpenSettings, { space }));
                 },
                 properties: {
-                  label: ['open current space settings label', { ns: SPACE_PLUGIN }],
+                  label: ['open current space settings label', { ns: meta.id }],
                   icon: 'ph--faders--regular',
                   keyBinding: {
                     macos: 'meta+shift+,',
@@ -154,7 +154,7 @@ export default (context: PluginContext) => {
 
     // Create spaces group node.
     createExtension({
-      id: `${SPACE_PLUGIN}/root`,
+      id: `${meta.id}/root`,
       position: 'hoist',
       connector: (node) =>
         Rx.make((get) =>
@@ -191,7 +191,7 @@ export default (context: PluginContext) => {
               }
 
               const settings = get(context.capabilities(Capabilities.SettingsStore))[0]?.getStore<SpaceSettingsProps>(
-                SPACE_PLUGIN,
+                meta.id,
               )?.value;
 
               // TODO(wittjosiah): During client reset, accessing default space throws.
@@ -276,7 +276,7 @@ export default (context: PluginContext) => {
 
     // Create space actions.
     createExtension({
-      id: `${SPACE_PLUGIN}/actions`,
+      id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
           pipe(
@@ -308,7 +308,7 @@ export default (context: PluginContext) => {
 
     // Create nodes for objects in the root collection of a space.
     createExtension({
-      id: `${SPACE_PLUGIN}/root-collection`,
+      id: `${meta.id}/root-collection`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -358,7 +358,7 @@ export default (context: PluginContext) => {
 
     // Create nodes for objects in a collection or by its fully qualified id.
     createExtension({
-      id: `${SPACE_PLUGIN}/objects`,
+      id: `${meta.id}/objects`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -429,7 +429,7 @@ export default (context: PluginContext) => {
 
     // Create nodes for objects in a query collection.
     createExtension({
-      id: `${SPACE_PLUGIN}/query-collection-objects`,
+      id: `${meta.id}/query-collection-objects`,
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) =>
@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const typename = typenameFromQuery(collection.query);
+              const typename = getTypenameFromQuery(collection.query);
               return typename && space ? Option.some({ typename, space }) : Option.none();
             }),
             Option.map(({ typename, space }) => {
@@ -486,7 +486,7 @@ export default (context: PluginContext) => {
 
     // Static schema records.
     createExtension({
-      id: `${SPACE_PLUGIN}/static-schemas`,
+      id: `${meta.id}/static-schemas`,
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
         return Rx.make((get) =>
@@ -494,7 +494,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
-              typenameFromQuery(node.data.query) === DataType.StoredSchema.typename
+              getTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -518,7 +518,7 @@ export default (context: PluginContext) => {
 
     // Create static schema actions.
     createExtension({
-      id: `${SPACE_PLUGIN}/static-schema-actions`,
+      id: `${meta.id}/static-schema-actions`,
       actions: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
@@ -538,7 +538,9 @@ export default (context: PluginContext) => {
               const filteredViews = get(
                 rxFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
-                  views.filter((view) => typenameFromQuery(view.query) === Type.getTypename(schema as Type.Obj.Any)),
+                  views.filter(
+                    (view) => getTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                  ),
                 ),
               );
               const deletable = filteredViews.length === 0;
@@ -564,7 +566,7 @@ export default (context: PluginContext) => {
 
     // Create nodes for schema views.
     createExtension({
-      id: `${SPACE_PLUGIN}/schema-views`,
+      id: `${meta.id}/schema-views`,
       connector: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
@@ -585,7 +587,7 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(rxFromQuery(query))
-                .filter((view) => typenameFromQuery(view.query) === typename)
+                .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>
@@ -608,7 +610,7 @@ export default (context: PluginContext) => {
 
     // Create record nodes.
     createExtension({
-      id: `${SPACE_PLUGIN}/records`,
+      id: `${meta.id}/records`,
       resolver: (id) => {
         let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) => {
@@ -639,7 +641,7 @@ export default (context: PluginContext) => {
 
     // Create collection actions and action groups.
     createExtension({
-      id: `${SPACE_PLUGIN}/object-actions`,
+      id: `${meta.id}/object-actions`,
       actions: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
@@ -647,7 +649,9 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data);
-              return space && Obj.isObject(node.data) ? Option.some({ space, object: node.data }) : Option.none();
+              return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+                ? Option.some({ space, object: node.data })
+                : Option.none();
             }),
             Option.flatMap(({ space, object }) => {
               const isSchema = Obj.instanceOf(DataType.StoredSchema, object);
@@ -661,12 +665,12 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.QueryCollection, object) &&
-                  typenameFromQuery(object.query) === DataType.StoredSchema.typename
+                  getTypenameFromQuery(object.query) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query) === object.typename)),
+                  rxFromSignal(() => views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename)),
                 );
                 deletable = filteredViews.length === 0;
               }
@@ -698,7 +702,7 @@ export default (context: PluginContext) => {
 
     // View selected objects.
     createExtension({
-      id: `${SPACE_PLUGIN}/selected-objects`,
+      id: `${meta.id}/selected-objects`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -710,7 +714,7 @@ export default (context: PluginContext) => {
                 type: PLANK_COMPANION_TYPE,
                 data: 'selected-objects',
                 properties: {
-                  label: ['companion selected objects label', { ns: SPACE_PLUGIN }],
+                  label: ['companion selected objects label', { ns: meta.id }],
                   icon: 'ph--tree-view--regular',
                   disposition: 'hidden',
                 },
@@ -723,7 +727,7 @@ export default (context: PluginContext) => {
 
     // Object settings plank companion.
     createExtension({
-      id: `${SPACE_PLUGIN}/settings`,
+      id: `${meta.id}/settings`,
       connector: (node) =>
         Rx.make((get) =>
           pipe(
@@ -735,7 +739,7 @@ export default (context: PluginContext) => {
                 type: PLANK_COMPANION_TYPE,
                 data: 'settings',
                 properties: {
-                  label: ['object settings label', { ns: SPACE_PLUGIN }],
+                  label: ['object settings label', { ns: meta.id }],
                   icon: 'ph--sliders--regular',
                   disposition: 'hidden',
                   position: 'fallback',

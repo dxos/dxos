@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const MAP_PLUGIN = 'dxos.org/plugin/map';
-
 export const meta: PluginMeta = {
-  id: MAP_PLUGIN,
+  id: 'dxos.org/plugin/map',
   name: 'Maps',
   description:
     'Activate Maps to plot data from your tables on an interactive globe. Just add Lat/Long fields to your schema to see them on a map. You can also plot points on the map while chatting with your AI assistant.',

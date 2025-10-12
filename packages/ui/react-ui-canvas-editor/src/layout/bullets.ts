@@ -5,7 +5,7 @@
 import { type Selection, easeLinear, interpolate, select } from 'd3';
 
 import type { BaseGraphEdge, GraphEdge } from '@dxos/graph';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { DATA_SHAPE_ID, getShapeElements } from '../components';
 import type { CanvasGraphModel } from '../types';
@@ -26,7 +26,7 @@ export const getPaths = (
       const edge = graph.getEdge(el.getAttribute(DATA_SHAPE_ID)!);
       return edge && edge.source === filter.source ? { edge, el } : null;
     })
-    .filter(isNotFalsy);
+    .filter(isTruthy);
 };
 
 export type BulletOptions = {

@@ -21,9 +21,9 @@ type InitializeProps = {
   createIdentity?: boolean;
   createSpace?: boolean;
   onInitialized?: (client: Client) => MaybePromise<void>;
-  onIdentityCreated?: (props: { client: Client }) => MaybePromise<void>;
+  onCreateIdentity?: (props: { client: Client }, context: StoryContext | any) => MaybePromise<void>;
   // NOTE: context must be untyped until ClientRepeater is removed.
-  onSpaceCreated?: (props: { client: Client; space: Space }, context: StoryContext | any) => MaybePromise<void>;
+  onCreateSpace?: (props: { client: Client; space: Space }, context: StoryContext | any) => MaybePromise<void>;
 };
 
 /**
@@ -31,7 +31,7 @@ type InitializeProps = {
  */
 const initializeClient = async (
   client: Client,
-  { createIdentity, createSpace, onSpaceCreated, onIdentityCreated, onInitialized }: InitializeProps,
+  { createIdentity, createSpace, onCreateIdentity, onCreateSpace, onInitialized }: InitializeProps,
   context: StoryContext,
 ): Promise<ClientStory> => {
   await onInitialized?.(client);
@@ -39,14 +39,17 @@ const initializeClient = async (
   if (createIdentity || createSpace) {
     if (!client.halo.identity.get()) {
       await client.halo.createIdentity();
-      await onIdentityCreated?.({ client });
+      await client.spaces.waitUntilReady();
+      await client.spaces.default.waitUntilReady();
+      await onCreateIdentity?.({ client }, context);
     }
   }
 
   let space: Space | undefined;
   if (createSpace) {
     space = await client.spaces.create({ name: 'Test Space' });
-    await onSpaceCreated?.({ client, space }, context);
+    await space.waitUntilReady(); // Is this required?
+    await onCreateSpace?.({ client, space }, context);
   }
 
   return { space };
@@ -60,8 +63,8 @@ export type WithClientProviderProps = InitializeProps & Omit<ClientProviderProps
 export const withClientProvider = ({
   createIdentity,
   createSpace,
-  onSpaceCreated,
-  onIdentityCreated,
+  onCreateSpace,
+  onCreateIdentity,
   onInitialized,
   ...props
 }: WithClientProviderProps = {}): Decorator => {
@@ -73,8 +76,8 @@ export const withClientProvider = ({
         {
           createIdentity,
           createSpace,
-          onSpaceCreated,
-          onIdentityCreated,
+          onCreateSpace,
+          onCreateIdentity,
           onInitialized,
         },
         context,
@@ -108,20 +111,19 @@ export const useMultiClient = () => useContext(MultiClientContext);
 /**
  * Decorator that creates a scaffold for multiple clients.
  * Orchestrates invitations between a randomly selected host and the remaining clients.
- * NOTE: Should come before withLayout.
  */
 export const withMultiClientProvider = ({
   numClients = 2,
   createIdentity,
   createSpace,
-  onSpaceCreated,
-  onIdentityCreated,
+  onCreateSpace,
+  onCreateIdentity,
   onInitialized,
   ...props
 }: WithMultiClientProviderProps): Decorator => {
   return (Story, context) => {
     const builder = useRef(new TestBuilder());
-    const hostRef = useRef<Client>();
+    const hostRef = useRef<Client>(null);
     const spaceReady = useRef(new Trigger<Space | undefined>());
 
     // Handle invitations.
@@ -136,8 +138,8 @@ export const withMultiClientProvider = ({
             {
               createIdentity,
               createSpace,
-              onSpaceCreated,
-              onIdentityCreated,
+              onCreateSpace,
+              onCreateIdentity,
               onInitialized,
             },
             context,

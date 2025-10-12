@@ -7,7 +7,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { floatingMenu } from '../command';
+import { floatingMenu } from '../floating-menu';
 import { decorateMarkdown } from '../markdown';
 
 import { commands } from './commands';

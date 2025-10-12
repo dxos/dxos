@@ -9,7 +9,7 @@ import { IconButton, toLocalizedString, useDensityContext, useTranslation } from
 import { DropdownMenu, type MenuItem, MenuProvider } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
 
-import { NAVTREE_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
@@ -38,7 +38,7 @@ export const NavTreeItemActionDropdownMenu = ({
   menuActions,
   caller,
 }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const density = useDensityContext();
   return (
     <MenuProvider>
@@ -93,7 +93,7 @@ export const NavTreeItemMonolithicAction = ({
 };
 
 export const NavTreeItemAction = ({ monolithic, menuActions, parent: node, ...props }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(NAVTREE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
   const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);

@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Rive, useRive } from '@rive-app/react-canvas';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 
+import { log } from '@dxos/log';
 import { useAsyncState } from '@dxos/react-ui';
+import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
-import { render, withLayout, withTheme } from '@dxos/storybook-utils';
+import { render } from '@dxos/storybook-utils';
 
 const useFlash = (rive: Rive | null, name: string, delay: number, period: number) => {
   useEffect(() => {
@@ -44,10 +44,13 @@ const Component = ({ buffer }: { buffer: ArrayBuffer }) => {
 const DefaultStory = () => {
   const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
-    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' });
-    if (response.ok) {
+    // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
+    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
+      log.catch(error);
+    });
+    if (response?.ok) {
       return await response.arrayBuffer();
-    } else {
+    } else if (response) {
       console.log(response.status);
     }
   });
@@ -82,13 +85,10 @@ const DefaultStory = () => {
 const meta = {
   title: 'ui/brand/Rive',
   render: render(DefaultStory),
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-      classNames: ['absolute inset-0 bg-black'],
-    }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DATA_TEST_ID, ProjectionMapper, useCanvasContext, zoomInPlace, zoomTo } from '@dxos/react-ui-canvas';
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { type ActionHandler } from '../actions';
 import { type TestId } from '../components';
@@ -160,8 +160,8 @@ export const useActionHandler = () => {
         }
         case 'copy': {
           const { ids = selection.selected.value } = action;
-          const nodes = ids.map((id) => graph.getNode(id)).filter(isNotFalsy);
-          const edges = ids.map((id) => graph.getEdge(id)).filter(isNotFalsy);
+          const nodes = ids.map((id) => graph.getNode(id)).filter(isTruthy);
+          const edges = ids.map((id) => graph.getEdge(id)).filter(isTruthy);
           clipboard.clear().builder.addNodes(nodes).addEdges(edges);
           return true;
         }

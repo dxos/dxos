@@ -7,7 +7,8 @@ import { Console, Effect, Schema } from 'effect';
 import { defineFunction } from '../handler';
 
 export default defineFunction({
-  name: 'example.org/function/reply',
+  key: 'example.org/function/reply',
+  name: 'Reply',
   description: 'Function that echoes the input',
   inputSchema: Schema.Any,
   outputSchema: Schema.Any,

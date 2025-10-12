@@ -14,7 +14,7 @@ import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../h
 import { useOnline, usePresets } from '../../hooks';
 import { Assistant } from '../../types';
 
-import { LoggingContainer } from './LoggingContainer';
+import { ExecutionGraphContainer } from './ExecutionGraphContainer';
 import { type ComponentProps } from './types';
 
 export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
@@ -44,7 +44,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
           </Popover.Trigger>
           <Popover.Portal>
             <Popover.Content>
-              <LoggingContainer space={space} />
+              <ExecutionGraphContainer space={space} />
               <Popover.Arrow />
             </Popover.Content>
           </Popover.Portal>

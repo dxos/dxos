@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
@@ -12,6 +11,7 @@ import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dx
 
 import { meta } from '../../meta';
 import { type ScriptSettingsProps } from '../../types';
+import { getAccessCredential } from '../../util';
 
 export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettingsProps }) => {
   const { t } = useTranslation(meta.id);
@@ -20,22 +20,7 @@ export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettingsPro
   // TODO(burdon): Check token.
   const handleAuthenticate = async () => {
     const { identityKey } = client.halo.identity.get()!;
-    await client.halo.writeCredentials([
-      {
-        issuer: identityKey,
-        issuanceDate: new Date(),
-        subject: {
-          id: identityKey,
-          assertion: {
-            '@type': 'dxos.halo.credentials.ServiceAccess',
-            serverName: 'hub.dxos.network',
-            serverKey: identityKey,
-            identityKey,
-            capabilities: ['composer:beta'],
-          },
-        },
-      } satisfies Credential,
-    ]);
+    await client.halo.writeCredentials([getAccessCredential(identityKey)]);
   };
 
   return (

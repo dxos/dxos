@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiLanguageModel } from '@effect/ai';
+import { LanguageModel } from '@effect/ai';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { parseResponse } from '../AiParser';
-import { preprocessAiInput } from '../AiPreprocessor';
+import { preprocessPrompt } from '../AiPreprocessor';
 import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
 
 /**
@@ -42,10 +42,11 @@ describe.skip('lm-studio', () => {
           }),
         ];
 
-        const prompt = yield* preprocessAiInput(history);
-        const blocks = yield* AiLanguageModel.streamText({
-          prompt,
+        const prompt = yield* preprocessPrompt(history, {
           system: 'You are a helpful assistant. Be extremely brief with your answers.',
+        });
+        const blocks = yield* LanguageModel.streamText({
+          prompt,
           disableToolCallResolution: true,
         }).pipe(
           parseResponse({

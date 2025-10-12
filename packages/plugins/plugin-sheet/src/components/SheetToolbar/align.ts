@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { type CompleteCellRange, inRange } from '@dxos/compute';
 import { type ToolbarMenuActionGroupProperties, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { type SheetModel } from '../../model';
 import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '../../types';
 import { useSheetContext } from '../SheetContext';
@@ -40,7 +40,7 @@ export const useAlignState = (state: Partial<AlignState>) => {
 
 const createAlignGroupAction = (value?: AlignValue) =>
   createMenuItemGroup('align', {
-    label: ['align label', { ns: SHEET_PLUGIN }],
+    label: ['align label', { ns: meta.id }],
     variant: 'toggleGroup',
     selectCardinality: 'single',
     value: `${alignKey}--${value}`,
@@ -79,7 +79,7 @@ const createAlignActions = (model: SheetModel, state: ToolbarState, cursorFallba
         key: alignKey,
         value: alignValue as AlignValue,
         checked: state[alignKey] === alignValue,
-        label: [`range value ${alignValue} label`, { ns: SHEET_PLUGIN }],
+        label: [`range value ${alignValue} label`, { ns: meta.id }],
         icon,
         testId: `grid.toolbar.${alignKey}.${alignValue}`,
       },

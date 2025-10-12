@@ -18,10 +18,14 @@ Surfaces enable developers to change the entire look and feel of Composer by ext
 import { definePlugin, SurfaceProvides } from '@dxos/app-framework';
 
 export default definePlugin({
-  provides: {
-    // return any component that can render the data or null otherwise
-    component: ({ data, role }) => <></>,
-  },
+  id: 'my-plugin',
+  () => [
+    defineModule({
+      id: 'my-plugin/context',
+      activatesOn: Events.Startup,
+      activate: () => [],
+    }),
+  ]
 });
 ```
 
@@ -35,25 +39,14 @@ The `<Surface />` rendering this component may be named `main` - which is a full
 import { definePlugin } from '@dxos/app-framework';
 
 export default definePlugin({
-  provides: {
-    surface: {
-      component: ({ data, role }) => {
-        switch (role) {
-          case 'main':
-            return isTypedObject(data.active) && isColor(data.active) ? (
-              <ColorMain object={data.active} />
-            ) : null;
-
-          case 'section':
-            return isTypedObject(data.object) && isColor(data.object) ? (
-              <ColorSection object={data.object} />
-            ) : null;
-        }
-
-        return null;
-      },
-    },
-  },
+  id: 'my-plugin',
+  () => [
+    defineModule({
+      id: 'my-plugin/context',
+      activatesOn: Events.Startup,
+      activate: () => [],
+    }),
+  ]
 });
 ```
 
@@ -81,6 +74,7 @@ export const MyComponent = ({ data }) => {
 When multiple plugins provide components for the same data, the `<Surface />` element can render all or some of them based on other props passed to `<Surface />`.
 
 :::apidoc[@dxos/app-framework.SurfaceProps]{level="3"}
+
 ### Type `SurfaceProps`
 
 SurfaceProps are the props that are passed to the Surface component.
@@ -88,8 +82,8 @@ SurfaceProps are the props that are passed to the Surface component.
 
 ## See also
 
-* [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
-* [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
+- [Surface plugin source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/plugin.tsx)
+- [Surface component props and source](https://github.com/dxos/dxos/blob/main/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx)
 
 ::: note Under Development
 

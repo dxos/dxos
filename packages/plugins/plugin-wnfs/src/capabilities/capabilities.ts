@@ -8,11 +8,11 @@ import { type PrivateDirectory, type PrivateForest } from 'wnfs';
 import { defineCapability } from '@dxos/app-framework';
 import { type SpaceId } from '@dxos/keys';
 
-import { WNFS_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace WnfsCapabilities {
-  export const Blockstore = defineCapability<Blockstore>(`${WNFS_PLUGIN}/capability/blockstore`);
+  export const Blockstore = defineCapability<Blockstore>(`${meta.id}/capability/blockstore`);
 
   export type Instances = Record<SpaceId, { directory: PrivateDirectory; forest: PrivateForest }>;
-  export const Instances = defineCapability<Instances>(`${WNFS_PLUGIN}/capability/instances`);
+  export const Instances = defineCapability<Instances>(`${meta.id}/capability/instances`);
 }

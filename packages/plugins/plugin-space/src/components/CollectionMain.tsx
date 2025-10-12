@@ -8,10 +8,10 @@ import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export const CollectionMain = ({ collection }: { collection: DataType.Collection }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <div

@@ -65,7 +65,7 @@ export class MessageSyncer {
 
   sync(messages: DataType.Message[]) {
     log('sync', {
-      messages: messages.map((m) => m.blocks.length),
+      messages: messages.map((message) => message.blocks.length),
       currentMessageIndex: this._currentMessageIndex,
       currentBlockIndex: this._currentBlockIndex,
       currentBlockContent: this._currentBlockContent,

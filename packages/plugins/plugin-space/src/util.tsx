@@ -23,13 +23,13 @@ import {
 import { type QueryResult, type Space, SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type TreeData } from '@dxos/react-ui-list';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 
-import { SPACE_PLUGIN } from './meta';
+import { meta } from './meta';
 import { type ObjectForm, SPACE_TYPE, SpaceAction } from './types';
 
-export const SPACES = `${SPACE_PLUGIN}-spaces`;
-export const COMPOSER_SPACE_LOCK = 'dxos.org/plugin/space/lock';
+export const SPACES = `${meta.id}-spaces`;
+export const COMPOSER_SPACE_LOCK = `${meta.id}/lock`;
 // TODO(wittjosiah): Remove.
 export const SHARED = 'shared-spaces';
 
@@ -57,8 +57,8 @@ export const getSpaceDisplayName = (
     : namesCache[space.id]
       ? namesCache[space.id]
       : personal
-        ? ['personal space label', { ns: SPACE_PLUGIN }]
-        : ['unnamed space label', { ns: SPACE_PLUGIN }];
+        ? ['personal space label', { ns: meta.id }]
+        : ['unnamed space label', { ns: meta.id }];
 };
 
 const getCollectionGraphNodePartials = ({
@@ -145,7 +145,7 @@ const getQueryCollectionNodePartials = ({
   space: Space;
   resolve: (typename: string) => Record<string, any>;
 }) => {
-  const typename = typenameFromQuery(collection.query);
+  const typename = getTypenameFromQuery(collection.query);
   return {
     icon: typename && resolve(typename)?.icon,
     acceptPersistenceClass: new Set(['echo']),
@@ -244,40 +244,40 @@ export const constructSpaceNode = ({
     nodes: [
       {
         id: `settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-        type: `${SPACE_PLUGIN}/settings`,
+        type: `${meta.id}/settings`,
         data: null,
         properties: {
-          label: ['settings panel label', { ns: SPACE_PLUGIN }],
+          label: ['settings panel label', { ns: meta.id }],
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
         },
         nodes: [
           {
             id: `properties-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${SPACE_PLUGIN}/properties`,
-            data: `${SPACE_PLUGIN}/properties`,
+            type: `${meta.id}/properties`,
+            data: `${meta.id}/properties`,
             properties: {
-              label: ['space settings properties label', { ns: SPACE_PLUGIN }],
+              label: ['space settings properties label', { ns: meta.id }],
               icon: 'ph--sliders--regular',
               position: 'hoist',
             },
           },
           {
             id: `members-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${SPACE_PLUGIN}/members`,
-            data: `${SPACE_PLUGIN}/members`,
+            type: `${meta.id}/members`,
+            data: `${meta.id}/members`,
             properties: {
-              label: ['members panel label', { ns: SPACE_PLUGIN }],
+              label: ['members panel label', { ns: meta.id }],
               icon: 'ph--users--regular',
               position: 'hoist',
             },
           },
           {
             id: `schema-settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-            type: `${SPACE_PLUGIN}/schema`,
-            data: `${SPACE_PLUGIN}/schema`,
+            type: `${meta.id}/schema`,
+            data: `${meta.id}/schema`,
             properties: {
-              label: ['space settings schema label', { ns: SPACE_PLUGIN }],
+              label: ['space settings schema label', { ns: meta.id }],
               icon: 'ph--shapes--regular',
             },
           },
@@ -311,7 +311,7 @@ export const constructSpaceActions = ({
         await dispatch(createIntent(SpaceAction.Migrate, { space }));
       },
       properties: {
-        label: ['migrate space label', { ns: SPACE_PLUGIN }],
+        label: ['migrate space label', { ns: meta.id }],
         icon: 'ph--database--regular',
         disposition: 'list-item-primary',
         disabled: migrating || Migrations.running(space),
@@ -328,7 +328,7 @@ export const constructSpaceActions = ({
           await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: space }));
         },
         properties: {
-          label: ['create object in space label', { ns: SPACE_PLUGIN }],
+          label: ['create object in space label', { ns: meta.id }],
           icon: 'ph--plus--regular',
           disposition: 'item',
           testId: 'spacePlugin.createObject',
@@ -341,7 +341,7 @@ export const constructSpaceActions = ({
           await dispatch(createIntent(SpaceAction.Rename, { space, caller: params?.caller }));
         },
         properties: {
-          label: ['rename space label', { ns: SPACE_PLUGIN }],
+          label: ['rename space label', { ns: meta.id }],
           icon: 'ph--pencil-simple-line--regular',
           keyBinding: {
             macos: 'shift+F6',
@@ -358,7 +358,7 @@ export const constructSpaceActions = ({
 export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any; space: Space }) => {
   return {
     id: `${space.id}/${Type.getTypename(schema)}`,
-    type: `${SPACE_PLUGIN}/static-schema`,
+    type: `${meta.id}/static-schema`,
     data: schema,
     properties: {
       label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
@@ -523,7 +523,7 @@ export const constructObjectActions = ({
 
   const queryCollection = Obj.instanceOf(DataType.QueryCollection, object) ? object : undefined;
   const matchingObjectForm = queryCollection
-    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === typenameFromQuery(queryCollection.query))
+    ? objectForms.find((form) => Type.getTypename(form.objectSchema) === getTypenameFromQuery(queryCollection.query))
     : undefined;
 
   const actions: NodeArg<ActionData>[] = [
@@ -536,7 +536,7 @@ export const constructObjectActions = ({
               await dispatch(createIntent(SpaceAction.OpenCreateObject, { target: object }));
             },
             properties: {
-              label: ['create object in collection label', { ns: SPACE_PLUGIN }],
+              label: ['create object in collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -577,7 +577,7 @@ export const constructObjectActions = ({
                 await dispatch(
                   createIntent(SpaceAction.OpenCreateObject, {
                     target: space,
-                    typename: queryCollection ? typenameFromQuery(queryCollection.query) : undefined,
+                    typename: queryCollection ? getTypenameFromQuery(queryCollection.query) : undefined,
                   }),
                 );
               } else {
@@ -591,7 +591,7 @@ export const constructObjectActions = ({
               }
             },
             properties: {
-              label: ['create object in smart collection label', { ns: SPACE_PLUGIN }],
+              label: ['create object in smart collection label', { ns: meta.id }],
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',
               testId: 'spacePlugin.createObject',
@@ -648,7 +648,7 @@ export const constructObjectActions = ({
               await navigator.clipboard.writeText(url);
             },
             properties: {
-              label: ['copy link label', { ns: SPACE_PLUGIN }],
+              label: ['copy link label', { ns: meta.id }],
               icon: 'ph--link--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
@@ -664,7 +664,7 @@ export const constructObjectActions = ({
         await dispatch(createIntent(LayoutAction.Expose, { part: 'navigation', subject: fullyQualifiedId(object) }));
       },
       properties: {
-        label: ['expose object label', { ns: SPACE_PLUGIN }],
+        label: ['expose object label', { ns: meta.id }],
         icon: 'ph--eye--regular',
         disposition: 'heading-list-item',
         testId: 'spacePlugin.exposeObject',

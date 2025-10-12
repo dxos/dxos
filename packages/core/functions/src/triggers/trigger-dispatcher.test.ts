@@ -18,11 +18,10 @@ import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
+  FunctionInvocationService,
   QueueService,
-  RemoteFunctionExecutionService,
   TracingService,
 } from '../services';
-import { FunctionImplementationResolver, LocalFunctionExecutionService } from '../services/local-function-execution';
 import { TestDatabaseLayer } from '../testing';
 import { FunctionTrigger } from '../types';
 
@@ -35,17 +34,17 @@ const TestLayer = pipe(
   Layer.provideMerge(
     Layer.mergeAll(
       AiService.notAvailable,
+      CredentialsService.layerConfig([]),
+      FunctionInvocationService.layerTestMocked({ functions: [reply] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
+      FetchHttpClient.layer,
       TestDatabaseLayer({
         types: [FunctionType, FunctionTrigger, DataType.Person, DataType.Task],
       }),
-      CredentialsService.layerConfig([]),
-      LocalFunctionExecutionService.layerLive,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
-      FetchHttpClient.layer,
     ),
   ),
-  Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [reply] })),
 );
 
 const TestTriggerDispatcherLayer = Layer.provideMerge(
@@ -452,7 +451,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -494,7 +495,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -530,7 +533,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -578,7 +583,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Task)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Task)).ast,
+            },
           },
         });
         yield* DatabaseService.add(trigger);
@@ -625,7 +632,9 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'subscription',
-            query: Query.select(Filter.type(DataType.Person)).ast,
+            query: {
+              ast: Query.select(Filter.type(DataType.Person)).ast,
+            },
           },
           input: {
             objectId: '{{event.changedObjectId}}',

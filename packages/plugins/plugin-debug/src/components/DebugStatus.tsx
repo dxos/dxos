@@ -59,7 +59,7 @@ const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: numbe
 // TODO(burdon): Integrate with Sentry?
 const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
-  const errorRef = useRef<Error>();
+  const errorRef = useRef<Error>(null);
   useEffect(() => {
     const errorListener = (event: any) => {
       const error: Error = event.error ?? event.reason;
@@ -83,7 +83,7 @@ const ErrorIndicator = () => {
   }, []);
 
   const handleReset = () => {
-    errorRef.current = undefined;
+    errorRef.current = null;
     forceUpdate({});
   };
 

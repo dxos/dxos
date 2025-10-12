@@ -102,8 +102,8 @@
     "typedoc": "typedoc --out typedoc"
   },
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
-    "@automerge/automerge-repo": "2.3.0-alpha.0",
+    "@automerge/automerge": "3.1.2",
+    "@automerge/automerge-repo": "2.3.1",
     "@dxos/async": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -137,14 +137,14 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
-    "effect": "3.17.7",
+    "effect": "3.18.3",
     "jwt-decode": "^4.0.0",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0",
     "ua-parser-js": "^1.0.39"
   },
   "devDependencies": {
-    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge": "3.1.2",
     "@dxos/test-utils": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

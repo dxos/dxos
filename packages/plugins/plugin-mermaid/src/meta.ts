@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const MERMAID_PLUGIN = 'dxos.org/plugin/mermaid';
-
 export const meta: PluginMeta = {
-  id: MERMAID_PLUGIN,
+  id: 'dxos.org/plugin/mermaid',
   name: 'Mermaid',
   description: 'Tool that renders text definitions to create diagrams.',
   icon: 'ph--anchor-simple--regular',

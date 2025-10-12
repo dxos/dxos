@@ -9,11 +9,9 @@ import { defineCapability } from '@dxos/app-framework';
 import type {
   CredentialsService,
   DatabaseService,
-  FunctionImplementationResolver,
+  FunctionInvocationService,
   InvocationTracer,
-  LocalFunctionExecutionService,
   QueueService,
-  RemoteFunctionExecutionService,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions';
@@ -31,18 +29,16 @@ export namespace AutomationCapabilities {
     | DatabaseService
     | QueueService
     | CredentialsService
-    | LocalFunctionExecutionService
-    | RemoteFunctionExecutionService
-    // TODO(dmaretskyi): This service is private and shouldn't be exposed as a part of public API.
-    | FunctionImplementationResolver
+    | FunctionInvocationService
     | InvocationTracer
     | TriggerStateStore
     // TODO(dmaretskyi): Those should be provided at AI-chat call site.
     | ToolResolverService
     | ToolExecutionService;
 
+  export type ComputeRuntime = ManagedRuntime.ManagedRuntime<AutomationCapabilities.ComputeServices, never>;
   export interface ComputeRuntimeProvider {
-    getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<ComputeServices, never>;
+    getRuntime(spaceId: SpaceId): ComputeRuntime;
   }
 
   /**

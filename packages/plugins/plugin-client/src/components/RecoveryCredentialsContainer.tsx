@@ -9,13 +9,13 @@ import { useCredentials } from '@dxos/react-client/halo';
 import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItem, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { CLIENT_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ClientAction } from '../types';
 
-export const MANAGE_CREDENTIALS_DIALOG = `${CLIENT_PLUGIN}/ManageCredentialsDialog`;
+export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}/ManageCredentialsDialog`;
 
 export const RecoveryCredentialsContainer = () => {
-  const { t } = useTranslation(CLIENT_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(

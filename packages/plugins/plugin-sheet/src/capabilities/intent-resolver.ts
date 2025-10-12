@@ -4,7 +4,7 @@
 
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 
-import { SHEET_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { SheetAction, createSheet } from '../types';
 
 export default () =>
@@ -26,7 +26,7 @@ export default () =>
           const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
           return {
             undoable: {
-              message: [`${axis} dropped label`, { ns: SHEET_PLUGIN }],
+              message: [`${axis} dropped label`, { ns: meta.id }],
               data: { ...undoData, model },
             },
           };

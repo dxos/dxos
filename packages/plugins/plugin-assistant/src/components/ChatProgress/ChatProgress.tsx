@@ -5,9 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { Flex, ProgressBar, type ProgressBarProps, TextCrawl } from '@dxos/react-ui-components';
+import { Flex, ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
-import { useExecutionGraph } from '../../hooks';
 import { type Assistant } from '../../types';
 
 // TODO(burdon): Reset after each session.

@@ -8,12 +8,11 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Domino, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CommandMenuGroup,
   CommandMenuProvider,
   type DNDOptions,
-  Domino,
   type EditorInputMode,
   type EditorSelectionState,
   type EditorStateStore,
@@ -40,7 +39,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
-import { isNonNullable, isNotFalsy } from '@dxos/util';
+import { isNonNullable, isTruthy } from '@dxos/util';
 
 import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';
@@ -75,18 +74,20 @@ export const MarkdownEditor = ({
   ...props
 }: MarkdownEditorProps) => {
   const { t } = useTranslation();
-  const viewRef = useRef<EditorView>();
+  const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback(
+  const getMenu = useCallback<UseCommandMenuOptions['getMenu']>(
     (trigger: string, query?: string) => {
       switch (trigger) {
-        case '@':
+        case '@': {
           return onLinkQuery?.(query) ?? [];
+        }
         case '/':
-        default:
+        default: {
           return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
+        }
       }
     },
     [onLinkQuery, slashCommandGroups],
@@ -101,7 +102,7 @@ export const MarkdownEditor = ({
         delay: 3_000,
         content: () =>
           Domino.of('div')
-            .child(
+            .children(
               Domino.of('span').text('Press'),
               ...trigger.map((text) =>
                 Domino.of('span')
@@ -114,10 +115,11 @@ export const MarkdownEditor = ({
       },
       getMenu,
     };
-  }, [getMenu]);
+  }, [onLinkQuery, getMenu]);
 
-  const { commandMenu, groupsRef, ...commandMenuProps } = useCommandMenu(options);
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isNotFalsy), [extensionsParam, commandMenu]);
+  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
+
+  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
     <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
@@ -126,7 +128,7 @@ export const MarkdownEditor = ({
   );
 };
 
-const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProps>(
+const MarkdownEditorImpl = forwardRef<EditorView | null, MarkdownEditorProps>(
   (
     {
       id,
@@ -190,7 +192,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
           role !== 'section' && onFileUpload && dropFile({ onDrop: handleDrop }),
           providerExtensions,
           extensions,
-        ].filter(isNotFalsy),
+        ].filter(isTruthy),
         ...(role !== 'section' && {
           id,
           scrollTo,
@@ -203,7 +205,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
       [id, formattingObserver, viewMode, themeMode, extensions, providerExtensions],
     );
 
-    useImperativeHandle(forwardedRef, () => editorView, [editorView]);
+    useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
     useTest(editorView);
     useSelectCurrentThread(editorView, id);
 
@@ -282,7 +284,7 @@ const MarkdownEditorImpl = forwardRef<EditorView | undefined, MarkdownEditorProp
 
 // Expose editor view for playwright tests.
 // TODO(wittjosiah): Find a better way to expose this or find a way to limit it to test runs.
-const useTest = (view?: EditorView) => {
+const useTest = (view: EditorView | null) => {
   useEffect(() => {
     const composer = (window as any).composer;
     if (composer) {

@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const SCRIPT_PLUGIN = 'dxos.org/plugin/script';
-
 export const meta: PluginMeta = {
-  id: SCRIPT_PLUGIN,
+  id: 'dxos.org/plugin/script',
   name: 'Scripts',
   description:
     'Scripts in Composer allow you to deploy custom functions that run on the edge. These functions can be referenced by your AI agent and called inside of cells in any Sheet. Use scripts to interact with API’s or external data inside of Composer.',

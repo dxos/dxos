@@ -11,7 +11,7 @@ import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { type MarkdownConfig } from '@lezer/markdown';
 
-import { isNotFalsy } from '@dxos/util';
+import { isTruthy } from '@dxos/util';
 
 import { markdownHighlightStyle, markdownTagsExtensions } from './highlight';
 
@@ -67,7 +67,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
         // https://codemirror.net/docs/ref/#commands.defaultKeymap
         ...defaultKeymap,
         ...completionKeymap,
-      ].filter(isNotFalsy),
+      ].filter(isTruthy),
     ),
   ];
 };

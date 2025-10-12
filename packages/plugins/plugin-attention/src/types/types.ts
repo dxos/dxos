@@ -6,10 +6,10 @@ import { Schema } from 'effect';
 
 import { SelectionSchema } from '@dxos/react-ui-attention';
 
-import { ATTENTION_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export namespace AttentionAction {
-  const ATTENTION_ACTION = `${ATTENTION_PLUGIN}/action`;
+  const ATTENTION_ACTION = `${meta.id}/action`;
 
   export class Select extends Schema.TaggedClass<Select>()(`${ATTENTION_ACTION}/select`, {
     input: Schema.Struct({

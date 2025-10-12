@@ -9,7 +9,7 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { OBSERVABILITY_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { ObservabilityAction } from '../types';
 
 export const ObservabilitySettingsSchema = Schema.mutable(
@@ -25,12 +25,12 @@ export const ObservabilitySettingsSchema = Schema.mutable(
 export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
 export const ObservabilitySettings = ({ settings }: { settings: ObservabilitySettingsProps }) => {
-  const { t } = useTranslation(OBSERVABILITY_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: OBSERVABILITY_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <Message.Root valence='info' classNames='container-max-width mbe-cardSpacingBlock'>
           <Message.Content>{t('observability description')}</Message.Content>
         </Message.Root>

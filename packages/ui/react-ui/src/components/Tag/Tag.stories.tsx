@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -19,11 +17,6 @@ const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as 
 const meta = {
   title: 'ui/react-ui-core/Tag',
   component: Tag,
-  decorators: [withTheme],
-  parameters: { chromatic: { disableSnapshot: false } },
-} as const;
-
-export const Default: Story = {
   render: () => (
     <div role='grid' className='grid grid-cols-5 gap-2 max-is-screen-md'>
       {palettes.map((palette) => (
@@ -33,8 +26,16 @@ export const Default: Story = {
       ))}
     </div>
   ),
+  decorators: [withTheme],
+  parameters: {
+    chromatic: {
+      disableSnapshot: false,
+    },
+  },
 } satisfies Meta<typeof Tag>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};

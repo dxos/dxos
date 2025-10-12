@@ -28,7 +28,7 @@ jobs:
           command: manifest-pr
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Checkout all branches
           token: ${{ secrets.CREATE_PR_TOKEN }}

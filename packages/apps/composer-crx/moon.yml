@@ -3,3 +3,4 @@ language: typescript
 tags:
   - typecheck
   - vite
+  - storybook

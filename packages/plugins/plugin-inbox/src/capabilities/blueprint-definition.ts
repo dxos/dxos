@@ -7,11 +7,11 @@ import { Blueprint, Template } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-import { gmailSync, open, summarize } from '../functions';
+import { open, summarize, sync } from '../functions';
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
 
-const functions: FunctionDefinition[] = [gmailSync, open, summarize];
+const functions: FunctionDefinition[] = [open, summarize, sync];
 const tools: string[] = [];
 
 export default () => {

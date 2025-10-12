@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AiToolkit } from '@effect/ai';
+import { Toolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, Redacted } from 'effect';
@@ -11,21 +11,15 @@ import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';
-import {
-  ComputeEventLogger,
-  CredentialsService,
-  LocalFunctionExecutionService,
-  RemoteFunctionExecutionService,
-  TracingService,
-} from '@dxos/functions';
+import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
 
 import { syncLinearIssues } from '../functions';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([], AiToolkit.make()),
-  makeToolExecutionServiceFromFunctions([], AiToolkit.make() as any, Layer.empty as any),
+  makeToolResolverFromFunctions([], Toolkit.make()),
+  makeToolExecutionServiceFromFunctions(Toolkit.make() as any, Layer.empty as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
   Layer.provideMerge(
@@ -41,9 +35,10 @@ const TestLayer = Layer.mergeAll(
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      LocalFunctionExecutionService.layer,
-      RemoteFunctionExecutionService.mockLayer,
-      TracingService.layerLogInfo(),
+      FunctionInvocationService.layerTestMocked({ functions: [syncLinearIssues] }).pipe(
+        Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+        Layer.provideMerge(TracingService.layerLogInfo()),
+      ),
       FetchHttpClient.layer,
     ),
   ),
@@ -53,7 +48,7 @@ describe('Feed', { timeout: 600_000 }, () => {
   it.effect(
     'fetch discord messages',
     Effect.fnUntraced(
-      function* ({ expect: _ }) {
+      function* (_) {
         // const messages = yield* LocalFunctionExecutionService.invokeFunction(fetchDiscordMessages, {
         //   serverId: '837138313172353095',
         //   // channelId: '1404487604761526423',
@@ -85,7 +80,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
 
-        const linearIssues = yield* LocalFunctionExecutionService.invokeFunction(syncLinearIssues, {
+        const linearIssues = yield* FunctionInvocationService.invokeFunction(syncLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
         console.log(linearIssues);

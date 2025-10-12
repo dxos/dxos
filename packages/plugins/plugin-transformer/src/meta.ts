@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const TRANSFORMER_PLUGIN = 'dxos.org/plugin/transformer';
-
 export const meta: PluginMeta = {
-  id: TRANSFORMER_PLUGIN,
+  id: 'dxos.org/plugin/transformer',
   name: 'Transformer',
   description: 'Run local transformers.',
   icon: 'ph--cpu--regular',

@@ -12,49 +12,48 @@ import { meta } from './meta';
 import { translations } from './translations';
 import { Template } from './types';
 
-export const TemplatePlugin = () =>
-  definePlugin(meta, [
-    defineModule({
-      id: `${meta.id}/module/translations`,
-      activatesOn: Events.SetupTranslations,
-      activate: () => contributes(Capabilities.Translations, translations),
-    }),
-    defineModule({
-      id: `${meta.id}/module/metadata`,
-      activatesOn: Events.SetupMetadata,
-      activate: () =>
-        contributes(Capabilities.Metadata, {
-          id: Template.Data.typename,
-          metadata: {
-            icon: 'ph--asterisk--regular',
-          },
+export const TemplatePlugin = definePlugin(meta, () => [
+  defineModule({
+    id: `${meta.id}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
+  }),
+  defineModule({
+    id: `${meta.id}/module/metadata`,
+    activatesOn: Events.SetupMetadata,
+    activate: () =>
+      contributes(Capabilities.Metadata, {
+        id: Template.Data.typename,
+        metadata: {
+          icon: 'ph--asterisk--regular',
+        },
+      }),
+  }),
+  defineModule({
+    id: `${meta.id}/module/object-form`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () =>
+      contributes(
+        SpaceCapabilities.ObjectForm,
+        defineObjectForm({
+          objectSchema: Template.Data,
+          getIntent: () => createIntent(Template.Create),
         }),
-    }),
-    defineModule({
-      id: `${meta.id}/module/object-form`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () =>
-        contributes(
-          SpaceCapabilities.ObjectForm,
-          defineObjectForm({
-            objectSchema: Template.Data,
-            getIntent: () => createIntent(Template.Create),
-          }),
-        ),
-    }),
-    defineModule({
-      id: `${meta.id}/module/schema`,
-      activatesOn: ClientEvents.SetupSchema,
-      activate: () => contributes(ClientCapabilities.Schema, [Template.Data]),
-    }),
-    defineModule({
-      id: `${meta.id}/module/react-surface`,
-      activatesOn: Events.SetupReactSurface,
-      activate: ReactSurface,
-    }),
-    defineModule({
-      id: `${meta.id}/module/intent-resolver`,
-      activatesOn: Events.SetupIntentResolver,
-      activate: IntentResolver,
-    }),
-  ]);
+      ),
+  }),
+  defineModule({
+    id: `${meta.id}/module/schema`,
+    activatesOn: ClientEvents.SetupSchema,
+    activate: () => contributes(ClientCapabilities.Schema, [Template.Data]),
+  }),
+  defineModule({
+    id: `${meta.id}/module/react-surface`,
+    activatesOn: Events.SetupReactSurface,
+    activate: ReactSurface,
+  }),
+  defineModule({
+    id: `${meta.id}/module/intent-resolver`,
+    activatesOn: Events.SetupIntentResolver,
+    activate: IntentResolver,
+  }),
+]);

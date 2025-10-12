@@ -34,7 +34,7 @@ import {
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
-import { SHEET_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetAction } from '../../types';
 import { useSheetContext } from '../SheetContext';
 
@@ -69,7 +69,7 @@ const sheetRowDefault = {
 };
 
 export const GridSheet = () => {
-  const { t } = useTranslation(SHEET_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
@@ -77,7 +77,7 @@ export const GridSheet = () => {
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const rangeController = useRef<RangeController>();
+  const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
   const handleFocus = useCallback(
@@ -308,7 +308,7 @@ export const GridSheet = () => {
 
   return (
     // TODO(thure): Why are Table’s and Sheet’s editor boxes off by 1px?
-    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent '>
+    <div role='none' className='relative min-bs-0 [&_.cm-editor]:!border-lb [&_.cm-editor]:!border-transparent'>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         initialCells={initialCells}

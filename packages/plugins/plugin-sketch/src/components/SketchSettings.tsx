@@ -7,15 +7,15 @@ import React from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { SKETCH_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type SketchSettingsProps } from '../types';
 
 export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) => {
-  const { t } = useTranslation(SKETCH_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: SKETCH_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <ControlGroup>
           <ControlItemInput title={t('settings grid')}>
             <Input.Switch

@@ -8,16 +8,16 @@ import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
-import { FILES_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type FilesSettingsProps, type FilesState, LocalFilesAction } from '../types';
 
 export const FilesSettings = ({ settings, state }: { settings: FilesSettingsProps; state: FilesState }) => {
-  const { t } = useTranslation(FILES_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   return (
     <ControlPage>
-      <ControlSection title={t('settings title', { ns: FILES_PLUGIN })}>
+      <ControlSection title={t('settings title', { ns: meta.id })}>
         <Message.Root valence='warning' classNames='container-max-width'>
           <Message.Content>{t('save files to directory description')}</Message.Content>
         </Message.Root>

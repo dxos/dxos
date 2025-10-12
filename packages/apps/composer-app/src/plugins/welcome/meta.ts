@@ -4,9 +4,7 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const WELCOME_PLUGIN = 'dxos.org/plugin/welcome';
-
 export const meta: PluginMeta = {
-  id: WELCOME_PLUGIN,
+  id: 'dxos.org/plugin/welcome',
   name: 'Welcome',
 };

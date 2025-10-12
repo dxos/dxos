@@ -3,11 +3,11 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Match } from 'effect';
+import { Match, type Schema } from 'effect';
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Type } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -26,9 +26,9 @@ import {
   useAddRow,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { type DataType, typenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
-import { TABLE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export type TableContainerProps = {
   role: string;
@@ -41,7 +41,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
 
   const client = useClient();
   const space = getSpace(view);
-  const typename = view.query ? typenameFromQuery(view.query) : undefined;
+  const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, typename);
   const queriedObjects = useQuery(space, schema ? Filter.type(schema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(queriedObjects);
@@ -92,7 +92,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   }, []);
 
   const rowActions = useMemo(
-    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: TABLE_PLUGIN }] }],
+    (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
     [],
   );
   const handleRowAction = useCallback(
@@ -110,6 +110,14 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
   const handleRowOrderChange = useCallback(() => {
     tableRef.current?.update?.();
   }, []);
+
+  const handleCreate = useCallback(
+    (schema: Schema.Schema.AnyNoContext, values: any) => {
+      invariant(space);
+      return space.db.add(Obj.make(schema, values));
+    },
+    [space],
+  );
 
   const model = useTableModel({
     view,
@@ -161,6 +169,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
           model={model}
           presentation={presentation}
           schema={schema}
+          onCreate={handleCreate}
           onRowClick={handleRowClick}
         />
       </Table.Root>

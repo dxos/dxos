@@ -2,14 +2,13 @@
 // Copyright 20255555 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { IntentPlugin, SettingsPlugin, contributes } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
+import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -17,9 +16,9 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
+import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
-import { ColumnContainer, withLayout } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 import { Meeting } from '../types';
@@ -41,12 +40,13 @@ const meta = {
   component: MeetingContainer,
   render: () => <Story />,
   decorators: [
+    withTheme,
     withPluginManager({
       plugins: [
+        AttentionPlugin(),
         ThemePlugin({ tx: defaultTx, resourceExtensions: translations }),
-        IntentPlugin(),
-        SettingsPlugin(),
         ClientPlugin({
+          types: [Meeting.Meeting],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },
@@ -65,13 +65,17 @@ const meta = {
             );
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
+        IntentPlugin(),
+        SettingsPlugin(),
         MarkdownPlugin(),
       ],
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
-    withLayout({ Container: ColumnContainer, classNames: 'w-[40rem] overflow-hidden' }),
   ],
+  parameters: {
+    layout: 'column',
+  },
 } satisfies Meta<typeof MeetingContainer>;
 
 export default meta;

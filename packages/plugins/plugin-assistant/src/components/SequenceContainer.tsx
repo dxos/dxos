@@ -25,7 +25,7 @@ const parseSequence = (text: string): SequenceDefinition | undefined => {
     const json = JSON5.parse(text);
     const { steps } = json;
     return { steps };
-  } catch (error) {
+  } catch {
     // Ignore.
   }
 };
@@ -40,7 +40,7 @@ export const SequenceContainer = ({ sequence }: { sequence: Sequence }) => {
     });
   }, [sequence]);
 
-  const editorRef = useRef<EditorView | undefined>(undefined);
+  const editorRef = useRef<EditorView>(null);
 
   // TODO(burdon): Factor out.
   // const toolRegistry = useMemo(() => {

@@ -64,6 +64,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-storybook-layout"
     }
   ]
 }

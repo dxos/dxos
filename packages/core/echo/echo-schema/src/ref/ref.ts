@@ -14,7 +14,7 @@ import { type JsonSchemaType } from '../json-schema';
 import type { BaseObject, WithId } from '../types';
 
 /**
- * The `$id` field for an ECHO reference schema.
+ * The `$id` and `$ref` fields for an ECHO reference schema.
  */
 export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 
@@ -34,6 +34,31 @@ export const createSchemaReference = (typename: string): JsonSchemaType => {
         $ref: DXN.fromTypename(typename).toString(),
       },
     },
+  };
+};
+
+/**
+ * Runtime type-info for a reference extracted from effect AST.
+ */
+export type RefereneAST = {
+  /**
+   * Typename of linked schema.
+   */
+  typename: string;
+
+  /**
+   * Version of linked schema.
+   */
+  version: string;
+};
+
+export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => {
+  if (ast._tag !== 'Declaration' || !ast.annotations[ReferenceAnnotationId]) {
+    return undefined;
+  }
+  return {
+    typename: (ast.annotations[ReferenceAnnotationId] as any).typename,
+    version: (ast.annotations[ReferenceAnnotationId] as any).version,
   };
 };
 
@@ -255,7 +280,9 @@ export const createEchoReferenceSchema = (
     },
     {
       jsonSchema: {
+        // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
         $id: JSON_SCHEMA_ECHO_REF_ID,
+        $ref: JSON_SCHEMA_ECHO_REF_ID,
         reference: referenceInfo,
       },
       [ReferenceAnnotationId]: {

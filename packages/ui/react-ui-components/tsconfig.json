@@ -6,6 +6,7 @@
     ]
   },
   "include": [
+    "src/**/*.json",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/*.ts"
@@ -36,7 +37,13 @@
       "path": "../../core/ai"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-query"
     },
     {
       "path": "../../sdk/client-protocol"

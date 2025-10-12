@@ -21,7 +21,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-import { DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -33,7 +33,7 @@ import {
   POPOVER_RENAME_SPACE,
 } from '../components';
 import { SpaceEvents } from '../events';
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { CollectionAction, SpaceAction } from '../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../util';
 
@@ -94,9 +94,9 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Allow other plugins to add default content.
         await context.activatePromise(SpaceEvents.SpaceCreated);
-        const onSpaceCreatedCallbacks = context.getCapabilities(SpaceCapabilities.OnSpaceCreated);
-        const spaceCreatedIntents = onSpaceCreatedCallbacks.map((onSpaceCreated) =>
-          onSpaceCreated({ space, rootCollection: collection }),
+        const onCreateSpaceCallbacks = context.getCapabilities(SpaceCapabilities.onCreateSpace);
+        const spaceCreatedIntents = onCreateSpaceCallbacks.map((onCreateSpace) =>
+          onCreateSpace({ space, rootCollection: collection }),
         );
 
         return {
@@ -406,7 +406,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
       resolve: async ({ view, fieldId, deletionData }, undo) => {
         const space = getSpace(view);
         invariant(space);
-        const typename = typenameFromQuery(view.query);
+        const typename = getTypenameFromQuery(view.query.ast);
         invariant(typename);
         const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
         invariant(schema);
@@ -415,7 +415,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           const { deleted, index } = projection.deleteFieldProjection(fieldId);
           return {
             undoable: {
-              message: ['field deleted label', { ns: SPACE_PLUGIN }],
+              message: ['field deleted label', { ns: meta.id }],
               data: { deletionData: { ...deleted, index } },
             },
           };
@@ -470,13 +470,13 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
               createIntent(LayoutAction.AddToast, {
                 part: 'toast',
                 subject: {
-                  id: `${SPACE_PLUGIN}/space-limit`,
-                  title: ['space limit label', { ns: SPACE_PLUGIN }],
-                  description: ['space limit description', { ns: SPACE_PLUGIN }],
+                  id: `${meta.id}/space-limit`,
+                  title: ['space limit label', { ns: meta.id }],
+                  description: ['space limit description', { ns: meta.id }],
                   duration: 5_000,
                   icon: 'ph--warning--regular',
-                  actionLabel: ['remove deleted objects label', { ns: SPACE_PLUGIN }],
-                  actionAlt: ['remove deleted objects alt', { ns: SPACE_PLUGIN }],
+                  actionLabel: ['remove deleted objects label', { ns: meta.id }],
+                  actionAlt: ['remove deleted objects alt', { ns: meta.id }],
                   closeLabel: ['close label', { ns: 'os' }],
                   onAction: () => space.db.coreDatabase.unlinkDeletedObjects(),
                 },
@@ -605,7 +605,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           return {
             undoable: {
               // TODO(ZaymonFC): Pluralize if more than one object.
-              message: [undoMessageKey, { ns: SPACE_PLUGIN }],
+              message: [undoMessageKey, { ns: meta.id }],
               data: { deletionData },
             },
             intents:

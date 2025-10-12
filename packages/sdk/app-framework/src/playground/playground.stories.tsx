@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { useApp } from '../components';
 import { IntentPlugin } from '../plugin-intent';
@@ -17,7 +15,8 @@ import { GeneratorPlugin, createNumberPlugin } from './generator';
 import { LayoutPlugin } from './layout';
 import { LoggerPlugin } from './logger';
 
-const plugins = [IntentPlugin(), LayoutPlugin(), DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
+const pluginFactories = [IntentPlugin, LayoutPlugin, DebugPlugin(), LoggerPlugin(), GeneratorPlugin()];
+const plugins = pluginFactories.map((factory) => (typeof factory === 'function' ? factory() : factory));
 
 const Placeholder = () => {
   return <div>Loading...</div>;
@@ -25,7 +24,7 @@ const Placeholder = () => {
 
 const DefaultStory = () => {
   const App = useApp({
-    pluginLoader: (id) => createNumberPlugin(id),
+    pluginLoader: (id) => createNumberPlugin(id)(),
     plugins,
     core: plugins.map((plugin) => plugin.meta.id),
     placeholder: Placeholder,
@@ -37,7 +36,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'sdk/app-framework/playground',
   render: DefaultStory,
-  decorators: [withTheme, withLayout()],
+  decorators: [withTheme],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

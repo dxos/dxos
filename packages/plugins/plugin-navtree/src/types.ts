@@ -28,13 +28,14 @@ export type FlattenedActions = {
 };
 
 type SharedProperties = {
-  label: Label;
-  icon?: string;
+  testId?: string;
   disabled?: boolean;
   position?: Position;
-  testId?: string;
+  label: Label;
   className?: string;
   headingClassName?: string;
+  icon?: string;
+  iconClassName?: string;
 };
 
 export type NodeProperties = SharedProperties & {

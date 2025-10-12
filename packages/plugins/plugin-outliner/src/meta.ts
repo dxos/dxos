@@ -4,10 +4,8 @@
 
 import { type PluginMeta } from '@dxos/app-framework';
 
-export const OUTLINER_PLUGIN = 'dxos.org/plugin/outliner';
-
 export const meta: PluginMeta = {
-  id: OUTLINER_PLUGIN,
+  id: 'dxos.org/plugin/outliner',
   name: 'Outliner',
   description: 'Hierarchical note editor.',
   icon: 'ph--tree-structure--regular',

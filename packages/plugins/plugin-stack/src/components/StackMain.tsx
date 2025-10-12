@@ -22,7 +22,7 @@ import { Stack } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { STACK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import {
   type AddSectionPosition,
   type CollapsedSections,
@@ -42,7 +42,7 @@ type StackMainProps = {
 const StackMain = ({ id, collection }: StackMainProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
-  const { t } = useTranslation(STACK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const allMetadata = useCapabilities(Capabilities.Metadata);
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
@@ -98,7 +98,7 @@ const StackMain = ({ id, collection }: StackMainProps) => {
         // TODO(wittjosiah): Use object creation dialog.
         createIntent(LayoutAction.UpdateDialog, {
           part: 'dialog',
-          subject: `${STACK_PLUGIN}/AddSectionDialog`,
+          subject: `${meta.id}/AddSectionDialog`,
           options: {
             blockAlign: 'start',
             props: {

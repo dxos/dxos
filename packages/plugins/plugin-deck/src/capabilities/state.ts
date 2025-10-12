@@ -8,7 +8,7 @@ import { live } from '@dxos/live-object';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
-import { DECK_PLUGIN } from '../meta';
+import { meta } from '../meta';
 import { type DeckPluginState, type DeckState, defaultDeck, getMode } from '../types';
 
 import { DeckCapabilities } from './capabilities';
@@ -18,8 +18,8 @@ const boolean = /true|false/;
 // TODO(thure, 18 Feb 2025): Remove after the next release.
 
 const migrateSidebarStateDefaults = {
-  [`${DECK_PLUGIN}/complementary-sidebar-state`]: 'expanded',
-  [`${DECK_PLUGIN}/sidebar-state`]: 'collapsed',
+  [`${meta.id}/complementary-sidebar-state`]: 'expanded',
+  [`${meta.id}/sidebar-state`]: 'collapsed',
 };
 
 const migrateSidebarState = () => {
@@ -33,7 +33,7 @@ const migrateSidebarState = () => {
 export const DeckStateFactory = () => {
   migrateSidebarState();
 
-  const state = new LocalStorageStore<DeckPluginState>(DECK_PLUGIN, {
+  const state = new LocalStorageStore<DeckPluginState>(meta.id, {
     sidebarState: 'expanded',
     complementarySidebarState: 'collapsed',
     complementarySidebarPanel: undefined,

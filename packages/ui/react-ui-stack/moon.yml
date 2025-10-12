@@ -3,7 +3,9 @@ language: typescript
 tags:
   - e2e
   - ts-build
+  - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -11,3 +13,6 @@ tasks:
       - '--entryPoint=src/playwright/index.ts'
       - '--entryPoint=src/testing/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

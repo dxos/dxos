@@ -55,6 +55,9 @@
       "path": "../../core/ai"
     },
     {
+      "path": "../../core/assistant"
+    },
+    {
       "path": "../../core/conductor"
     },
     {
@@ -109,10 +112,16 @@
       "path": "../../sdk/react-edge-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-graph"

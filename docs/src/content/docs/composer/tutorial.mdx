@@ -35,7 +35,7 @@ export const translations = [
   {
     'en-US': {
       // Most translations provided by plugins use the plugin id as the namespace.
-      [MAP_PLUGIN]: {
+      [MapPlugin.meta.id]: {
         'plugin name': 'Maps',
         'toggle type label': 'Toggle view',
       },
@@ -83,7 +83,7 @@ Intents have typed inputs and outputs as well as a string identifier and are con
 // types/types.ts
 // ...
 export namespace MapAction {
-  const MAP_ACTION = `${MAP_PLUGIN}/action`;
+  const MAP_ACTION = `${MapPlugin.meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(
     `${MAP_ACTION}/create`,
@@ -230,7 +230,7 @@ defineModule({
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
-      id: `${MAP_PLUGIN}/map`,
+      id: `${MapPlugin.meta.id}/map`,
       // The article role is used by planks in the deck.
       // The section role is used by items in a stack.
       role: ['article', 'section'],
@@ -259,7 +259,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${MAP_PLUGIN}/settings`,
+      id: `${MapPlugin.meta.id}/settings`,
       // The complementary--settings role is used by the surface in the deck's complementary sidebar.
       // The second part of the role denotes the panel of the sidebar that the surface is in.
       role: 'complementary--settings',
@@ -308,7 +308,7 @@ export default (context: PluginsContext) =>
       actions: () => {
         return [
           {
-            id: `${MAP_PLUGIN}/toggle`,
+            id: `${MapPlugin.meta.id}/toggle`,
             data: async () => {
               const { dispatchPromise: dispatch } = context.requestCapability(
                 Capabilities.IntentDispatcher,
@@ -316,7 +316,7 @@ export default (context: PluginsContext) =>
               await dispatch(createIntent(MapAction.Toggle));
             },
             properties: {
-              label: ['toggle type label', { ns: MAP_PLUGIN }],
+              label: ['toggle type label', { ns: MapPlugin.meta.id }],
               icon: 'ph--compass--regular',
             },
           },

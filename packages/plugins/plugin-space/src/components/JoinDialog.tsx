@@ -13,9 +13,9 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
-import { SPACE_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
-export const JOIN_DIALOG = `${SPACE_PLUGIN}/JoinDialog`;
+export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -25,7 +25,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
   const { graph } = useAppGraph();
-  const { t } = useTranslation(SPACE_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {
@@ -39,10 +39,10 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
           createIntent(LayoutAction.AddToast, {
             part: 'toast',
             subject: {
-              id: `${SPACE_PLUGIN}/join-success`,
+              id: `${meta.id}/join-success`,
               duration: 5_000,
-              title: ['join success label', { ns: SPACE_PLUGIN }],
-              closeLabel: ['dismiss label', { ns: SPACE_PLUGIN }],
+              title: ['join success label', { ns: meta.id }],
+              closeLabel: ['dismiss label', { ns: meta.id }],
             },
           }),
         ),

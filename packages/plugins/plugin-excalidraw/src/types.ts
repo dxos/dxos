@@ -6,12 +6,12 @@ import { Schema } from 'effect';
 
 import { DiagramType } from '@dxos/plugin-sketch/types';
 
-import { EXCALIDRAW_PLUGIN } from './meta';
+import { meta } from './meta';
 
 export const EXCALIDRAW_SCHEMA = 'excalidraw.com/2';
 
 export namespace SketchAction {
-  const SKETCH_ACTION = `${EXCALIDRAW_PLUGIN}/action`;
+  const SKETCH_ACTION = `${meta.id}/action`;
 
   export class Create extends Schema.TaggedClass<Create>()(`${SKETCH_ACTION}/create`, {
     input: Schema.Struct({

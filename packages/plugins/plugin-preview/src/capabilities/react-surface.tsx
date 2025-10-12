@@ -26,11 +26,11 @@ import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { DataType, type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { TaskCard } from '../components/TaskCard';
-import { PREVIEW_PLUGIN } from '../meta';
+import { meta } from '../meta';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
@@ -38,7 +38,7 @@ export default () =>
     // Specific schema types.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--contact`,
+      id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
@@ -52,12 +52,12 @@ export default () =>
         const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
         const currentSpaceOrgTable = currentSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            getTypenameFromQuery(view.query.ast) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
         const defaultSpaceOrgTable = defaultSpaceViews.find(
           (view) =>
-            typenameFromQuery(view.query) === DataType.Organization.typename &&
+            getTypenameFromQuery(view.query.ast) === DataType.Organization.typename &&
             Obj.instanceOf(Table.Table, view.presentation.target),
         );
 
@@ -109,7 +109,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--organization`,
+      id: `${meta.id}/schema-popover--organization`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => {
@@ -123,7 +123,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--project`,
+      id: `${meta.id}/schema-popover--project`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => {
@@ -133,7 +133,7 @@ export default () =>
       },
     }),
     createSurface({
-      id: `${PREVIEW_PLUGIN}/schema-popover--task`,
+      id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
       component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
@@ -143,13 +143,13 @@ export default () =>
     // Fallback for any object.
     //
     createSurface({
-      id: `${PREVIEW_PLUGIN}/fallback-popover`,
+      id: `${meta.id}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any; projection?: ProjectionModel } => Obj.isObject(data.subject),
       component: ({ data, role }) => {
         const schema = getSchema(data.subject);
-        const { t } = useTranslation(PREVIEW_PLUGIN);
+        const { t } = useTranslation(meta.id);
         if (!schema) {
           // TODO(burdon): Use Alert.
           return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;

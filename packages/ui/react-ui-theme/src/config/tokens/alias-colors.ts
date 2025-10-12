@@ -27,6 +27,7 @@ export const aliasColors = {
         //
       ].join(', '),
     ],
+    gridFocusStack: ['[data-grid-focus-indicator-variant="stack"]'],
   },
   aliases: {
     // TODO(thure): Aliases should be merged more elegantly, this causes overwrites.

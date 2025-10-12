@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, type Heads, type State, next as am } from '@automerge/automerge';
+import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
 import type { Obj } from '@dxos/echo';
 import { ObjectStructure } from '@dxos/echo-protocol';
@@ -24,7 +24,7 @@ export const getEditHistory = (object: Obj.Any): State<any>[] => {
 
   const objectCore = getObjectCore(object);
   const doc = objectCore.getDoc();
-  const changes = am.getHistory(doc as Doc<any>);
+  const changes = A.getHistory(doc as Doc<any>);
   return changes;
 };
 
@@ -39,7 +39,7 @@ export const checkoutVersion = (object: Obj.Any, version: Heads): unknown => {
 
   const objectCore = getObjectCore(object);
   const doc = objectCore.getDoc();
-  const snapshot = am.view(doc as Doc<any>, version);
+  const snapshot = A.view(doc as Doc<any>, version);
 
   // TODO(dmaretskyi): Refactor so this doesn't have to create another core.
   const versionCore = new ObjectCore();

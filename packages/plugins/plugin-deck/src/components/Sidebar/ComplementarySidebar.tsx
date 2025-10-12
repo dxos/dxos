@@ -18,21 +18,21 @@ import { Tabs } from '@dxos/react-ui-tabs';
 
 import { DeckCapabilities } from '../../capabilities';
 import { type DeckCompanion, getCompanionId, useBreakpoints, useDeckCompanions, useHoistStatusbar } from '../../hooks';
-import { DECK_PLUGIN } from '../../meta';
+import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankContentError, PlankLoading } from '../Plank';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
-const label = ['complementary sidebar title', { ns: DECK_PLUGIN }] satisfies Label;
+const label = ['complementary sidebar title', { ns: meta.id }] satisfies Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
 };
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useCapability(DeckCapabilities.MutableDeckState);
   const layoutMode = getMode(layout.deck);
@@ -130,7 +130,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               key={getCompanionId(companion.id)}
               value={getCompanionId(companion.id)}
               classNames='absolute data-[state="inactive"]:-z-[1] inset-block-0 inline-start-0 is-[calc(100%-var(--r0-size))] lg:is-[--r1-size] grid grid-cols-1 grid-rows-[var(--rail-size)_1fr_min-content] pbs-[env(safe-area-inset-top)]'
-              {...(layout.complementarySidebarState !== 'expanded' && { inert: 'true' })}
+              {...(layout.complementarySidebarState !== 'expanded' && { inert: true })}
             >
               <ComplementarySidebarPanel
                 companion={companion}
@@ -160,7 +160,7 @@ const ScrollArea = ({ children }: PropsWithChildren) => {
 };
 
 const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(DECK_PLUGIN);
+  const { t } = useTranslation(meta.id);
 
   if (getCompanionId(companion.id) !== activeId && !data) {
     return null;

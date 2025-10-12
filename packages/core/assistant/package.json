@@ -41,7 +41,7 @@
     "run:chat": "vite-node ./bin/chat.ts"
   },
   "dependencies": {
-    "@automerge/automerge": "3.1.1",
+    "@automerge/automerge": "3.1.2",
     "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
@@ -62,11 +62,12 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.25.2",
-    "@effect/ai-anthropic": "^0.16.1",
-    "@effect/platform": "^0.90.2",
-    "@effect/platform-node": "^0.95.0",
-    "@preact/signals-core": "^1.9.0",
+    "@effect/ai": "0.29.1",
+    "@effect/ai-anthropic": "^0.19.2",
+    "@effect/experimental": "0.56.0",
+    "@effect/platform": "^0.92.1",
+    "@effect/platform-node": "^0.98.3",
+    "@preact/signals-core": "^1.12.1",
     "@xenova/transformers": "^2.17.2",
     "chalk": "^4.1.0",
     "handlebars": "4.7.8",
@@ -74,7 +75,7 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.17.7",
+    "effect": "3.18.3",
     "inquirer": "^12.0.0"
   },
   "peerDependencies": {

@@ -17,7 +17,13 @@ import {
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';
-import { DatabaseService, LocalFunctionExecutionService, QueueService, TracingService } from '@dxos/functions';
+import {
+  ComputeEventLogger,
+  DatabaseService,
+  FunctionInvocationService,
+  QueueService,
+  TracingService,
+} from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -82,18 +88,18 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
           makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
-          makeToolExecutionServiceFromFunctions(
-            [readDocument, updateDocument],
-            testToolkit,
-            testToolkit.toLayer({}) as any,
-          ),
+          makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
+          Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
-          Layer.provideMerge(LocalFunctionExecutionService.layer),
-          Layer.provideMerge(TracingService.layerNoop),
+          Layer.provideMerge(
+            FunctionInvocationService.layerTestMocked({ functions: [readDocument, updateDocument] }).pipe(
+              Layer.provideMerge(ComputeEventLogger.layerFromTracing),
+              Layer.provideMerge(TracingService.layerNoop),
+            ),
+          ),
         ),
       ),
       TestHelpers.taggedTest('llm'),

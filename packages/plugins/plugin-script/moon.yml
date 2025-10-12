@@ -4,6 +4,7 @@ tags:
   - ts-build
   - ts-test
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -11,3 +12,6 @@ tasks:
       - '--entryPoint=src/types/index.ts'
       - '--entryPoint=src/templates/index.ts'
       - '--preactSignalTracking'
+  test:
+    inputs:
+      - .storybook/*

@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos-theme';
-
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
@@ -11,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/storybook-utils';
+import { withTheme } from '@dxos/react-ui/testing';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
@@ -34,18 +32,17 @@ const meta = {
   component: AutomationPanel as any,
   render: DefaultStory,
   decorators: [
+    withTheme,
     withClientProvider({
       createIdentity: true,
       createSpace: true,
       types: [FunctionType, FunctionTrigger],
-      onSpaceCreated: ({ space }) => {
+      onCreateSpace: ({ space }) => {
         for (const fn of functions) {
           space.db.add(Obj.make(FunctionType, fn));
         }
       },
     }),
-    withLayout(),
-    withTheme,
   ],
   parameters: {
     layout: 'centered',

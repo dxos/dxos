@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
+import { withTheme } from '@dxos/react-ui/testing';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
-import { IntrinsicCardContainer, withLayout, withTheme } from '@dxos/storybook-utils';
+import { IntrinsicCardContainer } from '@dxos/storybook-utils';
 
 import { MessageCard } from './MessageCard';
 
@@ -24,7 +24,7 @@ const createMockMessage = (): DataType.Message =>
         text: faker.lorem.paragraph(),
       },
     ],
-    created: new Date('2025-01-15T10:30:00Z').toISOString(),
+    created: new Date(Date.now() - 0.5 * 24 * 60 * 60 * 1_000).toISOString(),
     sender: {
       name: 'John Doe',
       email: 'john.doe@example.com',
@@ -46,12 +46,10 @@ const meta = {
       </IntrinsicCardContainer>
     );
   },
-  decorators: [
-    withTheme,
-    withLayout({
-      fullscreen: true,
-    }),
-  ],
+  decorators: [withTheme],
+  parameters: {
+    layout: 'fullscreen',
+  },
 } satisfies Meta<typeof MessageCard>;
 
 export default meta;

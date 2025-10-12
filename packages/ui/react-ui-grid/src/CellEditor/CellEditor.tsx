@@ -13,7 +13,7 @@ import {
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
-  preventNewline,
+  filterChars,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -132,7 +132,7 @@ export const CellEditor = ({ value, extensions, box, gridId, onBlur, autoFocus, 
       selection: { anchor: value?.length ?? 0 },
       extensions: [
         extensions ?? [],
-        preventNewline,
+        filterChars(/[\n\r]+/),
         EditorView.focusChangeEffect.of((state, focusing) => {
           if (!focusing) {
             onBlur?.(state.doc.toString());

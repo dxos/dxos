@@ -102,12 +102,12 @@ const GridRoot = ({
 
 GridRoot.displayName = GRID_NAME;
 
+const GRID_CONTENT_NAME = 'GridContent';
+
 type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
   getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
 };
-
-const GRID_CONTENT_NAME = 'GridContent';
 
 const GridContent = forwardRef<NaturalDxGrid, GridScopedProps<GridContentProps>>((props, forwardedRef) => {
   const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME, props.__gridScope);
@@ -166,7 +166,7 @@ export const Grid = {
   Content: GridContent,
 };
 
-export { GridRoot, GridContent, useGridContext, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd };
+export { GridRoot, GridContent, createGridScope, gridSeparatorInlineEnd, gridSeparatorBlockEnd, useGridContext };
 
 export type { GridRootProps, GridContentProps, GridEditing, GridEditBox, GridScopedProps, DxGridElement };
 
