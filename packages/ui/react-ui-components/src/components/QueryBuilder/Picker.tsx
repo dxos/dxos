@@ -8,7 +8,7 @@ import { Select, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '../../translations';
 
-const NULL = '__null';
+const NULL = '__NULL__';
 
 export type PickerProps<T extends { id: string; label: string }> = {
   placeholder?: string;
@@ -17,6 +17,7 @@ export type PickerProps<T extends { id: string; label: string }> = {
   onChange?: (value: string | null) => void;
 };
 
+// TODO(burdon): Factor out.
 export const Picker = <T extends { id: string; label: string }>({
   placeholder,
   values,
