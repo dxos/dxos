@@ -28,7 +28,7 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { translations } from '../translations';
 
 import { ProjectContainer } from './ProjectContainer';
-import { ProjectSettings } from './ProjectSettings';
+import { ProjectObjectSettings } from './ProjectSettings';
 
 faker.seed(0);
 
@@ -44,12 +44,12 @@ const DefaultStory = () => {
   return (
     <Stack orientation='horizontal' size='split' rail={false} classNames='pli-0'>
       <ProjectContainer role='article' project={project} />
-      <ProjectSettings project={project} classNames='border-is border-separator' />
+      <ProjectObjectSettings project={project} classNames='border-is border-separator' />
     </Stack>
   );
 };
 
-const meta: Meta<typeof ProjectContainer> = {
+const meta = {
   title: 'plugins/plugin-project/ProjectContainer',
   render: DefaultStory,
   decorators: [
@@ -205,7 +205,7 @@ const meta: Meta<typeof ProjectContainer> = {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
   },
-};
+} satisfies Meta<typeof ProjectContainer>;
 
 export default meta;
 

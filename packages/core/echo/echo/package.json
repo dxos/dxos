@@ -6,7 +6,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "sideEffects": true,
+  "sideEffects": false,
   "type": "module",
   "exports": {
     ".": {
@@ -45,6 +45,12 @@
       "browser": "./dist/lib/browser/internal/index.mjs",
       "node": "./dist/lib/node-esm/internal/index.mjs"
     },
+    "./query": {
+      "source": "./src/query/index.ts",
+      "types": "./dist/types/src/query/index.d.ts",
+      "browser": "./dist/lib/browser/query/index.mjs",
+      "node": "./dist/lib/node-esm/query/index.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -79,8 +85,6 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -88,7 +92,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@preact/signals-core": "^1.12.1",
     "effect": "3.18.3"
   },
   "publishConfig": {

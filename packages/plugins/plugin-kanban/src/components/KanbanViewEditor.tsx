@@ -10,14 +10,14 @@ import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
 import { type CustomInputMap, Form, SelectInput } from '@dxos/react-ui-form';
 import { Kanban } from '@dxos/react-ui-kanban/types';
-import { type DataType, ProjectionModel, typenameFromQuery } from '@dxos/schema';
+import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 type KanbanViewEditorProps = { view: DataType.View };
 
 export const KanbanViewEditor = ({ view }: KanbanViewEditorProps) => {
   const client = useClient();
   const space = getSpace(view);
-  const currentTypename = view.query ? typenameFromQuery(view.query.ast) : undefined;
+  const currentTypename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const schema = useSchema(client, space, currentTypename);
 
   const projection = useMemo(() => {

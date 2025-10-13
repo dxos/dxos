@@ -51,11 +51,6 @@ export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
         extensions: [
           createThemeExtensions({ themeMode }),
           createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
-          createBasicExtensions({
-            bracketMatching: false,
-            lineWrapping,
-            placeholder,
-          }),
           autocomplete({ onSubmit, onSuggest, onCancel }),
           references ? referencesExtension({ provider: references.provider }) : [],
           // TODO(burdon): Standardize.

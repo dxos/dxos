@@ -6,7 +6,6 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useLayout } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
 import { getSpace, parseId, useSpace } from '@dxos/react-client/echo';
 
 import { AutomationSettings, FunctionsContainer } from '../components';
@@ -47,8 +46,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/companion/automation`,
       role: 'article',
-      filter: (data): data is { companionTo: ScriptType; subject: 'automation' } =>
-        Obj.instanceOf(ScriptType, data.companionTo) && data.subject === 'automation',
+      filter: (data): data is { companionTo: Obj.Any; subject: 'automation' } =>
+        Obj.isObject(data.companionTo) && data.subject === 'automation',
       component: ({ data }) => {
         return <AutomationSettings space={getSpace(data.companionTo)!} object={data.companionTo} />;
       },

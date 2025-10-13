@@ -32,7 +32,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
     if (!view) {
       return Query.select(Filter.nothing());
     } else {
-      return Query.fromAst(view.query.ast);
+      // NOTE: Snapshot is required to prevent signal read in prohibited scope.
+      return Query.fromAst(Obj.getSnapshot(view).query.ast);
     }
   }, [view?.query.ast]);
 

@@ -96,7 +96,7 @@ export class MessageSyncer {
 
           void this._model.append(content);
           this._currentBlockContent = currentBlockContent;
-          log.info('append', { message: i, block: j, content });
+          log('append', { message: i, block: j, content });
         }
 
         if (block.pending) {

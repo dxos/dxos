@@ -38,14 +38,8 @@ export default (context: PluginContext) =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: InboxAction.CreateMailbox,
-      resolve: ({ spaceId, name }) => ({
-        data: {
-          object: Obj.make(Mailbox.Mailbox, {
-            name,
-            // TODO(dmaretskyi): Use space.queues.create() instead.
-            queue: Ref.fromDXN(createQueueDXN(spaceId)),
-          }),
-        },
+      resolve: ({ space, name }) => ({
+        data: { object: Mailbox.make({ name, space }) },
       }),
     }),
     createResolver({

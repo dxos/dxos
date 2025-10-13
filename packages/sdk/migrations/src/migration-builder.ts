@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Doc, next as am } from '@automerge/automerge';
+import { next as A, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import { type Schema } from 'effect';
 
@@ -101,7 +101,7 @@ export class MigrationBuilder {
       },
     };
     const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
-    const newHandle = this._repo.import<DatabaseDirectory>(am.save(migratedDoc));
+    const newHandle = this._repo.import<DatabaseDirectory>(A.save(migratedDoc));
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle);
   }
@@ -168,7 +168,7 @@ export class MigrationBuilder {
     }
 
     for (const [id, url] of Object.entries(this._newLinks)) {
-      links[id] = new am.RawString(url);
+      links[id] = new A.RawString(url);
     }
 
     this._newRoot = this._repo.create<DatabaseDirectory>({

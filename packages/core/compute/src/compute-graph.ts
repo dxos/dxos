@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ManagedRuntime } from 'effect';
+
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo/internal';
-import { FunctionType } from '@dxos/functions';
+import { type FunctionInvocationService, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
-import { type Listeners } from '@dxos/vendor-hyperformula';
+import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
 import { ComputeNode } from './compute-node';
@@ -67,12 +69,13 @@ export class ComputeGraph extends Resource {
 
   constructor(
     private readonly _hf: HyperFormula,
+    private readonly _runtime: ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {
     super();
 
-    this.context = new FunctionContext(this._hf, this._space, {
+    this.context = new FunctionContext(this._hf, this._runtime, this._space, {
       ...this._options,
       onUpdate: (update) => {
         this._options?.onUpdate?.(update);

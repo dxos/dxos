@@ -28,9 +28,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -40,31 +37,25 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
+      "path": "../../common/util"
     },
     {
-      "path": "../../common/util"
+      "path": "../../plugins/plugin-automation"
     },
     {
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/schema"
+      "path": "../ai"
     },
     {
       "path": "../echo/echo"
     },
     {
-      "path": "../echo/echo-db"
-    },
-    {
-      "path": "../echo/live-object"
+      "path": "../echo/echo-schema"
     },
     {
       "path": "../functions"
-    },
-    {
-      "path": "../protocols"
     }
   ]
 }

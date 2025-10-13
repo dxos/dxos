@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { type BaseObject, EchoSchema, StoredSchema, type TypedObject } from '@dxos/echo/internal';
+import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';
@@ -106,8 +106,7 @@ export const SpaceForm = Schema.Struct({
 });
 
 export type ObjectForm<T extends BaseObject = BaseObject> = {
-  // TODO(dmaretskyi): Change to Schema.Schema.AnyNoContext
-  objectSchema: TypedObject;
+  objectSchema: Schema.Schema.AnyNoContext;
   formSchema?: Schema.Schema<T, any>;
   hidden?: boolean;
   getIntent: (props: T, options: { space: Space }) => AnyIntentChain;

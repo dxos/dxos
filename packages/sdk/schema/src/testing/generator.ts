@@ -43,20 +43,21 @@ export type TypeSpec = {
  */
 export const createObjectFactory =
   (db: EchoDatabase, generator: ValueGenerator) =>
-  async (specs: TypeSpec[]): Promise<Map<string, Live<any>[]>> => {
-    const map = new Map<string, Live<any>[]>();
+  async (specs: TypeSpec[]): Promise<Live<any>[]> => {
+    const result: Live<any>[] = [];
     for (const { type, count } of specs) {
       try {
         const pipeline = createObjectPipeline(generator, type, { db });
         const objects = await Effect.runPromise(createArrayPipeline(count, pipeline));
-        map.set(type.typename, objects);
+        result.push(...objects);
+        // NOTE: Flush so that available to other generators as refs.
         await db.flush();
       } catch (err) {
         log.catch(err);
       }
     }
 
-    return map;
+    return result;
   };
 
 /**

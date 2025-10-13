@@ -11,40 +11,41 @@ import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
 import { type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
-import { getHashColor } from '@dxos/react-ui-theme';
+import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  space?: Space;
+  space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
+  tags?: TagMap;
 };
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
+export const query = ({ space, tags }: QueryOptions = {}): Extension => {
   const parser = QueryDSL.Parser.configure({ strict: false });
 
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
-    decorations(),
+    decorations({ tags }),
     autocompletion({
       activateOnTyping: true,
       override: [
         async (context: CompletionContext) => {
           const tree = parser.parse(context.state.sliceDoc());
           const node = tree.cursorAt(context.pos, -1).node;
+          let range = undefined;
 
           switch (node.parent?.type.id) {
             case QueryDSL.Node.TypeFilter: {
-              let range = undefined;
               if (node?.type.id === QueryDSL.Node.Identifier) {
                 range = { from: node.from, to: node.to };
               } else if (node?.type.name === ':') {
-                range = { from: node.from + 1 };
+                range = { from: node.from + 1, to: node.to };
               }
 
               if (range) {
@@ -55,6 +56,22 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
                   options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
                 };
               }
+
+              break;
+            }
+
+            // TODO(burdon): Trigger on #
+            case QueryDSL.Node.TagFilter: {
+              if (tags) {
+                range = { from: node.from + 1, to: node.to };
+                return {
+                  ...range,
+                  filter: true,
+                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
+                };
+              }
+
+              break;
             }
           }
 
@@ -66,6 +83,7 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
       onComplete: ({ line }: TypeaheadContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
+          // TODO(burdon): Get suggestion from parser.
           return staticCompletion(['type:', 'AND', 'OR', 'NOT'])({ line });
         }
       },
@@ -78,7 +96,7 @@ export const query = ({ space }: Partial<QueryOptions> = {}): Extension => {
 /**
  * Decorations
  */
-const decorations = (): Extension => {
+const decorations = ({ tags }: QueryOptions): Extension => {
   const buildDecorations = (state: EditorState) => {
     const hasFocus = state.field(focusField);
     const isInside = (node: SyntaxNodeRef) => {
@@ -123,13 +141,16 @@ const decorations = (): Extension => {
           }
 
           case QueryDSL.Node.TagFilter: {
-            const tag = node.node.getChild(QueryDSL.Node.Tag);
-            if (tag) {
+            const tagNode = node.node.getChild(QueryDSL.Node.Tag);
+            if (tagNode) {
+              const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
+              const tag = findTagByLabel(tags, label);
+              const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
               deco.add(
                 node.from,
                 node.to,
                 Decoration.widget({
-                  widget: new TagWidget(state.sliceDoc(tag.from + 1, tag.to)),
+                  widget: new TagWidget(label, hue),
                   atomic: true,
                 }),
               );
@@ -142,15 +163,19 @@ const decorations = (): Extension => {
               break;
             }
 
-            const props = JSON5.parse(state.sliceDoc(node.from, node.to));
-            if (props) {
-              deco.add(
-                node.from,
-                node.to,
-                Decoration.widget({
-                  widget: new ObjectWidget(props),
-                }),
-              );
+            try {
+              const props = JSON5.parse(state.sliceDoc(node.from, node.to));
+              if (props) {
+                deco.add(
+                  node.from,
+                  node.to,
+                  Decoration.widget({
+                    widget: new ObjectWidget(props),
+                  }),
+                );
+              }
+            } catch {
+              // Ignore malformed JSON.
             }
             break;
           }
@@ -263,7 +288,10 @@ class TypeWidget extends WidgetType {
  * Tag
  */
 class TagWidget extends WidgetType {
-  constructor(private readonly _str: string) {
+  constructor(
+    private readonly _str: string,
+    private readonly _hue: string,
+  ) {
     super();
   }
 
@@ -272,11 +300,13 @@ class TagWidget extends WidgetType {
   }
 
   override toDOM() {
-    const { bg, border } = getHashColor(this._str);
+    const { bg, border, surface } = getStyles(this._hue);
     return container(
       border,
       Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-black text-xs', bg]).text('#'),
-      Domino.of('span').classNames(['flex items-center pis-1 pie-1 text-subdued']).text(this._str),
+      Domino.of('span')
+        .classNames(['flex items-center pis-1 pie-1 text-subdued text-sm rounded-r-[3px]', surface])
+        .text(this._str),
     );
   }
 }

@@ -2,7 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
+import {
+  Capabilities,
+  Events,
+  allOf,
+  contributes,
+  createIntent,
+  defineModule,
+  definePlugin,
+} from '@dxos/app-framework';
+import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -17,7 +26,7 @@ import { SheetAction, SheetType } from './types';
 export const SheetPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/compute-graph-registry`,
-    activatesOn: ClientEvents.ClientReady,
+    activatesOn: allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
   }),
   defineModule({

@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { ROOT_ID, createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-graph';
-import { DataType, typenameFromQuery } from '@dxos/schema';
+import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { getActiveSpace } from '../hooks';
@@ -440,7 +440,7 @@ export default (context: PluginContext) => {
             ),
             Option.flatMap((collection) => {
               const space = getSpace(collection);
-              const typename = typenameFromQuery(collection.query);
+              const typename = getTypenameFromQuery(collection.query);
               return typename && space ? Option.some({ typename, space }) : Option.none();
             }),
             Option.map(({ typename, space }) => {
@@ -494,7 +494,7 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
-              typenameFromQuery(node.data.query) === DataType.StoredSchema.typename
+              getTypenameFromQuery(node.data.query) === DataType.StoredSchema.typename
                 ? Option.some(node.data)
                 : Option.none(),
             ),
@@ -539,7 +539,7 @@ export default (context: PluginContext) => {
                 rxFromSignal(() =>
                   // TODO(wittjosiah): Remove cast.
                   views.filter(
-                    (view) => typenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
+                    (view) => getTypenameFromQuery(view.query.ast) === Type.getTypename(schema as Type.Obj.Any),
                   ),
                 ),
               );
@@ -587,7 +587,7 @@ export default (context: PluginContext) => {
               // TODO(wittjosiah): Remove cast.
               const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.Obj.Any) : schema.typename;
               return get(rxFromQuery(query))
-                .filter((view) => typenameFromQuery(view.query.ast) === typename)
+                .filter((view) => getTypenameFromQuery(view.query.ast) === typename)
                 .map((view) =>
                   get(
                     rxFromSignal(() =>
@@ -649,7 +649,9 @@ export default (context: PluginContext) => {
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data);
-              return space && Obj.isObject(node.data) ? Option.some({ space, object: node.data }) : Option.none();
+              return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+                ? Option.some({ space, object: node.data })
+                : Option.none();
             }),
             Option.flatMap(({ space, object }) => {
               const isSchema = Obj.instanceOf(DataType.StoredSchema, object);
@@ -663,12 +665,12 @@ export default (context: PluginContext) => {
                 // Don't allow the Records smart collection to be deleted.
                 !(
                   Obj.instanceOf(DataType.QueryCollection, object) &&
-                  typenameFromQuery(object.query) === DataType.StoredSchema.typename
+                  getTypenameFromQuery(object.query) === DataType.StoredSchema.typename
                 );
               if (isSchema && query) {
                 const views = get(rxFromQuery(query));
                 const filteredViews = get(
-                  rxFromSignal(() => views.filter((view) => typenameFromQuery(view.query.ast) === object.typename)),
+                  rxFromSignal(() => views.filter((view) => getTypenameFromQuery(view.query.ast) === object.typename)),
                 );
                 deletable = filteredViews.length === 0;
               }

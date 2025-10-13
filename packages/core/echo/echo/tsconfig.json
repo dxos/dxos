@@ -13,9 +13,6 @@
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/effect"
-    },
-    {
       "path": "../../../common/errors"
     },
     {
@@ -37,7 +34,7 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-signals"
+      "path": "../echo-schema"
     },
     {
       "path": "../live-object"

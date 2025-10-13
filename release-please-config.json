@@ -1012,6 +1012,11 @@
           "type": "json",
           "path": "vendor/hyperformula/package.json",
           "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "vendor/quickjs/package.json",
+          "jsonpath": "$.version"
         }
       ]
     }

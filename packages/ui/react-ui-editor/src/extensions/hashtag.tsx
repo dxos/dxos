@@ -13,7 +13,7 @@ import {
   WidgetType,
 } from '@codemirror/view';
 
-import { getHashColor, mx } from '@dxos/react-ui-theme';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 
 class TagWidget extends WidgetType {
   constructor(private _text: string) {
@@ -22,7 +22,7 @@ class TagWidget extends WidgetType {
 
   toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.className = mx('cm-tag', getHashColor(this._text).tag);
+    span.className = mx('cm-tag', getHashStyles(this._text).surface);
     span.textContent = this._text;
     return span;
   }

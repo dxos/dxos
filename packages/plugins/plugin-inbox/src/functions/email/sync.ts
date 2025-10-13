@@ -7,6 +7,7 @@ import { format, subDays } from 'date-fns';
 import { Array, Chunk, Console, Effect, Ref, Schema, Stream, pipe } from 'effect';
 import { isNotNullable } from 'effect/Predicate';
 
+import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
@@ -21,9 +22,7 @@ export default defineFunction({
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
-    mailboxId: Schema.String.annotations({
-      description: 'The DXN ID of the mailbox object.',
-    }),
+    mailboxId: ArtifactId,
     userId: Schema.optional(Schema.String),
     after: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
     pageSize: Schema.optional(Schema.Number),
@@ -33,22 +32,25 @@ export default defineFunction({
   }),
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
-    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 7), 'yyyy-MM-dd'), pageSize = 100 },
+    data: { mailboxId, userId = 'me', after = format(subDays(new Date(), 30), 'yyyy-MM-dd'), pageSize = 100 },
   }) =>
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
-      // TODO(wittjosiah): Sync labels to integration config to avoid breaking when user labels are renamed.
-      const labels = yield* listLabels(userId);
-      const labelMap = new Map(labels.labels.map((label) => [label.id, label.name]));
-
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
+
+      // Sync labels.
+      const { labels } = yield* listLabels(userId);
+      labels.forEach((label) => {
+        (mailbox.tags ??= {})[label.id] = { label: label.name };
+      });
+
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
       const nextPage = yield* Ref.make<string | undefined>(undefined);
 
       do {
-        // Request messages.
+        // Sync messages.
         // TODO(burdon): Query from Oldest to Newest (due to queue order).
         const objects = yield* Effect.tryPromise(() => queue.queryObjects());
         const last = objects.at(-1);
@@ -67,7 +69,7 @@ export default defineFunction({
             pipe(
               // Retrieve details.
               getMessage(userId, message.id),
-              Effect.flatMap(messageToObject(last, labelMap)),
+              Effect.flatMap(messageToObject(last)),
             ),
           ),
           Effect.all,

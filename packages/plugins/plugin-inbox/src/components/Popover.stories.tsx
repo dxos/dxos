@@ -102,11 +102,11 @@ const meta = {
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
             const space = client.spaces.default;
+            const mailbox = Mailbox.make({ space });
             const { emails } = await seedTestData(space);
-            const queueDxn = space.queues.create().dxn;
+            const queueDxn = mailbox.queue.dxn;
             const queue = space.queues.get<DataType.Message>(queueDxn);
             await queue.append(emails);
-            const mailbox = Mailbox.make({ queue: queueDxn });
             space.db.add(mailbox);
           },
         }),

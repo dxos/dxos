@@ -7,12 +7,6 @@
   ],
   "references": [
     {
-      "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/debug"
     },
     {
@@ -20,9 +14,6 @@
     },
     {
       "path": "../../common/errors"
-    },
-    {
-      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -38,9 +29,6 @@
     },
     {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/schema"
