@@ -38,13 +38,7 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../halo/keyring"
-    },
-    {
       "path": "../../protocols"
-    },
-    {
-      "path": "../edge-client"
     },
     {
       "path": "../messaging"

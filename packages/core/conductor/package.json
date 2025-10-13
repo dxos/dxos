@@ -37,13 +37,10 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/async": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -52,7 +49,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
@@ -61,8 +57,7 @@
     "@preact/signals-core": "^1.12.1",
     "chalk": "^4.1.2",
     "effect": "3.18.3",
-    "jsonpath-plus": "10.2.0",
-    "ollama": "^0.5.11"
+    "jsonpath-plus": "10.2.0"
   },
   "devDependencies": {},
   "publishConfig": {
