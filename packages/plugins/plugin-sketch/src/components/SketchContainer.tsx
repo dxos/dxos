@@ -36,8 +36,7 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
   const handleThreadCreate = actions.find((action) => action.id === `${fullyQualifiedId(sketch)}/comment`)?.data;
 
   return (
-    // NOTE: Min 500px height (for tools palette to be visible).
-    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'} classNames='min-bs-[32rem]'>
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
       <Sketch
         // Force instance per sketch object. Otherwise, sketch shares the same instance.
         key={id}

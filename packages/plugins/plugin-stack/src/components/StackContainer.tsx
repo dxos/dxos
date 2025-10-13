@@ -134,8 +134,7 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
     <StackItem.Content
       toolbar
       // TODO(burdon): Common border fragments?
-      // TODO(burdon): Fragment for max width (side rail + is-prose?)
-      classNames='overflow-hidden is-full max-is-[50rem] mli-auto border-l border-r border-subduedSeparator'
+      classNames='container-max-width overflow-hidden border-l border-r border-subduedSeparator'
     >
       <Toolbar.Root>
         <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add section' onClick={handleAddSection} />

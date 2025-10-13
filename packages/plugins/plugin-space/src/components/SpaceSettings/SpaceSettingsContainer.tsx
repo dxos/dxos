@@ -162,7 +162,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
           title={t('space properties settings verbose label', { ns: meta.id })}
