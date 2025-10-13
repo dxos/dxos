@@ -38,11 +38,6 @@ import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
 
-export const defaultStyles = {
-  dark: vscodeDarkStyle,
-  light: vscodeLightStyle,
-};
-
 //
 // Basic
 //
@@ -206,6 +201,11 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
 
 export const defaultThemeSlots = grow;
 
+export const defaultStyles = {
+  dark: vscodeDarkStyle,
+  light: vscodeLightStyle,
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -221,8 +221,8 @@ export const createThemeExtensions = ({
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
     // TODO(burdon): Factor out.
     syntaxHighlightingProps && [
-      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? vscodeDarkStyle : vscodeLightStyle)),
-      transparentBackground,
+      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
+      transparentBackground, // TODO(burdon): Remove and patch styles.
     ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),

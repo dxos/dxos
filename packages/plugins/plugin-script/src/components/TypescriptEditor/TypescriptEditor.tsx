@@ -68,10 +68,10 @@ export const TypescriptEditor = ({
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],
 
+        // TODO(burdon): Test order and consolidate keymaps.
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
 
-        // TODO(burdon): Factor out.
         javascript({ typescript: true }),
 
         // https://github.com/val-town/codemirror-ts
@@ -91,7 +91,7 @@ export const TypescriptEditor = ({
     [id, extensions, themeMode, inputMode, selection, scrollTo],
   );
 
-  // TODO(brudon): Use editor.
+  // TODO(brudon): Use react-ui-editor's Editor component.
   return (
     <div
       ref={parentRef}

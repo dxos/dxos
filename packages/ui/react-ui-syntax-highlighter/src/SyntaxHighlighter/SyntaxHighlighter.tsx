@@ -25,6 +25,7 @@ export type SyntaxHighlighterProps = ThemedClassName<
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
+// TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = ({
   classNames,
   children,
