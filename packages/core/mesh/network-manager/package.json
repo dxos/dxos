@@ -84,22 +84,10 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "isomorphic-ws": "^5.0.0",
-    "nanomessage-rpc": "^3.0.0",
-    "node-datachannel": "^0.30.0",
-    "p-defer": "^3.0.0",
-    "stream": "^0.0.3",
-    "tiny-invariant": "^1.3.1",
-    "ws": "^8.14.2",
-    "xor-distance": "^2.0.0"
+    "node-datachannel": "^0.30.0"
   },
   "devDependencies": {
-    "@dxos/edge-client": "workspace:*",
-    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
-    "@swc-node/register": "1.11.1",
-    "@types/ws": "^7.4.0",
-    "fast-check": "^3.19.0",
     "fetch-mock": "^11.0.0"
   },
   "publishConfig": {

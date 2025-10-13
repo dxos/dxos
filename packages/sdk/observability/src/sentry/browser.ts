@@ -57,7 +57,7 @@ export const init = (options: InitOptions) => {
       replaysSessionSampleRate: options.replaySampleRate,
       replaysOnErrorSampleRate: options.replaySampleRateOnError,
       tracesSampleRate: options.sampleRate,
-      transport: options.transport,
+      transport: options.transport as any, // TODO(dmaretskyi): Fix
       beforeSend: (event) => {
         options.onError?.(event);
         return event;
