@@ -59,6 +59,7 @@ export type TreeItemProps<T extends HasId = any> = {
   draggable?: boolean;
   renderColumns?: ColumnRenderer<T>;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  canSelect?: (params: { item: T; path: string[] }) => boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onSelect?: (params: { item: T; path: string[]; current: boolean; option: boolean }) => void;
 };
@@ -71,6 +72,7 @@ const RawTreeItem = <T extends HasId = any>({
   draggable: _draggable,
   renderColumns: Columns,
   canDrop,
+  canSelect,
   onOpenChange,
   onSelect,
 }: TreeItemProps<T>) => {
@@ -94,6 +96,7 @@ const RawTreeItem = <T extends HasId = any>({
   const level = path.length - levelOffset;
   const isBranch = !!parentOf;
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
+  const canSelectItem = canSelect?.({ item, path }) ?? true;
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -192,16 +195,18 @@ const RawTreeItem = <T extends HasId = any>({
 
   const handleSelect = useCallback(
     (option = false) => {
-      // TODO(burdon): Display stack.
-      const toggle = true;
-      if (isBranch && toggle) {
+      // If the item is a branch, toggle it if:
+      //   - also holding down the option key
+      //   - or the item is currently selected
+      if (isBranch && (option || current)) {
         handleOpenToggle();
-      } else {
+      } else if (canSelectItem) {
+        canSelect?.({ item, path });
         rowRef.current?.focus();
         onSelect?.({ item, path, current: !current, option });
       }
     },
-    [item, path, current, isBranch, handleOpenToggle, onSelect],
+    [item, path, current, isBranch, canSelectItem, handleOpenToggle, onSelect],
   );
 
   const handleKeyDown = useCallback(
@@ -278,6 +283,7 @@ const RawTreeItem = <T extends HasId = any>({
             draggable={_draggable}
             renderColumns={Columns}
             canDrop={canDrop}
+            canSelect={canSelect}
             onOpenChange={onOpenChange}
             onSelect={onSelect}
           />

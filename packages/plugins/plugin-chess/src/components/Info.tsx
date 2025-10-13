@@ -99,12 +99,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const { t } = useTranslation(meta.id);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
-      ? t('game.checkmate')
+      ? t('game.checkmate label')
       : model.game.isStalemate()
-        ? t('game.stalemate')
-        : t('game.draw')
+        ? t('game.stalemate label')
+        : t('game.draw label')
     : model.game.isCheck()
-      ? t('game.check')
+      ? t('game.check label')
       : undefined;
 
   const history = model.game.history();

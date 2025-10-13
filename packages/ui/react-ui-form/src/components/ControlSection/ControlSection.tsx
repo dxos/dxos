@@ -22,7 +22,7 @@ export type ControlPageProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export const ControlPage = ({ children, classNames, ...props }: ControlPageProps) => {
   return (
-    <StackItem.Content classNames='block overflow-y-auto [--control-spacing:var(--dx-trimMd)]'>
+    <StackItem.Content scrollable classNames='[--control-spacing:var(--dx-trimMd)]'>
       <div role='none' className={mx('pli-cardSpacingInline pbe-trimLg', classNames)} {...props}>
         {children}
       </div>

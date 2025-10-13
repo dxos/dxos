@@ -100,7 +100,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
   };
 
   return (
-    <StackItem.Content toolbar classNames='bs-full overflow-hidden'>
+    <StackItem.Content toolbar>
       <Toolbar.Root>
         <IconButton icon='ph--plus--regular' disabled={!queue} label='Insert' onClick={handleInsert} />
       </Toolbar.Root>

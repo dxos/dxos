@@ -153,7 +153,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   );
 
   return (
-    <StackItem.Content toolbar classNames='overflow-hidden'>
+    <StackItem.Content toolbar>
       <Tabs.Root
         value={showResolvedThreads ? 'all' : 'unresolved'}
         orientation='horizontal'

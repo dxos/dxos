@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { StackMain } from '../components';
+import { StackContainer } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -24,11 +24,7 @@ export default () =>
         // This allows the id to be overridden by the surface for situations where the id of the collection
         // is not the same as the id of what is being represented (e.g., a space with a root collection).
         const id = typeof data.id === 'string' ? data.id : undefined;
-        return (
-          <div role='none' className='overflow-auto' style={{ contain: 'layout' }}>
-            <StackMain id={id ?? fullyQualifiedId(data.subject)} collection={data.subject} />
-          </div>
-        );
+        return <StackContainer id={id ?? fullyQualifiedId(data.subject)} collection={data.subject} />;
       },
     }),
   );

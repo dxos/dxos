@@ -4,6 +4,6 @@
 
 import { lazy } from 'react';
 
-export const StackMain = lazy(() => import('./StackMain'));
+export const StackContainer = lazy(() => import('./StackContainer'));
 
 export * from './StackSettings';

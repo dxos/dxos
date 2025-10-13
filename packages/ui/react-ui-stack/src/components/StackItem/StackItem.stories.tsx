@@ -25,7 +25,7 @@ const DefaultStory = (props: StackItemRootProps) => {
           </DropdownMenu.Root>
         </div>
       </StackItem.Heading>
-      <StackItem.Content classNames='p-2'>Content</StackItem.Content>
+      <StackItem.Content>Content</StackItem.Content>
     </StackItem.Root>
   );
 };

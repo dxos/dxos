@@ -94,7 +94,7 @@ export const SketchContainer = ({ sketch, role, settings }: SketchContainerProps
     // NOTE: Min 500px height (for tools palette to be visible).
     <StackItem.Content
       size={role === 'section' ? 'square' : 'intrinsic'}
-      classNames='min-bs-[32rem]'
+      // classNames='min-bs-[32rem]'
       ref={containerRef}
     >
       <Excalidraw

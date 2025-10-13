@@ -41,7 +41,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
   const schemas = useQuerySpaceSchemas(space);
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection title={t('schema verbose label')} description={t('schema description')}>
           <div role='none' className={controlItemClasses}>

@@ -36,7 +36,7 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
   }
 
   return (
-    <StackItem.Content toolbar={!!companionTo} classNames='container-max-width'>
+    <StackItem.Content classNames='container-max-width' toolbar={!!companionTo}>
       {!!companionTo && <Toolbar chat={chat} companionTo={companionTo} />}
       <Chat.Root chat={chat} processor={processor}>
         <Chat.Thread />

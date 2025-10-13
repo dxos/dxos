@@ -21,7 +21,7 @@ export const PluginDetail = ({ plugin, enabled, onEnable }: PluginDetailProps) =
   const { id, name, description, homePage, source, screenshots } = plugin.meta;
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <div role='none' className='container-max-width p-4'>
         <div role='none' className='flex justify-between items-center'>
           <p>{id}</p>

@@ -145,7 +145,7 @@ export class EdgeWsConnection extends Resource {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
         return;
       }
-      log.warn('Error closing websocket', { err });
+      log.warn('error closing websocket', { err });
     }
   }
 

@@ -130,7 +130,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   return (
     <Clipboard.Provider>
-      <StackItem.Content classNames='block overflow-y-auto'>
+      <StackItem.Content scrollable>
         <ControlPage>
           <ControlSection title={t('members verbose label')} description={t('members description')}>
             <ControlFrame>

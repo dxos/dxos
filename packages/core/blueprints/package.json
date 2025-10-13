@@ -31,12 +31,9 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "3.18.3",
-    "handlebars": "4.7.8",
-    "lodash.defaultsdeep": "^4.6.1"
+    "handlebars": "4.7.8"
   },
-  "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.6"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "effect": "^3.13.3"
   },
