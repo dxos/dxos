@@ -30,7 +30,7 @@ export type StackItemContentProps = ThemedClassName<Omit<ComponentPropsWithoutRe
   /**
    * Whether the consumer intends to do something custom and typical affordances should not apply.
    */
-  // TODO(burdon): This is cryptic; can we remove (only used by plugin-inbox?)
+  // TODO(burdon): This is cryptic; can we remove (only used by plugin-inbox?) Normalize toolbar?
   layoutManaged?: boolean;
 
   /**
