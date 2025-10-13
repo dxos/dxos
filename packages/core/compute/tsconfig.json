@@ -46,9 +46,6 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../ai"
     },
     {
