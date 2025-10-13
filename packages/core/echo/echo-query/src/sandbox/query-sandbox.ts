@@ -53,16 +53,14 @@ export class QuerySandbox extends Resource {
    */
   eval(queryCode: string): QueryAST.Query {
     using context = this.#runtime.newContext();
-    unwrapResult(
-      context,
-      context.evalCode(trim`
-        import { Filter, Order, Query } from 'dxos:query-env';
-        globalThis.Filter = Filter;
-        globalThis.Order = Order;
-        globalThis.Query = Query;
-      `),
-    ).dispose();
+    const globals = trim`
+      import { Filter, Order, Query } from 'dxos:query-env';
+      globalThis.Filter = Filter;
+      globalThis.Order = Order;
+      globalThis.Query = Query;
+    `;
 
+    unwrapResult(context, context.evalCode(globals)).dispose();
     using query = unwrapResult(context, context.evalCode(queryCode));
     const result = context.dump(query);
     if ('~Filter' in result) {
