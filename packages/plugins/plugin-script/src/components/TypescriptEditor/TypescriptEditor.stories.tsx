@@ -79,12 +79,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
       </Toolbar.Root>
       <div className='grid grid-rows-[1fr_min-content] bs-full overflow-hidden text-sm'>
-        <TypescriptEditor
-          {...props}
-          classNames='overflow-hidden'
-          initialValue={object.content}
-          extensions={extensions}
-        />
+        <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
         <Json data={result} classNames='shrink-0 p-2 border-t border-subduedSeparator' />
       </div>
     </StackItem.Content>
