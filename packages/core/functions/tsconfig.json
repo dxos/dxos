@@ -11,6 +11,12 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/crypto"
     },
     {
@@ -44,7 +50,13 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../agent"
     },
     {
       "path": "../ai"
@@ -59,7 +71,13 @@
       "path": "../echo/echo-pipeline"
     },
     {
+      "path": "../echo/echo-protocol"
+    },
+    {
       "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../echo/live-object"
     },
     {
       "path": "../mesh/edge-client"

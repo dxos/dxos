@@ -30,11 +30,16 @@
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.12.1",
     "effect": "3.18.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/random": "workspace:*"
+  },
   "peerDependencies": {
     "effect": "^3.13.3"
   },

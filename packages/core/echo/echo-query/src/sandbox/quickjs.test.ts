@@ -48,7 +48,7 @@ test('global variables are shared in a context created from runtime', async () =
 test('load module', async () => {
   const QuickJS = await createQuickJS();
   using runtime = QuickJS.newRuntime({
-    moduleLoader: (name, context) => {
+    moduleLoader: (name, _context) => {
       switch (name) {
         case 'test:name':
           return `
