@@ -71,7 +71,6 @@ export const TypescriptEditor = ({
         javascript({ typescript: true }),
         autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
 
-        // TODO(burdon): Test order and consolidate keymaps.
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
         keymap.of(completionKeymap),
@@ -123,7 +122,7 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   return (info: HoverInfo) => {
     return {
       dom: Domino.of('div')
-        .classNames('p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg')
+        .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
         .children(
           ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
             Domino.of('span').classNames(classFromKind(kind)).text(text),
