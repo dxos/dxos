@@ -92,6 +92,7 @@ export type BasicExtensionsOptions = {
   /** If true user cannot edit the text, but they can still select and copy it. */
   readOnly?: boolean;
   search?: boolean;
+  /** NOTE: Do not use with stack sections. */
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
   tabSize?: number;

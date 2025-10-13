@@ -113,7 +113,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
           );
         }}
       >
-        <StackItem.Content toolbar classNames='overflow-hidden'>
+        <StackItem.Content toolbar>
           <Board.Toolbar />
           <Board.Container>
             <Board.Viewport classNames='border-none'>
