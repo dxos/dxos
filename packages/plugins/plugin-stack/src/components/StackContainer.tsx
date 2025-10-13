@@ -34,12 +34,12 @@ import {
 import { StackContext } from './StackContext';
 import { StackSection } from './StackSection';
 
-type StackMainProps = {
+type StackContainerProps = {
   id: string;
   collection: DataType.Collection;
 };
 
-const StackMain = ({ id, collection }: StackMainProps) => {
+const StackContainer = ({ id, collection }: StackContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { t } = useTranslation(meta.id);
@@ -133,6 +133,8 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   return (
     <StackItem.Content
       toolbar
+      // TODO(burdon): Common border fragments?
+      // TODO(burdon): Fragment for max width (side rail + is-prose?)
       classNames='overflow-hidden is-full max-is-[50rem] mli-auto border-l border-r border-subduedSeparator'
     >
       <Toolbar.Root>
@@ -158,4 +160,4 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   );
 };
 
-export default StackMain;
+export default StackContainer;

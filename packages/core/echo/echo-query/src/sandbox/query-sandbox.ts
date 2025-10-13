@@ -18,7 +18,7 @@ import { unwrapResult } from './quickjs';
  */
 export class QuerySandbox extends Resource {
   // Caching the wasm module.
-  static quickJS: Promise<QuickJSWASMModule> | null = null;
+  private static quickJS: Promise<QuickJSWASMModule> | null = null;
   static getQuickJS() {
     if (!QuerySandbox.quickJS) {
       QuerySandbox.quickJS = createQuickJS();
