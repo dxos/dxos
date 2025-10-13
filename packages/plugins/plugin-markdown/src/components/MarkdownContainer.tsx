@@ -95,7 +95,8 @@ export const MarkdownContainer = ({
       ),
     [objectForms, schemaWhiteList],
   );
-  const onLinkQuery = useCallback(
+
+  const handleLinkQuery = useCallback(
     async (query?: string): Promise<CommandMenuGroup[]> => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
@@ -137,6 +138,7 @@ export const MarkdownContainer = ({
     [filter, resolve, space],
   );
 
+  // TODO(burdon): Reconcile variants.
   const editor = doc ? (
     <DocumentEditor
       id={fullyQualifiedId(object)}
@@ -147,7 +149,7 @@ export const MarkdownContainer = ({
       settings={settings}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? onLinkQuery : undefined}
+      onLinkQuery={space ? handleLinkQuery : undefined}
     />
   ) : text ? (
     <MarkdownEditor
@@ -160,10 +162,9 @@ export const MarkdownContainer = ({
       inputMode={settings.editorInputMode}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? onLinkQuery : undefined}
+      onLinkQuery={space ? handleLinkQuery : undefined}
     />
   ) : (
-    // TODO(burdon): Normalize with above.
     <MarkdownEditor
       id={id}
       role={role}
@@ -174,7 +175,7 @@ export const MarkdownContainer = ({
       inputMode={settings.editorInputMode}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? onLinkQuery : undefined}
+      onLinkQuery={space ? handleLinkQuery : undefined}
     />
   );
 

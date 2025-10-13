@@ -30,6 +30,7 @@ import { isNonNullable } from '@dxos/util';
 export type TypescriptEditorProps = ThemedClassName<
   {
     id: string;
+    role?: string;
     inputMode?: EditorInputMode;
     toolbar?: boolean;
     env?: VirtualTypeScriptEnvironment;
@@ -39,6 +40,7 @@ export type TypescriptEditorProps = ThemedClassName<
 export const TypescriptEditor = ({
   classNames,
   id,
+  role = 'article',
   inputMode = 'vscode',
   toolbar,
   env,
@@ -62,7 +64,7 @@ export const TypescriptEditor = ({
           lineNumbers: true,
           lineWrapping: false,
           monospace: true,
-          scrollPastEnd: true,
+          scrollPastEnd: role === 'article',
           search: true,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),

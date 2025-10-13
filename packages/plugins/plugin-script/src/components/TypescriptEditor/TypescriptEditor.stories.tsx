@@ -73,7 +73,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   }, [object]);
 
   return (
-    <StackItem.Content toolbar classNames='overflow-hidden'>
+    <StackItem.Content toolbar>
       {/* <ScriptToolbar script={script} state={{}} /> */}
       <Toolbar.Root>
         <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
