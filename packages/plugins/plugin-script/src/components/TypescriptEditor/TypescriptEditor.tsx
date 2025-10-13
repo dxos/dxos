@@ -68,18 +68,16 @@ export const TypescriptEditor = ({
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],
 
+        javascript({ typescript: true }),
+        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
+
         // TODO(burdon): Test order and consolidate keymaps.
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
-
-        javascript({ typescript: true }),
-
-        // https://github.com/val-town/codemirror-ts
         keymap.of(completionKeymap),
-
-        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
         keymap.of(lintKeymap),
 
+        // https://github.com/val-town/codemirror-ts
         env && [
           tsFacet.of({ env, path: `/src/${id}.ts` }),
           tsSync(),
