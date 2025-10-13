@@ -3116,8 +3116,8 @@ importers:
         specifier: 3.18.3
         version: 3.18.3
       esbuild-wasm:
-        specifier: ^0.16.14
-        version: 0.16.17
+        specifier: ^0.25.10
+        version: 0.25.10
       i18next:
         specifier: ^24.2.1
         version: 24.2.3(typescript@5.9.3)
@@ -8787,8 +8787,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       esbuild-wasm:
-        specifier: ^0.16.14
-        version: 0.16.17
+        specifier: ^0.25.10
+        version: 0.25.10
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -25785,9 +25785,9 @@ packages:
   esbuild-style-plugin@1.6.1:
     resolution: {integrity: sha512-t5ZtQyGKNiM8DLedz+iwFH0LPWLnMmaEQ2RnnP1ppFHq35najxqJHAhUVVSbTFm5cR2ZumGdBMqnmuKBRBMvDw==}
 
-  esbuild-wasm@0.16.17:
-    resolution: {integrity: sha512-Tn7NuMqRcM+T/qCOxbQRq0qrwWl1sUWp6ARfJRakE8Bepew6zata4qrKgH2YqovNC5e/2fcTa7o+VL/FAOZC1Q==}
-    engines: {node: '>=12'}
+  esbuild-wasm@0.25.10:
+    resolution: {integrity: sha512-IyyfrTA2iiOh/uhlaJj0aUDgW42lFhr29ZeKouVNOz/8mLyuqWbEuVst+B4RBH18pb3AcOHnaOgyskAbsVOe3A==}
+    engines: {node: '>=18'}
     hasBin: true
 
   esbuild@0.17.19:
@@ -46544,7 +46544,7 @@ snapshots:
       postcss: 8.5.6
       postcss-modules: 4.3.1(postcss@8.5.6)
 
-  esbuild-wasm@0.16.17: {}
+  esbuild-wasm@0.25.10: {}
 
   esbuild@0.17.19:
     optionalDependencies:
