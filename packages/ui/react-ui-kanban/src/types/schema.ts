@@ -6,9 +6,12 @@ import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType, ViewAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo-schema';
 import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
 export const Kanban = Schema.Struct({
+  name: Schema.optional(Schema.String),
+
   /**
    * Order of columns by value and cards by id, derivative of the field selected by `columnPivotField` but can that be
    * inferred here? Or is this a preference that should apply first, then kanban should continue rendering what it
@@ -28,8 +31,10 @@ export const Kanban = Schema.Struct({
     typename: 'dxos.org/type/Kanban',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+
 export type Kanban = Schema.Schema.Type<typeof Kanban>;
 
 /**

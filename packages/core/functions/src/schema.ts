@@ -8,6 +8,8 @@ import { Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
+// TODO(burdon): Remove Type suffix.
+
 /**
  * Source script.
  */
