@@ -37,12 +37,6 @@ export default () =>
       component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${meta.id}/companion/base-settings`,
-      role: 'base-object-settings', // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
-      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
-      component: ({ data }) => <ScriptProperties object={data.subject} />,
-    }),
-    createSurface({
       id: `${meta.id}/article`,
       role: ['article', 'section'],
       filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
@@ -52,6 +46,14 @@ export default () =>
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(meta.id)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
+    }),
+    // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
+    // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
+    createSurface({
+      id: `${meta.id}/companion/base-settings`,
+      role: 'base-object-settings',
+      filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
+      component: ({ data }) => <ScriptProperties object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion/settings`,
