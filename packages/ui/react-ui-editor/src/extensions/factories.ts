@@ -19,7 +19,7 @@ import {
   placeholder,
   scrollPastEnd,
 } from '@codemirror/view';
-import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
@@ -201,6 +201,13 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
 
 export const defaultThemeSlots = grow;
 
+const semanticTokensSettings = {
+  settings: {
+    background: 'var(--dx-baseSurface)',
+    foreground: 'var(--dx-baseText)',
+  },
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -214,7 +221,10 @@ export const createThemeExtensions = ({
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    syntaxHighlightingProps && [themeMode === 'dark' ? vscodeDark : vscodeLight, transparentBackground],
+    syntaxHighlightingProps && [
+      themeMode === 'dark' ? vscodeDarkInit(semanticTokensSettings) : vscodeLightInit(semanticTokensSettings),
+      transparentBackground,
+    ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     slots.scroll?.className &&
