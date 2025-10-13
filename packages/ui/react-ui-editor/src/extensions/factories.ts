@@ -4,7 +4,7 @@
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
-import { HighlightStyle, bracketMatching, syntaxHighlighting } from '@codemirror/language';
+import { bracketMatching } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { type ChangeSpec, EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import {
@@ -19,7 +19,7 @@ import {
   placeholder,
   scrollPastEnd,
 } from '@codemirror/view';
-import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
+import { vscodeDarkInit, vscodeDarkStyle, vscodeLightInit, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
@@ -201,6 +201,13 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
 
 export const defaultThemeSlots = grow;
 
+const semanticTokensSettings = {
+  settings: {
+    background: 'var(--dx-baseSurface)',
+    foreground: 'var(--dx-baseText)',
+  },
+};
+
 export const defaultStyles = {
   dark: vscodeDarkStyle,
   light: vscodeLightStyle,
@@ -219,10 +226,8 @@ export const createThemeExtensions = ({
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    // TODO(burdon): Factor out.
     syntaxHighlightingProps && [
-      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
-      transparentBackground, // TODO(burdon): Remove and patch styles.
+      themeMode === 'dark' ? vscodeDarkInit(semanticTokensSettings) : vscodeLightInit(semanticTokensSettings),
     ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
@@ -276,24 +281,3 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
 
   return extensions;
 };
-
-const transparentBackground = EditorView.theme({
-  '&': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-gutters': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-content': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-scroller': {
-    backgroundColor: 'transparent !important',
-  },
-});
