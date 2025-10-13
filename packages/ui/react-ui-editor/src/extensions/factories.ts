@@ -4,7 +4,7 @@
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
-import { bracketMatching } from '@codemirror/language';
+import { HighlightStyle, bracketMatching, syntaxHighlighting } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { type ChangeSpec, EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
 import {
@@ -19,7 +19,7 @@ import {
   placeholder,
   scrollPastEnd,
 } from '@codemirror/view';
-import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
@@ -37,6 +37,11 @@ import { type ThemeStyles, defaultTheme } from '../styles';
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
+
+export const defaultStyles = {
+  dark: vscodeDarkStyle,
+  light: vscodeLightStyle,
+};
 
 //
 // Basic
@@ -214,7 +219,11 @@ export const createThemeExtensions = ({
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    syntaxHighlightingProps && [themeMode === 'dark' ? vscodeDark : vscodeLight, transparentBackground],
+    // TODO(burdon): Factor out.
+    syntaxHighlightingProps && [
+      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? vscodeDarkStyle : vscodeLightStyle)),
+      transparentBackground,
+    ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     slots.scroll?.className &&

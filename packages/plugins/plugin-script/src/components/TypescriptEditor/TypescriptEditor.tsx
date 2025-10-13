@@ -4,10 +4,9 @@
 
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
-import { defaultHighlightStyle } from '@codemirror/language';
+import { HighlightStyle } from '@codemirror/language';
 import { lintKeymap } from '@codemirror/lint';
 import { Prec } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
@@ -15,13 +14,14 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
   type EditorInputMode,
   InputModeExtensions,
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
+  defaultStyles,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -102,8 +102,9 @@ export const TypescriptEditor = ({
   );
 };
 
+// TODO(burdon): Factor out (react-ui-editor).
 const createTooltipRenderer = (themeMode: ThemeMode) => {
-  const theme = themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle;
+  const theme = HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light);
 
   const classFromKind = (_kind: string) => {
     // E.g., localName, methodName, parameterName, etc.
@@ -122,18 +123,16 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
-    const div = document.createElement('div');
-    div.className = 'p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg';
-
-    if (info.quickInfo?.displayParts) {
-      for (const part of info.quickInfo.displayParts) {
-        const span = div.appendChild(document.createElement('span'));
-        span.className = classFromKind(part.kind);
-        span.innerText = part.text;
-      }
-    }
-
-    return { dom: div };
+    return {
+      dom: Domino.of('div')
+        .classNames('p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg')
+        .children(
+          ...(info.quickInfo?.displayParts?.map((part) =>
+            Domino.of('span').classNames(classFromKind(part.kind)).text(part.text),
+          ) ?? []),
+        )
+        .build(),
+    };
   };
 };
 
