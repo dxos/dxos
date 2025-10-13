@@ -41,14 +41,14 @@ const DefaultStory = (props: TypescriptEditorProps) => {
 
   const handleRun = useCallback(() => {
     try {
-      const x = 100;
-      const definitions: [string, any][] = [['x', x]];
+      const definitions: [string, any][] = [['x', 100]];
 
       // TODO(burdon): Eval.
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
       const result = new Function(...definitions.map(([name]) => name), `return ${object.content}`)(
         ...definitions.map(([, value]) => value),
       );
+
       setResult({
         timestamp: Date.now(),
         result,
