@@ -37,6 +37,9 @@ export const uploadWorkerFunction = async ({
   const edgeClient = new EdgeHttpClient(edgeUrl);
   const edgeIdentity = createEdgeIdentity(client);
   edgeClient.setIdentity(edgeIdentity);
+  log.info('>>> uploadFunction', {
+    assetsSize: Object.keys(assets).reduce((acc, key) => acc + assets[key].length, 0),
+  });
   const response = await edgeClient.uploadFunction(
     { functionId },
     { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
