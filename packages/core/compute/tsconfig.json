@@ -40,7 +40,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../plugins/plugin-automation"
+    },
+    {
       "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../ai"
     },
     {
       "path": "../echo/echo"

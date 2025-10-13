@@ -8,7 +8,7 @@ import { Option, pipe } from 'effect';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { createExtension, rxFromSignal } from '@dxos/plugin-graph';
+import { ACTION_TYPE, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { kebabize } from '@dxos/util';
 
@@ -37,7 +37,7 @@ export default (context: PluginContext) =>
                 rxFromSignal(() => [
                   {
                     id: `${fullyQualifiedId(mailbox)}-unfiltered`,
-                    type: Mailbox.Mailbox.typename,
+                    type: `${Mailbox.Mailbox.typename}-filter`,
                     data: mailbox,
                     properties: {
                       label: ['inbox label', { ns: meta.id }],
@@ -45,15 +45,30 @@ export default (context: PluginContext) =>
                       filter: null,
                     },
                   },
-                  ...mailbox.filters.map(({ name, filter }) => ({
+                  ...mailbox.filters?.map(({ name, filter }) => ({
                     id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}`,
-                    type: Mailbox.Mailbox.typename,
+                    type: `${Mailbox.Mailbox.typename}-filter`,
                     data: mailbox,
                     properties: {
                       label: name,
                       icon: 'ph--tray--regular',
                       filter,
                     },
+                    nodes: [
+                      {
+                        id: `${fullyQualifiedId(mailbox)}-filter-${kebabize(name)}-delete`,
+                        type: ACTION_TYPE,
+                        data: async () => {
+                          const index = mailbox.filters.findIndex((f) => f.name === name);
+                          mailbox.filters.splice(index, 1);
+                        },
+                        properties: {
+                          label: ['delete filter label', { ns: meta.id }],
+                          icon: 'ph--trash--regular',
+                          disposition: 'list-item',
+                        },
+                      },
+                    ],
                   })),
                 ]),
               ),

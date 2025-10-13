@@ -2,10 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type ManagedRuntime } from 'effect';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
+import { type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { ConfigParams, FunctionPluginDefinition, FunctionTranslationsPackage } from '@dxos/vendor-hyperformula';
@@ -19,14 +21,15 @@ export type ComputeGraphPlugin = {
   translations: FunctionTranslationsPackage;
 };
 
+export type FunctionsRuntimeProvider = {
+  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<FunctionInvocationService, never>;
+};
+
 export type ComputeGraphOptions = {
   plugins?: ComputeGraphPlugin[];
+  computeRuntime: FunctionsRuntimeProvider;
 } & Partial<FunctionContextOptions> &
   Partial<ConfigParams>;
-
-export const defaultOptions: ComputeGraphOptions = {
-  licenseKey: 'gpl-v3',
-};
 
 export const defaultPlugins: ComputeGraphPlugin[] = [
   {
@@ -35,23 +38,26 @@ export const defaultPlugins: ComputeGraphPlugin[] = [
   },
 ];
 
+export const defaultOptions: Partial<ComputeGraphOptions> = {
+  licenseKey: 'gpl-v3',
+};
+
 /**
  * Manages a collection of ComputeGraph instances for each space.
  *
  * [ComputePlugin] => [ComputeGraphRegistry] => [ComputeGraph(Space)] => [ComputeNode(Object)]
  *
  * NOTE: The ComputeGraphRegistry manages the hierarchy of resources via its root Context.
- * NOTE: The package.json file defines the packaged #hyperformula module.
  */
 // TODO(burdon): Move graph into separate plugin; isolate HF deps.
 export class ComputeGraphRegistry extends Resource {
   private readonly _graphs = new Map<SpaceId, ComputeGraph>();
-
   private readonly _options: ComputeGraphOptions;
 
-  constructor(options: ComputeGraphOptions = { plugins: defaultPlugins }) {
+  constructor(options: ComputeGraphOptions) {
     super();
     this._options = defaultsDeep({}, options, defaultOptions);
+    this._options.plugins = this._options.plugins ?? defaultPlugins;
     this._options.plugins?.forEach(({ plugin, translations }) => {
       HyperFormula.registerFunctionPlugin(plugin, translations);
     });
@@ -74,7 +80,10 @@ export class ComputeGraphRegistry extends Resource {
   createGraph(space: Space): ComputeGraph {
     invariant(!this._graphs.has(space.id), `ComputeGraph already exists for space: ${space.id}`);
     const hf = HyperFormula.buildEmpty(this._options);
-    const graph = new ComputeGraph(hf, space, this._options);
+    invariant(this._options.computeRuntime, 'ComputeRuntime is required');
+    const runtime = this._options.computeRuntime.getRuntime(space.id);
+
+    const graph = new ComputeGraph(hf, runtime, space, this._options);
     this._graphs.set(space.id, graph);
     return graph;
   }

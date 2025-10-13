@@ -17,6 +17,7 @@ import { type HasId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { TreeItem as NaturalTreeItem, Treegrid } from '@dxos/react-ui';
 import {
+  ghostFocusWithin,
   ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
@@ -28,10 +29,10 @@ import { useTree } from './TreeContext';
 import { TreeItemHeading } from './TreeItemHeading';
 import { TreeItemToggle } from './TreeItemToggle';
 
-type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
-
 const hoverableDescriptionIcons =
   '[--icons-color:inherit] hover-hover:[--icons-color:var(--description-text)] hover-hover:hover:[--icons-color:inherit] focus-within:[--icons-color:inherit]';
+
+type TreeItemState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
 
 export const TreeDataSchema = Schema.Struct({
   id: Schema.String,
@@ -65,13 +66,13 @@ export type TreeItemProps<T extends HasId = any> = {
 const RawTreeItem = <T extends HasId = any>({
   item,
   path: _path,
+  levelOffset = 2,
   last,
   draggable: _draggable,
   renderColumns: Columns,
   canDrop,
   onOpenChange,
   onSelect,
-  levelOffset = 2,
 }: TreeItemProps<T>) => {
   const rowRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -83,7 +84,10 @@ const RawTreeItem = <T extends HasId = any>({
 
   const { useItems, getProps, isOpen, isCurrent } = useTree();
   const items = useItems(item);
-  const { id, label, parentOf, icon, disabled, className, headingClassName, testId } = getProps(item, _path);
+  const { id, parentOf, label, className, headingClassName, icon, iconClassName, disabled, testId } = getProps(
+    item,
+    _path,
+  );
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
@@ -181,38 +185,35 @@ const RawTreeItem = <T extends HasId = any>({
   // Cancel expand on unmount.
   useEffect(() => () => cancelExpand(), [cancelExpand]);
 
-  const handleOpenChange = useCallback(
+  const handleOpenToggle = useCallback(
     () => onOpenChange?.({ item, path, open: !open }),
     [onOpenChange, item, path, open],
   );
 
   const handleSelect = useCallback(
     (option = false) => {
-      if (isBranch) {
-        handleOpenChange();
+      // TODO(burdon): Display stack.
+      const toggle = true;
+      if (isBranch && toggle) {
+        handleOpenToggle();
       } else {
         rowRef.current?.focus();
         onSelect?.({ item, path, current: !current, option });
       }
     },
-    [item, path, current, isBranch, handleOpenChange, onSelect],
+    [item, path, current, isBranch, handleOpenToggle, onSelect],
   );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       switch (event.key) {
         case 'ArrowRight':
-          isBranch && !open && handleOpenChange();
-          break;
         case 'ArrowLeft':
-          isBranch && open && handleOpenChange();
-          break;
-        case ' ':
-          handleSelect(event.altKey);
+          isBranch && handleOpenToggle();
           break;
       }
     },
-    [isBranch, open, handleOpenChange, handleSelect],
+    [isBranch, open, handleOpenToggle, handleSelect],
   );
 
   return (
@@ -230,6 +231,7 @@ const RawTreeItem = <T extends HasId = any>({
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
           ghostHover,
+          ghostFocusWithin,
           className,
         ]}
         data-itemid={id}
@@ -244,26 +246,27 @@ const RawTreeItem = <T extends HasId = any>({
           setMenuOpen(true);
         }}
       >
-        <Treegrid.Cell
-          indent
-          classNames='relative grid grid-cols-subgrid col-[tree-row]'
+        <div
+          role='none'
+          className='indent relative grid grid-cols-subgrid col-[tree-row]'
           style={paddingIndentation(level)}
         >
-          <div role='none' className='flex items-center'>
-            <TreeItemToggle isBranch={isBranch} open={open} onToggle={handleOpenChange} />
+          <Treegrid.Cell classNames='flex items-center'>
+            <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading
-              ref={buttonRef}
-              label={label}
-              icon={icon}
-              className={headingClassName}
               disabled={disabled}
               current={current}
+              label={label}
+              className={headingClassName}
+              icon={icon}
+              iconClassName={iconClassName}
               onSelect={handleSelect}
+              ref={buttonRef}
             />
-          </div>
+          </Treegrid.Cell>
           {Columns && <Columns item={item} path={path} open={open} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />}
           {instruction && <NaturalTreeItem.DropIndicator instruction={instruction} gap={2} />}
-        </Treegrid.Cell>
+        </div>
       </Treegrid.Row>
       {open &&
         items.map((item, index) => (

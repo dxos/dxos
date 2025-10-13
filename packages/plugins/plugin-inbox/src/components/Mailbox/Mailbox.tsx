@@ -23,7 +23,7 @@ import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { filterLabel } from '../../functions/email/api';
-import { getMessageProps } from '../util';
+import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
   DEFAULT: 60,
@@ -43,7 +43,7 @@ const renderMessageCell = (message: DataType.Message, now: Date, current?: boole
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
   return trim`
     <button
-      class="message__thumb dx-focus-ring-inset"
+      class="message__thumb dx-focus-ring-inset opacity-70"
       data-inbox-action="select-message"
       data-message-id="${id}"
     >

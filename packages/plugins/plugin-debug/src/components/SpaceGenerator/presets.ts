@@ -4,12 +4,13 @@
 
 import { Schema } from 'effect';
 
-import { RESEARCH_BLUEPRINT, ResearchOn, agent } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, ResearchOn, agent, entityExtraction } from '@dxos/assistant-testing';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { sync } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -98,7 +99,7 @@ export const generator = () => ({
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
 
         const objects = range(n, () => {
-          // TODO(wittjosiah): Move filter to another property.
+          // TODO(wittjosiah): Move filter to a tag.
           const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
           const organizationsQuery = contactsQuery.reference('organization');
           const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
@@ -106,6 +107,33 @@ export const generator = () => ({
           const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
           const organizationsQueryString = `${contactsQueryString}.reference("organization")`;
           const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+
+          const emailSyncTrigger = Obj.make(FunctionTrigger, {
+            enabled: true,
+            spec: {
+              kind: 'timer',
+              cron: '* * * * *', // Every minute.
+            },
+            function: Ref.make(serializeFunction(sync)),
+            input: {
+              mailboxId: Obj.getDXN(mailbox).toString(),
+            },
+          });
+          space.db.add(emailSyncTrigger);
+
+          const contactExtractionTrigger = Obj.make(FunctionTrigger, {
+            enabled: true,
+            // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
+            spec: {
+              kind: 'queue',
+              queue: mailbox.queue.dxn.toString(),
+            },
+            function: Ref.make(serializeFunction(entityExtraction)),
+            input: {
+              source: '{{event.item}}',
+            },
+          });
+          space.db.add(contactExtractionTrigger);
 
           const researchPrompt = space.db.add(
             Prompt.make({
