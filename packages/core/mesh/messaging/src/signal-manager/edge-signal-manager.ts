@@ -4,7 +4,7 @@
 
 import { Event, scheduleMicroTask } from '@dxos/async';
 import { Resource, cancelWithContext } from '@dxos/context';
-import { type EdgeConnection, protocol } from '@dxos/edge-client';
+import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -87,13 +87,22 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
   async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     this._swarmPeers.delete(topic);
-    await this._edgeConnection.send(
-      protocol.createMessage(SwarmRequestSchema, {
-        serviceId: EdgeService.SWARM,
-        source: createMessageSource(topic, peer),
-        payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
-      }),
-    );
+    try {
+      await this._edgeConnection.send(
+        protocol.createMessage(SwarmRequestSchema, {
+          serviceId: EdgeService.SWARM,
+          source: createMessageSource(topic, peer),
+          payload: { action: SwarmRequestAction.LEAVE, swarmKeys: [topic.toHex()] },
+        }),
+      );
+    } catch (err) {
+      if (err instanceof EdgeIdentityChangedError) {
+        // Note: On edge identity change, the connection is closed and EDGE will remove us from the swarm.
+        //       So we should just delete the swarm from _swarmPeers.
+        return;
+      }
+      throw err;
+    }
   }
 
   async query({ topic }: { topic: PublicKey }): Promise<SwarmResponse> {
