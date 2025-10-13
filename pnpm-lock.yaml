@@ -2819,8 +2819,8 @@ importers:
         specifier: ^3.19.0
         version: 3.23.1
       get-port-please:
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
 
   packages/core/echo/echo-protocol:
     dependencies:
@@ -11226,8 +11226,8 @@ importers:
         specifier: ^2.3.9
         version: 2.3.14
       get-port-please:
-        specifier: ^3.1.1
-        version: 3.1.1
+        specifier: ^3.2.0
+        version: 3.2.0
 
   packages/sdk/config:
     dependencies:
@@ -26600,8 +26600,8 @@ packages:
     resolution: {integrity: sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==}
     engines: {node: '>=8.0.0'}
 
-  get-port-please@3.1.1:
-    resolution: {integrity: sha512-3UBAyM3u4ZBVYDsxOQfJDxEa6XTbpBDrOjp4mf7ExFRt5BKs/QywQQiJsh2B+hxcZLSapWqCRvElUe8DnKcFHA==}
+  get-port-please@3.2.0:
+    resolution: {integrity: sha512-I9QVvBw5U/hw3RmWpYKRumUeaDgxTPd401x364rLmWBJcOQ753eov1eTgzDqRG9bqFIfDc7gfzcQEWrUri3o1A==}
 
   get-port@7.1.0:
     resolution: {integrity: sha512-QB9NKEeDg3xxVwCCwJQ9+xycaz6pBB6iQ76wiWMl1927n0Kir6alPiP+yuiICLLU4jpMe08dXfpebuQppFA2zw==}
@@ -47661,7 +47661,7 @@ snapshots:
 
   get-package-type@0.1.0: {}
 
-  get-port-please@3.1.1: {}
+  get-port-please@3.2.0: {}
 
   get-port@7.1.0: {}
 
