@@ -72,7 +72,7 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "chartjs-node-canvas": "^4.1.6",
+    "chartjs-node-canvas": "^5.0.0",
     "debug": "^4.3.4",
     "effect": "3.18.3",
     "esbuild": "0.25.10",
