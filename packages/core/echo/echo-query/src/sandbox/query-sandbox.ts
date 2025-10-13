@@ -56,10 +56,10 @@ export class QuerySandbox extends Resource {
     unwrapResult(
       context,
       context.evalCode(trim`
-        import { Query, Filter, Order } from 'dxos:query-env';
-        globalThis.Query = Query;
+        import { Filter, Order, Query } from 'dxos:query-env';
         globalThis.Filter = Filter;
         globalThis.Order = Order;
+        globalThis.Query = Query;
       `),
     ).dispose();
 
