@@ -12,13 +12,16 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-
-import { templates } from '../../templates';
+import { trim } from '@dxos/util';
 
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
+const SCRIPT = trim`
+  x * 2
+`;
+
 const DefaultStory = (props: TypescriptEditorProps) => {
-  const object = useMemo(() => createObject({ content: templates[0].source }), []);
+  const object = useMemo(() => createObject({ content: SCRIPT }), []);
   const [result, setResult] = useState<object | undefined>({});
 
   // TODO(burdon): Make this work.
@@ -43,10 +46,9 @@ const DefaultStory = (props: TypescriptEditorProps) => {
 
       // TODO(burdon): Eval.
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      const fn = new Function(...definitions.map(([name]) => name), `return ${object.content}`)(
+      const result = new Function(...definitions.map(([name]) => name), `return ${object.content}`)(
         ...definitions.map(([, value]) => value),
       );
-      const result = fn();
       setResult({
         timestamp: Date.now(),
         result,
@@ -54,7 +56,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
     } catch (err) {
       setResult({
         timestamp: Date.now(),
-        error: err,
+        error: String(err),
       });
     }
   }, [object]);
