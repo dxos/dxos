@@ -16,9 +16,9 @@ import {
 import { fullyQualifiedId, isLiveObject } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { AttentionProvider } from '@dxos/react-ui-attention';
-import { Stack } from '@dxos/react-ui-stack';
+import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -131,29 +131,30 @@ const StackMain = ({ id, collection }: StackMainProps) => {
   );
 
   return (
-    <AttentionProvider id={id}>
-      <StackContext.Provider
-        value={{
-          onCollapse: handleCollapse,
-          onNavigate: handleNavigate,
-          onDelete: handleDelete,
-          onAdd: handleAdd,
-        }}
-      >
-        <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack'>
-          {items.map((item) => (
-            <StackSection key={item.id} {...item} />
-          ))}
-        </Stack>
-
-        <div role='none' className='flex mlb-2 pli-2 justify-center'>
-          <Button data-testid='stack.createSection' classNames='gap-2' onClick={handleAddSection}>
-            <Icon icon='ph--plus' />
-            <span className='sr-only'>{t('add section label')}</span>
-          </Button>
-        </div>
-      </StackContext.Provider>
-    </AttentionProvider>
+    <StackItem.Content
+      toolbar
+      classNames='overflow-hidden is-full max-is-[50rem] mli-auto border-l border-r border-subduedSeparator'
+    >
+      <Toolbar.Root>
+        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add section' onClick={handleAddSection} />
+      </Toolbar.Root>
+      <AttentionProvider id={id}>
+        <StackContext.Provider
+          value={{
+            onCollapse: handleCollapse,
+            onNavigate: handleNavigate,
+            onDelete: handleDelete,
+            onAdd: handleAdd,
+          }}
+        >
+          <Stack orientation='vertical' size='intrinsic' id={id} data-testid='main.stack' classNames='overflow-y-auto'>
+            {items.map((item) => (
+              <StackSection key={item.id} {...item} />
+            ))}
+          </Stack>
+        </StackContext.Provider>
+      </AttentionProvider>
+    </StackItem.Content>
   );
 };
 

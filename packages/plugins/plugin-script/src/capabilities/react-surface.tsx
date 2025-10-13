@@ -38,7 +38,7 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/article`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
