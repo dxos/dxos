@@ -23,7 +23,7 @@ import {
   TestContainer,
 } from '../components';
 import { meta } from '../meta';
-import { type ScriptSettingsProps } from '../types';
+import { type ScriptSettings } from '../types';
 
 import { ScriptCapabilities } from './capabilities';
 
@@ -32,7 +32,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
+      filter: (data): data is { subject: SettingsStore<ScriptSettings> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
     }),
@@ -43,7 +43,7 @@ export default () =>
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(meta.id)?.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
