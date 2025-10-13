@@ -35,6 +35,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -44,7 +45,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
-    "@dxos/ai": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/vendor-hyperformula": "workspace:*",
     "@preact/signals-core": "^1.12.1",

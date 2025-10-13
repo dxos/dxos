@@ -22,9 +22,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../echo-schema"
-    },
-    {
       "path": "../echo-signals"
     }
   ]

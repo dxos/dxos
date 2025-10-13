@@ -59,9 +59,6 @@
       "path": "../echo/echo-pipeline"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
       "path": "../mesh/edge-client"
     },
     {
