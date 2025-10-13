@@ -125,8 +125,8 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
       dom: Domino.of('div')
         .classNames('p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg')
         .children(
-          ...(info.quickInfo?.displayParts?.map((part) =>
-            Domino.of('span').classNames(classFromKind(part.kind)).text(part.text),
+          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
+            Domino.of('span').classNames(classFromKind(kind)).text(text),
           ) ?? []),
         )
         .build(),
