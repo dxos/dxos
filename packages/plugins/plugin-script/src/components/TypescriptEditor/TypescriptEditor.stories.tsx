@@ -36,12 +36,27 @@ const DefaultStory = (props: TypescriptEditorProps) => {
     [],
   );
 
-  // TODO(burdon): Eval.
   const handleRun = useCallback(() => {
-    console.log(object.content);
-    setResult({
-      timestamp: Date.now(),
-    });
+    try {
+      const x = 100;
+      const definitions: [string, any][] = [['x', x]];
+
+      // TODO(burdon): Eval.
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const fn = new Function(...definitions.map(([name]) => name), `return ${object.content}`)(
+        ...definitions.map(([, value]) => value),
+      );
+      const result = fn();
+      setResult({
+        timestamp: Date.now(),
+        result,
+      });
+    } catch (err) {
+      setResult({
+        timestamp: Date.now(),
+        error: err,
+      });
+    }
   }, [object]);
 
   return (
