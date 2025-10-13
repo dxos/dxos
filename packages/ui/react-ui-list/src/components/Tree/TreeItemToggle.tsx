@@ -29,11 +29,11 @@ export const TreeItemToggle = memo(
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}
-          icon='ph--caret-right--bold'
           size={3}
-          label={open ? 'Click to close' : 'Click to open'}
+          icon='ph--caret-right--bold'
           iconOnly
           noTooltip
+          label={open ? 'Click to close' : 'Click to open'}
           tabIndex={-1}
           {...props}
         />
