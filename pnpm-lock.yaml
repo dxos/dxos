@@ -445,10 +445,16 @@ importers:
       astro:
         specifier: ^5.13.1
         version: 5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.44.0)(typescript@5.9.3)(yaml@2.7.1)
+      sharp:
+        specifier: ^0.32.5
+        version: 0.32.6
       starlight-links-validator:
         specifier: ^0.14.3
         version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.14.1(@types/node@22.10.2)(encoding@0.1.13)(idb-keyval@6.2.1)(jiti@2.6.1)(rollup@3.23.0)(sass@1.51.0)(terser@5.44.0)(typescript@5.9.3)(yaml@2.7.1)))
     devDependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-framework
       '@dxos/client':
         specifier: workspace:*
         version: link:../packages/sdk/client
@@ -53827,7 +53833,7 @@ snapshots:
   sharp@0.32.6:
     dependencies:
       color: 4.2.3
-      detect-libc: 2.0.3
+      detect-libc: 2.0.4
       node-addon-api: 6.1.0
       prebuild-install: 7.1.1
       semver: 7.7.2
