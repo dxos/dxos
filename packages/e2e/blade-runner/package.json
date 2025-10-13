@@ -95,7 +95,7 @@
     "@types/js-yaml": "^4.0.5",
     "@types/seedrandom": "^3.0.5",
     "@types/yargs": "~16.0.1",
-    "chart.js": "^3.9.1",
+    "chart.js": "^4.5.0",
     "js-yaml": "^4.1.0",
     "yargs": "~16.2.0"
   },
