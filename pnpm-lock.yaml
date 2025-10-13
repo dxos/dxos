@@ -2518,6 +2518,12 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../echo-signals
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -2539,6 +2545,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.3
         version: 3.18.3

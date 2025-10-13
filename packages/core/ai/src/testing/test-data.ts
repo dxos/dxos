@@ -15,7 +15,7 @@ import {
   toJsonSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
+import { live } from '@dxos/echo/internal';
 
 import {
   type DataSource,

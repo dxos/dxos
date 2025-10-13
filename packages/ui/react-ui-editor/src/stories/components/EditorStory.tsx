@@ -8,7 +8,7 @@ import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useM
 import { Expando } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
+import { live } from '@dxos/echo/internal';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';

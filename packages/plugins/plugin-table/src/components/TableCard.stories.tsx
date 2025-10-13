@@ -9,7 +9,7 @@ import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { FormatEnum } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
-import { live } from '@dxos/react-client/echo';
+import { live } from '@dxos/echo/internal';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { CardContainer } from '@dxos/react-ui-stack/testing';

@@ -7,7 +7,8 @@ import { createRoot } from 'react-dom/client';
 
 import { Filter, Type } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { Expando, live, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { live } from '@dxos/echo/internal';
+import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 export const App = () => {
