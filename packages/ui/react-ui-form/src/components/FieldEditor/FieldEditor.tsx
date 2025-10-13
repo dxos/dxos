@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type SchemaRegistry } from '@dxos/echo-db';
 import { type EchoSchema, FormatEnum, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { type SchemaRegistry } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {

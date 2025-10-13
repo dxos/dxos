@@ -15,8 +15,8 @@ import {
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
 import { Filter, Obj, type Type } from '@dxos/echo';
-import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo/internal';
+import { MemoryQueue } from '@dxos/echo-db';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

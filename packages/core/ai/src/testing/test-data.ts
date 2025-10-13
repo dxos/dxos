@@ -5,7 +5,6 @@
 import { type Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import type { EchoDatabase } from '@dxos/echo-db';
 import {
   JSON_SCHEMA_ECHO_REF_ID,
   type JsonSchemaType,
@@ -14,8 +13,9 @@ import {
   Ref as RefImpl,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/echo/internal';
+import type { EchoDatabase } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 
 import {
   type DataSource,

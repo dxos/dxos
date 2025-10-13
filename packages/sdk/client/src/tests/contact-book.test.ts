@@ -6,11 +6,11 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
+import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
-import { Obj } from '@dxos/echo';
 import { Client } from '../client';
 import { TestBuilder, TextV0Type, performInvitation, waitForSpace } from '../testing';
 

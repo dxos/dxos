@@ -6,8 +6,8 @@ import { Array, Effect, Option, pipe } from 'effect';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { ObjectVersion } from '@dxos/echo-db';
 import { type ObjectId } from '@dxos/echo/internal';
+import { ObjectVersion } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';

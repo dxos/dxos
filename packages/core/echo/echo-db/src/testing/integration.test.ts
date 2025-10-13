@@ -7,6 +7,19 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Obj, Type } from '@dxos/echo';
+import {
+  Expando,
+  type ObjectId,
+  Ref,
+  RelationSourceId,
+  RelationTargetId,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeReference,
+} from '@dxos/echo/internal';
+import { getSchema } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
+import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -14,22 +27,8 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import {
-  Expando,
-  type ObjectId,
-  Ref,
-  RelationSourceId,
-  RelationTargetId,
-  TypedObject,
-  getSchemaTypename,
-  getTypeAnnotation,
-  getTypeReference,
-} from '@dxos/echo/internal';
-import { getSchema } from '@dxos/echo/internal';
-import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live } from '@dxos/echo/internal';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

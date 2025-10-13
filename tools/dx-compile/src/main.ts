@@ -17,8 +17,8 @@ import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
-import { SwcTransformPlugin } from './swc-transform-plugin';
 import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
+import { SwcTransformPlugin } from './swc-transform-plugin';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;

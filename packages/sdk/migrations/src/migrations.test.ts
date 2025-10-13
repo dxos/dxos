@@ -5,12 +5,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Filter, type Space, live } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
+import { Obj, Type } from '@dxos/echo';
 import { Expando } from '@dxos/echo/internal';
 
 import { Migrations } from './migrations';
-import { Obj,Type } from '@dxos/echo';
 
 Migrations.define('test', [
   {

@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { Expando } from '@dxos/echo/internal';
-import { PublicKey } from '@dxos/keys';
 import { live } from '@dxos/echo/internal';
+import { createDocAccessor, createObject } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { Button, Icon, useThemeContext } from '@dxos/react-ui';

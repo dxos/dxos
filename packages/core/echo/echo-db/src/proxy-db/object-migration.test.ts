@@ -6,7 +6,7 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
+import { JsonPath, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 import { Filter } from '../query';

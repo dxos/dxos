@@ -6,12 +6,12 @@ import { Effect, Schema } from 'effect';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Filter, Ref, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { ObjectId, getTypename, isInstanceOf, toEffectSchema } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
+import { Queue } from '@dxos/echo-db';
 import { DatabaseService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { live } from '@dxos/echo/internal';
 import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { safeParseJson } from '@dxos/util';
 

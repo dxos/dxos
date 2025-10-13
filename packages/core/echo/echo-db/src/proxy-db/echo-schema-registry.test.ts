@@ -1,4 +1,3 @@
-import { Obj, Type, Ref } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
@@ -6,6 +5,7 @@ import { Obj, Type, Ref } from '@dxos/echo';
 import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -16,7 +16,6 @@ import {
   getSchemaTypename,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 import { Filter } from '../query';

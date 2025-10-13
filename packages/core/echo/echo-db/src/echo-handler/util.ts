@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Reference } from '@dxos/echo-protocol';
 import { type BaseObject, type ForeignKey } from '@dxos/echo/internal';
 import { getMeta } from '@dxos/echo/internal';
+import { Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type Live, getProxyTarget } from '@dxos/live-object';
 

@@ -5,8 +5,8 @@
 import { type Schema } from 'effect';
 
 import { raise } from '@dxos/debug';
-import { type AnyLiveObject, type EchoDatabase, Filter } from '@dxos/echo-db';
 import { StoredSchema, getSchema, getSchemaTypename, toJsonSchema } from '@dxos/echo/internal';
+import { type AnyLiveObject, type EchoDatabase, Filter } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import type { DataSource, Node, Relationship } from './query-executor';

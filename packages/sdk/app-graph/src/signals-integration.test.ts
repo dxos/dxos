@@ -7,16 +7,15 @@ import { signal } from '@preact/signals-core';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Obj, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
-import { Expando, Ref } from '@dxos/echo/internal';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { live } from '@dxos/live-object';
 
 import { ROOT_ID } from './graph';
 import { GraphBuilder, createExtension, rxFromSignal } from './graph-builder';
 import { rxFromQuery } from './testing';
-import { Type, Obj } from '@dxos/echo';
 
 registerSignalsRuntime();
 

@@ -4,12 +4,12 @@
 import { type Schema } from 'effect';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
+import { Type } from '@dxos/echo';
 import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
 import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
-import { Type } from '@dxos/echo';
 
 registerSignalsRuntime();
 

@@ -11,8 +11,10 @@ import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
+
 import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
+
 import { useProject } from './Project';
 
 export type ViewColumnProps = {

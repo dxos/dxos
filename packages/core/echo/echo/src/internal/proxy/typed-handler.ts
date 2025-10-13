@@ -7,10 +7,8 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Schema, SchemaAST } from 'effect';
 
 import { inspectCustom } from '@dxos/debug';
-import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '..';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-
 import {
   ReactiveArray,
   type ReactiveHandler,
@@ -19,6 +17,8 @@ import {
   objectData,
   symbolIsProxy,
 } from '@dxos/live-object';
+
+import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '..';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

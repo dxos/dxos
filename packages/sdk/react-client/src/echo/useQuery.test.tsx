@@ -5,12 +5,12 @@
 import { renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { Expando, Filter, live } from '@dxos/client/echo';
+import { Expando, Filter } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { createClient, createClientContextProvider } from '../testing/util';
 
 import { useQuery } from './useQuery';
-import { Obj, Type } from '@dxos/echo';
 
 describe('useQuery', () => {
   // TODO(dmaretskyi): Fix this test.

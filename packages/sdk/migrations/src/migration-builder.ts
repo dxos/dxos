@@ -8,6 +8,7 @@ import { type Schema } from 'effect';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
+import { requireTypeReference } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import {
   type DatabaseDirectory,
@@ -16,7 +17,6 @@ import {
   SpaceDocVersion,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { requireTypeReference } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 

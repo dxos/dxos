@@ -4,6 +4,8 @@
 
 import { type Schema } from 'effect';
 
+import { type Live, UntypedReactiveHandler, createProxy, isValidProxyTarget } from '@dxos/live-object';
+
 import {
   type BaseObject,
   type CreationProps,
@@ -18,7 +20,6 @@ import {
 } from '..';
 import { MetaId } from '..';
 
-import { type Live, createProxy, isValidProxyTarget, UntypedReactiveHandler } from '@dxos/live-object';
 import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
 /**

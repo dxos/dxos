@@ -14,9 +14,9 @@ import {
   type Relation,
   type Type,
 } from '@dxos/echo';
+import type { EchoSchema } from '@dxos/echo/internal';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
-import type { EchoSchema } from '@dxos/echo/internal';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';

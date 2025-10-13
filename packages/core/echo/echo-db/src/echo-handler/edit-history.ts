@@ -5,8 +5,8 @@
 import { next as A, type Doc, type Heads, type State } from '@automerge/automerge';
 
 import type { Obj } from '@dxos/echo';
-import { ObjectStructure } from '@dxos/echo-protocol';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { ObjectStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 

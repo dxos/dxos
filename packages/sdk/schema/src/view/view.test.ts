@@ -6,8 +6,8 @@ import { Schema } from 'effect';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { FormatEnum, RuntimeSchemaRegistry, StoredSchema, TypeEnum } from '@dxos/echo/internal';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { log } from '@dxos/log';
 
 import { DataType } from '../common';

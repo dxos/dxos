@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Type } from '@dxos/echo';
-import { type BaseObject, Expando, Ref, getSchema, getTypename } from '@dxos/echo/internal';
+import { Ref, getSchema, getTypename } from '@dxos/echo/internal';
 import { getMeta, getType } from '@dxos/echo/internal';
 import { Testing, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';

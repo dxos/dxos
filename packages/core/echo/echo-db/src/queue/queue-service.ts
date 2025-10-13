@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ATTR_META, type ObjectId, ObjectJSON } from '@dxos/echo/internal';
+import { ATTR_META, type ObjectId, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import type { SpaceId } from '@dxos/keys';
 import { KEY_QUEUE_POSITION, type QueryResult, type QueueQuery } from '@dxos/protocols';

@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
-import { Obj, Type, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 import { EchoTestBuilder } from '../testing';
 

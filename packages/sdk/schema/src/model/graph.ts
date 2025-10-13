@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyLiveObject } from '@dxos/echo-db';
+import { Obj } from '@dxos/echo';
 import { type BaseObject, FormatEnum, getSchema } from '@dxos/echo/internal';
+import { type AnyLiveObject } from '@dxos/echo-db';
 import { Graph, GraphModel, type GraphNode, createEdgeId } from '@dxos/graph';
 import { log } from '@dxos/log';
 
-import { Obj } from '@dxos/echo';
 import { getSchemaProperties } from '../properties';
 
 /**

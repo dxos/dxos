@@ -10,10 +10,10 @@ import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Type } from '@dxos/echo';
+import { type Expando, type HasId, Ref } from '@dxos/echo/internal';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId, Ref } from '@dxos/echo/internal';
 import { SpaceId } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 

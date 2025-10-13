@@ -7,10 +7,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { Expando, ObjectId, Ref, getType } from '@dxos/echo/internal';
 import { Testing } from '@dxos/echo/testing';
+import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';

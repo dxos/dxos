@@ -3,7 +3,6 @@
 //
 
 import * as EchoSchema from './internal';
-
 import type * as Obj from './Obj';
 
 export type Ref<T> = EchoSchema.Ref<T>;

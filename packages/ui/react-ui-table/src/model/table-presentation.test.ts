@@ -7,8 +7,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';
-import { live } from '@dxos/live-object';
 import { createEchoSchema } from '@dxos/echo/testing';
+import { live } from '@dxos/live-object';
 import { createView } from '@dxos/schema';
 
 import { Table } from '../types';

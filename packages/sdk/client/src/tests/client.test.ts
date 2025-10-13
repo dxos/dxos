@@ -8,15 +8,14 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Filter } from '@dxos/echo-db';
+import { Obj } from '@dxos/echo';
 import { Ref } from '@dxos/echo/internal';
-import { live } from '@dxos/live-object';
+import { Filter } from '@dxos/echo-db';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
 import { MessageType, TestBuilder, TextV0Type, ThreadType, performInvitation } from '../testing';
-import { Obj } from '@dxos/echo';
 
 describe('Client', () => {
   const dataRoot = '/tmp/dxos/client/storage';

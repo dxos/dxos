@@ -5,8 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Filter } from '@dxos/echo';
-import { ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME, Expando, Ref } from '@dxos/echo/internal';
+import { ObjectStructure } from '@dxos/echo-protocol';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type MatchedObject, filterMatchObject } from './filter-match';

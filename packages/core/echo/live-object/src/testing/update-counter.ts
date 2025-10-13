@@ -1,5 +1,10 @@
-import { registerSignalsRuntime } from '@dxos/echo-signals';
+//
+// Copyright 2025 DXOS.org
+//
+
 import { effect } from '@preact/signals-core';
+
+import { registerSignalsRuntime } from '@dxos/echo-signals';
 
 registerSignalsRuntime();
 

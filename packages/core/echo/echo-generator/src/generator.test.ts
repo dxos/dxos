@@ -7,8 +7,8 @@ import { Schema } from 'effect';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { getObjectCore } from '@dxos/echo-db';
 import { TypedObject, getType } from '@dxos/echo/internal';
+import { getObjectCore } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
 
 import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';

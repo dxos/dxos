@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { type Ref, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { ObjectId } from '@dxos/echo/internal';
+import { Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import { FunctionTrigger } from './types';

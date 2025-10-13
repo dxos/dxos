@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { live } from '@dxos/echo/internal';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';

@@ -1,5 +1,10 @@
+//
+// Copyright 2025 DXOS.org
+//
+
 import path from 'node:path';
-import { Plugin } from 'esbuild';
+
+import { type Plugin } from 'esbuild';
 
 /**
  * ESBuild plugin that restricts relative imports to be within a specified directory.
@@ -12,7 +17,7 @@ export const restrictRelativeImportsPlugin = (opts: { allowedDirectory: string }
 
   return {
     name: 'restrict-relative-imports',
-    setup(build) {
+    setup: (build) => {
       build.onResolve({ filter: /^\.\.?\// }, async (args) => {
         // Get the directory of the importing file
         const importerDir = path.dirname(args.importer);

@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { TypedObject } from '@dxos/echo/internal';
+import { Queue } from '@dxos/echo-db';
 
 export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 

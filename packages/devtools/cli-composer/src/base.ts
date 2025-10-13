@@ -8,9 +8,9 @@ import { Schema } from 'effect';
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { ATTR_META, ATTR_TYPE, type ObjectMeta, getTypeAnnotation } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { FUNCTION_TYPES } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/echo/internal';
 import { isNonNullable } from '@dxos/util';
 
 /**

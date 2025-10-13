@@ -6,10 +6,9 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
-import { Testing } from '@dxos/echo/testing';
 import { Ref, getSchema } from '@dxos/echo/internal';
+import { Testing } from '@dxos/echo/testing';
 import { DXN, SpaceId } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import type { Queue } from '../queue';

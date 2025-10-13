@@ -16,10 +16,10 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
+import { Obj } from '@dxos/echo';
 import { type EchoClient, Filter, Query, type QueryFn, type QueryOptions } from '@dxos/echo-db';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import {
@@ -38,7 +38,6 @@ import { InvitationsProxy } from '../invitations';
 
 import { AgentQuerySourceProvider } from './agent';
 import { SpaceProxy } from './space-proxy';
-import { Obj } from '@dxos/echo';
 
 const ENABLE_AGENT_QUERY_SOURCE = false;
 

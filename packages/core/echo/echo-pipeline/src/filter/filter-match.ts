@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, EXPANDO_TYPENAME, type ObjectJSON } from '@dxos/echo/internal';
+import { ObjectStructure, type QueryAST, decodeReference, isEncodedReference } from '@dxos/echo-protocol';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {

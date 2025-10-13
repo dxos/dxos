@@ -6,11 +6,11 @@ import { type Schema } from 'effect';
 import { type Simplify } from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import { type ToMutable } from './internal';
-import * as EchoSchema from './internal';
 import { invariant } from '@dxos/invariant';
 import type * as Keys from '@dxos/keys';
 
+import { type ToMutable } from './internal';
+import * as EchoSchema from './internal';
 import type * as RelationModule from './Relation';
 
 //

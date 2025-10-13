@@ -6,7 +6,7 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { ScriptSettingsSchema, ScriptSettingsProps } from '../types';
+import { type ScriptSettingsProps, ScriptSettingsSchema } from '../types';
 
 export default () => {
   const settings = live<ScriptSettingsProps>({

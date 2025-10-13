@@ -9,7 +9,6 @@ import { Schema } from 'effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, Query, Type } from '@dxos/echo';
-import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -21,12 +20,13 @@ import {
   getType,
   isDeleted,
 } from '@dxos/echo/internal';
-import { EchoObject, Expando, Ref, type Ref$, TypedObject, foreignKey, getTypeReference } from '@dxos/echo/internal';
+import { EchoObject, Expando, Ref, type Ref$, foreignKey, getTypeReference } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { TestingDeprecated, prepareAstForCompare } from '@dxos/echo/testing';
+import { Reference, decodeReference, encodeReference } from '@dxos/echo-protocol';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';

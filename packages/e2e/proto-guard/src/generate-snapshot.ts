@@ -10,7 +10,8 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { Expando, live } from '@dxos/client/echo';
+import { live } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Ref, TypedObject } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
@@ -20,7 +21,6 @@ import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registr
 import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
 import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
-import { Obj, Type } from '@dxos/echo';
 
 /**
  * Generates a snapshot of encoded protocol buffers to check for backwards compatibility.

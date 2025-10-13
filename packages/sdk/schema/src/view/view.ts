@@ -7,7 +7,6 @@ import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -20,10 +19,11 @@ import {
   TypeEnum,
   toEffectSchema,
 } from '@dxos/echo/internal';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { getSchemaProperties } from '../properties';
 

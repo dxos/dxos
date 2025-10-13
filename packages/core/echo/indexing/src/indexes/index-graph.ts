@@ -6,8 +6,8 @@ import { Schema, pipe } from 'effect';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
 import { EntityKind, ObjectId } from '@dxos/echo/internal';
+import { ObjectStructure, decodeReference } from '@dxos/echo-protocol';
 import { InternalError } from '@dxos/errors';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

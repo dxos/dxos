@@ -5,9 +5,8 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import { describe, it } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import { Testing } from '@dxos/echo/testing';
-import { live } from '@dxos/live-object';
-import { Obj, Type, Ref } from '@dxos/echo';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';

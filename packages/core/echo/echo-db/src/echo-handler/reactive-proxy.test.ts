@@ -1,11 +1,11 @@
+import { describe } from 'vitest';
+
 import { Obj } from '@dxos/echo';
 //
 // Copyright 2024 DXOS.org
 //
 
-import { describe } from 'vitest';
-
-import { TestingDeprecated } from '@dxos/echo/testing';
+import { type TestingDeprecated } from '@dxos/echo/testing';
 
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';

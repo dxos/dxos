@@ -5,8 +5,9 @@
 import { type Schema } from 'effect';
 
 import { Filter, type Space } from '@dxos/client/echo';
-import { type AnyLiveObject } from '@dxos/echo-db';
+import { Obj } from '@dxos/echo';
 import { EchoSchema, getSchema, getTypeAnnotation } from '@dxos/echo/internal';
+import { type AnyLiveObject } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -20,7 +21,6 @@ import {
   type TestObjectProvider,
   type TestSchemaMap,
 } from './types';
-import { Obj } from '@dxos/echo';
 
 /**
  * Typed object generator.

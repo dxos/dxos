@@ -6,14 +6,15 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { ATTR_META } from '..';
-import { Testing, updateCounter } from '../testing';
-import { live } from './reactive-object';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
-import { isNode } from '@dxos/util';
-
 import type { Live } from '@dxos/live-object';
 import { objectData } from '@dxos/live-object';
+import { isNode } from '@dxos/util';
+
+import { ATTR_META } from '..';
+import { Testing, updateCounter } from '../testing';
+
+import { live } from './reactive-object';
 
 registerSignalsRuntime();
 

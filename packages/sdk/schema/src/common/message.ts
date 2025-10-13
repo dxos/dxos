@@ -5,8 +5,8 @@
 import { Schema } from 'effect';
 
 import { Obj, Type } from '@dxos/echo';
-import { defineObjectMigration } from '@dxos/echo-db';
 import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
+import { defineObjectMigration } from '@dxos/echo-db';
 import { Unit, isTruthy } from '@dxos/util';
 
 import { Actor, type ActorRole } from './actor';

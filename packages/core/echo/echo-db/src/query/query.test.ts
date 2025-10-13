@@ -8,16 +8,17 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Order, Type } from '@dxos/echo';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Expando, Ref, RelationSourceId, RelationTargetId, getMeta } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';
+import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
-import { live } from '@dxos/echo/internal';
+
 import { getObjectCore } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoDatabase } from '../proxy-db';

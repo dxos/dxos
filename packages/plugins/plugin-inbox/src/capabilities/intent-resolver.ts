@@ -19,7 +19,6 @@ import {
 // import { SequenceBuilder, compileSequence, DEFAULT_INPUT, ValueBag, ComputeGraphModel } from '@dxos/conductor';
 // import { TestRuntime } from '@dxos/conductor/testing';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
 // import { runAndForwardErrors } from '@dxos/effect';
 // import { AiService, DatabaseService, QueueService, ServiceContainer, ToolResolverService } from '@dxos/functions';
 // import { failedInvariant } from '@dxos/invariant';

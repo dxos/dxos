@@ -7,8 +7,8 @@ import { Schema } from 'effect';
 import type { SchemaClass } from 'effect/Schema';
 
 import { type Event } from '@dxos/async';
-import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import type { ObjectId } from '@dxos/echo/internal';
+import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';

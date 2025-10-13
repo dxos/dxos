@@ -5,7 +5,6 @@
 import { Effect, type Schema, SchemaAST } from 'effect';
 
 import { Obj, type Type } from '@dxos/echo';
-import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import {
   type BaseObject,
   FormatEnum,
@@ -17,6 +16,7 @@ import {
   getSchemaReference,
   getTypename,
 } from '@dxos/echo/internal';
+import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';

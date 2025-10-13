@@ -11,11 +11,10 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
-import { Expando } from '@dxos/echo/internal';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -33,7 +32,6 @@ import { type ProtoRpcPeer, createLinkedPorts, createProtoRpcPeer } from '@dxos/
 import { Client } from '../client';
 import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
-import { Obj, Type } from '@dxos/echo';
 
 export const testConfigWithLocalSignal = new Config({
   version: 1,

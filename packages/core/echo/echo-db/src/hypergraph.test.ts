@@ -4,9 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
+import { Obj, Ref, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
-import { Obj, Type, Ref } from '@dxos/echo';
 
 import { getObjectCore } from './echo-handler';
 import { EchoTestBuilder } from './testing';
