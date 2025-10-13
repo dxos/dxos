@@ -19,12 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -38,12 +32,6 @@
     },
     {
       "path": "../invariant"
-    },
-    {
-      "path": "../log"
-    },
-    {
-      "path": "../random"
     },
     {
       "path": "../util"
