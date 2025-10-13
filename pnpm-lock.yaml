@@ -9045,6 +9045,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/vendor-quickjs':
+        specifier: workspace:*
+        version: link:../../../vendor/quickjs
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2

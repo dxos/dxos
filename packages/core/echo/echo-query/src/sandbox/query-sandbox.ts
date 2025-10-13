@@ -4,6 +4,7 @@
 
 import { Resource } from '@dxos/context';
 import { Query, type QueryAST } from '@dxos/echo';
+import { trim } from '@dxos/util';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 
 import envCode from '#query-env?raw';
@@ -16,15 +17,24 @@ import { unwrapResult } from './quickjs';
  * `Query`, `Filter` and `Order` are provided as globals.
  */
 export class QuerySandbox extends Resource {
+  // Caching the wasm module.
+  static quickJS: Promise<QuickJSWASMModule> | null = null;
+  static getQuickJS() {
+    if (!QuerySandbox.quickJS) {
+      QuerySandbox.quickJS = createQuickJS();
+    }
+
+    return QuerySandbox.quickJS;
+  }
+
   #runtime!: QuickJSRuntime;
 
   protected override async _open() {
-    const quickJS = await getQuickJS();
+    const quickJS = await QuerySandbox.getQuickJS();
     this.#runtime = quickJS.newRuntime({
-      moduleLoader: (moduleName, context) => {
+      moduleLoader: (moduleName, _context) => {
         switch (moduleName) {
           case 'dxos:query-env':
-            // return mockEnvCode;
             return envCode;
           default:
             throw new Error(`Module not found: ${moduleName}`);
@@ -45,14 +55,12 @@ export class QuerySandbox extends Resource {
     using context = this.#runtime.newContext();
     unwrapResult(
       context,
-      context.evalCode(
-        ` 
+      context.evalCode(trim`
         import { Query, Filter, Order } from 'dxos:query-env';
         globalThis.Query = Query;
         globalThis.Filter = Filter;
         globalThis.Order = Order;
-      `,
-      ),
+      `),
     ).dispose();
 
     using query = unwrapResult(context, context.evalCode(queryCode));
@@ -64,12 +72,3 @@ export class QuerySandbox extends Resource {
     }
   }
 }
-
-// Caching the wasm module.
-let quickJS: Promise<QuickJSWASMModule> | null = null;
-const getQuickJS = () => {
-  if (!quickJS) {
-    quickJS = createQuickJS();
-  }
-  return quickJS;
-};

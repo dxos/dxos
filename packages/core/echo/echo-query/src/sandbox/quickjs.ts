@@ -3,6 +3,17 @@
 //
 
 import { type QuickJSContext, type QuickJSHandle, type SuccessOrFail } from '@dxos/vendor-quickjs';
+import { type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
+
+// Caching the wasm module.
+let quickJS: Promise<QuickJSWASMModule> | null = null;
+const getQuickJS = () => {
+  if (!quickJS) {
+    quickJS = createQuickJS();
+  }
+
+  return quickJS;
+};
 
 /**
  * Unwraps a result and throws the underlying error.
