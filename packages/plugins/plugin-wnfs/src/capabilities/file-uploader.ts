@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -15,7 +16,9 @@ export default (context: PluginContext) => {
 
     const program = Effect.gen(function* () {
       const fileInfo = yield* dispatch(createIntent(WnfsAction.Upload, { file, space }));
-      yield* dispatch(pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: space })));
+      yield* dispatch(
+        Function.pipe(createIntent(WnfsAction.Create, fileInfo), chain(SpaceAction.AddObject, { target: space })),
+      );
       return fileInfo;
     });
 
