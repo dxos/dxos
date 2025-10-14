@@ -29,8 +29,7 @@ Test.describe('spaces query', () => {
     }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
   );
 
-  Test /
-    it('should query space for objects', () =>
+  Test.it('should query space for objects', () =>
       Effect.gen(function* () {
         const client = yield* ClientService;
         client.addTypes([DataType.Task]);

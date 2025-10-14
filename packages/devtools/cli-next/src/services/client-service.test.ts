@@ -10,7 +10,7 @@ import { TestLayer } from '../testing';
 import { ClientService } from './client-service';
 
 Test.describe('ClientService', () => {
-  Tets.it('should initialize', async () => {
+  Test.it('should initialize', async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
       return client;
@@ -19,7 +19,7 @@ Test.describe('ClientService', () => {
     Test.expect(client).toBeDefined();
   });
 
-  Tets.it('can create identity', async () => {
+  Test.it('can create identity', async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
       const identity = yield* Effect.tryPromise({

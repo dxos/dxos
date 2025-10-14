@@ -17,7 +17,7 @@ const createTestId = () => ObjectId.random();
 
 Test.describe('ExecutionGraph', () => {
   Test.describe('basic functionality', () => {
-    it('should create an empty graph initially', () => {
+    Test.it('should create an empty graph initially', () => {
       const graph = new ExecutionGraph();
       const result = graph.getGraph();
 
@@ -25,7 +25,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(result.commits).toEqual([]);
     });
 
-    it('should add a simple user message', () => {
+    Test.it('should add a simple user message', () => {
       const graph = new ExecutionGraph();
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -55,7 +55,7 @@ Test.describe('ExecutionGraph', () => {
       });
     });
 
-    it('should handle basic status & message processing', () => {
+    Test.it('should handle basic status & message processing', () => {
       const graph = new ExecutionGraph();
       const status = Obj.make(AgentStatus, {
         created: '2025-01-01T00:00:00Z',
@@ -89,7 +89,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(result.commits[1].parents).toEqual([status.id]);
     });
 
-    it('should add an assistant message with text', () => {
+    Test.it('should add an assistant message with text', () => {
       const graph = new ExecutionGraph();
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -119,7 +119,7 @@ Test.describe('ExecutionGraph', () => {
   });
 
   Test.describe('sequential chaining within messages', () => {
-    it('should chain blocks within a message', () => {
+    Test.it('should chain blocks within a message', () => {
       const graph = new ExecutionGraph();
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -167,7 +167,7 @@ Test.describe('ExecutionGraph', () => {
       });
     });
 
-    it('should chain across multiple messages', () => {
+    Test.it('should chain across multiple messages', () => {
       const graph = new ExecutionGraph();
 
       // First message
@@ -210,7 +210,7 @@ Test.describe('ExecutionGraph', () => {
   });
 
   Test.describe('tool calls and results', () => {
-    it('should handle tool calls and results with proper parent relationships', () => {
+    Test.it('should handle tool calls and results with proper parent relationships', () => {
       const graph = new ExecutionGraph();
 
       const message1Id = createTestId();
@@ -295,7 +295,7 @@ Test.describe('ExecutionGraph', () => {
       });
     });
 
-    it('should handle tool errors with proper parent relationships', () => {
+    Test.it('should handle tool errors with proper parent relationships', () => {
       const graph = new ExecutionGraph();
 
       const message1Id = createTestId();
@@ -372,7 +372,7 @@ Test.describe('ExecutionGraph', () => {
   });
 
   Test.describe('different processing orders', () => {
-    it('should handle AgentStatus processed after tool result', () => {
+    Test.it('should handle AgentStatus processed after tool result', () => {
       const graph = new ExecutionGraph();
 
       const message1Id = createTestId();
@@ -431,7 +431,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(toolResult?.parents).toContain(statusId);
     });
 
-    it('should handle AgentStatus processed before tool result', () => {
+    Test.it('should handle AgentStatus processed before tool result', () => {
       const graph = new ExecutionGraph();
 
       const message1Id = createTestId();
@@ -492,7 +492,7 @@ Test.describe('ExecutionGraph', () => {
   });
 
   Test.describe('complex scenarios', () => {
-    it('should handle multiple tool calls in sequence', () => {
+    Test.it('should handle multiple tool calls in sequence', () => {
       const graph = new ExecutionGraph();
 
       const msg1Id = createTestId();
@@ -604,7 +604,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(result.commits[6].parents).toEqual([status2Id, `${msg4Id}_toolCall_tool2`]); // msg5_toolResult_tool2
     });
 
-    it('should handle mixed block types in a message', () => {
+    Test.it('should handle mixed block types in a message', () => {
       const graph = new ExecutionGraph();
 
       const messageId = createTestId();
@@ -641,7 +641,7 @@ Test.describe('ExecutionGraph', () => {
   });
 
   Test.describe('edge cases', () => {
-    it('should handle empty text blocks', () => {
+    Test.it('should handle empty text blocks', () => {
       const graph = new ExecutionGraph();
 
       const messageId = createTestId();
@@ -665,7 +665,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(result.commits[1].parents).toEqual([`${messageId}_block_0`]); // Third text block
     });
 
-    it('should handle messages with no blocks', () => {
+    Test.it('should handle messages with no blocks', () => {
       const graph = new ExecutionGraph();
 
       const messageId = createTestId();
@@ -683,7 +683,7 @@ Test.describe('ExecutionGraph', () => {
       Test.expect(result.commits).toHaveLength(0);
     });
 
-    it('should handle getGraph with lastRequest filter', () => {
+    Test.it('should handle getGraph with lastRequest filter', () => {
       const graph = new ExecutionGraph();
 
       const msg1Id = createTestId();
