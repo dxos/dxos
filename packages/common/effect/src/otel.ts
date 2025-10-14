@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Resource, Tracer } from '@effect/opentelemetry';
+import * as Resource from '@effect/opentelemetry/Resource';
+import * as Tracer from '@effect/opentelemetry/Tracer';
 import { type Attributes, trace } from '@opentelemetry/api';
 import * as Effect from 'effect/Effect';
 import type * as Function from 'effect/Function';
