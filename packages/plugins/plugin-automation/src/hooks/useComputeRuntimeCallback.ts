@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Effect } from 'effect';
+import type * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework';

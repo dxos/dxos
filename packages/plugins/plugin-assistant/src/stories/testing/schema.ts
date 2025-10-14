@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';

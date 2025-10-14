@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import {
   Capabilities,
@@ -65,7 +65,10 @@ export const WnfsPlugin = definePlugin(meta, () => [
           objectSchema: FileType,
           formSchema: WnfsAction.UploadFileSchema,
           getIntent: (props, options) =>
-            pipe(createIntent(WnfsAction.Upload, { ...props, space: options.space }), chain(WnfsAction.Create, {})),
+            Function.pipe(
+              createIntent(WnfsAction.Upload, { ...props, space: options.space }),
+              chain(WnfsAction.Create, {}),
+            ),
         }),
       ),
   }),

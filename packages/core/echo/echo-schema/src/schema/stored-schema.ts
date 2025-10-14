@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { SchemaVersion, Typename } from '../ast';
 import { JsonSchemaType } from '../json-schema';

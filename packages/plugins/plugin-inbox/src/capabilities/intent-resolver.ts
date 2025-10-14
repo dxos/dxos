@@ -194,7 +194,7 @@ export default (context: PluginContext) =>
         // // TODO(dmaretskyi): This should iterate over every message.
 
         // const input = 'TODO';
-        // const { text } = await pipe(
+        // const { text } = await Function.pipe(
         //   { [DEFAULT_INPUT]: input },
         //   ValueBag.make,
         //   (input) => runtime.runGraph('dxn:compute:test', input),

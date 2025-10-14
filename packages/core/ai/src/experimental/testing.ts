@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Chat, LanguageModel } from '@effect/ai';
-import { Chunk, Effect, Stream } from 'effect';
+import type * as Chat from '@effect/ai/Chat';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';

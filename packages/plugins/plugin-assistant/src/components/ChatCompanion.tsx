@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Capabilities, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
@@ -66,7 +69,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
   const metadata = useCapabilities(Capabilities.Metadata);
   const blueprintKeys = useMemo(
     () =>
-      pipe(
+      Function.pipe(
         metadata,
         Array.findFirst(
           (capability): capability is { id: string; metadata: { blueprints?: string[] } } =>

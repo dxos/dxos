@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type ObjectId } from '@dxos/echo-schema';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';

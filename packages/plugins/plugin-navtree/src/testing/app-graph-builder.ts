@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { type PluginContext } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -28,7 +29,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       id: 'app-menu',
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
@@ -55,7 +56,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       id: 'user-account',
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
@@ -112,7 +113,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       position: 'hoist',
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {
@@ -153,7 +154,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
         });
 
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === 'spaces-root' ? Option.some(node) : Option.none())),
             Option.map(() => {
@@ -179,7 +180,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       id: 'space-actions',
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
             Option.map((node) => {
@@ -220,7 +221,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
         });
 
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'space' ? Option.some(node) : Option.none())),
             Option.map((node) => {
@@ -245,7 +246,7 @@ export const storybookGraphBuilders = (context: PluginContext): BuilderExtension
       id: 'object-actions',
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === 'object' ? Option.some(node) : Option.none())),
             Option.map((node) => {
