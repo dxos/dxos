@@ -382,7 +382,7 @@ export default (context: PluginContext) =>
             await space.waitUntilReady();
             const result = await dispatch(
               Function.pipe(
-                createIntent(ScriptAction.Create, { space }),
+                createIntent(ScriptAction.CreateScript, { space }),
                 chain(SpaceAction.AddObject, { target: space }),
               ),
             );
