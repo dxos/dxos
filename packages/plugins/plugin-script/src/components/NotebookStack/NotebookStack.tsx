@@ -20,6 +20,7 @@ export type NotebookStackProps = {
 } & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete'> &
   Pick<TypescriptEditorProps, 'env'>;
 
+// TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
 export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
   return (
     <Stack orientation='vertical' size='contain' rail>
@@ -30,8 +31,10 @@ export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
   );
 };
 
-// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
+// TODO(burdon): Support calling named deployed functions (as with sheet).
 // TODO(burdon): Different section types (value, query, expression, prompt).
+// TODO(burdon): Display errors.
+// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
 
 type NotebookSectionProps = {
   cell: Notebook.Cell;
@@ -76,6 +79,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           </DropdownMenu.Root>
         </StackItem.HeadingStickyContent>
       </StackItem.Heading>
+
       <StackItem.Content>
         <TypescriptEditor
           id={script.id}
