@@ -57,7 +57,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
-                <Icon icon='ph--text-aa--regular' size={5} />
+                <Icon icon='ph--list--regular' size={5} />
               </StackItem.SigilButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
@@ -90,7 +90,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           classNames='p-2'
         />
         {value != null && (
-          <div className='flex p-2 border-t border-subduedSeparator text-description font-mono'>
+          <div className='flex p-2 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
             {name && (
               <>
                 <span className='text-infoText'>{name}</span>
