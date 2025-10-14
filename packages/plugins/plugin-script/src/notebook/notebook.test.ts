@@ -14,7 +14,6 @@ import { ComputeGraph } from './notebook';
 describe('notebook', () => {
   test('parse dependency graph', () => {
     const notebook = createNotebook();
-
     const computer = new ComputeGraph(notebook);
     const result = computer.parse();
 
