@@ -100,11 +100,11 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           <div className='flex p-2 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
             {name && (
               <>
-                <span className='text-infoText'>{name}</span>
+                <span className='text-successText'>{name}</span>
                 <span className='text-description'>&nbsp;=&nbsp;</span>
               </>
             )}
-            <span className='text-infoText'>{value}</span>
+            <span>{value}</span>
           </div>
         )}
       </StackItem.Content>
