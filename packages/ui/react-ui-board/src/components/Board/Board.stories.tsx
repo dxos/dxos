@@ -11,6 +11,7 @@ import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 import { translations } from '../../translations';
 
 import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
+import { defaultGrid } from './defs';
 import { type BoardLayout } from './types';
 
 type TestItem = {
@@ -20,7 +21,7 @@ type TestItem = {
 
 type StoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
 
-const DefaultStory = ({ layout: _layout, items: _items, ...props }: StoryProps) => {
+const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryProps) => {
   const [items, setItems] = useState(_items ?? []);
   const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
 
@@ -107,11 +108,7 @@ export const Default: Story = {
       { id: '5', title: 'Item 5' },
       { id: '6', title: 'Item 6' },
     ],
-    grid: {
-      overScroll: 300,
-      size: { width: 300, height: 300 },
-      gap: 16,
-    },
+    grid: defaultGrid,
     layout: {
       size: { width: 7, height: 5 },
       cells: {
