@@ -14,11 +14,11 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
 
     // Block access to global objects.
     console: undefined,
-    window: undefined,
     document: undefined,
+    global: undefined,
     globalThis: undefined,
     self: undefined,
-    global: undefined,
+    window: undefined,
 
     // Allow some safe globals.
     Math,
@@ -47,9 +47,9 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
   const fn = new Function(
     ...sandboxKeys,
     trim`
-        'use strict';
-        return ${code};
-      `,
+      'use strict';
+      return ${code};
+    `,
   );
 
   return fn(...sandboxValues);
@@ -94,5 +94,6 @@ export const systemDefinitions = trim`
   interface String { length: number; }
   interface CallableFunction extends Function {}
   interface NewableFunction extends Function {}
+
   declare var console: { log(...args: any[]): void };
 `;
