@@ -58,11 +58,8 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "compile:buf": "buf generate"
-  },
   "dependencies": {
-    "@bufbuild/protobuf": "^2.1.0",
+    "@bufbuild/protobuf": "2.9.0",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -72,8 +69,8 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
-    "@bufbuild/buf": "^1.43.0",
-    "@bufbuild/protoc-gen-es": "^2.1.0",
+    "@bufbuild/buf": "1.43.0",
+    "@bufbuild/protoc-gen-es": "2.9.0",
     "@dxos/protobuf-compiler": "workspace:*",
     "effect": "3.18.3"
   },

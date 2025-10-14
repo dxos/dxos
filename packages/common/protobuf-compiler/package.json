@@ -17,7 +17,6 @@
     "src"
   ],
   "scripts": {
-    "prebuild": "vite-node ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen",
     "test": "true || mocha -r @swc-node/register '**/*.test.ts'"
   },
   "dependencies": {
