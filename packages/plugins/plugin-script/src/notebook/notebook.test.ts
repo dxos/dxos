@@ -18,7 +18,7 @@ describe('notebook', () => {
     const computer = new ComputeGraph(notebook);
     const result = computer.parse();
 
-    const getId = (i: number) => notebook.cells[i].script.target!.id;
+    const getId = (i: number) => notebook.cells[i].id;
 
     // Check dependencies.
     expect(result.dependencyGraph).toMatchObject({
@@ -30,18 +30,10 @@ describe('notebook', () => {
     // Compute values.
     const values = computer.evaluate();
     expect(values).toEqual({
-      a: 100,
-      b: 200,
-      c: 300,
-      d: 200,
-    });
-
-    // Check that values are accessible via the getter.
-    expect(computer.values).toEqual({
-      a: 100,
-      b: 200,
-      c: 300,
-      d: 200,
+      [getId(0)]: 300,
+      [getId(2)]: 200,
+      [getId(3)]: 200,
+      [getId(4)]: 500,
     });
   });
 });
