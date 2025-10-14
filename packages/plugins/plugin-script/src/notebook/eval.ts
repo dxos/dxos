@@ -97,6 +97,7 @@ export const systemDefinitions = trim`
   interface Object {}
   interface RegExp {}
   interface String { length: number; }
+
   interface CallableFunction extends Function {}
   interface NewableFunction extends Function {}
 
