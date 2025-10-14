@@ -5,13 +5,10 @@
 import { type Signal, signal } from '@preact/signals-core';
 
 import { log } from '@dxos/log';
-import { isNonNullable } from '@dxos/util';
 
 import { type Notebook } from '../types';
 
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
-
-export type CellExpression = { id: string } & ParsedExpression;
 
 /**
  * Compute graph that evaluates the notebook cells.
@@ -19,45 +16,47 @@ export type CellExpression = { id: string } & ParsedExpression;
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
-  /**
-   * Parsed expressions.
-   */
-  private _expressions = signal<CellExpression[]>([]);
-
-  /**
-   * Computed values by cell ID.
-   */
+  private _expressions = signal<Record<string, ParsedExpression>>({});
   private _values = signal<Record<string, any>>({});
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
 
+  /**
+   * Parsed expressions by cell ID.
+   */
+  get expressions(): Signal<Record<string, ParsedExpression>> {
+    return this._expressions;
+  }
+
+  /**
+   * Computed values by cell ID.
+   */
   get values(): Signal<Record<string, any>> {
     return this._values;
   }
 
-  get expressions(): Signal<CellExpression[]> {
-    return this._expressions;
-  }
-
+  /**
+   * Compute values.
+   */
   evaluate() {
     // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
     this._values.value = {};
 
     // Create a map of cell IDs to expressions for easy lookup.
-    const cellExpressions = new Map<string, CellExpression>();
-    expressions.forEach((expr) => {
-      cellExpressions.set(expr.id, expr);
+    const cellExpressions = new Map<string, ParsedExpression>();
+    Object.entries(expressions).forEach(([id, expr]) => {
+      cellExpressions.set(id, expr);
     });
 
     // Topological sort to determine evaluation order.
-    const evaluationOrder = this.topologicalSort(
-      expressions.map((expr) => expr.id),
-      dependencyGraph,
-    );
+    const evaluationOrder = this.topologicalSort(Object.keys(expressions), dependencyGraph);
+
+    // Values by reference name.
+    const valuesByName: Record<string, any> = {};
+    const valuesByCellId: Record<string, any> = {};
 
     // Evaluate cells in dependency order.
-    const values: Record<string, any> = {};
     for (const cellId of evaluationOrder) {
       const expr = cellExpressions.get(cellId);
       if (!expr) {
@@ -75,7 +74,8 @@ export class ComputeGraph {
         // For assignments or declarations, evaluate and store the value.
         if (expr.name && expr.value !== undefined) {
           // If the parser extracted a literal value, use it directly.
-          values[expr.name] = expr.value;
+          valuesByName[expr.name] = expr.value;
+          valuesByCellId[cellId] = expr.value;
         } else if (expr.name) {
           // For non-literal assignments, we need to evaluate the expression.
           // The parser identifies it's an assignment, so we can extract the RHS.
@@ -89,32 +89,36 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = this.evalScript(rhs, values);
-            values[expr.name] = result;
+            const result = this.evalScript(rhs, valuesByName);
+            valuesByName[expr.name] = result;
+            valuesByCellId[cellId] = result;
           }
         } else {
           // For expressions without assignment, just evaluate.
-          this.evalScript(cellSource, values);
+          const result = this.evalScript(cellSource, valuesByName);
+          valuesByCellId[cellId] = result;
         }
       } catch (error) {
         log.error('error evaluating cell', { cellId, error });
       }
     }
 
-    this._values.value = values;
-    return values;
+    this._values.value = valuesByCellId;
+    return valuesByCellId;
   }
 
+  /**
+   * Parse expressions.
+   */
   parse() {
-    const expressions = this._notebook.cells
-      .map<CellExpression | undefined>((cell) => {
-        const text = cell.script.target?.source.target;
-        if (text) {
-          const parsed = this._parser.parseExpression(text.content);
-          return { id: cell.id, ...parsed } satisfies CellExpression;
-        }
-      })
-      .filter(isNonNullable);
+    const expressions = this._notebook.cells.reduce<Record<string, ParsedExpression>>((acc, cell) => {
+      const text = cell.script.target?.source.target;
+      if (text) {
+        const parsed = this._parser.parseExpression(text.content);
+        acc[cell.id] = parsed;
+      }
+      return acc;
+    }, {});
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);
@@ -144,26 +148,26 @@ export class ComputeGraph {
     return result;
   }
 
-  private buildDependencyGraph(expressions: CellExpression[]): Record<string, string[]> {
+  private buildDependencyGraph(expressions: Record<string, ParsedExpression>): Record<string, string[]> {
     // Create a map of variable names to their cell IDs.
     const nameToCellId = new Map<string, string>();
-    expressions.forEach((expr) => {
+    Object.entries(expressions).forEach(([id, expr]) => {
       if (expr.name) {
-        nameToCellId.set(expr.name, expr.id);
+        nameToCellId.set(expr.name, id);
       }
     });
 
     // Build the dependency graph using cell IDs.
     const graph: Record<string, string[]> = {};
-    expressions.forEach((expr) => {
+    Object.entries(expressions).forEach(([id, expr]) => {
       if (expr.references && expr.references.length > 0) {
         // Map variable references to cell IDs.
         const dependencyCellIds = expr.references
           .map((ref) => nameToCellId.get(ref))
-          .filter((cellId): cellId is string => cellId !== undefined && cellId !== expr.id);
+          .filter((cellId): cellId is string => cellId !== undefined && cellId !== id);
 
         if (dependencyCellIds.length > 0) {
-          graph[expr.id] = dependencyCellIds;
+          graph[id] = dependencyCellIds;
         }
       }
     });

@@ -45,8 +45,8 @@ const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
     return [createDataExtensions({ id: script.id, text: createDocAccessor(script.source.target!, ['content']) })];
   }, [script]);
 
-  const name = graph?.expressions.value.find((expr) => expr.id === cell.id)?.name;
-  const value = name ? graph?.values.value[name] : undefined;
+  const name = graph?.expressions.value[cell.id]?.name;
+  const value = graph?.values.value[cell.id];
 
   return (
     <StackItem.Root role='section' item={script}>
@@ -81,7 +81,7 @@ const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
         />
         {value != null && (
           <div className='p-2 border-t border-subduedSeparator text-description text-sm font-mono'>
-            <span>{name} = </span>
+            {name && <span>{name} = </span>}
             <span>{value}</span>
           </div>
         )}
