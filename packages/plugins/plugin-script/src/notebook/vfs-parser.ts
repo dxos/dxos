@@ -212,42 +212,42 @@ export class VirtualTypeScriptParser {
     const localSymbols = new Set<string>();
 
     // First, collect local symbols (parameters, local variables).
-    const collectLocalSymbols = (n: ts.Node) => {
-      if (ts.isFunctionDeclaration(n) || ts.isArrowFunction(n) || ts.isFunctionExpression(n)) {
-        n.parameters.forEach((param) => {
+    const collectLocalSymbols = (node: ts.Node) => {
+      if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+        node.parameters.forEach((param) => {
           if (ts.isIdentifier(param.name)) {
             localSymbols.add(param.name.text);
           }
         });
       }
 
-      if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) {
-        localSymbols.add(n.name.text);
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+        localSymbols.add(node.name.text);
       }
 
-      ts.forEachChild(n, collectLocalSymbols);
+      ts.forEachChild(node, collectLocalSymbols);
     };
 
     collectLocalSymbols(node);
 
     // Then find all identifier references.
-    const findRefs = (n: ts.Node) => {
-      if (ts.isIdentifier(n)) {
+    const findRefs = (node: ts.Node) => {
+      if (ts.isIdentifier(node)) {
         // Skip if it's a local symbol
-        if (!localSymbols.has(n.text)) {
+        if (!localSymbols.has(node.text)) {
           // Check if it's a reference (not a declaration).
-          const parent = n.parent;
+          const parent = node.parent;
           const isDeclaration =
-            (ts.isVariableDeclaration(parent) && parent.name === n) ||
-            (ts.isFunctionDeclaration(parent) && parent.name === n) ||
-            (ts.isParameter(parent) && parent.name === n);
+            (ts.isVariableDeclaration(parent) && parent.name === node) ||
+            (ts.isFunctionDeclaration(parent) && parent.name === node) ||
+            (ts.isParameter(parent) && parent.name === node);
 
-          if (!isDeclaration && !this.isBuiltIn(n.text)) {
-            references.add(n.text);
+          if (!isDeclaration && !this.isBuiltIn(node.text)) {
+            references.add(node.text);
           }
         }
       }
-      ts.forEachChild(n, findRefs);
+      ts.forEachChild(node, findRefs);
     };
 
     findRefs(node);
@@ -456,15 +456,10 @@ const builtIns = new Set([
   'String',
 
   // Functions.
-  'console',
-  'document',
-  'global',
   'isFinite',
   'isNaN',
   'parseFloat',
   'parseInt',
-  'process',
-  'window',
 ]);
 
 /**

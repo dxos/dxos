@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 
 import { type Notebook } from '../types';
 
+import { evalScript } from './eval';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 
 /**
@@ -89,7 +90,7 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = this.evalScript(rhs, valuesByName);
+            const result = evalScript(rhs, valuesByName);
             valuesByName[expr.name] = result;
             if (typeof result !== 'function') {
               valuesByCellId[cellId] = result;
@@ -97,7 +98,7 @@ export class ComputeGraph {
           }
         } else {
           // For expressions without assignment, just evaluate.
-          const result = this.evalScript(cellSource, valuesByName);
+          const result = evalScript(cellSource, valuesByName);
           valuesByCellId[cellId] = result;
         }
       } catch (error) {
@@ -176,13 +177,5 @@ export class ComputeGraph {
     });
 
     return graph;
-  }
-
-  /**
-   * Evaluate the script (with dependencies as arguments).
-   */
-  private evalScript(code: string, deps: Record<string, any> = {}) {
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function(...Object.keys(deps), 'return ' + code)(...Object.values(deps));
   }
 }
