@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { ExplorerAction, ViewType } from './types';
+import { ExplorerAction, Graph } from './types';
 
 export const ExplorerPlugin = definePlugin(meta, () => [
   defineModule({
@@ -23,7 +23,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: ViewType.typename,
+        id: Graph.Graph.typename,
         metadata: {
           icon: 'ph--graph--regular',
         },
@@ -36,7 +36,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: ViewType,
+          objectSchema: Graph.Graph,
           getIntent: () => createIntent(ExplorerAction.Create),
         }),
       ),
@@ -44,7 +44,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [ViewType]),
+    activate: () => contributes(ClientCapabilities.Schema, [Graph.Graph]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,
