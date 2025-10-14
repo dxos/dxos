@@ -37,7 +37,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
   const [expandedId, setExpandedId] = useState<DataType.View['id']>();
   const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
 
   useAsyncEffect(async () => {
@@ -46,7 +46,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
     }
 
     const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
-    if (foundSchema !== schema) {
+    if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
   }, [client, space, view, schema]);
@@ -147,7 +147,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                       onClick={() => handleToggleField(view)}
                     />
                   </div>
-                  {expandedId === view.id && view && schema && (
+                  {expandedId === view.id && view && (
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                       <ViewEditor
                         ref={projectionRef}
