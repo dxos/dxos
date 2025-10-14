@@ -15,7 +15,7 @@ import { NotebookStack } from './NotebookStack';
 import { type TypescriptEditorProps } from './TypescriptEditor';
 
 export type NotebookContainerProps = {
-  role: string;
+  role?: string;
   notebook?: Notebook.Notebook;
 } & Pick<TypescriptEditorProps, 'env'>;
 
