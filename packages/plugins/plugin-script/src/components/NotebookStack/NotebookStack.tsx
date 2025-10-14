@@ -89,6 +89,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           extensions={extensions}
           env={env}
           options={{
+            placeholder: t('notebook cell placeholder'),
             highlightActiveLine: false,
             lineNumbers: false,
           }}

@@ -92,6 +92,7 @@ export const translations = [
         'script deployment error toast close label_one': 'Close',
         'script deployment error toast close label_other': 'Close',
 
+        'notebook cell placeholder': 'Enter script',
         'notebook cell delete label': 'Delete cell',
         'notebook cell insert label': 'Insert cell',
       },
