@@ -10,7 +10,6 @@ import { ScriptType } from '@dxos/functions';
 import { meta } from '../meta';
 
 export namespace ScriptAction {
-  // TODO(burdon): Why is this required?
   export const CreateScript = Schema.Struct({
     name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Placeholder annotation?
@@ -19,7 +18,12 @@ export namespace ScriptAction {
   });
 
   export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-    input: Schema.extend(CreateScript, Schema.Struct({ space: SpaceSchema })),
+    input: Schema.extend(
+      CreateScript,
+      Schema.Struct({
+        space: SpaceSchema,
+      }),
+    ),
     output: Schema.Struct({
       object: ScriptType,
     }),

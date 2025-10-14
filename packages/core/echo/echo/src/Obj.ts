@@ -75,12 +75,14 @@ export const make = <S extends Type.Obj.Any>(
   );
 
   if (props[EchoSchema.MetaId] != null) {
-    // Set default fields on meta on creation
+    // Set default fields on meta on creation.
     meta = { ...structuredClone(DEFAULT_META), ...props[EchoSchema.MetaId] };
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
+  const filteredProps = Object.entries(props).filter(([_, v]) => v != null);
+
+  return live<Schema.Schema.Type<S>>(schema, filteredProps as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {
@@ -96,7 +98,7 @@ export const isObject = (obj: unknown): obj is Any => {
  * const johnIsPerson = Obj.instanceOf(Person)(john);
  *
  * const isPerson = Obj.instanceOf(Person);
- * if(isPerson(john)) {
+ * if (isPerson(john)) {
  *   // john is Person
  * }
  * ```
