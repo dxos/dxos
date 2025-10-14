@@ -52,7 +52,9 @@ export const withRetry = (
   );
 };
 
-export const withRetryConfig = (effect: Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError, HttpClient.HttpClient>) =>
+export const withRetryConfig = (
+  effect: Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError, HttpClient.HttpClient>,
+) =>
   Effect.gen(function* () {
     const config = yield* HttpConfig;
     return yield* withRetry(effect, config);
