@@ -13,6 +13,7 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
     ...deps,
 
     // Block access to global objects.
+    console: undefined,
     window: undefined,
     document: undefined,
     globalThis: undefined,
@@ -28,7 +29,8 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
     Number,
     Boolean,
     JSON,
-    console,
+
+    // Functions.
     parseInt,
     parseFloat,
     isNaN,
@@ -52,3 +54,45 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
 
   return fn(...sandboxValues);
 };
+
+/**
+ * Globals.
+ */
+export const builtIns = new Set([
+  // Types.
+  'Array',
+  'Date',
+  'Error',
+  'JSON',
+  'Map',
+  'Math',
+  'Number',
+  'Promise',
+  'Object',
+  'RegExp',
+  'Set',
+  'String',
+
+  // Functions.
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+]);
+
+/**
+ * Default system definitions.
+ */
+export const systemDefinitions = trim`
+  interface Array<T> { length: number; [n: number]: T; }
+  interface Boolean {}
+  interface Function {}
+  interface IArguments {}
+  interface Number {}
+  interface Object {}
+  interface RegExp {}
+  interface String { length: number; }
+  interface CallableFunction extends Function {}
+  interface NewableFunction extends Function {}
+  declare var console: { log(...args: any[]): void };
+`;

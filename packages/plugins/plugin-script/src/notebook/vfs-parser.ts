@@ -6,7 +6,18 @@ import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vf
 import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
-import { trim } from '@dxos/util';
+
+import { builtIns, systemDefinitions } from './eval';
+
+/**
+ * Default system definitions.
+ */
+const systemFiles: VirtualFile[] = [
+  {
+    filename: '/lib.d.ts',
+    content: systemDefinitions,
+  },
+];
 
 export type ParsedExpression = {
   name?: string;
@@ -50,7 +61,7 @@ export class VirtualTypeScriptParser {
     // If no declarations found, check for standalone expression references.
     if (analysis.length === 0) {
       const sourcefilename = '/temp.ts';
-      const env = this.createEnvironment([{ filename: sourcefilename, content: input }, ...systemFiles]);
+      const env = this.createEnvironment([{ filename: sourcefilename, content: input }]);
       const sourceFile = env.getSourceFile(sourcefilename);
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
@@ -73,7 +84,7 @@ export class VirtualTypeScriptParser {
    * Analyze multiple files with full type information.
    */
   analyzeFiles(files: VirtualFile[]): ParsedExpression[] {
-    const env = this.createEnvironment([...files, ...systemFiles]);
+    const env = this.createEnvironment(files);
     const results: ParsedExpression[] = [];
     const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
@@ -336,15 +347,17 @@ export class VirtualTypeScriptParser {
   }
 
   protected createEnvironment(files: VirtualFile[]) {
+    const allFiles = [...systemFiles, ...files];
+
     const fileMap = new Map<string, string>();
-    files.forEach(({ filename, content }) => {
+    allFiles.forEach(({ filename, content }) => {
       fileMap.set(filename, content);
     });
 
     const system = createSystem(fileMap);
     return createVirtualTypeScriptEnvironment(
       system,
-      files.map(({ filename }) => filename),
+      allFiles.map(({ filename }) => filename),
       ts,
       this.compilerOptions,
     );
@@ -390,7 +403,7 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
       });
 
       // Create environment.
-      const env = this.createEnvironment([...files, ...systemFiles]);
+      const env = this.createEnvironment(files);
 
       // Get diagnostics (errors).
       const diagnostics = env.languageService.getSemanticDiagnostics(filename);
@@ -436,50 +449,3 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
     return cellAnalysis;
   }
 }
-
-/**
- * Globals.
- */
-const builtIns = new Set([
-  // Types.
-  'Array',
-  'Date',
-  'Error',
-  'JSON',
-  'Map',
-  'Math',
-  'Number',
-  'Promise',
-  'Object',
-  'RegExp',
-  'Set',
-  'String',
-
-  // Functions.
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-]);
-
-/**
- * Default system definitions.
- */
-const systemFiles: VirtualFile[] = [
-  {
-    filename: '/lib.d.ts',
-    content: trim`
-      interface Array<T> { length: number; [n: number]: T; }
-      interface Boolean {}
-      interface Function {}
-      interface IArguments {}
-      interface Number {}
-      interface Object {}
-      interface RegExp {}
-      interface String { length: number; }
-      interface CallableFunction extends Function {}
-      interface NewableFunction extends Function {}
-      declare var console: { log(...args: any[]): void };
-    `,
-  },
-];
