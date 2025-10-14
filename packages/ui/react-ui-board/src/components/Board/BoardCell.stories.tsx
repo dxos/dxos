@@ -6,18 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, cardStackDefaultInlineSizeRem, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
 import { Board, type BoardCellProps } from './Board';
+import { defaultGrid } from './defs';
 
 const DefaultStory = (props: BoardCellProps) => {
   return (
-    <Board.Root
-      layout={{ size: { width: 1, height: 1 }, cells: {} }}
-      grid={{ size: { width: cardStackDefaultInlineSizeRem, height: cardStackDefaultInlineSizeRem }, gap: 0.625 }}
-    >
+    <Board.Root layout={{ size: { width: 1, height: 1 }, cells: {} }} grid={defaultGrid}>
       <Board.Viewport>
         <Board.Cell {...props} draggable={false}>
           <Card.Text>This is a card with some long text that should wrap.</Card.Text>

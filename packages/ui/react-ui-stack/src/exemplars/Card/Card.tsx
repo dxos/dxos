@@ -22,7 +22,12 @@ import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './frag
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
-const cardStackDefaultInlineSizeRem = 18;
+const cardDefaultInlineSize = 20;
+/**
+ * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the
+ * inline axis. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
+ */
+const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
 const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
@@ -185,4 +190,12 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardStackDefaultInlineSizeRem };
+export {
+  cardRoot,
+  cardHeading,
+  cardText,
+  cardChrome,
+  cardSpacing,
+  cardStackDefaultInlineSizeRem,
+  cardDefaultInlineSize,
+};

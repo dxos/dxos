@@ -6,11 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, cardStackDefaultInlineSizeRem, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
 import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
+import { defaultGrid } from './defs';
 import { type BoardLayout } from './types';
 
 type TestItem = {
@@ -107,11 +108,7 @@ export const Default: Story = {
       { id: '5', title: 'Item 5' },
       { id: '6', title: 'Item 6' },
     ],
-    grid: {
-      overScroll: cardStackDefaultInlineSizeRem,
-      size: { width: cardStackDefaultInlineSizeRem, height: cardStackDefaultInlineSizeRem },
-      gap: 1,
-    },
+    grid: defaultGrid,
     layout: {
       size: { width: 7, height: 5 },
       cells: {
