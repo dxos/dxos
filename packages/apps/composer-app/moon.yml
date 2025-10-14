@@ -15,7 +15,7 @@ tasks:
     deps:
       - prebuild
   prebuild:
-    script: pnpm run copy:assets
+    command: pnpm run --silent copy:assets
     deps:
       - ^:prebuild
     inputs:
