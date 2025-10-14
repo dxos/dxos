@@ -13,13 +13,25 @@
       "path": "../../../common/debug"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
     },
     {
       "path": "../../../common/node-std"
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../echo-protocol"
     },
     {
       "path": "../echo-signals"

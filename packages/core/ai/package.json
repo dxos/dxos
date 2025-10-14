@@ -53,11 +53,15 @@
     "run:chat": "vite-node src/bin/chat.ts"
   },
   "dependencies": {
+    "@dxos/async": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/live-object": "workspace:*",

@@ -12,22 +12,24 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
+import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
 
-// TODO(wittjosiah): Support arbitrary imports.
-// TODO(burdon): Translate filters.
+// TODO(wittjosiah): Support arbitrary type imports.
+// TODO(burdon): Translate tags.
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', `return ${queryString}`)(
+    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', 'Markdown', `return ${queryString}`)(
       Query,
       Filter,
       DataType,
       ResearchOn,
+      Markdown,
     );
   } catch {
     return Query.select(Filter.nothing());

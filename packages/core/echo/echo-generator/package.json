@@ -31,6 +31,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "3.18.3"

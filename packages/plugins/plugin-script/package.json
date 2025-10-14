@@ -92,6 +92,7 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@dxos/vendor-quickjs": "workspace:*",
     "@lezer/common": "^1.2.2",
     "@lezer/highlight": "^1.2.1",
     "@octokit/core": "^4.0.4",

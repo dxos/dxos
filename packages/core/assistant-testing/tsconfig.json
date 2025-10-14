@@ -12,7 +12,13 @@
   ],
   "references": [
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
     },
     {
       "path": "../../common/invariant"
@@ -48,6 +54,9 @@
       "path": "../blueprints"
     },
     {
+      "path": "../conductor"
+    },
+    {
       "path": "../echo/echo"
     },
     {
@@ -58,6 +67,9 @@
     },
     {
       "path": "../functions"
+    },
+    {
+      "path": "../mesh/edge-client"
     }
   ]
 }
