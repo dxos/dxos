@@ -22,10 +22,13 @@ import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './frag
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
-const cardDefaultInlineSize = 20;
+/**
+ * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
+ */
+const cardDefaultInlineSize = 18;
 /**
  * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the
- * inline axis. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
+ * inline axis.
  */
 const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
