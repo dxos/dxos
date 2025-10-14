@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OpenAiClient } from '@effect/ai-openai';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 

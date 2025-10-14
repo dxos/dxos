@@ -18,7 +18,8 @@ Test.describe('spaces list', () => {
       const logs = logger.logs;
       Test.expect(logs).toHaveLength(1);
       Test.expect(logs[0].args).toEqual(['[]']);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
+  );
 
   Test.it('should list spaces', () =>
     Effect.gen(function* () {
@@ -31,5 +32,6 @@ Test.describe('spaces list', () => {
       Test.expect(logs).toHaveLength(1);
       const formattedSpaces = JSON.parse(logs[0].args as string);
       Test.expect(formattedSpaces).toHaveLength(2);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
+  );
 });

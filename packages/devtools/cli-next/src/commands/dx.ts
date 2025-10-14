@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Options } from '@effect/cli';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
 import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
 

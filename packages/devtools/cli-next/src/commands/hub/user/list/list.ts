@@ -4,7 +4,7 @@
 
 import path from 'node:path';
 
-import { Command } from '@effect/cli';
+import * as Command from '@effect/cli/Command';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as Config from 'effect/Config';

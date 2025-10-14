@@ -4,7 +4,7 @@
 
 import * as Inspector from 'node:inspector/promises';
 
-import { Command } from '@effect/cli';
+import * as Command from '@effect/cli/Command';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 

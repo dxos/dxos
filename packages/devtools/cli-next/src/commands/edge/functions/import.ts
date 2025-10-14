@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Args, Command } from '@effect/cli';
+import * as Args from '@effect/cli/Args';
+import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';

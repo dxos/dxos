@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Options } from '@effect/cli';
+import * as Options from '@effect/cli/Options';
 
 //
 // Common options.

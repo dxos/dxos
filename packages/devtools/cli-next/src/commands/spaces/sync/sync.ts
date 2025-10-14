@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Options } from '@effect/cli';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schedule from 'effect/Schedule';

@@ -21,7 +21,8 @@ Test.describe('halo create', () => {
       Test.expect(logs).toHaveLength(2);
       Test.expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
       Test.expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
+  );
 
   Test.it('should create an identity with a display name', () =>
     Effect.gen(function* () {
@@ -32,5 +33,6 @@ Test.describe('halo create', () => {
       Test.expect(logs).toHaveLength(2);
       Test.expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
       Test.expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
+  );
 });

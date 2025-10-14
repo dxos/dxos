@@ -6,7 +6,7 @@ import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { test } from 'vitest';
 
 import { Ref } from '@dxos/echo';
 import { logCustomEvent } from '@dxos/functions';
