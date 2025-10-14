@@ -18,7 +18,7 @@ export type ParsedExpression = {
 };
 
 export type VirtualFile = {
-  fileName: string;
+  filename: string;
   content: string;
 };
 
@@ -33,7 +33,7 @@ export class VirtualTypeScriptParser {
     strict: true,
     esModuleInterop: true,
     skipLibCheck: true,
-    forceConsistentCasingInFileNames: true,
+    forceConsistentCasingInfilenames: true,
     jsx: ts.JsxEmit.React,
     noLib: true, // Don't automatically include default lib files.
   };
@@ -42,35 +42,15 @@ export class VirtualTypeScriptParser {
    * Parse a single expression or statement.
    */
   parseExpression(input: string): ParsedExpression {
-    const files: VirtualFile[] = [{ fileName: '/temp.ts', content: input }];
+    const files: VirtualFile[] = [{ filename: '/temp.ts', content: input }];
 
     const analysis = this.analyzeFiles(files);
 
     // If no declarations found, check for standalone expression references
     if (analysis.length === 0) {
-      const fsMap = new Map<string, string>();
-      fsMap.set('/temp.ts', input);
-      fsMap.set(
-        '/lib.d.ts',
-        trim`
-          interface Array<T> { length: number; [n: number]: T; }
-          interface Boolean {}
-          interface Function {}
-          interface IArguments {}
-          interface Number {}
-          interface Object {}
-          interface RegExp {}
-          interface String { length: number; }
-          interface CallableFunction extends Function {}
-          interface NewableFunction extends Function {}
-          declare var console: { log(...args: any[]): void };
-        `,
-      );
-
-      const system = createSystem(fsMap);
-      const env = createVirtualTypeScriptEnvironment(system, ['/temp.ts', '/lib.d.ts'], ts, this.compilerOptions);
-
-      const sourceFile = env.getSourceFile('/temp.ts');
+      const sourcefilename = '/temp.ts';
+      const env = this.createEnvironment([{ filename: sourcefilename, content: input }, ...systemFiles]);
+      const sourceFile = env.getSourceFile(sourcefilename);
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
       if (sourceFile && typeChecker) {
@@ -92,47 +72,13 @@ export class VirtualTypeScriptParser {
    * Analyze multiple files with full type information.
    */
   analyzeFiles(files: VirtualFile[]): ParsedExpression[] {
-    // Create virtual file system
-    const fsMap = new Map<string, string>();
-    files.forEach((file) => {
-      fsMap.set(file.fileName, file.content);
-    });
-
-    // Add minimal TypeScript lib content to avoid errors
-    fsMap.set(
-      '/lib.d.ts',
-      trim`
-        interface Array<T> { length: number; [n: number]: T; }
-        interface Boolean {}
-        interface Function {}
-        interface IArguments {}
-        interface Number {}
-        interface Object {}
-        interface RegExp {}
-        interface String { length: number; }
-        interface CallableFunction extends Function {}
-        interface NewableFunction extends Function {}
-        declare var console: { log(...args: any[]): void };
-      `,
-    );
-
-    // Add TypeScript lib files for browser environment.
-    const system = createSystem(fsMap);
-
-    // Create virtual TypeScript environment.
-    const env = createVirtualTypeScriptEnvironment(
-      system,
-      [...files.map((f) => f.fileName), '/lib.d.ts'],
-      ts,
-      this.compilerOptions,
-    );
-
+    const env = this.createEnvironment([...files, ...systemFiles]);
     const results: ParsedExpression[] = [];
     const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
     // Analyze each file
     files.forEach((file) => {
-      const sourceFile = env.getSourceFile(file.fileName);
+      const sourceFile = env.getSourceFile(file.filename);
       if (!sourceFile || !typeChecker) return;
 
       const fileResults = this.analyzeSourceFile(sourceFile, typeChecker);
@@ -200,7 +146,7 @@ export class VirtualTypeScriptParser {
             }
 
             // Find references in the initializer only
-            const refs = declaration.initializer 
+            const refs = declaration.initializer
               ? this.findReferences(declaration.initializer, sourceFile, typeChecker)
               : [];
 
@@ -311,30 +257,6 @@ export class VirtualTypeScriptParser {
    * Check if a name is a built-in global.
    */
   protected isBuiltIn(name: string): boolean {
-    const builtIns = new Set([
-      'console',
-      'Math',
-      'JSON',
-      'Object',
-      'Array',
-      'String',
-      'Number',
-      'Promise',
-      'Map',
-      'Set',
-      'Date',
-      'RegExp',
-      'Error',
-      'parseInt',
-      'parseFloat',
-      'isNaN',
-      'isFinite',
-      'window',
-      'document',
-      'global',
-      'process',
-    ]);
-
     return builtIns.has(name);
   }
 
@@ -350,7 +272,7 @@ export class VirtualTypeScriptParser {
         if (expr.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isIdentifier(expr.left)) {
           const type = typeChecker.getTypeAtLocation(expr.right);
           const typeString = typeChecker.typeToString(type);
-          
+
           // Get the literal value if it's a literal
           let value: any;
           if (ts.isNumericLiteral(expr.right)) {
@@ -411,6 +333,21 @@ export class VirtualTypeScriptParser {
     visit(sourceFile);
     return Array.from(references);
   }
+
+  protected createEnvironment(files: VirtualFile[]) {
+    const fileMap = new Map<string, string>();
+    files.forEach(({ filename, content }) => {
+      fileMap.set(filename, content);
+    });
+
+    const system = createSystem(fileMap);
+    return createVirtualTypeScriptEnvironment(
+      system,
+      files.map(({ filename }) => filename),
+      ts,
+      this.compilerOptions,
+    );
+  }
 }
 
 /**
@@ -439,52 +376,26 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
       // Add previous cells as context.
       if (cumulativeCode.length > 0) {
         files.push({
-          fileName: '/context.ts',
+          filename: '/context.ts',
           content: cumulativeCode.join('\n'),
         });
       }
 
       // Add current cell.
+      const filename = `/cell/${cell.id}.ts`;
       files.push({
-        fileName: `/cell_${cell.id}.ts`,
+        filename,
         content: cell.code,
       });
 
       // Create environment.
-      const fsMap = new Map<string, string>();
-      files.forEach((file) => fsMap.set(file.fileName, file.content));
-
-      // Add minimal TypeScript lib content.
-      fsMap.set(
-        '/lib.d.ts',
-        trim`
-          interface Array<T> { length: number; [n: number]: T; }
-          interface Boolean {}
-          interface Function {}
-          interface IArguments {}
-          interface Number {}
-          interface Object {}
-          interface RegExp {}
-          interface String { length: number; }
-          interface CallableFunction extends Function {}
-          interface NewableFunction extends Function {}
-          declare var console: { log(...args: any[]): void };
-        `,
-      );
-
-      const system = createSystem(fsMap);
-      const env = createVirtualTypeScriptEnvironment(
-        system,
-        [...files.map((f) => f.fileName), '/lib.d.ts'],
-        ts,
-        this.compilerOptions,
-      );
+      const env = this.createEnvironment([...files, ...systemFiles]);
 
       // Get diagnostics (errors).
-      const diagnostics = env.languageService.getSemanticDiagnostics(`/cell_${cell.id}.ts`);
+      const diagnostics = env.languageService.getSemanticDiagnostics(filename);
 
       // Analyze current cell.
-      const sourceFile = env.getSourceFile(`/cell_${cell.id}.ts`);
+      const sourceFile = env.getSourceFile(filename);
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
       if (sourceFile && typeChecker) {
@@ -496,7 +407,7 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
           exp.references?.forEach((ref) => allRefs.add(ref));
         });
 
-        // Also check for references not in exports (like console.log(y)).
+        // Also check for references not in exports (e.g., console.log(y)).
         const additionalRefs = this.findAllReferences(sourceFile, typeChecker);
         additionalRefs.forEach((ref) => allRefs.add(ref));
 
@@ -524,3 +435,55 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
     return cellAnalysis;
   }
 }
+
+/**
+ * Globals.
+ */
+const builtIns = new Set([
+  // Types.
+  'Array',
+  'Date',
+  'Error',
+  'JSON',
+  'Map',
+  'Math',
+  'Number',
+  'Promise',
+  'Object',
+  'RegExp',
+  'Set',
+  'String',
+
+  // Functions.
+  'console',
+  'document',
+  'global',
+  'isFinite',
+  'isNaN',
+  'parseFloat',
+  'parseInt',
+  'process',
+  'window',
+]);
+
+/**
+ * Default system definitions.
+ */
+const systemFiles: VirtualFile[] = [
+  {
+    filename: '/lib.d.ts',
+    content: trim`
+      interface Array<T> { length: number; [n: number]: T; }
+      interface Boolean {}
+      interface Function {}
+      interface IArguments {}
+      interface Number {}
+      interface Object {}
+      interface RegExp {}
+      interface String { length: number; }
+      interface CallableFunction extends Function {}
+      interface NewableFunction extends Function {}
+      declare var console: { log(...args: any[]): void };
+    `,
+  },
+];

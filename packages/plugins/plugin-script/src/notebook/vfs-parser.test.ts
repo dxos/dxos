@@ -91,7 +91,7 @@ describe('vfs-parser', () => {
 
     const files = [
       {
-        fileName: '/test.ts',
+        filename: '/test.ts',
         content: 'export const PI = 3.14159;\nexport function square(x: number): number { return x * x; }',
       },
     ];
