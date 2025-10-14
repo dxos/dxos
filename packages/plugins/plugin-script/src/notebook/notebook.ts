@@ -91,7 +91,9 @@ export class ComputeGraph {
 
             const result = this.evalScript(rhs, valuesByName);
             valuesByName[expr.name] = result;
-            valuesByCellId[cellId] = result;
+            if (typeof result !== 'function') {
+              valuesByCellId[cellId] = result;
+            }
           }
         } else {
           // For expressions without assignment, just evaluate.

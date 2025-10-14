@@ -16,6 +16,7 @@ import React from 'react';
 
 import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type BasicExtensionsOptions,
   type EditorInputMode,
   InputModeExtensions,
   type UseTextEditorProps,
@@ -34,6 +35,7 @@ export type TypescriptEditorProps = ThemedClassName<
     inputMode?: EditorInputMode;
     toolbar?: boolean;
     env?: VirtualTypeScriptEnvironment;
+    options?: BasicExtensionsOptions;
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
@@ -44,6 +46,7 @@ export const TypescriptEditor = ({
   inputMode = 'vscode',
   toolbar,
   env,
+  options,
   initialValue,
   extensions,
   scrollTo,
@@ -58,15 +61,15 @@ export const TypescriptEditor = ({
       scrollTo,
       extensions: [
         extensions,
-        // TODO(burdon): Pass in options for this.
         createBasicExtensions({
-          // highlightActiveLine: true,
+          highlightActiveLine: true,
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
           monospace: true,
           scrollPastEnd: role !== 'section',
           search: true,
+          ...options,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],

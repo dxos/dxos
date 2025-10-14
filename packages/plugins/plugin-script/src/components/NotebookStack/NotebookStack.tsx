@@ -78,11 +78,21 @@ const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
           initialValue={script.source.target?.content}
           extensions={extensions}
           env={env}
+          options={{
+            highlightActiveLine: false,
+            lineNumbers: false,
+          }}
+          classNames='p-2'
         />
         {value != null && (
-          <div className='p-2 border-t border-subduedSeparator text-description text-sm font-mono'>
-            {name && <span>{name} = </span>}
-            <span>{value}</span>
+          <div className='flex p-2 border-t border-subduedSeparator text-description font-mono'>
+            {name && (
+              <>
+                <span className='text-infoText'>{name}</span>
+                <span className='text-description'>&nbsp;=&nbsp;</span>
+              </>
+            )}
+            <span className='text-infoText'>{value}</span>
           </div>
         )}
       </StackItem.Content>

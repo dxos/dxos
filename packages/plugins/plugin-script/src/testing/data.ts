@@ -19,7 +19,7 @@ export const createNotebook = () =>
         id: PublicKey.random().toString(),
         script: Ref.make(
           Obj.make(ScriptType, {
-            source: Ref.make(createObject(DataType.makeText(['c = a + b', '', ''].join('\n')))),
+            source: Ref.make(createObject(DataType.makeText(['c = a() + b', '', ''].join('\n')))),
           }),
         ),
       },
@@ -27,7 +27,7 @@ export const createNotebook = () =>
         id: PublicKey.random().toString(),
         script: Ref.make(
           Obj.make(ScriptType, {
-            source: Ref.make(createObject(DataType.makeText(['a = 100', ''].join('\n')))),
+            source: Ref.make(createObject(DataType.makeText(['a = () => 100', ''].join('\n')))),
           }),
         ),
       },
@@ -43,7 +43,7 @@ export const createNotebook = () =>
         id: PublicKey.random().toString(),
         script: Ref.make(
           Obj.make(ScriptType, {
-            source: Ref.make(createObject(DataType.makeText(['d = a * 2'].join('\n')))),
+            source: Ref.make(createObject(DataType.makeText(['d = a() * 2'].join('\n')))),
           }),
         ),
       },
