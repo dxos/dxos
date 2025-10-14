@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST } from 'effect';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { findNode } from '@dxos/effect';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { log } from '@dxos/log';

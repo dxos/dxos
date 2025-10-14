@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain, type Label, defineCapability } from '@dxos/app-framework';
 import { type Space } from '@dxos/react-client/echo';

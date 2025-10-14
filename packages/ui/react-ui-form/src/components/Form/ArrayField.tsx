@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST, pipe } from 'effect';
-import { capitalize } from 'effect/String';
+import * as Function from 'effect/Function';
+import * as SchemaAST from 'effect/SchemaAST';
+import * as String from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 
 import { SimpleType, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
@@ -34,7 +35,7 @@ export const ArrayField = ({ property, readonly, path, inputProps, Custom, looku
   //  It doesn't become live until another field is touched, but that's better than the whole form crashing.
   const values = (useFormValues(path ?? []) ?? []) as any[];
   invariant(Array.isArray(values), `Values at path ${path?.join('.')} must be an array.`);
-  const label = title ?? pipe(name, capitalize);
+  const label = title ?? Function.pipe(name, String.capitalize);
 
   const elementType = findArrayElementType(ast);
 

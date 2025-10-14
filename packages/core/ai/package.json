@@ -29,6 +29,12 @@
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs"
     },
+    "./AiServiceRouter": {
+      "source": "./src/AiServiceRouter.ts",
+      "types": "./dist/types/src/AiServiceRouter.d.ts",
+      "browser": "./dist/lib/browser/AiServiceRouter.mjs",
+      "node": "./dist/lib/node-esm/AiServiceRouter.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

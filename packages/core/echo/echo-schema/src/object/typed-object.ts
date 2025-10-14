@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
@@ -37,7 +37,7 @@ export type TypedObjectProps = TypeMeta & {
 
 /**
  * Base class factory for typed objects.
- * @deprecated Use pipe(Type.Obj) instead.
+ * @deprecated Use Function.pipe(Type.Obj) instead.
  */
 export const TypedObject = ({
   typename: typenameParam,

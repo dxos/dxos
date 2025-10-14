@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -25,7 +26,7 @@ export default (context: PluginContext) =>
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));
@@ -55,7 +56,7 @@ export default (context: PluginContext) =>
         ),
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const [settingsStore] = get(context.capabilities(Capabilities.SettingsStore));

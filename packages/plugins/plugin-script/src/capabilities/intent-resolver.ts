@@ -3,7 +3,7 @@
 //
 
 import { Octokit } from '@octokit/core';
-import { Predicate } from 'effect';
+import * as Predicate from 'effect/Predicate';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';

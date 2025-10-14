@@ -3,7 +3,8 @@
 //
 
 import { effect, untracked } from '@preact/signals-core';
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Path, findNode, isLiteralUnion, isSimpleType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

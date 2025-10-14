@@ -2,8 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, JSONSchema, Option, Schema, SchemaAST, type Types, pipe } from 'effect';
-import type { Mutable } from 'effect/Types';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import * as JSONSchema from 'effect/JSONSchema';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
@@ -306,7 +311,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
       case 'array': {
         if (Array.isArray(root.items)) {
-          const [required, optional] = pipe(
+          const [required, optional] = Function.pipe(
             root.items,
             Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
             Array.splitAt(root.minItems ?? root.items.length),
@@ -481,7 +486,7 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
 
 const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefined => {
   if (schema.typename) {
-    const annotation: Mutable<TypeAnnotation> = {
+    const annotation: Types.Mutable<TypeAnnotation> = {
       // TODO(dmaretskyi): Decoding default.
       kind: schema.entityKind ? Schema.decodeSync(EntityKindSchema)(schema.entityKind) : EntityKind.Object,
       typename: schema.typename,

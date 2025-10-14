@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Context } from 'effect';
+import type * as Context from 'effect/Context';
 
 import type { Space } from '@dxos/client/echo';
 import type { EchoDatabase, QueueFactory } from '@dxos/echo-db';

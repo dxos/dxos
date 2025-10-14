@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';

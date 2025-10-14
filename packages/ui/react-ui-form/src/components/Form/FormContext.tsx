@@ -92,7 +92,7 @@ export const FormProvider = ({
         }
       }
     },
-    [form, autoSave],
+    [form.canSave, form.formIsValid, form.handleSave, autoSave],
   );
 
   useEffect(() => {

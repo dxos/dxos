@@ -3,7 +3,8 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import { Match, Schema } from 'effect';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 import { type Live, live } from '@dxos/live-object';

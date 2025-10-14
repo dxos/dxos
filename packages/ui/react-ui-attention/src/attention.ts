@@ -3,7 +3,7 @@
 //
 
 import { untracked } from '@preact/signals-core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Live, live } from '@dxos/live-object';
 import { ComplexMap } from '@dxos/util';

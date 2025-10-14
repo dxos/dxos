@@ -4,7 +4,7 @@
 
 import { inspect } from 'util';
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
