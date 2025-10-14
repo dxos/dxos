@@ -11,7 +11,7 @@ import { createDataExtensions, listener, stackItemContentEditorClassNames } from
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { useDeployState, useToolbarState } from '../hooks';
-import { type ScriptSettingsProps } from '../types';
+import { type ScriptSettings } from '../types';
 
 import { ScriptToolbar } from './ScriptToolbar';
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
@@ -19,7 +19,7 @@ import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor
 export type ScriptEditorProps = {
   role: string;
   script: ScriptType;
-  settings?: ScriptSettingsProps;
+  settings?: ScriptSettings;
 } & Pick<TypescriptEditorProps, 'env'>;
 
 export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'vscode' }, env }: ScriptEditorProps) => {
