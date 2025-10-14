@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
-import { Context, Effect, Layer } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import type * as Schema from 'effect/Schema';
 
 import type { EchoDatabaseImpl, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';

@@ -3,7 +3,9 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, Record, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -553,7 +555,7 @@ export class Graph implements WritableGraph {
   }
 
   getPath({ source = 'root', target }: { source?: string; target: string }): Option.Option<string[]> {
-    return pipe(
+    return Function.pipe(
       this.getNode(source),
       Option.flatMap((node) => {
         let found: Option.Option<string[]> = Option.none();

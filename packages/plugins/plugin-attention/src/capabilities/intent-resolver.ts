@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
 import { type Selection } from '@dxos/react-ui-attention';

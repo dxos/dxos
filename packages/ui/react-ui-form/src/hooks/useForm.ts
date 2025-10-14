@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';

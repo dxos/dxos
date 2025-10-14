@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HttpClient, HttpClientRequest } from '@effect/platform';
-import { type Config, Context, Effect, Layer, Redacted } from 'effect';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import type * as Config from 'effect/Config';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Redacted from 'effect/Redacted';
 
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

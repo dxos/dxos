@@ -4,8 +4,10 @@
 
 import path from 'node:path';
 
-import { FileSystem } from '@effect/platform';
-import { Console, Effect, Option } from 'effect';
+import * as FileSystem from '@effect/platform/FileSystem';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Filter, type Space, getMeta } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';

@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema, SchemaAST, pipe } from 'effect';
-import { capitalize } from 'effect/String';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+import * as String from 'effect/String';
 
 import {
   type BaseObject,
@@ -128,7 +131,7 @@ const processProperty = <T extends BaseObject>(
     ast: prop.type,
     optional: prop.isOptional,
     readonly: prop.isReadonly,
-    title: title ?? pipe(name, capitalize),
+    title: title ?? Function.pipe(name, String.capitalize),
     description,
     examples,
     defaultValue,

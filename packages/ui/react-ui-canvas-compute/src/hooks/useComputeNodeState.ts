@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ComputeMeta, ComputeNode } from '@dxos/conductor';

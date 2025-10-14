@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, Toolkit } from '@effect/ai';
-import { Array, Context, Effect, Either, Layer } from 'effect';
+import type * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Layer from 'effect/Layer';
 
 import { log } from '@dxos/log';
 

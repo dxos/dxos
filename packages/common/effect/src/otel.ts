@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Resource, Tracer } from '@effect/opentelemetry';
+import * as Resource from '@effect/opentelemetry/Resource';
+import * as Tracer from '@effect/opentelemetry/Tracer';
 import { type Attributes, trace } from '@opentelemetry/api';
-import { Effect, Layer } from 'effect';
-import { type LazyArg } from 'effect/Function';
+import * as Effect from 'effect/Effect';
+import type * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 export interface Configuration {
   readonly resource?:
@@ -19,9 +21,11 @@ export interface Configuration {
 
 // Based on https://github.com/Effect-TS/effect/blob/main/packages/opentelemetry/src/NodeSdk.ts
 export const layerOtel: {
-  (evaluate: LazyArg<Configuration>): Layer.Layer<Resource.Resource>;
+  (evaluate: Function.LazyArg<Configuration>): Layer.Layer<Resource.Resource>;
   <R, E>(evaluate: Effect.Effect<Configuration, E, R>): Layer.Layer<Resource.Resource, E, R>;
-} = (evaluate: LazyArg<Configuration> | Effect.Effect<Configuration, any, any>): Layer.Layer<Resource.Resource> =>
+} = (
+  evaluate: Function.LazyArg<Configuration> | Effect.Effect<Configuration, any, any>,
+): Layer.Layer<Resource.Resource> =>
   Layer.unwrapEffect(
     Effect.map(
       Effect.isEffect(evaluate) ? (evaluate as Effect.Effect<Configuration>) : Effect.sync(evaluate),

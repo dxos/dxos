@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type SchemaAST } from 'effect';
+import type * as SchemaAST from 'effect/SchemaAST';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { deepMapValues } from '@dxos/util';

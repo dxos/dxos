@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { ObjectId } from '@dxos/echo-schema';

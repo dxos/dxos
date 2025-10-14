@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, SettingsAction, contributes, createIntent } from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
@@ -16,7 +17,7 @@ export default (context: PluginContext) =>
       id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
             Option.map((node) => [
@@ -41,7 +42,7 @@ export default (context: PluginContext) =>
       id: meta.id,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === 'root' ? Option.some(node) : Option.none())),
             Option.map((node) => [
@@ -110,7 +111,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -132,7 +133,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/plugins`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === REGISTRY_ID ? Option.some(node) : Option.none())),
             Option.map(() => {

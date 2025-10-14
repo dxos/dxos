@@ -31,7 +31,21 @@
 
     "plugins": [
       {
-        "name": "@effect/language-service"
+        "name": "@effect/language-service",
+        // Force namespace imports instead of named imports.
+        // Example: import * as Effect from "effect"
+        // Why: namespace imports avoid name collisions and tend to tree-shake better,
+        // especially with bundlers like esbuild.
+        "namespaceImportPackages": [
+          "effect",
+          "@effect/*"
+        ],
+
+        // When a symbol is re-exported through a barrel (e.g. index.ts),
+        // the language service will "follow" the re-export and import directly
+        // from the original file where the symbol is defined,
+        // instead of importing from the barrel.
+        "topLevelNamedReexports": "follow"
       }
     ]
   },

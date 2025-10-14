@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, Match, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
@@ -181,7 +184,7 @@ const scriptMatch = (script: ScriptType) => (trigger: FunctionTrigger) => {
 };
 
 const projectMatch = (project: DataType.Project) => {
-  const viewQueries = pipe(
+  const viewQueries = Function.pipe(
     project.collections,
     Array.map((collection) => collection.target),
     Array.filter(Schema.is(DataType.View)),

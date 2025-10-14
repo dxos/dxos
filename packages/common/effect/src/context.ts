@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, type Scope } from 'effect';
+import * as Effect from 'effect/Effect';
+import type * as Scope from 'effect/Scope';
 
 import { Context } from '@dxos/context';
 
