@@ -74,7 +74,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
 
   // Not using `breakpoint` to avoid firing when breakpoint changes between tablet and desktop.
   // `ssr: false` to avoid using fallback values and flashing into solo mode on startup.
-  const [isNotMobile] = useMediaQuery('md', { ssr: false });
+  const [isNotMobile] = useMediaQuery('md');
   const shouldRevert = useRef(false);
   useEffect(() => {
     if (!isNotMobile && getMode(deck) === 'deck') {
