@@ -80,7 +80,7 @@ export const make = <S extends Type.Obj.Any>(
     delete props[EchoSchema.MetaId];
   }
 
-  const filteredProps = Object.entries(props).filter(([_, v]) => v != null);
+  const filteredProps = Object.fromEntries(Object.entries(props).filter(([_, v]) => v != null));
 
   return live<Schema.Schema.Type<S>>(schema, filteredProps as any, { keys: [], ...meta });
 };
