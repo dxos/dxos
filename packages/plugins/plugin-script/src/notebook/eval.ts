@@ -21,20 +21,25 @@ export const evalScript = (code: string, deps: Record<string, any> = {}) => {
     window: undefined,
 
     // Allow some safe globals.
-    Math,
-    Date,
     Array,
-    Object,
-    String,
-    Number,
     Boolean,
+    Date,
+    Error,
     JSON,
+    Map,
+    Math,
+    Number,
+    Object,
+    Promise,
+    RegExp,
+    Set,
+    String,
 
     // Functions.
-    parseInt,
-    parseFloat,
-    isNaN,
     isFinite,
+    isNaN,
+    parseFloat,
+    parseInt,
 
     // Note: undefined and null are not included as they are keywords, not variables.
   };
@@ -67,8 +72,8 @@ export const builtIns = new Set([
   'Map',
   'Math',
   'Number',
-  'Promise',
   'Object',
+  'Promise',
   'RegExp',
   'Set',
   'String',
