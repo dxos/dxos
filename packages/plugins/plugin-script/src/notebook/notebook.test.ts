@@ -4,11 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Obj, Ref } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
-import { DataType } from '@dxos/schema';
-
-import { Notebook } from '../types';
+import { createNotebook } from '../testing';
 
 import { ComputeGraph } from './notebook';
 
@@ -17,34 +13,18 @@ import { ComputeGraph } from './notebook';
 
 describe('notebook', () => {
   test('parse dependency graph', () => {
-    const notebook = Notebook.make({
-      cells: [
-        Obj.make(ScriptType, {
-          source: Ref.make(DataType.makeText('c = a + b')),
-        }),
-        Obj.make(ScriptType, {
-          source: Ref.make(DataType.makeText('a = 100')),
-        }),
-        Obj.make(ScriptType, {
-          source: Ref.make(DataType.makeText('b = 200')),
-        }),
-        Obj.make(ScriptType, {
-          source: Ref.make(DataType.makeText('d = a * 2')),
-        }),
-        Obj.make(ScriptType, {
-          source: Ref.make(DataType.makeText('c + d')),
-        }),
-      ],
-    });
+    const notebook = createNotebook();
 
     const computer = new ComputeGraph(notebook);
     const result = computer.parse();
 
+    const getId = (i: number) => notebook.cells[i].script.target!.id;
+
     // Check dependencies.
     expect(result.dependencyGraph).toMatchObject({
-      [notebook.cells[0].id]: [notebook.cells[1].id, notebook.cells[2].id],
-      [notebook.cells[3].id]: [notebook.cells[1].id],
-      [notebook.cells[4].id]: [notebook.cells[0].id, notebook.cells[3].id],
+      [getId(0)]: [getId(1), getId(2)],
+      [getId(3)]: [getId(1)],
+      [getId(4)]: [getId(0), getId(3)],
     });
 
     // Compute values.

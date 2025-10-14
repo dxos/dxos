@@ -50,7 +50,8 @@ export class ComputeGraph {
         continue;
       }
 
-      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.source.target?.content;
+      const cellSource = this._notebook.cells.find((cell) => cell.script.target?.id === cellId)?.script.target?.source
+        .target?.content;
       if (!cellSource) {
         log.error('no source for cell', { cellId });
         continue;
@@ -92,10 +93,10 @@ export class ComputeGraph {
   parse() {
     const expressions = this._notebook.cells
       .map((cell) => {
-        const text = cell.source.target;
+        const text = cell.script.target?.source.target;
         if (text) {
           const parsed = this._parser.parseExpression(text.content);
-          return { cellId: cell.id, ...parsed };
+          return { cellId: cell.script.target?.id, ...parsed };
         }
       })
       .filter(isNonNullable);
