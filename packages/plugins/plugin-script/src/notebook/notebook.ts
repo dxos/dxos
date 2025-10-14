@@ -114,11 +114,12 @@ export class ComputeGraph {
    */
   parse() {
     const expressions = this._notebook.cells.reduce<Record<string, ParsedExpression>>((acc, cell) => {
-      const text = cell.script.target?.source.target;
+      const text = cell.script.target?.source.target?.content.trim();
       if (text) {
-        const parsed = this._parser.parseExpression(text.content);
+        const parsed = this._parser.parseExpression(text);
         acc[cell.id] = parsed;
       }
+
       return acc;
     }, {});
 

@@ -5,6 +5,7 @@
 import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vfs';
 import ts from 'typescript';
 
+import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 export type ParsedExpression = {
@@ -42,6 +43,7 @@ export class VirtualTypeScriptParser {
    * Parse a single expression or statement.
    */
   parseExpression(input: string): ParsedExpression {
+    invariant(input.trim() !== '', 'input must not be empty');
     const files: VirtualFile[] = [{ filename: '/temp.ts', content: input }];
     const analysis = this.analyzeFiles(files);
 

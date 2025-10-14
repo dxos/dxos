@@ -5,10 +5,11 @@
 import React, { useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon } from '@dxos/react-ui';
+import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
+import { meta } from '../../meta';
 import { type ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
 import { TypescriptEditor } from '../TypescriptEditor';
@@ -40,6 +41,7 @@ type NotebookSectionProps = {
 } & Pick<TypescriptEditorProps, 'env'>;
 
 const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
+  const { t } = useTranslation(meta.id);
   const script = useMemo(() => cell.script.target!, [cell]);
   const extensions = useMemo(() => {
     return [createDataExtensions({ id: script.id, text: createDocAccessor(script.source.target!, ['content']) })];
@@ -61,9 +63,8 @@ const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
             <DropdownMenu.Portal>
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>
-                  <DropdownMenu.Item>Option 1</DropdownMenu.Item>
-                  <DropdownMenu.Item>Option 2</DropdownMenu.Item>
-                  <DropdownMenu.Item>Option 3</DropdownMenu.Item>
+                  <DropdownMenu.Item>{t('insert cell label')}</DropdownMenu.Item>
+                  <DropdownMenu.Item>{t('delete cell label')}</DropdownMenu.Item>
                 </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>
