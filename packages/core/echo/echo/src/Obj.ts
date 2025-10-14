@@ -66,7 +66,7 @@ const DEFAULT_META: EchoSchema.ObjectMeta = {
 export const make = <S extends Type.Obj.Any>(
   schema: S,
   props: MakeProps<S>,
-  meta?: EchoSchema.ObjectMeta,
+  meta?: Partial<EchoSchema.ObjectMeta>,
 ): LiveObject.Live<Schema.Schema.Type<S>> => {
   assertArgument(
     EchoSchema.getTypeAnnotation(schema)?.kind === EchoSchema.EntityKind.Object,
@@ -80,7 +80,7 @@ export const make = <S extends Type.Obj.Any>(
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, meta);
+  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {

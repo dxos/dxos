@@ -25,9 +25,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "api-keys": "./scripts/inject_api_keys.mjs"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

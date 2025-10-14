@@ -112,12 +112,13 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         children.length > 0 ? children.map(({ id }) => id) : node.properties.role === 'branch' ? [] : undefined;
       return {
         id: node.id,
-        label: node.properties.label ?? node.id,
         parentOf,
-        icon: node.properties.icon,
         disabled: node.properties.disabled,
-        className: mx(node.properties.modified && 'italic', node.properties.className),
+        label: node.properties.label ?? node.id,
+        className: mx(node.properties.className, node.properties.modified && 'italic'), // TODO(burdon): Italic?
         headingClassName: node.properties.headingClassName,
+        icon: node.properties.icon,
+        iconClassName: node.properties.iconClassName,
         testId: node.properties.testId,
       };
     },
@@ -177,6 +178,10 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
     return target.item.properties.canDrop?.(source) ?? false;
+  }, []);
+
+  const canSelect = useCallback(({ item }: { item: Node }) => {
+    return item.properties.selectable ?? true;
   }, []);
 
   const handleSelect = useCallback(
@@ -304,6 +309,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       isCurrent,
       isOpen,
       canDrop,
+      canSelect,
       isAlternateTree,
       setAlternateTree,
       onTabChange: handleTabChange,
@@ -322,6 +328,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       isCurrent,
       isOpen,
       canDrop,
+      canSelect,
       isAlternateTree,
       setAlternateTree,
       handleTabChange,

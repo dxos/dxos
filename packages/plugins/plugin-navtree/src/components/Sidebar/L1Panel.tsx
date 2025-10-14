@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/react-ui-theme';
@@ -28,11 +28,10 @@ export type L1PanelProps = {
 export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.id);
   const { isAlternateTree, ...navTreeContext } = useNavTreeContext();
-  // NOTE(burdon): I'm very uneasy about this pattern of declaring hooks as context props.
-  const { useItems } = navTreeContext;
   const title = toLocalizedString(item.properties.label, t);
 
   // TODO(wittjosiah): Support multiple alternate trees.
+  const { useItems } = navTreeContext;
   const alternateTree = useItems(item, { disposition: 'alternate-tree' })[0];
   const alternatePath = useMemo(() => [...path, item.id], [item.id, path]);
   const isAlternate = isAlternateTree?.(alternatePath, item) ?? false;
@@ -59,19 +58,19 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
       {...(!open && { inert: true })}
     >
       {item.id === currentItemId && (
-        <>
+        <DensityProvider density='fine'>
           <L1PanelHeader path={path} item={item} currentItemId={currentItemId} onBack={onBack} />
           <div role='none' className='overflow-y-auto'>
             {isAlternate ? (
               <Tree
                 {...navTreeContext}
-                useItems={useAlternateItems}
                 id={alternateTree.id}
                 root={alternateTree}
                 path={alternatePath}
                 levelOffset={5}
                 gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                 renderColumns={NavTreeItemColumns}
+                useItems={useAlternateItems}
               />
             ) : (
               <Tree
@@ -80,13 +79,13 @@ export const L1Panel = ({ open, path, item, currentItemId, onBack }: L1PanelProp
                 root={item}
                 path={path}
                 levelOffset={5}
-                draggable
                 gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
                 renderColumns={NavTreeItemColumns}
+                draggable
               />
             )}
           </div>
-        </>
+        </DensityProvider>
       )}
     </Tabs.Tabpanel>
   );

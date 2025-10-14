@@ -22,21 +22,22 @@ import { meta } from '../meta';
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
 
-export type ProjectSettingsProps = ThemedClassName<{
+// TODO(burdon): Standardize Object/Plugin settings.
+export type ProjectObjectSettingsProps = ThemedClassName<{
   project: DataType.Project;
 }>;
 
 /**
- * ProjectSettings allows for editing the views of a project.
+ * Supports editing the project view.
  */
-export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) => {
+export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(project);
   const views = project.collections.map((ref) => ref.target).filter((object) => Obj.instanceOf(DataType.View, object));
   const [expandedId, setExpandedId] = useState<DataType.View['id']>();
   const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
-  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
 
   useAsyncEffect(async () => {
@@ -45,7 +46,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
     }
 
     const foundSchema = await resolveSchemaWithClientAndSpace(client, space, view.query.ast);
-    if (foundSchema !== schema) {
+    if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
   }, [client, space, view, schema]);
@@ -55,18 +56,16 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
     [project.collections],
   );
 
-  const updateViewQuery = useCallback(
+  const handleQueryChanged = useCallback(
     async (queryString: string, target?: string) => {
       if (!view || !space) {
         return;
       }
 
       view.query.string = queryString;
-
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const newQuery = queue ? evalQuery(queryString).options({ queues: [queue] }) : evalQuery(queryString);
       view.query.ast = newQuery.ast;
-
       const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
       if (!newSchema) {
         return;
@@ -78,6 +77,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
         presentation: Obj.make(Type.Expando, {}),
       });
       view.projection = Obj.getSnapshot(newView).projection;
+
       setSchema(() => newSchema);
     },
     [view, schema],
@@ -147,7 +147,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
                       onClick={() => handleToggleField(view)}
                     />
                   </div>
-                  {expandedId === view.id && view && schema && (
+                  {expandedId === view.id && view && (
                     <div role='none' className='col-span-5 mbs-1 mbe-1 border border-separator rounded-md'>
                       <ViewEditor
                         ref={projectionRef}
@@ -155,7 +155,7 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}
-                        onQueryChanged={updateViewQuery}
+                        onQueryChanged={handleQueryChanged}
                       />
                     </div>
                   )}
@@ -173,4 +173,4 @@ export const ProjectSettings = ({ project, classNames }: ProjectSettingsProps) =
   );
 };
 
-export default ProjectSettings;
+export default ProjectObjectSettings;

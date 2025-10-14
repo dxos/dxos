@@ -64,7 +64,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'deploy',
-      label: [state.deploying ? 'pending label' : 'deploy label', { ns: meta.id }],
+      label: [state.deploying ? 'publishing label' : 'deploy label', { ns: meta.id }],
       icon: state.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: state.deploying,
       classNames: state.deploying ? '[&_svg]:animate-spin' : '',
@@ -74,10 +74,9 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
   const copyAction = createMenuAction<DeployActionProperties>(
     'copy',
     async () => {
-      if (!state.functionUrl) {
-        return;
+      if (state.functionUrl) {
+        await navigator.clipboard.writeText(state.functionUrl);
       }
-      await navigator.clipboard.writeText(state.functionUrl);
     },
     {
       type: 'copy',
@@ -117,9 +116,9 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
 };
 
 export const useDeployDeps = ({ script }: { script: ScriptType }) => {
+  const client = useClient();
   const space = getSpace(script);
   const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
-  const client = useClient();
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
-  return { space, fn, client, existingFunctionId };
+  return { client, space, fn, existingFunctionId };
 };

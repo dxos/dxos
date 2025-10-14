@@ -37,7 +37,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
       // NOTE: Snapshot is required to prevent signal read in prohibited scope.
       return Query.fromAst(Obj.getSnapshot(view).query.ast);
     }
-  }, [view?.query.ast]);
+  }, [JSON.stringify(view?.query.ast)]);
 
   useAsyncEffect(async () => {
     if (!query || !space) {

@@ -15,7 +15,7 @@ import {
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
-import { getHashColor } from '@dxos/react-ui-theme';
+import { getHashStyles } from '@dxos/react-ui-theme';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -85,7 +85,7 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
               const obj = node.data?.data.object;
               return {
                 data: {
-                  color: getHashColor(obj && Obj.getTypename(obj))?.color,
+                  color: getHashStyles(obj && Obj.getTypename(obj))?.hue,
                 },
                 classes: {
                   'dx-selected': selection.contains(node.id),

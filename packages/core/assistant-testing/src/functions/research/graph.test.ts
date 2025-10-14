@@ -7,7 +7,8 @@ import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
 import { Config, Effect, Layer, pipe } from 'effect';
 
-import { AiService, AiServiceRouter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { tapHttpErrors } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { TestHelpers } from '@dxos/effect';

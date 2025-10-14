@@ -11,7 +11,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
-import { ProjectContainer, ProjectSettings } from '../components';
+import { ProjectContainer, ProjectObjectSettings } from '../components';
 import { meta } from '../meta';
 
 export default () =>
@@ -41,6 +41,6 @@ export default () =>
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
-      component: ({ data }) => <ProjectSettings project={data.subject} />,
+      component: ({ data }) => <ProjectObjectSettings project={data.subject} />,
     }),
   ]);

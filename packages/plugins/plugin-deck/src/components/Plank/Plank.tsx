@@ -102,7 +102,7 @@ const PlankContainer = ({ children, solo, companion }: PropsWithChildren<{ solo:
   return (
     <div
       role='none'
-      className={mx('absolute inset-0 grid', companion && 'grid-cols-[1fr_1fr]', railGridHorizontal, mainIntrinsicSize)}
+      className={mx('absolute inset-0 grid', companion && 'grid-cols-[6fr_4fr]', railGridHorizontal, mainIntrinsicSize)}
       {...sizeAttrs}
     >
       {children}
@@ -171,11 +171,7 @@ const PlankComponent = memo(
 
     useLayoutEffect(() => {
       if (scrollIntoView === id) {
-        // TODO(wittjosiah): When focused on page load, the focus is always visible.
-        //   Forcing focus to something smaller than the plank prevents large focus ring in the interim.
-        const focusable = rootElement.current?.querySelector('button') || rootElement.current;
-        focusable?.focus({ preventScroll: true });
-        layoutMode === 'deck' && focusable?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         // Clear the scroll into view state once it has been actioned.
         void dispatch(createIntent(LayoutAction.ScrollIntoView, { part: 'current', subject: undefined }));
       }

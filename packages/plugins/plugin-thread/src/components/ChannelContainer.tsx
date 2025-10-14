@@ -114,7 +114,7 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
   const isJoined = callManager.joined && callManager.roomId === roomId;
 
   return (
-    <StackItem.Content toolbar={!isJoined} classNames={isJoined && 'h-full'}>
+    <StackItem.Content classNames={isJoined && 'bs-full'} toolbar={!isJoined}>
       {isJoined && !isNamed && <DisplayNameMissing />}
       {isJoined && isNamed && (
         <Call.Root>

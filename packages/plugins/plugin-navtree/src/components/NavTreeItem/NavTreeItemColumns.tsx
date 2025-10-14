@@ -5,7 +5,7 @@
 import React, { Fragment, memo } from 'react';
 
 import { isAction } from '@dxos/app-graph';
-import { DensityProvider, Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { useLoadDescendents } from '../../hooks';
 import { meta } from '../../meta';
@@ -15,7 +15,7 @@ import { type NavTreeItemColumnsProps } from '../types';
 
 import { NavTreeItemAction } from './NavTreeItemAction';
 
-export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: NavTreeItemColumnsProps) => {
+export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(meta.id);
   const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
@@ -29,15 +29,15 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
     .flatMap((action) => (isAction(action) ? [action] : []))
     .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
 
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
-
   useLoadDescendents(item);
   useLoadDescendents(primaryAction && !isAction(primaryAction) ? primaryAction : undefined);
 
+  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
+
   return (
-    <DensityProvider density={density}>
-      <div role='none' className='contents app-no-drag'>
-        {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
+    <div role='none' className='contents app-no-drag'>
+      {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
+        <Treegrid.Cell classNames='contents'>
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}
             label={toLocalizedString(primaryAction.properties?.label, t)}
@@ -48,11 +48,13 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
             menuType={primaryAction.properties?.menuType}
             caller={NAV_TREE_ITEM}
           />
-        ) : (
-          <Treegrid.Cell />
-        )}
-        <ActionRoot>
-          {actions.length > 0 ? (
+        </Treegrid.Cell>
+      ) : (
+        <Treegrid.Cell role='none' />
+      )}
+      <ActionRoot>
+        {actions.length > 0 ? (
+          <Treegrid.Cell classNames='contents'>
             <NavTreeItemAction
               testId={`navtree.treeItem.actionsLevel${level}`}
               label={t('tree item actions label')}
@@ -62,12 +64,16 @@ export const NavTreeItemColumns = memo(({ path, item, open, density = 'fine' }: 
               menuType='dropdown'
               caller={NAV_TREE_ITEM}
             />
-          ) : (
-            <Treegrid.Cell />
-          )}
-        </ActionRoot>
-        {ItemEnd && <ItemEnd node={item} open={open} />}
-      </div>
-    </DensityProvider>
+          </Treegrid.Cell>
+        ) : (
+          <Treegrid.Cell role='none' />
+        )}
+      </ActionRoot>
+      {ItemEnd && (
+        <Treegrid.Cell classNames='contents'>
+          <ItemEnd node={item} open={open} />
+        </Treegrid.Cell>
+      )}
+    </div>
   );
 });

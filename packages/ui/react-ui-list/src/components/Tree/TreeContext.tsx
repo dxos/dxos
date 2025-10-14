@@ -11,10 +11,11 @@ export type TreeItemDataProps = {
   id: string;
   label: Label;
   parentOf?: string[];
-  icon?: string;
-  disabled?: boolean;
   className?: string;
   headingClassName?: string;
+  icon?: string;
+  iconClassName?: string;
+  disabled?: boolean;
   testId?: string;
 };
 

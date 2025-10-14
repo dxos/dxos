@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as am } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 
 import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
@@ -243,7 +243,7 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
       missingOnLocal.push(documentId as DocumentId);
     } else if (!remote.documents[documentId] || remote.documents[documentId].length === 0) {
       missingOnRemote.push(documentId as DocumentId);
-    } else if (!am.equals(local.documents[documentId], remote.documents[documentId])) {
+    } else if (!A.equals(local.documents[documentId], remote.documents[documentId])) {
       different.push(documentId as DocumentId);
     }
   }
