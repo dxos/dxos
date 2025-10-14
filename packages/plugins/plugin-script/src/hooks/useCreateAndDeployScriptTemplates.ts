@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Function from 'effect/Function';
 import { useCallback, useState } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
