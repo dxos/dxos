@@ -58,9 +58,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "compile:buf": "buf generate"
-  },
   "dependencies": {
     "@bufbuild/protobuf": "^2.1.0",
     "@dxos/codec-protobuf": "workspace:*",

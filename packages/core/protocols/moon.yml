@@ -8,7 +8,7 @@ tasks:
     deps:
       - prebuild
   gen-buf:
-    command: pnpm run --silent compile:buf
+    command: buf generate
     inputs:
       - src/proto/dxos/**/*.proto
     outputs:
