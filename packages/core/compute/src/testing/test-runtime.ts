@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Layer, ManagedRuntime } from 'effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';

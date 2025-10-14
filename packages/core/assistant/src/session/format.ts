@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -28,7 +31,7 @@ export const formatSystemPrompt = ({
   objects = [],
 }: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
   Effect.gen(function* () {
-    const blueprintDefs = yield* pipe(
+    const blueprintDefs = yield* Function.pipe(
       blueprints,
       Effect.forEach((blueprint) => Effect.succeed(blueprint.instructions)),
       Effect.flatMap(Effect.forEach((template) => DatabaseService.loadOption(template.source))),
@@ -47,7 +50,7 @@ export const formatSystemPrompt = ({
       ),
     );
 
-    const objectDefs = yield* pipe(
+    const objectDefs = yield* Function.pipe(
       objects,
       Effect.forEach((object) =>
         Effect.succeed(trim`
@@ -60,7 +63,7 @@ export const formatSystemPrompt = ({
       Effect.map((objects) => (objects.length > 0 ? ['## Context Objects', ...objects].join('\n\n') : undefined)),
     );
 
-    return yield* pipe(
+    return yield* Function.pipe(
       Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
       Effect.map((parts) => parts.join('\n\n')),
     );

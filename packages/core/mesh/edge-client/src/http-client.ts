@@ -2,10 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type HttpClient } from '@effect/platform';
-import { type HttpClientError } from '@effect/platform/HttpClientError';
-import { type HttpClientResponse } from '@effect/platform/HttpClientResponse';
-import { Context, Duration, Effect, Layer, Schedule } from 'effect';
+import type * as HttpClient from '@effect/platform/HttpClient';
+import type * as HttpClientError from '@effect/platform/HttpClientError';
+import type * as HttpClientResponse from '@effect/platform/HttpClientResponse';
+import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schedule from 'effect/Schedule';
 
 import { log } from '@dxos/log';
 
@@ -28,7 +32,7 @@ export class HttpConfig extends Context.Tag('HttpConfig')<HttpConfig, RetryOptio
 
 // HOC pattern.
 export const withRetry = (
-  effect: Effect.Effect<HttpClientResponse, HttpClientError, HttpClient.HttpClient>,
+  effect: Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError, HttpClient.HttpClient>,
   {
     timeout = Duration.millis(1_000),
     retryBaseDelay = Duration.millis(1_000),

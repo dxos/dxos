@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { Schema, pipe } from 'effect';
+import * as Schema from 'effect/Schema';
 import { beforeAll, describe, test } from 'vitest';
 
 import { AiService, MixedStreamParser } from '@dxos/ai';

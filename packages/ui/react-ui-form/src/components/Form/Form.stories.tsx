@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';

@@ -3,7 +3,9 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Console, Effect, Schema } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { type Queue } from '@dxos/client/echo';
 import { DXN } from '@dxos/keys';

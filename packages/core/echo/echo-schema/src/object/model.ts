@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';

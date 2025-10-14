@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { NodeContext } from '@effect/platform-node';
+import * as NodeContext from '@effect/platform-node/NodeContext';
 import { assert, describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { TestConsole } from '../testing';
 

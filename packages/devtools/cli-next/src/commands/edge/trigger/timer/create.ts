@@ -3,7 +3,9 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Console, Effect, HashMap } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as HashMap from 'effect/HashMap';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { DatabaseService, FunctionTrigger, FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';

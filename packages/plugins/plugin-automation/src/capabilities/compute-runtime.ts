@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Toolkit } from '@effect/ai';
+import * as Toolkit from '@effect/ai/Toolkit';
 import { BrowserKeyValueStore } from '@effect/platform-browser';
-import { Effect, Layer, ManagedRuntime } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';

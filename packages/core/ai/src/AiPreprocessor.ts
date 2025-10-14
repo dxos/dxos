@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prompt } from '@effect/ai';
-import { Array, Effect, Predicate, pipe } from 'effect';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Predicate from 'effect/Predicate';
 
 import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';
@@ -29,7 +32,7 @@ export const preprocessPrompt: (
   messages,
   { system } = {},
 ) {
-  let prompt = yield* pipe(
+  let prompt = yield* Function.pipe(
     messages,
     Effect.forEach(
       Effect.fnUntraced(function* (msg) {
@@ -37,7 +40,7 @@ export const preprocessPrompt: (
           case 'user':
             return [
               Prompt.makeMessage('user', {
-                content: yield* pipe(
+                content: yield* Function.pipe(
                   msg.blocks,
                   Effect.forEach(convertUserMessagePart),
                   Effect.map(Array.filter(Predicate.isNotUndefined)),
@@ -47,7 +50,7 @@ export const preprocessPrompt: (
           case 'assistant':
             return [
               Prompt.makeMessage('assistant', {
-                content: yield* pipe(
+                content: yield* Function.pipe(
                   msg.blocks,
                   Effect.forEach(convertAssistantMessagePart),
                   Effect.map(Array.filter(Predicate.isNotUndefined)),
@@ -58,7 +61,7 @@ export const preprocessPrompt: (
           case 'tool':
             return [
               Prompt.makeMessage('tool', {
-                content: yield* pipe(
+                content: yield* Function.pipe(
                   msg.blocks,
                   Effect.forEach(convertToolMessagePart),
                   Effect.map(Array.filter(Predicate.isNotUndefined)),

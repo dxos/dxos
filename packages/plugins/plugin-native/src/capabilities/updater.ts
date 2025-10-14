@@ -5,7 +5,12 @@
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { type DownloadEvent, check } from '@tauri-apps/plugin-updater';
-import { Duration, Effect, Fiber, Match, Schedule, pipe } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Schedule from 'effect/Schedule';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { log } from '@dxos/log';
@@ -67,7 +72,7 @@ export default (context: PluginContext) => {
     }
   });
 
-  const fiber = pipe(
+  const fiber = Function.pipe(
     // prettier-ignore
     action,
     Effect.repeat(Schedule.fixed(Duration.hours(1))),

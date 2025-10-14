@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JSONSchema, Option, SchemaAST, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import type * as JSONSchema from 'effect/JSONSchema';
+import * as Option from 'effect/Option';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';
@@ -53,7 +56,7 @@ export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
 export const FormatAnnotation = createAnnotationHelper<FormatEnum>(FormatAnnotationId);
 
 export const getFormatAnnotation = (node: SchemaAST.AST): FormatEnum | undefined =>
-  pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
+  Function.pipe(SchemaAST.getAnnotation<FormatEnum>(FormatAnnotationId)(node), Option.getOrUndefined);
 
 // TODO(burdon): Rename to FormatType and change to discriminated union.
 export enum FormatEnum {
@@ -167,6 +170,6 @@ export const formatToType: Record<FormatEnum, TypeEnum> = {
 export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
 
 export const getOptionsAnnotation = (node: SchemaAST.AST): OptionsAnnotationType[] | undefined =>
-  pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+  Function.pipe(SchemaAST.getAnnotation<OptionsAnnotationType[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
 
 export type OptionsAnnotationType = string | number;

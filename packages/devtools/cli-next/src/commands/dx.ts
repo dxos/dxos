@@ -3,7 +3,8 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { Config, Layer } from 'effect';
+import * as Config from 'effect/Config';
+import * as Layer from 'effect/Layer';
 
 import { ENV_DX_PROFILE_DEFAULT } from '@dxos/client-protocol';
 

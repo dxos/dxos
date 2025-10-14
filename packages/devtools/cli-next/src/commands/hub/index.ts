@@ -3,7 +3,10 @@
 //
 
 import { Command, Options } from '@effect/cli';
-import { ConfigProvider, Effect, Layer, Option } from 'effect';
+import * as ConfigProvider from 'effect/ConfigProvider';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { status } from './status';
 import { user } from './user';

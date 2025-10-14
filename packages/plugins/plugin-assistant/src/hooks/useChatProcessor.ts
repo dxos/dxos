@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect-rx/rx-react';
-import { type Runtime } from 'effect';
+import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo } from 'react';
 
 import { AiConversation } from '@dxos/assistant';

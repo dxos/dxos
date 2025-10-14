@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 /** Schema for a single select option. Used to define choices in a {single|multi}-select field. */
 export const SelectOptionSchema = Schema.Struct({

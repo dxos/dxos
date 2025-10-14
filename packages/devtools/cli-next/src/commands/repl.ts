@@ -3,7 +3,7 @@
 //
 
 import { Command, Prompt } from '@effect/cli';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { run } from './dx';
 

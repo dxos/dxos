@@ -3,7 +3,11 @@
 //
 
 import { Command } from '@effect/cli';
-import { Array, Console, Effect, Record, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Record from 'effect/Record';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
@@ -19,7 +23,7 @@ export const stats = Command.make(
   ({ spaceId }) =>
     Effect.gen(function* () {
       const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
-      const stats = pipe(
+      const stats = Function.pipe(
         objects,
         Array.groupBy((obj) => Obj.getTypename(obj) ?? '<empty>'),
         Record.map((objs) => objs.length),

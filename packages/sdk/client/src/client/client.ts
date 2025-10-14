@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {

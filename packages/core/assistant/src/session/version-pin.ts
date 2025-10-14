@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';

@@ -3,7 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { Match, Option, Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';
@@ -76,7 +79,7 @@ const TestChat: FC<{ doc: Markdown.Document; content: string }> = ({ doc, conten
 
     const text = await doc.content.load();
     const accessor = createDocAccessor(text, ['content']);
-    const cursor = pipe(
+    const cursor = Function.pipe(
       editorState.getState(fullyQualifiedId(doc))?.selection,
       Option.fromNullable,
       Option.map(selectionToRange),

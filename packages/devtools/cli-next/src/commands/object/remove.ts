@@ -4,7 +4,9 @@
 
 import { Command } from '@effect/cli';
 import { Options } from '@effect/cli';
-import { Console, Effect, Option } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Filter, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';

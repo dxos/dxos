@@ -3,9 +3,12 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer, pipe } from 'effect';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 import { AiService, AiServiceRouter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { tapHttpErrors } from '@dxos/ai/testing';
@@ -19,7 +22,7 @@ import { makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
 
 // import { type EchoTestBuilder } from '@dxos/echo-db/testing';
 
-const TestLayer = pipe(
+const TestLayer = Function.pipe(
   AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
   Layer.provideMerge(DatabaseService.notAvailable),
   Layer.provideMerge(ToolResolverService.layerEmpty),
