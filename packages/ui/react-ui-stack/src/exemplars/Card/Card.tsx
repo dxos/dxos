@@ -22,6 +22,8 @@ import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './frag
 
 type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
 
+const cardStackDefaultInlineSizeRem = 18;
+
 const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
   ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
@@ -183,4 +185,4 @@ export const Card = {
   Text: CardText,
 };
 
-export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing };
+export { cardRoot, cardHeading, cardText, cardChrome, cardSpacing, cardStackDefaultInlineSizeRem };
