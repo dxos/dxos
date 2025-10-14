@@ -18,10 +18,13 @@ export const CreateMap = Schema.Struct({
     [TypenameAnnotationId]: ['used-static', 'dynamic'],
     title: 'Select pin record type',
   }),
-  locationFieldName: Schema.String.annotations({
-    [LocationAnnotationId]: true,
-    title: 'Location property',
-  }),
+  locationFieldName: Schema.String.pipe(
+    Schema.annotations({
+      [LocationAnnotationId]: true,
+      title: 'Location property',
+    }),
+    Schema.optional,
+  ),
 });
 
 export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
