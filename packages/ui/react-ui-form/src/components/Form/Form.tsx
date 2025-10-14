@@ -4,14 +4,14 @@
 
 import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Schema } from 'effect';
-import React, { type ReactElement, useEffect, useMemo, useRef } from 'react';
+import React, { type ReactElement, useCallback, useEffect, useRef } from 'react';
 
 import { type BaseObject, type PropertyKey } from '@dxos/echo-schema';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { cardDialogOverflow, cardSpacing } from '@dxos/react-ui-stack';
 import { type ProjectionModel, type SchemaProperty } from '@dxos/schema';
 
-import { type FormOptions } from '../../hooks';
+import { type FormHandler, type FormOptions } from '../../hooks';
 
 import { FormActions, type FormOuterSpacing } from './FormActions';
 import { FormFields, type FormFieldsProps } from './FormContent';
@@ -72,7 +72,14 @@ export const Form = <T extends BaseObject>({
   }, [autoFocus]);
 
   // TODO(burdon): Name?
-  const handleValid = useMemo(() => (autoSave ? onSave : undefined), [autoSave, onSave]);
+  const handleValid = useCallback(
+    async (values: any, meta: { changed: FormHandler<T>['changed'] }) => {
+      if (autoSave) {
+        await onSave?.(values, meta);
+      }
+    },
+    [autoSave, onSave],
+  );
 
   return (
     <FormProvider
