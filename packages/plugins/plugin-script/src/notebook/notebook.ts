@@ -3,6 +3,7 @@
 //
 
 import { log } from '@dxos/log';
+import { isNonNullable } from '@dxos/util';
 
 import { type Notebook } from '../types';
 
@@ -14,6 +15,7 @@ import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
+  /** Values by name. */
   private _values: Record<string, any> = {};
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
@@ -23,6 +25,9 @@ export class ComputeGraph {
   }
 
   evaluate() {
+    // Clear previous values.
+    this._values = {};
+
     const { expressions, dependencyGraph } = this.parse();
 
     // Create a map of cell IDs to expressions for easy lookup.
@@ -37,16 +42,19 @@ export class ComputeGraph {
       dependencyGraph,
     );
 
-    // Clear previous values.
-    this._values = {};
-
     // Evaluate cells in dependency order.
     for (const cellId of evaluationOrder) {
       const expr = cellExpressions.get(cellId);
-      if (!expr) continue;
+      if (!expr) {
+        log.error('no expression for cell', { cellId });
+        continue;
+      }
 
       const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.source.target?.content;
-      if (!cellSource) continue;
+      if (!cellSource) {
+        log.error('no source for cell', { cellId });
+        continue;
+      }
 
       try {
         // For assignments or declarations, evaluate and store the value.
@@ -86,12 +94,11 @@ export class ComputeGraph {
       .map((cell) => {
         const text = cell.source.target;
         if (text) {
-          const { content } = text;
-          const parsed = this._parser.parseExpression(content);
+          const parsed = this._parser.parseExpression(text.content);
           return { cellId: cell.id, ...parsed };
         }
       })
-      .filter(Boolean) as (ParsedExpression & { cellId: string })[];
+      .filter(isNonNullable);
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);
@@ -103,13 +110,15 @@ export class ComputeGraph {
     const result: string[] = [];
 
     const visit = (node: string) => {
-      if (visited.has(node)) return;
+      if (visited.has(node)) {
+        return;
+      }
+
       visited.add(node);
 
       // Visit dependencies first.
       const deps = dependencies[node] || [];
       deps.forEach((dep) => visit(dep));
-
       result.push(node);
     };
 
@@ -118,7 +127,7 @@ export class ComputeGraph {
     return result;
   }
 
-  private buildDependencyGraph(expressions: (ParsedExpression & { cellId: string })[]) {
+  private buildDependencyGraph(expressions: (ParsedExpression & { cellId: string })[]): Record<string, string[]> {
     // Create a map of variable names to their cell IDs.
     const nameToCell = new Map<string, string>();
     expressions.forEach((expr) => {
