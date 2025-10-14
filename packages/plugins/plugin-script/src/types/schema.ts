@@ -13,7 +13,7 @@ export namespace Notebook {
   export const Notebook = Schema.mutable(
     Schema.Struct({
       name: Schema.optional(Schema.String),
-      scripts: Schema.mutable(Schema.Array(ScriptType)),
+      cells: Schema.mutable(Schema.Array(ScriptType)),
     }),
   ).pipe(
     Type.Obj({
@@ -25,7 +25,7 @@ export namespace Notebook {
 
   export type Notebook = Schema.Schema.Type<typeof Notebook>;
 
-  export const make = (props: Obj.MakeProps<typeof Notebook> = { scripts: [] }) => Obj.make(Notebook, props);
+  export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }) => Obj.make(Notebook, props);
 }
 
 export const ScriptSettings = Schema.mutable(

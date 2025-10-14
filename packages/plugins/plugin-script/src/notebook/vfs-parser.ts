@@ -11,6 +11,7 @@ export type ParsedExpression = {
   name?: string;
   type?: 'function' | 'variable' | 'class' | 'interface';
   valueType?: string;
+  value?: any;
   parameters?: Array<{ name: string; type: string }>;
   returnType?: string;
   references?: string[];
@@ -73,6 +74,12 @@ export class VirtualTypeScriptParser {
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
       if (sourceFile && typeChecker) {
+        // Check for assignment expressions
+        const assignmentInfo = this.findAssignmentExpression(sourceFile, typeChecker);
+        if (assignmentInfo) {
+          return assignmentInfo;
+        }
+
         const references = this.findAllReferences(sourceFile, typeChecker);
         return { references };
       }
@@ -167,6 +174,10 @@ export class VirtualTypeScriptParser {
             let kind: 'function' | 'variable' = 'variable';
             let parameters: Array<{ name: string; type: string }> | undefined;
             let returnType: string | undefined;
+            let value: any;
+
+            // Get the type string
+            const typeString = type ? typeChecker.typeToString(type) : 'any';
 
             // Check if it's a function.
             if (declaration.initializer) {
@@ -178,16 +189,29 @@ export class VirtualTypeScriptParser {
                   parameters = this.extractParameters(signature, typeChecker);
                   returnType = typeChecker.typeToString(signature.getReturnType());
                 }
+              } else {
+                // Extract literal values
+                if (ts.isNumericLiteral(declaration.initializer)) {
+                  value = Number(declaration.initializer.text);
+                } else if (ts.isStringLiteral(declaration.initializer)) {
+                  value = declaration.initializer.text;
+                }
               }
             }
+
+            // Find references in the initializer only
+            const refs = declaration.initializer 
+              ? this.findReferences(declaration.initializer, sourceFile, typeChecker)
+              : [];
 
             results.push({
               name: declaration.name.text,
               type: kind,
-              valueType: type ? typeChecker.typeToString(type) : 'any',
+              valueType: typeString,
+              value,
               parameters,
               returnType,
-              references: this.findReferences(declaration, sourceFile, typeChecker),
+              references: refs,
             });
           }
         });
@@ -236,7 +260,7 @@ export class VirtualTypeScriptParser {
   /**
    * Find all references to variables used in a node.
    */
-  private findReferences(node: ts.Node, sourceFile: ts.SourceFile, typeChecker: ts.TypeChecker): string[] {
+  private findReferences(node: ts.Node, _sourceFile: ts.SourceFile, _typeChecker: ts.TypeChecker): string[] {
     const references = new Set<string>();
     const localSymbols = new Set<string>();
 
@@ -262,8 +286,8 @@ export class VirtualTypeScriptParser {
     // Then find all identifier references.
     const findRefs = (n: ts.Node) => {
       if (ts.isIdentifier(n)) {
-        const symbol = typeChecker.getSymbolAtLocation(n);
-        if (symbol && !localSymbols.has(n.text)) {
+        // Skip if it's a local symbol
+        if (!localSymbols.has(n.text)) {
           // Check if it's a reference (not a declaration).
           const parent = n.parent;
           const isDeclaration =
@@ -315,6 +339,48 @@ export class VirtualTypeScriptParser {
   }
 
   /**
+   * Find assignment expressions in a source file.
+   */
+  private findAssignmentExpression(sourceFile: ts.SourceFile, typeChecker: ts.TypeChecker): ParsedExpression | null {
+    let result: ParsedExpression | null = null;
+
+    const visit = (node: ts.Node) => {
+      if (ts.isExpressionStatement(node) && ts.isBinaryExpression(node.expression)) {
+        const expr = node.expression;
+        if (expr.operatorToken.kind === ts.SyntaxKind.EqualsToken && ts.isIdentifier(expr.left)) {
+          const type = typeChecker.getTypeAtLocation(expr.right);
+          const typeString = typeChecker.typeToString(type);
+          
+          // Get the literal value if it's a literal
+          let value: any;
+          if (ts.isNumericLiteral(expr.right)) {
+            value = Number(expr.right.text);
+          } else if (ts.isStringLiteral(expr.right)) {
+            value = expr.right.text;
+          }
+
+          // Find references in the right-hand side
+          const references = this.findReferences(expr.right, sourceFile, typeChecker);
+
+          result = {
+            name: expr.left.text,
+            type: 'variable',
+            valueType: typeString,
+            value,
+            references,
+          };
+        }
+      }
+      if (!result) {
+        ts.forEachChild(node, visit);
+      }
+    };
+
+    visit(sourceFile);
+    return result;
+  }
+
+  /**
    * Find all identifier references in a source file.
    */
   protected findAllReferences(sourceFile: ts.SourceFile, _typeChecker: ts.TypeChecker): string[] {
@@ -329,7 +395,13 @@ export class VirtualTypeScriptParser {
           (ts.isFunctionDeclaration(parent) && parent.name === node) ||
           (ts.isParameter(parent) && parent.name === node);
 
-        if (!isDeclaration && !this.isBuiltIn(node.text)) {
+        // Skip if it's the left-hand side of an assignment.
+        const isAssignmentTarget =
+          ts.isBinaryExpression(parent) &&
+          parent.operatorToken.kind === ts.SyntaxKind.EqualsToken &&
+          parent.left === node;
+
+        if (!isDeclaration && !isAssignmentTarget && !this.isBuiltIn(node.text)) {
           references.add(node.text);
         }
       }

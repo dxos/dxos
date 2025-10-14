@@ -7,11 +7,64 @@ import { describe, expect, test } from 'vitest';
 import { NotebookVirtualParser, VirtualTypeScriptParser } from './vfs-parser';
 
 describe('vfs-parser', () => {
-  test('parse simple expression', () => {
+  test('parse simple assignments', () => {
+    const parser = new VirtualTypeScriptParser();
+
+    const tests = [
+      {
+        input: 'const a = 1',
+        expected: {
+          name: 'a',
+          type: 'variable',
+        },
+      },
+      {
+        input: 'a = 1',
+        expected: {
+          name: 'a',
+          type: 'variable',
+        },
+      },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+      const result = parser.parseExpression(input);
+      expect(result, input).toMatchObject(expected);
+    });
+  });
+
+  test('parse variable with references', () => {
+    const parser = new VirtualTypeScriptParser();
+
+    const tests = [
+      {
+        input: 'const y = x * 2',
+        expected: {
+          name: 'y',
+          type: 'variable',
+          references: ['x'],
+        },
+      },
+      {
+        input: 'y = x * 2',
+        expected: {
+          name: 'y',
+          type: 'variable',
+          references: ['x'],
+        },
+      },
+    ];
+
+    tests.forEach(({ input, expected }) => {
+      const result = parser.parseExpression(input);
+      expect(result, input).toMatchObject(expected);
+    });
+  });
+
+  test('parse simple expression with references', () => {
     const parser = new VirtualTypeScriptParser();
 
     const result = parser.parseExpression('(a + b) * c');
-
     expect(result).toMatchObject({
       references: ['a', 'b', 'c'],
     });
@@ -20,9 +73,7 @@ describe('vfs-parser', () => {
   test('parse single expression', () => {
     const parser = new VirtualTypeScriptParser();
 
-    // Test function declaration with types.
     const result = parser.parseExpression('const add = (a: number, b: number): number => a + b;');
-
     expect(result).toMatchObject({
       name: 'add',
       type: 'function',
@@ -46,7 +97,6 @@ describe('vfs-parser', () => {
     ];
 
     const results = parser.analyzeFiles(files);
-
     expect(results).toHaveLength(2);
     expect(results[0]).toMatchObject({
       name: 'PI',

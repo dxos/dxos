@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo-schema';
 import { DataType } from '@dxos/schema';
 
-// TODO(burdon): Remove Type suffix.
+// TODO(burdon): Create namespace and remove Type suffix.
 
 /**
  * Source script.
@@ -67,4 +67,5 @@ export const FunctionType = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
 );
+
 export interface FunctionType extends Schema.Schema.Type<typeof FunctionType> {}
