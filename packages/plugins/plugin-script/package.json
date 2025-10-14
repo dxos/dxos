@@ -110,6 +110,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
