@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, Schema } from 'effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';

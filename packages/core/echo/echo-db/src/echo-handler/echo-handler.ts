@@ -5,7 +5,7 @@
 import { type InspectOptionsStylized } from 'node:util';
 
 import * as A from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Obj } from '@dxos/echo';

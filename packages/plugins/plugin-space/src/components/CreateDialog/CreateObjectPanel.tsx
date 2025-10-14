@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';

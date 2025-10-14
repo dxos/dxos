@@ -3,7 +3,8 @@
 //
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
-import { Match, Predicate } from 'effect';
+import * as Match from 'effect/Match';
+import * as Predicate from 'effect/Predicate';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';

@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Brand, type Schema } from 'effect';
+import type * as Brand from 'effect/Brand';
+import type * as Schema from 'effect/Schema';
 
 import type { CleanupFn } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';

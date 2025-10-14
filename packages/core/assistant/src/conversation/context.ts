@@ -3,8 +3,10 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Context, Schema } from 'effect';
-import { Array, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
@@ -126,7 +128,7 @@ export class AiContextBinder {
   }
 
   private _reduce(items: (Obj.Any | Relation.Any)[]): Bindings {
-    return pipe(
+    return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),
       Array.reduce(new Bindings(), (context, item) => {

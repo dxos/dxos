@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LanguageModel } from '@effect/ai';
+import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Effect, Layer, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect';

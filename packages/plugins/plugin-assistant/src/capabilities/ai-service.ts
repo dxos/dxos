@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';

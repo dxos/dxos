@@ -3,8 +3,8 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
-import { FetchHttpClient } from '@effect/platform';
-import { Layer } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
 import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';

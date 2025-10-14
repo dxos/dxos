@@ -15,7 +15,8 @@ import {
   ATTR_CODE_STACKTRACE,
   ATTR_SERVICE_NAME,
 } from '@opentelemetry/semantic-conventions';
-import { Duration, Effect } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
 import { beforeEach } from 'vitest';
 
 import { LogLevel, type LogProcessor, log } from '@dxos/log';

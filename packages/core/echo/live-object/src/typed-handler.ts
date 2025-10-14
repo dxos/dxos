@@ -4,7 +4,8 @@
 
 import { type InspectOptionsStylized } from 'node:util';
 
-import { Schema, SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { inspectCustom } from '@dxos/debug';
 import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '@dxos/echo-schema';

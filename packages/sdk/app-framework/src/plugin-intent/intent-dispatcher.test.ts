@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Fiber, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { chain, createIntent } from './intent';
@@ -104,7 +107,11 @@ describe('Intent dispatcher', () => {
 
   test('chain intents', async () => {
     const { dispatch } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
-    const intent = pipe(createIntent(Compute, { value: 1 }), chain(ToString, {}), chain(Concat, { plus: '!' }));
+    const intent = Function.pipe(
+      createIntent(Compute, { value: 1 }),
+      chain(ToString, {}),
+      chain(Concat, { plus: '!' }),
+    );
 
     expect(intent.first.id).toBe(Compute._tag);
     expect(intent.last.id).toBe(Concat._tag);
@@ -120,7 +127,7 @@ describe('Intent dispatcher', () => {
 
   test('undo chained intent', async () => {
     const { dispatch, undo } = createDispatcher(() => [computeResolver, toStringResolver, concatResolver]);
-    const intent = pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
+    const intent = Function.pipe(createIntent(Compute, { value: 1 }), chain(Compute, {}), chain(Compute, {}));
     const program = Effect.gen(function* () {
       const a = yield* dispatch(intent);
 

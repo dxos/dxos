@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, SchemaAST, type Types } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

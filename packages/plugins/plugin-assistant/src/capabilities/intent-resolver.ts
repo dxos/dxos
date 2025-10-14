@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';

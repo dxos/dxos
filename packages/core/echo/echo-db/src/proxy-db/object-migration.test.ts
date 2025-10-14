@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo-schema';

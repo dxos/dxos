@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref, TagInfo, type TagMap, Type } from '@dxos/echo';

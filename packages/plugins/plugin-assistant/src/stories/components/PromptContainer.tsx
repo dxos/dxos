@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Predicate } from 'effect';
+import * as Predicate from 'effect/Predicate';
 import React from 'react';
 
 import { Prompt } from '@dxos/blueprints';

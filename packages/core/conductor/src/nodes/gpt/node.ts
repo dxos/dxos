@@ -2,8 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Response, Toolkit } from '@effect/ai';
-import { Effect, Layer, PubSub, Schema, Stream, Struct } from 'effect';
+import * as Response from '@effect/ai/Response';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as PubSub from 'effect/PubSub';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
+import * as Struct from 'effect/Struct';
 
 import { AiService, DEFAULT_EDGE_MODEL, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import {
   type BaseObject,

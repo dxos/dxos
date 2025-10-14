@@ -5,7 +5,7 @@
 import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 

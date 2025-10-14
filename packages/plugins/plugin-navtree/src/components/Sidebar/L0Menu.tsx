@@ -72,7 +72,7 @@ type L0ItemProps = L0ItemRootProps & {
 
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { tab, isCurrent, onSelect, onTabChange } = useNavTreeContext();
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [isLg] = useMediaQuery('lg');
 
   return useCallback(
     (event: MouseEvent) => {

@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
-import { type Simplify } from 'effect/Schema';
+import type * as EffectSchema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import * as EchoSchema from '@dxos/echo-schema';
@@ -55,20 +54,20 @@ interface ObjJsonProps {
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface obj<Self extends Schema.Schema.Any>
+export interface obj<Self extends EffectSchema.Schema.Any>
   extends EchoSchema.TypeMeta,
-    Schema.AnnotableClass<
+    EffectSchema.AnnotableClass<
       obj<Self>,
-      OfKind<EchoSchema.EntityKind.Object> & ToMutable<Schema.Schema.Type<Self>>,
-      Simplify<ObjJsonProps & ToMutable<Schema.Schema.Encoded<Self>>>,
-      Schema.Schema.Context<Self>
+      OfKind<EchoSchema.EntityKind.Object> & ToMutable<EffectSchema.Schema.Type<Self>>,
+      EffectSchema.Simplify<ObjJsonProps & ToMutable<EffectSchema.Schema.Encoded<Self>>>,
+      EffectSchema.Schema.Context<Self>
     > {}
 
 /**
  * Object schema.
  */
 export const Obj: {
-  (opts: EchoSchema.TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => obj<Self>;
+  (opts: EchoSchema.TypeMeta): <Self extends EffectSchema.Schema.Any>(self: Self) => obj<Self>;
 } = EchoSchema.EchoObject as any;
 
 /**
@@ -81,7 +80,7 @@ export declare namespace Obj {
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
   // TODO(burdon): This erases the ECHO type info (e.g., id, typename).
-  export type Any = Schema.Schema.AnyNoContext;
+  export type Any = EffectSchema.Schema.AnyNoContext;
 }
 
 //
@@ -93,9 +92,9 @@ export interface Expando extends OfKind<EchoSchema.EntityKind.Object> {
   [key: string]: any;
 }
 
-type ExpandoEncoded = Simplify<ObjJsonProps & { [key: string]: any }>;
+type ExpandoEncoded = EffectSchema.Simplify<ObjJsonProps & { [key: string]: any }>;
 
-export const Expando: Schema.Schema<Expando, ExpandoEncoded, never> = EchoSchema.Expando as any;
+export const Expando: EffectSchema.Schema<Expando, ExpandoEncoded, never> = EchoSchema.Expando as any;
 
 //
 // Relation
@@ -114,17 +113,17 @@ interface RelationJsonProps {
  * See Effect's note on interface types.
  */
 export interface relation<
-  Self extends Schema.Schema.Any,
-  SourceSchema extends Schema.Schema.Any,
-  TargetSchema extends Schema.Schema.Any,
+  Self extends EffectSchema.Schema.Any,
+  SourceSchema extends EffectSchema.Schema.Any,
+  TargetSchema extends EffectSchema.Schema.Any,
 > extends EchoSchema.TypeMeta,
-    Schema.AnnotableClass<
+    EffectSchema.AnnotableClass<
       relation<Self, SourceSchema, TargetSchema>,
       OfKind<EchoSchema.EntityKind.Relation> &
-        Relation.Endpoints<Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>> &
-        ToMutable<Schema.Schema.Type<Self>>,
-      Simplify<RelationJsonProps & ToMutable<Schema.Schema.Encoded<Self>>>,
-      Schema.Schema.Context<Self>
+        Relation.Endpoints<EffectSchema.Schema.Type<SourceSchema>, EffectSchema.Schema.Type<TargetSchema>> &
+        ToMutable<EffectSchema.Schema.Type<Self>>,
+      EffectSchema.Simplify<RelationJsonProps & ToMutable<EffectSchema.Schema.Encoded<Self>>>,
+      EffectSchema.Schema.Context<Self>
     > {}
 
 /**
@@ -132,9 +131,9 @@ export interface relation<
  */
 // TODO(dmaretskyi): I have to redefine the type here so that the definition uses symbols from @dxos/echo/Relation.
 export const Relation: {
-  <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
+  <Source extends EffectSchema.Schema.AnyNoContext, Target extends EffectSchema.Schema.AnyNoContext>(
     opts: EchoSchema.EchoRelationOptions<Source, Target>,
-  ): <Self extends Schema.Schema.Any>(self: Self) => relation<Self, Source, Target>;
+  ): <Self extends EffectSchema.Schema.Any>(self: Self) => relation<Self, Source, Target>;
 } = EchoSchema.EchoRelation as any;
 
 /**
@@ -146,7 +145,7 @@ export namespace Relation {
    * NOTE: This is not an instance type.
    */
   // TODO(dmaretskyi): If schema was covariant, we could specify props in here, like `id: ObjectId`.
-  export type Any = Schema.Schema.AnyNoContext;
+  export type Any = EffectSchema.Schema.AnyNoContext;
 
   /**
    * Get relation source type.
@@ -174,15 +173,15 @@ export namespace Relation {
  * This typedef avoids `TS4023` error (name from external module cannot be used named).
  * See Effect's note on interface types.
  */
-export interface ref<TargetSchema extends Schema.Schema.Any>
-  extends EchoSchema.Ref$<Schema.Schema.Type<TargetSchema>> {}
+export interface ref<TargetSchema extends EffectSchema.Schema.Any>
+  extends EchoSchema.Ref$<EffectSchema.Schema.Type<TargetSchema>> {}
 
 /**
  * Ref schema.
  */
 export const Ref: <S extends Obj.Any>(schema: S) => ref<S> = EchoSchema.Ref;
 
-export interface Ref<T> extends Schema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
+export interface Ref<T> extends EffectSchema.SchemaClass<EchoSchema.Ref<T>, EncodedReference> {}
 
 // TODO(buurdon): Move to Ref?
 export namespace Ref {
@@ -190,7 +189,7 @@ export namespace Ref {
    * Type that represents an arbitrary schema type of a reference.
    * NOTE: This is not an instance type.
    */
-  export type Any = Schema.Schema<EchoSchema.Ref<any>, EncodedReference>;
+  export type Any = EffectSchema.Schema<EchoSchema.Ref<any>, EncodedReference>;
 }
 
 /**

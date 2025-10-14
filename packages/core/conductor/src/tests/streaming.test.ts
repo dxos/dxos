@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema, Stream } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { createTestServices } from '@dxos/functions/testing';

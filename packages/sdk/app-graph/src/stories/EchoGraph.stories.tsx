@@ -4,7 +4,8 @@
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
@@ -60,7 +61,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     id: 'space',
     connector: (node) =>
       Rx.make((get) =>
-        pipe(
+        Function.pipe(
           get(node),
           Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
           Option.map(() => {
@@ -84,7 +85,7 @@ const createGraph = (client: Client, registry: Registry.Registry): ExpandableGra
     connector: (node) => {
       let query: QueryResult<Live<Expando>> | undefined;
       return Rx.make((get) =>
-        pipe(
+        Function.pipe(
           get(node),
           Option.flatMap((node) => (isSpace(node.data) ? Option.some(node.data) : Option.none())),
           Option.map((space) => {

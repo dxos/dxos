@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 // Runtime data structure.
 export type Range = {

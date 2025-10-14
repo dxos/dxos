@@ -11,7 +11,9 @@ import {
   // @ts-ignore
 } from 'https://esm.sh/@effect/platform@0.89.0?deps=effect@3.17.0&bundle=false';
 // @ts-ignore
-import { Effect, Schedule } from 'https://esm.sh/effect@3.17.0?bundle=false';
+import * as Effect from 'https://esm.sh/effect@3.17.0/Effect?bundle=false';
+// @ts-ignore
+import * as Schedule from 'https://esm.sh/effect@3.17.0/Schedule?bundle=false';
 
 export default defineFunction({
   key: 'dxos.org/script/forex-effect',

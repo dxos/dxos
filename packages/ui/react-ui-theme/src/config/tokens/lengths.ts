@@ -74,7 +74,7 @@ export const maxSizesFacet = {
         root: {
           unit: 'rem',
           initial: 0,
-          slope: 10,
+          slope: 1,
         },
       },
     },
@@ -84,9 +84,9 @@ export const maxSizesFacet = {
     namespace: 'dx-',
     conditions: { root: [':root'] },
     sememes: {
-      prose: { root: ['size', 5] },
-      containerMaxWidth: { root: ['size', 5] },
-      popoverMaxWidth: { root: ['size', 2] },
+      prose: { root: ['size', 50] },
+      containerMaxWidth: { root: ['size', 50] },
+      popoverMaxWidth: { root: ['size', 18 /* this should align with cardDefaultInlineSize */] },
     },
   },
 } satisfies Facet;
