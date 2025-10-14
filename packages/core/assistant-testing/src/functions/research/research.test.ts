@@ -132,25 +132,25 @@ Test.describe('Research', () => {
   );
 });
 
-describe('misc', () => {
-  it('createExtractionSchema', () => {
+Test.describe('misc', () => {
+  Test.it('createExtractionSchema', () => {
     const _schema = createExtractionSchema(ResearchDataTypes);
     // log.info('schema', { schema });
   });
 
-  it('getSanitizedSchemaName', () => {
+  Test.it('getSanitizedSchemaName', () => {
     const _names = ResearchDataTypes.map(getSanitizedSchemaName);
     // log.info('names', { names }) ;
   });
 
-  it('getTypeAnnotation', () => {
+  Test.it('getTypeAnnotation', () => {
     for (const schema of ResearchDataTypes) {
       const _dxn = Type.getDXN(schema);
       // log.info('dxn', { schema, dxn });
     }
   });
 
-  it.skip('sanitizeObjects', () => {
+  Test.it.skip('sanitizeObjects', () => {
     const _TEST_DATA = {
       objects_dxos_org_type_Project: [
         {
