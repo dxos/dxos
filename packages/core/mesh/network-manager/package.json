@@ -87,6 +87,8 @@
     "node-datachannel": "^0.30.0"
   },
   "devDependencies": {
+    "@dxos/edge-client": "workspace:*",
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
     "fetch-mock": "^11.0.0"
   },

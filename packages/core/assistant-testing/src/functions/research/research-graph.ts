@@ -44,6 +44,7 @@ export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
   }),
 );
 
+// TODO(burdon): Move to DataType; generalize to Subject relation?
 export const ResearchOn = Schema.Struct({
   id: Type.ObjectId,
   completedAt: Type.Format.DateTime,

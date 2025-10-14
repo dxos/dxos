@@ -80,6 +80,8 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
