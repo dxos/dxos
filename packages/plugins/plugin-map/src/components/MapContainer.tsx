@@ -69,7 +69,7 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
   const selected = useSelected(typename, 'multi');
 
   return (
-    <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
       )}

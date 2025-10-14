@@ -64,7 +64,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
   const handleDelete = useCallback((token: DataType.AccessToken) => space.db.remove(token), [space]);
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
           title={t('integrations verbose label', { ns: meta.id })}

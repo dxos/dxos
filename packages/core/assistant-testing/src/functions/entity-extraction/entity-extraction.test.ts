@@ -59,6 +59,9 @@ describe('Entity-extraction', () => {
       function* (_) {
         const email = yield* DatabaseService.add(
           Obj.make(DataType.Message, {
+            [Obj.Meta]: {
+              tags: ['important'],
+            },
             created: new Date('2025-01-01').toISOString(),
             sender: {
               name: 'John Smith',
@@ -85,6 +88,9 @@ describe('Entity-extraction', () => {
           source: email,
         });
         expect(result.entities).toHaveLength(2);
+        for (const entity of result.entities ?? []) {
+          expect(Obj.getMeta(entity)?.tags).toContain('important');
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

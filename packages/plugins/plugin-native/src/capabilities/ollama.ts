@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiServiceRouter } from '@dxos/ai';
+import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 

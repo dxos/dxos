@@ -364,6 +364,7 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
       label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
       role: 'branch',
+      selectable: false,
       canDrop: () => false,
       space,
     },
@@ -479,6 +480,12 @@ export const createObjectNode = ({
     // TODO(wittjosiah): Remove metadata labels.
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
+  const selectable =
+    (!Obj.instanceOf(DataType.StoredSchema, object) &&
+      !Obj.instanceOf(DataType.QueryCollection, object) &&
+      !Obj.instanceOf(DataType.Collection, object)) ||
+    (navigable && Obj.instanceOf(DataType.Collection, object));
+
   return {
     id: fullyQualifiedId(object),
     type,
@@ -491,6 +498,7 @@ export const createObjectNode = ({
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,
+      selectable,
       canDrop: (source: TreeData) => {
         return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
       },

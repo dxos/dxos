@@ -64,6 +64,8 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* DatabaseService.resolve(created[0], DataType.Organization);
+          Obj.getMeta(organization).tags ??= [];
+          Obj.getMeta(organization).tags!.push(...(Obj.getMeta(source)?.tags ?? []));
           contact.organization = Ref.make(organization);
         }
       }
@@ -109,6 +111,9 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
   }
 
   const newContact = Obj.make(DataType.Person, {
+    [Obj.Meta]: {
+      tags: Obj.getMeta(message)?.tags,
+    },
     emails: [{ value: email }],
   });
   yield* DatabaseService.add(newContact);

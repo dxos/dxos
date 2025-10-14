@@ -149,7 +149,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  // TODO(wittjosiah): This test is flaky, especially in CI.
+  //   Most typical failure is `targetCell` returns `null`.
+  _play: async ({ canvasElement }: any) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -243,4 +245,4 @@ export const Default: Story = {
     // Verify the new object was created and relation was set
     await expect(newTargetCell).toHaveTextContent(newOrgName);
   },
-};
+} as any;

@@ -9,7 +9,8 @@ import type * as Layer from 'effect/Layer';
 import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type AiService, type AiServiceRouter } from '@dxos/ai';
+import { type AiService } from '@dxos/ai';
+import type * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';

@@ -38,7 +38,7 @@ export default () =>
     }),
     createSurface({
       id: `${meta.id}/article`,
-      role: 'article',
+      role: ['article', 'section'],
       filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
@@ -47,6 +47,8 @@ export default () =>
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
+    // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
+    // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
     createSurface({
       id: `${meta.id}/companion/base-settings`,
       role: 'base-object-settings',

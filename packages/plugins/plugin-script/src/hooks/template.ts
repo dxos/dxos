@@ -12,6 +12,7 @@ import { templates } from '../templates';
 export type TemplateActionProperties = { type: 'template'; value: string };
 
 const createTemplateSelectGroup = () => {
+  // TODO(burdon): This should not be in the toolbar (move to create Object dialog).
   return createMenuItemGroup('template-select', {
     label: ['template select group label', { ns: meta.id }],
     variant: 'dropdownMenu',
