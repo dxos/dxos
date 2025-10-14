@@ -58,13 +58,14 @@ export const TypescriptEditor = ({
       scrollTo,
       extensions: [
         extensions,
+        // TODO(burdon): Pass in options for this.
         createBasicExtensions({
-          highlightActiveLine: true,
+          // highlightActiveLine: true,
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
           monospace: true,
-          scrollPastEnd: role === 'article',
+          scrollPastEnd: role !== 'section',
           search: true,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
