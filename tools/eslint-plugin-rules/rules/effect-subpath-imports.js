@@ -28,7 +28,6 @@ export default {
     const requireForFile = createRequire(context.getFilename());
     const exportsCache = new Map(); // packageName -> Set<segment>
 
-    // 
     const loadExportsForPackage = (pkgName) => {
       if (exportsCache.has(pkgName)) return exportsCache.get(pkgName);
       try {
@@ -56,27 +55,35 @@ export default {
       return exported.has(segment);
     };
 
-    const allowedPackages = new Set([
-      'effect',
-      '@effect/ai',
-      '@effect/platform',
-      '@effect/platform-node',
-      "@effect/ai-anthropic"
-    ]);
+    const isEffectPackage = (source) => {
+      return source === 'effect' || source.startsWith('effect/') || source.startsWith('@effect/');
+    };
+    
+    /**
+     * Get the base package name from a source string.
+     * @param {string} source - The source string to get the base package name from.
+     * @returns {string} The base package name.
+     * @example
+     * getBasePackage('effect/Schema') // 'effect'
+     * getBasePackage('@effect/ai/openai') // '@effect/ai'
+     */
+    const getBasePackage = (source) => {
+      if (source.startsWith('@')) {
+        const parts = source.split('/');
+        return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : source;
+      } else {
+        return source.split('/')[0];
+      }
+    };
 
     return {
       ImportDeclaration: (node) => {
-        // Determine if this import targets one of the Effect packages (root or subpath).
         const source = String(node.source.value);
-        const matchedPackage = Array.from(allowedPackages).find(
-          (pkg) => source === pkg || source.startsWith(pkg + '/'),
-        );
-        if (!matchedPackage) {
-          return;
-        }
+        if (!isEffectPackage(source)) return;
+        const basePackage = getBasePackage(source);
 
         // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import only.
-        if (source.startsWith(matchedPackage + '/')) {
+        if (source.startsWith(basePackage + '/')) {
           const isNamespaceOnly =
             node.specifiers.length === 1 && node.specifiers[0].type === 'ImportNamespaceSpecifier';
           if (!isNamespaceOnly) {
@@ -89,7 +96,7 @@ export default {
         }
 
         // From here on, we only handle root package imports like 'effect'.
-        const packageName = matchedPackage;
+        const packageName = basePackage;
 
         // Only process imports with specifiers.
         if (!node.specifiers || node.specifiers.length === 0) {
