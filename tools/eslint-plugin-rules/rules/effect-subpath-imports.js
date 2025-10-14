@@ -65,11 +65,30 @@ export default {
 
     return {
       ImportDeclaration: (node) => {
-        // Only process imports from supported Effect packages.
-        const packageName = node.source.value;
-        if (!allowedPackages.has(packageName)) {
+        // Determine if this import targets one of the Effect packages (root or subpath).
+        const source = String(node.source.value);
+        const matchedPackage = Array.from(allowedPackages).find(
+          (pkg) => source === pkg || source.startsWith(pkg + '/'),
+        );
+        if (!matchedPackage) {
           return;
         }
+
+        // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import only.
+        if (source.startsWith(matchedPackage + '/')) {
+          const isNamespaceOnly =
+            node.specifiers.length === 1 && node.specifiers[0].type === 'ImportNamespaceSpecifier';
+          if (!isNamespaceOnly) {
+            context.report({
+              node,
+              message: 'Use namespace import for Effect subpaths',
+            });
+          }
+          return;
+        }
+
+        // From here on, we only handle root package imports like 'effect'.
+        const packageName = matchedPackage;
 
         // Only process imports with specifiers.
         if (!node.specifiers || node.specifiers.length === 0) {
@@ -118,6 +137,11 @@ export default {
           fix: (fixer) => {
             const sourceCode = context.getSourceCode();
             const imports = [];
+
+            // Idempotency guard: if nothing is resolvable, do not rewrite.
+            if (resolvedType.length === 0 && resolvedRegular.length === 0) {
+              return null;
+            }
 
             // Prefer regular (value) imports over type imports on duplicates.
             const seenResolved = new Set(); // key: `${alias}|${segment}`
