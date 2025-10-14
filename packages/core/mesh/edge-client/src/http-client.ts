@@ -52,13 +52,13 @@ export const withRetry = (
   );
 };
 
-export const withRetryConfig = (effect: Effect.Effect<HttpClientResponse, HttpClientError, HttpClient.HttpClient>) =>
+export const withRetryConfig = (effect: Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError, HttpClient.HttpClient>) =>
   Effect.gen(function* () {
     const config = yield* HttpConfig;
     return yield* withRetry(effect, config);
   });
 
-export const withLogging = <A extends HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
+export const withLogging = <A extends HttpClientResponse.HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.tap((res) => log.info('response', { status: res.status })));
 
 /**

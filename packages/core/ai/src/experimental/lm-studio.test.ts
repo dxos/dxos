@@ -6,7 +6,7 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
@@ -28,8 +28,8 @@ import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
  * ~/.lmstudio/bin/lms server start
  * ```
  */
-describe.skip('lm-studio', () => {
-  it.effect(
+Test.describe.skip('lm-studio', () => {
+  Test.it.effect(
     'streaming',
     Effect.fn(
       function* ({ expect }) {

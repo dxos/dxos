@@ -4,7 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -77,8 +77,8 @@ const TestLayer = Layer.mergeAll(
   Layer.provide(AiServiceTestingPreset('direct')),
 );
 
-describe('AiSession', () => {
-  it.effect(
+Test.describe('AiSession', () => {
+  Test.it.effect(
     'no tools',
     Effect.fnUntraced(
       function* (_) {
@@ -94,7 +94,7 @@ describe('AiSession', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'calculator',
     Effect.fnUntraced(
       function* (_) {

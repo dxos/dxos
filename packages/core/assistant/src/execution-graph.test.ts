@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
@@ -15,14 +15,14 @@ import { ExecutionGraph } from './execution-graph';
 // Helper function to create valid object IDs for testing
 const createTestId = () => ObjectId.random();
 
-describe('ExecutionGraph', () => {
-  describe('basic functionality', () => {
+Test.describe('ExecutionGraph', () => {
+  Test.describe('basic functionality', () => {
     it('should create an empty graph initially', () => {
       const graph = new ExecutionGraph();
       const result = graph.getGraph();
 
-      expect(result.branches).toEqual([]);
-      expect(result.commits).toEqual([]);
+      Test.expect(result.branches).toEqual([]);
+      Test.expect(result.commits).toEqual([]);
     });
 
     it('should add a simple user message', () => {
@@ -44,9 +44,9 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.branches).toEqual(['main']);
-      expect(result.commits).toHaveLength(1);
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.branches).toEqual(['main']);
+      Test.expect(result.commits).toHaveLength(1);
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${messageId}_block_0`,
         branch: 'main',
         message: 'Processing request...',
@@ -79,14 +79,14 @@ describe('ExecutionGraph', () => {
       const result = graph.getGraph();
       log.info('result', result);
 
-      expect(result.branches).toEqual(['main']);
-      expect(result.commits).toHaveLength(2);
-      expect(result.commits[0].branch).toEqual('main');
-      expect(result.commits[0].message).toEqual('Running Research');
-      expect(result.commits[0].parents).toEqual([]);
-      expect(result.commits[1].branch).toEqual('main');
-      expect(result.commits[1].message).toEqual('Processing request...');
-      expect(result.commits[1].parents).toEqual([status.id]);
+      Test.expect(result.branches).toEqual(['main']);
+      Test.expect(result.commits).toHaveLength(2);
+      Test.expect(result.commits[0].branch).toEqual('main');
+      Test.expect(result.commits[0].message).toEqual('Running Research');
+      Test.expect(result.commits[0].parents).toEqual([]);
+      Test.expect(result.commits[1].branch).toEqual('main');
+      Test.expect(result.commits[1].message).toEqual('Processing request...');
+      Test.expect(result.commits[1].parents).toEqual([status.id]);
     });
 
     it('should add an assistant message with text', () => {
@@ -108,8 +108,8 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(1);
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.commits).toHaveLength(1);
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${messageId}_block_0`,
         branch: 'main',
         message: 'Response (7 words)',
@@ -118,7 +118,7 @@ describe('ExecutionGraph', () => {
     });
   });
 
-  describe('sequential chaining within messages', () => {
+  Test.describe('sequential chaining within messages', () => {
     it('should chain blocks within a message', () => {
       const graph = new ExecutionGraph();
       const messageId = createTestId();
@@ -146,22 +146,22 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(3);
+      Test.expect(result.commits).toHaveLength(3);
 
       // First block has no parents
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${messageId}_block_0`,
         parents: [],
       });
 
       // Second block has first block as parent
-      expect(result.commits[1]).toMatchObject({
+      Test.expect(result.commits[1]).toMatchObject({
         id: `${messageId}_block_1`,
         parents: [`${messageId}_block_0`],
       });
 
       // Third block has second block as parent
-      expect(result.commits[2]).toMatchObject({
+      Test.expect(result.commits[2]).toMatchObject({
         id: `${messageId}_block_2`,
         parents: [`${messageId}_block_1`],
       });
@@ -193,23 +193,23 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message1, message2]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(2);
+      Test.expect(result.commits).toHaveLength(2);
 
       // First message block has no parents
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${message1Id}_block_0`,
         parents: [],
       });
 
       // Second message block has first message block as parent
-      expect(result.commits[1]).toMatchObject({
+      Test.expect(result.commits[1]).toMatchObject({
         id: `${message2Id}_block_0`,
         parents: [`${message1Id}_block_0`],
       });
     });
   });
 
-  describe('tool calls and results', () => {
+  Test.describe('tool calls and results', () => {
     it('should handle tool calls and results with proper parent relationships', () => {
       const graph = new ExecutionGraph();
 
@@ -268,28 +268,28 @@ describe('ExecutionGraph', () => {
       graph.addEvents([toolCallMessage, toolResultMessage, agentStatus]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(4);
+      Test.expect(result.commits).toHaveLength(4);
 
       // Text block
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${message1Id}_block_0`,
         parents: [],
       });
 
       // Tool call block
-      expect(result.commits[1]).toMatchObject({
+      Test.expect(result.commits[1]).toMatchObject({
         id: `${message1Id}_toolCall_${toolCallId}`,
         parents: [`${message1Id}_block_0`],
       });
 
       // Tool result should have two parents: AgentStatus and tool call
-      expect(result.commits[2]).toMatchObject({
+      Test.expect(result.commits[2]).toMatchObject({
         id: `${message2Id}_toolResult_${toolCallId}`,
         parents: [statusId, `${message1Id}_toolCall_${toolCallId}`],
       });
 
       // AgentStatus
-      expect(result.commits[3]).toMatchObject({
+      Test.expect(result.commits[3]).toMatchObject({
         id: statusId,
         parents: [`${message1Id}_toolCall_${toolCallId}`],
       });
@@ -349,29 +349,29 @@ describe('ExecutionGraph', () => {
       graph.addEvents([toolCallMessage, toolErrorMessage, agentStatus]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(3);
+      Test.expect(result.commits).toHaveLength(3);
 
       // Tool call block
-      expect(result.commits[0]).toMatchObject({
+      Test.expect(result.commits[0]).toMatchObject({
         id: `${message1Id}_toolCall_${toolCallId}`,
         parents: [],
       });
 
       // Tool error should have two parents: AgentStatus and tool call
-      expect(result.commits[1]).toMatchObject({
+      Test.expect(result.commits[1]).toMatchObject({
         id: `${message2Id}_toolResult_${toolCallId}`,
         parents: [statusId, `${message1Id}_toolCall_${toolCallId}`],
       });
 
       // AgentStatus
-      expect(result.commits[2]).toMatchObject({
+      Test.expect(result.commits[2]).toMatchObject({
         id: statusId,
         parents: [`${message1Id}_toolCall_${toolCallId}`],
       });
     });
   });
 
-  describe('different processing orders', () => {
+  Test.describe('different processing orders', () => {
     it('should handle AgentStatus processed after tool result', () => {
       const graph = new ExecutionGraph();
 
@@ -428,7 +428,7 @@ describe('ExecutionGraph', () => {
 
       // Tool result should be updated to point to AgentStatus
       const toolResult = result.commits.find((c) => c.id === `${message2Id}_toolResult_${toolCallId}`);
-      expect(toolResult?.parents).toContain(statusId);
+      Test.expect(toolResult?.parents).toContain(statusId);
     });
 
     it('should handle AgentStatus processed before tool result', () => {
@@ -487,11 +487,11 @@ describe('ExecutionGraph', () => {
 
       // Tool result should point to AgentStatus
       const toolResult = result.commits.find((c) => c.id === `${message2Id}_toolResult_${toolCallId}`);
-      expect(toolResult?.parents).toContain(statusId);
+      Test.expect(toolResult?.parents).toContain(statusId);
     });
   });
 
-  describe('complex scenarios', () => {
+  Test.describe('complex scenarios', () => {
     it('should handle multiple tool calls in sequence', () => {
       const graph = new ExecutionGraph();
 
@@ -592,16 +592,16 @@ describe('ExecutionGraph', () => {
       graph.addEvents(events);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(9);
+      Test.expect(result.commits).toHaveLength(9);
 
       // Check sequential chaining
-      expect(result.commits[0].parents).toEqual([]); // msg1_block_0
-      expect(result.commits[1].parents).toEqual([`${msg1Id}_block_0`]); // msg2_block_0
-      expect(result.commits[2].parents).toEqual([`${msg2Id}_block_0`]); // msg2_toolCall_tool1
-      expect(result.commits[3].parents).toEqual([status1Id, `${msg2Id}_toolCall_tool1`]); // msg3_toolResult_tool1
-      expect(result.commits[4].parents).toEqual([`${msg3Id}_toolResult_tool1`]); // msg4_block_0
-      expect(result.commits[5].parents).toEqual([`${msg4Id}_block_0`]); // msg4_toolCall_tool2
-      expect(result.commits[6].parents).toEqual([status2Id, `${msg4Id}_toolCall_tool2`]); // msg5_toolResult_tool2
+      Test.expect(result.commits[0].parents).toEqual([]); // msg1_block_0
+      Test.expect(result.commits[1].parents).toEqual([`${msg1Id}_block_0`]); // msg2_block_0
+      Test.expect(result.commits[2].parents).toEqual([`${msg2Id}_block_0`]); // msg2_toolCall_tool1
+      Test.expect(result.commits[3].parents).toEqual([status1Id, `${msg2Id}_toolCall_tool1`]); // msg3_toolResult_tool1
+      Test.expect(result.commits[4].parents).toEqual([`${msg3Id}_toolResult_tool1`]); // msg4_block_0
+      Test.expect(result.commits[5].parents).toEqual([`${msg4Id}_block_0`]); // msg4_toolCall_tool2
+      Test.expect(result.commits[6].parents).toEqual([status2Id, `${msg4Id}_toolCall_tool2`]); // msg5_toolResult_tool2
     });
 
     it('should handle mixed block types in a message', () => {
@@ -630,17 +630,17 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(4);
+      Test.expect(result.commits).toHaveLength(4);
 
       // All blocks should be chained sequentially
-      expect(result.commits[0].parents).toEqual([]); // text
-      expect(result.commits[1].parents).toEqual([`${messageId}_block_0`]); // reasoning
-      expect(result.commits[2].parents).toEqual([`${messageId}_block_1`]); // toolCall
-      expect(result.commits[3].parents).toEqual([`${messageId}_toolCall_tool1`]); // summary
+      Test.expect(result.commits[0].parents).toEqual([]); // text
+      Test.expect(result.commits[1].parents).toEqual([`${messageId}_block_0`]); // reasoning
+      Test.expect(result.commits[2].parents).toEqual([`${messageId}_block_1`]); // toolCall
+      Test.expect(result.commits[3].parents).toEqual([`${messageId}_toolCall_tool1`]); // summary
     });
   });
 
-  describe('edge cases', () => {
+  Test.describe('edge cases', () => {
     it('should handle empty text blocks', () => {
       const graph = new ExecutionGraph();
 
@@ -660,9 +660,9 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(2); // Empty block should be filtered out
-      expect(result.commits[0].parents).toEqual([]); // First text block
-      expect(result.commits[1].parents).toEqual([`${messageId}_block_0`]); // Third text block
+      Test.expect(result.commits).toHaveLength(2); // Empty block should be filtered out
+      Test.expect(result.commits[0].parents).toEqual([]); // First text block
+      Test.expect(result.commits[1].parents).toEqual([`${messageId}_block_0`]); // Third text block
     });
 
     it('should handle messages with no blocks', () => {
@@ -680,7 +680,7 @@ describe('ExecutionGraph', () => {
       graph.addEvents([message]);
       const result = graph.getGraph();
 
-      expect(result.commits).toHaveLength(0);
+      Test.expect(result.commits).toHaveLength(0);
     });
 
     it('should handle getGraph with lastRequest filter', () => {
@@ -726,13 +726,13 @@ describe('ExecutionGraph', () => {
 
       // Get all commits
       const allCommits = graph.getGraph();
-      expect(allCommits.commits).toHaveLength(4);
+      Test.expect(allCommits.commits).toHaveLength(4);
 
       // Get commits from last user request
       const lastRequestCommits = graph.getGraph(true);
-      expect(lastRequestCommits.commits).toHaveLength(2); // Only msg3 and msg4
-      expect(lastRequestCommits.commits[0].id).toBe(`${msg3Id}_block_0`);
-      expect(lastRequestCommits.commits[1].id).toBe(`${msg4Id}_block_0`);
+      Test.expect(lastRequestCommits.commits).toHaveLength(2); // Only msg3 and msg4
+      Test.expect(lastRequestCommits.commits[0].id).toBe(`${msg3Id}_block_0`);
+      Test.expect(lastRequestCommits.commits[1].id).toBe(`${msg4Id}_block_0`);
     });
   });
 });

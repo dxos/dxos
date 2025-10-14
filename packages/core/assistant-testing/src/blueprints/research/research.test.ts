@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Research Blueprint', { timeout: 120_000 }, () => {});
+Test.describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('Research Blueprint', { timeout: 120_000 }, () => {});

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
@@ -28,8 +28,8 @@ import {
 
 const ENABLE_LOGGING = false;
 
-describe('Graph as a fiber runtime', () => {
-  it.effect('simple adder node', ({ expect }) =>
+Test.describe('Graph as a fiber runtime', () => {
+  Test.it.effect('simple adder node', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
         // Break line formatting.
@@ -76,7 +76,7 @@ describe('Graph as a fiber runtime', () => {
     expect(result).toEqual({ result: 6 });
   });
 
-  it.effect('runFromInput', ({ expect }) =>
+  Test.it.effect('runFromInput', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }))
         .registerNode('dxn:test:sum', sum)
@@ -94,7 +94,7 @@ describe('Graph as a fiber runtime', () => {
     }),
   );
 
-  it.effect('if-else', ({ expect }) =>
+  Test.it.effect('if-else', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } })).registerGraph(
         'dxn:test:g4',

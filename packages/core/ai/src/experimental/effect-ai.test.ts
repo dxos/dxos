@@ -13,7 +13,7 @@ import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
@@ -106,9 +106,9 @@ const toolkitLayer = TestToolkit.toLayer({
  * - Simple API for plugins/artifacts.
  * - Ecosystem and design partner.
  */
-describe('LanguageModel', () => {
+Test.describe('LanguageModel', () => {
   // Sanity test.
-  it.effect(
+  Test.it.effect(
     'Debug: Verify API configuration',
     Effect.fn(
       function* ({ expect }) {
@@ -126,7 +126,7 @@ describe('LanguageModel', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'should make a tool call',
     Effect.fn(
       function* ({ expect }) {
@@ -152,7 +152,7 @@ describe('LanguageModel', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'should process an agentic loop using OpenAI',
     Effect.fn(function* ({ expect }) {
       // @effect-diagnostics-next-line multipleEffectProvide:off
@@ -169,7 +169,7 @@ describe('LanguageModel', () => {
     }, TestHelpers.runIf(process.env.OPENAI_API_KEY)),
   );
 
-  it.effect(
+  Test.it.effect(
     'should process an agentic loop using Claude',
     Effect.fn(
       function* ({ expect }) {
@@ -190,7 +190,7 @@ describe('LanguageModel', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'streaming',
     Effect.fn(
       function* (_) {
@@ -210,7 +210,7 @@ describe('LanguageModel', () => {
     { timeout: 120_000 },
   );
 
-  it.effect(
+  Test.it.effect(
     'streaming with tools',
     Effect.fn(
       function* (_) {
@@ -243,7 +243,7 @@ describe('LanguageModel', () => {
     { timeout: 120_000 },
   ); //
 
-  it.effect(
+  Test.it.effect(
     'with parser',
     Effect.fn(
       function* (_) {
@@ -280,7 +280,7 @@ describe('LanguageModel', () => {
     { timeout: 120_000 },
   );
 
-  it.effect(
+  Test.it.effect(
     'built-in search',
     Effect.fn(
       function* (_) {

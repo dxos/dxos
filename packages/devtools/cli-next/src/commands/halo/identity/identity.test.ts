@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { ClientService } from '../../../services';
@@ -10,25 +10,25 @@ import { TestConsole, TestLayer } from '../../../testing';
 
 import { handler } from './identity';
 
-describe('halo identity', () => {
-  it('should log if identity is not initialized', () =>
+Test.describe('halo identity', () => {
+  Test.it('should log if identity is not initialized', () =>
     Effect.gen(function* () {
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
-      expect(logs).toHaveLength(1);
-      expect(logs[0].args).toEqual(['Identity not initialized.']);
+      Test.expect(logs).toHaveLength(1);
+      Test.expect(logs[0].args).toEqual(['Identity not initialized.']);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 
-  it('should print identity if initialized', () =>
+  Test.it('should print identity if initialized', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity({ displayName: 'Test' }));
       yield* handler();
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
-      expect(logs).toHaveLength(2);
-      expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
-      expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
+      Test.expect(logs).toHaveLength(2);
+      Test.expect(logs[0].args).toEqual([`Identity key: ${client.halo.identity.get()?.identityKey.toHex()}`]);
+      Test.expect(logs[1].args).toEqual([`Display name: ${client.halo.identity.get()?.profile?.displayName}`]);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 });

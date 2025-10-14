@@ -3,7 +3,7 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -56,9 +56,9 @@ const TestTriggerDispatcherLayer = Layer.provideMerge(
   TestLayer,
 );
 
-describe('TriggerDispatcher', () => {
-  describe('Time Control', () => {
-    it.effect(
+Test.describe('TriggerDispatcher', () => {
+  Test.describe('Time Control', () => {
+    Test.it.effect(
       'should get current time based on time control',
       Effect.fnUntraced(function* ({ expect }) {
         const dispatcher = yield* TriggerDispatcher;
@@ -76,8 +76,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Manual Invocation', () => {
-    it.effect(
+  Test.describe('Manual Invocation', () => {
+    Test.it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -102,8 +102,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Timer Triggers', () => {
-    it.effect(
+  Test.describe('Timer Triggers', () => {
+    Test.it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -132,7 +132,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should handle disabled triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -173,7 +173,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'cron triggers are invoked periodically on schedule',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -217,8 +217,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Dynamic Trigger Management', () => {
-    it.effect(
+  Test.describe('Dynamic Trigger Management', () => {
+    Test.it.effect(
       'should handle trigger updates dynamically',
       Effect.fnUntraced(function* ({ expect }) {
         const dispatcher = yield* TriggerDispatcher;
@@ -246,8 +246,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Cron Patterns', () => {
-    it.effect(
+  Test.describe('Cron Patterns', () => {
+    Test.it.effect(
       'should support Effect cron expressions',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -281,7 +281,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should handle invalid cron expressions gracefully',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -308,8 +308,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Natural Time Control', () => {
-    it.effect(
+  Test.describe('Natural Time Control', () => {
+    Test.it.effect(
       'should start and stop dispatcher',
       Effect.fnUntraced(
         function* () {
@@ -322,8 +322,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Queue Triggers', () => {
-    it.effect(
+  Test.describe('Queue Triggers', () => {
+    Test.it.effect(
       'should invoke scheduled queue triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
@@ -352,7 +352,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'triggers are invoked one by one',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
@@ -399,7 +399,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
@@ -442,8 +442,8 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Database Triggers (Subscription)', () => {
-    it.effect(
+  Test.describe('Database Triggers (Subscription)', () => {
+    Test.it.effect(
       'should invoke triggers on object creation',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -481,7 +481,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should invoke triggers on object updates',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -525,7 +525,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -575,7 +575,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should handle multiple object types with filters',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
@@ -619,7 +619,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    Test.it.effect(
       'should pass correct event data to function',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);

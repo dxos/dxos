@@ -8,7 +8,7 @@ import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageM
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -58,24 +58,24 @@ const TestRouter = AiModelResolver.buildAiService.pipe(
   Layer.provide(FetchHttpClient.layer),
 );
 
-describe('AiServiceRouter', () => {
-  it.effect(
+Test.describe('AiServiceRouter', () => {
+  Test.it.effect(
     'claude',
     Effect.fn(
       function* () {
         const model = yield* LanguageModel.LanguageModel;
-        expect(model).toBeDefined();
+        Test.expect(model).toBeDefined();
       },
       Effect.provide(AiService.model('@anthropic/claude-3-5-sonnet-20241022').pipe(Layer.provide(TestRouter))),
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'gemini',
     Effect.fn(
       function* () {
         const model = yield* LanguageModel.LanguageModel;
-        expect(model).toBeDefined();
+        Test.expect(model).toBeDefined();
       },
       Effect.provide(AiService.model('@google/gemma-3-27b').pipe(Layer.provide(TestRouter))),
     ),

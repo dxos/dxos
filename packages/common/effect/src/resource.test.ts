@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { accuireReleaseResource } from './resource';
 
-it.effect(
+Test.it.effect(
   'acquire-release',
   Effect.fn(function* ({ expect }) {
     const events: string[] = [];

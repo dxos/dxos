@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -63,8 +63,8 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Research', () => {
-  it.effect(
+Test.describe('Research', () => {
+  Test.it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
@@ -98,7 +98,7 @@ describe('Research', () => {
   );
 
   // TODO(dmaretskyi): Out-of-memory.
-  it.effect.skip(
+  Test.it.effect.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {

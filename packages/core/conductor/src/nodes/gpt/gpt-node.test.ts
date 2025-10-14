@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj, Ref } from '@dxos/echo';
@@ -19,10 +19,10 @@ import { type GptInput, gptNode } from './node';
 
 const ENABLE_LOGGING = true;
 
-describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
-  describe('common', () => {
+Test.describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
+  Test.describe('common', () => {
     let builder: EchoTestBuilder, services: ServiceContainer, db: EchoDatabase, queues: QueueFactory;
-    beforeEach(async (ctx) => {
+    Test.beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
       ({ db, queues } = await builder.createDatabase());
       services = createTestServices({
@@ -36,11 +36,11 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
         },
       });
     });
-    afterEach(async () => {
+    Test.afterEach(async () => {
       await builder.close();
     });
 
-    it.effect(
+    Test.it.effect(
       'gpt simple',
       Effect.fn(function* () {
         const input: GptInput = {
@@ -52,13 +52,13 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           Effect.scoped,
         );
         log.info('output', { output });
-        expect(typeof output.text).toBe('string');
-        expect(output.text.length).toBeGreaterThan(10);
+        Test.expect(typeof output.text).toBe('string');
+        Test.expect(output.text.length).toBeGreaterThan(10);
       }),
       60_000,
     );
 
-    it.effect(
+    Test.it.effect(
       'gpt with history',
       Effect.fn(function* () {
         const conversation = queues.create();
@@ -82,14 +82,14 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           Effect.scoped,
         );
         log.info('output', { output });
-        expect(typeof output.text).toBe('string');
-        expect(output.text.length).toBeGreaterThan(10);
+        Test.expect(typeof output.text).toBe('string');
+        Test.expect(output.text.length).toBeGreaterThan(10);
 
         const conversationMessages = yield* Effect.promise(() =>
           queues.get<DataType.Message>(conversation.dxn).queryObjects(),
         );
         log.info('conversationMessages', { conversationMessages });
-        expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
+        Test.expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
       }),
       60_000,
     );
@@ -126,7 +126,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   //     );
   //     log.info('output', { output });
   //     log.info('artifact', { artifact: output.artifact });
-  //     expect(output.artifact).toBeDefined();
+  //     Test.expect(output.artifact).toBeDefined();
   //   }),
   //   60_000,
   // );

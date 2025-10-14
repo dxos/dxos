@@ -4,7 +4,7 @@
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -39,7 +39,7 @@ const TestLayer = Function.pipe(
   Layer.provideMerge(TracingService.layerNoop),
 );
 
-describe('graph', () => {
+Test.describe('graph', () => {
   // let builder: EchoTestBuilder;
   // test('findRelatedSchema', async () => {
   //   const db = await createEchoDatabase();
@@ -49,7 +49,7 @@ describe('graph', () => {
   const Toolkit = makeGraphWriterToolkit({ schema: [DataType.Project] });
   const ToolkitLayer = makeGraphWriterHandler(Toolkit);
 
-  it.effect.skip(
+  Test.it.effect.skip(
     'calculator',
     Effect.fn(
       function* (_) {

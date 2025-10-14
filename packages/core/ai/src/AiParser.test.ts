@@ -3,7 +3,7 @@
 //
 
 import * as Response from '@effect/ai/Response';
-import { describe, it, vi } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
@@ -13,9 +13,9 @@ import { type ContentBlock } from '@dxos/schema';
 
 import { parseResponse } from './AiParser';
 
-describe('parser', () => {
-  describe('accumulation', () => {
-    it.effect(
+Test.describe('parser', () => {
+  Test.describe('accumulation', () => {
+    Test.it.effect(
       'single text block',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello, world!'])])
@@ -32,7 +32,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'consecutive text blocks get combined',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['Hello,', ' world!'])])
@@ -49,7 +49,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'status parsed',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<status>I am thinking...</status>'])])
@@ -66,7 +66,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'text followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
@@ -98,7 +98,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'unterminated status tag followed by a tool call',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
@@ -130,7 +130,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'reasoning gets passed through',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...reasoning('My thoughts are...'), ...text(['Hello, world!'])])
@@ -151,7 +151,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'COT tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<cot>My thoughts are...</cot>'])])
@@ -168,7 +168,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'think tags get parsed to reasoning blocks',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(['<think>My thoughts are...</think>'])])
@@ -185,7 +185,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'toolkit',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([...text(splitByWord('<toolkit/>'))])
@@ -201,7 +201,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'multi choice select',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
@@ -220,7 +220,7 @@ describe('parser', () => {
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'works when every character is streamed individually',
       Effect.fn(function* ({ expect }) {
         const result = yield* makeInputStream([
@@ -265,7 +265,7 @@ describe('parser', () => {
     );
   });
 
-  describe('streaming', () => {
+  Test.describe('streaming', () => {
     const PARTS: Response.StreamPart<any>[] = [
       ...reasoning('My thoughts are...'),
       ...text(['Hello, ', 'world!']),
@@ -277,19 +277,19 @@ describe('parser', () => {
       }),
     ];
 
-    it.effect(
+    Test.it.effect(
       'onPart is called with every part',
       Effect.fn(function* ({ expect }) {
-        const onPart = vi.fn(Function.constant(Effect.void));
+        const onPart = Test.vi.fn(Function.constant(Effect.void));
         yield* makeInputStream(PARTS).pipe(parseResponse({ onPart })).pipe(Stream.runCollect);
         expect(onPart.mock.calls).toEqual(PARTS.map((part) => [part]));
       }),
     );
 
-    it.effect(
+    Test.it.effect(
       'gets partial content blocks',
       Effect.fn(function* ({ expect }) {
-        const onBlock = vi.fn(Function.constant(Effect.void));
+        const onBlock = Test.vi.fn(Function.constant(Effect.void));
         yield* makeInputStream(PARTS).pipe(parseResponse({ onBlock })).pipe(Stream.runCollect);
         expect(onBlock.mock.calls).toEqual(
           (

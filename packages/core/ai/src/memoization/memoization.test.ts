@@ -8,7 +8,7 @@ import * as Prompt from '@effect/ai/Prompt';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -40,16 +40,16 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-sonnet-4-0'),
 ).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
-describe('memoization', () => {
-  it.effect(
+Test.describe('memoization', () => {
+  Test.it.effect(
     'context paths',
     Effect.fnUntraced(function* (ctx) {
       const filepath = ctx.task.file.filepath;
-      expect(filepath.endsWith('memoization.test.ts')).toBe(true);
+      Test.expect(filepath.endsWith('memoization.test.ts')).toBe(true);
     }),
   );
 
-  it.effect(
+  Test.it.effect(
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
@@ -63,7 +63,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'tools',
     Effect.fnUntraced(
       function* (_) {
@@ -94,7 +94,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'tools with encoding',
     Effect.fnUntraced(
       function* (_) {
@@ -108,7 +108,7 @@ describe('memoization', () => {
           if (response.finishReason === 'tool-calls') {
             continue;
           } else {
-            expect(response.finishReason).toBe('stop');
+            Test.expect(response.finishReason).toBe('stop');
             console.log(response.text);
             break;
           }
@@ -119,7 +119,7 @@ describe('memoization', () => {
     ),
   );
 
-  it.effect(
+  Test.it.effect(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
@@ -133,7 +133,7 @@ describe('memoization', () => {
           if (response.finishReason === 'tool-calls') {
             continue;
           } else {
-            expect(response.finishReason).toBe('stop');
+            Test.expect(response.finishReason).toBe('stop');
             console.log(response.text);
             break;
           }

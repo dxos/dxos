@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
@@ -23,7 +23,7 @@ const ENABLE_LOGGING = true;
 const SKIP_AI_SERVICE_TESTS = true;
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
-  it.effect('text output', ({ expect }) =>
+  Test.it.effect('text output', ({ expect }) =>
     Effect.gen(function* () {
       const runtime = new TestRuntime(createTestServices({ logging: { enabled: ENABLE_LOGGING } }));
       runtime.registerGraph('dxn:compute:gpt1', gpt1());

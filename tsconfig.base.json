@@ -38,10 +38,7 @@
         // especially with bundlers like esbuild.
         "namespaceImportPackages": [
           "effect",
-          "@effect/ai",
-          "@effect/platform",
-          "@effect/platform-node",
-          "@effect/ai-anthropic"
+          "@effect/*"
         ],
 
         // When a symbol is re-exported through a barrel (e.g. index.ts),

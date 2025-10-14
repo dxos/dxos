@@ -4,7 +4,7 @@
 
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -40,8 +40,8 @@ const TestLayer = Layer.mergeAll(
 
 const DXOS_SERVER_ID = '837138313172353095';
 
-describe('Feed', { timeout: 600_000 }, () => {
-  it.effect(
+Test.describe('Feed', { timeout: 600_000 }, () => {
+  Test.it.effect(
     'fetch discord messages',
     Effect.fnUntraced(
       function* (_) {

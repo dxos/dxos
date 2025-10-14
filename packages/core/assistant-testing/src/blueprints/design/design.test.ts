@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -36,8 +36,8 @@ import { testToolkit } from '../testing';
 
 import blueprint from './design';
 
-describe('Design Blueprint', { timeout: 120_000 }, () => {
-  it.effect(
+Test.describe('Design Blueprint', { timeout: 120_000 }, () => {
+  Test.it.effect(
     'design blueprint',
     Effect.fn(
       function* ({ expect }) {

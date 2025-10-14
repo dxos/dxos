@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -27,16 +27,16 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
   ),
 );
 
-describe('FunctionInvocationService', () => {
-  it(
+Test.describe('FunctionInvocationService', () => {
+  Test.it(
     'should be defined',
     Effect.fnUntraced(function* () {
       const service = yield* FunctionInvocationService;
-      expect(service).toBeDefined();
+      Test.expect(service).toBeDefined();
     }, Effect.provide(TestLayer)),
   );
 
-  it(
+  Test.it(
     'routes to local when implementation is available',
     Effect.fnUntraced(function* () {
       const add = defineFunction({
@@ -53,11 +53,11 @@ describe('FunctionInvocationService', () => {
         return yield* FunctionInvocationService.invokeFunction(add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));
 
-      expect(result).toEqual(5);
+      Test.expect(result).toEqual(5);
     }),
   );
 
-  it(
+  Test.it(
     'routes to remote when no local implementation is found',
     Effect.fnUntraced(function* () {
       // This function is not deployed, so mock layer will be used.
@@ -75,7 +75,7 @@ describe('FunctionInvocationService', () => {
       }).pipe(Effect.provide(TestLayer));
 
       // RemoteFunctionExecutionService.mock echos input back.
-      expect(result).toEqual({ hello: 'world', resolved: 'remote' });
+      Test.expect(result).toEqual({ hello: 'world', resolved: 'remote' });
     }),
   );
 });

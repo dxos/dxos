@@ -3,7 +3,7 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Array from 'effect/Array';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
@@ -34,8 +34,8 @@ const TestLayer = Layer.mergeAll(
  * export ACCESS_TOKEN="xxx"
  * pnpm vitest api.test.ts
  */
-describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
-  it.effect(
+Test.describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () => {
+  Test.it.effect(
     'get labels',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';
@@ -45,7 +45,7 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
     }, Effect.provide(TestLayer)),
   );
 
-  it.effect(
+  Test.it.effect(
     'get messages',
     Effect.fnUntraced(function* ({ expect }) {
       const userId = 'rich@braneframe.com';

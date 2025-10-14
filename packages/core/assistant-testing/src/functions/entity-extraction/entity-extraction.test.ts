@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -52,8 +52,8 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Entity-extraction', () => {
-  it.effect(
+Test.describe('Entity-extraction', () => {
+  Test.it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
@@ -87,9 +87,9 @@ describe('Entity-extraction', () => {
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });
-        expect(result.entities).toHaveLength(2);
+        Test.expect(result.entities).toHaveLength(2);
         for (const entity of result.entities ?? []) {
-          expect(Obj.getMeta(entity)?.tags).toContain('important');
+          Test.expect(Obj.getMeta(entity)?.tags).toContain('important');
         }
       },
       Effect.provide(TestLayer),

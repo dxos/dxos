@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import * as Test from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import * as TestContext from 'effect/TestContext';
 
 import { createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
 
-describe('stream', () => {
-  it.effect('tokenize tags', ({ expect }) =>
+Test.describe('stream', () => {
+  Test.it.effect('tokenize tags', ({ expect }) =>
     Effect.gen(function* () {
       {
         expect(splitSpans('A\n<test />\nB')).toEqual(['A\n', '<test />', '\nB']);
@@ -19,7 +19,7 @@ describe('stream', () => {
     }),
   );
 
-  it.effect('tokenize fragments', ({ expect }) =>
+  Test.it.effect('tokenize fragments', ({ expect }) =>
     Effect.gen(function* () {
       {
         expect(splitFragments('A\n<toolkit />\nB')).toEqual(['A\n', '<toolkit />', '\nB']);
@@ -37,7 +37,7 @@ describe('stream', () => {
     }),
   );
 
-  it.effect('split sentences', ({ expect }) =>
+  Test.it.effect('split sentences', ({ expect }) =>
     Effect.gen(function* () {
       expect(splitSentences('Hello world. What a nice day!\nLooking great.')).toEqual([
         'Hello world. ',
@@ -47,7 +47,7 @@ describe('stream', () => {
     }),
   );
 
-  it.effect('stream char-by-char with tags', ({ expect }) =>
+  Test.it.effect('stream char-by-char with tags', ({ expect }) =>
     Effect.gen(function* () {
       const text = 'Hello <b>World</b>!';
       const result = yield* testStreamer(text);
@@ -55,7 +55,7 @@ describe('stream', () => {
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
 
-  it.effect('stream with self-closing tags', ({ expect }) =>
+  Test.it.effect('stream with self-closing tags', ({ expect }) =>
     Effect.gen(function* () {
       const text = 'Hello<br/>world<img src="test.jpg"/>';
       const result = yield* testStreamer(text);
@@ -63,7 +63,7 @@ describe('stream', () => {
     }).pipe(Effect.provide(TestContext.TestContext)),
   );
 
-  it.effect('stream with incomplete tag fragment', ({ expect }) =>
+  Test.it.effect('stream with incomplete tag fragment', ({ expect }) =>
     Effect.gen(function* () {
       const text = 'Hello <div class="test';
       const result = yield* testStreamer(text);
