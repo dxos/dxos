@@ -35,7 +35,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook!.cells.length;
       notebook?.cells.splice(idx, 0, {
         id: crypto.randomUUID(),
-        script: Ref.make(DataType.makeText()),
+        script: Ref.make(DataType.makeText('\n\n\n')),
       });
     },
     [notebook],

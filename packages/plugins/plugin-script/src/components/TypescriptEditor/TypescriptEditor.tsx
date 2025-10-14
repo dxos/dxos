@@ -99,7 +99,7 @@ export const TypescriptEditor = ({
     <div
       ref={parentRef}
       data-toolbar={toolbar ? 'enabled' : 'disabled'}
-      className={mx('_overflow-hidden', classNames)}
+      className={mx(classNames)}
       {...focusAttributes}
     />
   );

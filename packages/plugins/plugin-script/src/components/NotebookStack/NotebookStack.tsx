@@ -93,7 +93,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
             highlightActiveLine: false,
             lineNumbers: false,
           }}
-          classNames='p-2'
+          classNames='p-2 pbs-3'
         />
 
         {value != null && (
