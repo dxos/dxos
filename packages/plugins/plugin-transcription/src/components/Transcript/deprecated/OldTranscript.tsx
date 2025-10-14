@@ -3,7 +3,7 @@
 //
 
 import { intervalToDuration } from 'date-fns/intervalToDuration';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { yieldOrContinue } from 'main-thread-scheduling';
 import React, { type FC, type WheelEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';

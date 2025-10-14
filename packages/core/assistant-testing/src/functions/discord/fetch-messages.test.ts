@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Toolkit } from '@effect/ai';
-import { FetchHttpClient } from '@effect/platform';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer } from 'effect';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';

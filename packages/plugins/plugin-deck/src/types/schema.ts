@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { LayoutAction } from '@dxos/app-framework';
 import { type DeepReadonly } from '@dxos/util';

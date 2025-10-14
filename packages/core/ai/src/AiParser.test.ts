@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Response } from '@effect/ai';
+import * as Response from '@effect/ai/Response';
 import { describe, it, vi } from '@effect/vitest';
-import { Chunk, Effect, Function, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Stream from 'effect/Stream';
 
 import { type ContentBlock } from '@dxos/schema';
 

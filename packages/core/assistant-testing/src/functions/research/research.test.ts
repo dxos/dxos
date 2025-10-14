@@ -5,7 +5,8 @@
 import { inspect } from 'node:util';
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
 import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';

@@ -4,7 +4,7 @@
 
 import { EditorView } from '@codemirror/view';
 import { describe, it } from '@effect/vitest';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { type ContentBlock } from '@dxos/schema';
 

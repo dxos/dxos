@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { dual } from 'effect/Function';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -158,7 +158,7 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
 export const getKeys: {
   (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
   (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
-} = dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
+} = Function.dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
   const meta = EchoSchema.getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);

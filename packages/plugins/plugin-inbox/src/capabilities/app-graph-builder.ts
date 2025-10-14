@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -23,7 +24,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/mailbox-filters`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Mailbox.Mailbox, node.data) &&
@@ -81,7 +82,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/mailbox-message`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(Mailbox.Mailbox, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => {

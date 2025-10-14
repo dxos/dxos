@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Toolkit } from '@effect/ai';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
-import { Array, Effect, Layer, Schema } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import {

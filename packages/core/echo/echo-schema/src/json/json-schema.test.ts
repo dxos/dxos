@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Option, Schema, SchemaAST } from 'effect';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { type JsonProp, findAnnotation } from '@dxos/effect';

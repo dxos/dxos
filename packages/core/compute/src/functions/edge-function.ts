@@ -3,7 +3,8 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { Effect, SchemaAST } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo-schema';
