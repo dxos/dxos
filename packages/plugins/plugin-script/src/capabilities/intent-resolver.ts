@@ -19,7 +19,7 @@ import { ScriptAction } from '../types';
 export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ScriptAction.Create,
+      intent: ScriptAction.CreateScript,
       resolve: async ({ name, gistUrl, initialTemplateId }) => {
         let content = templates[0].source;
 

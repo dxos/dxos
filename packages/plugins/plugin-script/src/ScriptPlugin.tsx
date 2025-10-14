@@ -66,8 +66,8 @@ export const ScriptPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: ScriptType,
-          formSchema: ScriptAction.CreateScript.pipe(Schema.omit('initialTemplateId')),
-          getIntent: (props, options) => createIntent(ScriptAction.Create, { ...props, space: options.space }),
+          formSchema: ScriptAction.ScriptProps.pipe(Schema.omit('initialTemplateId')),
+          getIntent: (props, options) => createIntent(ScriptAction.CreateScript, { ...props, space: options.space }),
         }),
       ),
   }),
