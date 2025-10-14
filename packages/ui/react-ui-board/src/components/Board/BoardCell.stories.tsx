@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card, cardStackDefaultInlineSizeRem, translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
@@ -16,7 +16,7 @@ const DefaultStory = (props: BoardCellProps) => {
   return (
     <Board.Root
       layout={{ size: { width: 1, height: 1 }, cells: {} }}
-      grid={{ size: { width: 300, height: 300 }, gap: 10 }}
+      grid={{ size: { width: cardStackDefaultInlineSizeRem, height: cardStackDefaultInlineSizeRem }, gap: 0.625 }}
     >
       <Board.Viewport>
         <Board.Cell {...props} draggable={false}>

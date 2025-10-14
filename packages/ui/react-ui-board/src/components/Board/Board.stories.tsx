@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { withTheme } from '@dxos/react-ui/testing';
-import { Card, translations as stackTranslations } from '@dxos/react-ui-stack';
+import { Card, cardStackDefaultInlineSizeRem, translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
@@ -20,7 +20,7 @@ type TestItem = {
 
 type StoryProps = BoardRootProps & BoardContentProps & { items: TestItem[] };
 
-const DefaultStory = ({ layout: _layout, items: _items, ...props }: StoryProps) => {
+const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryProps) => {
   const [items, setItems] = useState(_items ?? []);
   const [layout, setLayout] = useState<BoardLayout>(_layout ?? { size: { width: 4, height: 4 }, cells: {} });
 
@@ -108,9 +108,9 @@ export const Default: Story = {
       { id: '6', title: 'Item 6' },
     ],
     grid: {
-      overScroll: 300,
-      size: { width: 300, height: 300 },
-      gap: 16,
+      overScroll: cardStackDefaultInlineSizeRem,
+      size: { width: cardStackDefaultInlineSizeRem, height: cardStackDefaultInlineSizeRem },
+      gap: 1,
     },
     layout: {
       size: { width: 7, height: 5 },
