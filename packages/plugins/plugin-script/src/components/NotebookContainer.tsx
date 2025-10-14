@@ -22,12 +22,12 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
 
-  const computeGraph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+  const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
 
   const handleCompute = useCallback(() => {
-    const values = computeGraph?.evaluate();
-    console.log(JSON.stringify(values, null, 2));
-  }, [computeGraph]);
+    graph?.evaluate();
+    console.log(JSON.stringify({ values: graph?.values.value, expressions: graph?.expressions }, null, 2));
+  }, [graph]);
 
   return (
     <StackItem.Content toolbar>
@@ -41,7 +41,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           onClick={handleCompute}
         />
       </Toolbar.Root>
-      <NotebookStack notebook={notebook} env={env} />
+      <NotebookStack notebook={notebook} graph={graph} env={env} />
     </StackItem.Content>
   );
 };

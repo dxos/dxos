@@ -10,8 +10,8 @@ import { trim } from '@dxos/util';
 export type ParsedExpression = {
   name?: string;
   type?: 'function' | 'variable' | 'class' | 'interface';
-  valueType?: string;
   value?: any;
+  valueType?: string;
   parameters?: Array<{ name: string; type: string }>;
   returnType?: string;
   references?: string[];
@@ -43,10 +43,9 @@ export class VirtualTypeScriptParser {
    */
   parseExpression(input: string): ParsedExpression {
     const files: VirtualFile[] = [{ filename: '/temp.ts', content: input }];
-
     const analysis = this.analyzeFiles(files);
 
-    // If no declarations found, check for standalone expression references
+    // If no declarations found, check for standalone expression references.
     if (analysis.length === 0) {
       const sourcefilename = '/temp.ts';
       const env = this.createEnvironment([{ filename: sourcefilename, content: input }, ...systemFiles]);
@@ -54,7 +53,7 @@ export class VirtualTypeScriptParser {
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
       if (sourceFile && typeChecker) {
-        // Check for assignment expressions
+        // Check for assignment expressions.
         const assignmentInfo = this.findAssignmentExpression(sourceFile, typeChecker);
         if (assignmentInfo) {
           return assignmentInfo;
@@ -65,7 +64,7 @@ export class VirtualTypeScriptParser {
       }
     }
 
-    return analysis[0] || {};
+    return analysis[0];
   }
 
   /**
@@ -76,7 +75,7 @@ export class VirtualTypeScriptParser {
     const results: ParsedExpression[] = [];
     const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
-    // Analyze each file
+    // Analyze each file.
     files.forEach((file) => {
       const sourceFile = env.getSourceFile(file.filename);
       if (!sourceFile || !typeChecker) return;

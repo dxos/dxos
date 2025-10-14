@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Signal, signal } from '@preact/signals-core';
+
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -9,40 +11,53 @@ import { type Notebook } from '../types';
 
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 
+export type CellExpression = { id: string } & ParsedExpression;
+
 /**
  * Compute graph that evaluates the notebook cells.
  */
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
-  /** Values by name. */
-  private _values: Record<string, any> = {};
+  /**
+   * Parsed expressions.
+   */
+  private _expressions = signal<CellExpression[]>([]);
+
+  /**
+   * Computed values by cell ID.
+   */
+  private _values = signal<Record<string, any>>({});
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
 
-  get values() {
+  get values(): Signal<Record<string, any>> {
     return this._values;
   }
 
-  evaluate() {
-    // Clear previous values.
-    this._values = {};
+  get expressions(): Signal<CellExpression[]> {
+    return this._expressions;
+  }
 
+  evaluate() {
+    // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
+    this._values.value = {};
 
     // Create a map of cell IDs to expressions for easy lookup.
-    const cellExpressions = new Map<string, ParsedExpression & { cellId: string }>();
+    const cellExpressions = new Map<string, CellExpression>();
     expressions.forEach((expr) => {
-      cellExpressions.set(expr.cellId, expr);
+      cellExpressions.set(expr.id, expr);
     });
 
     // Topological sort to determine evaluation order.
     const evaluationOrder = this.topologicalSort(
-      expressions.map((expr) => expr.cellId),
+      expressions.map((expr) => expr.id),
       dependencyGraph,
     );
 
     // Evaluate cells in dependency order.
+    const values: Record<string, any> = {};
     for (const cellId of evaluationOrder) {
       const expr = cellExpressions.get(cellId);
       if (!expr) {
@@ -50,8 +65,7 @@ export class ComputeGraph {
         continue;
       }
 
-      const cellSource = this._notebook.cells.find((cell) => cell.script.target?.id === cellId)?.script.target?.source
-        .target?.content;
+      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script.target?.source.target?.content;
       if (!cellSource) {
         log.error('no source for cell', { cellId });
         continue;
@@ -61,7 +75,7 @@ export class ComputeGraph {
         // For assignments or declarations, evaluate and store the value.
         if (expr.name && expr.value !== undefined) {
           // If the parser extracted a literal value, use it directly.
-          this._values[expr.name] = expr.value;
+          values[expr.name] = expr.value;
         } else if (expr.name) {
           // For non-literal assignments, we need to evaluate the expression.
           // The parser identifies it's an assignment, so we can extract the RHS.
@@ -75,34 +89,36 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = this.evalScript(rhs, this._values);
-            this._values[expr.name] = result;
+            const result = this.evalScript(rhs, values);
+            values[expr.name] = result;
           }
         } else {
           // For expressions without assignment, just evaluate.
-          this.evalScript(cellSource, this._values);
+          this.evalScript(cellSource, values);
         }
       } catch (error) {
         log.error('error evaluating cell', { cellId, error });
       }
     }
 
-    return this._values;
+    this._values.value = values;
+    return values;
   }
 
   parse() {
     const expressions = this._notebook.cells
-      .map((cell) => {
+      .map<CellExpression | undefined>((cell) => {
         const text = cell.script.target?.source.target;
         if (text) {
           const parsed = this._parser.parseExpression(text.content);
-          return { cellId: cell.script.target?.id, ...parsed };
+          return { id: cell.id, ...parsed } satisfies CellExpression;
         }
       })
       .filter(isNonNullable);
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);
+    this._expressions.value = expressions;
     return { expressions, dependencyGraph };
   }
 
@@ -128,12 +144,12 @@ export class ComputeGraph {
     return result;
   }
 
-  private buildDependencyGraph(expressions: (ParsedExpression & { cellId: string })[]): Record<string, string[]> {
+  private buildDependencyGraph(expressions: CellExpression[]): Record<string, string[]> {
     // Create a map of variable names to their cell IDs.
-    const nameToCell = new Map<string, string>();
+    const nameToCellId = new Map<string, string>();
     expressions.forEach((expr) => {
       if (expr.name) {
-        nameToCell.set(expr.name, expr.cellId);
+        nameToCellId.set(expr.name, expr.id);
       }
     });
 
@@ -143,11 +159,11 @@ export class ComputeGraph {
       if (expr.references && expr.references.length > 0) {
         // Map variable references to cell IDs.
         const dependencyCellIds = expr.references
-          .map((ref) => nameToCell.get(ref))
-          .filter((cellId): cellId is string => cellId !== undefined && cellId !== expr.cellId);
+          .map((ref) => nameToCellId.get(ref))
+          .filter((cellId): cellId is string => cellId !== undefined && cellId !== expr.id);
 
         if (dependencyCellIds.length > 0) {
-          graph[expr.cellId] = dependencyCellIds;
+          graph[expr.id] = dependencyCellIds;
         }
       }
     });

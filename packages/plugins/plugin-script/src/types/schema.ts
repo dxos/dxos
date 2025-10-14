@@ -11,6 +11,7 @@ import { EditorInputMode } from '@dxos/react-ui-editor';
 
 export namespace Notebook {
   export const Cell = Schema.Struct({
+    id: Schema.String,
     script: Type.Ref(ScriptType),
   });
 
