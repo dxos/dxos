@@ -7,7 +7,8 @@ import { type Registry } from '@effect-rx/rx-react';
 import { type Layer, type Schema } from 'effect';
 import { type FC, type PropsWithChildren } from 'react';
 
-import { type AiService, type AiServiceRouter } from '@dxos/ai';
+import { type AiService} from '@dxos/ai';
+import type * as AiServiceRouter  from '@dxos/ai/AiServiceRouter';
 import { type BuilderExtensions, type GraphBuilder } from '@dxos/app-graph';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client-protocol';

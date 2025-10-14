@@ -6,7 +6,7 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { Layer } from 'effect';
 
-import { AiServiceRouter } from '@dxos/ai';
+import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 export default (): Capability<any>[] => [
