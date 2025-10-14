@@ -9,14 +9,6 @@ import { type Notebook } from '../types';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 
 /**
- * Evaluate the script.
- */
-const evalScript = (code: string, deps: Record<string, any> = {}) => {
-  // eslint-disable-next-line @typescript-eslint/no-implied-eval
-  return new Function(...Object.keys(deps), 'return ' + code)(...Object.values(deps));
-};
-
-/**
  * Compute graph that evaluates the notebook cells.
  */
 export class ComputeGraph {
@@ -74,12 +66,12 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = evalScript(rhs, this._values);
+            const result = this.evalScript(rhs, this._values);
             this._values[expr.name] = result;
           }
         } else {
           // For expressions without assignment, just evaluate.
-          evalScript(cellSource, this._values);
+          this.evalScript(cellSource, this._values);
         }
       } catch (error) {
         log.error('error evaluating cell', { cellId, error });
@@ -151,5 +143,13 @@ export class ComputeGraph {
     });
 
     return graph;
+  }
+
+  /**
+   * Evaluate the script (with dependencies as arguments).
+   */
+  private evalScript(code: string, deps: Record<string, any> = {}) {
+    // eslint-disable-next-line @typescript-eslint/no-implied-eval
+    return new Function(...Object.keys(deps), 'return ' + code)(...Object.values(deps));
   }
 }
