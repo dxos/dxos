@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import React, { useCallback, useRef, useState } from 'react';
 
 import {
@@ -88,7 +89,7 @@ export const CreateObjectDialog = ({
           const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
-            yield* dispatch(pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
+            yield* dispatch(Function.pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
           } else {
             yield* dispatch(addObjectIntent);
           }
