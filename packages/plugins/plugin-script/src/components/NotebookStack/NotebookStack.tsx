@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
+import { DropdownMenu, Icon } from '@dxos/react-ui';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
@@ -16,14 +17,12 @@ export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
 } & Pick<TypescriptEditorProps, 'env'>;
 
-// TODO(burdon): Rail.
 // TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
 // TODO(burdon): Different section types (value, query, expression, prompt).
 // TODO(burdon): Show result (incl. error, streaming response).
 // TODO(burdon): Define actions for plugin.
 
 export const NotebookStack = ({ notebook, env }: NotebookStackProps) => {
-  // TODO(burdon): Rail isn't visible.
   return (
     <Stack orientation='vertical' size='contain' rail>
       {notebook?.cells.map((cell, i) => (
@@ -44,8 +43,29 @@ const NotebookSection = ({ cell, env }: NotebookSectionProps) => {
   }, [script]);
 
   return (
-    <StackItem.Root role='section' item={script} classNames='flex flex-col'>
-      <StackItem.Content classNames='flex flex-col'>
+    <StackItem.Root role='section' item={script}>
+      <StackItem.Heading classNames='attention-surface'>
+        <StackItem.HeadingStickyContent>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <StackItem.SigilButton>
+                <Icon icon='ph--text-aa--regular' size={5} />
+              </StackItem.SigilButton>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item>Option 1</DropdownMenu.Item>
+                  <DropdownMenu.Item>Option 2</DropdownMenu.Item>
+                  <DropdownMenu.Item>Option 3</DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </StackItem.HeadingStickyContent>
+      </StackItem.Heading>
+      <StackItem.Content>
         <TypescriptEditor
           id={script.id}
           role='section'
