@@ -15,6 +15,7 @@ export type NotebookStackProps = {
 
 // TODO(burdon): Allow moving cursor between sections.
 // TODO(burdon): Different section types (value, query, expression, prompt).
+// TODO(burdon): Show result (incl. error, streaming response).
 export const NotebookStack = ({ notebook }: NotebookStackProps) => {
   // TODO(burdon): Rail isn't visible.
   return (
