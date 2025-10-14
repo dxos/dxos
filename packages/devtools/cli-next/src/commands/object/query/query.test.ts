@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
@@ -13,8 +13,8 @@ import { TestConsole, TestLayer } from '../../../testing';
 
 import { handler } from './query';
 
-Test.describe('spaces query', () => {
-  Test.it('should query empty space', () =>
+describe('spaces query', () => {
+  it('should query empty space', () =>
     Effect.gen(function* () {
       // TODO(wittjosiah): Create test runtime so that client service can be shared with `beforeEach`.
       const client = yield* ClientService;
@@ -24,12 +24,11 @@ Test.describe('spaces query', () => {
       yield* handler({ spaceId: client.spaces.default.id, typename: DataType.Task.typename });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
-      Test.expect(logs).toHaveLength(1);
-      Test.expect(logs[0].args).toEqual(['[]']);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
-  );
+      expect(logs).toHaveLength(1);
+      expect(logs[0].args).toEqual(['[]']);
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 
-  Test.it('should query space for objects', () =>
+  it('should query space for objects', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       client.addTypes([DataType.Task]);
@@ -42,9 +41,8 @@ Test.describe('spaces query', () => {
       yield* handler({ spaceId: space.id, typename: DataType.Task.typename });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
-      Test.expect(logs).toHaveLength(1);
+      expect(logs).toHaveLength(1);
       const formattedObjects = JSON.parse(logs[0].args as string);
-      Test.expect(formattedObjects).toHaveLength(2);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise),
-  );
+      expect(formattedObjects).toHaveLength(2);
+    }).pipe(Effect.provide(TestLayer), Effect.scoped, Effect.runPromise));
 });

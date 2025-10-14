@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -16,8 +16,8 @@ import { AiServiceTestingPreset } from '../testing';
 
 import { processMessages } from './testing';
 
-Test.describe('effect AI tool calls', () => {
-  Test.it.effect(
+describe('effect AI tool calls', () => {
+  it.effect(
     'calculator',
     Effect.fn(
       function* ({ expect }) {
@@ -47,7 +47,7 @@ Test.describe('effect AI tool calls', () => {
 
   const parts = ['`---`', '`+++`', '`@@`'];
 
-  Test.it.effect(
+  it.effect(
     'markdown',
     Effect.fn(
       function* ({ expect }) {

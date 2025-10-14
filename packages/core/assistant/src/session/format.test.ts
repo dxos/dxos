@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { beforeAll, describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Blueprint, Template } from '@dxos/blueprints';
@@ -16,16 +16,16 @@ import { createSystemPrompt } from '../templates/system';
 
 import { formatSystemPrompt } from './format';
 
-Test.describe('format', () => {
+describe('format', () => {
   let db: EchoDatabase;
-  Test.beforeAll(async () => {
+  beforeAll(async () => {
     const builder = await new EchoTestBuilder().open();
     ({ db } = await builder.createDatabase({
       types: [DataType.Text, DataType.Organization, Blueprint.Blueprint],
     }));
   });
 
-  Test.it.effect(
+  it.effect(
     'should format',
     Effect.fn(function* () {
       const object = db.add(

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -16,8 +16,8 @@ const mockRegistry = Layer.succeed(ServiceRegistry, {
   resolve: (tag) => ((tag as any) === MyTag ? Option.some({ value: 'test' } as any) : Option.none()),
 });
 
-Test.describe('ServiceRegistry', () => {
-  Test.it.effect(
+describe('ServiceRegistry', () => {
+  it.effect(
     'provide',
     Effect.fn(function* ({ expect }) {
       const body = Effect.gen(function* () {
@@ -30,7 +30,7 @@ Test.describe('ServiceRegistry', () => {
     }, Effect.provide(mockRegistry)),
   );
 
-  Test.it.effect(
+  it.effect(
     'provide or die',
     Effect.fn(function* ({ expect }) {
       const body = Effect.gen(function* () {

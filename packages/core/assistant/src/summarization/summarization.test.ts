@@ -5,6 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
+import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import { beforeAll, describe, test } from 'vitest';
 
@@ -79,7 +80,7 @@ const summarizationFn = defineFunction({
       }),
     );
 
-    return DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
+    return DataType.makeText(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : '')));
   },
 });
 
@@ -136,7 +137,7 @@ const refinementFn = defineFunction({
       }),
     );
     return {
-      summary: DataType.makeText(pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
+      summary: DataType.makeText(Function.pipe(result[0]?.blocks[0], (c) => (c?._tag === 'text' ? c.text : ''))),
     };
   },
 });

@@ -3,7 +3,7 @@
 //
 
 import * as Prompt from '@effect/ai/Prompt';
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 
@@ -14,8 +14,8 @@ import { bufferToArray } from '@dxos/util';
 import { preprocessPrompt } from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
 
-Test.describe('preprocessor', () => {
-  Test.it.effect(
+describe('preprocessor', () => {
+  it.effect(
     'should preprocess simple user message with text',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -39,7 +39,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle multiple tool results at the start of a message',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -87,7 +87,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle assistant message with tool calls',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -130,7 +130,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle assistant message with reasoning',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -165,7 +165,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle redacted reasoning',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -195,7 +195,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle user message with image (base64)',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -226,7 +226,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle user message with image (URL)',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -255,7 +255,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle user message with file reference',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -281,7 +281,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle user message with transcript',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -306,7 +306,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle assistant message with various block types',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -359,7 +359,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should fail when user message contains invalid blocks',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -384,7 +384,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'handles provider-executed tool results',
     Effect.fn(function* ({ expect }) {
       const message = Obj.make(DataType.Message, {
@@ -414,7 +414,7 @@ Test.describe('preprocessor', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'should handle multiple messages',
     Effect.fn(function* ({ expect }) {
       const messages = [

@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { type ContentBlock } from '@dxos/schema';
@@ -31,8 +31,8 @@ class TestDocument implements TextModel {
   updateWidget(_id: string, _value: any) {}
 }
 
-Test.describe('reducers', () => {
-  Test.it.effect(
+describe('reducers', () => {
+  it.effect(
     'basic sync',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();
@@ -52,7 +52,7 @@ Test.describe('reducers', () => {
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'sync with partial updates',
     Effect.fn(function* ({ expect }) {
       const doc = new TestDocument();

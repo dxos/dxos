@@ -6,7 +6,7 @@ import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -25,8 +25,8 @@ import { processMessages } from './testing';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
 
-Test.describe('ollama', () => {
-  Test.it.effect(
+describe('ollama', () => {
+  it.effect(
     'streaming',
     Effect.fn(
       function* (_) {
@@ -66,7 +66,7 @@ Test.describe('ollama', () => {
     ),
   );
 
-  Test.it.effect(
+  it.effect(
     'tools',
     Effect.fn(
       function* (_) {

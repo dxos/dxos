@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -12,7 +12,7 @@ const doWork = Effect.fn('doWork')(function* () {
   return 'work done';
 });
 
-Test.it.effect.skip(
+it.effect.skip(
   'call a function to generate a research report',
   Effect.fnUntraced(
     function* (_) {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { afterAll, beforeAll, it } from '@effect/vitest';
 import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { type Logger, SeverityNumber, logs } from '@opentelemetry/api-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
@@ -78,11 +78,11 @@ const makeOtelLogProcessor = (logger: Logger): LogProcessor => {
 };
 log.addProcessor(makeOtelLogProcessor(logger));
 
-Test.beforeAll(() => {
+beforeAll(() => {
   sdk.start();
 });
 
-Test.afterAll(async () => {
+afterAll(async () => {
   await loggerProvider.shutdown();
   await sdk.shutdown();
 });
@@ -114,7 +114,7 @@ const baz = Effect.fn('baz')(function* () {
   yield* bar();
 });
 
-Test.it.live(
+it.live(
   'Test Suite One',
   Effect.fnUntraced(
     function* () {

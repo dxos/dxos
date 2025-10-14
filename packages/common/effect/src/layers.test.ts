@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -47,7 +47,7 @@ const ServerLive = Layer.scoped(
   }),
 );
 
-Test.it.effect.skip(
+it.effect.skip(
   'test',
   Effect.fn(
     function* (_) {

@@ -4,7 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -60,8 +60,8 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
 ).pipe(Layer.provideMerge(TestServicesLayer), Layer.orDie);
 
 // TODO(burdon): Create actual test with mock LLM.
-Test.describe('Chat processor', () => {
-  Test.it.effect(
+describe('Chat processor', () => {
+  it.effect(
     'basic',
     Effect.fn(
       function* ({ expect }) {

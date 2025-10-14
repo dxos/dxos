@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Test from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
@@ -12,8 +12,8 @@ import { DatabaseService } from '../services';
 
 import { TestDatabaseLayer, testStoragePath } from './layer';
 
-Test.describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
-  Test.it.effect(
+describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
+  it.effect(
     'persist database to disk',
     Effect.fnUntraced(function* (_) {
       const DbLayer = TestDatabaseLayer({
@@ -27,12 +27,12 @@ Test.describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
 
       yield* Effect.gen(function* () {
         const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.everything()));
-        Test.expect(objects[0]?.label).toEqual('test');
+        expect(objects[0]?.label).toEqual('test');
       }).pipe(Effect.provide(DbLayer));
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'reload database -- save index before restart',
     Effect.fnUntraced(function* (_) {
       const NUM_OBJECTS = 500;
@@ -50,12 +50,12 @@ Test.describe('TestDatabaseLayer', { timeout: 600_000 }, () => {
 
       yield* Effect.gen(function* () {
         const { objects } = yield* DatabaseService.runQuery(Query.select(Filter.type(DataType.Person)));
-        Test.expect(objects.length).toEqual(NUM_OBJECTS);
+        expect(objects.length).toEqual(NUM_OBJECTS);
       }).pipe(Effect.provide(DbLayer));
     }),
   );
 
-  Test.it.effect.skip(
+  it.effect.skip(
     'reload database -- save index before restart [manual]',
     Effect.fnUntraced(
       function* (_) {

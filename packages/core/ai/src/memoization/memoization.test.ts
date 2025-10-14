@@ -8,7 +8,7 @@ import * as Prompt from '@effect/ai/Prompt';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
-import * as Test from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -40,16 +40,16 @@ const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-sonnet-4-0'),
 ).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
 
-Test.describe('memoization', () => {
-  Test.it.effect(
+describe('memoization', () => {
+  it.effect(
     'context paths',
     Effect.fnUntraced(function* (ctx) {
       const filepath = ctx.task.file.filepath;
-      Test.expect(filepath.endsWith('memoization.test.ts')).toBe(true);
+      expect(filepath.endsWith('memoization.test.ts')).toBe(true);
     }),
   );
 
-  Test.it.effect(
+  it.effect(
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
@@ -63,7 +63,7 @@ Test.describe('memoization', () => {
     ),
   );
 
-  Test.it.effect(
+  it.effect(
     'tools',
     Effect.fnUntraced(
       function* (_) {
@@ -94,7 +94,7 @@ Test.describe('memoization', () => {
     ),
   );
 
-  Test.it.effect(
+  it.effect(
     'tools with encoding',
     Effect.fnUntraced(
       function* (_) {
@@ -108,7 +108,7 @@ Test.describe('memoization', () => {
           if (response.finishReason === 'tool-calls') {
             continue;
           } else {
-            Test.expect(response.finishReason).toBe('stop');
+            expect(response.finishReason).toBe('stop');
             console.log(response.text);
             break;
           }
@@ -119,7 +119,7 @@ Test.describe('memoization', () => {
     ),
   );
 
-  Test.it.effect(
+  it.effect(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
@@ -133,7 +133,7 @@ Test.describe('memoization', () => {
           if (response.finishReason === 'tool-calls') {
             continue;
           } else {
-            Test.expect(response.finishReason).toBe('stop');
+            expect(response.finishReason).toBe('stop');
             console.log(response.text);
             break;
           }

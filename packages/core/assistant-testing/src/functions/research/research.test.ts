@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import * as Test from '@effect/vitest';
+import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -63,8 +63,8 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-Test.describe('Research', () => {
-  Test.it.effect(
+describe('Research', () => {
+  it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
       function* (_) {
@@ -98,7 +98,7 @@ Test.describe('Research', () => {
   );
 
   // TODO(dmaretskyi): Out-of-memory.
-  Test.it.effect.skip(
+  it.effect.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {
@@ -132,25 +132,25 @@ Test.describe('Research', () => {
   );
 });
 
-Test.describe('misc', () => {
-  Test.it('createExtractionSchema', () => {
+describe('misc', () => {
+  it('createExtractionSchema', () => {
     const _schema = createExtractionSchema(ResearchDataTypes);
     // log.info('schema', { schema });
   });
 
-  Test.it('getSanitizedSchemaName', () => {
+  it('getSanitizedSchemaName', () => {
     const _names = ResearchDataTypes.map(getSanitizedSchemaName);
     // log.info('names', { names }) ;
   });
 
-  Test.it('getTypeAnnotation', () => {
+  it('getTypeAnnotation', () => {
     for (const schema of ResearchDataTypes) {
       const _dxn = Type.getDXN(schema);
       // log.info('dxn', { schema, dxn });
     }
   });
 
-  Test.it.skip('sanitizeObjects', () => {
+  it.skip('sanitizeObjects', () => {
     const _TEST_DATA = {
       objects_dxos_org_type_Project: [
         {
