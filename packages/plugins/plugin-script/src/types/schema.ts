@@ -10,12 +10,11 @@ import { ScriptType } from '@dxos/functions';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 
 export namespace Notebook {
-  export const Notebook = Schema.mutable(
-    Schema.Struct({
-      name: Schema.optional(Schema.String),
-      cells: Schema.mutable(Schema.Array(ScriptType)),
-    }),
-  ).pipe(
+  export const Notebook = Schema.Struct({
+    name: Schema.optional(Schema.String),
+    // TODO(burdon): Additional metadata.
+    cells: Schema.mutable(Schema.Array(ScriptType)),
+  }).pipe(
     Type.Obj({
       typename: 'dxos.org/type/Notebook',
       version: '0.1.0',

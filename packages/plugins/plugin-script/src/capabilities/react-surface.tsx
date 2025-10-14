@@ -16,6 +16,7 @@ import { type DataType } from '@dxos/schema';
 import {
   DEPLOYMENT_DIALOG,
   DeploymentDialog,
+  NotebookContainer,
   ScriptContainer,
   ScriptObjectSettings,
   ScriptPluginSettings,
@@ -23,7 +24,7 @@ import {
   TestContainer,
 } from '../components';
 import { meta } from '../meta';
-import { type ScriptSettings } from '../types';
+import { Notebook, type ScriptSettings } from '../types';
 
 import { ScriptCapabilities } from './capabilities';
 
@@ -37,7 +38,7 @@ export default () =>
       component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${meta.id}/article`,
+      id: `${meta.id}/script/article`,
       role: ['article', 'section'],
       filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
@@ -45,6 +46,15 @@ export default () =>
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
         const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
+      },
+    }),
+    createSurface({
+      id: `${meta.id}/notebook/article`,
+      role: 'article',
+      filter: (data): data is { subject: Notebook.Notebook } => Obj.instanceOf(Notebook.Notebook, data.subject),
+      component: ({ data, role }) => {
+        const compiler = useCapability(ScriptCapabilities.Compiler);
+        return <NotebookContainer role={role} notebook={data.subject} env={compiler.environment} />;
       },
     }),
     // TODO(burdon): Standardize PluginSettings vs ObjectSettings.

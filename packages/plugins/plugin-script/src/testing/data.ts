@@ -6,7 +6,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 
-import { Notebook } from '../../types';
+import { Notebook } from '../types';
 
 export const notebook = Notebook.make({
   cells: [

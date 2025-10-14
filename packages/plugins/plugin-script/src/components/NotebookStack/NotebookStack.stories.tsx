@@ -4,17 +4,18 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { notebook } from '../../testing';
 import { translations } from '../../translations';
 
 import { NotebookStack } from './NotebookStack';
-import { notebook } from './testing';
 
 const meta = {
   title: 'plugins/plugin-script/NotebookStack',
   component: NotebookStack,
-  decorators: [withTheme],
+  decorators: [withTheme, withClientProvider()],
   parameters: {
     layout: {
       type: 'column',
