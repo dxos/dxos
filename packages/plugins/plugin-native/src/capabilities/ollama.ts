@@ -6,7 +6,7 @@ import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { Command } from '@tauri-apps/plugin-shell';
 import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 
-import { AiServiceRouter } from '@dxos/ai';
+import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 
