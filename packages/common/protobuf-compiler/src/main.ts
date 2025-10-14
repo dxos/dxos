@@ -23,7 +23,7 @@ const main = async () => {
   });
 
   parser.add_argument('-v', '--version', { action: 'version', version } as any);
-  parser.add_argument('--src', { help: 'Protobuf input files' });
+  parser.add_argument('--src', { help: 'Protobuf input files', nargs: '*' });
   parser.add_argument('-s', '--substitutions', { help: 'Substitutions file' });
   parser.add_argument('--baseDir', {
     help: 'Base path to resolve fully qualified packages',
@@ -35,7 +35,24 @@ const main = async () => {
 
   const { src, substitutions, baseDir, outDir } = parser.parse_args();
 
-  const protoFilePaths = glob.sync(src, { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
+  // Handle both glob patterns and individual file paths
+  let protoFilePaths: string[];
+  if (Array.isArray(src) && src.length > 0) {
+    // If src is an array, check if the first item is a glob pattern
+    if (src.length === 1 && (src[0].includes('*') || src[0].includes('?'))) {
+      // Single glob pattern
+      protoFilePaths = glob.sync(src[0], { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
+    } else {
+      // Multiple individual file paths
+      protoFilePaths = src.map((file: string) => resolve(process.cwd(), file));
+    }
+  } else if (typeof src === 'string') {
+    // Single glob pattern (legacy behavior)
+    protoFilePaths = glob.sync(src, { cwd: process.cwd() }).map((file: string) => resolve(process.cwd(), file));
+  } else {
+    throw new Error('No source files specified');
+  }
+
   const substitutionsModule = substitutions
     ? ModuleSpecifier.resolveFromFilePath(substitutions, process.cwd())
     : undefined;
