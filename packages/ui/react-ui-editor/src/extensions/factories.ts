@@ -19,7 +19,7 @@ import {
   placeholder,
   scrollPastEnd,
 } from '@codemirror/view';
-import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
+import { vscodeDarkInit, vscodeDarkStyle, vscodeLightInit, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
@@ -92,6 +92,7 @@ export type BasicExtensionsOptions = {
   /** If true user cannot edit the text, but they can still select and copy it. */
   readOnly?: boolean;
   search?: boolean;
+  /** NOTE: Do not use with stack sections. */
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
   tabSize?: number;
@@ -208,6 +209,11 @@ const semanticTokensSettings = {
   },
 };
 
+export const defaultStyles = {
+  dark: vscodeDarkStyle,
+  light: vscodeLightStyle,
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -223,7 +229,6 @@ export const createThemeExtensions = ({
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
     syntaxHighlightingProps && [
       themeMode === 'dark' ? vscodeDarkInit(semanticTokensSettings) : vscodeLightInit(semanticTokensSettings),
-      transparentBackground,
     ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
@@ -277,24 +282,3 @@ export const createDataExtensions = <T>({ id, text, space, identity }: DataExten
 
   return extensions;
 };
-
-const transparentBackground = EditorView.theme({
-  '&': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-gutters': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-activeLineGutter': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-activeLine': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-content': {
-    backgroundColor: 'transparent !important',
-  },
-  '.cm-scroller': {
-    backgroundColor: 'transparent !important',
-  },
-});

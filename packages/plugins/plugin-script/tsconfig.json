@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../../vendor/quickjs"
+    },
+    {
       "path": "../../common/async"
     },
     {

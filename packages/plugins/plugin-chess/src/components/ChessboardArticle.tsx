@@ -26,7 +26,7 @@ export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: str
   }, []);
 
   return (
-    <StackItem.Content toolbar classNames='@container bs-full is-full overflow-hidden'>
+    <StackItem.Content toolbar>
       <Chessboard.Root game={game} ref={controller}>
         <Toolbar.Root>
           <IconButton
