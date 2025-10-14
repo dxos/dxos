@@ -221,6 +221,7 @@ export type ObjectMeta = {
 
   /**
    * Tags.
+   * An array of DXNs of Tag objects within the space.
    *
    * NOTE: Optional for backwards compatibilty.
    */
