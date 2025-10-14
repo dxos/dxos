@@ -3648,7 +3648,7 @@ importers:
   packages/core/protocols:
     dependencies:
       '@bufbuild/protobuf':
-        specifier: ^2.1.0
+        specifier: 2.9.0
         version: 2.9.0
       '@dxos/codec-protobuf':
         specifier: workspace:*
@@ -3673,10 +3673,10 @@ importers:
         version: link:../../common/util
     devDependencies:
       '@bufbuild/buf':
-        specifier: ^1.43.0
+        specifier: 1.43.0
         version: 1.43.0
       '@bufbuild/protoc-gen-es':
-        specifier: ^2.1.0
+        specifier: 2.9.0
         version: 2.9.0(@bufbuild/protobuf@2.9.0)
       '@dxos/protobuf-compiler':
         specifier: workspace:*
