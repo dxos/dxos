@@ -145,7 +145,7 @@ const MainRoot = ({
   children,
   ...props
 }: MainRootProps) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [isLg] = useMediaQuery('lg');
   const [navigationSidebarState = isLg ? 'expanded' : 'collapsed', setNavigationSidebarState] =
     useControllableState<SidebarState>({
       prop: propsNavigationSidebarState,
@@ -214,7 +214,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     { classNames, children, swipeToDismiss, onOpenAutoFocus, state, resizing, onStateChange, side, label, ...props },
     forwardedRef,
   ) => {
-    const [isLg] = useMediaQuery('lg', { ssr: false });
+    const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
     const { t } = useTranslation();
     const ref = useForwardedRef(forwardedRef);
@@ -338,7 +338,7 @@ MainContent.displayName = MAIN_NAME;
 type MainOverlayProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof Primitive.div>, 'children'>>;
 
 const MainOverlay = forwardRef<HTMLDivElement, MainOverlayProps>(({ classNames, ...props }, forwardedRef) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [isLg] = useMediaQuery('lg');
   const { navigationSidebarState, setNavigationSidebarState, complementarySidebarState, setComplementarySidebarState } =
     useMainContext(MAIN_NAME);
   const { tx } = useThemeContext();

@@ -9,7 +9,7 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, CardStack, StackItem, cardStackHeading } from '@dxos/react-ui-stack';
+import { Card, CardStack, StackItem, cardStackDefaultInlineSizeRem, cardStackHeading } from '@dxos/react-ui-stack';
 import { ProjectionModel, type View } from '@dxos/schema';
 
 import { getQueryTarget, resolveSchemaWithClientAndSpace } from '../helpers';
@@ -61,7 +61,7 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
 
   return (
     <CardStack.Root asChild>
-      <StackItem.Root item={view} size={20} focusIndicatorVariant='group'>
+      <StackItem.Root item={view} size={cardStackDefaultInlineSizeRem} focusIndicatorVariant='group'>
         <CardStack.Content classNames='density-fine' footer={false}>
           <StackItem.Heading classNames={[cardStackHeading, 'min-is-0 pli-cardSpacingChrome']} separateOnScroll>
             <h3 className='grow truncate'>{view.name ?? t('untitled view title')}</h3>
