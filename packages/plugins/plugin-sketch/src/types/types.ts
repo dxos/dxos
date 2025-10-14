@@ -3,7 +3,7 @@
 //
 
 import { type TLStore } from '@tldraw/tlschema';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { meta } from '../meta';
 

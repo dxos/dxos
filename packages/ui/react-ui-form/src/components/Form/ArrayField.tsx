@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST, pipe } from 'effect';
+import * as pipe from 'effect/pipe';
+import * as SchemaAST from 'effect/SchemaAST';
 import { capitalize } from 'effect/String';
 import React, { Fragment, useCallback } from 'react';
 

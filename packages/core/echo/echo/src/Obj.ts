@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
 import { dual } from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';

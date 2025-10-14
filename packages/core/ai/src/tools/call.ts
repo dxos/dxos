@@ -3,7 +3,7 @@
 //
 
 import { type AiError, type Tool, type Toolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/schema';

@@ -3,7 +3,10 @@
 //
 
 import { Tool, Toolkit } from '@effect/ai';
-import { Array, Effect, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';

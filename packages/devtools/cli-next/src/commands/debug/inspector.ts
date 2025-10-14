@@ -5,7 +5,8 @@
 import * as Inspector from 'node:inspector/promises';
 
 import { Command } from '@effect/cli';
-import { Duration, Effect } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
 
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
 

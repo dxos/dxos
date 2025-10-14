@@ -7,7 +7,11 @@ import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Console, Effect, Layer, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

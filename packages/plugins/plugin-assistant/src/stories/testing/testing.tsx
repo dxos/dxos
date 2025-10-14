@@ -3,7 +3,8 @@
 //
 
 import { Tool, Toolkit } from '@effect/ai';
-import { Console, Schema } from 'effect';
+import * as Console from 'effect/Console';
+import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {

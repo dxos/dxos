@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';

@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type JSONSchema, Option, SchemaAST, pipe } from 'effect';
+import type * as JSONSchema from 'effect/JSONSchema';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { createAnnotationHelper } from '../ast';
 import { type JsonSchemaType } from '../json-schema';

@@ -4,7 +4,8 @@
 
 import { type Tool, type Toolkit } from '@effect/ai';
 import { type Registry } from '@effect-rx/rx-react';
-import { type Layer, type Schema } from 'effect';
+import type * as Layer from 'effect/Layer';
+import type * as Schema from 'effect/Schema';
 import { type FC, type PropsWithChildren } from 'react';
 
 import { type AiService, type AiServiceRouter } from '@dxos/ai';

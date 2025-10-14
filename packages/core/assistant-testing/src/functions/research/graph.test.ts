@@ -5,7 +5,10 @@
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer, pipe } from 'effect';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as pipe from 'effect/pipe';
 
 import { AiService, AiServiceRouter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { tapHttpErrors } from '@dxos/ai/testing';

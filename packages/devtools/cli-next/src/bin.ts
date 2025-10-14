@@ -5,7 +5,11 @@
 //
 
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
-import { Cause, Effect, Exit, Layer, Logger } from 'effect';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as Logger from 'effect/Logger';
 
 import { unrefTimeout } from '@dxos/async';
 import { LogLevel, levels, log } from '@dxos/log';

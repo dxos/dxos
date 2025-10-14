@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';

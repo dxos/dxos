@@ -3,7 +3,7 @@
 //
 
 import { Toolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';

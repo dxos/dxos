@@ -3,7 +3,12 @@
 //
 
 import { Tool, Toolkit } from '@effect/ai';
-import { Context, Effect, Option, Schema, SchemaAST, identity } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as identity from 'effect/identity';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';

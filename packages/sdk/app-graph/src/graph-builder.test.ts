@@ -3,7 +3,8 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';

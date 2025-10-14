@@ -4,7 +4,8 @@
 
 import { AiError } from '@effect/ai';
 import { HttpClientError } from '@effect/platform';
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { AiModelError } from '../errors';
 

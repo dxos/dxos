@@ -3,7 +3,7 @@
 //
 
 import { Command } from '@effect/cli';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
 import { DatabaseService, FunctionType } from '@dxos/functions';

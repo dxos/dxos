@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { isArrayType } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';

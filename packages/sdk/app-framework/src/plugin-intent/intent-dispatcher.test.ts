@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Fiber, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { chain, createIntent } from './intent';

@@ -3,7 +3,8 @@
 //
 
 import { Tool, Toolkit } from '@effect/ai';
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';

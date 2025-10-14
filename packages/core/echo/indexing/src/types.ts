@@ -3,7 +3,7 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import type { SchemaClass } from 'effect/Schema';
 
 import { type Event } from '@dxos/async';

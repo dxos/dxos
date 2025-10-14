@@ -3,7 +3,9 @@
 //
 
 import { type Chat, LanguageModel } from '@effect/ai';
-import { Chunk, Effect, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';

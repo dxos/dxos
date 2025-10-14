@@ -3,7 +3,11 @@
 //
 
 import { HttpClient, HttpClientRequest } from '@effect/platform';
-import { type Config, Context, Effect, Layer, Redacted } from 'effect';
+import type * as Config from 'effect/Config';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Redacted from 'effect/Redacted';
 
 import { Query } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

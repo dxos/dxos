@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
 import React, { useCallback } from 'react';
 
 import {

@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST, pipe } from 'effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { capitalize } from 'effect/String';
 import React, { forwardRef, useMemo } from 'react';
 

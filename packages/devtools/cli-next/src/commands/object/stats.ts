@@ -3,7 +3,11 @@
 //
 
 import { Command } from '@effect/cli';
-import { Array, Console, Effect, Record, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
+import * as Record from 'effect/Record';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';

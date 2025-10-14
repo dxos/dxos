@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as pipe from 'effect/pipe';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';

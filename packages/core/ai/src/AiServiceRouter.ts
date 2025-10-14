@@ -7,7 +7,10 @@ import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageM
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { type HttpClient } from '@effect/platform';
-import { Context, Effect, Layer, Option } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { AiService } from './AiService';
 import { AiModelNotAvailableError } from './errors';

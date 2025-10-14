@@ -4,8 +4,9 @@
 
 import { Resource, Tracer } from '@effect/opentelemetry';
 import { type Attributes, trace } from '@opentelemetry/api';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
 import { type LazyArg } from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 export interface Configuration {
   readonly resource?:

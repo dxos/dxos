@@ -3,7 +3,10 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Array, Option, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { type QueryResult, type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';

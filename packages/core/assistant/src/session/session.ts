@@ -3,7 +3,10 @@
 //
 
 import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
-import { Chunk, Effect, type Schema, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import {
   AiParser,

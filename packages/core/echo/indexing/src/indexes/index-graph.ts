@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';

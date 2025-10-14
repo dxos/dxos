@@ -3,7 +3,10 @@
 //
 
 import { type Tool, type Toolkit } from '@effect/ai';
-import { Context, Effect, Layer, Record } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
 
 import { AiToolNotFoundError } from '../errors';
 

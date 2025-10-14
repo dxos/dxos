@@ -4,7 +4,11 @@
 
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Array, Config, Effect, Layer, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as pipe from 'effect/pipe';
 
 import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

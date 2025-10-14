@@ -3,7 +3,10 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { Effect, Option, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,

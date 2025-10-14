@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config, type ConfigError, Duration, Effect, Option } from 'effect';
 import type { TimeoutException } from 'effect/Cause';
+import * as Config from 'effect/Config';
+import type * as ConfigError from 'effect/ConfigError';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 export const withTimeout: <A, E, R>(
   effect: Effect.Effect<A, E, R>,

@@ -5,7 +5,10 @@
 import { Chat, LanguageModel, Prompt, Tool, Toolkit } from '@effect/ai';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer, Schema, Stream } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import { TestHelpers } from '@dxos/effect';
 

@@ -5,7 +5,9 @@
 import { Toolkit } from '@effect/ai';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Config, Effect, Layer } from 'effect';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';

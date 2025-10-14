@@ -1,7 +1,8 @@
 //
 // Copyright 2025 DXOS.org
 
-import { Layer, pipe } from 'effect';
+import * as Layer from 'effect/Layer';
+import * as pipe from 'effect/pipe';
 
 import { ClientService, CommandConfig, ConfigService } from '../services';
 

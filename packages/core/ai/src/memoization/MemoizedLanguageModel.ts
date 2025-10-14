@@ -4,7 +4,14 @@
 
 import { AiError, LanguageModel, Prompt, Response, Tool, Toolkit } from '@effect/ai';
 import { createPatch } from 'diff';
-import { Array, Effect, Layer, Option, Order, Schema, Stream, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Order from 'effect/Order';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
 export interface LayerOptions {

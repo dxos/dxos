@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, Ref, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Ref from 'effect/Ref';
 import { type Simplify } from 'effect/Types';
 
 import { live } from '@dxos/live-object';

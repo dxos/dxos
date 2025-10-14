@@ -4,7 +4,14 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array, Duration, Effect, Fiber, HashSet, Match, Ref, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as HashSet from 'effect/HashSet';
+import * as Match from 'effect/Match';
+import * as pipe from 'effect/pipe';
+import * as Ref from 'effect/Ref';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';

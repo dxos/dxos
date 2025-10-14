@@ -3,7 +3,8 @@
 //
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Effect, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';

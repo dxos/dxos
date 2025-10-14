@@ -4,7 +4,11 @@
 
 import { FetchHttpClient } from '@effect/platform';
 import { describe, it } from '@effect/vitest';
-import { Duration, Effect, Exit, Layer, pipe } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Layer from 'effect/Layer';
+import * as pipe from 'effect/pipe';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';

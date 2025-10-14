@@ -4,8 +4,15 @@
 
 import { FetchHttpClient } from '@effect/platform';
 import { format, subDays } from 'date-fns';
-import { Array, Chunk, Console, Effect, Ref, Schema, Stream, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Chunk from 'effect/Chunk';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
 import { isNotNullable } from 'effect/Predicate';
+import * as Ref from 'effect/Ref';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';

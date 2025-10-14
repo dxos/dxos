@@ -3,7 +3,10 @@
 //
 
 import { type Meta } from '@storybook/react-vite';
-import { Match, Option, Schema, pipe } from 'effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { Capabilities, IntentPlugin, SettingsPlugin, useCapability, useIntentDispatcher } from '@dxos/app-framework';

@@ -3,8 +3,10 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Context, Schema } from 'effect';
-import { Array, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';

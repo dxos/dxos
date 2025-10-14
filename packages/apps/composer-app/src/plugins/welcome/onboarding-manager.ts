@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as pipe from 'effect/pipe';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';

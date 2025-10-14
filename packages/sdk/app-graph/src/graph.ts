@@ -3,7 +3,9 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, Record, pipe } from 'effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Record from 'effect/Record';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';

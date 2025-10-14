@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { EchoSchema, StoredSchema, getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';

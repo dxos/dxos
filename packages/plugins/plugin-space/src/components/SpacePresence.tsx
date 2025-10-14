@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAppGraph, useCapability } from '@dxos/app-framework';

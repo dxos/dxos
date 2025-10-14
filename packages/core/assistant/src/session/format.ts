@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Option, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
 
 import { Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';

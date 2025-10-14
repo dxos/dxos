@@ -4,8 +4,10 @@
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import { FetchHttpClient } from '@effect/platform';
-import { Config, type ConfigError, Layer } from 'effect';
-import { Redacted } from 'effect';
+import * as Config from 'effect/Config';
+import type * as ConfigError from 'effect/ConfigError';
+import * as Layer from 'effect/Layer';
+import * as Redacted from 'effect/Redacted';
 
 import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';

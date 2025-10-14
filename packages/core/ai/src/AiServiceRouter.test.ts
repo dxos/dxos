@@ -9,7 +9,8 @@ import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import { FetchHttpClient } from '@effect/platform';
 import { describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import * as AiService from './AiService';
 import { AiModelResolver, LMSTUDIO_ENDPOINT } from './AiServiceRouter';

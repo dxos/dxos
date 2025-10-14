@@ -3,7 +3,10 @@
 //
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Array, Effect, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { DatabaseService, defineFunction, withAuthorization } from '@dxos/functions';

@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, Match, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Match from 'effect/Match';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';

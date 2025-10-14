@@ -3,7 +3,10 @@
 //
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Duration, Effect, Schedule, pipe } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
+import * as Schedule from 'effect/Schedule';
 import { type BuildOptions, type BuildResult, type Loader, type Plugin, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';

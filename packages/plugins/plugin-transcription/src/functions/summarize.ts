@@ -2,7 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';

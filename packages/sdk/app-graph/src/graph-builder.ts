@@ -4,7 +4,10 @@
 
 import { Registry, Rx } from '@effect-rx/rx-react';
 import { effect } from '@preact/signals-core';
-import { Array, Option, Record, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Record from 'effect/Record';
 
 import { type CleanupFn, type MulticastObservable, type Trigger } from '@dxos/async';
 import { log } from '@dxos/log';

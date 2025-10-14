@@ -5,7 +5,8 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
-import { Schema, pipe } from 'effect';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';

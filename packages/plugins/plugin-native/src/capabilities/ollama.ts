@@ -4,7 +4,10 @@
 
 import { FetchHttpClient, HttpClient } from '@effect/platform';
 import { Command } from '@tauri-apps/plugin-shell';
-import { Context, Effect, Layer, ManagedRuntime } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiServiceRouter } from '@dxos/ai';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';

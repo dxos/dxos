@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import type { TestContext } from 'vitest';
 
 // TODO(dmaretskyi): Add all different test tags here.

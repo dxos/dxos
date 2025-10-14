@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Match, Option, type Schema, SchemaAST, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { ResearchOn } from '@dxos/assistant-testing';
 import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';

@@ -4,7 +4,8 @@
 
 import { Prompt } from '@effect/ai';
 import { describe, it } from '@effect/vitest';
-import { Effect, Either } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema, SchemaAST, pipe } from 'effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { capitalize } from 'effect/String';
 
 import {

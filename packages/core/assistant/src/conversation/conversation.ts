@@ -3,7 +3,9 @@
 //
 
 import { type Toolkit } from '@effect/ai';
-import { Array, Effect, Option } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';

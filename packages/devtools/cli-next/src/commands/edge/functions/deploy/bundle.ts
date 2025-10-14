@@ -7,7 +7,9 @@ import { basename, join, relative } from 'node:path';
 
 import { FileSystem } from '@effect/platform';
 import { type PlatformError } from '@effect/platform/Error';
-import { Array, Console, Effect } from 'effect';
+import * as Array from 'effect/Array';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 import { type Message, build } from 'esbuild';
 
 import { BaseError } from '@dxos/errors';

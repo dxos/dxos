@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';

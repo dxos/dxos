@@ -3,7 +3,7 @@
 //
 
 import { HttpClient } from '@effect/platform';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 

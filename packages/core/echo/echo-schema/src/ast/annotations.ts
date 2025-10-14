@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema, SchemaAST, flow, pipe } from 'effect';
+import * as flow from 'effect/flow';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

@@ -3,7 +3,10 @@
 //
 
 import { Prompt } from '@effect/ai';
-import { Array, Effect, Predicate, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as pipe from 'effect/pipe';
+import * as Predicate from 'effect/Predicate';
 
 import { log } from '@dxos/log';
 import { type ContentBlock, type DataType } from '@dxos/schema';

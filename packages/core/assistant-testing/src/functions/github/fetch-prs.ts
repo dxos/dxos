@@ -3,7 +3,8 @@
 //
 
 import { HttpClient } from '@effect/platform';
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { defineFunction, withAuthorization } from '@dxos/functions';
 

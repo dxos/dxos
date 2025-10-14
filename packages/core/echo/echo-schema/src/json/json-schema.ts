@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, JSONSchema, Option, Schema, SchemaAST, type Types, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as JSONSchema from 'effect/JSONSchema';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+import type * as Types from 'effect/Types';
 import type { Mutable } from 'effect/Types';
 
 import { raise } from '@dxos/debug';

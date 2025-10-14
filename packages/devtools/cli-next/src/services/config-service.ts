@@ -5,7 +5,10 @@
 import { dirname } from 'node:path';
 
 import { FileSystem } from '@effect/platform';
-import { Context, Effect, Layer, Option } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Yaml from 'yaml';
 
 import { Config } from '@dxos/client';

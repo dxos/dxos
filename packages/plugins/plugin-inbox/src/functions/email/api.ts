@@ -3,7 +3,9 @@
 //
 
 import { HttpClient, HttpClientRequest } from '@effect/platform';
-import { Effect, Schedule, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';

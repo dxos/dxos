@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as pipe from 'effect/pipe';
 
 import {
   Capabilities,

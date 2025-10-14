@@ -3,7 +3,8 @@
 //
 
 import { Command } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
 
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';

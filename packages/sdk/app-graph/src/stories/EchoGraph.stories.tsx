@@ -4,7 +4,8 @@
 
 import { type Registry, RegistryContext, Rx, useRxValue } from '@effect-rx/rx-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Option, pipe } from 'effect';
+import * as Option from 'effect/Option';
+import * as pipe from 'effect/pipe';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {

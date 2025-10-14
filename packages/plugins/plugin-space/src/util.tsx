@@ -3,7 +3,7 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { pipe } from 'effect';
+import * as pipe from 'effect/pipe';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';

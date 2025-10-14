@@ -3,7 +3,9 @@
 //
 
 import { Tool, Toolkit } from '@effect/ai';
-import { Console, Effect, Schema } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
