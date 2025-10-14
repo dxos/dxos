@@ -9,6 +9,8 @@ import { ScriptType } from '@dxos/functions';
 
 import { meta } from '../meta';
 
+import { Notebook } from './schema';
+
 export namespace ScriptAction {
   export const ScriptProps = Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -17,7 +19,7 @@ export namespace ScriptAction {
     initialTemplateId: Schema.optional(Schema.String),
   });
 
-  export class CreateScript extends Schema.TaggedClass<CreateScript>()(`${meta.id}/action/create`, {
+  export class CreateScript extends Schema.TaggedClass<CreateScript>()(`${meta.id}/action/create-script`, {
     input: Schema.extend(
       ScriptProps,
       Schema.Struct({
@@ -26,6 +28,22 @@ export namespace ScriptAction {
     ),
     output: Schema.Struct({
       object: ScriptType,
+    }),
+  }) {}
+
+  export const NotebookProps = Schema.Struct({
+    name: Schema.optional(Schema.String),
+  });
+
+  export class CreateNotebook extends Schema.TaggedClass<CreateNotebook>()(`${meta.id}/action/create-notebook`, {
+    input: Schema.extend(
+      NotebookProps,
+      Schema.Struct({
+        space: SpaceSchema,
+      }),
+    ),
+    output: Schema.Struct({
+      object: Notebook.Notebook,
     }),
   }) {}
 }

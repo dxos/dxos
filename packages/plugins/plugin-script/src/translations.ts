@@ -91,6 +91,9 @@ export const translations = [
         'script deployment error toast description_other': 'There was an error deploying your scripts.',
         'script deployment error toast close label_one': 'Close',
         'script deployment error toast close label_other': 'Close',
+
+        'notebook cell delete label': 'Delete cell',
+        'notebook cell insert label': 'Insert cell',
       },
     },
   },

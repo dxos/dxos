@@ -12,6 +12,8 @@ import { EditorInputMode } from '@dxos/react-ui-editor';
 export namespace Notebook {
   export const Cell = Schema.Struct({
     id: Schema.String,
+
+    // TODO(burdon): Instead of script, just have source text.
     script: Type.Ref(ScriptType),
   });
 

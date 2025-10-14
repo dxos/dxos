@@ -13,34 +13,34 @@ import { meta } from '../../meta';
 import { type ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
 import { TypescriptEditor } from '../TypescriptEditor';
-import { type TypescriptEditorProps } from '../TypescriptEditor/TypescriptEditor';
+import { type TypescriptEditorProps } from '../TypescriptEditor';
 
 export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
-  graph?: ComputeGraph;
-} & Pick<TypescriptEditorProps, 'env'>;
+} & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete'> &
+  Pick<TypescriptEditorProps, 'env'>;
 
-// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
-// TODO(burdon): Different section types (value, query, expression, prompt).
-// TODO(burdon): Show result (incl. error, streaming response).
-// TODO(burdon): Define actions for plugin.
-
-export const NotebookStack = ({ notebook, graph, env }: NotebookStackProps) => {
+export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
   return (
     <Stack orientation='vertical' size='contain' rail>
       {notebook?.cells.map((cell, i) => (
-        <NotebookSection key={i} cell={cell} graph={graph} env={env} />
+        <NotebookSection key={i} cell={cell} {...props} />
       ))}
     </Stack>
   );
 };
 
+// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
+// TODO(burdon): Different section types (value, query, expression, prompt).
+
 type NotebookSectionProps = {
   cell: Notebook.Cell;
   graph?: ComputeGraph;
+  onCellInsert?: (after: string | undefined) => void;
+  onCellDelete?: (id: string) => void;
 } & Pick<TypescriptEditorProps, 'env'>;
 
-const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
+const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
   const script = useMemo(() => cell.script.target!, [cell]);
   const extensions = useMemo(() => {
@@ -63,8 +63,12 @@ const NotebookSection = ({ cell, graph, env }: NotebookSectionProps) => {
             <DropdownMenu.Portal>
               <DropdownMenu.Content>
                 <DropdownMenu.Viewport>
-                  <DropdownMenu.Item>{t('insert cell label')}</DropdownMenu.Item>
-                  <DropdownMenu.Item>{t('delete cell label')}</DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onCellInsert?.(cell.id)}>
+                    {t('notebook cell insert label')}
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
+                    {t('notebook cell delete label')}
+                  </DropdownMenu.Item>
                 </DropdownMenu.Viewport>
                 <DropdownMenu.Arrow />
               </DropdownMenu.Content>

@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
-import { ScriptAction } from '../types';
+import { Notebook, ScriptAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
@@ -48,6 +48,16 @@ export default () =>
         return {
           data: {
             object: Obj.make(ScriptType, { name, source: Ref.make(DataType.makeText(content)) }),
+          },
+        };
+      },
+    }),
+    createResolver({
+      intent: ScriptAction.CreateNotebook,
+      resolve: async ({ name }) => {
+        return {
+          data: {
+            object: Obj.make(Notebook.Notebook, { name, cells: [] }),
           },
         };
       },
