@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { log } from '@dxos/log';
+
 import { type Notebook } from '../types';
 
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
@@ -19,6 +21,7 @@ const evalScript = (code: string, deps: Record<string, any> = {}) => {
  */
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
+
   private _values: Record<string, any> = {};
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
@@ -38,14 +41,14 @@ export class ComputeGraph {
 
     // Topological sort to determine evaluation order.
     const evaluationOrder = this.topologicalSort(
-      expressions.map((e) => e.cellId),
+      expressions.map((expr) => expr.cellId),
       dependencyGraph,
     );
 
-    // Clear previous values
+    // Clear previous values.
     this._values = {};
 
-    // Evaluate cells in dependency order
+    // Evaluate cells in dependency order.
     for (const cellId of evaluationOrder) {
       const expr = cellExpressions.get(cellId);
       if (!expr) continue;
@@ -54,33 +57,32 @@ export class ComputeGraph {
       if (!cellSource) continue;
 
       try {
-        // For assignments or declarations, evaluate and store the value
-        if (expr.name) {
-          // Handle both 'const x = ...' and 'x = ...' patterns
-          let rhs: string;
-          if (cellSource.startsWith('const ') || cellSource.startsWith('let ') || cellSource.startsWith('var ')) {
-            // Extract RHS from declaration
-            const match = cellSource.match(/(?:const|let|var)\s+\w+\s*=\s*(.+)/);
-            if (match) {
-              rhs = match[1].trim();
-            } else {
-              continue;
-            }
-          } else if (cellSource.includes('=')) {
-            // Simple assignment
-            [, rhs] = cellSource.split('=').map((s) => s.trim());
-          } else {
-            continue;
-          }
+        // For assignments or declarations, evaluate and store the value.
+        if (expr.name && expr.value !== undefined) {
+          // If the parser extracted a literal value, use it directly.
+          this._values[expr.name] = expr.value;
+        } else if (expr.name) {
+          // For non-literal assignments, we need to evaluate the expression.
+          // The parser identifies it's an assignment, so we can extract the RHS.
+          const equalIndex = cellSource.indexOf('=');
+          if (equalIndex !== -1) {
+            // Find the actual assignment operator (not in strings or other contexts).
+            let rhs = cellSource.substring(equalIndex + 1).trim();
 
-          const result = evalScript(rhs, this._values);
-          this._values[expr.name] = result;
+            // Handle semicolon at the end.
+            if (rhs.endsWith(';')) {
+              rhs = rhs.slice(0, -1).trim();
+            }
+
+            const result = evalScript(rhs, this._values);
+            this._values[expr.name] = result;
+          }
         } else {
           // For expressions without assignment, just evaluate.
           evalScript(cellSource, this._values);
         }
       } catch (error) {
-        console.error(`Error evaluating cell ${cellId}:`, error);
+        log.error('error evaluating cell', { cellId, error });
       }
     }
 
