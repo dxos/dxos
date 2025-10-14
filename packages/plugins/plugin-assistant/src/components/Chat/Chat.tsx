@@ -6,7 +6,8 @@ import { type Extension, Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { useRxValue } from '@effect-rx/rx-react';
 import { createContext } from '@radix-ui/react-context';
-import { Array, Option } from 'effect';
+import * as Array from 'effect/Array';
+import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';

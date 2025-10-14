@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Options } from '@effect/cli';
-import { ConfigProvider, Effect, Layer, Option } from 'effect';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as ConfigProvider from 'effect/ConfigProvider';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { status } from './status';
 import { user } from './user';

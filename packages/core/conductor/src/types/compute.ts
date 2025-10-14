@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, type Schema, type Scope } from 'effect';
+import * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
+import type * as Scope from 'effect/Scope';
 
 import type { Services } from '@dxos/functions';
 import { mapValues } from '@dxos/util';

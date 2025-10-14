@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool, Toolkit } from '@effect/ai';
-import { type Context, Effect } from 'effect';
+import type * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
 
 import { type AiToolNotFoundError, ToolExecutionService, type ToolId, ToolResolverService } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';

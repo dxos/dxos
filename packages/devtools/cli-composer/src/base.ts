@@ -3,7 +3,7 @@
 //
 
 import { type Command } from '@oclif/core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';

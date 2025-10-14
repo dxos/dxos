@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback } from 'react';
 
 import { ToolId } from '@dxos/ai';

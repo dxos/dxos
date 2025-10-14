@@ -3,7 +3,7 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -590,7 +590,7 @@ export const constructObjectActions = ({
                 );
               } else {
                 await dispatch(
-                  pipe(
+                  Function.pipe(
                     matchingObjectForm.getIntent({}, { space }),
                     chain(SpaceAction.AddObject, { target: space, hidden: true }),
                     chain(LayoutAction.Open, { part: 'main' }),

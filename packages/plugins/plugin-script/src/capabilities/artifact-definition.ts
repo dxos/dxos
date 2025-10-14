@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, contributes, createIntent } from '@dxos/app-framework';

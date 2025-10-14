@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { SubscriptionList } from '@dxos/async';

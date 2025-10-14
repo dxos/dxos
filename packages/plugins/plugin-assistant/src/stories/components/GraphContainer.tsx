@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ResearchGraph } from '@dxos/assistant-testing';

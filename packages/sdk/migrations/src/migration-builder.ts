@@ -4,7 +4,7 @@
 
 import { next as A, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';

@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
-import { Console, Schema } from 'effect';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Console from 'effect/Console';
+import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {

@@ -3,7 +3,10 @@
 //
 
 import { EditorSelection, Transaction } from '@codemirror/state';
-import { Effect, Fiber, Queue, Stream } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Queue from 'effect/Queue';
+import * as Stream from 'effect/Stream';
 import React, {
   Component,
   type ErrorInfo,

@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Array, Effect, Schema, pipe } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { DatabaseService, defineFunction, withAuthorization } from '@dxos/functions';
@@ -114,7 +118,7 @@ const getLatestUpdateTimestamp: (
   const { objects: existingTasks } = yield* DatabaseService.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),
   );
-  return pipe(
+  return Function.pipe(
     existingTasks,
     Array.map((task) => Obj.getKeys(task, LINEAR_UPDATED_AT_KEY).at(0)?.id),
     Array.filter((x) => x !== undefined),

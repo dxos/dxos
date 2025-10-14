@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect/Function';
+import * as Function from 'effect/Function';
 import { useCallback, useState } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -40,7 +40,7 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
     const deploymentResults = await Promise.all(
       scriptTemplates.map(async (template) => {
         const result = await dispatch(
-          pipe(
+          Function.pipe(
             createIntent(ScriptAction.Create, { space, initialTemplateId: template.id }),
             chain(SpaceAction.AddObject, { target: space }),
           ),

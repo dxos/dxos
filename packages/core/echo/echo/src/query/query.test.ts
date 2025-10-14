@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';

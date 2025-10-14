@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context, Effect, Schema, type Types } from 'effect';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
