@@ -4,8 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Ref } from '@dxos/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -29,7 +28,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   const handleCompute = useCallback(() => {
     graph?.evaluate();
-    console.log(JSON.stringify({ values: graph?.values.value, expressions: graph?.expressions }, null, 2));
   }, [graph]);
 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
@@ -37,7 +35,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook!.cells.length;
       notebook?.cells.splice(idx, 0, {
         id: crypto.randomUUID(),
-        script: Ref.make(Obj.make(ScriptType, { source: Ref.make(DataType.makeText()) })),
+        script: Ref.make(DataType.makeText()),
       });
     },
     [notebook],

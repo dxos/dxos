@@ -64,7 +64,7 @@ export class ComputeGraph {
         continue;
       }
 
-      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script.target?.source.target?.content;
+      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script.target?.content;
       if (!cellSource) {
         log.error('no source for cell', { cellId });
         continue;
@@ -114,7 +114,7 @@ export class ComputeGraph {
    */
   parse() {
     const expressions = this._notebook.cells.reduce<Record<string, ParsedExpression>>((acc, cell) => {
-      const text = cell.script.target?.source.target?.content.trim();
+      const text = cell.script.target?.content.trim();
       if (text) {
         const parsed = this._parser.parseExpression(text);
         acc[cell.id] = parsed;

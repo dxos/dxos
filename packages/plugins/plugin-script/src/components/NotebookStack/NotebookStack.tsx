@@ -45,16 +45,17 @@ type NotebookSectionProps = {
 
 const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const script = useMemo(() => cell.script.target!, [cell]);
   const extensions = useMemo(() => {
-    return [createDataExtensions({ id: script.id, text: createDocAccessor(script.source.target!, ['content']) })];
-  }, [script]);
+    return cell.script.target
+      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })]
+      : [];
+  }, [cell.script.target]);
 
   const name = graph?.expressions.value[cell.id]?.name;
   const value = graph?.values.value[cell.id];
 
   return (
-    <StackItem.Root role='section' item={script}>
+    <StackItem.Root role='section' item={cell}>
       <StackItem.Heading classNames='attention-surface'>
         <StackItem.HeadingStickyContent>
           <DropdownMenu.Root>
@@ -82,9 +83,9 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
 
       <StackItem.Content>
         <TypescriptEditor
-          id={script.id}
+          id={cell.id}
           role='section'
-          initialValue={script.source.target?.content}
+          initialValue={cell.script.target?.content}
           extensions={extensions}
           env={env}
           options={{
@@ -93,6 +94,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           }}
           classNames='p-2'
         />
+
         {value != null && (
           <div className='flex p-2 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
             {name && (
