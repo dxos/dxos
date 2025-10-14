@@ -41,6 +41,7 @@
           "@effect/ai",
           "@effect/platform",
           "@effect/platform-node",
+          "@effect/ai-anthropic"
         ],
 
         // When a symbol is re-exported through a barrel (e.g. index.ts),

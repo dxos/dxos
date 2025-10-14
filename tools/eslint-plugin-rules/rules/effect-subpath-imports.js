@@ -61,6 +61,7 @@ export default {
       '@effect/ai',
       '@effect/platform',
       '@effect/platform-node',
+      "@effect/ai-anthropic"
     ]);
 
     return {
