@@ -31,7 +31,6 @@ export const ObjectMetaSchema = Schema.mutable(
     tags: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   }),
 );
-
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
