@@ -62,8 +62,9 @@ export class SharedWorkerConnection {
       timeout: 200,
     });
 
+    // TODO(dmaretskyi): Replace with injected locks interface.
     let lockKey: string | undefined;
-    if (typeof navigator !== 'undefined') {
+    if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
       lockKey = this._lockKey(params.origin);
       this._release = new Trigger();
       const ready = new Trigger();
