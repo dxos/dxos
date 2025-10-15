@@ -15,7 +15,7 @@ import { Picker } from './Picker';
 
 export type QueryBuilderProps = ThemedClassName<{
   types?: { id: string; label: string }[];
-  tags?: Tag[];
+  tags?: Tag.Tag[];
   onFilterChange?: (filter: Filter.Any | null) => void;
 }>;
 
