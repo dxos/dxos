@@ -955,7 +955,7 @@
         },
         {
           "type": "json",
-          "path": "tools/eslint-plugin-rules/package.json",
+          "path": "packages/common/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

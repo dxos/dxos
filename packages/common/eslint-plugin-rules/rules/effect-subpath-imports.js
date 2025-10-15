@@ -59,7 +59,7 @@ export default {
       return source === 'effect' || source.startsWith('effect/') || source.startsWith('@effect/');
     };
 
-    const shouldSkipPackage = (source) => {
+    const shouldSkipEffectPackage = (source) => {
       return source === '@effect/vitest';
     };
     
@@ -85,7 +85,7 @@ export default {
         const source = String(node.source.value);
         if (!isEffectPackage(source)) return;
         const basePackage = getBasePackage(source);
-        if (shouldSkipPackage(basePackage)) return;
+        if (shouldSkipEffectPackage(basePackage)) return;
 
         // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import only.
         if (source.startsWith(basePackage + '/')) {
