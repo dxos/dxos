@@ -131,6 +131,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
         )}
 
         {/* TODO(burdon): Pass in Space to query types. */}
+        {/* TODO(burdon): Initial value isn't set. */}
         {/* TODO(burdon): Save. */}
         {cell.type === 'query' && (
           <QueryEditor
@@ -168,5 +169,5 @@ const PromptEditor = ({ extensions: extensionsParam, ...props }: EditorProps) =>
     ].filter(isNonNullable);
   }, [extensionsParam]);
 
-  return <Editor {...props} moveToEnd extensions={extensions} />;
+  return <Editor {...props} extensions={extensions} moveToEnd />;
 };

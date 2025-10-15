@@ -56,6 +56,6 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       [space, readonly],
     );
 
-    return <Editor {...props} moveToEnd initialValue={value} extensions={extensions} ref={forwardedRef} />;
+    return <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={forwardedRef} />;
   },
 );
