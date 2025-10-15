@@ -8,7 +8,8 @@ import { createRequire } from 'node:module';
 const EXCLUDED_EFFECT_PACKAGES = ['@effect/vitest'];
 
 /**
- * ESLint rule to transform combined imports from 'effect' and '@effect/*' into subpath imports except for the EXCLUDED_EFFECT_PACKAGES.
+ * ESLint rule to transform combined imports from 'effect' and '@effect/*'
+ * into subpath imports except for the EXCLUDED_EFFECT_PACKAGES.
  * @example
  * // before
  * import { type Schema, SchemaAST } from 'effect';
