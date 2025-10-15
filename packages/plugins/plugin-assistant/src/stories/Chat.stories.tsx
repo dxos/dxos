@@ -612,7 +612,6 @@ export const WithChessTrigger: Story = {
           spec: {
             kind: 'subscription',
             query: {
-              raw: 'Query.select(Filter.type(Chess.Game))',
               ast: Query.select(Filter.type(Chess.Game)).ast,
             },
           },

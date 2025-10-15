@@ -257,7 +257,6 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                raw: 'Query.select(Filter.typename("dxos.org/type/Chess"))',
                 ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
               }),
             'type',
