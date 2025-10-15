@@ -12,6 +12,7 @@ import {
   type EditorProps,
   createBasicExtensions,
   createDataExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
 } from '@dxos/react-ui-editor';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
@@ -81,6 +82,9 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
                   <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell.id)}>
                     {t('notebook cell insert query label')}
                   </DropdownMenu.Item>
+                  <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell.id)}>
+                    {t('notebook cell insert markdown label')}
+                  </DropdownMenu.Item>
                   <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
                     {t('notebook cell delete label')}
                   </DropdownMenu.Item>
@@ -110,6 +114,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   );
 };
 
+// TODO(burdon): Label for cell id.
 const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
   const extensions = useMemo(() => {
@@ -128,6 +133,16 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
   );
 
   switch (cell.type) {
+    case 'markdown':
+      return (
+        <MarkdownEditor
+          id={cell.id}
+          classNames={editorStyles}
+          initialValue={cell.script.target?.content}
+          extensions={extensions}
+        />
+      );
+
     case 'script':
       return (
         <TypescriptEditor
@@ -180,6 +195,21 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
     default:
       return null;
   }
+};
+
+const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
+  const { t } = useTranslation(meta.id);
+  const { themeMode } = useThemeContext();
+  const extensions = useMemo(() => {
+    return [
+      createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
+      createThemeExtensions({ themeMode }),
+      createMarkdownExtensions(),
+      extensionsParam,
+    ].filter(isNonNullable);
+  }, [extensionsParam]);
+
+  return <Editor {...props} extensions={extensions} moveToEnd />;
 };
 
 const PromptEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
