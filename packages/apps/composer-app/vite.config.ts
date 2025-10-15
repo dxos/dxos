@@ -91,6 +91,11 @@ export default defineConfig((env) => ({
     alias: {
       'node-fetch': 'isomorphic-fetch',
       'node:util': '@dxos/node-std/util',
+      'node:path': '@dxos/node-std/path',
+      'node:url': '@dxos/node-std/url',
+      util: '@dxos/node-std/util',
+      path: '@dxos/node-std/path',
+      url: '@dxos/node-std/url',
       'tiktoken/lite': path.resolve(dirname, 'stub.mjs'),
     },
   },
