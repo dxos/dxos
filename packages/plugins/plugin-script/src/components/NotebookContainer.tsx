@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -24,6 +25,7 @@ export type NotebookContainerProps = {
 
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
+  const space = getSpace(notebook);
 
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
 
@@ -76,6 +78,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         />
       </Toolbar.Root>
       <NotebookStack
+        space={space}
         notebook={notebook}
         graph={graph}
         env={env}

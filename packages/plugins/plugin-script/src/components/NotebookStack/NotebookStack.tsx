@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
+import { type Space, createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import {
@@ -25,7 +25,7 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 
 export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
-} & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete' | 'onCellRun'> &
+} & Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete' | 'onCellRun'> &
   Pick<TypescriptEditorProps, 'env'>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
@@ -46,13 +46,14 @@ const editorStyles = 'p-3';
 
 type NotebookSectionProps = {
   cell: Notebook.Cell;
+  space?: Space;
   graph?: ComputeGraph;
   onCellInsert?: (type: Notebook.CellType, after: string | undefined) => void;
   onCellDelete?: (id: string) => void;
   onCellRun?: (id: string) => void;
 } & Pick<TypescriptEditorProps, 'env'>;
 
-const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellRun }: NotebookSectionProps) => {
+const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
   const extensions = useMemo(() => {
     return cell.script.target
@@ -123,7 +124,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellR
         )}
 
         {cell.type === 'prompt' && (
-          <div className='flex'>
+          <div role='none' className='flex'>
             <PromptEditor
               id={cell.id}
               classNames={editorStyles}
@@ -142,13 +143,12 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellR
           </div>
         )}
 
-        {/* TODO(burdon): Pass in Space to query types. */}
         {/* TODO(burdon): Initial value isn't set on load. */}
-        {/* TODO(burdon): Save. */}
         {cell.type === 'query' && (
           <QueryEditor
             id={cell.id}
             classNames={editorStyles}
+            space={space}
             value={cell.script.target?.content}
             onChange={handleQueryChange}
           />
