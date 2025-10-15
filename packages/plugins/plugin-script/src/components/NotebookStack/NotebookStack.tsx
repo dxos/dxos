@@ -62,6 +62,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   const name = graph?.expressions.value[cell.id]?.name;
   const value = graph?.values.value[cell.id];
 
+  // TODO(burdon): Dragging preview.
   return (
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full justify-between attention-surface'>
@@ -100,6 +101,15 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
       </StackItem.Heading>
+
+      {/* TODO(burdon): Fix preview. */}
+      <StackItem.DragPreview>
+        {({ item: cell }) => (
+          <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
+            <NotebookCell cell={cell} space={space} env={env} />
+          </StackItem.Content>
+        )}
+      </StackItem.DragPreview>
 
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
