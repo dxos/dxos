@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { createEchoSchema } from '@dxos/live-object/testing';
+import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ProjectionModel } from '@dxos/schema';

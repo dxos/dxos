@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { DataType } from '@dxos/schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '../types';

@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { Obj, Type } from '@dxos/echo';
+import { type HasId } from '@dxos/echo/internal';
 import { type EchoDatabase } from '@dxos/echo-db';
-import { type HasId } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';

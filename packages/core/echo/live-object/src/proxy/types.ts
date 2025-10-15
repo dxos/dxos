@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject } from '@dxos/echo-schema';
-
 /**
  * Reactive object proxy.
  */
-export interface ReactiveHandler<T extends BaseObject> extends ProxyHandler<T> {
+export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Target to Proxy mapping.
    */

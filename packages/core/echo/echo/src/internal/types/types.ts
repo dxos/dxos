@@ -21,6 +21,9 @@ import { ATTR_META } from '../object/model';
  */
 // TODO(dmaretskyi): Rename AnyProperties.
 // TODO(dmaretskyi): Prefer `Record<string, unknown>` over `any`.
+/**
+ * @deprecated use Obj.Any
+ */
 export type BaseObject = Record<string, any>;
 
 /**

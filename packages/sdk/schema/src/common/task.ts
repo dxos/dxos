@@ -11,7 +11,7 @@ import {
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 
 import { ItemAnnotation } from '../annotations';
 

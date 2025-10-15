@@ -13,7 +13,7 @@ import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
   getTypeAnnotation,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { type DxTagPickerItemClick } from '@dxos/lit-ui';

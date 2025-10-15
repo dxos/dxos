@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 

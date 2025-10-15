@@ -8,18 +8,20 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { inspectCustom } from '@dxos/debug';
-import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '@dxos/echo-schema';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-
 import {
   ReactiveArray,
   type ReactiveHandler,
   createProxy,
+  defineHiddenProperty,
   isValidProxyTarget,
   objectData,
   symbolIsProxy,
-} from './proxy';
+} from '@dxos/live-object';
+
+import { getSchemaDXN } from '../ast';
+import { DeletedId, SchemaId, SchemaValidator, TypeId } from '../object';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

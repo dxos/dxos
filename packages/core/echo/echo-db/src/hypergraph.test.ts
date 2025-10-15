@@ -4,9 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Expando, Ref } from '@dxos/echo-schema';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
 import { getObjectCore } from './echo-handler';
@@ -23,13 +22,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      live(Expando, {
+      Obj.make(Type.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      live(Expando, {
+      Obj.make(Type.Expando, {
         type: 'task',
         title: 'B',
       }),
@@ -57,13 +56,13 @@ describe('HyperGraph', () => {
     const db2 = await peer.createDatabase(spaceKey2);
 
     const obj1 = db1.add(
-      live(Expando, {
+      Obj.make(Type.Expando, {
         type: 'task',
         title: 'A',
       }),
     );
     const obj2 = db2.add(
-      live(Expando, {
+      Obj.make(Type.Expando, {
         type: 'task',
         title: 'B',
       }),

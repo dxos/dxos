@@ -3,9 +3,9 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo/internal';
 
-export { StoredSchema } from '@dxos/echo-schema';
+export { StoredSchema } from '@dxos/echo/internal';
 
 export { AccessToken } from './access-token';
 export { Actor, ActorRole, ActorRoles } from './actor';

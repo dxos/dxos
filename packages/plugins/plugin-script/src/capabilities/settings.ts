@@ -9,7 +9,7 @@ import { meta } from '../meta';
 import { ScriptSettings } from '../types';
 
 export default () => {
-  const settings = live(ScriptSettings, {
+  const settings = live<ScriptSettings>({
     editorInputMode: 'vscode',
   });
 
