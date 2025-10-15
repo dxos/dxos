@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
+import { Assistant } from '@dxos/plugin-assistant';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
@@ -15,8 +16,9 @@ export namespace Notebook {
   export const Cell = Schema.Struct({
     id: Schema.String,
     type: Schema.String,
-    script: Type.Ref(DataType.Text),
+    script: Schema.optional(Type.Ref(DataType.Text)),
     view: Schema.optional(Type.Ref(DataType.View)),
+    chat: Schema.optional(Type.Ref(Assistant.Chat)),
   }).pipe(Schema.mutable);
 
   export type Cell = Schema.Schema.Type<typeof Cell>;

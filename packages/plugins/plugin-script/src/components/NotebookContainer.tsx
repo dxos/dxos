@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
+import { Assistant } from '@dxos/plugin-assistant';
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -29,7 +29,6 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
-
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
 
   // TODO(burdon): Cache values in context (preserve when switched).
@@ -55,14 +54,27 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     (type, after) => {
       invariant(notebook);
-      const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      notebook.cells.splice(idx, 0, {
-        id: crypto.randomUUID(),
-        type,
-        script: Ref.make(DataType.makeText()),
-      });
+      const cell: Notebook.Cell = { id: crypto.randomUUID(), type };
+      switch (type) {
+        case 'markdown':
+        case 'script':
+        case 'query': {
+          cell.script = Ref.make(DataType.makeText());
+          break;
+        }
+
+        case 'prompt': {
+          if (space) {
+            cell.chat = Ref.make(Assistant.makeChat({ queue: space.queues.create() }));
+          }
+          break;
+        }
+      }
+
+      const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
+      notebook.cells.splice(idx, 0, cell);
     },
-    [notebook],
+    [space, notebook],
   );
 
   const handleCellDelete = useCallback<NonNullable<NotebookStackProps['onCellDelete']>>(
@@ -75,11 +87,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     },
     [notebook],
   );
-
-  // TODO(burdon): Run prompt (pass in computed variables).
-  const handleCellRun = useCallback<NonNullable<NotebookStackProps['onCellRun']>>((id) => {
-    log.info('run', { id });
-  }, []);
 
   return (
     <StackItem.Content classNames='container-max-width border-l border-r border-subduedSeparator' toolbar>
@@ -106,7 +113,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         onRearrange={handleRearrange}
         onCellInsert={handleCellInsert}
         onCellDelete={handleCellDelete}
-        onCellRun={handleCellRun}
       />
     </StackItem.Content>
   );
