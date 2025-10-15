@@ -69,25 +69,13 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
 
   return (
     <StackItem.Root role='section' item={cell} draggable>
-      <StackItem.Heading classNames='bs-full justify-between attention-surface'>
+      <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
         <StackItem.DragHandle>
-          <IconButton
-            classNames='mbs-1'
-            variant='ghost'
-            icon='ph--dots-six-vertical--regular'
-            iconOnly
-            label='Drag handle'
-          />
+          <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
         </StackItem.DragHandle>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <IconButton
-              classNames='mbe-1'
-              variant='ghost'
-              icon='ph--dots-three--regular'
-              iconOnly
-              label={t('notebook cell menu label')}
-            />
+            <IconButton variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook cell menu label')} />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
