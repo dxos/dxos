@@ -38,6 +38,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
         defineObjectForm({
           objectSchema: Graph.Graph,
           formSchema: ExplorerAction.GraphProps,
+          hidden: true,
           getIntent: (props, options) => createIntent(ExplorerAction.CreateGraph, { ...props, space: options.space }),
         }),
       ),
