@@ -544,9 +544,6 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
-      "path": "tools/codemods/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
