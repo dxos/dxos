@@ -40,8 +40,7 @@ export const Editor = forwardRef<EditorController, EditorProps>(
           EditorView.updateListener.of(({ view, docChanged, transactions }) => {
             const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
             if (!isInitialSync && docChanged) {
-              const value = view.state.doc.toString();
-              onChange?.(value);
+              onChange?.(view.state.doc.toString());
             }
           }),
         ],

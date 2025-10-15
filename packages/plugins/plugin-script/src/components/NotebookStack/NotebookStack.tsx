@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Icon, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor } from '@dxos/react-ui-components';
 import {
   Editor,
@@ -25,7 +25,7 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 
 export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
-} & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete'> &
+} & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete' | 'onCellRun'> &
   Pick<TypescriptEditorProps, 'env'>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
@@ -39,19 +39,20 @@ export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
   );
 };
 
-// TODO(burdon): Support calling named deployed functions (as with sheet).
-// TODO(burdon): Different section types (value, query, expression, prompt).
 // TODO(burdon): Display errors.
-// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
+// TODO(burdon): Support calling named deployed functions (as with sheet).
+
+const editorStyles = 'p-3';
 
 type NotebookSectionProps = {
   cell: Notebook.Cell;
   graph?: ComputeGraph;
   onCellInsert?: (type: Notebook.CellType, after: string | undefined) => void;
   onCellDelete?: (id: string) => void;
+  onCellRun?: (id: string) => void;
 } & Pick<TypescriptEditorProps, 'env'>;
 
-const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: NotebookSectionProps) => {
+const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
   const extensions = useMemo(() => {
     return cell.script.target
@@ -78,7 +79,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <StackItem.SigilButton>
-                <Icon icon='ph--list--regular' size={5} />
+                <Icon icon='ph--list--regular' size={4} />
               </StackItem.SigilButton>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
@@ -104,30 +105,41 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
         </StackItem.HeadingStickyContent>
       </StackItem.Heading>
 
-      <StackItem.Content>
+      <StackItem.Content classNames='overflow-visible'>
         {cell.type === 'script' && (
           <TypescriptEditor
             id={cell.id}
             role='section'
             initialValue={cell.script.target?.content}
             extensions={extensions}
+            classNames={editorStyles}
             env={env}
             options={{
               placeholder: t('notebook cell placeholder'),
               highlightActiveLine: false,
               lineNumbers: false,
             }}
-            classNames='p-2 pbs-3'
           />
         )}
 
         {cell.type === 'prompt' && (
-          <PromptEditor
-            id={cell.id}
-            initialValue={cell.script.target?.content}
-            extensions={extensions}
-            classNames='p-2 pbs-3'
-          />
+          <div className='flex'>
+            <PromptEditor
+              id={cell.id}
+              initialValue={cell.script.target?.content}
+              extensions={extensions}
+              classNames={editorStyles}
+            />
+            <div className='p-2'>
+              <IconButton
+                variant='ghost'
+                icon='ph--play--regular'
+                iconOnly
+                label={t('notebook cell prompt run label')}
+                onClick={() => onCellRun?.(cell.id)}
+              />
+            </div>
+          </div>
         )}
 
         {/* TODO(burdon): Pass in Space to query types. */}
@@ -138,7 +150,7 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
             id={cell.id}
             value={cell.script.target?.content}
             onChange={handleQueryChange}
-            classNames='p-2 pbs-3'
+            classNames={editorStyles}
           />
         )}
 

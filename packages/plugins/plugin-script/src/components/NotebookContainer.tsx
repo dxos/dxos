@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
@@ -36,14 +37,14 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       notebook?.cells.splice(idx, 0, {
         id: crypto.randomUUID(),
         type,
-        script: Ref.make(DataType.makeText(type === 'script' ? '\n\n\n' : '')),
+        script: Ref.make(DataType.makeText()),
       });
     },
     [notebook],
   );
 
   const handleCellDelete = useCallback<NonNullable<NotebookStackProps['onCellDelete']>>(
-    (id: string) => {
+    (id) => {
       const idx = notebook!.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
         notebook!.cells.splice(idx, 1);
@@ -51,6 +52,11 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     },
     [notebook],
   );
+
+  // TODO(burdon): Run prompt (pass in computed variables).
+  const handleCellRun = useCallback<NonNullable<NotebookStackProps['onCellRun']>>((id) => {
+    log.info('run', { id });
+  }, []);
 
   return (
     <StackItem.Content classNames='container-max-width border-l border-r border-subduedSeparator' toolbar>
@@ -75,6 +81,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         env={env}
         onCellInsert={handleCellInsert}
         onCellDelete={handleCellDelete}
+        onCellRun={handleCellRun}
       />
     </StackItem.Content>
   );

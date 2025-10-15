@@ -67,6 +67,7 @@ export const automerge = (accessor: DocAccessor): Extension => {
       class {
         constructor(private readonly _view: EditorView) {
           accessor.handle.addListener('change', this._handleChange);
+
           requestAnimationFrame(() => {
             const value = DocAccessor.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
