@@ -89,14 +89,14 @@ export class EdgeWsConnection extends Resource {
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
     };
-    this._ws.onclose = (event) => {
+    this._ws.onclose = (event: CloseEvent) => {
       if (this.isOpen) {
         log.warn('disconnected while being open', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
         muxer.destroy();
       }
     };
-    this._ws.onerror = (event) => {
+    this._ws.onerror = (event: ErrorEvent) => {
       if (this.isOpen) {
         log.warn('edge connection socket error', { error: event.error, info: event.message });
         this._callbacks.onRestartRequired();
@@ -107,7 +107,7 @@ export class EdgeWsConnection extends Resource {
     /**
      * https://developer.mozilla.org/en-US/docs/Web/API/MessageEvent/data
      */
-    this._ws.onmessage = async (event) => {
+    this._ws.onmessage = async (event: MessageEvent) => {
       if (!this.isOpen) {
         log.verbose('message ignored on closed connection', { event: event.type });
         return;
