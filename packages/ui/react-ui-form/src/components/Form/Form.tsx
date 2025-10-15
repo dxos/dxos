@@ -41,6 +41,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<{
   onCancel?: () => void;
 }> &
   Pick<FormOptions<T>, 'schema' | 'onValuesChanged' | 'onValidate' | 'onSave'> &
+  // TODO(wittjosiah): This needs to support different ref field options per field.
   FormFieldsProps;
 
 export const Form = <T extends BaseObject>({

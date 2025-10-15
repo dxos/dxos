@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { type Filter } from '@dxos/echo';
-import { Type, createTagList } from '@dxos/echo';
+import { Tag, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -25,10 +25,10 @@ const types = [
   { id: Type.getTypename(DataType.Employer), label: 'Employer' },
 ];
 
-const tags = createTagList({
-  ['tag_1' as const]: { label: 'Important' },
-  ['tag_2' as const]: { label: 'Investor' },
-  ['tag_3' as const]: { label: 'New' },
+const tags = Tag.createTagList({
+  ['tag_1' as const]: Tag.make({ label: 'Important' }),
+  ['tag_2' as const]: Tag.make({ label: 'Investor' }),
+  ['tag_3' as const]: Tag.make({ label: 'New' }),
 });
 
 const meta = {
