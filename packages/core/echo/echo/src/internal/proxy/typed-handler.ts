@@ -17,9 +17,24 @@ import {
   isValidProxyTarget,
   objectData,
   symbolIsProxy,
+  defineHiddenProperty,
 } from '@dxos/live-object';
 
-import { DeletedId, SchemaId, SchemaValidator, TypeId, defineHiddenProperty, getSchemaDXN } from '..';
+import type { BaseObject, CreationProps } from '../types';
+import {
+  attachTypedJsonSerializer,
+  EntityKindId,
+  Expando,
+  ObjectMetaSchema,
+  type ObjectMeta,
+  MetaId,
+  TypeId,
+  SchemaId,
+  DeletedId,
+  SchemaValidator,
+} from '../object';
+import { getTypeAnnotation, getSchemaDXN } from '../ast';
+import { ObjectId } from '@dxos/keys';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

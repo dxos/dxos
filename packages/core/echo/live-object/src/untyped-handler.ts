@@ -6,8 +6,7 @@ import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime
 import { invariant } from '@dxos/invariant';
 
 import { ReactiveArray, type ReactiveHandler, createProxy, isValidProxyTarget, objectData } from './proxy';
-
-import { defineHiddenProperty } from '.';
+import { defineHiddenProperty } from './define-hidden-property';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
