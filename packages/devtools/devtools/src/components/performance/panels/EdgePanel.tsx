@@ -14,10 +14,9 @@ import { IconButton } from '@dxos/react-ui';
 
 import { type CustomPanelProps, Panel } from '../Panel';
 
-import { Table, type TableProps } from './Table';
+import { Table, Unit, type TableProps } from './Table';
 
 export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdgeStatusResponse }>) => {
-  const websocketHealth = edge?.status ?? WsStatus.NOT_CONNECTED;
   const client = useClient();
 
   const [edgeStatus, setEdgeStatus] = useState<EdgeStatus | undefined>();
@@ -42,7 +41,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
     };
   }, []);
 
-  const rows = useMemo(() => getHealthReportTable(edgeStatus, websocketHealth), [edgeStatus, websocketHealth]);
+  const rows = useMemo(() => getHealthReportTable(edgeStatus, edge?.status), [edgeStatus, edge?.status]);
 
   return (
     <Panel
@@ -73,12 +72,17 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
 };
 
 const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TableProps['rows'] => {
+  const isConnected = wsStatus?.state === WsStatus.ConnectionState.CONNECTED;
   const rows: TableProps['rows'] = [
-    [
-      wsStatus === WsStatus.CONNECTED ? '✅' : '❌',
-      'web socket',
-      wsStatus === WsStatus.CONNECTED ? 'Connected' : 'Disconnected',
-    ],
+    [isConnected ? '✅' : '❌', 'web socket', isConnected ? 'Connected' : 'Disconnected'],
+    ...(!isConnected
+      ? []
+      : [
+          ['', 'uptime', wsStatus?.uptime?.toFixed(0) ?? 'N/A', 's'],
+          ['', 'latency', wsStatus?.latency?.toFixed(0) ?? 'N/A', 'ms'],
+          ['', 'up', Unit.KB(wsStatus?.rateBytesUp ?? 0), 'KB/s'],
+          ['', 'down', Unit.KB(wsStatus?.rateBytesDown ?? 0), 'KB/s'],
+        ]),
   ];
 
   if (!status) {

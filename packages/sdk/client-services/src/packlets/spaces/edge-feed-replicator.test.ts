@@ -45,7 +45,7 @@ describe('EdgeFeedReplicator', () => {
     const { endpoint, admitConnection, messageSink } = await createEdge();
     const { messenger } = await createClient(endpoint);
     admitConnection.wake();
-    await expect.poll(() => messenger.status).toBe(EdgeStatus.CONNECTED);
+    await expect.poll(() => messenger.status).toBe(EdgeStatus.ConnectionState.CONNECTED);
 
     await attachReplicator(messenger);
     await expect.poll(() => messageSink.length).toEqual(1);

@@ -80,10 +80,17 @@ export class EdgeClient extends Resource implements EdgeConnection {
     };
   }
 
-  get status() {
-    return Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
-      ? EdgeStatus.CONNECTED
-      : EdgeStatus.NOT_CONNECTED;
+  get status(): EdgeStatus {
+    return {
+      state:
+        Boolean(this._currentConnection) && this._ready.state === TriggerState.RESOLVED
+          ? EdgeStatus.ConnectionState.CONNECTED
+          : EdgeStatus.ConnectionState.NOT_CONNECTED,
+      uptime: this._currentConnection?.uptime ?? 0,
+      latency: this._currentConnection?.latency ?? 0,
+      rateBytesUp: this._currentConnection?.uploadRate ?? 0,
+      rateBytesDown: this._currentConnection?.downloadRate ?? 0,
+    };
   }
 
   get identityKey() {

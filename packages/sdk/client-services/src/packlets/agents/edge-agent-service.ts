@@ -25,7 +25,15 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
   queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
     return new Stream(({ ctx, next }) => {
       const update = () => {
-        next({ status: this._edgeConnection?.status ?? EdgeStatus.NOT_CONNECTED });
+        next({
+          status: this._edgeConnection?.status ?? {
+            state: EdgeStatus.ConnectionState.NOT_CONNECTED,
+            latency: 0,
+            uptime: 0,
+            rateBytesUp: 0,
+            rateBytesDown: 0,
+          },
+        });
       };
 
       this._edgeConnection?.statusChanged.on(ctx, update);
