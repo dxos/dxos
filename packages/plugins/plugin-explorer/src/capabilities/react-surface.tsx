@@ -20,6 +20,8 @@ export default () =>
       role: ['article', 'section'],
       filter: (data): data is { subject: DataType.View } =>
         Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Graph.Graph, data.subject.presentation.target),
-      component: ({ data, role }) => <ExplorerContainer view={data.subject} role={role} />,
+      component: ({ data, role }) => {
+        return <ExplorerContainer view={data.subject} role={role} />;
+      },
     }),
   );

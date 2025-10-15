@@ -4,9 +4,14 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Surface } from '@dxos/app-framework';
+import { Filter, Query, Ref } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
+import { Graph } from '@dxos/plugin-explorer/types';
 import { type Space, createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, Icon, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { QueryEditor } from '@dxos/react-ui-components';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   Editor,
   type EditorProps,
@@ -61,6 +66,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
 
   const name = graph?.expressions.value[cell.id]?.name;
   const value = graph?.values.value[cell.id];
+  const view = cell.view?.target;
 
   // TODO(burdon): Dragging preview.
   return (
@@ -113,20 +119,24 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
 
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
-        {value != null && (
-          <div
-            className={mx(
-              'flex bg-groupSurface border-t border-subduedSeparator text-description font-mono',
-              editorStyles,
+        {(value != null || view != null) && (
+          <div className='flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
+            {value != null && (
+              <div className={mx(editorStyles)}>
+                {name && (
+                  <>
+                    <span className='text-successText'>{name}</span>
+                    <span className='text-description'>&nbsp;=&nbsp;</span>
+                  </>
+                )}
+                <span>{value}</span>
+              </div>
             )}
-          >
-            {name && (
-              <>
-                <span className='text-successText'>{name}</span>
-                <span className='text-description'>&nbsp;=&nbsp;</span>
-              </>
+            {view && (
+              <div className='flex is-full overflow-hidden'>
+                <Surface role='section' limit={1} data={{ subject: view }} />
+              </div>
             )}
-            <span>{value}</span>
           </div>
         )}
       </StackItem.Content>
@@ -134,8 +144,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   );
 };
 
-// TODO(burdon): Label for cell id.
-const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => {
+const NotebookCell = ({ space, cell, env, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
   const extensions = useMemo(() => {
     return cell.script.target
@@ -145,12 +154,30 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
       : [];
   }, [cell.script.target]);
 
-  const handleQueryChange = useCallback(
-    (value: string) => {
-      cell.script.target!.content = value;
-    },
-    [cell],
-  );
+  const builder = useMemo(() => new QueryBuilder(), []);
+  useAsyncEffect(async () => {
+    if (!space) {
+      return;
+    }
+
+    if (cell.type === 'query') {
+      const query = cell.script.target!.content;
+      const filter = builder.build(query) ?? Filter.nothing();
+      const ast = Query.select(filter).ast;
+      const view = cell.view?.target;
+      if (!view) {
+        const graph = Graph.make({ query: { ast } });
+        const { view } = await Graph.makeView({ space, presentation: graph });
+        cell.view = Ref.make(view);
+      } else {
+        view.query.ast = ast;
+      }
+    }
+  }, [space, builder, cell, cell.script.target?.content]);
+
+  const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value: string) => {
+    cell.script.target!.content = value;
+  }, []);
 
   switch (cell.type) {
     case 'markdown':
@@ -182,15 +209,13 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
 
     case 'query':
       return (
-        <div role='none' className='flex flex-col is-full'>
-          <QueryEditor
-            id={cell.id}
-            classNames={editorStyles}
-            db={space?.db}
-            value={cell.script.target?.content}
-            onChange={handleQueryChange}
-          />
-        </div>
+        <QueryEditor
+          id={cell.id}
+          classNames={editorStyles}
+          db={space?.db}
+          value={cell.script.target?.content}
+          onChange={handleQueryChange}
+        />
       );
 
     case 'prompt':

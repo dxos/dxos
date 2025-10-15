@@ -16,7 +16,8 @@ export namespace Notebook {
     id: Schema.String,
     type: Schema.String,
     script: Type.Ref(DataType.Text),
-  });
+    view: Schema.optional(Type.Ref(DataType.View)),
+  }).pipe(Schema.mutable);
 
   export type Cell = Schema.Schema.Type<typeof Cell>;
 

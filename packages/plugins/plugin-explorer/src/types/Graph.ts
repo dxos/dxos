@@ -11,7 +11,6 @@ import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema
 export const Graph = Schema.Struct({
   name: Schema.optional(Schema.String),
   query: Schema.Struct({
-    // TODO(burdon): Rename `raw`.
     string: Schema.optional(Schema.String),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
@@ -23,6 +22,7 @@ export const Graph = Schema.Struct({
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+
 export type Graph = Schema.Schema.Type<typeof Graph>;
 
 /**
