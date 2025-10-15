@@ -7,6 +7,8 @@ import { type ObjectId } from '@dxos/echo/internal';
 
 export { StoredSchema } from '@dxos/echo/internal';
 
+export { StoredSchema } from '@dxos/echo-schema';
+
 export { AccessToken } from './access-token';
 export { Actor, ActorRole, ActorRoles } from './actor';
 export { Event } from './event';

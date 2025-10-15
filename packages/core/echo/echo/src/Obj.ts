@@ -80,7 +80,9 @@ export const make = <S extends Type.Obj.Any>(
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
+  const filteredProps = Object.fromEntries(Object.entries(props).filter(([_, v]) => v != null));
+
+  return live<Schema.Schema.Type<S>>(schema, filteredProps as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {
