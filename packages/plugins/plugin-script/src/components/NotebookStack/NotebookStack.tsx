@@ -65,7 +65,6 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   return (
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full justify-between attention-surface'>
-        {/* <StackItem.HeadingStickyContent> */}
         <StackItem.DragHandle>
           <div className='flex justify-center p-2'>
             <Icon icon='ph--dots-six-vertical--regular' size={4} />
@@ -100,7 +99,6 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
-        {/* </StackItem.HeadingStickyContent> */}
       </StackItem.Heading>
 
       <StackItem.Content classNames='overflow-visible'>
