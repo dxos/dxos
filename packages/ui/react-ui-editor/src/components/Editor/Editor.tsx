@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 export type EditorController = {
@@ -28,16 +30,17 @@ export type EditorProps = ThemedClassName<
  * NOTE: This shouold not be used with the automerge extension.
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
-  ({ classNames, id, extensions = [], moveToEnd, value, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions, moveToEnd, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
+        initialValue: value,
         extensions: [
-          extensions,
-          EditorView.updateListener.of((update) => {
-            const startValue = update.startState.doc.toString();
-            const value = update.state.doc.toString();
-            if (startValue !== value) {
+          extensions ?? [],
+          EditorView.updateListener.of(({ view, docChanged, transactions }) => {
+            const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
+            if (!isInitialSync && docChanged) {
+              const value = view.state.doc.toString();
               onChange?.(value);
             }
           }),
@@ -57,14 +60,17 @@ export const Editor = forwardRef<EditorController, EditorProps>(
       [view],
     );
 
-    // TODO(burdon): Create extension for this.
+    // Set initial value and cursor position.
     useEffect(() => {
       requestAnimationFrame(() => {
         view?.dispatch({
+          annotations: initialSync,
+          changes: value ? [{ from: 0, to: view?.state.doc.length ?? 0, insert: value ?? '' }] : [],
           selection: moveToEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
+        view?.focus();
       });
-    }, [value, moveToEnd]);
+    }, [view, value, moveToEnd]);
 
     return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;
   },

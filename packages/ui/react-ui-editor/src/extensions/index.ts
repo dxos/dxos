@@ -26,5 +26,6 @@ export * from './modes';
 export * from './outliner';
 export * from './preview';
 export * from './selection';
+export * from './state';
 export * from './tags';
 export * from './typewriter';

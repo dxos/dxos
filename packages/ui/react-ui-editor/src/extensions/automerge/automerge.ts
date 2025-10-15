@@ -11,12 +11,11 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
 import { DocAccessor } from '@dxos/react-client/echo';
 
 import { Cursor } from '../../util';
+import { initialSync } from '../state';
 
 import { cursorConverter } from './cursor';
 import { type State, isReconcile, updateHeadsEffect } from './defs';
 import { Syncer } from './sync';
-
-const initialSync = Transaction.userEvent.of('initial.sync');
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
@@ -71,8 +70,8 @@ export const automerge = (accessor: DocAccessor): Extension => {
             const current = this._view.state.doc.toString();
             if (value !== current) {
               this._view.dispatch({
-                changes: { from: 0, to: this._view.state.doc.length, insert: value },
                 annotations: initialSync,
+                changes: { from: 0, to: this._view.state.doc.length, insert: value },
               });
             }
           });
@@ -94,7 +93,6 @@ export const automerge = (accessor: DocAccessor): Extension => {
         // Only reconcile if it's not an initial sync (to avoid loops)
         const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
         if (!isInitialSync) {
-          console.log('### UPDATE ###');
           syncer.reconcile(view, true);
         }
       }
