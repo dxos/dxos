@@ -92,7 +92,7 @@ const createReactiveObject = <T extends BaseObject>(
  */
 const setIdOnTarget = (target: any) => {
   // invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
-  if ('id' in target) {
+  if ('id' in target && target.id !== undefined && target.id !== null) {
     if (!ObjectId.isValid(target.id)) {
       throw new Error('Invalid object id format.');
     }
