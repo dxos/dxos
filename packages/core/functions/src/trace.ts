@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Ref, Type } from '@dxos/echo';
+import { ObjectId } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
-import { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { FunctionTrigger } from './types';

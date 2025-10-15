@@ -7,7 +7,7 @@
 }
 
 .popover-card-width {
-  inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
+  inline-size: min(var(--radix-popper-available-width), calc(var(--dx-popoverMaxWidth) - 2 * var(--dx-hairLine)));
 }
 
 .popover-card-height {

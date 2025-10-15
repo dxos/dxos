@@ -3,10 +3,10 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Space, createDocAccessor } from '@dxos/client/echo';
-import { EchoObject, Ref } from '@dxos/echo-schema';
+import { EchoObject, Ref } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';

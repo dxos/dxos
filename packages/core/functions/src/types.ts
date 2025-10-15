@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema, SchemaAST } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, QueryAST, Type } from '@dxos/echo';
-import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo-schema';
+import { Expando, OptionsAnnotationId, RawObject, Ref } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
 import { FunctionType } from './schema';

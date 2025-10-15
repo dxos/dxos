@@ -7,7 +7,7 @@
 
 import { AiService } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo/internal';
 import { type FunctionDefinition, defineFunction } from '@dxos/functions';
 import { type ContentBlock, DataType } from '@dxos/schema';
 

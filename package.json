@@ -16,6 +16,7 @@
     "changed-packages": "scripts/changed",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
+    "create-worktree": "./scripts/create-worktree",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "gh-action": "./scripts/gh-action.mjs",

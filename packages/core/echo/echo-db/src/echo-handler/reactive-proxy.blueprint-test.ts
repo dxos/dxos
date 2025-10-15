@@ -1,18 +1,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
-import { getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
+import { Type } from '@dxos/echo';
+import { getSchema, getType, getTypeReference } from '@dxos/echo/internal';
+import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { getProxyHandler } from '@dxos/live-object';
 import { log } from '@dxos/log';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: Testing.TestSchema = {
+const TEST_OBJECT: TestingDeprecated.TestSchema = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -31,13 +32,13 @@ export interface TestConfiguration {
   allowObjectAssignments?: boolean;
   beforeAllCb?: () => Promise<void>;
   afterAllCb?: () => Promise<void>;
-  createObjectFn: (props?: Partial<Testing.TestSchema>) => Promise<Testing.TestSchema>;
+  createObjectFn: (props?: Partial<TestingDeprecated.TestSchema>) => Promise<TestingDeprecated.TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Schema.Schema.AnyNoContext) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, Testing.TestSchema, Testing.TestSchemaType]) {
+  for (const schema of [Type.Expando, TestingDeprecated.TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
@@ -59,7 +60,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       await afterAllCb?.();
     });
 
-    describe(`Proxy properties(schema=${schema != null})`, () => {
+    describe(`Proxy properties(schema=${Type.getTypename(schema)})`, () => {
       test('handler type', async () => {
         const obj = await createObject();
         log('handler', { handler: Object.getPrototypeOf(getProxyHandler(obj)).constructor.name });
@@ -136,8 +137,9 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect((obj.nullableShapeArray![2] as any).side).to.eq(33);
       });
 
-      test('validation failures', async () => {
-        if (schema == null) {
+      test('validation failures', async (ctx) => {
+        if (schema == Type.Expando) {
+          ctx.skip();
           return;
         }
 
@@ -222,10 +224,14 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('keys enumeration', async () => {
         const obj = await createObject({ string: 'bar' });
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'id'] : ['string']);
+        expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string']);
 
         obj.number = 42;
-        expect(Object.keys(obj)).to.deep.eq(objectsHaveId ? ['string', 'number', 'id'] : ['string', 'number']);
+        expect(Object.keys(obj).filter((key) => key !== 'id')).to.deep.eq(['string', 'number']);
+
+        if (objectsHaveId) {
+          expect(Object.keys(obj)).to.include('id');
+        }
       });
 
       test('has', async () => {

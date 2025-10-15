@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
+import { StoredSchema, getSchema, getSchemaTypename, toJsonSchema } from '@dxos/echo/internal';
 import { type AnyLiveObject, type EchoDatabase, Filter } from '@dxos/echo-db';
-import { StoredSchema, getSchema, getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import type { DataSource, Node, Relationship } from './query-executor';

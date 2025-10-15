@@ -59,7 +59,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/live-object": "workspace:*",

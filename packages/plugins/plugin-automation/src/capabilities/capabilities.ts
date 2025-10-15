@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ManagedRuntime } from 'effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { type AiService, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { defineCapability } from '@dxos/app-framework';

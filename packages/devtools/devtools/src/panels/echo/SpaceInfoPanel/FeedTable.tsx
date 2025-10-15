@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';

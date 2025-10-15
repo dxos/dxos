@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
-import { FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo-schema';
+import { FormatEnum, Ref, type TypeAnnotation, getValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSnapshot } from '@dxos/live-object';
 import { type Client } from '@dxos/react-client';

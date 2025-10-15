@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact } from '@dxos/protocols/proto/dxos/client/services';
 import {

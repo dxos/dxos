@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 
 import { Markdown } from '@dxos/plugin-markdown/types';

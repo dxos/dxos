@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { asyncTimeout } from '@dxos/async';
-import { Expando } from '@dxos/echo-schema';
+import { Expando } from '@dxos/echo/internal';
 import { type FunctionDefinition, type FunctionExecutor } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';

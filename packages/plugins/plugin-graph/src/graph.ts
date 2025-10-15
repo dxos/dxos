@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Record } from 'effect';
+import * as Record from 'effect/Record';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { type ExpandableGraph, GraphBuilder, ROOT_ID, flattenExtensions } from '@dxos/app-graph';

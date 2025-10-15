@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { TypeLiteral, isTypeLiteral } from 'effect/SchemaAST';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 /**
  * Creates a narrowed schema from an original schema that only includes
@@ -20,14 +20,14 @@ export const narrowSchema = <S extends Schema.Schema.AnyNoContext>(
 ): Schema.Schema<unknown, unknown> | undefined => {
   const ast = (schema as any)?.ast;
 
-  if (isTypeLiteral(ast)) {
+  if (SchemaAST.isTypeLiteral(ast)) {
     // Filter property signatures that match any of the provided paths
     const propertySignatures = ast.propertySignatures.filter((signature) => paths.includes(signature.name.toString()));
 
     // If we found at least one matching property
     if (propertySignatures.length > 0) {
       // Create a new TypeLiteral with only the matching properties
-      const narrowType = new TypeLiteral(propertySignatures, []);
+      const narrowType = new SchemaAST.TypeLiteral(propertySignatures, []);
       return Schema.make(narrowType);
     }
   }

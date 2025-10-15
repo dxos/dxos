@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { FunctionType } from '@dxos/functions';
 
 const ApiAuthorizationKey = Schema.Struct({

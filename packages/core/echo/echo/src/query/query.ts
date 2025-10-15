@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { NonEmptyArray } from 'effect/Array';
+import type * as EffectArray from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import type { Simplify } from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
-import { getTypeReference } from '@dxos/echo-schema';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
+import { getTypeReference } from '../internal';
 import type * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import type * as Type from '../Type';
@@ -132,7 +131,7 @@ export interface Query<T> {
    * @param order - Order to sort the results.
    * @returns Query for the ordered results.
    */
-  orderBy(...order: NonEmptyArray<Order<T>>): Query<T>;
+  orderBy(...order: EffectArray.NonEmptyArray<Order<T>>): Query<T>;
 
   /**
    * Add options to a query.
@@ -351,9 +350,9 @@ export declare namespace Filter {
 
   type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 
-  type And<FS extends readonly Any[]> = Simplify<Intersection<{ [K in keyof FS]: Type<FS[K]> }>>;
+  type And<FS extends readonly Any[]> = Schema.Simplify<Intersection<{ [K in keyof FS]: Type<FS[K]> }>>;
 
-  type Or<FS extends readonly Any[]> = Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
+  type Or<FS extends readonly Any[]> = Schema.Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
 }
 
 class FilterClass implements Filter<any> {

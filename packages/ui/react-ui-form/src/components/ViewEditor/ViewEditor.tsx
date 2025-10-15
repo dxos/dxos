@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, Match, Option, Schema } from 'effect';
-import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import * as Array from 'effect/Array';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
+import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   Callout,
@@ -205,59 +208,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
-    const custom: Partial<Record<string, InputComponent>> = useMemo(
-      () =>
-        mode === 'query'
-          ? {
-              ['query' satisfies keyof Schema.Schema.Type<typeof viewSchema>]: (props: InputProps) => {
-                const { themeMode } = useThemeContext();
-                const density = useDensityContext();
-                const elevation = useElevationContext();
-
-                // TODO(wittjosiah): Including props.onValueChange in deps causes infinite loop.
-                const handleChange = useCallback((text: string) => props.onValueChange('string', text), []);
-
-                const extensions = useMemo(
-                  () => [
-                    createBasicExtensions({ placeholder: t('query placeholder') }),
-                    createThemeExtensions({ themeMode }),
-                  ],
-                  [],
-                );
-
-                // TODO(wittjosiah): This is probably not the right way to do these styles.
-                return (
-                  <Input.Root>
-                    <InputHeader label={props.label} />
-                    <Editor
-                      classNames={mx(
-                        inputTheme.input({ density, elevation }),
-                        'flex items-center',
-                        'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
-                      )}
-                      extensions={extensions}
-                      value={props.getValue()}
-                      onChange={handleChange}
-                    />
-                    {/* TODO(wittjosiah): Support query editor.
-                    <QueryEditor
-                      classNames={mx(
-                        inputTheme.input({ density, elevation }),
-                        'flex items-center',
-                        'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
-                      )}
-                      space={space}
-                      value={props.getValue()}
-                      onChange={handleChange}
-                    /> */}
-                  </Input.Root>
-                );
-              },
-            }
-          : {},
-      [],
-    );
-
     return (
       <div role='none' className={mx(classNames)}>
         {schemaReadonly && mode === 'schema' && (
@@ -275,7 +225,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           readonly={readonly ? 'disabled-input' : false}
           onSave={handleUpdate}
           outerSpacing={outerSpacing}
-          Custom={custom}
+          Custom={mode === 'query' ? customFields : undefined}
         />
 
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
@@ -377,3 +327,52 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
   },
 );
+
+const customFields: Record<string, InputComponent> = {
+  query: (props: InputProps) => {
+    const { themeMode } = useThemeContext();
+    const { t } = useTranslation(translationKey);
+    const density = useDensityContext();
+    const elevation = useElevationContext();
+
+    const onValueChange = useRef(props.onValueChange);
+    useEffect(() => {
+      onValueChange.current = props.onValueChange;
+    }, [props.onValueChange]);
+    // NOTE: Including props.onValueChange in deps causes infinite loop with Editor.
+    const handleChange = useCallback((text: string) => onValueChange.current('string', text), []);
+
+    const extensions = useMemo(
+      () => [createBasicExtensions({ placeholder: t('query placeholder') }), createThemeExtensions({ themeMode })],
+      [],
+    );
+
+    // TODO(wittjosiah): This is probably not the right way to do these styles.
+    return (
+      <Input.Root>
+        <InputHeader label={props.label} />
+        <Editor
+          classNames={mx(
+            inputTheme.input({ density, elevation }),
+            'flex items-center',
+            'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
+          )}
+          extensions={extensions}
+          value={props.getValue()}
+          onChange={handleChange}
+        />
+        {/* TODO(wittjosiah): Support query editor.
+        <QueryEditor
+          classNames={mx(
+            inputTheme.input({ density, elevation }),
+            'flex items-center',
+            'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
+          )}
+          space={space}
+          value={props.getValue()}
+          onChange={handleChange}
+        /> */}
+      </Input.Root>
+    );
+  },
+};

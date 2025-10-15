@@ -3,7 +3,7 @@
 //
 
 import { beforeAll, describe, it } from '@effect/vitest';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
