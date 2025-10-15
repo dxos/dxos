@@ -36,7 +36,7 @@ describe('notebook', () => {
   test('evalScript blocks access to window and document', () => {
     const notebook = createNotebook();
     // Replace one of the cells with code that tries to access window/document.
-    if (notebook.cells[2].script.target) {
+    if (notebook.cells[2].script?.target) {
       notebook.cells[2].script.target.content = 'b = typeof window';
     }
 
@@ -48,7 +48,7 @@ describe('notebook', () => {
     expect(values[notebook.cells[2].id]).toBe('undefined');
 
     // Test document access.
-    if (notebook.cells[2].script.target) {
+    if (notebook.cells[2].script?.target) {
       notebook.cells[2].script.target.content = 'b = typeof document';
     }
     computer.parse();
@@ -58,7 +58,7 @@ describe('notebook', () => {
     expect(values2[notebook.cells[2].id]).toBe('undefined');
 
     // Test that safe globals still work.
-    if (notebook.cells[2].script.target) {
+    if (notebook.cells[2].script?.target) {
       notebook.cells[2].script.target.content = 'b = Math.max(100, 200)';
     }
     computer.parse();
