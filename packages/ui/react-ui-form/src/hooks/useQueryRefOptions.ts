@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { type TypeAnnotation } from '@dxos/echo-schema';
 import { type DXN } from '@dxos/keys';
@@ -25,9 +25,12 @@ type UseQueryRefOptionsProps = { refTypeInfo: TypeAnnotation | undefined; onQuer
  * Hook to query reference options based on type information.
  * Used internally within forms to fetch and format reference options for reference fields.
  */
+// TODO(wittjosiah): This should be a reactive query so that the options are always up to date.
 export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryRefOptionsProps) => {
   const [options, setOptions] = useState<QueryTag[]>([]);
   const [loading, setLoading] = useState(false);
+  const [state, setState] = useState({});
+  const update = useCallback(() => setState({}), []);
 
   useEffect(() => {
     if (!refTypeInfo || !onQueryRefOptions) {
@@ -53,7 +56,7 @@ export const useQueryRefOptions = ({ refTypeInfo, onQueryRefOptions }: UseQueryR
     };
 
     void fetchOptions();
-  }, [refTypeInfo, onQueryRefOptions]);
+  }, [refTypeInfo, onQueryRefOptions, state]);
 
-  return { options, loading };
+  return { options, update, loading };
 };

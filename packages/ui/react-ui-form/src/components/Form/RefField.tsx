@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import '@dxos/lit-ui/dx-tag-picker.pcss';
+
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
@@ -70,7 +72,11 @@ export const RefField = ({
     () => (ast ? findAnnotation<ReferenceAnnotationValue>(ast, ReferenceAnnotationId) : undefined),
     [ast],
   );
-  const { options: availableOptions, loading: _loading } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
+  const {
+    options: availableOptions,
+    update: updateOptions,
+    loading: _loading,
+  } = useQueryRefOptions({ refTypeInfo, onQueryRefOptions });
 
   if ((refTypeInfo && refTypeInfo?.typename === getTypeAnnotation(Expando)?.typename) || !onQueryRefOptions) {
     // If ref type is expando, fall back to taking a DXN in string format.
@@ -133,6 +139,14 @@ export const RefField = ({
       }
     },
     [availableOptions, array, onValueChange],
+  );
+
+  const handleCreate = useCallback(
+    (values: any) => {
+      onCreate?.(values);
+      updateOptions();
+    },
+    [onCreate, updateOptions],
   );
 
   if (!refTypeInfo) {
@@ -211,7 +225,7 @@ export const RefField = ({
               createOptionLabel={createOptionLabel}
               createOptionIcon={createOptionIcon}
               createInitialValuePath={createInitialValuePath}
-              onCreate={onCreate}
+              onCreate={handleCreate}
             />
           </ObjectPicker.Root>
         )}
