@@ -121,7 +121,14 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: Noteb
           />
         )}
 
-        {cell.type === 'prompt' && <PromptEditor id={cell.id} extensions={extensions} classNames='p-2 pbs-3' />}
+        {cell.type === 'prompt' && (
+          <PromptEditor
+            id={cell.id}
+            initialValue={cell.script.target?.content}
+            extensions={extensions}
+            classNames='p-2 pbs-3'
+          />
+        )}
 
         {/* TODO(burdon): Pass in Space to query types. */}
         {/* TODO(burdon): Save. */}
@@ -161,5 +168,5 @@ const PromptEditor = ({ extensions: extensionsParam, ...props }: EditorProps) =>
     ].filter(isNonNullable);
   }, [extensionsParam]);
 
-  return <Editor {...props} extensions={extensions} />;
+  return <Editor {...props} moveToEnd extensions={extensions} />;
 };

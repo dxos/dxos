@@ -19,11 +19,13 @@ import { Syncer } from './sync';
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
-    create: () => ({
-      path: accessor.path.slice(),
-      lastHeads: A.getHeads(accessor.handle.doc()!),
-      unreconciledTransactions: [],
-    }),
+    create: () => {
+      return {
+        path: accessor.path.slice(),
+        lastHeads: A.getHeads(accessor.handle.doc()!),
+        unreconciledTransactions: [],
+      };
+    },
 
     update: (value, tr) => {
       const result: State = {
@@ -69,10 +71,11 @@ export const automerge = (accessor: DocAccessor): Extension => {
             const value = DocAccessor.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
-              this._view.dispatch({
-                annotations: initialSync,
-                changes: { from: 0, to: this._view.state.doc.length, insert: value },
-              });
+              // TODO(burdon): This attempts to set the initial state, but creates problems.
+              // this._view.dispatch({
+              //   changes: { from: 0, to: this._view.state.doc.length, insert: value },
+              //   annotations: initialSync,
+              // });
             }
           });
         }
