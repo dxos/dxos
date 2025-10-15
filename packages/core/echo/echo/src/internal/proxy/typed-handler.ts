@@ -14,27 +14,14 @@ import {
   ReactiveArray,
   type ReactiveHandler,
   createProxy,
+  defineHiddenProperty,
   isValidProxyTarget,
   objectData,
   symbolIsProxy,
-  defineHiddenProperty,
 } from '@dxos/live-object';
 
-import type { BaseObject, CreationProps } from '../types';
-import {
-  attachTypedJsonSerializer,
-  EntityKindId,
-  Expando,
-  ObjectMetaSchema,
-  type ObjectMeta,
-  MetaId,
-  TypeId,
-  SchemaId,
-  DeletedId,
-  SchemaValidator,
-} from '../object';
-import { getTypeAnnotation, getSchemaDXN } from '../ast';
-import { ObjectId } from '@dxos/keys';
+import { getSchemaDXN } from '../ast';
+import { DeletedId, SchemaId, SchemaValidator, TypeId } from '../object';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

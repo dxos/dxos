@@ -4,19 +4,20 @@
 
 import type * as Schema from 'effect/Schema';
 
+import { ObjectId } from '@dxos/keys';
 import {
   type Live,
   UntypedReactiveHandler,
   createProxy,
-  isValidProxyTarget,
   defineHiddenProperty,
+  isValidProxyTarget,
 } from '@dxos/live-object';
 
-import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
-import type { BaseObject, CreationProps } from '../types';
-import { attachTypedJsonSerializer, EntityKindId, Expando, ObjectMetaSchema, type ObjectMeta, MetaId } from '../object';
 import { getTypeAnnotation } from '../ast';
-import { ObjectId } from '@dxos/keys';
+import { EntityKindId, Expando, MetaId, type ObjectMeta, ObjectMetaSchema, attachTypedJsonSerializer } from '../object';
+import type { BaseObject, CreationProps } from '../types';
+
+import { TypedReactiveHandler, prepareTypedTarget } from './typed-handler';
 
 /**
  * Creates a reactive object from a plain Javascript object.
