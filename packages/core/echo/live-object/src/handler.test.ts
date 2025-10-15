@@ -6,18 +6,23 @@ import { inspect } from 'node:util';
 
 import { describe, expect, test } from 'vitest';
 
-import { ATTR_META } from '@dxos/echo-schema';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { isNode } from '@dxos/util';
 
-import type { Live } from './live';
 import { live } from './object';
 import { objectData } from './proxy';
+import { updateCounter } from './testing';
 
 registerSignalsRuntime();
 
-const TEST_OBJECT: Testing.TestSchema = {
+class TestClass {
+  field = 'value';
+  toJSON() {
+    return { field: this.field };
+  }
+}
+
+const TEST_OBJECT = {
   string: 'foo',
   number: 42,
   boolean: true,
@@ -26,87 +31,70 @@ const TEST_OBJECT: Testing.TestSchema = {
   object: { field: 'bar' },
 };
 
-for (const schema of [undefined, Testing.TestSchemaWithClass]) {
-  const createObject = (props: Partial<Testing.TestSchemaWithClass> = {}): Live<Testing.TestSchemaWithClass> => {
-    return schema == null ? (live(props) as Testing.TestSchemaWithClass) : live(schema, props);
-  };
+describe(`Reactive Object`, () => {
+  test.skipIf(!isNode())('inspect', () => {
+    const obj = live({ string: 'bar' });
+    const str = inspect(obj, { colors: false });
+    expect(str).to.eq(`{ string: 'bar' }`);
+  });
 
-  describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
-    test.skipIf(!isNode())('inspect', () => {
-      const obj = createObject({ string: 'bar' });
-      const str = inspect(obj, { colors: false });
-      expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
-    });
-
-    test('data symbol', async () => {
-      const obj = createObject({ ...TEST_OBJECT });
-      const objData: any = (obj as any)[objectData];
-      expect(objData).to.deep.contain({
-        '@type': `${schema ? 'Typed' : ''}ReactiveObject`,
-        ...TEST_OBJECT,
-      });
-    });
-
-    test('can assign class instances', () => {
-      const obj = createObject();
-
-      const classInstance = new Testing.TestClass();
-      obj.classInstance = classInstance;
-      expect(obj.classInstance!.field).to.eq('value');
-      expect(obj.classInstance instanceof Testing.TestClass).to.eq(true);
-      expect(obj.classInstance === classInstance).to.be.true;
-
-      obj.classInstance!.field = 'baz';
-      expect(obj.classInstance!.field).to.eq('baz');
-    });
-
-    describe('class instance equality', () => {
-      test('toJSON', () => {
-        const original = { classInstance: new Testing.TestClass() };
-        const reactive = createObject(original);
-        if (!schema) {
-          expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
-        } else {
-          expect(JSON.stringify(reactive)).to.eq(
-            JSON.stringify({
-              [ATTR_META]: {
-                keys: [],
-              },
-              ...original,
-            }),
-          );
-        }
-      });
-
-      test('chai deep equal works', () => {
-        const original = { classInstance: new Testing.TestClass() };
-        const reactive = createObject(original);
-        expect(reactive).to.deep.eq(original);
-        expect(reactive).to.not.deep.eq({ ...original, number: 11 });
-      });
-
-      test('jest deep equal works', () => {
-        const original = { classInstance: new Testing.TestClass() };
-        const reactive = createObject(original);
-        expect(reactive).toEqual(original);
-        expect(reactive).not.toEqual({ ...original, number: 11 });
-      });
-    });
-
-    describe('signal updates', () => {
-      test('not in nested class instances', () => {
-        const obj = createObject({ classInstance: new Testing.TestClass() });
-        using updates = updateCounter(() => {
-          obj.classInstance!.field;
-        });
-        expect(updates.count, 'update count').to.eq(0);
-
-        obj.classInstance!.field = 'baz';
-        expect(updates.count, 'update count').to.eq(0);
-      });
+  test('data symbol', async () => {
+    const obj = live({ ...TEST_OBJECT });
+    const objData: any = (obj as any)[objectData];
+    expect(objData).to.deep.contain({
+      '@type': `ReactiveObject`,
+      ...TEST_OBJECT,
     });
   });
-}
+
+  test('can assign class instances', () => {
+    const obj = live({}) as any;
+
+    const classInstance = new TestClass();
+    obj.classInstance = classInstance;
+    expect(obj.classInstance!.field).to.eq('value');
+    expect(obj.classInstance instanceof TestClass).to.eq(true);
+    expect(obj.classInstance === classInstance).to.be.true;
+
+    obj.classInstance!.field = 'baz';
+    expect(obj.classInstance!.field).to.eq('baz');
+  });
+
+  describe('class instance equality', () => {
+    test('toJSON', () => {
+      const original = { classInstance: new TestClass() };
+      const reactive = live(original);
+      expect(JSON.stringify(reactive)).to.eq(JSON.stringify(original));
+    });
+
+    test('chai deep equal works', () => {
+      const original = { classInstance: new TestClass() };
+      const reactive = live(original);
+      expect(reactive).to.deep.eq(original);
+      expect(reactive).to.not.deep.eq({ ...original, number: 11 });
+    });
+
+    test('jest deep equal works', () => {
+      const original = { classInstance: new TestClass() };
+      const reactive = live(original);
+      expect(reactive).toEqual(original);
+      expect(reactive).not.toEqual({ ...original, number: 11 });
+    });
+  });
+
+  describe('signal updates', () => {
+    test('not in nested class instances', () => {
+      const obj = live({ classInstance: new TestClass() });
+      using updates = updateCounter(() => {
+        obj.classInstance!.field;
+      });
+      expect(updates.count, 'update count').to.eq(0);
+
+      obj.classInstance!.field = 'baz';
+      expect(updates.count, 'update count').to.eq(0);
+    });
+  });
+});
 
 describe('getters', () => {
   test('add getter to object', () => {

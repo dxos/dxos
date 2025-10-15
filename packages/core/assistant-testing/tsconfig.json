@@ -66,9 +66,6 @@
       "path": "../echo/echo-protocol"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
       "path": "../functions"
     },
     {

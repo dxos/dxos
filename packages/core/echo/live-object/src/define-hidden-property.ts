@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-// TODO(burdon): Document.
+/**
+ * Define a non-enumerable property on an object.
+ */
 export const defineHiddenProperty = (object: any, key: string | symbol, value: any) => {
   Object.defineProperty(object, key, {
     enumerable: false,

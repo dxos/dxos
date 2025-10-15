@@ -44,7 +44,7 @@
     "@atlaskit/pragmatic-drag-and-drop": "^1.4.0",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -65,7 +65,7 @@
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

@@ -28,7 +28,7 @@
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",

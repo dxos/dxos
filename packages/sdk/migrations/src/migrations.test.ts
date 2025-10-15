@@ -5,9 +5,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Filter, type Space, live } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Expando } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { Expando } from '@dxos/echo/internal';
 
 import { Migrations } from './migrations';
 
@@ -75,7 +76,7 @@ describe('Migrations', () => {
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
     space.properties['test.version'] = '1970-01-02';
-    space.db.add(live(Expando, { namespace: 'test', count: 5 }));
+    space.db.add(Obj.make(Type.Expando, { namespace: 'test', count: 5 }));
     await Migrations.migrate(space);
     const { objects } = await space.db.query(Filter.type(Expando, { namespace: 'test' })).run();
     expect(objects).to.have.length(1);

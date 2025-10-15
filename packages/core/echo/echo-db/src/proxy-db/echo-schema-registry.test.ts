@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -14,8 +15,7 @@ import {
   TypeIdentifierAnnotationId,
   getSchemaTypename,
   toJsonSchema,
-} from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+} from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
 import { Filter } from '../query';
@@ -122,7 +122,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = live(StoredSchema, {
+    const schemaToStore = Obj.make(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
       jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),

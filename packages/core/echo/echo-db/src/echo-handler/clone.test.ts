@@ -5,8 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
-import { Expando, Ref } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -27,7 +26,7 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -50,7 +49,7 @@ describe('clone', () => {
   test('clone to the same database by changing the id', async () => {
     const { db } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
     });
@@ -70,11 +69,11 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
       assignee: Ref.make(
-        live(Expando, {
+        Obj.make(Type.Expando, {
           type: 'Person',
           name: 'John Doe',
         }),
@@ -101,7 +100,7 @@ describe('clone', () => {
     expect(task2.assignee.target?.id).to.equal(task1.assignee.target?.id);
     expect(task2.assignee.target?.name).to.equal(task1.assignee.target?.name);
     expect(
-      (await db2.query(Query.select(Filter.type(Expando, { type: 'Person' }))).run()).objects[0] ===
+      (await db2.query(Query.select(Filter.type(Type.Expando, { type: 'Person' }))).run()).objects[0] ===
         task2.assignee.target,
     ).to.be.true;
   });
@@ -110,10 +109,10 @@ describe('clone', () => {
     const { db: db1 } = await builder.createDatabase();
     const { db: db2 } = await builder.createDatabase();
 
-    const task1 = live(Expando, {
+    const task1 = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: live(Expando, { content: 'Some details' }),
+      details: Obj.make(Type.Expando, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();

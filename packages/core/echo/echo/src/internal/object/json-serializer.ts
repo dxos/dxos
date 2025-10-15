@@ -8,12 +8,12 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, type ObjectMeta, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import { EntityKind } from '../ast';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../ref';
 import { type AnyEchoObject } from '../types';
-import { defineHiddenProperty } from '../utils';
 
 import { setSchema } from './accessors';
 import { ObjectMetaSchema } from './meta';

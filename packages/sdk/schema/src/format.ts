@@ -12,7 +12,7 @@ import {
   type SelectOption,
   SelectOptionSchema,
   TypeEnum,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 
 /**
  * Base schema.

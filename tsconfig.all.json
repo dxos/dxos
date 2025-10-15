@@ -43,6 +43,9 @@
       "path": "packages/common/esbuild-plugins/tsconfig.json"
     },
     {
+      "path": "packages/common/eslint-plugin-rules/tsconfig.json"
+    },
+    {
       "path": "packages/common/feed-store/tsconfig.json"
     },
     {
@@ -152,9 +155,6 @@
     },
     {
       "path": "packages/core/echo/echo-query/tsconfig.json"
-    },
-    {
-      "path": "packages/core/echo/echo-schema/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-signals/tsconfig.json"
@@ -557,9 +557,6 @@
     },
     {
       "path": "tools/dx-tools/tsconfig.json"
-    },
-    {
-      "path": "tools/eslint-plugin-rules/tsconfig.json"
     },
     {
       "path": "tools/lit-storybook/tsconfig.json"

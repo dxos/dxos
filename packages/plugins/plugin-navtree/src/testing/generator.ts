@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { type Live, Obj, Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 import { range } from '@dxos/util';
 

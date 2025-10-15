@@ -6,8 +6,8 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import type { Space } from '@dxos/client-protocol';
+import { Obj } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { type Contact, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { range } from '@dxos/util';
 
@@ -47,7 +47,7 @@ describe('ContactBook', () => {
 
       client1.addTypes([TextV0Type]);
       const space2 = await client1.spaces.create();
-      const document = space2.db.add(live(TextV0Type, { content: 'text' }));
+      const document = space2.db.add(Obj.make(TextV0Type, { content: 'text' }));
       await space2.db.flush();
 
       await space2.admitContact(contact);

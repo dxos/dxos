@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { GeoLocation, type GeoPoint } from '@dxos/echo-schema';
+import { GeoLocation, type GeoPoint } from '@dxos/echo/internal';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 

@@ -10,8 +10,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
-import { Expando, live } from '@dxos/client/echo';
-import { Ref, TypedObject } from '@dxos/echo-schema';
+import { live } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
+import { Ref, TypedObject } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -97,9 +98,9 @@ const main = async () => {
     await promise;
     await space.db.flush();
 
-    const expando = space.db.add(live(Expando, { value: [1, 2, 3] }));
+    const expando = space.db.add(Obj.make(Type.Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
-      live(Todo, {
+      Obj.make(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
@@ -118,10 +119,10 @@ const main = async () => {
     class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
     client.addTypes([TestType]);
-    const object = space.db.add(live(dynamicSchema, {}));
+    const object = space.db.add(Obj.make(dynamicSchema, {}));
     dynamicSchema.addFields({ name: Schema.String, todo: Ref(Todo) });
     object.name = 'Test';
-    object.todo = live(Todo, { name: 'Test todo' });
+    object.todo = Obj.make(Todo, { name: 'Test todo' });
     await space.db.flush();
 
     // space.db.add(live(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));

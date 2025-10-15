@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
+import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { type SchemaRegistry } from '@dxos/echo-db';
-import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import {
   Callout,

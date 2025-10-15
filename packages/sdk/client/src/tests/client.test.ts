@@ -8,9 +8,9 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
-import { Ref } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { isNode } from '@dxos/util';
 
@@ -210,15 +210,15 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(live(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(Obj.make(ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      live(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(live(TextV0Type, { content: text })) }],
+      Obj.make(MessageType, {
+        blocks: [{ timestamp: new Date().toISOString(), content: Ref.make(Obj.make(TextV0Type, { content: text })) }],
       }),
     );
     thread2.messages.push(Ref.make(message));

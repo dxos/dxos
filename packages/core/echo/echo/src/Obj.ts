@@ -5,13 +5,13 @@
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import * as EchoSchema from '@dxos/echo-schema';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import * as LiveObject from '@dxos/live-object';
-import { live } from '@dxos/live-object';
 import { assumeType, deepMapValues } from '@dxos/util';
 
+import { live } from './internal';
+import * as EchoSchema from './internal';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 import * as Type from './Type';
@@ -80,9 +80,7 @@ export const make = <S extends Type.Obj.Any>(
     delete props[EchoSchema.MetaId];
   }
 
-  const filteredProps = Object.fromEntries(Object.entries(props).filter(([_, v]) => v != null));
-
-  return live<Schema.Schema.Type<S>>(schema, filteredProps as any, { keys: [], ...meta });
+  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {

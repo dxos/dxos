@@ -66,7 +66,7 @@ importers:
         version: link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:tools/eslint-plugin-rules
+        version: link:packages/common/eslint-plugin-rules
       '@dxos/keys':
         specifier: workspace:*
         version: link:packages/common/keys
@@ -1357,6 +1357,8 @@ importers:
         specifier: ~0.0.1
         version: 0.0.1
 
+  packages/common/eslint-plugin-rules: {}
+
   packages/common/feed-store:
     dependencies:
       '@dxos/async':
@@ -1449,12 +1451,12 @@ importers:
         specifier: 3.18.3
         version: 3.18.3
     devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/random':
         specifier: workspace:*
         version: link:../random
@@ -1596,9 +1598,9 @@ importers:
 
   packages/common/local-storage:
     dependencies:
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -2058,12 +2060,12 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -2152,9 +2154,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -2258,9 +2257,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -2349,9 +2345,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
@@ -2422,9 +2415,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2470,9 +2460,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -2549,9 +2536,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
@@ -2618,9 +2602,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -2648,6 +2629,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
       effect:
         specifier: 3.18.3
         version: 3.18.3
@@ -2684,9 +2668,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -2757,12 +2738,12 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../../sdk/client
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -2818,9 +2799,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../mesh/edge-client
@@ -2992,42 +2970,6 @@ importers:
         specifier: ^1.7.1
         version: 1.7.1
 
-  packages/core/echo/echo-schema:
-    dependencies:
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-protocol':
-        specifier: workspace:*
-        version: link:../echo-protocol
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../../common/effect
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../../common/node-std
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: ^1.12.1
-        version: 1.12.1
-      effect:
-        specifier: 3.18.3
-        version: 3.18.3
-
   packages/core/echo/echo-signals:
     dependencies:
       '@preact/signals':
@@ -3064,12 +3006,12 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
@@ -3131,9 +3073,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -3197,9 +3136,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../mesh/edge-client
@@ -3866,9 +3802,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -4050,9 +3983,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -4225,9 +4158,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -4546,9 +4479,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -4926,15 +4856,15 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -5089,12 +5019,12 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -5206,12 +5136,12 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -5384,9 +5314,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -5646,9 +5573,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -5701,9 +5625,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -5825,9 +5746,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -5943,9 +5861,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -6040,9 +5955,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6146,9 +6058,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -6261,9 +6170,6 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -6442,9 +6348,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6569,9 +6472,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -6684,9 +6584,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -6820,9 +6717,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -6969,9 +6863,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -7090,9 +6981,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7268,9 +7156,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7383,9 +7268,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -7510,9 +7392,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -7673,9 +7552,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -7849,9 +7725,9 @@ importers:
         specifier: ^10.9.4
         version: 10.9.4
     devDependencies:
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -7955,9 +7831,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8097,9 +7970,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8188,9 +8058,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -8297,9 +8164,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -8430,9 +8294,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -8530,9 +8391,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -8688,9 +8546,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8815,9 +8670,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -9014,9 +8866,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9153,9 +9002,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -9358,9 +9204,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9503,9 +9346,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -9669,9 +9509,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -9772,9 +9609,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -9888,9 +9722,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -9994,9 +9825,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -10055,9 +9883,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -10204,9 +10029,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10367,9 +10189,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/live-object':
         specifier: workspace:*
         version: link:../../core/echo/live-object
@@ -10494,9 +10313,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -10669,9 +10485,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10769,9 +10582,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10896,9 +10706,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
@@ -10984,9 +10794,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -11105,9 +10912,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -11223,9 +11027,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11280,6 +11081,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -11289,9 +11093,6 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -11441,9 +11242,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -11519,15 +11317,15 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../core/echo/echo-protocol
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -11688,9 +11486,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -11814,9 +11609,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -12413,9 +12205,9 @@ importers:
 
   packages/ui/react-ui-attention:
     dependencies:
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -12501,9 +12293,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -12695,9 +12487,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
@@ -12849,9 +12638,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -12970,9 +12756,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13028,9 +12814,6 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
     devDependencies:
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -13291,9 +13074,9 @@ importers:
       '@dxos/display-name':
         specifier: workspace:*
         version: link:../../common/display-name
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -13391,9 +13174,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -13514,9 +13294,6 @@ importers:
       '@dxos/echo-query':
         specifier: workspace:*
         version: link:../../core/echo/echo-query
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -14000,9 +13777,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -14091,9 +13865,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -14429,9 +14203,9 @@ importers:
       '@atlaskit/pragmatic-drag-and-drop-hitbox':
         specifier: ^1.0.3
         version: 1.0.3
-      '@dxos/echo-schema':
+      '@dxos/echo':
         specifier: workspace:*
-        version: link:../../core/echo/echo-schema
+        version: link:../../core/echo/echo
       '@dxos/keyboard':
         specifier: workspace:*
         version: link:../../common/keyboard
@@ -14590,9 +14364,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -14925,12 +14696,12 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
     devDependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -15071,8 +14842,6 @@ importers:
         version: 16.0.4
 
   tools/dx-tools: {}
-
-  tools/eslint-plugin-rules: {}
 
   tools/lit-storybook:
     devDependencies:
