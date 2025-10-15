@@ -28,28 +28,28 @@ export const orgResearchTemplate = async (space: Space, name?: string): Promise<
         queues: [mailbox.queue.dxn.toString()],
       },
     ),
-    queryString: 'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
+    queryRaw: 'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
     jsonSchema: Type.toJsonSchema(DataType.Message),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
   const contactsView = createView({
     name: 'Contacts',
     query: contactsQuery,
-    queryString: contactsQueryString,
+    queryRaw: contactsQueryString,
     jsonSchema: Type.toJsonSchema(DataType.Person),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
   const organizationsView = createView({
     name: 'Organizations',
     query: organizationsQuery,
-    queryString: organizationsQueryString,
+    queryRaw: organizationsQueryString,
     jsonSchema: Type.toJsonSchema(DataType.Organization),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
   const notesView = createView({
     name: 'Notes',
     query: notesQuery,
-    queryString: notesQueryString,
+    queryRaw: notesQueryString,
     jsonSchema: Type.toJsonSchema(Markdown.Document),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });

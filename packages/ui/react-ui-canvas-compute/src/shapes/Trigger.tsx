@@ -131,7 +131,7 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
       return {
         kind: 'subscription',
         query: {
-          string: 'Query.select(Filter.nothing())',
+          raw: 'Query.select(Filter.nothing())',
           ast: Query.select(Filter.nothing()).ast,
         },
       } satisfies SubscriptionTrigger;

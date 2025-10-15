@@ -79,7 +79,7 @@ const meta = {
             const personView = createView({
               name: 'Contacts',
               query: Query.select(Filter.type(DataType.Person)),
-              queryString: 'Query.select(Filter.type(DataType.Person))',
+              queryRaw: 'Query.select(Filter.type(DataType.Person))',
               jsonSchema: Type.toJsonSchema(DataType.Person),
               presentation: project,
             });
@@ -88,7 +88,7 @@ const meta = {
             const organizationView = createView({
               name: 'Organizations',
               query: Query.select(Filter.type(DataType.Organization)),
-              queryString: 'Query.select(Filter.type(DataType.Organization))',
+              queryRaw: 'Query.select(Filter.type(DataType.Organization))',
               jsonSchema: Type.toJsonSchema(DataType.Organization),
               presentation: project,
             });
@@ -97,7 +97,7 @@ const meta = {
             const taskView = createView({
               name: 'Tasks',
               query: Query.select(Filter.type(DataType.Task)),
-              queryString: 'Query.select(Filter.type(DataType.Task))',
+              queryRaw: 'Query.select(Filter.type(DataType.Task))',
               jsonSchema: Type.toJsonSchema(DataType.Task),
               presentation: project,
             });
@@ -106,7 +106,7 @@ const meta = {
             const projectView = createView({
               name: 'Projects (not the UI component)',
               query: Query.select(Filter.type(DataType.Project)),
-              queryString: 'Query.select(Filter.type(DataType.Project))',
+              queryRaw: 'Query.select(Filter.type(DataType.Project))',
               jsonSchema: Type.toJsonSchema(DataType.Project),
               presentation: project,
             });
@@ -116,7 +116,7 @@ const meta = {
             const messageView = createView({
               name: 'Messages',
               query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
-              queryString: 'Query.select(Filter.type(DataType.Message))',
+              queryRaw: 'Query.select(Filter.type(DataType.Message))',
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,
             });

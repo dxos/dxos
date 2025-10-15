@@ -612,7 +612,7 @@ export const WithChessTrigger: Story = {
           spec: {
             kind: 'subscription',
             query: {
-              string: 'Query.select(Filter.type(Chess.Game))',
+              raw: 'Query.select(Filter.type(Chess.Game))',
               ast: Query.select(Filter.type(Chess.Game)).ast,
             },
           },
@@ -772,7 +772,7 @@ export const WithProject: Story = {
         spec: {
           kind: 'subscription',
           query: {
-            string: organizationsQueryString,
+            raw: organizationsQueryString,
             ast: organizationsQuery.ast,
           },
         },
@@ -790,29 +790,28 @@ export const WithProject: Story = {
         ).options({
           queues: [mailbox.queue.dxn.toString()],
         }),
-        queryString:
-          'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("Project") } }))',
+        queryRaw: 'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("Project") } }))',
         jsonSchema: Type.toJsonSchema(DataType.Message),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const contactsView = createView({
         name: 'Contacts',
         query: contactsQuery,
-        queryString: contactsQueryString,
+        queryRaw: contactsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Person),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const organizationsView = createView({
         name: 'Organizations',
         query: organizationsQuery,
-        queryString: organizationsQueryString,
+        queryRaw: organizationsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Organization),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const notesView = createView({
         name: 'Notes',
         query: notesQuery,
-        queryString: notesQueryString,
+        queryRaw: notesQueryString,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });

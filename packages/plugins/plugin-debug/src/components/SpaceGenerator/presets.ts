@@ -157,7 +157,7 @@ export const generator = () => ({
             spec: {
               kind: 'subscription',
               query: {
-                string: organizationsQueryString,
+                raw: organizationsQueryString,
                 ast: organizationsQuery.ast,
               },
             },
@@ -176,7 +176,7 @@ export const generator = () => ({
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
-            queryString:
+            queryRaw:
               'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
@@ -184,21 +184,21 @@ export const generator = () => ({
           const contactsView = createView({
             name: 'Contacts',
             query: contactsQuery,
-            queryString: contactsQueryString,
+            queryRaw: contactsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Person),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
             query: organizationsQuery,
-            queryString: organizationsQueryString,
+            queryRaw: organizationsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Organization),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
             query: notesQuery,
-            queryString: notesQueryString,
+            queryRaw: notesQueryString,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
@@ -262,7 +262,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                string: 'Query.select(Filter.typename("dxos.org/type/Chess"))',
+                raw: 'Query.select(Filter.typename("dxos.org/type/Chess"))',
                 ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast,
               }),
             'type',
