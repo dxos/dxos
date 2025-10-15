@@ -67,7 +67,7 @@ export class EdgeWsConnection extends Resource {
   }
 
   public get uptime(): number {
-    return this._openTimestamp ? Date.now() - this._openTimestamp : 0;
+    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
   }
 
   public get uploadRate(): number {
