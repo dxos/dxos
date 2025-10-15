@@ -59,11 +59,9 @@ export const ScriptPlugin = definePlugin(meta, () => [
           icon: 'ph--notebook--regular',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (notebook: Notebook.Notebook) =>
-            await Ref.Array.loadAll([
-              ...notebook.cells.map((cell) => cell.script).filter(isNonNullable),
-              ...notebook.cells.map((cell) => cell.view).filter(isNonNullable),
-              ...notebook.cells.map((cell) => cell.chat).filter(isNonNullable),
-            ] as const as Ref.Any[]),
+            await Ref.Array.loadAll(
+              notebook.cells.flatMap((cell) => [cell.script, cell.view, cell.chat].filter(isNonNullable)) as any,
+            ),
         },
       }),
     ],
