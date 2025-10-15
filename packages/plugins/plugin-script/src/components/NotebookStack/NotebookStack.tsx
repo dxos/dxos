@@ -94,7 +94,6 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
 
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
-
         {value != null && (
           <div className='flex p-2 pis-3 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
             {name && (
