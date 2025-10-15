@@ -2,7 +2,7 @@
 node:
   # IMPORTANT: Keep in-sync with .prototools
   # This is a workaround for issue with moonrepo not picking up node version from .prototools consistently.
-  version: 20.19.5
+  version: 24.4.1
   dedupeOnLockfileChange: false
   packageManager: pnpm
 
