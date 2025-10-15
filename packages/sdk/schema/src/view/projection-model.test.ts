@@ -7,8 +7,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EchoSchemaRegistry } from '@dxos/echo-db';
-import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
   EchoObject,
   EntityKind,
@@ -22,7 +20,9 @@ import {
   TypeEnum,
   getPropertyMetaAnnotation,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { EchoSchemaRegistry } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo-schema';
+import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
 import { DataType } from '@dxos/schema';
 
 // TODO(burdon): Create namespace and remove Type suffix.

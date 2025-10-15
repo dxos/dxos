@@ -42,31 +42,31 @@ describe('notebook', () => {
     if (notebook.cells[2].script.target) {
       notebook.cells[2].script.target.content = 'b = typeof window';
     }
-    
+
     const computer = new ComputeGraph(notebook);
     computer.parse();
     const values = computer.evaluate();
-    
+
     // Should evaluate to 'undefined' since window is blocked.
     expect(values[notebook.cells[2].id]).toBe('undefined');
-    
+
     // Test document access.
     if (notebook.cells[2].script.target) {
       notebook.cells[2].script.target.content = 'b = typeof document';
     }
     computer.parse();
     const values2 = computer.evaluate();
-    
+
     // Should evaluate to 'undefined' since document is blocked.
     expect(values2[notebook.cells[2].id]).toBe('undefined');
-    
+
     // Test that safe globals still work.
     if (notebook.cells[2].script.target) {
       notebook.cells[2].script.target.content = 'b = Math.max(100, 200)';
     }
     computer.parse();
     const values3 = computer.evaluate();
-    
+
     // Should evaluate correctly.
     expect(values3[notebook.cells[2].id]).toBe(200);
   });

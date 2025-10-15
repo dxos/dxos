@@ -101,6 +101,7 @@ export const translations = [
         'notebook cell insert query label': 'Insert query',
         'notebook markdown placeholder': 'Enter markdown',
         'notebook prompt placeholder': 'Enter prompt',
+        'notebook cell insert label': 'Insert cell',
       },
     },
   },

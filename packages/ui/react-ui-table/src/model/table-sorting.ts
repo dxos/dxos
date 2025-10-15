@@ -5,7 +5,7 @@
 import { type ReadonlySignal, type Signal, computed, signal } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
 import { formatForDisplay } from '@dxos/react-ui-form';
 import type {
   DataType,

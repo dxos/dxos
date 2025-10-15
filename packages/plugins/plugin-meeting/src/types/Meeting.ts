@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { ThreadType } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { DataType } from '@dxos/schema';

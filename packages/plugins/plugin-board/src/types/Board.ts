@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
 import { meta } from '../meta';

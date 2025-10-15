@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type InvocationSpan, TraceEvent } from '@dxos/functions';
 import { type Space, useQuery, useSpace } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

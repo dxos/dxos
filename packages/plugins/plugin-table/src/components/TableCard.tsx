@@ -5,7 +5,7 @@
 import React, { useMemo, useRef } from 'react';
 
 import { Filter, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo-schema';
+import { EchoSchema } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';

@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { JsonPath, TypedObject, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
+import { JsonPath, getSchema, getSchemaDXN, getSchemaVersion, getTypename } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -24,19 +24,19 @@ afterEach(async () => {
   await builder.close();
 });
 
-class ContactV1 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.1.0' })({
+const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}) {}
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.1.0' }));
 
-class ContactV2 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.2.0' })({
+const ContactV2 = Schema.Struct({
   name: Schema.String,
-}) {}
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.2.0' }));
 
-class ContactV3 extends TypedObject({ typename: 'example.com/type/Contact', version: '0.3.0' })({
+const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}) {}
+}).pipe(Type.Obj({ typename: 'example.com/type/Contact', version: '0.3.0' }));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
@@ -60,7 +60,7 @@ test('migrate 1 object', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -79,7 +79,7 @@ test('incrementally migrates new objects', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -89,7 +89,7 @@ test('incrementally migrates new objects', async () => {
     expect(objects[0].name).to.eq('John Doe');
   }
 
-  db.add(live(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
+  db.add(Obj.make(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2]);
 
@@ -114,7 +114,7 @@ test('chained migrations', async () => {
   const { db, graph } = await builder.createDatabase();
   graph.schemaRegistry.addSchema([ContactV1, ContactV2, ContactV3]);
 
-  db.add(live(ContactV1, { firstName: 'John', lastName: 'Doe' }));
+  db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
   await db.flush({ indexes: true });
   await db.runMigrations([migrationV2, migrationV3]);
 
@@ -132,7 +132,7 @@ test('chained migrations', async () => {
 //   graph.schemaRegistry.addSchema([ViewTypeV1, ViewTypeV2]);
 
 //   db.add(
-//     live(ViewTypeV1, {
+//     Obj.make(ViewTypeV1, {
 //       fields: [
 //         { id: '8cb60541', path: 'name' as JsonPath },
 //         { id: '902dd8b5', path: 'email' as JsonPath },

@@ -4,7 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { isLiveObject } from '@dxos/live-object';
 import { get } from '@dxos/util';

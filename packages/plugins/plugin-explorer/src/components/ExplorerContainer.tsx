@@ -11,15 +11,15 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 import { useGraphModel } from '../hooks';
-import { type ViewType } from '../types';
 
 import { D3ForceGraph } from './Graph';
 
 type ExplorerContainerProps = {
   role: string;
-  view: ViewType;
+  view: DataType.View;
 };
 
 const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {

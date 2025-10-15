@@ -31,7 +31,6 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/live-object": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

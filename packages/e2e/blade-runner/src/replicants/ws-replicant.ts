@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trigger, latch } from '@dxos/async';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import {
   EdgeClient,
   SwarmRequestSchema,

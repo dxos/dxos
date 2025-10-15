@@ -14,11 +14,12 @@ import {
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, live } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';

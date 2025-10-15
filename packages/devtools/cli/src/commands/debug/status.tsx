@@ -3,11 +3,9 @@
 //
 
 import { Flags } from '@oclif/core';
-import { render } from 'ink';
 import React from 'react';
 
 import { BaseCommand } from '../../base';
-import { App } from '../../components';
 
 // TODO(burdon): Experimental (make JIT to remove react dependency).
 //  https://oclif.io/docs/jit_plugins
@@ -23,8 +21,12 @@ export default class Status extends BaseCommand<typeof Status> {
   };
 
   async run(): Promise<any> {
+    // Avoid importing ink modules at top-level to prevent top level await issues during manifest generation.
+    const { render } = await import('ink');
+    const { App } = await import('../../components/App');
     return await this.execWithClient(async ({ client }) => {
-      const { waitUntilExit } = render(<App client={client} interval={this.flags.interval} />);
+      const element = React.createElement(App, { client, interval: this.flags.interval });
+      const { waitUntilExit } = render(element);
       await waitUntilExit();
     });
   }

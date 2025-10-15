@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
-import { type SelectOption } from '@dxos/echo-schema';
+import { type SelectOption } from '@dxos/echo/internal';
 import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';

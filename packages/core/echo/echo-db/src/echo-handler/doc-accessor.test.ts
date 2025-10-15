@@ -5,8 +5,8 @@
 import { next as A, type Doc } from '@automerge/automerge';
 import { describe, it } from 'vitest';
 
-import { Testing } from '@dxos/echo-schema/testing';
-import { live } from '@dxos/live-object';
+import { Obj } from '@dxos/echo';
+import { Testing } from '@dxos/echo/testing';
 
 import { DocAccessor } from '../core-db';
 import { EchoTestBuilder } from '../testing';
@@ -19,7 +19,7 @@ describe('diff', () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([Testing.Task]);
 
-    const obj = db.add(live(Testing.Task, { description: 'This is a document.' }));
+    const obj = db.add(Obj.make(Testing.Task, { description: 'This is a document.' }));
     const accessor = createDocAccessor(obj, ['description']);
     accessor.handle.change((doc: Doc<Testing.Task>) => {
       const idx = DocAccessor.getValue<string>(accessor).indexOf('a');
