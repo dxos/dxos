@@ -31,6 +31,7 @@ export const modules = [
   'experimental/*/src/**',
   'plugins/*/src/**',
   'sdk/*/src/**',
+  'stories/*/src/**',
   'ui/*/src/**',
   'ui/primitives/*/src/**',
 ];
