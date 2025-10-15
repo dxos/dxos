@@ -8,9 +8,6 @@ import { createNotebook } from '../testing';
 
 import { ComputeGraph } from './notebook';
 
-// TODO(burdon): Create test where one cell could be a AI prompt that references other cells.
-// TODO(burdon): UI cells: Value, Query, TS Expression, Prompt (show input and output).
-
 describe('notebook', () => {
   test('parse dependency graph', () => {
     const notebook = createNotebook();

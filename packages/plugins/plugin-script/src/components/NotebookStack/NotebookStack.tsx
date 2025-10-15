@@ -29,6 +29,8 @@ import { type Notebook } from '../../types';
 import { TypescriptEditor } from '../TypescriptEditor';
 import { type TypescriptEditorProps } from '../TypescriptEditor';
 
+import { NotebookMenu, type NotebookMenuProps } from './NotebookMenu';
+
 export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
   onRearrange?: StackProps['onRearrange'];
@@ -47,22 +49,18 @@ export const NotebookStack = ({ notebook, onRearrange, ...props }: NotebookStack
 };
 
 // TODO(burdon): Display errors.
-// TODO(burdon): Support calling named deployed functions (as with sheet).
 
 const editorStyles = 'p-2 pis-3';
 
 type NotebookSectionProps = {
-  cell: Notebook.Cell;
   space?: Space;
   graph?: ComputeGraph;
-  onCellInsert?: (type: Notebook.CellType, after: string | undefined) => void;
-  onCellDelete?: (id: string) => void;
+  cell: Notebook.Cell;
   onCellRun?: (id: string) => void;
-} & Pick<TypescriptEditorProps, 'env'>;
+} & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
 const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-
   const name = graph?.expressions.value[cell.id]?.name;
   const value = graph?.values.value[cell.id];
   const view = cell.view?.target;
@@ -75,30 +73,14 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
         </StackItem.DragHandle>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <IconButton variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook cell menu label')} />
+            <IconButton
+              variant='ghost'
+              icon='ph--dots-three--regular'
+              iconOnly
+              label={t('notebook cell insert label')}
+            />
           </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content>
-              <DropdownMenu.Viewport>
-                <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell.id)}>
-                  {t('notebook cell insert script label')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell.id)}>
-                  {t('notebook cell insert prompt label')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell.id)}>
-                  {t('notebook cell insert query label')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell.id)}>
-                  {t('notebook cell insert markdown label')}
-                </DropdownMenu.Item>
-                <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-                  {t('notebook cell delete label')}
-                </DropdownMenu.Item>
-              </DropdownMenu.Viewport>
-              <DropdownMenu.Arrow />
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
+          <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </DropdownMenu.Root>
       </StackItem.Heading>
 

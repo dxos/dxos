@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
@@ -16,8 +16,10 @@ import { meta } from '../meta';
 import { ComputeGraph } from '../notebook';
 import { type Notebook } from '../types';
 
-import { NotebookStack, type NotebookStackProps } from './NotebookStack';
+import { NotebookMenu, NotebookStack, type NotebookStackProps } from './NotebookStack';
 import { type TypescriptEditorProps } from './TypescriptEditor';
+
+// TODO(burdon): Support calling named deployed functions (as with sheet).
 
 export type NotebookContainerProps = {
   role?: string;
@@ -82,12 +84,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   return (
     <StackItem.Content classNames='container-max-width border-l border-r border-subduedSeparator' toolbar>
       <Toolbar.Root>
-        <Toolbar.IconButton
-          icon='ph--plus--regular'
-          iconOnly
-          label={t('add cell label')}
-          onClick={() => handleCellInsert('script', undefined)}
-        />
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
+          </DropdownMenu.Trigger>
+          <NotebookMenu onCellInsert={handleCellInsert} />
+        </DropdownMenu.Root>
         <Toolbar.IconButton
           icon='ph--play--fill'
           iconOnly
