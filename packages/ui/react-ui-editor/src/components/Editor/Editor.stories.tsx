@@ -61,7 +61,8 @@ export const Automerge: Story = {
       [],
     );
 
-    return <Editor classNames='p-2' {...props} extensions={extensions} />;
+    // TODO(burdon): Remove the need for initialValue.
+    return <Editor classNames='p-2' {...props} initialValue={value} extensions={extensions} />;
   },
   args: {
     moveToEnd: true,
