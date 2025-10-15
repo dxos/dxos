@@ -55,20 +55,6 @@ type NotebookSectionProps = {
 
 const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, onCellRun }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const extensions = useMemo(() => {
-    return cell.script.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
-          isNonNullable,
-        )
-      : [];
-  }, [cell.script.target]);
-
-  const handleQueryChange = useCallback(
-    (value: string) => {
-      cell.script.target!.content = value;
-    },
-    [cell],
-  );
 
   const name = graph?.expressions.value[cell.id]?.name;
   const value = graph?.values.value[cell.id];
@@ -107,55 +93,10 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
       </StackItem.Heading>
 
       <StackItem.Content classNames='overflow-visible'>
-        {cell.type === 'script' && (
-          <TypescriptEditor
-            id={cell.id}
-            role='section'
-            classNames={editorStyles}
-            initialValue={cell.script.target?.content}
-            extensions={extensions}
-            env={env}
-            options={{
-              placeholder: t('notebook cell placeholder'),
-              highlightActiveLine: false,
-              lineNumbers: false,
-            }}
-          />
-        )}
-
-        {cell.type === 'prompt' && (
-          <div role='none' className='flex'>
-            <PromptEditor
-              id={cell.id}
-              classNames={editorStyles}
-              initialValue={cell.script.target?.content}
-              extensions={extensions}
-            />
-            <div className='p-2'>
-              <IconButton
-                variant='ghost'
-                icon='ph--play--regular'
-                iconOnly
-                label={t('notebook cell prompt run label')}
-                onClick={() => onCellRun?.(cell.id)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* TODO(burdon): Initial value isn't set on load. */}
-        {cell.type === 'query' && (
-          <QueryEditor
-            id={cell.id}
-            classNames={editorStyles}
-            space={space}
-            value={cell.script.target?.content}
-            onChange={handleQueryChange}
-          />
-        )}
+        <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
 
         {value != null && (
-          <div className='flex p-2 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
+          <div className='flex p-2 pis-3 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
             {name && (
               <>
                 <span className='text-successText'>{name}</span>
@@ -168,6 +109,78 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
       </StackItem.Content>
     </StackItem.Root>
   );
+};
+
+const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => {
+  const { t } = useTranslation(meta.id);
+  const extensions = useMemo(() => {
+    return cell.script.target
+      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
+          isNonNullable,
+        )
+      : [];
+  }, [cell.script.target]);
+
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      cell.script.target!.content = value;
+    },
+    [cell],
+  );
+
+  switch (cell.type) {
+    case 'script':
+      return (
+        <TypescriptEditor
+          id={cell.id}
+          role='section'
+          classNames={editorStyles}
+          initialValue={cell.script.target?.content}
+          extensions={extensions}
+          env={env}
+          options={{
+            placeholder: t('notebook cell placeholder'),
+            highlightActiveLine: false,
+            lineNumbers: false,
+          }}
+        />
+      );
+
+    case 'query':
+      return (
+        <QueryEditor
+          id={cell.id}
+          classNames={editorStyles}
+          space={space}
+          value={cell.script.target?.content}
+          onChange={handleQueryChange}
+        />
+      );
+
+    case 'prompt':
+      return (
+        <div role='none' className='flex is-full'>
+          <PromptEditor
+            id={cell.id}
+            classNames={editorStyles}
+            initialValue={cell.script.target?.content}
+            extensions={extensions}
+          />
+          <div className='p-2'>
+            <IconButton
+              variant='ghost'
+              icon='ph--play--regular'
+              iconOnly
+              label={t('notebook cell prompt run label')}
+              onClick={() => onCellRun?.(cell.id)}
+            />
+          </div>
+        </div>
+      );
+
+    default:
+      return null;
+  }
 };
 
 const PromptEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
