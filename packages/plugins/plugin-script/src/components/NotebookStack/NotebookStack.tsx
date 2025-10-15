@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, Query, Ref } from '@dxos/echo';
+import { Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { type Space, createDocAccessor } from '@dxos/react-client/echo';
@@ -68,7 +68,6 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   const value = graph?.values.value[cell.id];
   const view = cell.view?.target;
 
-  // TODO(burdon): Dragging preview.
   return (
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full justify-between attention-surface'>
@@ -108,7 +107,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
         </DropdownMenu.Root>
       </StackItem.Heading>
 
-      {/* TODO(burdon): Fix preview. */}
+      {/* TODO(burdon): Fix drag preview. */}
       <StackItem.DragPreview>
         {({ item: cell }) => (
           <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
@@ -162,15 +161,17 @@ const NotebookCell = ({ space, cell, env, onCellRun }: NotebookSectionProps) => 
 
     if (cell.type === 'query') {
       const query = cell.script.target!.content;
-      const filter = builder.build(query) ?? Filter.nothing();
-      const ast = Query.select(filter).ast;
-      const view = cell.view?.target;
-      if (!view) {
-        const graph = Graph.make({ query: { ast } });
-        const { view } = await Graph.makeView({ space, presentation: graph });
-        cell.view = Ref.make(view);
-      } else {
-        view.query.ast = ast;
+      const filter = builder.build(query);
+      if (filter) {
+        const ast = Query.select(filter).ast;
+        const view = cell.view?.target;
+        if (!view) {
+          const graph = Graph.make({ query: { ast } });
+          const { view } = await Graph.makeView({ space, presentation: graph });
+          cell.view = Ref.make(view);
+        } else {
+          view.query.ast = ast;
+        }
       }
     }
   }, [space, builder, cell, cell.script.target?.content]);
