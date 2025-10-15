@@ -565,9 +565,6 @@
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
-      "path": "tools/log-hook/tsconfig.json"
-    },
-    {
       "path": "tools/protobuf-test/tsconfig.json"
     },
     {

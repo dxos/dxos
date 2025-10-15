@@ -965,11 +965,6 @@
         },
         {
           "type": "json",
-          "path": "tools/log-hook/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/protobuf-test/package.json",
           "jsonpath": "$.version"
         },
