@@ -12,7 +12,7 @@
     "@dxos/react-ui-theme": "latest",
     "@dxos/react-ui-types": "latest",
     "@dxos/react-client": "latest",
-    "@dxos/echo-schema": "latest",
+    "@dxos/echo": "latest",
     "react": "~19.2.0",
     "react-dom": "~19.2.0"
   },

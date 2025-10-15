@@ -8,8 +8,8 @@ import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
+import type { ObjectId } from '@dxos/echo/internal';
 import type { Queue } from '@dxos/echo-db';
-import type { ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 

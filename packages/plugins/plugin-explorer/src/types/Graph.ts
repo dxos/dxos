@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, QueryAST, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
 import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema';
 
 export const Graph = Schema.Struct({

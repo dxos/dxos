@@ -21,7 +21,7 @@
       "path": "../../common/storybook-utils"
     },
     {
-      "path": "../../core/echo/echo-schema"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../sdk/app-framework"

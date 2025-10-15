@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { ReactiveObjectSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';

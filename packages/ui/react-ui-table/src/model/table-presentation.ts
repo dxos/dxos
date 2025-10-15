@@ -6,7 +6,7 @@ import { signal } from '@preact/signals-core';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,

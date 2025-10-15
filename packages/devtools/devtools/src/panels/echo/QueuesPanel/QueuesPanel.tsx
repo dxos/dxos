@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

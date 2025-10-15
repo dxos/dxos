@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.
