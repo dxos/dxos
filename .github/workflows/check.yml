@@ -37,7 +37,47 @@ concurrency:
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
-  check:
+  build:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:20.19.5
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled && !inputs.e2e }}
+        with:
+          detached: true
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Check Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: moon run :build --affected --remote
+
+      - name: Check All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: moon run :build
+
+      - uses: 'moonrepo/run-report-action@v1'
+        if: (success() || failure()) && github.event_name == 'pull_request'
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+  lint:
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:20.19.5
@@ -70,11 +110,11 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected --remote
+        run: moon run :lint --affected --remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :lint :build
+        run: moon run :lint
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
