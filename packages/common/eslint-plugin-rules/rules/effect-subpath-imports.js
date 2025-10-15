@@ -64,7 +64,7 @@ export default {
     };
 
     const shouldSkipEffectPackage = (basePackage) => {
-      return EXCLUDED_EFFECT_PACKAGES.includes(source);
+      return EXCLUDED_EFFECT_PACKAGES.includes(basePackage);
     };
     
     /**
