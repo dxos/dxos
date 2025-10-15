@@ -190,6 +190,7 @@ export const translations = [
         'creating in collection label': 'In Collection',
         'clear input label': 'Clear',
         'expose object label': 'Expose in navtree',
+        'add tag label': 'Add tag',
         'advanced settings label': 'Advanced',
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',

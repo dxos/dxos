@@ -11,6 +11,8 @@ import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
+import { meta as pluginMeta } from '../../meta';
+
 const BaseSchema = Schema.Struct({
   label: Schema.String.pipe(Schema.optional),
   // TODO(wittjosiah): Support multiple tags.
@@ -74,7 +76,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         values={values}
         createSchema={TagSchema}
         createOptionIcon='ph--plus--regular'
-        createOptionLabel={['add tag label', { ns: 'plugin-space' }]}
+        createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
         createInitialValuePath='label'
         onCreate={handleCreateTag}
         onSave={handleSave}

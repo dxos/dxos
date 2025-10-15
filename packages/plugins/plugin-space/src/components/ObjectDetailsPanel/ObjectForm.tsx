@@ -11,6 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
+import { meta as pluginMeta } from '../../meta';
+
 const TagSchema = Tag.Tag.pipe(Schema.omit('id'));
 
 type ObjectFormProps = { object: Obj.Any; schema: Schema.Schema.AnyNoContext };
@@ -63,7 +65,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       values={values}
       createSchema={TagSchema}
       createOptionIcon='ph--plus--regular'
-      createOptionLabel={['add tag label', { ns: 'plugin-space' }]}
+      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
       onCreate={handleCreateTag}
       onSave={handleSave}
