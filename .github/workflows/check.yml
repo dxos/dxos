@@ -141,7 +141,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vitest-report
+          name: vitest-report-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
 
