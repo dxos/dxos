@@ -5,11 +5,10 @@
 import { effect } from '@preact/signals-core';
 import type * as Schema from 'effect/Schema';
 
-import { EchoSchema, StoredSchema, getSchemaTypename, toJsonSchema } from '@dxos/echo-schema';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';
 
-import { live } from '../object';
+import { EchoSchema, StoredSchema, getSchemaTypename, live, toJsonSchema } from '../internal';
 
 // NOTE: Registration is done here is this is the module that calls out to `effect`.
 registerSignalsRuntime();

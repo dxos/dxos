@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { type ObjectStructure, decodeReference } from '@dxos/echo-protocol';
-import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { DXN, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';

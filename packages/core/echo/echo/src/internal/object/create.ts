@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { defineHiddenProperty } from '@dxos/live-object';
 
 import { EntityKind, getSchemaDXN, getTypeAnnotation } from '../ast';
-import { defineHiddenProperty } from '../utils';
 
 import { getObjectDXN, setSchema } from './accessors';
 import { attachedTypedObjectInspector } from './inspect';

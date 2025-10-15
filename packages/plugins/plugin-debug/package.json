@@ -40,7 +40,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -8,8 +8,8 @@ import React, { useCallback, useState } from 'react';
 
 import { ContactType } from '@dxos/client/testing';
 import { type Type } from '@dxos/echo';
-import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
+import { type BaseObject, Expando, Format, Ref, type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { Tooltip } from '@dxos/react-ui';
 import { withSurfaceVariantsLayout, withTheme } from '@dxos/react-ui/testing';
 import { Testing } from '@dxos/schema/testing';

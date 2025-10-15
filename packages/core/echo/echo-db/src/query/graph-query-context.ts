@@ -7,9 +7,9 @@ import * as Predicate from 'effect/Predicate';
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
+import { type ObjectId } from '@dxos/echo/internal';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';

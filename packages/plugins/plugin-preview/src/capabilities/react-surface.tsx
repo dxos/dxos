@@ -16,7 +16,7 @@ import {
 } from '@dxos/app-framework';
 import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { AttentionAction } from '@dxos/plugin-attention/types';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useActiveSpace } from '@dxos/plugin-space';

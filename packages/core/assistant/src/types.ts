@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type ObjectId } from '@dxos/echo-schema';
+import { type ObjectId } from '@dxos/echo/internal';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
