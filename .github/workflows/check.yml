@@ -87,7 +87,7 @@ jobs:
         # TODO(wittjosiah): Test across all LTS versions of node.
         #  Currently fails on 22 and 24.
         # node-version: ['20.19.5', '22', '24']
-        node-version: ['20.19.5']
+        node-version: ['20.19.5', '24.4.1'] # TODO(dmaretskyi): Switch to 24.10.0
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
@@ -141,12 +141,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: vitest-report
+          name: vitest-report-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
 
       - uses: codecov/codecov-action@v5
-        if: ${{ matrix.node-version == '20.19.5' }}
+        if: ${{ matrix.node-version == '24.4.1' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false
@@ -165,7 +165,7 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:20.19.5
+      image: ghcr.io/dxos/gh-actions:24.4.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
