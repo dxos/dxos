@@ -1,5 +1,6 @@
 # https://moonrepo.dev/docs/config/toolchain#node
 node:
+  version: 20.19.5 # keep in-sync with .prototools
   dedupeOnLockfileChange: false
   packageManager: pnpm
 
