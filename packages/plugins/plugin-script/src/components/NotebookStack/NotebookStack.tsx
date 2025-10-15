@@ -110,9 +110,9 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellR
           <TypescriptEditor
             id={cell.id}
             role='section'
+            classNames={editorStyles}
             initialValue={cell.script.target?.content}
             extensions={extensions}
-            classNames={editorStyles}
             env={env}
             options={{
               placeholder: t('notebook cell placeholder'),
@@ -126,9 +126,9 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellR
           <div className='flex'>
             <PromptEditor
               id={cell.id}
+              classNames={editorStyles}
               initialValue={cell.script.target?.content}
               extensions={extensions}
-              classNames={editorStyles}
             />
             <div className='p-2'>
               <IconButton
@@ -143,14 +143,14 @@ const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete, onCellR
         )}
 
         {/* TODO(burdon): Pass in Space to query types. */}
-        {/* TODO(burdon): Initial value isn't set. */}
+        {/* TODO(burdon): Initial value isn't set on load. */}
         {/* TODO(burdon): Save. */}
         {cell.type === 'query' && (
           <QueryEditor
             id={cell.id}
+            classNames={editorStyles}
             value={cell.script.target?.content}
             onChange={handleQueryChange}
-            classNames={editorStyles}
           />
         )}
 
