@@ -60,7 +60,7 @@ export interface Query<T> {
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
    */
-  select(filter: Filter<T>): Query<T>;
+  select(filter: Filter<any>): Query<T>;
   select(props: Filter.Props<T>): Query<T>;
 
   /**
@@ -682,7 +682,7 @@ class QueryClass implements Query<any> {
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter<any> | Filter.Props<any>): Query<any> {
+  select(filter: Filter.Any | Filter.Props<any>): Query.Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -698,7 +698,7 @@ class QueryClass implements Query<any> {
     }
   }
 
-  reference(key: string): Query<any> {
+  reference(key: string): Query.Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -706,7 +706,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query<any> {
+  referencedBy(target: Schema.Schema.All | string, key: string): Query.Any {
     const dxn = getTypeDXNFromSpecifier(target);
     return new QueryClass({
       type: 'incoming-references',
@@ -716,7 +716,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -725,7 +725,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -734,7 +734,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  source(): Query<any> {
+  source(): Query.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -742,7 +742,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  target(): Query<any> {
+  target(): Query.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -750,7 +750,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  orderBy(...order: Order<any>[]): Query<any> {
+  orderBy(...order: Order<any>[]): Query.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -758,7 +758,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Query<any> {
+  options(options: QueryAST.QueryOptions): Query.Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,
