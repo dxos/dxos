@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema, SchemaAST, flow, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -30,7 +33,7 @@ export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
 export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
-  flow(
+  Function.flow(
     SchemaAST.getAnnotation<string>(TypeIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
@@ -77,7 +80,7 @@ export type TypeMeta = Pick<TypeAnnotation, 'typename' | 'version'>;
  */
 export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
   assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
-  return flow(
+  return Function.flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
   )(schema.ast);
@@ -125,7 +128,7 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
 };
 
 export const getPropertyMetaAnnotation = <T>(prop: SchemaAST.PropertySignature, name: string) =>
-  pipe(
+  Function.pipe(
     SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(prop.type),
     Option.map((meta) => meta[name] as T),
     Option.getOrElse(() => undefined),
@@ -139,7 +142,7 @@ export const ReferenceAnnotationId = Symbol.for('@dxos/schema/annotation/Referen
 export type ReferenceAnnotationValue = TypeAnnotation;
 
 export const getReferenceAnnotation = (schema: Schema.Schema.AnyNoContext) =>
-  pipe(
+  Function.pipe(
     SchemaAST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );

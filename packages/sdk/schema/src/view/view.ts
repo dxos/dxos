@@ -2,7 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -250,7 +254,7 @@ export const createViewWithReferences = async ({
     projection.showFieldProjection(property.name as JsonProp);
 
     await Effect.gen(function* () {
-      const referenceDxn = yield* pipe(
+      const referenceDxn = yield* Function.pipe(
         findAnnotation<ReferenceAnnotationValue>(property.ast, ReferenceAnnotationId),
         Option.fromNullable,
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
@@ -258,7 +262,7 @@ export const createViewWithReferences = async ({
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
 
-      const referencePath = yield* pipe(
+      const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),

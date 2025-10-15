@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, Match, Option, Schema } from 'effect';
+import * as Array from 'effect/Array';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';

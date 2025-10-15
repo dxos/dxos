@@ -3,7 +3,7 @@
 //
 
 import { computed } from '@preact/signals-core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';

@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Array, Config, Effect, Layer, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Config from 'effect/Config';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -49,9 +53,9 @@ describe.runIf(process.env.ACCESS_TOKEN)('Gmail API', { timeout: 30_000 }, () =>
       const { messages } = yield* listMessages(userId, 'maline', 50);
       invariant(messages);
 
-      const objects = yield* pipe(
+      const objects = yield* Function.pipe(
         messages.slice(1, 2),
-        Array.map((message) => pipe(getMessage(userId, message.id), Effect.flatMap(messageToObject()))),
+        Array.map((message) => Function.pipe(getMessage(userId, message.id), Effect.flatMap(messageToObject()))),
         Effect.all,
       );
 

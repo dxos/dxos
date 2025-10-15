@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
@@ -150,7 +151,7 @@ export class IndexGraph extends Resource implements Index {
         continue;
       }
       const escapedPath = EscapedPropPath.escape(path);
-      pipe(
+      Function.pipe(
         this._inboundReferences,
         (map) => defaultMap(map, targetObject, () => new Map()),
         (map) => defaultMap(map, escapedPath, () => new Set()),

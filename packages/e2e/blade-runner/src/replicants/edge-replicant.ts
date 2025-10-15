@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { useEffect, useMemo, useState } from 'react';
 
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';

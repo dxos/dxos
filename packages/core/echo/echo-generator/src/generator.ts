@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';

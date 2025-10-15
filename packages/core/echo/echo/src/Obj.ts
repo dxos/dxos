@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { dual } from 'effect/Function';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
@@ -75,12 +75,14 @@ export const make = <S extends Type.Obj.Any>(
   );
 
   if (props[EchoSchema.MetaId] != null) {
-    // Set default fields on meta on creation
+    // Set default fields on meta on creation.
     meta = { ...structuredClone(DEFAULT_META), ...props[EchoSchema.MetaId] };
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
+  const filteredProps = Object.fromEntries(Object.entries(props).filter(([_, v]) => v != null));
+
+  return live<Schema.Schema.Type<S>>(schema, filteredProps as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {
@@ -96,7 +98,7 @@ export const isObject = (obj: unknown): obj is Any => {
  * const johnIsPerson = Obj.instanceOf(Person)(john);
  *
  * const isPerson = Obj.instanceOf(Person);
- * if(isPerson(john)) {
+ * if (isPerson(john)) {
  *   // john is Person
  * }
  * ```
@@ -158,7 +160,7 @@ export const getMeta = (obj: Any | Relation.Any): EchoSchema.ObjectMeta => {
 export const getKeys: {
   (obj: Any | Relation.Any, source: string): EchoSchema.ForeignKey[];
   (source: string): (obj: Any | Relation.Any) => EchoSchema.ForeignKey[];
-} = dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
+} = Function.dual(2, (obj: Any | Relation.Any, source?: string): EchoSchema.ForeignKey[] => {
   const meta = EchoSchema.getMeta(obj);
   invariant(meta != null, 'Invalid object.');
   return meta.keys.filter((key) => key.source === source);

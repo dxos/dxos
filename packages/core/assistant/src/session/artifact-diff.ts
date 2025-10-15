@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from 'effect';
+import * as Context from 'effect/Context';
 
 import { type ObjectId } from '@dxos/echo/internal';
 import { type ObjectVersion } from '@dxos/echo-db';

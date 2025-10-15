@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HttpClient, HttpClientRequest } from '@effect/platform';
-import { Effect, Schedule, Schema } from 'effect';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';

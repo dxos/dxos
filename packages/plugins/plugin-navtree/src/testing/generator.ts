@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type NodeArg } from '@dxos/app-graph';
 import { type Live, Obj, Type } from '@dxos/echo';

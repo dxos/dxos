@@ -2,11 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
 import { DataType } from '@dxos/schema';
+
+// TODO(burdon): Create namespace and remove Type suffix.
 
 /**
  * Source script.
@@ -65,4 +67,5 @@ export const FunctionType = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
 );
+
 export interface FunctionType extends Schema.Schema.Type<typeof FunctionType> {}

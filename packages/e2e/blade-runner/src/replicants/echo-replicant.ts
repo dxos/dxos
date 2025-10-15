@@ -4,7 +4,7 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';

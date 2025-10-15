@@ -3,7 +3,7 @@
 //
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';

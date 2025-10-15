@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 // TODO(burdon): Move to jsonpath-plus.
 import jp from 'jsonpath';
 

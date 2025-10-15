@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
-import { Context, Effect, Layer, ManagedRuntime } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';

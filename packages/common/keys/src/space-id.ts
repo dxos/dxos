@@ -4,7 +4,7 @@
 
 import base32Decode from 'base32-decode';
 import base32Encode from 'base32-encode';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 

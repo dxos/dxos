@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { TypedObject } from '@dxos/echo/internal';

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import {
@@ -127,7 +128,7 @@ export default () =>
         const handleMessageClick = useCallback(
           (message: DataType.Message) => {
             void dispatch(
-              pipe(
+              Function.pipe(
                 createIntent(LayoutAction.UpdatePopover, {
                   part: 'popover',
                   options: {

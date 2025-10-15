@@ -3,7 +3,7 @@
 //
 
 import { computed, untracked } from '@preact/signals-core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import {
   FormatEnum,

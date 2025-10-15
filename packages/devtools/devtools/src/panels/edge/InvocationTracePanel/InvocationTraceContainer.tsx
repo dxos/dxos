@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Match, Option, Schema } from 'effect';
+import * as Array from 'effect/Array';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { Filter, type Obj } from '@dxos/echo';

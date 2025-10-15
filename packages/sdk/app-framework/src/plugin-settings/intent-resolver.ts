@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import { Capabilities, LayoutAction } from '../common';
 import { contributes } from '../core';
@@ -20,7 +20,7 @@ export default () =>
         return {
           intents: [
             plugin
-              ? pipe(
+              ? Function.pipe(
                   openSettings,
                   chain(LayoutAction.Open, {
                     part: 'main',

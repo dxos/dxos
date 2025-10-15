@@ -3,7 +3,7 @@
 //
 
 import { useFocusFinders } from '@fluentui/react-tabster';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import React, { type ReactElement, useCallback, useEffect, useRef } from 'react';
 
 import { type BaseObject, type PropertyKey } from '@dxos/echo/internal';

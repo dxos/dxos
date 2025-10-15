@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ManagedRuntime } from 'effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';

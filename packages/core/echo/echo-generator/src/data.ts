@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Space, createDocAccessor } from '@dxos/client/echo';
 import { EchoObject, Ref } from '@dxos/echo/internal';

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Option, type Schema } from 'effect';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
 

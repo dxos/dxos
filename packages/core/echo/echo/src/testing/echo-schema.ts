@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { assertArgument } from '@dxos/invariant';

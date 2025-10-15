@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LanguageModel } from '@effect/ai';
+import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import { type HttpClient } from '@effect/platform';
-import { Context, Effect, Layer, Option } from 'effect';
+import type * as HttpClient from '@effect/platform/HttpClient';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { AiService } from './AiService';
 import { AiModelNotAvailableError } from './errors';

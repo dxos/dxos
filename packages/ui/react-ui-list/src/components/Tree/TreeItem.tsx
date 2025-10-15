@@ -10,7 +10,7 @@ import {
   attachInstruction,
   extractInstruction,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { type FC, type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type HasId } from '@dxos/echo/internal';

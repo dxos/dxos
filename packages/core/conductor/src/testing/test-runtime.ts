@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
-import type { Scope } from 'effect/Scope';
+import * as Effect from 'effect/Effect';
+import type * as Scope from 'effect/Scope';
 
 import { raise } from '@dxos/debug';
 import type { ServiceContainer } from '@dxos/functions';
@@ -62,7 +62,7 @@ export class TestRuntime {
   runGraph<T extends ValueRecord = any>(
     graphDxn: string,
     input: ValueBag<any>,
-  ): Effect.Effect<ValueBag<T>, ConductorError, Scope> {
+  ): Effect.Effect<ValueBag<T>, ConductorError, Scope.Scope> {
     const serviceLayer = this._serviceContainer.createLayer();
     return Effect.gen(this, function* () {
       const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
@@ -76,7 +76,7 @@ export class TestRuntime {
     graphDxn: string,
     inputNodeId: string,
     input: ValueBag<any>,
-  ): Promise<Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope>>> {
+  ): Promise<Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope.Scope>>> {
     const serviceLayer = this._serviceContainer.createLayer();
 
     const workflow = await this._workflowLoader.load(DXN.parse(graphDxn));
@@ -89,7 +89,7 @@ export class TestRuntime {
 
     executor.setOutputs(inputNodeId, Effect.succeed(input));
     const dependantNodes = executor.getAllDependantNodes(inputNodeId);
-    const result: Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope>> = {};
+    const result: Record<string, Effect.Effect<ValueBag<any>, ConductorError, Scope.Scope>> = {};
     for (const nodeId of dependantNodes) {
       result[nodeId] = executor.computeInputs(nodeId).pipe(Effect.provide(serviceLayer));
     }

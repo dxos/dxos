@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useMemo } from 'react';
 
 import {
@@ -100,7 +101,7 @@ export const useSelectThreadOnCellFocus = () => {
 
       if (closestThread) {
         const primary = fullyQualifiedId(model.sheet);
-        const intent = pipe(
+        const intent = Function.pipe(
           createIntent(ThreadAction.Select, { current: fullyQualifiedId(closestThread) }),
           chain(DeckAction.ChangeCompanion, { primary, companion: `${primary}${ATTENDABLE_PATH_SEPARATOR}comments` }),
         );

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema, type SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo } from 'react';
 
 import {

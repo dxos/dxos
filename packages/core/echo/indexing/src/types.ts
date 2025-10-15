@@ -3,8 +3,7 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import { Schema } from 'effect';
-import type { SchemaClass } from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { type Event } from '@dxos/async';
 import type { ObjectId } from '@dxos/echo/internal';
@@ -117,7 +116,7 @@ export const staticImplements =
  * - '\' -> '\\'
  * - contact with .
  */
-export const EscapedPropPath: SchemaClass<string, string> & {
+export const EscapedPropPath: Schema.SchemaClass<string, string> & {
   escape: (path: ObjectPropPath) => EscapedPropPath;
   unescape: (path: EscapedPropPath) => ObjectPropPath;
 } = class extends Schema.String.annotations({ title: 'EscapedPropPath' }) {

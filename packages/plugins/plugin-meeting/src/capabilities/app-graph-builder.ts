@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
@@ -29,7 +30,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/share-call-link`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
@@ -69,7 +70,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/call-thread`,
       connector: (node) => {
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.map((node) => node.data),
             Option.filter(Obj.instanceOf(ChannelType)),
@@ -111,7 +112,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/call-companion`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
@@ -148,7 +149,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/call-transcript`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
@@ -167,7 +168,7 @@ export default (context: PluginContext) =>
                     if (!meeting) {
                       const space = getSpace(channel);
                       invariant(space);
-                      const intent = pipe(
+                      const intent = Function.pipe(
                         createIntent(MeetingAction.Create, { channel }),
                         chain(SpaceAction.AddObject, { target: space, hidden: true }),
                         chain(MeetingAction.SetActive),
@@ -209,7 +210,7 @@ export default (context: PluginContext) =>
         ),
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.flatMap((channel) => {
@@ -241,7 +242,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/meeting-transcript-companion`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(Meeting.Meeting, node.data) ? Option.some(node.data) : Option.none(),

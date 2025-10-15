@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Chunk, Effect, Exit, GlobalValue, Option } from 'effect';
-import type { AnySpan, Span } from 'effect/Tracer';
+import * as Cause from 'effect/Cause';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as GlobalValue from 'effect/GlobalValue';
+import * as Option from 'effect/Option';
+import type * as Tracer from 'effect/Tracer';
 
 const spanSymbol = Symbol.for('effect/SpanAnnotation');
 const originalSymbol = Symbol.for('effect/OriginalAnnotation');
@@ -48,7 +53,7 @@ const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
   }
 
   if (span) {
-    let current: Span | AnySpan | undefined = span;
+    let current: Tracer.Span | Tracer.AnySpan | undefined = span;
     let i = 0;
     while (current && current._tag === 'Span' && i < 10) {
       const stackFn = spanToTrace.get(current);

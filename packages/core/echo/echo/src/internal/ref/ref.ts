@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, ParseResult, Schema, SchemaAST } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import * as ParseResult from 'effect/ParseResult';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type EncodedReference, Reference } from '@dxos/echo-protocol';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
