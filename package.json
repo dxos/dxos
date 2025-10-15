@@ -65,7 +65,6 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@rushstack/eslint-patch": "^1.12.0",
-    "@swc-node/register": "1.11.1",
     "@swc/core": "1.13.5",
     "@swc/types": "^0.1.25",
     "@testing-library/dom": "^10.4.1",
