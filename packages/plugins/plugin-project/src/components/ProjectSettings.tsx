@@ -5,15 +5,18 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { useCapabilities } from '@dxos/app-framework';
+import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { cardChrome, cardText } from '@dxos/react-ui-stack';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel, createView } from '@dxos/schema';
+import { DataType, type ProjectionModel, createView, getTypenames } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
 import { resolveSchemaWithClientAndSpace } from '../helpers';
@@ -21,6 +24,8 @@ import { meta } from '../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
 const listItemGrid = 'grid grid-cols-subgrid col-span-5';
+
+const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 // TODO(burdon): Standardize Object/Plugin settings.
 export type ProjectObjectSettingsProps = ThemedClassName<{
@@ -39,6 +44,44 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
+  const tags = useQuery(space, Filter.type(Tag.Tag));
+
+  const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
+  const whitelistedTypenames = useMemo(
+    () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => Type.getTypename(type)))),
+    [schemaWhitelists],
+  );
+
+  const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
+  const objectFormTypenames = useMemo(
+    () =>
+      new Set(
+        objectForms
+          .map((form) => Type.getTypename(form.objectSchema))
+          // TODO(wittjosiah): Remove.
+          .filter((typename) => !OMIT.includes(typename) && !typename.endsWith('View')),
+      ),
+    [objectForms],
+  );
+
+  const typenames = getTypenames({
+    annotation: ['dynamic', 'limited-static'],
+    whitelistedTypenames,
+    objectFormTypenames,
+    space,
+    client,
+  });
+
+  const types = useMemo(
+    () =>
+      typenames
+        .map((typename) => ({
+          id: typename,
+          label: t('typename label', { ns: typename, defaultValue: typename }),
+        }))
+        .toSorted((a, b) => a.label.localeCompare(b.label)),
+    [t, typenames],
+  );
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {
@@ -154,6 +197,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}
+                        tags={tags}
+                        types={types}
                         onQueryChanged={handleQueryChanged}
                       />
                     </div>

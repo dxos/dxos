@@ -8,7 +8,7 @@ import React from 'react';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Ref } from '@dxos/client/echo';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query, Tag, Type } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -58,6 +58,7 @@ const meta = {
       plugins: [
         ClientPlugin({
           types: [
+            Tag.Tag,
             DataType.Project,
             DataType.View,
             DataType.Collection,
@@ -72,6 +73,9 @@ const meta = {
             const space = client.spaces.default;
             await space.waitUntilReady();
 
+            const tag = space.db.add(Tag.make({ label: 'important', hue: 'green' }));
+            const tagDxn = Obj.getDXN(tag).toString();
+
             // Create a project
             const project = DataType.makeProject({ collections: [] });
 
@@ -79,7 +83,6 @@ const meta = {
             const personView = createView({
               name: 'Contacts',
               query: Query.select(Filter.type(DataType.Person)),
-              queryRaw: 'Query.select(Filter.type(DataType.Person))',
               jsonSchema: Type.toJsonSchema(DataType.Person),
               presentation: project,
             });
@@ -87,8 +90,7 @@ const meta = {
             // Create a view for Organizations
             const organizationView = createView({
               name: 'Organizations',
-              query: Query.select(Filter.type(DataType.Organization)),
-              queryRaw: 'Query.select(Filter.type(DataType.Organization))',
+              query: Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(DataType.Organization),
               presentation: project,
             });
@@ -96,8 +98,7 @@ const meta = {
             // Create a view for Tasks
             const taskView = createView({
               name: 'Tasks',
-              query: Query.select(Filter.type(DataType.Task)),
-              queryRaw: 'Query.select(Filter.type(DataType.Task))',
+              query: Query.select(Filter.type(DataType.Task)).select(Filter.tag(tagDxn)),
               jsonSchema: Type.toJsonSchema(DataType.Task),
               presentation: project,
             });
@@ -106,7 +107,6 @@ const meta = {
             const projectView = createView({
               name: 'Projects (not the UI component)',
               query: Query.select(Filter.type(DataType.Project)),
-              queryRaw: 'Query.select(Filter.type(DataType.Project))',
               jsonSchema: Type.toJsonSchema(DataType.Project),
               presentation: project,
             });
@@ -116,7 +116,6 @@ const meta = {
             const messageView = createView({
               name: 'Messages',
               query: Query.select(Filter.type(DataType.Message)).options({ queues: [messageQueue.dxn.toString()] }),
-              queryRaw: 'Query.select(Filter.type(DataType.Message))',
               jsonSchema: Type.toJsonSchema(DataType.Message),
               presentation: project,
             });
@@ -138,22 +137,34 @@ const meta = {
 
             // Generate sample Organizations
             Array.from({ length: 5 }).forEach(() => {
-              const org = Obj.make(DataType.Organization, {
-                name: faker.company.name(),
-                website: faker.internet.url(),
-                description: faker.lorem.paragraph(),
-                image: faker.image.url(),
-              });
+              const org = Obj.make(
+                DataType.Organization,
+                {
+                  name: faker.company.name(),
+                  website: faker.internet.url(),
+                  description: faker.lorem.paragraph(),
+                  image: faker.image.url(),
+                },
+                {
+                  tags: faker.datatype.boolean() ? [Obj.getDXN(tag).toString()] : [],
+                },
+              );
               space.db.add(org);
             });
 
             // Generate sample Tasks
             Array.from({ length: 8 }).forEach(() => {
-              const task = Obj.make(DataType.Task, {
-                title: faker.lorem.sentence(),
-                status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
-                priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
-              });
+              const task = Obj.make(
+                DataType.Task,
+                {
+                  title: faker.lorem.sentence(),
+                  status: faker.helpers.arrayElement(['todo', 'in-progress', 'done']) as any,
+                  priority: faker.helpers.arrayElement(['low', 'medium', 'high']) as any,
+                },
+                {
+                  tags: faker.datatype.boolean() ? [Obj.getDXN(tag).toString()] : [],
+                },
+              );
               space.db.add(task);
             });
 

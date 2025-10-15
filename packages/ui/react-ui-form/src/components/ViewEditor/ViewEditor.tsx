@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
-import { QueryAST, Type } from '@dxos/echo';
+import { QueryAST } from '@dxos/echo';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { Filter, Query, type SchemaRegistry } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -192,8 +192,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
 
     const custom = useMemo(() => (mode === 'query' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
-
-    console.log('viewEditor', { viewSchema, json: Type.toJsonSchema(viewSchema) });
 
     return (
       <div role='none' className={mx(classNames)}>

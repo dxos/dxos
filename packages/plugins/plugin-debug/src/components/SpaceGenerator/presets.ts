@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RESEARCH_BLUEPRINT, ResearchOn, agent, entityExtraction } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-testing';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { sync } from '@dxos/plugin-inbox';
@@ -63,6 +63,9 @@ export const generator = () => ({
       PresetName.DXOS_TEAM,
       async (space, n, cb) => {
         const objects = range(n, () => {
+          const tag = space.db.add(Tag.make({ label: 'Investor' }));
+          const tagDxn = Obj.getDXN(tag).toString();
+
           const org = space.db.add(Obj.make(DataType.Organization, { name: 'DXOS', website: 'https://dxos.org' }));
 
           const doc = space.db.add(
@@ -71,16 +74,17 @@ export const generator = () => ({
               content: 'DXOS builds Composer, an open-source AI-powered malleable application.',
             }),
           );
-          space.db.add(
-            Relation.make(ResearchOn, {
-              [Relation.Source]: doc,
-              [Relation.Target]: org,
-              completedAt: new Date().toISOString(),
-            }),
-          );
+          Obj.getMeta(doc).tags = [tagDxn];
+          // space.db.add(
+          //   Relation.make(ResearchOn, {
+          //     [Relation.Source]: doc,
+          //     [Relation.Target]: org,
+          //     completedAt: new Date().toISOString(),
+          //   }),
+          // );
 
           space.db.add(
-            Obj.make(DataType.Person, { fullName: 'Rich', jobTitle: 'investor', organization: Ref.make(org) }),
+            Obj.make(DataType.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }),
           );
           space.db.add(Obj.make(DataType.Person, { fullName: 'Josiah', organization: Ref.make(org) }));
           space.db.add(Obj.make(DataType.Person, { fullName: 'Dima', organization: Ref.make(org) }));
@@ -97,16 +101,13 @@ export const generator = () => ({
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
         const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+        const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
+        const tagDxn = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          // TODO(wittjosiah): Move filter to a tag.
-          const contactsQuery = Query.select(Filter.type(DataType.Person, { jobTitle: 'investor' }));
-          const organizationsQuery = contactsQuery.reference('organization');
-          const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
-
-          const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { jobTitle: "investor" }))';
-          const organizationsQueryString = `${contactsQueryString}.reference("organization")`;
-          const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+          const contactsQuery = Query.select(Filter.type(DataType.Person)).select(Filter.tag(tagDxn));
+          const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
           const emailSyncTrigger = Obj.make(FunctionTrigger, {
             enabled: true,
@@ -157,7 +158,6 @@ export const generator = () => ({
             spec: {
               kind: 'subscription',
               query: {
-                raw: organizationsQueryString,
                 ast: organizationsQuery.ast,
               },
             },
@@ -176,29 +176,24 @@ export const generator = () => ({
             ).options({
               queues: [mailbox.queue.dxn.toString()],
             }),
-            queryRaw:
-              'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("investor") } }))',
             jsonSchema: Type.toJsonSchema(DataType.Message),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const contactsView = createView({
             name: 'Contacts',
             query: contactsQuery,
-            queryRaw: contactsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Person),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const organizationsView = createView({
             name: 'Organizations',
             query: organizationsQuery,
-            queryRaw: organizationsQueryString,
             jsonSchema: Type.toJsonSchema(DataType.Organization),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
           const notesView = createView({
             name: 'Notes',
             query: notesQuery,
-            queryRaw: notesQueryString,
             jsonSchema: Type.toJsonSchema(Markdown.Document),
             presentation: Obj.make(DataType.Collection, { objects: [] }),
           });
