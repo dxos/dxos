@@ -27,3 +27,4 @@ fileGroups:
 
 implicitInputs:
   - package.json
+  - pnpm-lock.yaml
