@@ -25,17 +25,14 @@ function notifyStart() {
 notifyStart;
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
 
-
-readonly PUBLISH_FILTERS=( --filter-prod="./packages/**" --filter-prod="./vendor/**" --filter-prod="./tools/eslint-plugin-rules/**" )
-
 if [ "$DX_ENVIRONMENT" = "production" ]; then
-  pnpm "${PUBLISH_FILTERS[@]}" publish --no-git-checks --tag=latest
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=latest
 elif [ "$DX_ENVIRONMENT" = "staging" ]; then
-  pnpm "${PUBLISH_FILTERS[@]}" publish --no-git-checks --tag=next
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=next
 elif [ "$DX_ENVIRONMENT" = "main" ]; then
-  pnpm "${PUBLISH_FILTERS[@]}" publish --no-git-checks --tag=main
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=main
 elif [ "$DX_ENVIRONMENT" = "labs" ]; then
-  pnpm "${PUBLISH_FILTERS[@]}" publish --no-git-checks --tag=labs
+  pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --tag=labs
 fi
 
 if [[ $? -eq 0 ]]; then
