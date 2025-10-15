@@ -94,7 +94,10 @@ export const translations = [
 
         'notebook cell placeholder': 'Enter script',
         'notebook cell delete label': 'Delete cell',
-        'notebook cell insert label': 'Insert cell',
+        'notebook cell insert script label': 'Insert script',
+        'notebook cell insert prompt label': 'Insert prompt',
+        'notebook cell insert query label': 'Insert query',
+        'notebook prompt placeholder': 'Enter prompt',
       },
     },
   },

@@ -23,9 +23,10 @@ import { type QueryOptions, query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
+    value?: string;
     readonly?: boolean;
   } & QueryOptions &
-    EditorProps
+    Omit<EditorProps, 'initialValue'>
 >;
 
 /**
@@ -55,6 +56,6 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       [space, readonly],
     );
 
-    return <Editor {...props} moveToEnd value={value} extensions={extensions} ref={forwardedRef} />;
+    return <Editor {...props} moveToEnd initialValue={value} extensions={extensions} ref={forwardedRef} />;
   },
 );

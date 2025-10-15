@@ -343,7 +343,11 @@ const customFields: Record<string, InputComponent> = {
     const handleChange = useCallback((text: string) => onValueChange.current('string', text), []);
 
     const extensions = useMemo(
-      () => [createBasicExtensions({ placeholder: t('query placeholder') }), createThemeExtensions({ themeMode })],
+      () => [
+        //
+        createBasicExtensions({ placeholder: t('query placeholder') }),
+        createThemeExtensions({ themeMode }),
+      ],
       [],
     );
 

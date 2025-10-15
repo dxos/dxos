@@ -31,11 +31,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   }, [graph]);
 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
-    (after) => {
+    (type, after) => {
       const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook!.cells.length;
       notebook?.cells.splice(idx, 0, {
         id: crypto.randomUUID(),
-        script: Ref.make(DataType.makeText('\n\n\n')),
+        type,
+        script: Ref.make(DataType.makeText(type === 'script' ? '\n\n\n' : '')),
       });
     },
     [notebook],
@@ -58,7 +59,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           icon='ph--plus--regular'
           iconOnly
           label={t('add cell label')}
-          onClick={() => handleCellInsert('')}
+          onClick={() => handleCellInsert('script', undefined)}
         />
         <Toolbar.IconButton
           icon='ph--play--fill'

@@ -17,10 +17,10 @@ export type EditorController = {
 
 export type EditorProps = ThemedClassName<
   {
-    value?: string;
     moveToEnd?: boolean;
+    value?: string;
     onChange?: (value: string) => void;
-  } & Omit<UseTextEditorProps, 'initialValue'>
+  } & UseTextEditorProps
 >;
 
 /**
@@ -28,7 +28,7 @@ export type EditorProps = ThemedClassName<
  * NOTE: This shouold not be used with the automerge extension.
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
-  ({ classNames, id, extensions = [], value, moveToEnd, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions = [], moveToEnd, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -57,17 +57,14 @@ export const Editor = forwardRef<EditorController, EditorProps>(
       [view],
     );
 
-    // Update content.
+    // TODO(burdon): Create extension for this.
     useEffect(() => {
-      if (value !== view?.state.doc.toString()) {
-        requestAnimationFrame(() => {
-          view?.dispatch({
-            changes: { from: 0, to: view.state.doc.length, insert: value },
-            selection: moveToEnd ? { anchor: value?.length ?? 0 } : undefined,
-          });
+      requestAnimationFrame(() => {
+        view?.dispatch({
+          selection: moveToEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
-      }
-    }, [view, value, moveToEnd]);
+      });
+    }, [value, moveToEnd]);
 
     return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;
   },

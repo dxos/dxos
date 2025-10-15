@@ -13,7 +13,6 @@ import {
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
-  createThemeExtensions,
   outliner,
 } from '@dxos/react-ui-editor';
 
@@ -38,7 +37,6 @@ export const TasksContainer = ({ space }: ComponentProps) => {
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode }),
           outliner(),
         ]}
       />
