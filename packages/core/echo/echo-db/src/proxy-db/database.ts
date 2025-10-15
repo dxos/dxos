@@ -60,6 +60,7 @@ export type AddOptions = {
 /**
  * Database API.
  */
+// TODO(burdon): Rename (no product name in types).
 export interface EchoDatabase {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;

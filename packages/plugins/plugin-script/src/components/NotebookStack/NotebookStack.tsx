@@ -186,7 +186,7 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
           <QueryEditor
             id={cell.id}
             classNames={editorStyles}
-            space={space}
+            db={space?.db}
             value={cell.script.target?.content}
             onChange={handleQueryChange}
           />

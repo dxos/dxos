@@ -40,7 +40,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
   return (
     <StackItem.Content toolbar size={role === 'section' ? 'square' : 'intrinsic'}>
       <Toolbar.Root>
-        <QueryEditor space={space} onChange={handleChange} />
+        <QueryEditor db={space.db} onChange={handleChange} />
       </Toolbar.Root>
       <D3ForceGraph model={model} match={match} />
     </StackItem.Content>

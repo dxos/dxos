@@ -43,7 +43,7 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
   return (
     <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
-        <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' space={space} onChange={setQuery} />
+        <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' db={space.db} onChange={setQuery} />
         <div className='bs-full overflow-y-auto'>
           {objects.map((object) => (
             <div
