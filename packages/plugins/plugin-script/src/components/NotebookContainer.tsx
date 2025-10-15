@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
@@ -34,10 +35,26 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     graph?.evaluate();
   }, [graph]);
 
+  const handleRearrange = useCallback<NonNullable<NotebookStackProps['onRearrange']>>(
+    (source, target) => {
+      invariant(notebook);
+      const from = notebook.cells.findIndex((cell) => cell.id === source.id);
+      const to = notebook.cells.findIndex((cell) => cell.id === target.id);
+      if (from != null && to != null) {
+        const cell = notebook.cells.splice(from, 1)[0];
+        if (cell) {
+          notebook.cells.splice(to, 0, cell);
+        }
+      }
+    },
+    [notebook],
+  );
+
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
     (type, after) => {
-      const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook!.cells.length;
-      notebook?.cells.splice(idx, 0, {
+      invariant(notebook);
+      const idx = after ? notebook!.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
+      notebook.cells.splice(idx, 0, {
         id: crypto.randomUUID(),
         type,
         script: Ref.make(DataType.makeText()),
@@ -48,9 +65,10 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   const handleCellDelete = useCallback<NonNullable<NotebookStackProps['onCellDelete']>>(
     (id) => {
-      const idx = notebook!.cells.findIndex((cell) => cell.id === id);
+      invariant(notebook);
+      const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        notebook!.cells.splice(idx, 1);
+        notebook.cells.splice(idx, 1);
       }
     },
     [notebook],
@@ -83,6 +101,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         notebook={notebook}
         graph={graph}
         env={env}
+        onRearrange={handleRearrange}
         onCellInsert={handleCellInsert}
         onCellDelete={handleCellDelete}
         onCellRun={handleCellRun}

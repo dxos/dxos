@@ -15,7 +15,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
 } from '@dxos/react-ui-editor';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -26,13 +26,14 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 
 export type NotebookStackProps = {
   notebook?: Notebook.Notebook;
+  onRearrange?: StackProps['onRearrange'];
 } & Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete' | 'onCellRun'> &
   Pick<TypescriptEditorProps, 'env'>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
+export const NotebookStack = ({ notebook, onRearrange, ...props }: NotebookStackProps) => {
   return (
-    <Stack orientation='vertical' size='contain' rail>
+    <Stack orientation='vertical' size='contain' rail onRearrange={onRearrange}>
       {notebook?.cells.map((cell, i) => (
         <NotebookSection key={i} cell={cell} {...props} />
       ))}
@@ -61,7 +62,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
   const value = graph?.values.value[cell.id];
 
   return (
-    <StackItem.Root role='section' item={cell}>
+    <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='attention-surface'>
         <StackItem.HeadingStickyContent>
           <DropdownMenu.Root>
