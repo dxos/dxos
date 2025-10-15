@@ -4,8 +4,12 @@
 
 import { createRequire } from 'node:module';
 
+
+const EXCLUDED_EFFECT_PACKAGES = ['@effect/vitest'];
+
 /**
- * ESLint rule to transform combined imports from 'effect' into subpath imports.
+ * ESLint rule to transform combined imports from 'effect' and '@effect/*'
+ * into subpath imports except for the EXCLUDED_EFFECT_PACKAGES.
  * @example
  * // before
  * import { type Schema, SchemaAST } from 'effect';
@@ -59,8 +63,8 @@ export default {
       return source === 'effect' || source.startsWith('effect/') || source.startsWith('@effect/');
     };
 
-    const shouldSkipPackage = (source) => {
-      return source === '@effect/vitest';
+    const shouldSkipEffectPackage = (basePackage) => {
+      return EXCLUDED_EFFECT_PACKAGES.includes(basePackage);
     };
     
     /**
@@ -85,7 +89,7 @@ export default {
         const source = String(node.source.value);
         if (!isEffectPackage(source)) return;
         const basePackage = getBasePackage(source);
-        if (shouldSkipPackage(basePackage)) return;
+        if (shouldSkipEffectPackage(basePackage)) return;
 
         // If it's a subpath import (e.g., 'effect/Schema'), enforce namespace import only.
         if (source.startsWith(basePackage + '/')) {
