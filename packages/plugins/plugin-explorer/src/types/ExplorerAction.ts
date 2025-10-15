@@ -11,7 +11,7 @@ import { meta } from '../meta';
 
 const EXPLORER_ACTION = `${meta.id}/action`;
 
-export const CreateGraph = Schema.Struct({
+export const GraphProps = Schema.Struct({
   name: Schema.optional(Schema.String),
   typename: Schema.String.annotations({
     [TypenameAnnotationId]: ['used-static', 'dynamic'],
@@ -19,10 +19,10 @@ export const CreateGraph = Schema.Struct({
   }),
 });
 
-export class Create extends Schema.TaggedClass<Create>()(`${EXPLORER_ACTION}/create`, {
+export class CreateGraph extends Schema.TaggedClass<CreateGraph>()(`${EXPLORER_ACTION}/create-graph`, {
   input: Schema.Struct({
     space: SpaceSchema,
-  }).pipe(Schema.extend(CreateGraph)),
+  }).pipe(Schema.extend(GraphProps)),
   output: Schema.Struct({
     object: DataType.View,
   }),

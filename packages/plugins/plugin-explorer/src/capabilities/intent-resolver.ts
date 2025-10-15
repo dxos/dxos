@@ -11,7 +11,7 @@ export default (context: PluginContext) =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: ExplorerAction.Create,
+      intent: ExplorerAction.CreateGraph,
       resolve: async ({ space, name, typename }) => {
         const client = context.getCapability(ClientCapabilities.Client);
         const { view } = await Graph.makeView({ client, space, name, typename });
