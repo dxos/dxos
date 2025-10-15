@@ -62,12 +62,11 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
   const view = cell.view?.target;
   const builder = useMemo(() => new QueryBuilder(), []);
   useAsyncEffect(async () => {
-    if (!space) {
+    if (!space || !cell.script?.target) {
       return;
     }
 
     if (cell.type === 'query') {
-      invariant(cell.script?.target);
       const query = cell.script.target.content;
       const filter = builder.build(query);
       if (filter) {
@@ -97,9 +96,6 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
   // TODO(burdon): Requires services.
   //
   const processor = useChatProcessor({ chat: cell.chat?.target });
-  if (cell.chat?.target) {
-    console.log('processor', cell.chat.target, processor);
-  }
 
   const handleCellRun = useCallback(() => {
     invariant(processor);
@@ -110,7 +106,10 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
 
   switch (cell.type) {
     case 'markdown':
-      invariant(cell.script?.target);
+      if (!cell.script?.target) {
+        return null;
+      }
+
       return (
         <MarkdownEditor
           id={cell.id}
@@ -121,7 +120,10 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
       );
 
     case 'script':
-      invariant(cell.script?.target);
+      if (!cell.script?.target) {
+        return null;
+      }
+
       return (
         <>
           <TypescriptEditor
@@ -142,7 +144,10 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
       );
 
     case 'query':
-      invariant(cell.script?.target);
+      if (!cell.script?.target) {
+        return null;
+      }
+
       return (
         <>
           <QueryEditor
