@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+# Script to create a new branch from main, set up a worktree, and open it in Windsurf
+# Usage: ./create-worktree-branch.sh <branch-name>
+
+set -e
+
+# Check if branch name is provided
+if [ $# -eq 0 ]; then
+    echo "Error: Please provide a branch name"
+    echo "Usage: $0 <branch-name>"
+    exit 1
+fi
+
+BRANCH_NAME="$1"
+
+# Ensure we're in a git repository
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "Error: Not in a git repository"
+    exit 1
+fi
+
+# Get the git directory
+GIT_DIR=$(git rev-parse --git-dir)
+echo "Git directory: $GIT_DIR"
+
+# Find the .git directory in the path
+# If we're in a worktree, the path will contain .git/worktrees/
+if [[ "$GIT_DIR" == *"/.git/worktrees/"* ]]; then
+    # Extract the base repository path (everything before .git)
+    REPO_BASE=$(echo "$GIT_DIR" | sed 's/\.git\/worktrees\/.*//')
+    # Go up one level and append .worktrees
+    PARENT_DIR=$(dirname "$REPO_BASE")
+    WORKTREES_BASE="$PARENT_DIR/$(basename "$REPO_BASE").worktrees"
+else
+    # We're in the main repository, use the standard pattern
+    REPO_BASE=$(dirname "$GIT_DIR")
+    PARENT_DIR=$(dirname "$REPO_BASE")
+    WORKTREES_BASE="$PARENT_DIR/$(basename "$REPO_BASE").worktrees"
+fi
+
+# Define the new worktree location
+NEW_WORKTREE="$WORKTREES_BASE/$BRANCH_NAME"
+
+echo "Worktree base directory: $WORKTREES_BASE"
+echo "New worktree will be created at: $NEW_WORKTREE"
+echo ""
+echo "Creating branch '$BRANCH_NAME' from main..."
+
+# Fetch latest from origin
+echo "Fetching latest from origin..."
+git fetch origin
+
+# Check if branch already exists
+if git show-ref --verify --quiet refs/heads/"$BRANCH_NAME"; then
+    echo "Error: Branch '$BRANCH_NAME' already exists"
+    exit 1
+fi
+
+# Create new branch from origin/main without setting upstream
+git branch --no-track "$BRANCH_NAME" origin/main
+
+echo "Creating worktree at $NEW_WORKTREE..."
+
+# Check if worktree already exists
+if [ -d "$NEW_WORKTREE" ]; then
+    echo "Error: Worktree directory '$NEW_WORKTREE' already exists"
+    exit 1
+fi
+
+# Create the worktree
+git worktree add "$NEW_WORKTREE" "$BRANCH_NAME"
+
+echo "Opening worktree in Windsurf..."
+
+# Open the worktree in Windsurf using the surf CLI command
+surf "$NEW_WORKTREE"
+
+echo "✅ Successfully created branch '$BRANCH_NAME' with worktree and opened in Windsurf"
+echo "Worktree location: $NEW_WORKTREE"
