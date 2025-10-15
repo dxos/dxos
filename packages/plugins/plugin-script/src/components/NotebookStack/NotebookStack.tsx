@@ -180,15 +180,19 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
         />
       );
 
+    // TODO(burdon): Add view surfaces (Map/Graph/Table).
+    // TODO(burdon): Resize sections.
     case 'query':
       return (
-        <QueryEditor
-          id={cell.id}
-          classNames={editorStyles}
-          space={space}
-          value={cell.script.target?.content}
-          onChange={handleQueryChange}
-        />
+        <div role='none' className='flex flex-col is-full'>
+          <QueryEditor
+            id={cell.id}
+            classNames={editorStyles}
+            space={space}
+            value={cell.script.target?.content}
+            onChange={handleQueryChange}
+          />
+        </div>
       );
 
     case 'prompt':
