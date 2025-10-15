@@ -10,7 +10,7 @@ import { EditorInputMode } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 export namespace Notebook {
-  export type CellType = 'markdown' | 'script' | 'query' | 'prompt';
+  export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
   export const Cell = Schema.Struct({
     id: Schema.String,

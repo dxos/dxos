@@ -180,8 +180,6 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
         />
       );
 
-    // TODO(burdon): Add view surfaces (Map/Graph/Table).
-    // TODO(burdon): Resize sections.
     case 'query':
       return (
         <div role='none' className='flex flex-col is-full'>
@@ -215,6 +213,11 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
           </div>
         </div>
       );
+
+    // TODO(burdon): Add view surfaces (Map/Graph/Table).
+    // TODO(burdon): Resize sections.
+    case 'view':
+      return null;
 
     default:
       return null;
