@@ -5359,9 +5359,6 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
-      '@dxos/plugin-explorer':
-        specifier: workspace:*
-        version: link:../plugin-explorer
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
@@ -5480,51 +5477,15 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@19.2.0)
     devDependencies:
-      '@dxos/plugin-board':
-        specifier: workspace:*
-        version: link:../plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
-      '@dxos/plugin-inbox':
-        specifier: workspace:*
-        version: link:../plugin-inbox
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
-      '@dxos/plugin-project':
-        specifier: workspace:*
-        version: link:../plugin-project
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@dxos/plugin-sketch':
-        specifier: workspace:*
-        version: link:../plugin-sketch
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/plugin-thread':
-        specifier: workspace:*
-        version: link:../plugin-thread
-      '@dxos/plugin-token-manager':
-        specifier: workspace:*
-        version: link:../plugin-token-manager
-      '@dxos/plugin-wnfs':
-        specifier: workspace:*
-        version: link:../plugin-wnfs
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
