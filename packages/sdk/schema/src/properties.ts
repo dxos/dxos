@@ -17,7 +17,7 @@ import {
   type PropertyKey,
   getFormatAnnotation,
   getSchemaReference,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import {
   type SimpleType,
   findAnnotation,

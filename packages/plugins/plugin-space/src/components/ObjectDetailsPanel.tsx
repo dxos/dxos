@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { Filter, getSpace, useQuery, useSchema } from '@dxos/react-client/echo';

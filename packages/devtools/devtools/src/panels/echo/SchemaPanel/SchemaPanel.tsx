@@ -14,7 +14,7 @@ import {
   getSchemaTypename,
   getSchemaVersion,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

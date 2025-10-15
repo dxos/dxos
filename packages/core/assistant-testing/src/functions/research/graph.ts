@@ -13,8 +13,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, type Relation } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
-import { type EchoDatabase, type Queue } from '@dxos/echo-db';
-import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   EntityKind,
   ObjectId,
@@ -29,7 +27,9 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { type EchoDatabase, type Queue } from '@dxos/echo-db';
+import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService, DatabaseService } from '@dxos/functions';
 import { DXN } from '@dxos/keys';

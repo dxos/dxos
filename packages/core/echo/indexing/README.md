@@ -1,11 +1,11 @@
-# @dxos/echo-schema
+# @dxos/indexing
 
 ECHO database.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/echo-schema
+pnpm i @dxos/indexing
 ```
 
 ## DXOS Resources

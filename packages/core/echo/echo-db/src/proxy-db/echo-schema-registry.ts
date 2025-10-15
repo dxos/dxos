@@ -17,7 +17,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -63,7 +63,6 @@
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

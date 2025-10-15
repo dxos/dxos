@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
-import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo-schema';
+import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
 import { FunctionType, ScriptType } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';

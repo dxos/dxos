@@ -3,9 +3,10 @@
 //
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { AbstractGraphBuilder, AbstractGraphModel, Graph } from '@dxos/graph';
-import { isLiveObject, live } from '@dxos/live-object';
+import { isLiveObject } from '@dxos/live-object';
 import { type MakeOptional } from '@dxos/util';
 
 import { type Connection, type Shape } from './schema';

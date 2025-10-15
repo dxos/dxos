@@ -6,8 +6,8 @@ import { type Heads } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Event } from '@dxos/async';
+import type { ObjectId } from '@dxos/echo/internal';
 import { type ObjectPropPath, type ObjectStructure } from '@dxos/echo-protocol';
-import type { ObjectId } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';

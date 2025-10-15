@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type ForeignKey } from '@dxos/echo-schema';
+import { type ForeignKey } from '@dxos/echo/internal';
 import { IconButton, List, ListItem, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
