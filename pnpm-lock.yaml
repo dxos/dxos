@@ -66,7 +66,7 @@ importers:
         version: link:packages/common/esbuild-plugins
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:tools/eslint-plugin-rules
+        version: link:packages/common/eslint-plugin-rules
       '@dxos/keys':
         specifier: workspace:*
         version: link:packages/common/keys
@@ -1356,6 +1356,8 @@ importers:
       tty-browserify:
         specifier: ~0.0.1
         version: 0.0.1
+
+  packages/common/eslint-plugin-rules: {}
 
   packages/common/feed-store:
     dependencies:
@@ -15071,8 +15073,6 @@ importers:
         version: 16.0.4
 
   tools/dx-tools: {}
-
-  tools/eslint-plugin-rules: {}
 
   tools/lit-storybook:
     devDependencies:
