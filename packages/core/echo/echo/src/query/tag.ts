@@ -4,32 +4,34 @@
 
 import * as Schema from 'effect/Schema';
 
-export const TagInfo = Schema.Struct({
+import { LabelAnnotation } from '../internal';
+import * as Obj from '../Obj';
+import * as Type from '../Type';
+
+export const Tag = Schema.Struct({
   label: Schema.String,
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
-});
-
-export type TagInfo = Schema.Schema.Type<typeof TagInfo>;
-
-export const Tag = Schema.extend(
-  TagInfo,
-  Schema.Struct({
-    id: Schema.String,
+}).pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Tag',
+    version: '0.1.0',
   }),
+  LabelAnnotation.set(['label']),
 );
-
 export type Tag = Schema.Schema.Type<typeof Tag>;
 
-export type TagMap = Record<string, TagInfo>;
+export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
-export const sortTags = ({ label: a }: TagInfo, { label: b }: TagInfo) => a.localeCompare(b);
+export type TagMap = Record<string, Tag>;
+
+export const sortTags = ({ label: a }: Tag, { label: b }: Tag) => a.localeCompare(b);
 
 export const createTagList = (tags: TagMap): Tag[] =>
   Object.entries(tags)
     .map(([id, tag]) => ({ ...tag, id }))
     .sort(sortTags);
 
-export const findTagByLabel = (tags: Record<string, TagInfo> | undefined, name: string): Tag | undefined => {
+export const findTagByLabel = (tags: TagMap | undefined, name: string): Tag | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;
 };
