@@ -8,12 +8,12 @@ import { Surface } from '@dxos/app-framework';
 import { Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { useChatProcessor } from '@dxos/plugin-assistant';
+import { useChatProcessor, useChatServices } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { IconButton, useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   Editor,
@@ -93,16 +93,9 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
 
   //
   // Prompt.
-  // TODO(burdon): Requires services.
   //
-  const processor = useChatProcessor({ chat: cell.chat?.target });
-
-  const handleCellRun = useCallback(() => {
-    invariant(processor);
-    void processor.request({
-      message: 'Hello',
-    });
-  }, [cell, processor]);
+  const services = useChatServices({ space, chat: cell.chat?.target });
+  const processor = useChatProcessor({ chat: cell.chat?.target, services });
 
   switch (cell.type) {
     case 'markdown':
@@ -171,20 +164,10 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
       }
 
       return (
-        <div role='none' className='flex is-full'>
-          <Chat.Root chat={cell.chat.target} processor={processor}>
-            <Chat.Prompt />
-          </Chat.Root>
-          <div className='p-2'>
-            <IconButton
-              variant='ghost'
-              icon='ph--play--regular'
-              iconOnly
-              label={t('notebook cell prompt run label')}
-              onClick={handleCellRun}
-            />
-          </div>
-        </div>
+        <Chat.Root chat={cell.chat.target} processor={processor}>
+          <Chat.Prompt settings={false} classNames='p-2' />
+          <Chat.Thread overscroll={0} classNames='bs-[10rem]' />
+        </Chat.Root>
       );
 
     default:
