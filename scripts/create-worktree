@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Script to create a new branch from main, set up a worktree, and open it in Windsurf
-# Usage: ./create-worktree-branch.sh <branch-name>
+# Usage: ./create-worktree <branch-name>
 
 set -e
 
