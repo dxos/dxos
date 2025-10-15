@@ -79,7 +79,7 @@ Consider this expression of schema declared with Effect Schema:
 ```ts file=./snippets/schema.ts#L5-
 import { Schema } from 'effect';
 
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 
 export class TaskType extends TypedObject({
   typename: 'dxos.org/type/Task',

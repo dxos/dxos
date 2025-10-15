@@ -41,7 +41,7 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
       scriptTemplates.map(async (template) => {
         const result = await dispatch(
           Function.pipe(
-            createIntent(ScriptAction.Create, { space, initialTemplateId: template.id }),
+            createIntent(ScriptAction.CreateScript, { space, initialTemplateId: template.id }),
             chain(SpaceAction.AddObject, { target: space }),
           ),
         );

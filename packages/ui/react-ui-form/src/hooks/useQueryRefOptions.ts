@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import { type TypeAnnotation } from '@dxos/echo-schema';
+import { type TypeAnnotation } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Palette } from '@dxos/react-ui-types';

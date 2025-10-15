@@ -56,10 +56,10 @@
       "path": "../../protocols"
     },
     {
-      "path": "../echo-protocol"
+      "path": "../echo"
     },
     {
-      "path": "../echo-schema"
+      "path": "../echo-protocol"
     }
   ]
 }

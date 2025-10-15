@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { ForeignKey } from '@dxos/echo-schema';
+import { ForeignKey } from '@dxos/echo/internal';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

@@ -11,7 +11,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -23,11 +22,12 @@ import {
   type RuntimeSchemaRegistry,
   TypeEnum,
   toEffectSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { getSchemaProperties } from '../properties';
 
@@ -332,7 +332,7 @@ export const createViewFromSpace = async ({
   invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
-    space.db.add(live(schema, {}));
+    space.db.add(Obj.make(schema, {}));
   });
 
   return {

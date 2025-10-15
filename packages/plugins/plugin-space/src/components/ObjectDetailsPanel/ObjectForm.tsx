@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { DXN, Obj, Tag, Type } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo-schema';
+import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';

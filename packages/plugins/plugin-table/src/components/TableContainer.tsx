@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useRef } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo-schema';
+import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceAction } from '@dxos/plugin-space/types';

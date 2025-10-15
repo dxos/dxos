@@ -37,7 +37,6 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",

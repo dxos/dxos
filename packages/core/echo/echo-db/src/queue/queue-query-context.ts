@@ -8,9 +8,9 @@ import * as Function from 'effect/Function';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import type { BaseObject } from '@dxos/echo/internal';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';

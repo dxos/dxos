@@ -11,11 +11,10 @@ import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Filter } from '@dxos/echo';
-import { Expando } from '@dxos/echo-schema';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
-import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -183,7 +182,7 @@ export const testSpaceAutomerge = async (
   createDb: EchoDatabase,
   checkDb: EchoDatabase = createDb,
 ) => {
-  const object = live(Expando, {});
+  const object = Obj.make(Type.Expando, {});
   createDb.add(object);
   await expect.poll(() => checkDb.query(Filter.ids(object.id)).first({ timeout: 1000 }));
 

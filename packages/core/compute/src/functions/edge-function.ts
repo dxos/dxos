@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
-import { toEffectSchema } from '@dxos/echo-schema';
+import { toEffectSchema } from '@dxos/echo/internal';
 import { ComputeEventLogger, FunctionInvocationService, FunctionType, TracingService } from '@dxos/functions';
 import { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';

@@ -5,7 +5,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';

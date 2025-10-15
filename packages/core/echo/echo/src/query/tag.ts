@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LabelAnnotation } from '@dxos/echo-schema';
-
+import { LabelAnnotation } from '../internal';
 import * as Obj from '../Obj';
 import * as Type from '../Type';
 
