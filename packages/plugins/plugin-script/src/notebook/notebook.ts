@@ -114,15 +114,17 @@ export class ComputeGraph {
    * Parse expressions.
    */
   parse() {
-    const expressions = this._notebook.cells.reduce<Record<string, ParsedExpression>>((acc, cell) => {
-      const text = cell.script.target?.content.trim();
-      if (text) {
-        const parsed = this._parser.parseExpression(text);
-        acc[cell.id] = parsed;
-      }
+    const expressions = this._notebook.cells
+      .filter((cell) => cell.type === 'script')
+      .reduce<Record<string, ParsedExpression>>((acc, cell) => {
+        const text = cell.script.target?.content.trim();
+        if (text) {
+          const parsed = this._parser.parseExpression(text);
+          acc[cell.id] = parsed;
+        }
 
-      return acc;
-    }, {});
+        return acc;
+      }, {});
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);

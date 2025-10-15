@@ -16,6 +16,7 @@ import {
   createThemeExtensions,
 } from '@dxos/react-ui-editor';
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -44,7 +45,7 @@ export const NotebookStack = ({ notebook, onRearrange, ...props }: NotebookStack
 // TODO(burdon): Display errors.
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-const editorStyles = 'p-3';
+const editorStyles = 'p-2 pis-3';
 
 type NotebookSectionProps = {
   cell: Notebook.Cell;
@@ -63,44 +64,54 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
 
   return (
     <StackItem.Root role='section' item={cell} draggable>
-      <StackItem.Heading classNames='attention-surface'>
-        <StackItem.HeadingStickyContent>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <StackItem.SigilButton>
-                <Icon icon='ph--list--regular' size={4} />
-              </StackItem.SigilButton>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell.id)}>
-                    {t('notebook cell insert script label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell.id)}>
-                    {t('notebook cell insert prompt label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell.id)}>
-                    {t('notebook cell insert query label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell.id)}>
-                    {t('notebook cell insert markdown label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-                    {t('notebook cell delete label')}
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </StackItem.HeadingStickyContent>
+      <StackItem.Heading classNames='bs-full justify-between attention-surface'>
+        {/* <StackItem.HeadingStickyContent> */}
+        <StackItem.DragHandle>
+          <div className='flex justify-center p-2'>
+            <Icon icon='ph--dots-six-vertical--regular' size={4} />
+          </div>
+        </StackItem.DragHandle>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <div className='flex justify-center p-2'>
+              <Icon icon='ph--dots-three--regular' size={4} />
+            </div>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content>
+              <DropdownMenu.Viewport>
+                <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell.id)}>
+                  {t('notebook cell insert script label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell.id)}>
+                  {t('notebook cell insert prompt label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell.id)}>
+                  {t('notebook cell insert query label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell.id)}>
+                  {t('notebook cell insert markdown label')}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
+                  {t('notebook cell delete label')}
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+        {/* </StackItem.HeadingStickyContent> */}
       </StackItem.Heading>
 
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
         {value != null && (
-          <div className='flex p-2 pis-3 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
+          <div
+            className={mx(
+              'flex bg-groupSurface border-t border-subduedSeparator text-description font-mono',
+              editorStyles,
+            )}
+          >
             {name && (
               <>
                 <span className='text-successText'>{name}</span>
