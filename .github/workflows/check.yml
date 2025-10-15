@@ -70,7 +70,7 @@ jobs:
 
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :lint :build --affected
+        run: moon run :lint :build --affected --remote
 
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -126,7 +126,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected -- --no-file-parallelism
+        run: moon run :test --affected --remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -199,7 +199,7 @@ jobs:
 
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :bundle --affected
+        run: moon run :bundle --affected --remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -207,7 +207,7 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :e2e --affected --concurrency=2 -- --browser=all
+        run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
