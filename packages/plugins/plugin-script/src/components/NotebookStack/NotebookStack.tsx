@@ -9,8 +9,7 @@ import { Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { type Space, createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, IconButton, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   Editor,
@@ -72,15 +71,23 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full justify-between attention-surface'>
         <StackItem.DragHandle>
-          <div className='flex justify-center p-2'>
-            <Icon icon='ph--dots-six-vertical--regular' size={4} />
-          </div>
+          <IconButton
+            classNames='mbs-1'
+            variant='ghost'
+            icon='ph--dots-six-vertical--regular'
+            iconOnly
+            label='Drag handle'
+          />
         </StackItem.DragHandle>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
-            <div className='flex justify-center p-2'>
-              <Icon icon='ph--dots-three--regular' size={4} />
-            </div>
+            <IconButton
+              classNames='mbe-1'
+              variant='ghost'
+              icon='ph--dots-three--regular'
+              iconOnly
+              label={t('notebook cell menu label')}
+            />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content>
@@ -116,6 +123,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
         )}
       </StackItem.DragPreview>
 
+      {/* TODO(burdon): Enable resize. */}
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell cell={cell} space={space} env={env} onCellRun={onCellRun} />
         {(value != null || view != null) && (
@@ -131,11 +139,7 @@ const NotebookSection = ({ cell, space, graph, env, onCellInsert, onCellDelete, 
                 <span>{value}</span>
               </div>
             )}
-            {view && (
-              <div className='flex is-full overflow-hidden'>
-                <Surface role='section' limit={1} data={{ subject: view }} />
-              </div>
-            )}
+            {view && <Surface role='section' limit={1} data={{ subject: view }} />}
           </div>
         )}
       </StackItem.Content>
@@ -239,11 +243,6 @@ const NotebookCell = ({ space, cell, env, onCellRun }: NotebookSectionProps) => 
           </div>
         </div>
       );
-
-    // TODO(burdon): Add view surfaces (Map/Graph/Table).
-    // TODO(burdon): Resize sections.
-    case 'view':
-      return null;
 
     default:
       return null;

@@ -39,7 +39,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
     return null;
   }
 
-  // TODO(burdon): Enable resize.
+  // TODO(burdon): Enable resize. Remove is-full.
   return (
     <StackItem.Content classNames='is-full' toolbar={showToolbar} size={role === 'section' ? 'video' : 'intrinsic'}>
       {showToolbar && (
