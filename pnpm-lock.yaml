@@ -9464,9 +9464,6 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.28.4
-      '@dxos/lit-ui':
-        specifier: workspace:*
-        version: link:../../ui/lit-ui
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

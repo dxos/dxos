@@ -84,7 +84,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.13",
-    "@dxos/lit-ui": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

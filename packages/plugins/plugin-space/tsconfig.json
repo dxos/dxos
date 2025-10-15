@@ -87,9 +87,6 @@
       "path": "../../sdk/shell"
     },
     {
-      "path": "../../ui/lit-ui"
-    },
-    {
       "path": "../../ui/react-ui"
     },
     {
