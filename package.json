@@ -126,7 +126,7 @@
     "globrex": "^0.1.2",
     "husky": "^8.0.0",
     "jiti": "2.4.2",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.0.0",
     "jsdom-global": "^3.0.2",
     "json-stringify-safe": "^5.0.1",
     "knip": "^5.64.3",
@@ -173,7 +173,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "20.19.5"
+    "node": "24.4.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -194,10 +194,14 @@
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",
+      "oxc-resolver",
       "protobufjs",
       "sharp",
       "sodium-native",
-      "workerd"
+      "styled-components",
+      "unrs-resolver",
+      "workerd",
+      "yarn"
     ],
     "overrides": {
       "@automerge/automerge": "3.1.1",
