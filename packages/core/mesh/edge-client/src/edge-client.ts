@@ -2,7 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, PersistentLifecycle, Trigger, TriggerState, scheduleMicroTask } from '@dxos/async';
+import {
+  Event,
+  PersistentLifecycle,
+  Trigger,
+  TriggerState,
+  scheduleMicroTask,
+  scheduleTaskInterval,
+} from '@dxos/async';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -16,6 +23,9 @@ import { type Protocol } from './protocol';
 import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
+
+// Refresh status every second: latency, rate counters.
+const STATUS_REFRESH_INTERVAL = 1000;
 
 export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
@@ -166,6 +176,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
     this._persistentLifecycle.open().catch((err) => {
       log.warn('Error while opening connection', { err });
     });
+
+    // Notify about status changes (latency, rate counters).
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        if (!this._currentConnection) {
+          return;
+        }
+        this.statusChanged.emit(this.status);
+      },
+      STATUS_REFRESH_INTERVAL,
+    );
   }
 
   /**
