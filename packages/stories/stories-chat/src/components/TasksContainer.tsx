@@ -13,6 +13,7 @@ import {
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
+  createThemeExtensions,
   outliner,
 } from '@dxos/react-ui-editor';
 
@@ -34,6 +35,7 @@ export const TasksContainer = ({ space }: ComponentProps) => {
         id={document.id}
         classNames='h-full p-2 overflow-hidden'
         extensions={[
+          createThemeExtensions({ themeMode }),
           createDataExtensions({ id: document.id, text: createDocAccessor(document.content.target, ['content']) }),
           createBasicExtensions({ readOnly: false }),
           createMarkdownExtensions(),

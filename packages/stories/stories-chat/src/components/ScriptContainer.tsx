@@ -20,6 +20,7 @@ export const ScriptContainer = ({ space }: ComponentProps) => {
   if (!script) {
     return null;
   }
+
   return (
     <div className='flex is-full bs-[70vh] min-bs-[20rem] overflow-auto'>
       <ScriptContainerComponent role={'section'} script={script} settings={settings} env={compiler.environment} />

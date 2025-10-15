@@ -6,7 +6,7 @@ import React from 'react';
 
 import { InvocationTraceContainer } from '@dxos/devtools';
 
-import type { ComponentProps } from './types';
+import { type ComponentProps } from './types';
 
 export const InvocationsContainer = ({ space }: ComponentProps) => {
   return (

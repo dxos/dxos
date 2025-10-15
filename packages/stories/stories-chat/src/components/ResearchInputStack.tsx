@@ -10,7 +10,7 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { ResearchInputQueue } from '../testing';
 
 import { DebugCard } from './DebugCard';
-import type { ComponentProps } from './types';
+import { type ComponentProps } from './types';
 
 export const ResearchInputStack = ({ space }: ComponentProps) => {
   const [researchInput] = useQuery(space, Filter.type(ResearchInputQueue));

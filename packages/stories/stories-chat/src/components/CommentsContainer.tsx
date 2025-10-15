@@ -5,10 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
+import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-
-import { useContextBinder } from '../../hooks';
-import { Assistant } from '../../types';
 
 import { type ComponentProps } from './types';
 

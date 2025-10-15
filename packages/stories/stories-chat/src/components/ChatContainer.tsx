@@ -5,14 +5,19 @@
 import React, { useCallback } from 'react';
 
 import { Filter } from '@dxos/echo';
+import {
+  Assistant,
+  Chat,
+  Toolbar,
+  useBlueprintRegistry,
+  useChatProcessor,
+  useChatServices,
+  useOnline,
+  usePresets,
+} from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
-
-import { Chat, Toolbar } from '../../components';
-import { useBlueprintRegistry, useChatProcessor, useChatServices } from '../../hooks';
-import { useOnline, usePresets } from '../../hooks';
-import { Assistant } from '../../types';
 
 import { ExecutionGraphContainer } from './ExecutionGraphContainer';
 import { type ComponentProps } from './types';

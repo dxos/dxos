@@ -9,7 +9,7 @@ import { Filter } from '@dxos/echo';
 import { Chess } from '@dxos/plugin-chess';
 import { useQuery } from '@dxos/react-client/echo';
 
-import type { ComponentProps } from './types';
+import { type ComponentProps } from './types';
 
 export const ChessContainer: FC<ComponentProps> = ({ space }) => {
   const chess = useQuery(space, Filter.type(Chess.Game));

@@ -5353,9 +5353,6 @@ importers:
       '@dxos/plugin-automation':
         specifier: workspace:*
         version: link:../plugin-automation
-      '@dxos/plugin-board':
-        specifier: workspace:*
-        version: link:../plugin-board
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -5368,30 +5365,12 @@ importers:
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../plugin-markdown
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../plugin-preview
-      '@dxos/plugin-script':
-        specifier: workspace:*
-        version: link:../plugin-script
-      '@dxos/plugin-sketch':
-        specifier: workspace:*
-        version: link:../plugin-sketch
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-stack':
-        specifier: workspace:*
-        version: link:../plugin-stack
       '@dxos/plugin-transcription':
         specifier: workspace:*
         version: link:../plugin-transcription
-      '@dxos/plugin-wnfs':
-        specifier: workspace:*
-        version: link:../plugin-wnfs
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -5501,6 +5480,9 @@ importers:
         specifier: ^1.8.1
         version: 1.8.1(react@19.2.0)
     devDependencies:
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../plugin-board
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -5510,9 +5492,24 @@ importers:
       '@dxos/plugin-map':
         specifier: workspace:*
         version: link:../plugin-map
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
       '@dxos/plugin-project':
         specifier: workspace:*
         version: link:../plugin-project
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../plugin-script
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../plugin-sketch
+      '@dxos/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../plugin-table
@@ -5525,6 +5522,9 @@ importers:
       '@dxos/plugin-token-manager':
         specifier: workspace:*
         version: link:../plugin-token-manager
+      '@dxos/plugin-wnfs':
+        specifier: workspace:*
+        version: link:../plugin-wnfs
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -8694,6 +8694,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -11810,6 +11813,262 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
+
+  packages/stories/stories-chat:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/assistant
+      '@dxos/assistant-testing':
+        specifier: workspace:*
+        version: link:../../core/assistant-testing
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute
+      '@dxos/conductor':
+        specifier: workspace:*
+        version: link:../../core/conductor
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
+      '@dxos/echo-query':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-query
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/graph':
+        specifier: workspace:*
+        version: link:../../common/graph
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/lit-ui':
+        specifier: workspace:*
+        version: link:../../ui/lit-ui
+      '@dxos/live-object':
+        specifier: workspace:*
+        version: link:../../core/echo/live-object
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../common/local-storage
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-attention
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-automation
+      '@dxos/plugin-board':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-board
+      '@dxos/plugin-chess':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-chess
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-deck
+      '@dxos/plugin-explorer':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-explorer
+      '@dxos/plugin-graph':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-graph
+      '@dxos/plugin-inbox':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-inbox
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-map
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
+      '@dxos/plugin-project':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-project
+      '@dxos/plugin-script':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-script
+      '@dxos/plugin-sketch':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sketch
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
+      '@dxos/plugin-stack':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-stack
+      '@dxos/plugin-storybook-layout':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-storybook-layout
+      '@dxos/plugin-table':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-table
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-theme
+      '@dxos/plugin-thread':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-thread
+      '@dxos/plugin-token-manager':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-token-manager
+      '@dxos/plugin-transcription':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-transcription
+      '@dxos/plugin-wnfs':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-wnfs
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-edge-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-edge-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-canvas-compute':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas-compute
+      '@dxos/react-ui-canvas-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-canvas-editor
+      '@dxos/react-ui-chat':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-chat
+      '@dxos/react-ui-components':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-components
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-graph':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-graph
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-searchlist
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-sfx
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-table':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-table
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/ai':
+        specifier: 0.29.1
+        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+    devDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: ~19.2.1
+        version: 19.2.1(@types/react@19.2.2)
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+      vite:
+        specifier: 7.1.9
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
 
   packages/ui/brand:
     dependencies:

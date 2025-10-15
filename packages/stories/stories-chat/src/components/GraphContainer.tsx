@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ResearchGraph } from '@dxos/assistant-testing';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { useFlush } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -15,8 +16,6 @@ import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
-
-import { useFlush } from '../../hooks';
 
 import { type ComponentProps } from './types';
 

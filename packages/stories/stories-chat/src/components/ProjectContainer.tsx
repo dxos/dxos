@@ -9,7 +9,7 @@ import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import type { ComponentProps } from './types';
+import { type ComponentProps } from './types';
 
 export const ProjectContainer: FC<ComponentProps> = ({ space }) => {
   const projects = useQuery(space, Filter.type(DataType.Project));

@@ -9,7 +9,7 @@ import { ResearchGraph } from '@dxos/assistant-testing';
 import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 
-import type { ComponentProps } from './types';
+import { type ComponentProps } from './types';
 
 export const ResearchOutputStack = ({ space }: ComponentProps) => {
   const [researchGraph] = useQuery(space, Filter.type(ResearchGraph));

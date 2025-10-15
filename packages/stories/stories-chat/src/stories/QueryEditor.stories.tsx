@@ -7,6 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Obj, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
+import { translations } from '@dxos/plugin-assistant';
 import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
 import { faker } from '@dxos/random';
 import { Filter, useSpaces } from '@dxos/react-client/echo';
@@ -17,8 +18,6 @@ import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
-
-import { translations } from '../translations';
 
 faker.seed(1);
 const generator = faker as any as ValueGenerator;
@@ -70,7 +69,7 @@ const tags: Tag.TagMap = {
 };
 
 const meta: Meta<typeof QueryEditor> = {
-  title: 'plugins/plugin-assistant/QueryEditor',
+  title: 'stories/stories-chat/QueryEditor',
   component: QueryEditor,
   render: render(DefaultStory),
   decorators: [

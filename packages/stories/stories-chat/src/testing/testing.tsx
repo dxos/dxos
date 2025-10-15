@@ -41,6 +41,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -56,9 +57,6 @@ import { type Client, Config } from '@dxos/react-client';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
-
-import { AssistantPlugin } from '../../AssistantPlugin';
-import { Assistant, AssistantAction } from '../../types';
 
 // TODO(burdon): Factor out.
 export const config = {

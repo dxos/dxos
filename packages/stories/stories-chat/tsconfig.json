@@ -1,0 +1,250 @@
+{
+  "extends": [
+    "../../../tsconfig.base.json"
+  ],
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/context"
+    },
+    {
+      "path": "../../common/debug"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/graph"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/local-storage"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
+    },
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../common/util"
+    },
+    {
+      "path": "../../core/ai"
+    },
+    {
+      "path": "../../core/assistant"
+    },
+    {
+      "path": "../../core/assistant-testing"
+    },
+    {
+      "path": "../../core/blueprints"
+    },
+    {
+      "path": "../../core/compute"
+    },
+    {
+      "path": "../../core/conductor"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
+    },
+    {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
+      "path": "../../core/echo/echo-query"
+    },
+    {
+      "path": "../../core/echo/live-object"
+    },
+    {
+      "path": "../../core/functions"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/devtools"
+    },
+    {
+      "path": "../../plugins/plugin-assistant"
+    },
+    {
+      "path": "../../plugins/plugin-attention"
+    },
+    {
+      "path": "../../plugins/plugin-automation"
+    },
+    {
+      "path": "../../plugins/plugin-board"
+    },
+    {
+      "path": "../../plugins/plugin-chess"
+    },
+    {
+      "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-deck"
+    },
+    {
+      "path": "../../plugins/plugin-explorer"
+    },
+    {
+      "path": "../../plugins/plugin-graph"
+    },
+    {
+      "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-map"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-project"
+    },
+    {
+      "path": "../../plugins/plugin-script"
+    },
+    {
+      "path": "../../plugins/plugin-sketch"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-stack"
+    },
+    {
+      "path": "../../plugins/plugin-storybook-layout"
+    },
+    {
+      "path": "../../plugins/plugin-table"
+    },
+    {
+      "path": "../../plugins/plugin-theme"
+    },
+    {
+      "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-token-manager"
+    },
+    {
+      "path": "../../plugins/plugin-transcription"
+    },
+    {
+      "path": "../../plugins/plugin-wnfs"
+    },
+    {
+      "path": "../../sdk/app-framework"
+    },
+    {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/react-edge-client"
+    },
+    {
+      "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../ui/lit-ui"
+    },
+    {
+      "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-compute"
+    },
+    {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
+      "path": "../../ui/react-ui-chat"
+    },
+    {
+      "path": "../../ui/react-ui-components"
+    },
+    {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-searchlist"
+    },
+    {
+      "path": "../../ui/react-ui-sfx"
+    },
+    {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/react-ui-theme"
+    }
+  ]
+}

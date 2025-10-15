@@ -23,6 +23,10 @@ import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { BLUEPRINT_KEY } from '@dxos/plugin-assistant';
+import { useContextBinder } from '@dxos/plugin-assistant';
+import { translations } from '@dxos/plugin-assistant';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { Board, BoardPlugin } from '@dxos/plugin-board';
 import { Chess, ChessPlugin } from '@dxos/plugin-chess';
 import * as chessFunctions from '@dxos/plugin-chess/functions';
@@ -50,12 +54,6 @@ import { DataType, createView } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
-import { BLUEPRINT_KEY } from '../capabilities';
-import { useContextBinder } from '../hooks';
-import { addTestData, createTestMailbox, createTestTranscription, organizations, testTypes } from '../testing';
-import { translations } from '../translations';
-import { Assistant } from '../types';
-
 import {
   BlueprintContainer,
   ChatContainer,
@@ -74,8 +72,18 @@ import {
   TasksContainer,
   TokenManagerContainer,
   TriggersContainer,
-} from './components';
-import { ResearchInputQueue, accessTokensFromEnv, config, getDecorators } from './testing';
+} from '../components';
+import {
+  ResearchInputQueue,
+  accessTokensFromEnv,
+  addTestData,
+  config,
+  createTestMailbox,
+  createTestTranscription,
+  getDecorators,
+  organizations,
+  testTypes,
+} from '../testing';
 
 const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
 
@@ -143,7 +151,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       size='split'
       rail={false}
       itemsCount={deckComponents.length}
-      classNames='absolute inset-0 gap-[--stack-gap]'
+      classNames='  absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
@@ -191,7 +199,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 };
 
 const storybook: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-assistant/Chat',
+  title: 'stories/stories-chat/Chat',
   render: render(DefaultStory),
   decorators: [withTheme],
   parameters: {
@@ -538,13 +546,16 @@ export const WithTranscription: Story = {
   },
 };
 
+// TODO(burdon): Move to env.
+const VITE_LINEAR_API_KEY = process.env.VITE_LINEAR_API_KEY;
+
 export const WithLinearSync: Story = {
   decorators: getDecorators({
     plugins: [],
     config: config.remote,
     types: [DataType.Task, DataType.Person, DataType.Project],
     accessTokens: accessTokensFromEnv({
-      'linear.app': import.meta.env.VITE_LINEAR_API_KEY,
+      'linear.app': VITE_LINEAR_API_KEY,
     }),
   }),
   args: {
