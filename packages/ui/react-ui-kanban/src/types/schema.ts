@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType, ViewAnnotation } from '@dxos/echo/internal';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
 export const Kanban = Schema.Struct({
