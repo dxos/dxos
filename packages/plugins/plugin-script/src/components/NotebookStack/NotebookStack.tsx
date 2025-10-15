@@ -197,6 +197,7 @@ const NotebookCell = ({ cell, space, env, onCellRun }: NotebookSectionProps) => 
   }
 };
 
+// TODO(burdon): Support widgets that can consume variables.
 const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();

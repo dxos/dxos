@@ -29,6 +29,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
 
+  // TODO(burdon): Cache values in context (preserve when switched).
   const handleCompute = useCallback(() => {
     graph?.evaluate();
   }, [graph]);
