@@ -344,7 +344,24 @@ describe('query api', () => {
     test('filter by tags', () => {
       const query = Query.select(Filter.type(Task)).select(Filter.tag('important'));
       Schema.validateSync(QueryAST.Query)(query.ast);
-      expect(query.ast).toMatchInlineSnapshot();
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "filter": {
+            "tag": "important",
+            "type": "tag",
+          },
+          "selection": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:dxos.org/type/Task:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "filter",
+        }
+      `);
     });
 
     test.skip('chain', () => {
