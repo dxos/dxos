@@ -25,7 +25,7 @@ export type TriggerEditorProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = (values: FunctionTrigger) => {
+  const handleSave = ({ id: _, ...values }: FunctionTrigger) => {
     onSave?.(values);
   };
 
@@ -103,7 +103,7 @@ const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }
         return (
           <Input.Root>
             <InputHeader label={props.label} />
-            <QueryForm initialQuery={props.getValue().ast} types={types} tags={tags} onChange={handleChange} />
+            <QueryForm initialQuery={(props.getValue() as any).ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );
       },
