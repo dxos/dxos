@@ -34,8 +34,13 @@ export interface Any extends BaseObj {}
 
 /**
  * Object with arbitrary properties.
+ *
+ * NOTE: Due to how typescript works, this type is not assignable to a specific schema type.
+ * In that case, use `Obj.instanceOf` to check if an object is of a specific type.
  */
-export interface AnyProps extends Obj<{ [key: string]: any }> {}
+export interface AnyProps extends BaseObj {
+  [key: string]: any;
+}
 
 export const Any = Schema.Struct({}).pipe(
   Type.Obj({
