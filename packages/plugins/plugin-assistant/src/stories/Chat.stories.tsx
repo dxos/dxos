@@ -19,7 +19,7 @@ import {
   agent,
 } from '@dxos/assistant-testing';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -612,7 +612,6 @@ export const WithChessTrigger: Story = {
           spec: {
             kind: 'subscription',
             query: {
-              string: 'Query.select(Filter.type(Chess.Game))',
               ast: Query.select(Filter.type(Chess.Game)).ast,
             },
           },
@@ -703,9 +702,12 @@ export const WithProject: Story = {
       await addTestData(space);
       const { objects: people } = await space.db.query(Filter.type(DataType.Person)).run();
       const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+      const tag = space.db.add(Tag.make({ label: 'Project' }));
+      const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        person.notes = 'Project';
+        const meta = Obj.getMeta(person);
+        meta.tags = [tagDxn];
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
@@ -725,31 +727,36 @@ export const WithProject: Story = {
           content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
         }),
       );
+      [dxosResearch, blueyardResearch].forEach((research) => {
+        const meta = Obj.getMeta(research);
+        meta.tags = [tagDxn];
+      });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
-      space.db.add(
-        Relation.make(ResearchOn, {
-          [Relation.Source]: dxosResearch,
-          [Relation.Target]: dxos,
-          completedAt: new Date().toISOString(),
-        }),
-      );
-      space.db.add(
-        Relation.make(ResearchOn, {
-          [Relation.Source]: blueyardResearch,
-          [Relation.Target]: blueyard,
-          completedAt: new Date().toISOString(),
-        }),
-      );
+      [dxos, blueyard].forEach((organization) => {
+        const meta = Obj.getMeta(organization);
+        meta.tags = [tagDxn];
+      });
+      // TODO(wittjosiah): Support relations.
+      // space.db.add(
+      //   Relation.make(ResearchOn, {
+      //     [Relation.Source]: dxosResearch,
+      //     [Relation.Target]: dxos,
+      //     completedAt: new Date().toISOString(),
+      //   }),
+      // );
+      // space.db.add(
+      //   Relation.make(ResearchOn, {
+      //     [Relation.Source]: blueyardResearch,
+      //     [Relation.Target]: blueyard,
+      //     completedAt: new Date().toISOString(),
+      //   }),
+      // );
 
-      const contactsQuery = Query.select(Filter.type(DataType.Person, { notes: 'Project' }));
-      const organizationsQuery = contactsQuery.sourceOf(DataType.Employer, { active: true }).target();
-      const notesQuery = organizationsQuery.targetOf(ResearchOn).source();
-
-      const contactsQueryString = 'Query.select(Filter.type(DataType.Person, { notes: "Project" }))';
-      const organizationsQueryString = `${contactsQueryString}.sourceOf(DataType.Employer, { active: true }).target()`;
-      const notesQueryString = `${organizationsQueryString}.targetOf(ResearchOn).source()`;
+      const contactsQuery = Query.select(Filter.type(DataType.Person)).select(Filter.tag(tagDxn));
+      const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
+      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
       const researchPrompt = space.db.add(
         Prompt.make({
@@ -772,7 +779,6 @@ export const WithProject: Story = {
         spec: {
           kind: 'subscription',
           query: {
-            string: organizationsQueryString,
             ast: organizationsQuery.ast,
           },
         },
@@ -785,34 +791,29 @@ export const WithProject: Story = {
 
       const mailboxView = createView({
         name: 'Mailbox',
-        query: Query.select(
-          Filter.type(DataType.Message, { properties: { labels: Filter.contains('Project') } }),
-        ).options({
-          queues: [mailbox.queue.dxn.toString()],
-        }),
-        queryString:
-          'Query.select(Filter.type(DataType.Message, { properties: { labels: Filter.contains("Project") } }))',
+        query: Query.select(Filter.type(DataType.Message))
+          .select(Filter.tag(tagDxn))
+          .options({
+            queues: [mailbox.queue.dxn.toString()],
+          }),
         jsonSchema: Type.toJsonSchema(DataType.Message),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const contactsView = createView({
         name: 'Contacts',
         query: contactsQuery,
-        queryString: contactsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Person),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const organizationsView = createView({
         name: 'Organizations',
         query: organizationsQuery,
-        queryString: organizationsQueryString,
         jsonSchema: Type.toJsonSchema(DataType.Organization),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });
       const notesView = createView({
         name: 'Notes',
         query: notesQuery,
-        queryString: notesQueryString,
         jsonSchema: Type.toJsonSchema(Markdown.Document),
         presentation: Obj.make(DataType.Collection, { objects: [] }),
       });

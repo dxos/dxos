@@ -71,7 +71,7 @@ export type WebhookTrigger = Schema.Schema.Type<typeof WebhookTriggerSchema>;
 const SubscriptionTriggerSchema = Schema.Struct({
   kind: Schema.Literal('subscription').annotations(kindLiteralAnnotations),
   query: Schema.Struct({
-    string: Schema.optional(Schema.String.annotations({ title: 'Query' })),
+    raw: Schema.optional(Schema.String.annotations({ title: 'Query' })),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
   options: Schema.optional(
