@@ -5,18 +5,18 @@
 import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
+import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
+import type { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Icon, useTranslation, Popover } from '@dxos/react-ui';
 import { useStream } from '@dxos/react-client/devtools';
+import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
+import { Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { Unit } from '@dxos/util';
 
 import { meta } from '../../meta';
 
 import { createClientSaveTracker } from './save-tracker';
 import { getIcon, getStatus } from './status';
-import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import type { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
-import { Unit } from '@dxos/util';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -125,7 +125,7 @@ const EdgeConnectionPopover = () => {
               <span>{t('Upload')}</span>
             </div>
             <span className='text-sm font-mono text-neutral-900 dark:text-neutral-100'>
-              {Unit.Kilobyte(status.rateBytesUp, 0)} kb/s
+              {Unit.Kilobyte(status.rateBytesUp, 0)}/s
             </span>
           </div>
 
@@ -136,7 +136,7 @@ const EdgeConnectionPopover = () => {
               <span>{t('Download')}</span>
             </div>
             <span className='text-sm font-mono text-neutral-900 dark:text-neutral-100'>
-              {Unit.Kilobyte(status.rateBytesDown, 0)} kb/s
+              {Unit.Kilobyte(status.rateBytesDown, 0)}/s
             </span>
           </div>
         </div>
