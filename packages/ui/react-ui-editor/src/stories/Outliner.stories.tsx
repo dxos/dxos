@@ -9,8 +9,16 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
-import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
+import {
+  type CommandMenuGroup,
+  type CommandMenuItem,
+  CommandMenuProvider,
+  deleteItem,
+  hashtag,
+  listItemToString,
+  outliner,
+  treeFacet,
+} from '../extensions';
 import { str } from '../testing';
 
 import { EditorStory } from './components';
