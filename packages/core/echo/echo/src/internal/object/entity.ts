@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import {
@@ -67,6 +67,11 @@ export const EchoObject: {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
+      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        kind: EntityKind.Object,
+        typename,
+        version,
+      }),
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, typename, version);
@@ -113,10 +118,45 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
         targetSchema: targetDXN,
       } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
+
+      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        kind: EntityKind.Relation,
+        typename: options.typename,
+        version: options.version,
+        relationSource: sourceDXN,
+        relationTarget: targetDXN,
+      }),
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, options.typename, options.version);
   };
+};
+
+/**
+ * @returns JSON-schema annotation so that the schema can be serialized with correct parameters.
+ */
+export const makeTypeJsonSchemaAnnotation = (options: {
+  kind: EntityKind;
+  typename: string;
+  version: string;
+  relationSource?: string;
+  relationTarget?: string;
+}) => {
+  assertArgument(!!options.relationSource === (options.kind === EntityKind.Relation), 'relationSource');
+  assertArgument(!!options.relationTarget === (options.kind === EntityKind.Relation), 'relationTarget');
+
+  const obj = {
+    // TODO(dmaretskyi): Should this include the version?
+    $id: DXN.fromTypename(options.typename).toString(),
+    entityKind: options.kind,
+    version: options.version,
+    typename: options.typename,
+  } as any;
+  if (options.kind === EntityKind.Relation) {
+    obj.relationSource = { $ref: options.relationSource };
+    obj.relationTarget = { $ref: options.relationTarget };
+  }
+  return obj;
 };
 
 const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
