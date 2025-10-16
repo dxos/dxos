@@ -10,7 +10,7 @@ import { translationKey } from '../../translations';
 
 const NULL = '__NULL__';
 
-export type PickerProps<T extends { id: string; label: string }> = {
+export type PickerProps<T extends { value: string; label: string }> = {
   placeholder?: string;
   values?: T[];
   value?: string | null;
@@ -18,7 +18,7 @@ export type PickerProps<T extends { id: string; label: string }> = {
 };
 
 // TODO(wittjosiah): Should use `SelectInput` from `react-ui-form` instead.
-export const Picker = <T extends { id: string; label: string }>({
+export const Picker = <T extends { value: string; label: string }>({
   placeholder,
   values,
   value,
@@ -37,8 +37,8 @@ export const Picker = <T extends { id: string; label: string }>({
               <Select.Item value={NULL}>
                 <Select.ItemText>{t('picker none')}</Select.ItemText>
               </Select.Item>
-              {sorted.map(({ id, label }) => (
-                <Select.Item key={id} value={id}>
+              {sorted.map(({ value, label }) => (
+                <Select.Item key={value} value={value}>
                   <Select.ItemText>{label}</Select.ItemText>
                 </Select.Item>
               ))}
