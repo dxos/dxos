@@ -107,7 +107,7 @@ export class VirtualTypeScriptParser {
     const results: ParsedExpression[] = [];
 
     const visit = (node: ts.Node) => {
-      // Function declarations
+      // Function declarations.
       if (ts.isFunctionDeclaration(node) && node.name) {
         const symbol = typeChecker.getSymbolAtLocation(node.name);
         const type = symbol && typeChecker.getTypeOfSymbolAtLocation(symbol, node);
@@ -134,7 +134,7 @@ export class VirtualTypeScriptParser {
             let returnType: string | undefined;
             let value: any;
 
-            // Get the type string
+            // Get the type string.
             const typeString = type ? typeChecker.typeToString(type) : 'any';
 
             // Check if it's a function.
@@ -157,7 +157,7 @@ export class VirtualTypeScriptParser {
               }
             }
 
-            // Find references in the initializer only
+            // Find references in the initializer only.
             const refs = declaration.initializer
               ? this.findReferences(declaration.initializer, sourceFile, typeChecker)
               : [];
@@ -175,7 +175,7 @@ export class VirtualTypeScriptParser {
         });
       }
 
-      // Class declarations
+      // Class declarations.
       else if (ts.isClassDeclaration(node) && node.name) {
         results.push({
           name: node.name.text,
@@ -244,7 +244,7 @@ export class VirtualTypeScriptParser {
     // Then find all identifier references.
     const findRefs = (node: ts.Node) => {
       if (ts.isIdentifier(node)) {
-        // Skip if it's a local symbol
+        // Skip if it's a local symbol.
         if (!localSymbols.has(node.text)) {
           // Check if it's a reference (not a declaration).
           const parent = node.parent;
@@ -285,7 +285,7 @@ export class VirtualTypeScriptParser {
           const type = typeChecker.getTypeAtLocation(expr.right);
           const typeString = typeChecker.typeToString(type);
 
-          // Get the literal value if it's a literal
+          // Get the literal value if it's a literal.
           let value: any;
           if (ts.isNumericLiteral(expr.right)) {
             value = Number(expr.right.text);
@@ -293,7 +293,7 @@ export class VirtualTypeScriptParser {
             value = expr.right.text;
           }
 
-          // Find references in the right-hand side
+          // Find references in the right-hand side.
           const references = this.findReferences(expr.right, sourceFile, typeChecker);
 
           result = {
@@ -372,7 +372,7 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
    * Analyze notebook cells with full type checking.
    */
   analyzeNotebook(cells: Array<{ id: string; code: string }>) {
-    // Create cumulative environment where each cell can see previous cells
+    // Create cumulative environment where each cell can see previous cells.
     const cumulativeCode: string[] = [];
     const cellAnalysis: Map<
       string,
