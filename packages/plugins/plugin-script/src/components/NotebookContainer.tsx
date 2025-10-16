@@ -88,10 +88,9 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     [notebook],
   );
 
-  // TODO(burdon): Use outline instead of border?
   return (
-    <StackItem.Content classNames='container-max-width border-l border-r border-subduedSeparator' toolbar>
-      <Toolbar.Root>
+    <StackItem.Content toolbar>
+      <Toolbar.Root textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
@@ -107,6 +106,8 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         />
       </Toolbar.Root>
       <NotebookStack
+        // TODO(burdon): Use outline instead of border?
+        classNames='container-max-width border-l border-r border-subduedSeparator'
         space={space}
         notebook={notebook}
         graph={graph}

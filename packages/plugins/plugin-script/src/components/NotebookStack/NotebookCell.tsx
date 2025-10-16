@@ -34,6 +34,7 @@ import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEdito
 import { type NotebookMenuProps } from './NotebookMenu';
 
 const editorStyles = 'p-2 pis-3';
+const valueStyles = 'p-1 pis-3';
 
 export type NotebookCellProps = {
   space?: Space;
@@ -143,7 +144,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
       }
 
       return (
-        <div className={mx('grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
+        <div className={mx('bs-full overflow-hidden grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
             classNames={[editorStyles, 'border-b border-subduedSeparator']}
@@ -162,7 +163,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 
       return (
         <Chat.Root chat={cell.chat.target} processor={processor}>
-          <Chat.Prompt settings={false} classNames='p-2' />
+          <Chat.Prompt settings={false} classNames='p-2 border-b border-subduedSeparator' />
           <Chat.Thread overscroll={0} />
         </Chat.Root>
       );
@@ -183,7 +184,7 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
     <div
       className={mx(
         'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
-        editorStyles,
+        valueStyles,
       )}
     >
       {name && (

@@ -85,7 +85,6 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
       >
         <MarkdownStream
           ref={setController}
-          classNames='bs-full max-is-prose overflow-hidden'
           registry={componentRegistry}
           cursor={cursor}
           fadeIn={fadeIn}

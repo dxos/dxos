@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DropdownMenu, IconButton, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
@@ -14,16 +14,18 @@ import { type TypescriptEditorProps } from '../TypescriptEditor';
 import { NotebookCell, type NotebookCellProps } from './NotebookCell';
 import { NotebookMenu } from './NotebookMenu';
 
-export type NotebookStackProps = {
-  notebook?: Notebook.Notebook;
-  onRearrange?: StackProps['onRearrange'];
-} & Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete'> &
-  Pick<TypescriptEditorProps, 'env'>;
+export type NotebookStackProps = ThemedClassName<
+  {
+    notebook?: Notebook.Notebook;
+    onRearrange?: StackProps['onRearrange'];
+  } & (Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete'> &
+    Pick<TypescriptEditorProps, 'env'>)
+>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-export const NotebookStack = ({ notebook, onRearrange, ...props }: NotebookStackProps) => {
+export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: NotebookStackProps) => {
   return (
-    <Stack orientation='vertical' size='contain' rail onRearrange={onRearrange}>
+    <Stack classNames={classNames} orientation='vertical' size='contain' rail onRearrange={onRearrange}>
       {notebook?.cells.map((cell, i) => (
         <NotebookSection key={i} cell={cell} {...props} />
       ))}
@@ -39,7 +41,7 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
 
   // TOOD(burdon): Set size if no extrinsic size (provider).
   return (
-    <StackItem.Root role='section' item={cell} draggable>
+    <StackItem.Root role='section' item={cell} draggable classNames={resizable && 'min-bs-[16rem]'}>
       <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
         <StackItem.DragHandle asChild>
           <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
