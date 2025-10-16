@@ -18,7 +18,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ChatContainer } from '../components';
-import { useContextBinder } from '../hooks';
+import { useBlueprintRegistry, useContextBinder } from '../hooks';
 import { Assistant, AssistantAction } from '../types';
 
 export type ChatCompanionProps = {
@@ -30,6 +30,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
   const companionTo = data.companionTo;
   const space = getSpace(companionTo);
   const chat = data.subject === 'assistant-chat' ? undefined : data.subject;
+  const blueprintRegistry = useBlueprintRegistry();
   const binder = useContextBinder(chat);
   const { dispatch } = useIntentDispatcher();
 
@@ -80,14 +81,35 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
       ),
     [metadata, companionTo],
   );
-  const allBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
+  const existingBlueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
   const pluginBlueprints = useMemo(
-    () => allBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
-    [allBlueprints, blueprintKeys],
+    () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
+    [existingBlueprints, blueprintKeys],
   );
 
-  // TODO(wittjosiah): Occasionally this fails to bind but seems to be an upstream issue.
-  //   It seems like the queue object signal emits as an empty array after previously emitting a non-empty array.
+  // Initialize related blueprints that are not already in the space.
+  useAsyncEffect(async () => {
+    if (!space) {
+      return;
+    }
+
+    // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
+    const { objects: existingBlueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+    for (const key of blueprintKeys) {
+      const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
+      if (existingBlueprint) {
+        continue;
+      }
+
+      const blueprint = blueprintRegistry.getByKey(key);
+      if (!blueprint) {
+        continue;
+      }
+
+      space.db.add(Obj.clone(blueprint));
+    }
+  }, [space, blueprintRegistry, blueprintKeys]);
+
   useAsyncEffect(async () => {
     if (!binder) {
       return;

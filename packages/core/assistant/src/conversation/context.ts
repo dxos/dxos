@@ -9,7 +9,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
-import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { ComplexSet } from '@dxos/util';
 
@@ -64,35 +64,38 @@ export class AiContextBinder {
    * Reactive query of all bindings.
    */
   // TODO(burdon): Cache value?
-  readonly bindings: ReadonlySignal<Bindings> = computed(() => this._reduce(this._queue.objects));
+  readonly bindings: ReadonlySignal<Bindings>;
+  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
+  readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
 
-  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]> = computed(() => [
-    ...this.bindings.value.blueprints,
-  ]);
-
-  readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
-
-  constructor(private readonly _queue: Queue) {}
+  constructor(private readonly _queue: Queue) {
+    const query = this._queue.query(Query.select(Filter.everything()));
+    // TODO(wittjosiah): This needs to be cleaned up.
+    const _unsubscribe = query.subscribe(() => {});
+    this.bindings = computed(() => this._reduce(query.objects));
+    this.blueprints = computed(() => [...this.bindings.value.blueprints]);
+    this.objects = computed(() => [...this.bindings.value.objects]);
+  }
 
   /**
    * Asynchronous query of all bindings.
    */
   async query(): Promise<Bindings> {
-    const queueItems = await this._queue.queryObjects();
-    return this._reduce(queueItems);
+    const { objects } = await this._queue.query(Query.select(Filter.everything())).run();
+    return this._reduce(objects);
   }
 
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
-    if (!props.blueprints?.length && !props.objects?.length) {
-      return;
-    }
-
     const blueprints =
       props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
       [];
     const objects =
       props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
+    if (!blueprints.length && !objects.length) {
+      return;
+    }
 
     await this._queue.append([
       Obj.make(ContextBinding, {
