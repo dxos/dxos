@@ -6,19 +6,26 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoSchema, Format, toJsonSchema } from '@dxos/echo/internal';
-import { QueryBuilder } from '@dxos/echo-query';
-import { useSpace } from '@dxos/react-client/echo';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { type EchoSchema, Format } from '@dxos/echo/internal';
+import { useQuery } from '@dxos/react-client/echo';
+import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { type DataType, type ProjectionModel, createView, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, type ProjectionModel, createView, getTypenameFromQuery } from '@dxos/schema';
 
 import { translations } from '../../translations';
 import { TestLayout, TestPanel, VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
 
 import { ViewEditor, type ViewEditorProps } from './ViewEditor';
+
+const types = [
+  // TODO(burdon): Get label from annotation.
+  { id: Type.getTypename(DataType.Organization), label: 'Organization' },
+  { id: Type.getTypename(DataType.Person), label: 'Person' },
+  { id: Type.getTypename(DataType.Project), label: 'Project' },
+  { id: Type.getTypename(DataType.Employer), label: 'Employer' },
+];
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
@@ -30,10 +37,12 @@ export type ViewEditorDebugObjects = {
 type StoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: StoryProps) => {
-  const space = useSpace();
+  const { space } = useClientProvider();
   const [schema, setSchema] = useState<EchoSchema>();
   const [view, setView] = useState<DataType.View>();
   const projectionRef = useRef<ProjectionModel>(null);
+
+  const tags = useQuery(space, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (space) {
@@ -62,9 +71,8 @@ const DefaultStory = (props: StoryProps) => {
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = createView({
         name: 'Test',
-        query: Query.select(Filter.type(TestSchema)),
-        queryString: 'Query.select(Filter.type(TestSchema))',
-        jsonSchema: toJsonSchema(TestSchema),
+        query: Query.select(Filter.typename(TestSchema.typename)),
+        jsonSchema: Type.toJsonSchema(TestSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
 
@@ -74,38 +82,33 @@ const DefaultStory = (props: StoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (queryString: string, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: string) => {
       if (!schema || !view || !space) {
         return;
       }
 
       if (props.mode === 'query') {
-        view.query.string = queryString;
-
-        const builder = new QueryBuilder();
-        const filter = builder.build(queryString) ?? Filter.nothing();
         const queue = target && DXN.tryParse(target) ? target : undefined;
-        const newQuery = queue ? Query.select(filter).options({ queues: [queue] }) : Query.select(filter);
-        view.query.ast = newQuery.ast;
+        const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+        view.query.ast = query.ast;
 
-        const typename = getTypenameFromQuery(newQuery.ast);
+        const typename = getTypenameFromQuery(query.ast);
         const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
         if (!newSchema) {
           return;
         }
 
         const newView = createView({
-          query: newQuery,
+          query,
           jsonSchema: newSchema.jsonSchema,
           presentation: Obj.make(Type.Expando, {}),
         });
         view.projection = Obj.getSnapshot(newView).projection;
         setSchema(() => newSchema);
       } else {
-        const typename = queryString;
-        const newQuery = Query.select(Filter.typename(typename));
-        view.query.ast = newQuery.ast;
-        schema.updateTypename(typename);
+        console.log('updateViewQuery', { newQuery });
+        view.query.ast = newQuery;
+        schema.updateTypename(getTypenameFromQuery(newQuery));
       }
     },
     [view, schema],
@@ -147,6 +150,8 @@ const DefaultStory = (props: StoryProps) => {
           registry={space?.db.schemaRegistry}
           mode={props.mode}
           readonly={props.readonly}
+          types={types}
+          tags={tags}
           onQueryChanged={updateViewQuery}
           onDelete={handleDelete}
         />
@@ -158,7 +163,18 @@ const DefaultStory = (props: StoryProps) => {
 const meta = {
   title: 'ui/react-ui-form/ViewEditor',
   render: DefaultStory,
-  decorators: [withClientProvider({ createSpace: true }), withTheme],
+  decorators: [
+    withClientProvider({
+      createSpace: true,
+      types: [Tag.Tag],
+      onCreateSpace: ({ space }) => {
+        space.db.add(Tag.make({ label: 'Important' }));
+        space.db.add(Tag.make({ label: 'Investor' }));
+        space.db.add(Tag.make({ label: 'New' }));
+      },
+    }),
+    withTheme,
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,

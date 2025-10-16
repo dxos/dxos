@@ -28,8 +28,19 @@ export type Obj<Props> = BaseObj & Props;
 
 /**
  * Base type for all ECHO objects.
+ * This type does not define any properties.
  */
 export interface Any extends BaseObj {}
+
+/**
+ * Object with arbitrary properties.
+ *
+ * NOTE: Due to how typescript works, this type is not assignable to a specific schema type.
+ * In that case, use `Obj.instanceOf` to check if an object is of a specific type.
+ */
+export interface AnyProps extends BaseObj {
+  [key: string]: any;
+}
 
 export const Any = Schema.Struct({}).pipe(
   Type.Obj({

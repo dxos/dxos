@@ -11,7 +11,7 @@ import { type CreateViewFromSpaceProps, createViewFromSpace } from '@dxos/schema
 export const Graph = Schema.Struct({
   name: Schema.optional(Schema.String),
   query: Schema.Struct({
-    string: Schema.optional(Schema.String),
+    raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
 }).pipe(
@@ -29,7 +29,7 @@ export type Graph = Schema.Schema.Type<typeof Graph>;
  * Make a graph object.
  */
 export const make = (
-  props: Obj.MakeProps<typeof Graph> = { query: { string: '', ast: Query.select(Filter.nothing()).ast } },
+  props: Obj.MakeProps<typeof Graph> = { query: { raw: '', ast: Query.select(Filter.nothing()).ast } },
 ) => Obj.make(Graph, props);
 
 type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'> & {
