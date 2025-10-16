@@ -90,6 +90,8 @@ export type EchoRelationOptions<
 export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
   options: EchoRelationOptions<Source, Target>,
 ) => {
+  assertArgument(Schema.isSchema(options.source), 'source');
+  assertArgument(Schema.isSchema(options.target), 'target');
   const sourceDXN = getDXNForRelationSchemaRef(options.source);
   const targetDXN = getDXNForRelationSchemaRef(options.target);
   if (getEntityKind(options.source) !== EntityKind.Object) {
@@ -136,6 +138,7 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
  * @returns JSON-schema annotation so that the schema can be serialized with correct parameters.
  */
 export const makeTypeJsonSchemaAnnotation = (options: {
+  identifier?: string;
   kind: EntityKind;
   typename: string;
   version: string;
@@ -147,7 +150,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 
   const obj = {
     // TODO(dmaretskyi): Should this include the version?
-    $id: DXN.fromTypename(options.typename).toString(),
+    $id: options.identifier ?? DXN.fromTypename(options.typename).toString(),
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,
@@ -160,6 +163,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 };
 
 const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
+  assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
     return identifier;

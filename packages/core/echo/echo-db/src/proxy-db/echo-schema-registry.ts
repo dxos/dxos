@@ -16,6 +16,7 @@ import {
   createJsonSchema,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  makeTypeJsonSchemaAnnotation,
   toJsonSchema,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -34,6 +35,7 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
+import { SchemaAST } from 'effect';
 
 export type EchoSchemaRegistryOptions = {
   /**
@@ -290,10 +292,17 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
     const schemaToStore = create(StoredSchema, { ...meta, jsonSchema: createJsonSchema() });
+    const typeId = `dxn:echo:@:${schemaToStore.id}`;
     schemaToStore.jsonSchema = toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
-        [TypeIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+        [TypeIdentifierAnnotationId]: typeId,
+        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+          identifier: typeId,
+          kind: meta.kind,
+          typename: meta.typename,
+          version: meta.version,
+        }),
       }),
     );
 

@@ -7,7 +7,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
-import { type TypeAnnotation, TypeAnnotationId } from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
+import { DXN } from '@dxos/keys';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (
@@ -82,5 +83,10 @@ export const setTypenameInSchema = (
       typename,
       version: existingAnnotation.version,
     } satisfies TypeAnnotation,
+    [SchemaAST.JSONSchemaAnnotationId]: {
+      ...(schema.ast.annotations[SchemaAST.JSONSchemaAnnotationId] ?? {}),
+      $id: schema.ast.annotations[TypeIdentifierAnnotationId] ?? DXN.fromTypename(typename).toString(),
+      typename,
+    },
   });
 };
