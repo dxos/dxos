@@ -125,25 +125,25 @@ const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
     jsonSchema.$id = echoIdentifier;
   }
 
-  const objectAnnotation = getTypeAnnotation(schema);
-  if (objectAnnotation) {
-    // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
-    if (!jsonSchema.$id) {
-      // TODO(dmaretskyi): Should this include the version?
-      jsonSchema.$id = DXN.fromTypename(objectAnnotation.typename).toString();
-    }
-    jsonSchema.entityKind = objectAnnotation.kind;
-    jsonSchema.version = objectAnnotation.version;
-    jsonSchema.typename = objectAnnotation.typename;
-    if (jsonSchema.entityKind === EntityKind.Relation) {
-      jsonSchema.relationTarget = {
-        $ref: objectAnnotation.sourceSchema,
-      };
-      jsonSchema.relationSource = {
-        $ref: objectAnnotation.targetSchema,
-      };
-    }
-  }
+  // const objectAnnotation = getTypeAnnotation(schema);
+  // if (objectAnnotation) {
+  //   // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
+  //   if (!jsonSchema.$id) {
+  //     // TODO(dmaretskyi): Should this include the version?
+  //     jsonSchema.$id = DXN.fromTypename(objectAnnotation.typename).toString();
+  //   }
+  //   jsonSchema.entityKind = objectAnnotation.kind;
+  //   jsonSchema.version = objectAnnotation.version;
+  //   jsonSchema.typename = objectAnnotation.typename;
+  //   if (jsonSchema.entityKind === EntityKind.Relation) {
+  //     jsonSchema.relationTarget = {
+  //       $ref: objectAnnotation.sourceSchema,
+  //     };
+  //     jsonSchema.relationSource = {
+  //       $ref: objectAnnotation.targetSchema,
+  //     };
+  //   }
+  // }
 
   return normalizeJsonSchema(jsonSchema);
 };
