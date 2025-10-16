@@ -34,7 +34,7 @@ faker.seed(0);
 
 const DefaultStory = () => {
   const space = useSpace();
-  const projects = useQuery(space, Filter.typename(DataType.Project.typename));
+  const projects = useQuery(space, Filter.type(DataType.Project));
   const project = projects[0];
 
   if (!project) {
