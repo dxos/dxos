@@ -143,7 +143,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
       }
 
       return (
-        <>
+        <div className={mx('grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
             id={cell.id}
             classNames={[editorStyles, 'border-b border-subduedSeparator']}
@@ -152,7 +152,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
             onChange={handleQueryChange}
           />
           {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
-        </>
+        </div>
       );
 
     case 'prompt':
@@ -163,7 +163,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
       return (
         <Chat.Root chat={cell.chat.target} processor={processor}>
           <Chat.Prompt settings={false} classNames='p-2' />
-          <Chat.Thread overscroll={0} classNames='bs-[10rem]' />
+          <Chat.Thread overscroll={0} />
         </Chat.Root>
       );
 

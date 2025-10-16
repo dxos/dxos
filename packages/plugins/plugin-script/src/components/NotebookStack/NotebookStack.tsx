@@ -35,6 +35,7 @@ type NotebookSectionProps = NotebookCellProps;
 
 const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...props }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
+  const resizable = cell.type === 'query' || cell.type === 'prompt';
 
   // TOOD(burdon): Set size if no extrinsic size (provider).
   // TODO(burdon): Fix overflow bug.
@@ -55,7 +56,7 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </DropdownMenu.Root>
-        <StackItem.ResizeHandle />
+        {resizable && <StackItem.ResizeHandle />}
       </StackItem.Heading>
 
       {/* TODO(burdon): Fix drag preview? */}
