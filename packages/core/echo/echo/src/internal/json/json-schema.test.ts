@@ -729,7 +729,7 @@ describe('json-to-effect', () => {
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
   });
 
-  test.skip('object nested inside another struct', () => {
+  test('object nested inside another struct', () => {
     const Contact = Schema.Struct({
       name: Schema.String,
     }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
@@ -743,7 +743,9 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
+            "$id": "dxn:type:example.com/type/Contact",
             "additionalProperties": false,
+            "entityKind": "object",
             "properties": {
               "id": {
                 "type": "string",
@@ -761,6 +763,8 @@ describe('json-to-effect', () => {
               "id",
             ],
             "type": "object",
+            "typename": "example.com/type/Contact",
+            "version": "0.1.0",
           },
         },
         "propertyOrder": [
