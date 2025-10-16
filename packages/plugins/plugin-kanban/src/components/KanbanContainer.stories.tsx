@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
@@ -97,13 +97,13 @@ const StorybookKanban = () => {
   const handleRemoveCard = useCallback((card: { id: string }) => space.db.remove(card), [space]);
 
   const handleUpdateQuery = useCallback(
-    (typename: string) => {
+    (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
       invariant(view);
 
-      schema.updateTypename(typename);
-      view.query.ast = Query.select(Filter.typename(typename)).ast;
+      schema.updateTypename(getTypenameFromQuery(newQuery));
+      view.query.ast = newQuery;
     },
     [view, schema],
   );

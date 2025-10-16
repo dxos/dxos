@@ -45,8 +45,8 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
           const tag = values[path];
           const meta = Obj.getMeta(object);
           const currentTag = meta.tags?.[0];
-          if (tag !== undefined && currentTag !== values.tag?.dxn.toString()) {
-            meta.tags = [values.tag.dxn.toString()];
+          if (currentTag !== tag?.dxn.toString()) {
+            meta.tags = tag ? [tag.dxn.toString()] : [];
           }
           continue;
         }

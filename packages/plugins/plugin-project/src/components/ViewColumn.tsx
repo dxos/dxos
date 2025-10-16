@@ -35,7 +35,8 @@ export const ViewColumn = ({ view }: ViewColumnProps) => {
       return Query.select(Filter.nothing());
     } else {
       // NOTE: Snapshot is required to prevent signal read in prohibited scope.
-      return Query.fromAst(Obj.getSnapshot(view).query.ast);
+      // TODO(wittjosiah): Without stringify, filter.filters remains a proxied array.
+      return Query.fromAst(JSON.parse(JSON.stringify(Obj.getSnapshot(view).query.ast)));
     }
   }, [JSON.stringify(view?.query.ast)]);
 

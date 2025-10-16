@@ -217,14 +217,14 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static contains<T>(value: T): Echo.Filter<T[]> {
+  static contains<T>(value: T): Echo.Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Echo.Filter<T> {
+  static between<T>(from: T, to: T): Echo.Filter<unknown> {
     return new FilterClass({
       type: 'range',
       from,

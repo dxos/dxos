@@ -72,8 +72,8 @@ export default (context: PluginContext) =>
 
         const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
         const space = spaceId && client.spaces.get(spaceId);
-        const meeting = objectId && (await space?.db.query(Query.select(Filter.ids(objectId))).first());
-        state.activeMeeting = meeting;
+        const meeting = objectId ? await space?.db.query(Query.select(Filter.ids(objectId))).first() : undefined;
+        state.activeMeeting = meeting as Meeting.Meeting | undefined;
 
         const enabled = !!transcriptionEnabled;
         if (space && transcriptDxn) {

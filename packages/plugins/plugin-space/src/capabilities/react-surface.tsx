@@ -32,7 +32,7 @@ import {
 import { Input, useTranslation } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
+import { DataType, type TypenameAnnotation, TypenameAnnotationId, getTypenames } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -253,9 +253,6 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         const client = useClient();
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
 
         const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
 
@@ -277,33 +274,13 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
           [objectForms],
         );
 
-        const fixed = client.graph.schemaRegistry.schemas.filter((schema) => {
-          const limitedStatic =
-            annotation.includes('limited-static') && whitelistedTypenames.has(Type.getTypename(schema));
-          const unusedStatic =
-            annotation.includes('unused-static') &&
-            whitelistedTypenames.has(Type.getTypename(schema)) &&
-            !space.properties.staticRecords?.includes(Type.getTypename(schema));
-          const usedStatic =
-            annotation.includes('used-static') &&
-            whitelistedTypenames.has(Type.getTypename(schema)) &&
-            space.properties.staticRecords?.includes(Type.getTypename(schema));
-          const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || unusedStatic || usedStatic || objectForm;
+        const typenames = getTypenames({
+          annotation,
+          whitelistedTypenames,
+          objectFormTypenames,
+          space,
+          client,
         });
-        const dynamic = space?.db.schemaRegistry.query().runSync();
-        const typenames = Array.from(
-          new Set<string>([
-            ...(annotation.includes('limited-static') ||
-            annotation.includes('unused-static') ||
-            annotation.includes('used-static') ||
-            annotation.includes('static') ||
-            annotation.includes('object-form')
-              ? fixed.map((schema) => Type.getTypename(schema))
-              : []),
-            ...(annotation.includes('dynamic') ? dynamic.map((schema) => schema.typename) : []),
-          ]),
-        ).sort();
 
         const options = useMemo(
           () =>
