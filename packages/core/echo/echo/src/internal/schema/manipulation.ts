@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 
 import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
-import { DXN } from '@dxos/keys';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (

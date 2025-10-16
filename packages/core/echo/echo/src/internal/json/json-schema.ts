@@ -12,18 +12,12 @@ import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
-import { invariant, assertArgument } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import {
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
-} from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
 import { EntityKind, EntityKindSchema } from '../ast';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
@@ -104,7 +98,7 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
 
 const _toJsonSchemaAST = (ast: SchemaAST.AST): JsonSchemaType => {
   const withRefinements = withEchoRefinements(ast, '#');
-  let jsonSchema = JSONSchema.fromAST(withRefinements, {
+  const jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as JsonSchemaType;
 

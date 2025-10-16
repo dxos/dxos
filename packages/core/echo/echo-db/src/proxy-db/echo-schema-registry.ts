@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -34,7 +35,6 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { SchemaAST } from 'effect';
 
 export type EchoSchemaRegistryOptions = {
   /**

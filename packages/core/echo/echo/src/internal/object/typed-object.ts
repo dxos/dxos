@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
@@ -10,7 +11,6 @@ import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type 
 import { type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
-import { SchemaAST } from 'effect';
 import { makeTypeJsonSchemaAnnotation } from './entity';
 
 /**
