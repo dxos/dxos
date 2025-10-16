@@ -3,7 +3,8 @@
 //
 
 import { Chess as ChessJS } from 'chess.js';
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { DatabaseService, defineFunction } from '@dxos/functions';

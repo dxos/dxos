@@ -13,6 +13,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {
@@ -25,10 +28,10 @@
       "path": "../../../sdk/client"
     },
     {
-      "path": "../echo-db"
+      "path": "../echo"
     },
     {
-      "path": "../echo-schema"
+      "path": "../echo-db"
     },
     {
       "path": "../live-object"

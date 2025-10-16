@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { EditorInputMode, EditorViewMode } from '@dxos/react-ui-editor/types';
 import { DataType, ItemAnnotation } from '@dxos/schema';
 

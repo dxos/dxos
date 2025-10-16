@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DeletedId, TypeId, defineHiddenProperty, getTypename } from '@dxos/echo-schema';
 import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
+import { defineHiddenProperty } from './define-hidden-property';
 import { ReactiveArray, type ReactiveHandler, createProxy, isValidProxyTarget, objectData } from './proxy';
-import { TypedReactiveHandler } from './typed-handler';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -46,8 +45,6 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       defineHiddenProperty(target, symbolPropertySignal, compositeRuntime.createSignal());
     }
 
-    defineHiddenProperty(target, DeletedId, false);
-
     for (const key of Object.getOwnPropertyNames(target)) {
       const descriptor = Object.getOwnPropertyDescriptor(target, key)!;
       if (descriptor.get) {
@@ -73,25 +70,17 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolSignal].notifyRead();
     target[symbolPropertySignal].notifyRead();
 
+    // TODO(dmaretskyi): Is this needed? The user can just as easily inspect the proxy target.
     if (prop === objectData) {
       return toJSON(target);
-    }
-
-    if (prop === TypeId) {
-      return undefined;
     }
 
     const value = Reflect.get(target, prop);
 
     if (isValidProxyTarget(value)) {
-      const isTyped = getTypename(value) !== undefined;
-      if (isTyped) {
-        return createProxy(value, TypedReactiveHandler.instance);
-      } else {
-        // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
-        // TODO(dmaretskyi): Not sure this note is relevant anymore since proxy handlers are singletons.
-        return createProxy(value, this);
-      }
+      // Note: Need to pass in `this` instance to createProxy to ensure that the same proxy is used for target.
+      // TODO(dmaretskyi): Not sure this note is relevant anymore since proxy handlers are singletons.
+      return createProxy(value, this);
     }
 
     return value;

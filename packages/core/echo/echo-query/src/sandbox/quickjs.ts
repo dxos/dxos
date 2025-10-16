@@ -9,6 +9,7 @@ import { type QuickJSContext, type QuickJSHandle, type SuccessOrFail } from '@dx
  *
  * Replacement for `QuickJScontext.unwrapResult` because that seems to cause an OOM.
  */
+// TODO(burdon): Factor out.
 export const unwrapResult = <T>(context: QuickJSContext, result: SuccessOrFail<T, QuickJSHandle>): T => {
   if (result.error) {
     const contextError = context.dump(result.error);

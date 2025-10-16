@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
+import { type EchoSchema } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { type EchoSchema } from '@dxos/echo-schema';
 import { type Live } from '@dxos/live-object';
 
 // TODO(burdon): Use echo-schema types.

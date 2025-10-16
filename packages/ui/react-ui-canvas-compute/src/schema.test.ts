@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { live } from '@dxos/client/echo';
+import { live } from '@dxos/echo/internal';
 import { BaseGraphNode, Graph } from '@dxos/graph';
 import {
   Polygon,

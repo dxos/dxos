@@ -10,10 +10,10 @@ import { type EditorInputMode, EditorInputModes } from '@dxos/react-ui-editor';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type ScriptSettingsProps } from '../../types';
+import { type ScriptSettings } from '../../types';
 import { getAccessCredential } from '../../util';
 
-export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettingsProps }) => {
+export const ScriptPluginSettings = ({ settings }: { settings: ScriptSettings }) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
 

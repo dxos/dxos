@@ -11,7 +11,7 @@ import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
 import { type Space } from '@dxos/client/echo';
-import { type TagMap, Type, findTagByLabel } from '@dxos/echo';
+import { Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
@@ -19,7 +19,7 @@ import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
   space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
-  tags?: TagMap;
+  tags?: Tag.TagMap;
 };
 
 /**
@@ -144,7 +144,7 @@ const decorations = ({ tags }: QueryOptions): Extension => {
             const tagNode = node.node.getChild(QueryDSL.Node.Tag);
             if (tagNode) {
               const label = state.sliceDoc(tagNode.from + 1, tagNode.to);
-              const tag = findTagByLabel(tags, label);
+              const tag = Tag.findTagByLabel(tags, label);
               const hue = tag?.hue ?? getHashHue(tag?.id ?? label);
               deco.add(
                 node.from,

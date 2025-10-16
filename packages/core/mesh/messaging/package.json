@@ -52,6 +52,7 @@
     "ws": "^8.14.2"
   },
   "devDependencies": {
+    "@dxos/keyring": "workspace:*",
     "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },

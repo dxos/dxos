@@ -3,7 +3,7 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';

@@ -6,6 +6,7 @@ import { ScriptType } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
+import { Notebook } from './types';
 
 export const translations = [
   {
@@ -18,6 +19,15 @@ export const translations = [
         'object name placeholder': 'New script',
         'rename object label': 'Rename script',
         'delete object label': 'Delete script',
+      },
+      [Notebook.Notebook.typename]: {
+        'typename label': 'Notebook',
+        'typename label_zero': 'Notebooks',
+        'typename label_one': 'Notebook',
+        'typename label_other': 'Notebooks',
+        'object name placeholder': 'New notebook',
+        'rename object label': 'Rename notebook',
+        'delete object label': 'Delete notebook',
       },
       [meta.id]: {
         'plugin name': 'Scripts',
@@ -81,6 +91,10 @@ export const translations = [
         'script deployment error toast description_other': 'There was an error deploying your scripts.',
         'script deployment error toast close label_one': 'Close',
         'script deployment error toast close label_other': 'Close',
+
+        'notebook cell placeholder': 'Enter script',
+        'notebook cell delete label': 'Delete cell',
+        'notebook cell insert label': 'Insert cell',
       },
     },
   },

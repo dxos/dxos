@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -17,7 +17,7 @@ import {
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';

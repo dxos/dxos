@@ -98,7 +98,7 @@ export type NavTreeContainerProps = {
 } & Pick<NavTreeContextValue, 'tab'>;
 
 export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeContainerProps) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [isLg] = useMediaQuery('lg');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);
@@ -178,6 +178,10 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
 
   const canDrop = useCallback(({ source, target }: { source: TreeData; target: TreeData }) => {
     return target.item.properties.canDrop?.(source) ?? false;
+  }, []);
+
+  const canSelect = useCallback(({ item }: { item: Node }) => {
+    return item.properties.selectable ?? true;
   }, []);
 
   const handleSelect = useCallback(
@@ -305,6 +309,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       isCurrent,
       isOpen,
       canDrop,
+      canSelect,
       isAlternateTree,
       setAlternateTree,
       onTabChange: handleTabChange,
@@ -323,6 +328,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
       isCurrent,
       isOpen,
       canDrop,
+      canSelect,
       isAlternateTree,
       setAlternateTree,
       handleTabChange,

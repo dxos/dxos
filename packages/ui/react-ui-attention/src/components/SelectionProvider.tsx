@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { useDefaultValue } from '@dxos/react-ui';

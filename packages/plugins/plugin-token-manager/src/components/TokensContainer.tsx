@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -64,7 +64,7 @@ export const TokensContainer = ({ space }: { space: Space }) => {
   const handleDelete = useCallback((token: DataType.AccessToken) => space.db.remove(token), [space]);
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
           title={t('integrations verbose label', { ns: meta.id })}

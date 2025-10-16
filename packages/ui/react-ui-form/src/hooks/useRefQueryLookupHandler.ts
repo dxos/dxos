@@ -4,7 +4,8 @@
 
 import { useCallback } from 'react';
 
-import { type TypeAnnotation, getObjectDXN } from '@dxos/echo-schema';
+import { Obj } from '@dxos/echo';
+import { type TypeAnnotation, getObjectDXN } from '@dxos/echo/internal';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { isNonNullable } from '@dxos/util';
 
@@ -28,8 +29,7 @@ export const useRefQueryLookupHandler = ({ space }: UseRefQueryLookupProps): Que
             return undefined;
           }
 
-          // TODO(Zaymon): Better fallback object names?
-          const item = { dxn, label: object?.name ?? object?.id ?? '' };
+          const item = { dxn, label: Obj.getLabel(object) ?? object?.id ?? '' };
           return item;
         })
         .filter(isNonNullable);

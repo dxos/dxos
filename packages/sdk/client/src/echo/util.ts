@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client-protocol';
 import { Obj, type Type } from '@dxos/echo';
@@ -12,7 +12,7 @@ import { type Live, isLiveObject } from '@dxos/live-object';
 
 import { SpaceProxy } from './space-proxy';
 
-// TODO(dmaretskyi): Move to @dxos/echo-schema.
+// TODO(dmaretskyi): Move to @dxos/echo/internal.
 export const ReactiveObjectSchema: Schema.Schema<Live<any>> = Schema.Any.pipe(
   Schema.filter((obj) => isLiveObject(obj)),
   Schema.annotations({ title: 'Live' }),

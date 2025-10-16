@@ -4,15 +4,15 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { TypedObject } from '@dxos/echo/internal';
 import { type EchoDatabaseImpl, Filter, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';
-import { TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

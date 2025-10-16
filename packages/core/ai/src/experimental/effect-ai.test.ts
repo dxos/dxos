@@ -2,15 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Chat, LanguageModel, Prompt, Tool, Toolkit } from '@effect/ai';
+import * as Chat from '@effect/ai/Chat';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
-import { NodeHttpClient } from '@effect/platform-node';
+import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Chunk, Config, Console, Effect, Layer, Schedule, Schema, Stream, pipe } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Config from 'effect/Config';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as EffectFunction from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect';
@@ -125,7 +137,7 @@ describe('LanguageModel', () => {
           }).pipe(
             // Effect.tap((response) => Console.log(response)),
             Effect.provide(OpenAiLanguageModel.model('gpt-4o')),
-            Effect.retry(pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
+            Effect.retry(EffectFunction.pipe(Schedule.exponential('1 second'), Schedule.intersect(Schedule.recurs(2)))),
             Effect.timeout('30 seconds'),
           );
 

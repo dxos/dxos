@@ -16,6 +16,7 @@ import { type DataType } from '@dxos/schema';
 import {
   DEPLOYMENT_DIALOG,
   DeploymentDialog,
+  NotebookContainer,
   ScriptContainer,
   ScriptObjectSettings,
   ScriptPluginSettings,
@@ -23,7 +24,7 @@ import {
   TestContainer,
 } from '../components';
 import { meta } from '../meta';
-import { type ScriptSettingsProps } from '../types';
+import { Notebook, type ScriptSettings } from '../types';
 
 import { ScriptCapabilities } from './capabilities';
 
@@ -32,21 +33,32 @@ export default () =>
     createSurface({
       id: `${meta.id}/plugin-settings`,
       role: 'article',
-      filter: (data): data is { subject: SettingsStore<ScriptSettingsProps> } =>
+      filter: (data): data is { subject: SettingsStore<ScriptSettings> } =>
         data.subject instanceof SettingsStore && data.subject.prefix === meta.id,
       component: ({ data: { subject } }) => <ScriptPluginSettings settings={subject.value} />,
     }),
     createSurface({
-      id: `${meta.id}/article`,
-      role: 'article',
+      id: `${meta.id}/script/article`,
+      role: ['article', 'section'],
       filter: (data): data is { subject: ScriptType } => Obj.instanceOf(ScriptType, data.subject),
       component: ({ data, role }) => {
         const compiler = useCapability(ScriptCapabilities.Compiler);
         // TODO(dmaretskyi): Since settings store is not reactive, this would break on the script plugin being enabled without a page reload.
-        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettingsProps>(meta.id)?.value;
+        const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
         return <ScriptContainer role={role} script={data.subject} settings={settings} env={compiler.environment} />;
       },
     }),
+    createSurface({
+      id: `${meta.id}/notebook/article`,
+      role: 'article',
+      filter: (data): data is { subject: Notebook.Notebook } => Obj.instanceOf(Notebook.Notebook, data.subject),
+      component: ({ data, role }) => {
+        const compiler = useCapability(ScriptCapabilities.Compiler);
+        return <NotebookContainer role={role} notebook={data.subject} env={compiler.environment} />;
+      },
+    }),
+    // TODO(burdon): Standardize PluginSettings vs ObjectSettings.
+    // TODO(burdon): Why is ScriptProperties different from ScriptObjectSettings?
     createSurface({
       id: `${meta.id}/companion/base-settings`,
       role: 'base-object-settings',

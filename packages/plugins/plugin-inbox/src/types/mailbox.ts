@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, TagInfo, type TagMap, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ItemAnnotation } from '@dxos/schema';
 
@@ -21,9 +21,6 @@ export enum MessageState {
 export const Mailbox = Schema.Struct({
   name: Schema.optional(Schema.String),
   queue: Type.Ref(Queue),
-  // Tags mapped from labels.
-  // TODO(burdon): Reconcile with Space tags.
-  tags: Schema.mutable(Schema.Record({ key: Schema.String, value: TagInfo })),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
     Schema.Struct({
@@ -41,10 +38,9 @@ export const Mailbox = Schema.Struct({
 
 export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters' | 'tags'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters'> & {
   space: Space;
   filters?: { name: string; filter: string }[];
-  tags?: TagMap;
 };
 
 export const make = ({ space, ...props }: MailboxProps) => {
@@ -52,7 +48,6 @@ export const make = ({ space, ...props }: MailboxProps) => {
   return Obj.make(Mailbox, {
     queue: Ref.fromDXN(queue.dxn),
     filters: [],
-    tags: {},
     ...props,
   });
 };

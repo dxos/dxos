@@ -3,7 +3,10 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Array, Option, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { type QueryResult, type Space, SpaceState, getSpace, isSpace, parseId } from '@dxos/client/echo';
@@ -81,7 +84,7 @@ export default (context: PluginContext) => {
       position: 'hoist',
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -158,7 +161,7 @@ export default (context: PluginContext) => {
       position: 'hoist',
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [spacesNode]),
@@ -174,7 +177,7 @@ export default (context: PluginContext) => {
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === SPACES ? Option.some(node) : Option.none())),
             Option.map(() => {
@@ -279,7 +282,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
@@ -311,7 +314,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/root-collection`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none(),
@@ -334,7 +337,7 @@ export default (context: PluginContext) => {
 
               return get(
                 rxFromSignal(() =>
-                  pipe(
+                  Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
                     Array.filter(isNonNullable),
@@ -361,7 +364,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/objects`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.Collection, node.data) ? Option.some(node.data) : Option.none(),
@@ -372,7 +375,7 @@ export default (context: PluginContext) => {
 
               return get(
                 rxFromSignal(() =>
-                  pipe(
+                  Function.pipe(
                     collection.objects,
                     Array.map((object) => object.target),
                     Array.filter(isNonNullable),
@@ -433,7 +436,7 @@ export default (context: PluginContext) => {
       connector: (node) => {
         let query: QueryResult<Type.Expando> | undefined;
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) ? Option.some(node.data) : Option.none(),
@@ -490,7 +493,7 @@ export default (context: PluginContext) => {
       connector: (node) => {
         const client = context.getCapability(ClientCapabilities.Client);
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               Obj.instanceOf(DataType.QueryCollection, node.data) &&
@@ -522,7 +525,7 @@ export default (context: PluginContext) => {
       actions: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = isSpace(node.properties.space) ? node.properties.space : undefined;
@@ -570,7 +573,7 @@ export default (context: PluginContext) => {
       connector: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data) ?? (isSpace(node.properties.space) ? node.properties.space : undefined);
@@ -645,7 +648,7 @@ export default (context: PluginContext) => {
       actions: (node) => {
         let query: QueryResult<DataType.View> | undefined;
         return Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               const space = getSpace(node.data);
@@ -705,7 +708,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/selected-objects`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(DataType.View, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [
@@ -730,7 +733,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/settings`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.isObject(node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [

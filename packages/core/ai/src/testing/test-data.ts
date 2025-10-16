@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
-import type { EchoDatabase } from '@dxos/echo-db';
 import {
   JSON_SCHEMA_ECHO_REF_ID,
   type JsonSchemaType,
@@ -13,9 +12,10 @@ import {
   type Ref,
   Ref as RefImpl,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
+import type { EchoDatabase } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { live } from '@dxos/live-object';
 
 import {
   type DataSource,

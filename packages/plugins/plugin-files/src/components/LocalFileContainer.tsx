@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { type FC, useMemo } from 'react';
 
 import { Surface, useAppGraph } from '@dxos/app-framework';

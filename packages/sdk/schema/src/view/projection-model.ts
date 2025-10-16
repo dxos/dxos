@@ -3,7 +3,7 @@
 //
 
 import { computed, untracked } from '@preact/signals-core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import {
   FormatEnum,
@@ -12,8 +12,8 @@ import {
   TypeEnum,
   formatToType,
   typeToFormat,
-} from '@dxos/echo-schema';
-import { createSchemaReference, getSchemaReference } from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { createSchemaReference, getSchemaReference } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type Live, getSnapshot } from '@dxos/live-object';
 import { log } from '@dxos/log';

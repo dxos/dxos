@@ -6,6 +6,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -39,19 +42,25 @@
       "path": "../assistant"
     },
     {
+      "path": "../blueprints"
+    },
+    {
       "path": "../echo/echo"
     },
     {
       "path": "../echo/echo-db"
     },
     {
-      "path": "../echo/echo-schema"
-    },
-    {
       "path": "../echo/live-object"
     },
     {
       "path": "../functions"
+    },
+    {
+      "path": "../mesh/edge-client"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

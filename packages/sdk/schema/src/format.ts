@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import {
   DecimalPrecision,
@@ -12,7 +12,7 @@ import {
   type SelectOption,
   SelectOptionSchema,
   TypeEnum,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 
 /**
  * Base schema.

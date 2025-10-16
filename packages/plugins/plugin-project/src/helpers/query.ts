@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, Effect, Match, Option, type Schema, SchemaAST, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as EffectFunction from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { ResearchOn } from '@dxos/assistant-testing';
 import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';
@@ -11,23 +17,25 @@ import {
   type ReferenceAnnotationValue,
   getTypeAnnotation,
   unwrapOptional,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
 
-// TODO(wittjosiah): Support arbitrary imports.
-// TODO(burdon): Translate filters.
+// TODO(wittjosiah): Support arbitrary type imports.
+// TODO(burdon): Translate tags.
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', `return ${queryString}`)(
+    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', 'Markdown', `return ${queryString}`)(
       Query,
       Filter,
       DataType,
       ResearchOn,
+      Markdown,
     );
   } catch {
     return Query.select(Filter.nothing());
@@ -133,10 +141,10 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'object' }, ({ typename }) => Option.fromNullable(typename)),
     Match.when({ type: 'and' }, ({ filters }) =>
-      pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
+      EffectFunction.pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
     ),
     Match.when({ type: 'or' }, ({ filters }) =>
-      pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
+      EffectFunction.pipe(filters, Array.map(typenameFromFilter), Array.findFirst(Option.isSome), Option.flatten),
     ),
     Match.orElse(() => Option.none()),
   );

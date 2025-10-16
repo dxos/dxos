@@ -20,6 +20,9 @@
       "path": "../../../common/context"
     },
     {
+      "path": "../../../common/debug"
+    },
+    {
       "path": "../../../common/errors"
     },
     {
@@ -53,10 +56,10 @@
       "path": "../../protocols"
     },
     {
-      "path": "../echo-protocol"
+      "path": "../echo"
     },
     {
-      "path": "../echo-schema"
+      "path": "../echo-protocol"
     }
   ]
 }

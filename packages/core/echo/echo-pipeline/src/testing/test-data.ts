@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { getSchemaDXN } from '@dxos/echo/internal';
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { getSchemaDXN } from '@dxos/echo-schema';
 import { DXN, ObjectId, PublicKey } from '@dxos/keys';
 
 import * as TestSchema from './test-schema';

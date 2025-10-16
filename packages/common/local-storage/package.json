@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",

@@ -28,6 +28,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -35,6 +38,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/random"
     },
     {
       "path": "../../common/util"
@@ -46,16 +52,25 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../ai"
     },
     {
       "path": "../echo/echo"
     },
     {
-      "path": "../echo/echo-schema"
+      "path": "../echo/echo-db"
+    },
+    {
+      "path": "../echo/live-object"
     },
     {
       "path": "../functions"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

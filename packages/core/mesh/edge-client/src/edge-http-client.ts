@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Effect, pipe } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -372,7 +374,7 @@ export class EdgeHttpClient {
   //
 
   private async _fetch<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
-    return pipe(
+    return Function.pipe(
       HttpClient.get(url),
       withLogging,
       withRetryConfig,

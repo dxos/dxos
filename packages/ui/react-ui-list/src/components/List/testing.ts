@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { faker } from '@dxos/random';
 
 export const TestItemSchema = Schema.Struct({

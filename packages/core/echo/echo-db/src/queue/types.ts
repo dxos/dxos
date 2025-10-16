@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type Obj, type Relation } from '@dxos/echo';
-import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo-schema';
+import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 import type { Queryable } from '../query';

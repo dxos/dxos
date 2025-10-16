@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { KeyValueStore } from '@effect/platform';
-import { Context } from 'effect';
-import { Schema } from 'effect';
-import { Effect, Layer } from 'effect';
-import { Option } from 'effect';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { ObjectId } from '@dxos/keys';
 

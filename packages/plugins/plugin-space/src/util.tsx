@@ -3,11 +3,11 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { type AnyEchoObject, EXPANDO_TYPENAME } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
 import {
@@ -364,6 +364,7 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
       label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
       role: 'branch',
+      selectable: false,
       canDrop: () => false,
       space,
     },
@@ -479,6 +480,12 @@ export const createObjectNode = ({
     // TODO(wittjosiah): Remove metadata labels.
     metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New item' }];
 
+  const selectable =
+    (!Obj.instanceOf(DataType.StoredSchema, object) &&
+      !Obj.instanceOf(DataType.QueryCollection, object) &&
+      !Obj.instanceOf(DataType.Collection, object)) ||
+    (navigable && Obj.instanceOf(DataType.Collection, object));
+
   return {
     id: fullyQualifiedId(object),
     type,
@@ -491,6 +498,7 @@ export const createObjectNode = ({
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
       persistenceKey: space?.id,
+      selectable,
       canDrop: (source: TreeData) => {
         return droppable && isGraphNode(source.item) && Obj.isObject(source.item.data);
       },
@@ -582,7 +590,7 @@ export const constructObjectActions = ({
                 );
               } else {
                 await dispatch(
-                  pipe(
+                  Function.pipe(
                     matchingObjectForm.getIntent({}, { space }),
                     chain(SpaceAction.AddObject, { target: space, hidden: true }),
                     chain(LayoutAction.Open, { part: 'main' }),

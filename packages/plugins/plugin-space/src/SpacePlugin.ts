@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
@@ -14,7 +14,7 @@ import {
   definePlugin,
   oneOf,
 } from '@dxos/app-framework';
-import { Ref, Type } from '@dxos/echo';
+import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { DataType, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
@@ -191,6 +191,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
         activatesOn: ClientEvents.SetupSchema,
         activate: () =>
           contributes(ClientCapabilities.Schema, [
+            Tag.Tag,
             DataType.View,
             DataType.Event,
             DataType.Organization,

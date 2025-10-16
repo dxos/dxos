@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo-schema';
+import { EntityKind, ObjectId, Ref, TypeAnnotationId } from '@dxos/echo/internal';
 
 // TODO(burdon): Remove (use @dxos/schema DataType).
 

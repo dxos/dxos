@@ -6,7 +6,7 @@ import { effect } from '@preact/signals-core';
 import orderBy from 'lodash.orderby';
 import { useEffect, useMemo, useState } from 'react';
 
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchemaType } from '@dxos/echo/internal';
 import { type Live } from '@dxos/live-object';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';

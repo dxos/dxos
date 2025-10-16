@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { isNotUndefined } from 'effect/Predicate';
+import * as Predicate from 'effect/Predicate';
 
 import { Event, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
+import { type ObjectId } from '@dxos/echo/internal';
 import { filterMatchObject } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { type ObjectId } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db';
@@ -218,7 +218,7 @@ export class SpaceQuerySource implements QuerySource {
     if (isObjectIdFilter(filter)) {
       results.push(
         ...(await this._database._coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
-          .filter(isNotUndefined)
+          .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
       );
@@ -284,7 +284,7 @@ export class SpaceQuerySource implements QuerySource {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
           .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
-          .filter(isNotUndefined)
+          .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
       : this._database.coreDatabase.allObjectCores().filter((core) => this._filterCore(core, filter, options));
 
