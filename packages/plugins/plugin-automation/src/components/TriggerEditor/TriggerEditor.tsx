@@ -103,7 +103,7 @@ const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }
         return (
           <Input.Root>
             <InputHeader label={props.label} />
-            <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
+            <QueryForm initialQuery={props.getValue().ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );
       },

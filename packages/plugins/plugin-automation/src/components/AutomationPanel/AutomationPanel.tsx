@@ -62,7 +62,7 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
     setSelected(undefined);
   };
 
-  const handleSave: TriggerEditorProps['onSave'] = (trigger) => {
+  const handleSave: TriggerEditorProps['onSave'] = ({ id: _, ...trigger }) => {
     if (selected) {
       Object.assign(selected, trigger);
     } else {
