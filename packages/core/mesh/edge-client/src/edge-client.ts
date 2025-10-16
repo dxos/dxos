@@ -24,7 +24,7 @@ import { getEdgeUrlWithProtocol } from './utils';
 
 const DEFAULT_TIMEOUT = 10_000;
 
-// Refresh status every second: latency, rate counters.
+// Refresh status every second: rtt, rate counters.
 const STATUS_REFRESH_INTERVAL = 1000;
 
 export type MessageListener = (message: Message) => void;
@@ -97,7 +97,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
           ? EdgeStatus.ConnectionState.CONNECTED
           : EdgeStatus.ConnectionState.NOT_CONNECTED,
       uptime: this._currentConnection?.uptime ?? 0,
-      latency: this._currentConnection?.latency ?? 0,
+      rtt: this._currentConnection?.rtt ?? 0,
       rateBytesUp: this._currentConnection?.uploadRate ?? 0,
       rateBytesDown: this._currentConnection?.downloadRate ?? 0,
     };
@@ -177,7 +177,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       log.warn('Error while opening connection', { err });
     });
 
-    // Notify about status changes (latency, rate counters).
+    // Notify about status changes (rtt, rate counters).
     scheduleTaskInterval(
       this._ctx,
       async () => {

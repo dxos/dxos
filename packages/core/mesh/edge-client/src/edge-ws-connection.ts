@@ -36,7 +36,7 @@ export class EdgeWsConnection extends Resource {
 
   // Latency tracking.
   private _pingTimestamp: number | undefined;
-  private _latency = 0;
+  private _rtt = 0;
 
   // Rate tracking with sliding window.
   private _uploadRate = 0;
@@ -62,8 +62,8 @@ export class EdgeWsConnection extends Resource {
     };
   }
 
-  public get latency(): number {
-    return this._latency;
+  public get rtt(): number {
+    return this._rtt;
   }
 
   public get uptime(): number {
@@ -151,7 +151,7 @@ export class EdgeWsConnection extends Resource {
       if (event.data === '__pong__') {
         // Calculate latency.
         if (this._pingTimestamp) {
-          this._latency = Date.now() - this._pingTimestamp;
+          this._rtt = Date.now() - this._pingTimestamp;
           this._pingTimestamp = undefined;
         }
         this._rescheduleHeartbeatTimeout();

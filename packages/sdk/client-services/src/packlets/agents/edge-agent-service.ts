@@ -28,7 +28,7 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
         next({
           status: this._edgeConnection?.status ?? {
             state: EdgeStatus.ConnectionState.NOT_CONNECTED,
-            latency: 0,
+            rtt: 0,
             uptime: 0,
             rateBytesUp: 0,
             rateBytesDown: 0,

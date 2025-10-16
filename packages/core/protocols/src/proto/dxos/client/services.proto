@@ -604,7 +604,7 @@ message EdgeStatus {
 
   ConnectionState state = 1;
   /** Latency in ms */
-  int32 latency = 2;
+  int32 rtt = 2;
 
   /** How long the connection has been up */
   int32 uptime = 3;

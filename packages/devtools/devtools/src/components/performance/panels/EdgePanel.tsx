@@ -79,7 +79,7 @@ const getHealthReportTable = (status?: EdgeStatus, wsStatus?: WsStatus): TablePr
       ? []
       : [
           ['', 'uptime', wsStatus?.uptime?.toFixed(0) ?? 'N/A', 's'],
-          ['', 'latency', wsStatus?.latency?.toFixed(0) ?? 'N/A', 'ms'],
+          ['', 'RTT', wsStatus?.rtt?.toFixed(0) ?? 'N/A', 'ms'],
           ['', 'up', Unit.KB(wsStatus?.rateBytesUp ?? 0), 'KB/s'],
           ['', 'down', Unit.KB(wsStatus?.rateBytesDown ?? 0), 'KB/s'],
         ]),
