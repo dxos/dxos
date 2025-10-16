@@ -220,12 +220,13 @@ export const useForm = <T extends BaseObject>({
 
       const newValues = { ...setValue(values, jsonPath, parsedValue) };
       setValues(newValues);
-      setChanged((prev) => ({ ...prev, [jsonPath]: true }));
+      const newChanged = { ...changed, [jsonPath]: true };
+      setChanged(newChanged);
       onValuesChanged?.(newValues);
 
       const isValid = validate(newValues);
       if (isValid && onValid) {
-        onValid(newValues, { changed });
+        onValid(newValues, { changed: newChanged });
       }
     },
     [values, onValuesChanged, validate, onValid, changed],

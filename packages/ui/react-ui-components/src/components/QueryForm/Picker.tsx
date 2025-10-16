@@ -17,7 +17,7 @@ export type PickerProps<T extends { id: string; label: string }> = {
   onChange?: (value: string | null) => void;
 };
 
-// TODO(burdon): Factor out.
+// TODO(wittjosiah): Should use `SelectInput` from `react-ui-form` instead.
 export const Picker = <T extends { id: string; label: string }>({
   placeholder,
   values,

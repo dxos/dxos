@@ -75,7 +75,7 @@ const View_ = Schema.Struct({
    * Can be a user-provided query grammar string or a query AST.
    */
   query: Schema.Struct({
-    string: Schema.optional(Schema.String),
+    raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
 
@@ -115,7 +115,7 @@ export const createFieldId = () => PublicKey.random().truncate();
 type CreateViewProps = {
   name?: string;
   query: Query.Any;
-  queryString?: string;
+  queryRaw?: string;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -131,7 +131,7 @@ type CreateViewProps = {
 export const createView = ({
   name,
   query,
-  queryString,
+  queryRaw,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -140,7 +140,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: { string: queryString, ast: query.ast },
+    query: { raw: queryRaw, ast: query.ast },
     projection: {
       schema: overrideSchema,
       fields: [],
@@ -218,7 +218,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
 export const createViewWithReferences = async ({
   name,
   query,
-  queryString,
+  queryRaw,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -230,7 +230,7 @@ export const createViewWithReferences = async ({
   const view = createView({
     name,
     query,
-    queryString,
+    queryRaw,
     jsonSchema,
     overrideSchema,
     presentation,
@@ -299,7 +299,7 @@ export const createViewWithReferences = async ({
 
 export type CreateViewFromSpaceProps = Omit<
   CreateViewWithReferencesProps,
-  'query' | 'queryString' | 'jsonSchema' | 'registry'
+  'query' | 'queryRaw' | 'jsonSchema' | 'registry'
 > & {
   client?: Client;
   space: Space;

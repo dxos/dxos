@@ -7,6 +7,7 @@ import { useRxValue } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useCapability, useIntentDispatcher } from '@dxos/app-framework';
+import { Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { Filter, fullyQualifiedId, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -54,15 +55,26 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const [filterText, setFilterText] = useState<string>(filterParam ?? '');
   // TODO(burdon): Query not supported on queues.
   //  Query.select(filter ?? Filter.everything()).orderBy(Order.property('createdAt', 'desc')),
-  const messages: DataType.Message[] = useQuery(mailbox.queue.target, filter ?? Filter.everything());
+  const messages: DataType.Message[] = useQuery(
+    mailbox.queue.target,
+    filter ?? Filter.everything(),
+  ) as DataType.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated(sortDescending.value)),
     [messages, sortDescending.value],
   );
 
   // Parse filter.
-  const parser = useMemo(() => new QueryBuilder(mailbox.tags), []);
-  useEffect(() => setFilter(parser.build(filterText)), [filterText]);
+  const space = getSpace(mailbox);
+  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const tagMap = useMemo(() => {
+    return tags.reduce((acc, tag) => {
+      acc[tag.id] = tag;
+      return acc;
+    }, {} as Tag.TagMap);
+  }, [tags]);
+  const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
+  useEffect(() => setFilter(parser.build(filterText)), [filterText, parser]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -123,7 +135,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     filterVisible.set(false);
     setFilterText(filterParam ?? '');
     setFilter(parser.build(filterParam ?? ''));
-  }, []);
+  }, [filterVisible, filterParam, parser]);
 
   return (
     <StackItem.Content
@@ -147,7 +159,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
                 classNames='min-is-0 pis-1'
                 autoFocus
                 space={getSpace(mailbox)}
-                tags={mailbox.tags}
+                tags={tagMap}
                 value={filterText}
                 onChange={setFilterText}
               />
@@ -177,7 +189,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
           id={id}
           role={role}
           messages={sortedMessages}
-          tags={mailbox.tags}
+          tags={tagMap}
           currentMessageId={currentMessageId}
           onAction={handleAction}
         />

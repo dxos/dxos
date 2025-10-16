@@ -22,7 +22,7 @@ import { type DataType } from '@dxos/schema';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import { Mailbox } from '../../types/mailbox';
 
-import { getMessage, listLabels, listMessages, messageToObject } from './api';
+import { getMessage, listMessages, messageToObject } from './api';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/gmail-sync',
@@ -46,11 +46,12 @@ export default defineFunction({
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
 
+      // TODO(wittjosiah): Consider syncing labels to space.
       // Sync labels.
-      const { labels } = yield* listLabels(userId);
-      labels.forEach((label) => {
-        (mailbox.tags ??= {})[label.id] = { label: label.name };
-      });
+      // const { labels } = yield* listLabels(userId);
+      // labels.forEach((label) => {
+      //   (mailbox.tags ??= {})[label.id] = { label: label.name };
+      // });
 
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
