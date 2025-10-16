@@ -65,7 +65,7 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   );
 
   const typenames = getTypenames({
-    annotation: ['dynamic', 'limited-static'],
+    annotation: ['dynamic', 'limited-static', 'object-form'],
     whitelistedTypenames,
     objectFormTypenames,
     space,
