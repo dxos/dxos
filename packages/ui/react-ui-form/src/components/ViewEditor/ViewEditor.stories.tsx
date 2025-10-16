@@ -21,10 +21,10 @@ import { ViewEditor, type ViewEditorProps } from './ViewEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { id: Type.getTypename(DataType.Organization), label: 'Organization' },
-  { id: Type.getTypename(DataType.Person), label: 'Person' },
-  { id: Type.getTypename(DataType.Project), label: 'Project' },
-  { id: Type.getTypename(DataType.Employer), label: 'Employer' },
+  { value: Type.getTypename(DataType.Organization), label: 'Organization' },
+  { value: Type.getTypename(DataType.Person), label: 'Person' },
+  { value: Type.getTypename(DataType.Project), label: 'Project' },
+  { value: Type.getTypename(DataType.Employer), label: 'Employer' },
 ];
 
 // Type definition for debug objects exposed to tests.

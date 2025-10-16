@@ -17,7 +17,7 @@ import { extractTag, extractTypename } from './query';
 
 export type QueryFormProps = ThemedClassName<{
   initialQuery?: QueryAST.Query;
-  types?: { id: string; label: string }[];
+  types?: { value: string; label: string }[];
   tags?: Tag.Tag[];
   onChange?: (query: Query.Any) => void;
 }>;
@@ -32,7 +32,10 @@ export const QueryForm = ({ classNames, types, tags, initialQuery, onChange }: Q
   const [type, setType] = useState<string | null>(initialType ?? null);
   const [tag, setTag] = useState<string | null>(initialTag ?? null);
 
-  const tagOptions = useMemo(() => tags?.map((tag) => ({ id: Obj.getDXN(tag).toString(), label: tag.label })), [tags]);
+  const tagOptions = useMemo(
+    () => tags?.map((tag) => ({ value: Obj.getDXN(tag).toString(), label: tag.label })),
+    [tags],
+  );
 
   const handleChange = useCallback(
     ({ type, tag }: { type: string | null; tag: string | null }) => {
