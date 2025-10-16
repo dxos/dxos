@@ -40,7 +40,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
   }
 
   return (
-    <StackItem.Content toolbar={showToolbar} size={role === 'section' ? 'video' : 'intrinsic'}>
+    <StackItem.Content toolbar={showToolbar}>
       {showToolbar && (
         <Toolbar.Root>
           <QueryEditor db={space.db} onChange={handleChange} />

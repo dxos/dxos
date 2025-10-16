@@ -207,8 +207,6 @@ export const defaultStyles = {
   light: vscodeLightStyle,
 };
 
-console.log(defaultStyles);
-
 /**
  * https://codemirror.net/examples/styling
  */

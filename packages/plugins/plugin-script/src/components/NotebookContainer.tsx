@@ -88,6 +88,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     [notebook],
   );
 
+  // TODO(burdon): Use outline instead of border?
   return (
     <StackItem.Content classNames='container-max-width border-l border-r border-subduedSeparator' toolbar>
       <Toolbar.Root>

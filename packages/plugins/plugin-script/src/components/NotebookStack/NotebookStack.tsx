@@ -36,10 +36,12 @@ type NotebookSectionProps = NotebookCellProps;
 const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...props }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
 
+  // TOOD(burdon): Set size if no extrinsic size (provider).
+  // TODO(burdon): Fix overflow bug.
   return (
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
-        <StackItem.DragHandle>
+        <StackItem.DragHandle asChild>
           <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
         </StackItem.DragHandle>
         <DropdownMenu.Root>
@@ -53,20 +55,21 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </DropdownMenu.Root>
+        <StackItem.ResizeHandle />
       </StackItem.Heading>
 
-      {/* TODO(burdon): Fix drag preview. */}
+      {/* TODO(burdon): Fix drag preview? */}
       <StackItem.DragPreview>
         {({ item: cell }) => (
           <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
-            <NotebookCell cell={cell} space={space} env={env} />
+            <NotebookCell space={space} cell={cell} env={env} dragging />
           </StackItem.Content>
         )}
       </StackItem.DragPreview>
 
       {/* TODO(burdon): Enable resize. */}
       <StackItem.Content classNames='overflow-visible'>
-        <NotebookCell cell={cell} space={space} env={env} {...props} />
+        <NotebookCell space={space} cell={cell} env={env} {...props} />
       </StackItem.Content>
     </StackItem.Root>
   );

@@ -38,11 +38,12 @@ const editorStyles = 'p-2 pis-3';
 export type NotebookCellProps = {
   space?: Space;
   graph?: ComputeGraph;
+  dragging?: boolean;
   cell: Notebook.Cell;
 } & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
 // TODO(burdon): Display errors.
-export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => {
+export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
   //
@@ -145,16 +146,12 @@ export const NotebookCell = ({ space, graph, cell, env }: NotebookCellProps) => 
         <>
           <QueryEditor
             id={cell.id}
-            classNames={editorStyles}
+            classNames={[editorStyles, 'border-b border-subduedSeparator']}
             db={space?.db}
             value={cell.script.target.content}
             onChange={handleQueryChange}
           />
-          {view && (
-            <div role='none' className='border-t border-subduedSeparator'>
-              <Surface role='section' limit={1} data={{ subject: view }} />
-            </div>
-          )}
+          {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
         </>
       );
 

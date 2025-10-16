@@ -215,6 +215,7 @@ export const filterItems = (
   }));
 };
 
+// TODO(burdon): Remove.
 export const insertAtCursor = (view: EditorView, head: number, insert: string) => {
   view.dispatch({
     changes: { from: head, to: head, insert },
