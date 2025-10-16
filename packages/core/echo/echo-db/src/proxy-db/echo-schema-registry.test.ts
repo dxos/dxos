@@ -13,7 +13,7 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   getSchemaTypename,
-  toJsonSchema
+  toJsonSchema,
 } from '@dxos/echo/internal';
 
 import { Filter } from '../query';
