@@ -38,7 +38,6 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
   const resizable = cell.type === 'query' || cell.type === 'prompt';
 
   // TOOD(burdon): Set size if no extrinsic size (provider).
-  // TODO(burdon): Fix overflow bug.
   return (
     <StackItem.Root role='section' item={cell} draggable>
       <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
