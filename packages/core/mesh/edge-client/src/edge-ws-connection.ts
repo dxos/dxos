@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTask, scheduleTaskInterval, Event } from '@dxos/async';
+import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';

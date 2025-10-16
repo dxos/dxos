@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Chart, registerables } from 'chart.js';
 import ChartStreaming from '@robloche/chartjs-plugin-streaming';
+import { Chart, registerables } from 'chart.js';
 import React, { createRef, useEffect, useState } from 'react';
 import 'chartjs-adapter-luxon';
 

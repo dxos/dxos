@@ -14,7 +14,7 @@ import { IconButton } from '@dxos/react-ui';
 
 import { type CustomPanelProps, Panel } from '../Panel';
 
-import { Table, Unit, type TableProps } from './Table';
+import { Table, type TableProps, Unit } from './Table';
 
 export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdgeStatusResponse }>) => {
   const client = useClient();
