@@ -647,6 +647,54 @@ describe('json-to-effect', () => {
     const effectSchema = toEffectSchema(jsonSchema);
     expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
   });
+
+  test.only('object nested inside another struct', () => {
+    const Contact = Schema.Struct({
+      name: Schema.String,
+    }).pipe(EchoObject({ typename: 'example.com/type/Contact', version: '0.1.0' }));
+    const input = Schema.Struct({
+      contact: Contact,
+    });
+    const jsonSchema = toJsonSchema(input);
+    expect(jsonSchema).toMatchInlineSnapshot(`
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "additionalProperties": false,
+        "properties": {
+          "contact": {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+              },
+              "name": {
+                "type": "string",
+              },
+            },
+            "propertyOrder": [
+              "name",
+              "id",
+            ],
+            "required": [
+              "name",
+              "id",
+            ],
+            "type": "object",
+          },
+        },
+        "propertyOrder": [
+          "contact",
+        ],
+        "required": [
+          "contact",
+        ],
+        "type": "object",
+      }
+    `);
+
+    const effectSchema = toEffectSchema(jsonSchema);
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(input.ast));
+  });
 });
 
 describe('reference', () => {
