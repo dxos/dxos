@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { type Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { Tag, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 
-import { QueryBuilder, type QueryBuilderProps } from './QueryBuilder';
+import { QueryForm, type QueryFormProps } from './QueryForm';
 
 const types = [
   // TODO(burdon): Get label from annotation.
@@ -32,18 +32,18 @@ const tags = Tag.createTagList({
 });
 
 const meta = {
-  title: 'ui/react-ui-components/QueryBuilder',
-  component: QueryBuilder,
-  render: (args: QueryBuilderProps) => {
-    const [filter, setFilter] = useState<Filter.Any | null>(null);
+  title: 'ui/react-ui-components/QueryForm',
+  component: QueryForm,
+  render: (args: QueryFormProps) => {
+    const [query, setQuery] = useState<Query.Any>(Query.select(Filter.nothing()));
 
     return (
       <div>
         <Toolbar.Root classNames='border-b border-subduedSeparator'>
-          <QueryBuilder {...args} onFilterChange={setFilter} />
+          <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 
-        <Json data={filter} classNames='p-2 text-xs' />
+        <Json data={query} classNames='p-2 text-xs' />
       </div>
     );
   },
@@ -58,7 +58,7 @@ const meta = {
     layout: 'column',
     translations,
   },
-} satisfies Meta<typeof QueryBuilder>;
+} satisfies Meta<typeof QueryForm>;
 
 export default meta;
 

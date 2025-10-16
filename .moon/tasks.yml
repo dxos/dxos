@@ -27,6 +27,6 @@ fileGroups:
 
 implicitInputs:
   - package.json
+  - /.pnpmfile.cjs
   - /pnpm-lock.yaml
-  - /pnpmfile.cjs
   - /patches/*

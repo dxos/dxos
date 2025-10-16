@@ -5,6 +5,7 @@
 import type * as EffectArray from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
@@ -195,7 +196,7 @@ export declare namespace Query {
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: T };
+  '~Filter': { value: Types.Contravariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -205,26 +206,28 @@ type Intersection<Types extends readonly unknown[]> = Types extends [infer First
   : unknown;
 
 interface FilterAPI {
-  is(value: unknown): value is Filter<any>;
+  is(value: unknown): value is Filter.Any;
 
   /** Construct a filter from an ast. */
-  fromAst(ast: QueryAST.Filter): Filter<any>;
+  fromAst(ast: QueryAST.Filter): Filter<Obj.Any>;
 
   /**
    * Filter that matches all objects.
    */
-  everything(): Filter<any>;
+  // TODO(dmaretskyi): `Obj.Any` would be more type-safe, but causes annoying errors in existing code
+  everything(): Filter<Obj.AnyProps>;
 
   /**
    * Filter that matches no objects.
    */
+  // TODO(dmaretskyi): Filter<never>?
   nothing(): Filter<any>;
 
   /**
    * Filter by object IDs.
    */
   // TODO(dmaretskyi): Rename to `Filter.id`.
-  ids(...id: ObjectId[]): Filter<any>;
+  ids(...id: ObjectId[]): Filter<Obj.AnyProps>;
 
   /**
    * Filter by type.
@@ -237,12 +240,12 @@ interface FilterAPI {
   /**
    * Filter by non-qualified typename.
    */
-  typename(typename: string): Filter<any>;
+  typename(typename: string): Filter<Obj.AnyProps>;
 
   /**
    * Filter by fully qualified type DXN.
    */
-  typeDXN(dxn: DXN): Filter<any>;
+  typeDXN(dxn: DXN): Filter<Obj.AnyProps>;
 
   /**
    * Filter by tag.
@@ -313,14 +316,14 @@ interface FilterAPI {
    * Predicate for an array property to contain the provided value.
    * @param value - Value to check against.
    */
-  contains<T>(value: T): Filter<T[]>;
+  contains<T>(value: T): Filter<readonly T[] | undefined>;
 
   /**
    * Predicate for property to be in the provided range.
    * @param from - Start of the range (inclusive).
    * @param to - End of the range (exclusive).
    */
-  between<T>(from: T, to: T): Filter<T>;
+  between<T>(from: T, to: T): Filter<unknown>;
 
   /**
    * Negate the filter.
@@ -355,6 +358,7 @@ export declare namespace Filter {
   type Or<FS extends readonly Any[]> = Schema.Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
 }
 
+// TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 class FilterClass implements Filter<any> {
   private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
 
@@ -536,14 +540,14 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static contains<T>(value: T): Filter<T[]> {
+  static contains<T>(value: T): Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Filter<T> {
+  static between<T>(from: T, to: T): Filter<unknown> {
     return new FilterClass({
       type: 'range',
       from,
@@ -633,6 +637,7 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
   );
 };
 
+// TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 class QueryClass implements Query<any> {
   private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
 
@@ -682,7 +687,7 @@ class QueryClass implements Query<any> {
 
   '~Query' = QueryClass.variance;
 
-  select(filter: Filter<any> | Filter.Props<any>): Query<any> {
+  select(filter: Filter.Any | Filter.Props<any>): Query.Any {
     if (Filter.is(filter)) {
       return new QueryClass({
         type: 'filter',
@@ -698,7 +703,7 @@ class QueryClass implements Query<any> {
     }
   }
 
-  reference(key: string): Query<any> {
+  reference(key: string): Query.Any {
     return new QueryClass({
       type: 'reference-traversal',
       anchor: this.ast,
@@ -706,7 +711,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  referencedBy(target: Schema.Schema.All | string, key: string): Query<any> {
+  referencedBy(target: Schema.Schema.All | string, key: string): Query.Any {
     const dxn = getTypeDXNFromSpecifier(target);
     return new QueryClass({
       type: 'incoming-references',
@@ -716,7 +721,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  sourceOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -725,7 +730,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query<any> {
+  targetOf(relation: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Query.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -734,7 +739,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  source(): Query<any> {
+  source(): Query.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -742,7 +747,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  target(): Query<any> {
+  target(): Query.Any {
     return new QueryClass({
       type: 'relation-traversal',
       anchor: this.ast,
@@ -750,7 +755,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  orderBy(...order: Order<any>[]): Query<any> {
+  orderBy(...order: Order<any>[]): Query.Any {
     return new QueryClass({
       type: 'order',
       query: this.ast,
@@ -758,7 +763,7 @@ class QueryClass implements Query<any> {
     });
   }
 
-  options(options: QueryAST.QueryOptions): Query<any> {
+  options(options: QueryAST.QueryOptions): Query.Any {
     return new QueryClass({
       type: 'options',
       query: this.ast,

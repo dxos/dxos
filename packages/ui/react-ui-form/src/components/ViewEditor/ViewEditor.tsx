@@ -6,25 +6,16 @@ import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
 
+import { QueryAST } from '@dxos/echo';
 import { EchoSchema, Format, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
-import { type SchemaRegistry } from '@dxos/echo-db';
+import { Filter, Query, type SchemaRegistry } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import {
-  Callout,
-  IconButton,
-  Input,
-  type ThemedClassName,
-  useDensityContext,
-  useElevationContext,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Editor, createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { Callout, IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
 import { cardSpacing } from '@dxos/react-ui-stack';
-import { inputTheme } from '@dxos/react-ui-theme';
 import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import {
   type DataType,
@@ -50,9 +41,10 @@ export type ViewEditorProps = ThemedClassName<
     registry?: SchemaRegistry;
     readonly?: boolean;
     showHeading?: boolean;
-    onQueryChanged?: (query: string, target?: string) => void;
+    onQueryChanged?: (query: QueryAST.Query, target?: string) => void;
     onDelete?: (fieldId: string) => void;
-  } & Pick<FormProps<any>, 'outerSpacing'>
+  } & Pick<FormProps<any>, 'outerSpacing'> &
+    Pick<QueryFormProps, 'types' | 'tags'>
 >;
 
 /**
@@ -68,6 +60,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       registry,
       readonly,
       showHeading = false,
+      types,
+      tags,
       onQueryChanged,
       onDelete,
       outerSpacing = true,
@@ -84,18 +78,6 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
     const [expandedField, setExpandedField] = useState<FieldType['id']>();
 
-    const serializedQuery = Match.value(mode).pipe(
-      Match.when('schema', () => getTypenameFromQuery(view.query.ast)),
-      Match.when('query', () => {
-        if (view.query.string) {
-          return view.query.string;
-        } else {
-          return 'Serializing query AST is not currently supported.';
-        }
-      }),
-      Match.exhaustive,
-    );
-
     const queueTarget = Match.value(view.query.ast).pipe(
       Match.when({ type: 'options' }, ({ options }) => {
         return Option.fromNullable(options.queues).pipe(
@@ -111,7 +93,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         query:
           mode === 'schema'
             ? Format.URL.annotations({ title: 'Record type' })
-            : Schema.String.annotations({ title: 'Query' }),
+            : QueryAST.Query.annotations({ title: 'Query' }),
       });
 
       if (mode === 'query') {
@@ -124,11 +106,16 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
       return base.pipe(Schema.mutable);
     }, [mode]);
+
     // TODO(burdon): Need to warn user of possible consequences of editing.
     // TODO(burdon): Settings should have domain name owned by user.
     const viewValues = useMemo(
-      () => ({ name: view.name, query: serializedQuery, target: queueTarget }),
-      [view.name, serializedQuery, queueTarget],
+      () => ({
+        name: view.name,
+        query: mode === 'schema' ? getTypenameFromQuery(view.query.ast) : view.query.ast,
+        target: queueTarget,
+      }),
+      [view.name, mode, view.query.ast, queueTarget],
     );
 
     const handleToggleField = useCallback(
@@ -147,23 +134,19 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     }, [schema, projectionModel, readonly]);
 
     const handleUpdate = useCallback(
-      (values: Schema.Schema.Type<typeof viewSchema>) => {
+      (values: any) => {
         invariant(!readonly);
         requestAnimationFrame(() => {
           if ('name' in values && view.name !== values.name) {
             view.name = values.name;
+            return;
           }
 
-          const queryChanged = serializedQuery !== values.query;
-          const targetValue = 'target' in values ? values.target : undefined;
-          const targetChanged = 'target' in values && values.target && queueTarget !== targetValue;
-
-          if ((queryChanged || targetChanged) && !readonly) {
-            onQueryChanged?.(values.query, targetValue);
-          }
+          const query = mode === 'schema' ? Query.select(Filter.typename(values.query)).ast : values.query;
+          onQueryChanged?.(query, values.target);
         });
       },
-      [serializedQuery, onQueryChanged, readonly, view, queueTarget],
+      [onQueryChanged, readonly, view, queueTarget, mode],
     );
 
     const handleDelete = useCallback(
@@ -208,6 +191,8 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       [projectionModel],
     );
 
+    const custom = useMemo(() => (mode === 'query' ? customFields({ types, tags }) : undefined), [types, tags, mode]);
+
     return (
       <div role='none' className={mx(classNames)}>
         {schemaReadonly && mode === 'schema' && (
@@ -225,7 +210,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           readonly={readonly ? 'disabled-input' : false}
           onSave={handleUpdate}
           outerSpacing={outerSpacing}
-          Custom={mode === 'query' ? customFields : undefined}
+          Custom={custom}
         />
 
         <div role='none' className={outerSpacing ? cardSpacing : 'mlb-cardSpacingBlock'}>
@@ -328,51 +313,18 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
   },
 );
 
-const customFields: Record<string, InputComponent> = {
+const customFields = ({ types, tags }: Pick<ViewEditorProps, 'types' | 'tags'>): Record<string, InputComponent> => ({
   query: (props: InputProps) => {
-    const { themeMode } = useThemeContext();
-    const { t } = useTranslation(translationKey);
-    const density = useDensityContext();
-    const elevation = useElevationContext();
-
-    const onValueChange = useRef(props.onValueChange);
-    useEffect(() => {
-      onValueChange.current = props.onValueChange;
-    }, [props.onValueChange]);
-    // NOTE: Including props.onValueChange in deps causes infinite loop with Editor.
-    const handleChange = useCallback((text: string) => onValueChange.current('string', text), []);
-
-    const extensions = useMemo(
-      () => [createBasicExtensions({ placeholder: t('query placeholder') }), createThemeExtensions({ themeMode })],
-      [],
+    const handleChange = useCallback(
+      (query: Query.Any) => props.onValueChange('object', query.ast),
+      [props.onValueChange],
     );
 
-    // TODO(wittjosiah): This is probably not the right way to do these styles.
     return (
       <Input.Root>
         <InputHeader label={props.label} />
-        <Editor
-          classNames={mx(
-            inputTheme.input({ density, elevation }),
-            'flex items-center',
-            'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
-          )}
-          extensions={extensions}
-          value={props.getValue()}
-          onChange={handleChange}
-        />
-        {/* TODO(wittjosiah): Support query editor.
-        <QueryEditor
-          classNames={mx(
-            inputTheme.input({ density, elevation }),
-            'flex items-center',
-            'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
-          )}
-          space={space}
-          value={props.getValue()}
-          onChange={handleChange}
-        /> */}
+        <QueryForm initialQuery={props.getValue()} types={types} tags={tags} onChange={handleChange} />
       </Input.Root>
     );
   },
-};
+});
