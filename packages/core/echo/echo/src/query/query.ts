@@ -5,6 +5,7 @@
 import type * as EffectArray from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
@@ -60,7 +61,7 @@ export interface Query<T> {
    * @param filter - Filter to select the objects.
    * @returns Query for the selected objects.
    */
-  select(filter: Filter<any>): Query<T>;
+  select(filter: Filter<T>): Query<T>;
   select(props: Filter.Props<T>): Query<T>;
 
   /**
@@ -195,7 +196,7 @@ export declare namespace Query {
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: T };
+  '~Filter': { value: Types.Contravariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -313,14 +314,14 @@ interface FilterAPI {
    * Predicate for an array property to contain the provided value.
    * @param value - Value to check against.
    */
-  contains<T>(value: T): Filter<T[]>;
+  contains<T>(value: T): Filter<readonly T[] | undefined>;
 
   /**
    * Predicate for property to be in the provided range.
    * @param from - Start of the range (inclusive).
    * @param to - End of the range (exclusive).
    */
-  between<T>(from: T, to: T): Filter<T>;
+  between<T>(from: T, to: T): Filter<unknown>;
 
   /**
    * Negate the filter.
@@ -536,14 +537,14 @@ class FilterClass implements Filter<any> {
     });
   }
 
-  static contains<T>(value: T): Filter<T[]> {
+  static contains<T>(value: T): Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Filter<T> {
+  static between<T>(from: T, to: T): Filter<unknown> {
     return new FilterClass({
       type: 'range',
       from,

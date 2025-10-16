@@ -334,6 +334,12 @@ describe('query api', () => {
     `);
   });
 
+  test('filter by tags', () => {
+    const query = Query.select(Filter.type(Task)).select(Filter.tag('important'));
+    Schema.validateSync(QueryAST.Query)(query.ast);
+    expect(query.ast).toMatchInlineSnapshot();
+  });
+
   test.skip('chain', () => {
     // NOTE: Can't support props without type since they can't be inferred.
     // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
