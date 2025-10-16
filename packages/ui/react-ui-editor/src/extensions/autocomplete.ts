@@ -40,6 +40,7 @@ export type AutocompleteOptions = {
  * Creates an autocomplete extension that shows inline suggestions.
  * Pressing Tab will complete the suggestion.
  */
+// TODO(burdon): Reconcile with suggest.
 export const autocomplete = ({ fireIfEmpty, onSubmit, onSuggest, onCancel }: AutocompleteOptions = {}): Extension => {
   const suggest = ViewPlugin.fromClass(
     class {

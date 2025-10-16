@@ -60,7 +60,7 @@ export const query = ({ db, tags }: QueryOptions = {}): Extension => {
               break;
             }
 
-            // TODO(burdon): Trigger on #
+            // TODO(burdon): Trigger on #.
             case QueryDSL.Node.TagFilter: {
               if (tags) {
                 range = { from: node.from + 1, to: node.to };
