@@ -12,7 +12,7 @@ import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { invariant, assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
@@ -36,18 +36,6 @@ import { Expando, makeTypeJsonSchemaAnnotation } from '../object';
 import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
-
-/**
- * Create object jsonSchema.
- */
-export const createJsonSchema = (schema: Schema.Struct<any> = Schema.Struct({})): JsonSchemaType => {
-  const jsonSchema = _toJsonSchema(schema);
-
-  // TODO(dmaretskyi): Fix those in the serializer.
-  jsonSchema.type = 'object';
-  delete jsonSchema.anyOf;
-  return jsonSchema;
-};
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -92,7 +80,8 @@ export type JsonSchemaOptions = {
  * @param schema
  */
 export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptions = {}): JsonSchemaType => {
-  let jsonSchema = _toJsonSchema(schema);
+  assertArgument(Schema.isSchema(schema), 'schema');
+  let jsonSchema = _toJsonSchemaAST(schema.ast);
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {
@@ -113,9 +102,8 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
   return jsonSchema;
 };
 
-const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
-  invariant(schema);
-  const withRefinements = withEchoRefinements(schema.ast, '#');
+const _toJsonSchemaAST = (ast: SchemaAST.AST): JsonSchemaType => {
+  const withRefinements = withEchoRefinements(ast, '#');
   let jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as JsonSchemaType;
@@ -144,7 +132,7 @@ const withEchoRefinements = (
         },
       });
     } else {
-      const jsonSchema = _toJsonSchema(Schema.make(suspendedAst));
+      const jsonSchema = _toJsonSchemaAST(suspendedAst);
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
         [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
       });
