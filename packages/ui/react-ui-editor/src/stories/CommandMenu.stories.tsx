@@ -17,13 +17,14 @@ import {
   type CommandMenuGroup,
   type CommandMenuItem,
   CommandMenuProvider,
+  type UseCommandMenuOptions,
   coreSlashCommands,
   filterItems,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
-} from '../components';
-import { type UseCommandMenuOptions, useCommandMenu } from '../extensions';
+  useCommandMenu,
+} from '../extensions';
 import { str } from '../testing';
 
 import { EditorStory, names } from './components';
