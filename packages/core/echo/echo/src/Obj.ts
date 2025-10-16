@@ -28,8 +28,14 @@ export type Obj<Props> = BaseObj & Props;
 
 /**
  * Base type for all ECHO objects.
+ * This type does not define any properties.
  */
 export interface Any extends BaseObj {}
+
+/**
+ * Object with arbitrary properties.
+ */
+export interface AnyProps extends Obj<{ [key: string]: any }> {}
 
 export const Any = Schema.Struct({}).pipe(
   Type.Obj({

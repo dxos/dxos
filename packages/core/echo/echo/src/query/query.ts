@@ -206,26 +206,28 @@ type Intersection<Types extends readonly unknown[]> = Types extends [infer First
   : unknown;
 
 interface FilterAPI {
-  is(value: unknown): value is Filter<any>;
+  is(value: unknown): value is Filter.Any;
 
   /** Construct a filter from an ast. */
-  fromAst(ast: QueryAST.Filter): Filter<any>;
+  fromAst(ast: QueryAST.Filter): Filter<Obj.Any>;
 
   /**
    * Filter that matches all objects.
    */
-  everything(): Filter<any>;
+  // TODO(dmaretskyi): `Obj.Any` would be more type-safe, but causes annoying errors in existing code
+  everything(): Filter<Obj.AnyProps>;
 
   /**
    * Filter that matches no objects.
    */
+  // TODO(dmaretskyi): Filter<never>?
   nothing(): Filter<any>;
 
   /**
    * Filter by object IDs.
    */
   // TODO(dmaretskyi): Rename to `Filter.id`.
-  ids(...id: ObjectId[]): Filter<any>;
+  ids(...id: ObjectId[]): Filter<Obj.AnyProps>;
 
   /**
    * Filter by type.
@@ -238,12 +240,12 @@ interface FilterAPI {
   /**
    * Filter by non-qualified typename.
    */
-  typename(typename: string): Filter<any>;
+  typename(typename: string): Filter<Obj.AnyProps>;
 
   /**
    * Filter by fully qualified type DXN.
    */
-  typeDXN(dxn: DXN): Filter<any>;
+  typeDXN(dxn: DXN): Filter<Obj.AnyProps>;
 
   /**
    * Filter by tag.
@@ -356,6 +358,7 @@ export declare namespace Filter {
   type Or<FS extends readonly Any[]> = Schema.Simplify<{ [K in keyof FS]: Type<FS[K]> }[number]>;
 }
 
+// TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 class FilterClass implements Filter<any> {
   private static variance: Filter<any>['~Filter'] = {} as Filter<any>['~Filter'];
 
@@ -634,6 +637,7 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
   );
 };
 
+// TODO(dmaretskyi): Separate object instead of statics for better devex with type errors.
 class QueryClass implements Query<any> {
   private static variance: Query<any>['~Query'] = {} as Query<any>['~Query'];
 
