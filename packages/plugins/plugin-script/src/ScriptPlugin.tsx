@@ -10,6 +10,7 @@ import { ScriptType } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { isNonNullable } from '@dxos/util';
 
 import {
   AppGraphBuilder,
@@ -58,7 +59,9 @@ export const ScriptPlugin = definePlugin(meta, () => [
           icon: 'ph--notebook--regular',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (notebook: Notebook.Notebook) =>
-            await Ref.Array.loadAll(notebook.cells.map((cell) => cell.script)),
+            await Ref.Array.loadAll(
+              notebook.cells.flatMap((cell) => [cell.script, cell.view, cell.chat].filter(isNonNullable)) as any,
+            ),
         },
       }),
     ],

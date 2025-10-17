@@ -133,7 +133,6 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   return (
     <StackItem.Content
       toolbar
-      // TODO(burdon): Common border fragments?
       classNames='container-max-width overflow-hidden border-l border-r border-subduedSeparator'
     >
       <Toolbar.Root>

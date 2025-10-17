@@ -5,6 +5,7 @@
 import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 
 import { mx } from '../../util';
+import { textBlockWidth } from '../fragments';
 
 export type ToolbarStyleProps = Partial<{ layoutManaged: boolean }>;
 
@@ -16,6 +17,11 @@ export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManage
   return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, ...etc);
 };
 
+export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {
+  return mx(!layoutManaged && ['flex gap-1', textBlockWidth], ...etc);
+};
+
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
   root: toolbarRoot,
+  inner: toolbarInner,
 };

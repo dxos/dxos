@@ -21,6 +21,9 @@ type CommandState = {
   tooltip?: Tooltip;
 };
 
+/**
+ * @deprecated
+ */
 export const commandState = StateField.define<CommandState>({
   create: () => ({}),
   update: (state, tr) => {

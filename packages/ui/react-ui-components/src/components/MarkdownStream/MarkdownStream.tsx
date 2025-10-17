@@ -22,6 +22,7 @@ import { addEventListener } from '@dxos/async';
 import { type ThemedClassName, useStateWithRef } from '@dxos/react-ui';
 import { useThemeContext } from '@dxos/react-ui';
 import {
+  type AutoScrollOptions,
   type StreamerOptions,
   type XmlTagsOptions,
   type XmlWidgetState,
@@ -60,11 +61,10 @@ export type MarkdownStreamProps = ThemedClassName<{
   content?: string;
   onEvent?: (event: MarkdownStreamEvent) => void;
 }> &
-  XmlTagsOptions &
-  StreamerOptions;
+  (XmlTagsOptions & StreamerOptions & AutoScrollOptions);
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, registry, content, onEvent, ...streamerOptions }, forwardedRef) => {
+  ({ classNames, registry, content, fadeIn, cursor, overscroll, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
     const { parentRef, view } = useTextEditor(() => {
@@ -89,8 +89,8 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           }),
           preview(),
           xmlTags({ registry, setWidgets }),
-          streamer(streamerOptions),
-          autoScroll(),
+          streamer({ cursor, fadeIn }),
+          autoScroll({ overscroll }),
         ],
       };
     }, [themeMode, registry]);

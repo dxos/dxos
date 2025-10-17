@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { initialSync } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
 export type EditorController = {
@@ -17,10 +19,10 @@ export type EditorController = {
 
 export type EditorProps = ThemedClassName<
   {
-    value?: string;
     moveToEnd?: boolean;
+    value?: string;
     onChange?: (value: string) => void;
-  } & Omit<UseTextEditorProps, 'initialValue'>
+  } & UseTextEditorProps
 >;
 
 /**
@@ -28,17 +30,17 @@ export type EditorProps = ThemedClassName<
  * NOTE: This shouold not be used with the automerge extension.
  */
 export const Editor = forwardRef<EditorController, EditorProps>(
-  ({ classNames, id, extensions = [], value, moveToEnd, onChange, ...props }, forwardedRef) => {
+  ({ classNames, id, extensions, moveToEnd, value, onChange, ...props }, forwardedRef) => {
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
+        initialValue: value,
         extensions: [
-          extensions,
-          EditorView.updateListener.of((update) => {
-            const startValue = update.startState.doc.toString();
-            const value = update.state.doc.toString();
-            if (startValue !== value) {
-              onChange?.(value);
+          extensions ?? [],
+          EditorView.updateListener.of(({ view, docChanged, transactions }) => {
+            const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
+            if (!isInitialSync && docChanged) {
+              onChange?.(view.state.doc.toString());
             }
           }),
         ],
@@ -57,16 +59,16 @@ export const Editor = forwardRef<EditorController, EditorProps>(
       [view],
     );
 
-    // Update content.
+    // Set initial value and cursor position.
     useEffect(() => {
-      if (value !== view?.state.doc.toString()) {
-        requestAnimationFrame(() => {
-          view?.dispatch({
-            changes: { from: 0, to: view.state.doc.length, insert: value },
-            selection: moveToEnd ? { anchor: value?.length ?? 0 } : undefined,
-          });
+      requestAnimationFrame(() => {
+        view?.dispatch({
+          annotations: initialSync,
+          changes: value ? [{ from: 0, to: view?.state.doc.length ?? 0, insert: value ?? '' }] : [],
+          selection: moveToEnd ? { anchor: view?.state.doc.length ?? 0 } : undefined,
         });
-      }
+        view?.focus();
+      });
     }, [view, value, moveToEnd]);
 
     return <div role='none' className={mx('is-full', classNames)} {...focusAttributes} ref={parentRef} />;

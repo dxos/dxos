@@ -222,7 +222,6 @@ export class AiChatProcessor {
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
     const runtime = await this._services();
-
     const system = trim`
       It is extremely important that you respond only with the title and nothing else.
       If you cannot do this effectively respond with "New Chat".
