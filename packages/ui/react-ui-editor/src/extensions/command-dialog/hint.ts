@@ -3,7 +3,7 @@
 // Based on https://github.com/codemirror/view/blob/main/src/placeholder.ts
 //
 
-import { RangeSetBuilder } from '@codemirror/state';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { clientRectsFor, flattenRect } from '../../util';
@@ -15,7 +15,7 @@ export type HintOptions = {
   onHint?: () => string | undefined;
 };
 
-export const hint = ({ delay = 3_000, onHint }: HintOptions) => {
+export const hint = ({ delay = 3_000, onHint }: HintOptions): Extension => {
   return ViewPlugin.fromClass(
     class {
       decorations = Decoration.none;

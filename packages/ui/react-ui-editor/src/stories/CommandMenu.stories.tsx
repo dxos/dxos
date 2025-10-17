@@ -18,8 +18,8 @@ import {
   type CommandMenuItem,
   CommandMenuProvider,
   type UseCommandMenuOptions,
-  coreSlashCommands,
   filterItems,
+  formattingCommands,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
@@ -35,7 +35,7 @@ type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
+  const { groupsRef, extension: commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
     <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
@@ -45,7 +45,7 @@ const DefaultStory = ({ text, ...options }: StoryProps) => {
 };
 
 const groups: CommandMenuGroup[] = [
-  coreSlashCommands,
+  formattingCommands,
   linkSlashCommands,
   {
     id: 'custom',

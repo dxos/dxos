@@ -53,6 +53,7 @@ export const commandState = StateField.define<CommandState>({
                 }
 
                 // Render react component.
+                // TODO(burdon): Use Popover.
                 renderDialog(
                   root,
                   {

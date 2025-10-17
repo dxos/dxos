@@ -67,11 +67,12 @@ const meta = {
   title: 'ui/react-ui-editor/CommandDialog',
   render: () => (
     <EditorStory
-      text={str('# Command', '', '', '')}
+      text={str('# Command', '', '')}
       extensions={[
         commandDialog({
           renderDialog: createRenderer(CommandDialog),
           onHint: () => "Press '?' to ask a question",
+          delay: 1_000,
         }),
       ]}
     />

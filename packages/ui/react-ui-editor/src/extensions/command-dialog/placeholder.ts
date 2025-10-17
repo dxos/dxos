@@ -15,6 +15,9 @@ export type PlaceholderOptions = {
   content: Content;
 };
 
+/**
+ * Show a transient placeholder at the current cursor position.
+ */
 export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Extension => {
   const plugin = ViewPlugin.fromClass(
     class {

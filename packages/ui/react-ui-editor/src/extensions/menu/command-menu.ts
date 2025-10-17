@@ -6,8 +6,7 @@ import { type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 
 import { type Range } from '../../types';
-
-import { type PlaceholderOptions, placeholder } from './placeholder';
+import { type PlaceholderOptions, placeholder } from '../command-dialog';
 
 export type CommandMenuOptions = {
   trigger: string | string[];
@@ -15,64 +14,14 @@ export type CommandMenuOptions = {
 
   // TODO(burdon): Replace with onKey?
   onClose?: () => void;
+  onEnter?: () => void;
   onArrowDown?: () => void;
   onArrowUp?: () => void;
-  onEnter?: () => void;
 
   onTextChange?: (trigger: string, text: string) => void;
 };
 
 export const commandMenu = (options: CommandMenuOptions): Extension => {
-  const commandMenuPlugin = ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet = Decoration.none;
-
-      constructor(readonly view: EditorView) {}
-
-      // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
-      update(update: ViewUpdate) {
-        const builder = new RangeSetBuilder<Decoration>();
-        const selection = update.view.state.selection.main;
-        const { range: activeRange, trigger } = update.view.state.field(commandMenuState) ?? {};
-
-        // Check if we should show the widget - only if cursor is within the active command range.
-        const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
-        if (shouldShowWidget) {
-          // Create mark decoration that wraps the entire line content in a dx-anchor.
-          builder.add(
-            activeRange.from,
-            activeRange.to,
-            Decoration.mark({
-              tagName: 'dx-anchor',
-              class: 'cm-floating-menu-trigger',
-              attributes: {
-                'data-visible-focus': 'false',
-                'data-auto-trigger': 'true',
-                'data-trigger': trigger!,
-              },
-            }),
-          );
-        }
-
-        const activeRangeChanged = update.transactions.some((tr) =>
-          tr.effects.some((effect) => effect.is(commandRangeEffect)),
-        );
-        if (activeRange && activeRangeChanged && trigger) {
-          const content = update.view.state.sliceDoc(
-            activeRange.from + 1, // Skip the trigger character.
-            activeRange.to,
-          );
-          options.onTextChange?.(trigger, content);
-        }
-
-        this.decorations = builder.finish();
-      }
-    },
-    {
-      decorations: (v) => v.decorations,
-    },
-  );
-
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
 
   const commandKeymap = keymap.of([
@@ -102,6 +51,7 @@ export const commandMenu = (options: CommandMenuOptions): Extension => {
         return false;
       },
     })),
+
     {
       key: 'Enter',
       run: (view) => {
@@ -172,6 +122,7 @@ export const commandMenu = (options: CommandMenuOptions): Extension => {
 
   return [
     Prec.highest(commandKeymap),
+    commandDecorations(options),
     placeholder(
       Object.assign(
         {
@@ -182,8 +133,59 @@ export const commandMenu = (options: CommandMenuOptions): Extension => {
     ),
     updateListener,
     commandMenuState,
-    commandMenuPlugin,
   ];
+};
+
+const commandDecorations = (options: CommandMenuOptions) => {
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet = Decoration.none;
+
+      constructor(readonly view: EditorView) {}
+
+      // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
+      update(update: ViewUpdate) {
+        const builder = new RangeSetBuilder<Decoration>();
+        const selection = update.view.state.selection.main;
+        const { range: activeRange, trigger } = update.view.state.field(commandMenuState) ?? {};
+
+        // Check if we should show the widget - only if cursor is within the active command range.
+        const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
+        if (shouldShowWidget) {
+          // Create mark decoration that wraps the entire line content in a dx-anchor.
+          builder.add(
+            activeRange.from,
+            activeRange.to,
+            Decoration.mark({
+              tagName: 'dx-anchor',
+              class: 'cm-floating-menu-trigger',
+              attributes: {
+                'data-visible-focus': 'false',
+                'data-auto-trigger': 'true',
+                'data-trigger': trigger!,
+              },
+            }),
+          );
+        }
+
+        const activeRangeChanged = update.transactions.some((tr) =>
+          tr.effects.some((effect) => effect.is(commandRangeEffect)),
+        );
+        if (activeRange && activeRangeChanged && trigger) {
+          const content = update.view.state.sliceDoc(
+            activeRange.from + 1, // Skip the trigger character.
+            activeRange.to,
+          );
+          options.onTextChange?.(trigger, content);
+        }
+
+        this.decorations = builder.finish();
+      }
+    },
+    {
+      decorations: (v) => v.decorations,
+    },
+  );
 };
 
 type CommandState = {

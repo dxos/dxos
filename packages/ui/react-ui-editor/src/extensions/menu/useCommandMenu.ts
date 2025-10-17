@@ -6,15 +6,18 @@ import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
-import { type DxAnchorActivate } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
+import { type PlaceholderOptions } from '../command-dialog';
+
 import { commandMenu, commandRangeEffect } from './command-menu';
-import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from './CommandMenu';
-import { type PlaceholderOptions } from './placeholder';
+import { type CommandMenuProps } from './CommandMenu';
+import { type CommandMenuGroup, type CommandMenuItem } from './menu';
+import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UseCommandMenuOptions = {
   // TODO(burdon): Extensions should not depend directly on the editor view.
+  //  Instead this should be encapsulted entirely in the extension.
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
@@ -23,13 +26,8 @@ export type UseCommandMenuOptions = {
 
 export type UseCommandMenu = {
   groupsRef: RefObject<CommandMenuGroup[]>;
-  commandMenu: Extension;
-  currentItem: string | undefined;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onActivate: (event: DxAnchorActivate) => void;
-  onSelect: (item: CommandMenuItem) => void;
-};
+  extension: Extension;
+} & Pick<CommandMenuProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
 
 export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions): UseCommandMenu => {
   const currentRef = useRef<CommandMenuItem | null>(null);
@@ -38,8 +36,8 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
 
-  const handleOpenChange = useCallback(
-    async (open: boolean, trigger?: string) => {
+  const handleOpenChange = useCallback<NonNullable<UseCommandMenu['onOpenChange']>>(
+    async (open, trigger?) => {
       if (open && trigger) {
         groupsRef.current = await getMenu(trigger);
       }
@@ -47,15 +45,15 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
       setOpen(open);
       if (!open) {
         setCurrentItem(undefined);
-        viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] });
+        viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] }); // TODO(burdon): Move into extension.
       }
     },
     [getMenu],
   );
 
-  const handleActivate = useCallback<UseCommandMenu['onActivate']>(
+  const handleActivate = useCallback<NonNullable<UseCommandMenu['onActivate']>>(
     async (event) => {
-      const item = getItem(groupsRef.current, currentItem);
+      const item = getMenuItem(groupsRef.current, currentItem);
       if (item) {
         currentRef.current = item;
       }
@@ -68,8 +66,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [open, handleOpenChange],
   );
 
-  // TODO(burdon): Move outside.
-  const handleSelect = useCallback<UseCommandMenu['onSelect']>((item) => {
+  const handleSelect = useCallback<NonNullable<UseCommandMenu['onSelect']>>((item) => {
     if (!viewRef.current) {
       return;
     }
@@ -80,21 +77,21 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
 
-  const memoizedCommandMenu = useMemo<Extension>(() => {
+  const extension = useMemo<Extension>(() => {
     return commandMenu({
       trigger,
       placeholder,
       onClose: () => handleOpenChange(false),
       onArrowDown: () => {
         setCurrentItem((currentItem) => {
-          const next = getNextItem(groupsRef.current, currentItem);
+          const next = getNextMenuItem(groupsRef.current, currentItem);
           currentRef.current = next;
           return next.id;
         });
       },
       onArrowUp: () => {
         setCurrentItem((currentItem) => {
-          const previous = getPreviousItem(groupsRef.current, currentItem);
+          const previous = getPreviousMenuItem(groupsRef.current, currentItem);
           currentRef.current = previous;
           return previous.id;
         });
@@ -123,7 +120,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
 
   return {
     groupsRef,
-    commandMenu: memoizedCommandMenu,
+    extension,
     currentItem,
     open,
     onOpenChange: setOpen,

@@ -22,7 +22,6 @@ import {
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
-  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -30,6 +29,7 @@ import {
   editorGutter,
   editorSlots,
   filterItems,
+  formattingCommands,
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
@@ -84,7 +84,7 @@ export const MarkdownEditor = ({
         }
         case '/':
         default: {
-          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+          return filterItems([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
         }
@@ -117,8 +117,7 @@ export const MarkdownEditor = ({
     };
   }, [onLinkQuery, getMenu]);
 
-  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
-
+  const { groupsRef, extension: commandMenu, ...commandMenuProps } = useCommandMenu(options);
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
