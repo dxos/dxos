@@ -688,6 +688,7 @@ export const WithProject: Story = {
     config: config.remote,
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
+      Tag.Tag,
       DataType.Employer,
       DataType.HasConnection,
       DataType.Message,

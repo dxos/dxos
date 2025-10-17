@@ -278,9 +278,9 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
               space.db.add(chat);
               await space.db.flush({ indexes: true });
 
-              binder.open();
+              await binder.open();
               await onChatCreated?.({ space, chat, binder });
-              binder.close();
+              await binder.close();
 
               return {
                 data: { object: chat },
