@@ -61,7 +61,6 @@ const DefaultStory = ({ text }: StoryProps) => {
         ref={viewRef}
         text={text}
         extensions={[outliner(), hashtag()]}
-        placeholder=''
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);

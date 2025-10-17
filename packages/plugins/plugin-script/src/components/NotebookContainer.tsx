@@ -106,7 +106,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         />
       </Toolbar.Root>
       <NotebookStack
-        // TODO(burdon): Use outline instead of border?
         classNames='container-max-width border-l border-r border-subduedSeparator'
         space={space}
         notebook={notebook}
