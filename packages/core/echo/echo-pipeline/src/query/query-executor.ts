@@ -64,6 +64,9 @@ export type ExecutionTrace = {
   documentsLoaded: number;
   indexHits: number;
 
+  beginTs: number;
+  endTs: number;
+
   executionTime: number;
   indexQueryTime: number;
   documentLoadTime: number;
@@ -78,11 +81,42 @@ export const ExecutionTrace = Object.freeze({
     objectCount: 0,
     documentsLoaded: 0,
     indexHits: 0,
+    beginTs: 0,
+    endTs: 0,
     indexQueryTime: 0,
     documentLoadTime: 0,
     executionTime: 0,
     children: [],
   }),
+  markEnd: (trace: ExecutionTrace) => {
+    trace.endTs = performance.now();
+    trace.executionTime = trace.endTs - trace.beginTs;
+  },
+  putOnPerformanceTimeline: (trace: ExecutionTrace) => {
+    performance.measure(trace.name, {
+      start: trace.beginTs,
+      end: trace.endTs,
+      detail: {
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Query Execution',
+          trackGroup: 'ECHO', // Group related tracks together
+          color: 'tertiary-dark',
+          properties: [
+            ['objectCount', trace.objectCount],
+            ['documentsLoaded', trace.documentsLoaded],
+            ['index hits', trace.indexHits],
+            ['indexQueryTime', trace.indexQueryTime],
+            ['documentLoadTime', trace.documentLoadTime],
+          ],
+          tooltipText: trace.details,
+        },
+      },
+    });
+    for (const child of trace.children) {
+      ExecutionTrace.putOnPerformanceTimeline(child);
+    }
+  },
   format: (trace: ExecutionTrace): string => {
     const go = (trace: ExecutionTrace, indent: number): string => {
       return [
@@ -192,6 +226,9 @@ export class QueryExecutor extends Resource {
           workingSet[index].documentId !== item.documentId,
       );
 
+    // Disabled because concurrent queries don't print hierarchies correctly.
+    // ExecutionTrace.putOnPerformanceTimeline(trace);
+
     if (TRACE_QUERY_EXECUTION) {
       console.log(ExecutionTrace.format(trace));
     }
@@ -214,7 +251,7 @@ export class QueryExecutor extends Resource {
       trace.children.push(result.trace);
     }
     trace.objectCount = workingSet.length;
-    trace.executionTime = performance.now() - begin;
+    ExecutionTrace.markEnd(trace);
     return { workingSet, trace };
   }
 
@@ -254,7 +291,8 @@ export class QueryExecutor extends Resource {
       default:
         throw new Error(`Unknown step type: ${(step as any)._tag}`);
     }
-    trace.executionTime = performance.now() - begin;
+    trace.beginTs = begin;
+    ExecutionTrace.markEnd(trace);
 
     return { workingSet: newWorkingSet, trace };
   }
@@ -266,6 +304,7 @@ export class QueryExecutor extends Resource {
       ...ExecutionTrace.makeEmpty(),
       name: 'Select',
       details: JSON.stringify(step.selector),
+      beginTs: performance.now(),
     };
 
     switch (step.selector._tag) {

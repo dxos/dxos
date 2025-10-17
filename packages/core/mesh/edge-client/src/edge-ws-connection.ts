@@ -45,6 +45,9 @@ export class EdgeWsConnection extends Resource {
   private readonly _rateUpdateInterval = 1000; // Update rates every second.
   private _bytesSamples: Array<{ timestamp: number; sent: number; received: number }> = [];
 
+  private _messagesSent = 0;
+  private _messagesReceived = 0;
+
   constructor(
     private readonly _identity: EdgeIdentity,
     private readonly _connectionInfo: { url: URL; protocolHeader?: string },
@@ -78,10 +81,19 @@ export class EdgeWsConnection extends Resource {
     return this._downloadRate;
   }
 
+  public get messagesSent(): number {
+    return this._messagesSent;
+  }
+
+  public get messagesReceived(): number {
+    return this._messagesReceived;
+  }
+
   public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });
+    this._messagesSent++;
     if (this._ws?.protocol.includes(EdgeWebsocketProtocol.V0)) {
       const binary = buf.toBinary(MessageSchema, message);
       if (binary.length > CLOUDFLARE_MESSAGE_MAX_BYTES) {
@@ -162,6 +174,8 @@ export class EdgeWsConnection extends Resource {
       if (!this.isOpen) {
         return;
       }
+
+      this._messagesReceived++;
 
       const message = this._ws?.protocol?.includes(EdgeWebsocketProtocol.V0)
         ? buf.fromBinary(MessageSchema, bytes)
