@@ -15,6 +15,10 @@ const MIN_QUERY_INTERVAL = 5_000;
 
 const POLL_INTERVAL = 30_000;
 
+// const MIN_QUERY_INTERVAL = 500;
+
+// const POLL_INTERVAL = 1_000;
+
 export type CollectionSynchronizerParams = {
   sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
   queryCollectionState: (collectionId: string, peerId: PeerId) => void;

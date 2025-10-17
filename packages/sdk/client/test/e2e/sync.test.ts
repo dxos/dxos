@@ -6,9 +6,10 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000 }, async () => {
+describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
   test('sync stuck', async () => {
-    const ITERATIONS = 100;
+    const ITERATIONS = 100,
+      RESTART_CLIENT = false; // restarting client doesn't work
 
     const config = new Config({
       version: 1,
@@ -21,6 +22,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
             echoReplicator: true,
             feedReplicator: true,
           },
+          storage: {
+            persistent: true,
+            dataRoot: `/tmp/dxos-${Date.now()}`,
+          },
         },
       },
     });
@@ -29,19 +34,29 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     await client.initialize();
     await client.halo.createIdentity();
 
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
-    await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+    await client.spaces.default.waitUntilReady();
+    await client.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
     console.log('\n### Creating object');
-    const obj = space.db.add(Obj.make(Type.Expando, { counter: 1 }));
-    await waitForSync(space.db);
+    const obj = client.spaces.default.db.add(Obj.make(Type.Expando, { counter: 1 }));
+    const dxn = Obj.getDXN(obj);
+    await waitForSync(client.spaces.default.db);
 
     for (let i = 0; i < ITERATIONS; i++) {
       console.log('\n### Iteration', i);
+      const obj = await client.spaces.default.db.ref(dxn).load();
       obj.counter++;
-      await space.db.flush();
-      await waitForSync(space.db); // its likely that this could miss the mutation and stil report that the sync has completed
+      await client.spaces.default.db.flush();
+      await waitForSync(client.spaces.default.db); // its likely that this could miss the mutation and stil report that the sync has completed
+
+      if (RESTART_CLIENT) {
+        await client.destroy();
+        await client.initialize();
+        if (!client.spaces.isReady.get()) {
+          await client.spaces.isReady.wait();
+        }
+        await client.spaces.default.waitUntilReady();
+      }
     }
   });
 });
