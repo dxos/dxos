@@ -11769,7 +11769,7 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
 
-  packages/stories/stories-chat:
+  packages/stories/stories-assistant:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*

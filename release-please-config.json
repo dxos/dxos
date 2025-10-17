@@ -745,7 +745,7 @@
         },
         {
           "type": "json",
-          "path": "packages/stories/stories-chat/package.json",
+          "path": "packages/stories/stories-assistant/package.json",
           "jsonpath": "$.version"
         },
         {
