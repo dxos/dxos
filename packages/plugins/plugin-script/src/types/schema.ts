@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
-import { Assistant } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
