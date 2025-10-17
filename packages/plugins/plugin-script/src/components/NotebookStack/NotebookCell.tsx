@@ -206,7 +206,7 @@ const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) 
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),
       extensionsParam,
