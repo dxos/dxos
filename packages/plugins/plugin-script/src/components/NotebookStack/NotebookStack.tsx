@@ -62,7 +62,7 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
         {resizable && <StackItem.ResizeHandle />}
       </StackItem.Heading>
 
-      {/* TODO(burdon): Fix drag preview? */}
+      {/* TODO(burdon): Move drag preview to outer stack (uniformly). */}
       <StackItem.DragPreview>
         {({ item: cell }) => (
           <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
@@ -71,7 +71,6 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
         )}
       </StackItem.DragPreview>
 
-      {/* TODO(burdon): Enable resize. */}
       <StackItem.Content classNames='overflow-visible'>
         <NotebookCell space={space} cell={cell} env={env} {...props} />
       </StackItem.Content>

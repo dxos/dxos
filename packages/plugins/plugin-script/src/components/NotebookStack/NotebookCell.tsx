@@ -22,6 +22,7 @@ import {
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -95,6 +96,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 
   //
   // Prompt.
+  // TODO(burdon): Add values to context or system message (via blueprint?).
   //
   const services = useChatServices({ space, chat: cell.chat?.target });
   const processor = useChatProcessor({ chat: cell.chat?.target, services });
@@ -204,8 +206,9 @@ const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) 
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
+      decorateMarkdown(),
       extensionsParam,
     ].filter(isNonNullable);
   }, [extensionsParam]);
