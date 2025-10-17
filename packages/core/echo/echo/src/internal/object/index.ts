@@ -11,7 +11,6 @@ export * from './json-serializer';
 export * from './meta';
 export type * from './relation';
 export * from './typed-object';
-export * from './typed-relation';
 export * from './typename';
 export * from './deleted';
 export * from './model';

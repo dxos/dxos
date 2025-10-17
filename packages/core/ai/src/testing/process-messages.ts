@@ -14,8 +14,9 @@ import { DataType } from '@dxos/schema';
 
 import * as AiParser from '../AiParser';
 import * as AiPreprocessor from '../AiPreprocessor';
-import { TestingToolkit, testingLayer } from '../testing';
 import { callTools, getToolCalls } from '../tools';
+
+import { TestingToolkit, testingLayer } from './toolkit';
 
 // TODO(dmaretskyi): What is the right stopping condition?
 export const hasToolCall = Effect.fn(function* (chat: Chat.Service) {
