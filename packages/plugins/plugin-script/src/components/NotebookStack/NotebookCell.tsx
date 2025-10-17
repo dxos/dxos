@@ -22,6 +22,7 @@ import {
   createDataExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -206,6 +207,7 @@ const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) 
       createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
       createThemeExtensions({ themeMode }),
       createMarkdownExtensions(),
+      decorateMarkdown(),
       extensionsParam,
     ].filter(isNonNullable);
   }, [extensionsParam]);
