@@ -92,14 +92,32 @@ const __assertFunctionSpaceIsCompatibleWithTheClientSpace = () => {
 
 const typeId = Symbol.for('@dxos/functions/FunctionDefinition');
 
-export type FunctionDefinition<T = any, O = any> = {
+export type FunctionDefinition<I = any, O = any> = {
   [typeId]: true;
+  /**
+   * Unique identifier of the function.
+   */
   key: string;
+  /**
+   * Human-readable name of the function.
+   */
   name: string;
+  /**
+   * Description of the function, used for documentation and discovery.
+   */
   description?: string;
-  inputSchema: Schema.Schema<T, any>;
+  /**
+   * Schema of the input data of the function handler.
+   */
+  inputSchema: Schema.Schema<I, any>;
+  /**
+   * Schema of the output of the function handler.
+   */
   outputSchema?: Schema.Schema<O, any>;
-  handler: FunctionHandler<T, O>;
+  /**
+   * Implementation of the function logic.
+   */
+  handler: FunctionHandler<I, O>;
   meta?: {
     /**
      * Tools that are projected from functions have this annotation.
@@ -114,16 +132,16 @@ export type FunctionDefinition<T = any, O = any> = {
   };
 };
 
+export type FunctionDefinitionParams<I = any, O = any> = Omit<
+  FunctionDefinition<I, O>,
+  typeof typeId | 'handler' | 'meta'
+> & {
+  handler: Types.NoInfer<FunctionHandler<I, O>>;
+};
+
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
-  <I, O>(params: {
-    key: string;
-    name: string;
-    description?: string;
-    inputSchema: Schema.Schema<I, any>;
-    outputSchema?: Schema.Schema<O, any>;
-    handler: Types.NoInfer<FunctionHandler<I, O>>;
-  }): FunctionDefinition<I, O>;
+  <I, O>(params: FunctionDefinitionParams<I, O>): FunctionDefinition<I, O>;
 } = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');
