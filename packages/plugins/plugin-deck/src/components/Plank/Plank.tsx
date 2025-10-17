@@ -102,7 +102,12 @@ const PlankContainer = ({ children, solo, companion }: PropsWithChildren<{ solo:
   return (
     <div
       role='none'
-      className={mx('absolute inset-0 grid', companion && 'grid-cols-[6fr_4fr]', railGridHorizontal, mainIntrinsicSize)}
+      className={mx(
+        'absolute inset-[--main-spacing] grid border border-separator rounded-md overflow-hidden',
+        companion && 'grid-cols-[6fr_4fr]',
+        railGridHorizontal,
+        mainIntrinsicSize,
+      )}
       {...sizeAttrs}
     >
       {children}
