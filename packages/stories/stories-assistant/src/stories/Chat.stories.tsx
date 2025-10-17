@@ -199,7 +199,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 };
 
 const storybook: Meta<typeof DefaultStory> = {
-  title: 'stories/stories-chat/Chat',
+  title: 'stories/stories-assistant/Chat',
   render: render(DefaultStory),
   decorators: [withTheme],
   parameters: {

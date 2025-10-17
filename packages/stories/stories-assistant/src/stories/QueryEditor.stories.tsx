@@ -69,7 +69,7 @@ const tags: Tag.TagMap = {
 };
 
 const meta: Meta<typeof QueryEditor> = {
-  title: 'stories/stories-chat/QueryEditor',
+  title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
   render: render(DefaultStory),
   decorators: [
