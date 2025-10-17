@@ -66,6 +66,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-components"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
