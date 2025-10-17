@@ -39,7 +39,7 @@ const meta = {
         <QueryEditor
           {...args}
           classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm'
-          space={space}
+          db={space?.db}
           onChange={handleChange}
         />
 

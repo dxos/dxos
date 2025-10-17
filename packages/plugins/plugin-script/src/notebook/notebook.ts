@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 
 import { type Notebook } from '../types';
 
+import { evalScript } from './eval';
 import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 
 /**
@@ -64,7 +65,7 @@ export class ComputeGraph {
         continue;
       }
 
-      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script.target?.content;
+      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script?.target?.content;
       if (!cellSource) {
         log.error('no source for cell', { cellId });
         continue;
@@ -89,7 +90,7 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = this.evalScript(rhs, valuesByName);
+            const result = evalScript(rhs, valuesByName);
             valuesByName[expr.name] = result;
             if (typeof result !== 'function') {
               valuesByCellId[cellId] = result;
@@ -97,7 +98,7 @@ export class ComputeGraph {
           }
         } else {
           // For expressions without assignment, just evaluate.
-          const result = this.evalScript(cellSource, valuesByName);
+          const result = evalScript(cellSource, valuesByName);
           valuesByCellId[cellId] = result;
         }
       } catch (error) {
@@ -113,15 +114,17 @@ export class ComputeGraph {
    * Parse expressions.
    */
   parse() {
-    const expressions = this._notebook.cells.reduce<Record<string, ParsedExpression>>((acc, cell) => {
-      const text = cell.script.target?.content.trim();
-      if (text) {
-        const parsed = this._parser.parseExpression(text);
-        acc[cell.id] = parsed;
-      }
+    const expressions = this._notebook.cells
+      .filter((cell) => cell.type === 'script')
+      .reduce<Record<string, ParsedExpression>>((acc, cell) => {
+        const text = cell.script?.target?.content.trim();
+        if (text) {
+          const parsed = this._parser.parseExpression(text);
+          acc[cell.id] = parsed;
+        }
 
-      return acc;
-    }, {});
+        return acc;
+      }, {});
 
     // Build dependency graph.
     const dependencyGraph = this.buildDependencyGraph(expressions);
@@ -176,13 +179,5 @@ export class ComputeGraph {
     });
 
     return graph;
-  }
-
-  /**
-   * Evaluate the script (with dependencies as arguments).
-   */
-  private evalScript(code: string, deps: Record<string, any> = {}) {
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function(...Object.keys(deps), 'return ' + code)(...Object.values(deps));
   }
 }

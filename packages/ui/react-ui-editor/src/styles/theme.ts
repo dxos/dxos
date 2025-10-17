@@ -110,6 +110,7 @@ export const defaultTheme: ThemeStyles = {
     borderLeft: '2px solid var(--dx-cmCursor)',
   },
   '.cm-placeholder': {
+    fontFamily: fontBody,
     color: 'var(--dx-placeholder)',
   },
 
