@@ -16,7 +16,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
   DatabaseService,
@@ -37,13 +37,12 @@ import { type TestStep, runSteps, testToolkit } from '../testing';
 import blueprint from './planning';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
-  it.effect(
+  it.scoped(
     'planning blueprint',
     Effect.fn(
       function* ({ expect }) {
-        const conversation = new AiConversation({
-          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
-        });
+        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* DatabaseService.add(blueprint);
         yield* Effect.promise(() =>
