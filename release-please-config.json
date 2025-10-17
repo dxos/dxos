@@ -930,11 +930,6 @@
         },
         {
           "type": "json",
-          "path": "tools/codemods/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/codemorph/package.json",
           "jsonpath": "$.version"
         },
@@ -961,11 +956,6 @@
         {
           "type": "json",
           "path": "tools/lockfile-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },
         {

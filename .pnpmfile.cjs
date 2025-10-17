@@ -53,10 +53,6 @@ function readPackage(packageJson, context) {
       break;
     }
 
-    case 'chartjs-plugin-streaming': {
-      packageJson.peerDependencies['chart.js'] = '>=3.0.0';
-    }
-
     // TODO(wittjosiah): Remove when bumping @effect-rx/rx-react.
     case '@effect-rx/rx': {
       packageJson.peerDependencies['@effect/platform'] = '*';
