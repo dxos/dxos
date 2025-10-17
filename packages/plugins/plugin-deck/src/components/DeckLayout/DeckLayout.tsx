@@ -36,15 +36,12 @@ import { Toast } from './Toast';
 import { Topbar } from './Topbar';
 
 export type DeckLayoutProps = {
-  onDismissToast: (id: string) => void;
+  onDismissToast?: (id: string) => void;
 };
-
-const PlankSeparator = ({ order }: { order: number }) =>
-  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-4' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)!.value;
+  const settings = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value;
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck, toasts } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
@@ -96,12 +93,12 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
   useEffect(() => {
-    if (!settings.enableDeck && layoutMode === 'deck') {
+    if (settings?.enableDeck && layoutMode === 'deck') {
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
       );
     }
-  }, [settings.enableDeck, dispatch, active, layoutMode]);
+  }, [settings?.enableDeck, dispatch, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized
@@ -137,11 +134,11 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const isEmpty = !solo && active.length === 0;
 
   const padding = useMemo(() => {
-    if (!solo && settings.overscroll === 'centering') {
+    if (!solo && settings?.overscroll === 'centering') {
       return calculateOverscroll(active.length);
     }
     return {};
-  }, [solo, settings.overscroll, deck]);
+  }, [solo, settings?.overscroll, deck]);
 
   const mainPosition = useMemo(
     () => [
@@ -274,7 +271,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         {topbar && <Topbar />}
 
         {/* Status bar. */}
-        {hoistStatusbar && <StatusBar showHints={settings.showHints} />}
+        {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
       </Main.Root>
 
       {/* Global popovers. */}
@@ -290,7 +287,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           key={toast.id}
           onOpenChange={(open) => {
             if (!open) {
-              onDismissToast(toast.id);
+              onDismissToast?.(toast.id);
             }
 
             return open;
@@ -300,3 +297,6 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     </PopoverRoot>
   );
 };
+
+const PlankSeparator = ({ order }: { order: number }) =>
+  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-4' style={{ gridColumn: order }} /> : null;

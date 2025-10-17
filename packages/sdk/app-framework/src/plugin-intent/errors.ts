@@ -24,7 +24,7 @@ export class BaseError extends Error {
 
 export class NoResolversError extends BaseError {
   constructor(action: string) {
-    super('NO_RESOLVERS', 'No resolvers were found for the action', { action });
+    super('NO_RESOLVERS', `No resolvers were found for the action: ${action}`, { action });
   }
 }
 
