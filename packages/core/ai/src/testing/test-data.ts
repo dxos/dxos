@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Ref as RefImpl, live } from '@dxos/echo/internal';
 import type { EchoDatabase } from '@dxos/echo-db';
-import { live, Ref as RefImpl } from '@dxos/echo/internal';
 
 import { Contact, Organization, Project, Task } from './test-schema';
 

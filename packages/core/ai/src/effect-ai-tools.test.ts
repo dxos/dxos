@@ -13,7 +13,6 @@ import { trim } from '@dxos/util';
 
 import * as AiService from './AiService';
 import { AiServiceTestingPreset } from './testing';
-
 import { processMessages } from './testing';
 
 describe('effect AI tool calls', () => {
