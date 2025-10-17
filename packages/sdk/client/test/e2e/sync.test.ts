@@ -13,13 +13,14 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
   test('sync stuck', async () => {
     const ITERATIONS = 100,
       BURST_SIZE = 30,
-      RESTART_CLIENT = false; // restarting client doesn't work
+      RESTART_CLIENT = false,
+      LOCAL = false; // restarting client doesn't work
 
     const config = new Config({
       version: 1,
       runtime: {
         services: {
-          edge: { url: 'https://edge.dxos.workers.dev' },
+          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge.dxos.workers.dev' },
         },
         client: {
           edgeFeatures: {
