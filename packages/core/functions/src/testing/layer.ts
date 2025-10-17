@@ -10,7 +10,7 @@ import type * as Schema from 'effect/Schema';
 import type { EchoDatabaseImpl, QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import type { EchoHostIndexingConfig } from '@dxos/echo-pipeline';
-import { accuireReleaseResource } from '@dxos/effect';
+import { acquireReleaseResource } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 
 import { DatabaseService, QueueService } from '../services';
 
-const testBuilder = accuireReleaseResource(() => new EchoTestBuilder());
+const testBuilder = acquireReleaseResource(() => new EchoTestBuilder());
 
 export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: string }) => {
   return `/tmp/dxos-${name}`;
