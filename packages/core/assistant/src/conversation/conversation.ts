@@ -58,6 +58,14 @@ export class AiConversation {
     this._context = new AiContextBinder(this._queue);
   }
 
+  public open() {
+    this._context.open();
+  }
+
+  public close() {
+    this._context.close();
+  }
+
   public get context() {
     return this._context;
   }

@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect-rx/rx-react';
 import type * as Runtime from 'effect/Runtime';
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
@@ -35,12 +35,17 @@ export const useChatProcessor = ({
   const observableRegistry = useContext(RegistryContext);
 
   // Create conversation from chat queue.
-  const conversation = useMemo(() => {
+  const [conversation, setConversation] = useState<AiConversation>();
+  useEffect(() => {
     if (!chat?.queue.target) {
       return;
     }
 
-    return new AiConversation({ queue: chat.queue.target as Queue<any> });
+    const conversation = new AiConversation({ queue: chat.queue.target as Queue<any> });
+    conversation.open();
+    setConversation(conversation);
+
+    return () => conversation.close();
   }, [chat?.queue.target]);
 
   // Create processor.

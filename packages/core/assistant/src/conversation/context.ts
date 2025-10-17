@@ -11,6 +11,7 @@ import * as Schema from 'effect/Schema';
 import { Blueprint } from '@dxos/blueprints';
 import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { ComplexSet } from '@dxos/util';
 
 /**
@@ -64,17 +65,47 @@ export class AiContextBinder {
    * Reactive query of all bindings.
    */
   // TODO(burdon): Cache value?
-  readonly bindings: ReadonlySignal<Bindings>;
-  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
-  readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
+  private _bindings?: ReadonlySignal<Bindings>;
+  private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
+  private _objects?: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
+  private _unsubscribe?: () => void;
 
-  constructor(private readonly _queue: Queue) {
+  constructor(private readonly _queue: Queue) {}
+
+  get isOpen() {
+    return this._bindings !== undefined;
+  }
+
+  get bindings() {
+    invariant(this._bindings, 'AiContextBinder not open');
+    return this._bindings;
+  }
+
+  get blueprints() {
+    invariant(this._blueprints, 'AiContextBinder not open');
+    return this._blueprints;
+  }
+
+  get objects() {
+    invariant(this._objects, 'AiContextBinder not open');
+    return this._objects;
+  }
+
+  open() {
     const query = this._queue.query(Query.select(Filter.everything()));
-    // TODO(wittjosiah): This needs to be cleaned up.
-    const _unsubscribe = query.subscribe(() => {});
-    this.bindings = computed(() => this._reduce(query.objects));
-    this.blueprints = computed(() => [...this.bindings.value.blueprints]);
-    this.objects = computed(() => [...this.bindings.value.objects]);
+    this._unsubscribe = query.subscribe(() => {});
+    // TODO(wittjosiah): These should probably throw or warn if accessed after close.
+    this._bindings = computed(() => this._reduce(query.objects));
+    this._blueprints = computed(() => [...this.bindings.value.blueprints]);
+    this._objects = computed(() => [...this.bindings.value.objects]);
+  }
+
+  close() {
+    this._bindings = undefined;
+    this._blueprints = undefined;
+    this._objects = undefined;
+    this._unsubscribe?.();
+    this._unsubscribe = undefined;
   }
 
   /**

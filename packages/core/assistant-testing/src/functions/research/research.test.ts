@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -105,6 +105,8 @@ describe('Research', () => {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
+        conversation.open();
+        onTestFinished(() => conversation.close());
 
         const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
         yield* DatabaseService.add(org);

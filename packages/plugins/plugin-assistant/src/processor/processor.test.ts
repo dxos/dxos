@@ -4,7 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { describe, it } from '@effect/vitest';
+import { describe, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -68,6 +68,8 @@ describe('Chat processor', () => {
         const services = yield* Effect.runtime<AiChatServices>();
         const queue = yield* QueueService.createQueue<DataType.Message>();
         const conversation = new AiConversation({ queue });
+        conversation.open();
+        onTestFinished(() => conversation.close());
         const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();

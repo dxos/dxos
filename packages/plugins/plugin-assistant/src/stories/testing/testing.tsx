@@ -277,7 +277,10 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
               await space.db.flush({ indexes: true });
+
+              binder.open();
               await onChatCreated?.({ space, chat, binder });
+              binder.close();
 
               return {
                 data: { object: chat },

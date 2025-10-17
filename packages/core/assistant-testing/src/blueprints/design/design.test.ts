@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, it } from '@effect/vitest';
+import { describe, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -45,6 +45,8 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
         const conversation = new AiConversation({
           queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
         });
+        conversation.open();
+        onTestFinished(() => conversation.close());
 
         yield* DatabaseService.add(blueprint);
         yield* Effect.promise(() =>
