@@ -74,7 +74,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burdon): Not working.
 export const Slash: Story = {
   args: {
     text: str('# Slash', '', names.join(' '), ''),
@@ -152,7 +151,7 @@ export const Link: Story = {
     }),
   ],
   args: {
-    text: str('# Link', '', names.join(' '), ''),
+    text: str('# Link', ''),
     trigger: ['/', '@'],
     getMenu: () => [],
   },
