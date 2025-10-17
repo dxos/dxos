@@ -40,7 +40,7 @@ export type DeckLayoutProps = {
 };
 
 const PlankSeparator = ({ order }: { order: number }) =>
-  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-4' style={{ gridColumn: order }} /> : null;
+  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-0' style={{ gridColumn: order }} /> : null;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -227,7 +227,10 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
                 ref={deckRef}
                 orientation='horizontal'
                 size='contain'
-                classNames={['absolute inset-block-0 -inset-inline-px', mainPaddingTransitions]}
+                classNames={[
+                  'absolute inset-block-[--main-spacing] -inset-inline-px bs-[calc(100%-2*var(--main-spacing))]',
+                  mainPaddingTransitions,
+                ]}
                 itemsCount={itemsCount - 1}
                 style={padding}
                 onScroll={handleScroll}

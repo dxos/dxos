@@ -215,6 +215,7 @@ const PlankComponent = memo(
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
+      !part.startsWith('solo') && 'mli-[--main-spacing] !border-separator border rounded-md overflow-hidden',
     );
 
     return (
