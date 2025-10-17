@@ -596,9 +596,23 @@ service EdgeAgentService {
   rpc QueryAgentStatus(google.protobuf.Empty) returns (stream QueryAgentStatusResponse);
 }
 
-enum EdgeStatus {
-  NOT_CONNECTED = 0;
-  CONNECTED = 1;
+message EdgeStatus {
+  enum ConnectionState {
+    NOT_CONNECTED = 0;
+    CONNECTED = 1;
+  }
+
+  ConnectionState state = 1;
+  /** Latency in ms */
+  int32 rtt = 2;
+
+  /** How long the connection has been up */
+  int32 uptime = 3;
+
+  /** Upload rate in bytes per second */
+  int32 rate_bytes_up = 4;
+  /** Download rate in bytes per second */
+  int32 rate_bytes_down = 5;
 }
 
 message QueryEdgeStatusResponse {

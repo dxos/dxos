@@ -41,17 +41,17 @@ describe('EdgeClient', () => {
 
     const { client } = await openNewClient(endpoint);
 
-    expect(client.status).toBe(EdgeStatus.NOT_CONNECTED);
+    expect(client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
     admitConnection.wake();
-    await expect.poll(() => client.status).toBe(EdgeStatus.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
 
     admitConnection.reset();
     await closeConnection();
     expect(client.isOpen).is.true;
-    await expect.poll(() => client.status).toBe(EdgeStatus.NOT_CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.NOT_CONNECTED);
 
     admitConnection.wake();
-    await expect.poll(() => client.status).toBe(EdgeStatus.CONNECTED);
+    await expect.poll(() => client.status.state).toBe(EdgeStatus.ConnectionState.CONNECTED);
   });
 
   test('set identity reconnects', async () => {

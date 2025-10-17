@@ -44,7 +44,7 @@ export class DevicesServiceImpl implements DevicesService {
                 presence = Device.PresenceState.ONLINE;
               } else if (profile.os?.toUpperCase() === 'EDGE') {
                 presence =
-                  this._edgeConnection?.status === EdgeStatus.CONNECTED
+                  this._edgeConnection?.status.state === EdgeStatus.ConnectionState.CONNECTED
                     ? Device.PresenceState.ONLINE
                     : Device.PresenceState.OFFLINE;
               } else {

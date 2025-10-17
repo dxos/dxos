@@ -149,7 +149,6 @@
     "@types/lodash.isequalwith": "^4.4.0",
     "@types/ua-parser-js": "^0.7.39",
     "fast-check": "^3.19.0",
-    "source-map-support": "^0.5.12",
     "typedoc": "0.28.1"
   },
   "peerDependencies": {
