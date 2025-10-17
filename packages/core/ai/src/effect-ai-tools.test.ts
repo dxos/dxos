@@ -11,8 +11,8 @@ import { TestHelpers } from '@dxos/effect';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import * as AiService from '../AiService';
-import { AiServiceTestingPreset } from '../testing';
+import * as AiService from './AiService';
+import { AiServiceTestingPreset } from './testing';
 
 import { processMessages } from './testing';
 
