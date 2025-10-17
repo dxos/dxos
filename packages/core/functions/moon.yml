@@ -11,3 +11,11 @@ tasks:
       - '--entryPoint=src/edge/index.ts'
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
+  e2e:
+    command: pnpm vitest run -c vitest.config.ts --reporter=verbose src/e2e/deploy.test.ts
+    deps:
+      - ^:build
+      - ^:compile
+    inputs:
+      - src/e2e/**
+      - vitest.config.ts
