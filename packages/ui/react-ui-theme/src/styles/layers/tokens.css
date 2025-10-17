@@ -6,7 +6,6 @@
     --sticky-top: 0;
 
     /* Lengths / sizes */
-    --main-spacing: .5rem;
     --rail-content: 3rem;
     --rail-size: calc(var(--rail-content) + 1px);
     --rail-action: calc(var(--rail-content) - 0.5rem + 1px);

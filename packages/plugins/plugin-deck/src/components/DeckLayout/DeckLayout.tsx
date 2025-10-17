@@ -16,7 +16,7 @@ import {
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { mainPaddingTransitions } from '@dxos/react-ui-theme';
+import { mainPaddingTransitions, mx } from '@dxos/react-ui-theme';
 
 import { DeckCapabilities } from '../../capabilities';
 import { useBreakpoints, useHoistStatusbar } from '../../hooks';
@@ -39,8 +39,14 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
 };
 
-const PlankSeparator = ({ order }: { order: number }) =>
-  order > 0 ? <span role='separator' className='row-span-2 bg-deckSurface is-0' style={{ gridColumn: order }} /> : null;
+const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: boolean }) =>
+  order > 0 ? (
+    <span
+      role='separator'
+      className={mx('row-span-2 bg-deckSurface', encapsulate ? 'is-0' : 'is-4')}
+      style={{ gridColumn: order }}
+    />
+  ) : null;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
@@ -197,6 +203,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
             classNames={mainPosition}
             style={
               {
+                '--main-spacing': settings.encapsulatedPlanks ? '.5rem' : '0',
                 '--dx-main-sidebarWidth':
                   sidebarState === 'expanded'
                     ? 'var(--nav-sidebar-size)'
@@ -237,7 +244,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
               >
                 {active.map((entryId) => (
                   <Fragment key={entryId}>
-                    <PlankSeparator order={order[entryId] - 1} />
+                    <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.enableDeck} />
                     <Plank
                       id={entryId}
                       companionId={activeCompanions?.[entryId]}

@@ -16,6 +16,7 @@ export default () => {
     enableNativeRedirect: false,
     newPlankPositioning: 'start',
     overscroll: 'none',
+    enableNewDeckLayout: false,
   });
 
   return contributes(Capabilities.Settings, {

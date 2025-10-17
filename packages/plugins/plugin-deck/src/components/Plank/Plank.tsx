@@ -68,7 +68,11 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
   const hasCompanion = !!(companionId && currentCompanion);
 
   return (
-    <PlankContainer solo={props.part === 'solo'} companion={hasCompanion}>
+    <PlankContainer
+      solo={props.part === 'solo'}
+      companion={hasCompanion}
+      encapsulate={!!props.settings?.encapsulatedPlanks}
+    >
       <PlankComponent
         id={id}
         node={node}
@@ -92,7 +96,12 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
   );
 });
 
-const PlankContainer = ({ children, solo, companion }: PropsWithChildren<{ solo: boolean; companion: boolean }>) => {
+const PlankContainer = ({
+  children,
+  solo,
+  companion,
+  encapsulate,
+}: PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>) => {
   const sizeAttrs = useMainSize();
   if (!solo) {
     return children;
@@ -103,7 +112,8 @@ const PlankContainer = ({ children, solo, companion }: PropsWithChildren<{ solo:
     <div
       role='none'
       className={mx(
-        'absolute inset-[--main-spacing] grid border border-separator rounded-md overflow-hidden',
+        'absolute inset-[--main-spacing] grid',
+        encapsulate && 'border border-separator rounded overflow-hidden',
         companion && 'grid-cols-[6fr_4fr]',
         railGridHorizontal,
         mainIntrinsicSize,
@@ -215,7 +225,9 @@ const PlankComponent = memo(
       part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
       part.startsWith('solo-') && 'row-span-2 grid-rows-subgrid min-is-0',
       part === 'solo-companion' && '!border-separator border-is',
-      !part.startsWith('solo') && 'mli-[--main-spacing] !border-separator border rounded-md overflow-hidden',
+      settings?.encapsulatedPlanks &&
+        !part.startsWith('solo') &&
+        'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
     );
 
     return (
