@@ -3,22 +3,12 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
-import {
-  Capabilities,
-  Surface,
-  contributes,
-  createSurface,
-  useCapabilities,
-  useCapability,
-  useLayout,
-} from '@dxos/app-framework';
+import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
 import { Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { useClient } from '@dxos/react-client';
 import {
   type Space,
   SpaceState,
@@ -29,7 +19,7 @@ import {
   parseId,
   useSpace,
 } from '@dxos/react-client/echo';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Input } from '@dxos/react-ui';
 import { type InputProps, SelectInput } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
@@ -63,6 +53,7 @@ import {
   SyncStatus,
   ViewEditor,
 } from '../components';
+import { useTypeOptions } from '../hooks';
 import { meta } from '../meta';
 import { HueAnnotationId, IconAnnotationId, type SpaceSettingsProps } from '../types';
 
@@ -249,72 +240,10 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
         return !!annotation;
       },
       component: ({ data: { schema, target }, ...inputProps }) => {
-        const { t } = useTranslation();
-        const client = useClient();
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
-
         const annotation = findAnnotation<TypenameAnnotation[]>(schema.ast, TypenameAnnotationId)!;
-
-        const schemaWhitelists = useCapabilities(ClientCapabilities.SchemaWhiteList);
-        const whitelistedTypenames = useMemo(
-          () => new Set(schemaWhitelists.flatMap((typeArray) => typeArray.map((type) => Type.getTypename(type)))),
-          [schemaWhitelists],
-        );
-
-        const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
-        const objectFormTypenames = useMemo(
-          () =>
-            new Set(
-              objectForms
-                .map((form) => Type.getTypename(form.objectSchema))
-                // TODO(wittjosiah): Remove.
-                .filter((typename) => !OMIT.includes(typename) && !typename.endsWith('View')),
-            ),
-          [objectForms],
-        );
-
-        const fixed = client.graph.schemaRegistry.schemas.filter((schema) => {
-          const limitedStatic =
-            annotation.includes('limited-static') && whitelistedTypenames.has(Type.getTypename(schema));
-          const unusedStatic =
-            annotation.includes('unused-static') &&
-            whitelistedTypenames.has(Type.getTypename(schema)) &&
-            !space.properties.staticRecords?.includes(Type.getTypename(schema));
-          const usedStatic =
-            annotation.includes('used-static') &&
-            whitelistedTypenames.has(Type.getTypename(schema)) &&
-            space.properties.staticRecords?.includes(Type.getTypename(schema));
-          const objectForm = annotation.includes('object-form') && objectFormTypenames.has(Type.getTypename(schema));
-          return annotation.includes('static') || limitedStatic || unusedStatic || usedStatic || objectForm;
-        });
-        const dynamic = space?.db.schemaRegistry.query().runSync();
-        const typenames = Array.from(
-          new Set<string>([
-            ...(annotation.includes('limited-static') ||
-            annotation.includes('unused-static') ||
-            annotation.includes('used-static') ||
-            annotation.includes('static') ||
-            annotation.includes('object-form')
-              ? fixed.map((schema) => Type.getTypename(schema))
-              : []),
-            ...(annotation.includes('dynamic') ? dynamic.map((schema) => schema.typename) : []),
-          ]),
-        ).sort();
-
-        const options = useMemo(
-          () =>
-            typenames
-              .map((typename) => ({
-                value: typename,
-                label: t('typename label', { ns: typename, defaultValue: typename }),
-              }))
-              .toSorted((a, b) => a.label.localeCompare(b.label)),
-          [t, typenames],
-        );
+        const options = useTypeOptions({ space, annotation });
 
         return <SelectInput {...props} options={options} />;
       },

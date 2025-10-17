@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { useTypeOptions } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
@@ -16,7 +17,7 @@ import { inputTextLabel, mx, subtleHover } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel, createView } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { evalQuery, resolveSchemaWithClientAndSpace } from '../helpers';
+import { resolveSchemaWithClientAndSpace } from '../helpers';
 import { meta } from '../meta';
 
 const listGrid = 'grid grid-cols-[min-content_1fr_min-content_min-content_min-content]';
@@ -39,6 +40,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   const view = useMemo(() => views.find((view) => view.id === expandedId), [views, expandedId]);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
+  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
 
   useAsyncEffect(async () => {
     if (!view?.query || !space) {
@@ -57,22 +60,21 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
   );
 
   const handleQueryChanged = useCallback(
-    async (queryString: string, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: string) => {
       if (!view || !space) {
         return;
       }
 
-      view.query.string = queryString;
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const newQuery = queue ? evalQuery(queryString).options({ queues: [queue] }) : evalQuery(queryString);
-      view.query.ast = newQuery.ast;
-      const newSchema = await resolveSchemaWithClientAndSpace(client, space, newQuery.ast);
+      const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+      view.query.ast = query.ast;
+      const newSchema = await resolveSchemaWithClientAndSpace(client, space, query.ast);
       if (!newSchema) {
         return;
       }
 
       const newView = createView({
-        query: newQuery,
+        query,
         jsonSchema: Type.toJsonSchema(newSchema),
         presentation: Obj.make(Type.Expando, {}),
       });
@@ -155,6 +157,8 @@ export const ProjectObjectSettings = ({ classNames, project }: ProjectObjectSett
                         schema={schema}
                         view={view}
                         registry={space?.db.schemaRegistry}
+                        tags={tags}
+                        types={types}
                         onQueryChanged={handleQueryChanged}
                       />
                     </div>
