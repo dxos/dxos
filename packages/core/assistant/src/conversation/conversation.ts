@@ -7,6 +7,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { DatabaseService } from '@dxos/functions';
@@ -37,7 +38,7 @@ export type AiConversationOptions = {
  * Durable conversation state (initiated by users and agents) backed by a Queue.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
  */
-export class AiConversation {
+export class AiConversation extends Resource {
   /**
    * Message and binding queue.
    */
@@ -54,8 +55,18 @@ export class AiConversation {
   private _toolkit: Toolkit.WithHandler<any> | undefined;
 
   public constructor(options: AiConversationOptions) {
+    super();
     this._queue = options.queue;
     this._context = new AiContextBinder(this._queue);
+  }
+
+  protected override async _open(): Promise<void> {
+    // TODO(wittjosiah): Pass in parent context?
+    await this._context.open();
+  }
+
+  protected override async _close(): Promise<void> {
+    await this._context.close();
   }
 
   public get context() {
