@@ -6,7 +6,9 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { sleep } from '@dxos/async';
+import { Stream } from '@dxos/codec-protobuf/stream';
 
+// DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
 describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
   test('sync stuck', async () => {
     const ITERATIONS = 100,
@@ -35,6 +37,16 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     const client = new Client({ config });
     await client.initialize();
     await client.halo.createIdentity();
+
+    setInterval(async () => {
+      const { status } = (await Stream.first(client.services.services.EdgeAgentService!.queryEdgeStatus())) ?? {};
+      console.log(
+        status?.messagesSent.toString().padStart(10),
+        'sent',
+        status?.messagesReceived.toString().padStart(10),
+        'received',
+      );
+    }, 2000);
 
     await client.spaces.default.waitUntilReady();
     await client.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
