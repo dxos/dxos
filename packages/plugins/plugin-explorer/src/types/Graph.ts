@@ -22,6 +22,7 @@ export const Graph = Schema.Struct({
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
+
 export type Graph = Schema.Schema.Type<typeof Graph>;
 
 /**

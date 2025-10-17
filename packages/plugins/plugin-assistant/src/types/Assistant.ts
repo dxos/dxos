@@ -4,9 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Queue } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
+import { Queue } from '@dxos/echo-db';
 
 import { LLM_PROVIDERS } from './defs';
 
@@ -28,6 +28,9 @@ export const Chat = Schema.Struct({
 );
 
 export interface Chat extends Schema.Schema.Type<typeof Chat> {}
+
+export const makeChat = ({ name, queue }: { name?: string; queue: Queue }) =>
+  Obj.make(Chat, { name, queue: Ref.fromDXN(queue.dxn) });
 
 /**
  * Relation between a Chat and companion objects (e.g., artifacts).

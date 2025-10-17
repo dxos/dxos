@@ -28,16 +28,16 @@ export type StackItemContentProps = ThemedClassName<Omit<ComponentPropsWithoutRe
   scrollable?: boolean;
 
   /**
-   * Whether the consumer intends to do something custom and typical affordances should not apply.
-   */
-  // TODO(burdon): This is cryptic; can we remove (only used by plugin-inbox?) Normalize toolbar?
-  layoutManaged?: boolean;
-
-  /**
    * Whether to set a certain aspect ratio on the content, including the toolbar and statusbar.
    * This is provided for convenience and consistency; it can instead be specified by the `classNames` or `style` props as needed.
    */
   size?: 'intrinsic' | 'video' | 'square';
+
+  /**
+   * Whether the consumer intends to do something custom and typical affordances should not apply.
+   * @deprecated Replace with override for gridTempateRows.
+   */
+  layoutManaged?: boolean;
 };
 
 /**
@@ -71,13 +71,13 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
         {...props}
         className={mx(
           'group grid grid-cols-[100%] density-coarse',
-          stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           size === 'video' ? 'aspect-video' : size === 'square' && 'aspect-square',
-          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+          stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
           scrollable ? 'min-bs-0 overflow-y-auto scrollbar-thin contain-layout' : 'overflow-hidden',
           role === 'section' &&
             toolbar &&
             '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
           classNames,
         )}
         style={style}

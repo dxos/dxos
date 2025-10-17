@@ -6,14 +6,20 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 export namespace Notebook {
+  export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
+
   export const Cell = Schema.Struct({
     id: Schema.String,
-    script: Type.Ref(DataType.Text),
-  });
+    type: Schema.String,
+    script: Schema.optional(Type.Ref(DataType.Text)),
+    view: Schema.optional(Type.Ref(DataType.View)),
+    chat: Schema.optional(Type.Ref(Assistant.Chat)),
+  }).pipe(Schema.mutable);
 
   export type Cell = Schema.Schema.Type<typeof Cell>;
 

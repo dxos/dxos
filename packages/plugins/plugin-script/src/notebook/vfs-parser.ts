@@ -6,7 +6,18 @@ import { createSystem, createVirtualTypeScriptEnvironment } from '@typescript/vf
 import ts from 'typescript';
 
 import { invariant } from '@dxos/invariant';
-import { trim } from '@dxos/util';
+
+import { builtIns, systemDefinitions } from './eval';
+
+/**
+ * Default system definitions.
+ */
+const systemFiles: VirtualFile[] = [
+  {
+    filename: '/lib.d.ts',
+    content: systemDefinitions,
+  },
+];
 
 export type ParsedExpression = {
   name?: string;
@@ -50,7 +61,7 @@ export class VirtualTypeScriptParser {
     // If no declarations found, check for standalone expression references.
     if (analysis.length === 0) {
       const sourcefilename = '/temp.ts';
-      const env = this.createEnvironment([{ filename: sourcefilename, content: input }, ...systemFiles]);
+      const env = this.createEnvironment([{ filename: sourcefilename, content: input }]);
       const sourceFile = env.getSourceFile(sourcefilename);
       const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
@@ -73,7 +84,7 @@ export class VirtualTypeScriptParser {
    * Analyze multiple files with full type information.
    */
   analyzeFiles(files: VirtualFile[]): ParsedExpression[] {
-    const env = this.createEnvironment([...files, ...systemFiles]);
+    const env = this.createEnvironment(files);
     const results: ParsedExpression[] = [];
     const typeChecker = env.languageService.getProgram()?.getTypeChecker();
 
@@ -96,7 +107,7 @@ export class VirtualTypeScriptParser {
     const results: ParsedExpression[] = [];
 
     const visit = (node: ts.Node) => {
-      // Function declarations
+      // Function declarations.
       if (ts.isFunctionDeclaration(node) && node.name) {
         const symbol = typeChecker.getSymbolAtLocation(node.name);
         const type = symbol && typeChecker.getTypeOfSymbolAtLocation(symbol, node);
@@ -123,7 +134,7 @@ export class VirtualTypeScriptParser {
             let returnType: string | undefined;
             let value: any;
 
-            // Get the type string
+            // Get the type string.
             const typeString = type ? typeChecker.typeToString(type) : 'any';
 
             // Check if it's a function.
@@ -146,7 +157,7 @@ export class VirtualTypeScriptParser {
               }
             }
 
-            // Find references in the initializer only
+            // Find references in the initializer only.
             const refs = declaration.initializer
               ? this.findReferences(declaration.initializer, sourceFile, typeChecker)
               : [];
@@ -164,7 +175,7 @@ export class VirtualTypeScriptParser {
         });
       }
 
-      // Class declarations
+      // Class declarations.
       else if (ts.isClassDeclaration(node) && node.name) {
         results.push({
           name: node.name.text,
@@ -212,42 +223,42 @@ export class VirtualTypeScriptParser {
     const localSymbols = new Set<string>();
 
     // First, collect local symbols (parameters, local variables).
-    const collectLocalSymbols = (n: ts.Node) => {
-      if (ts.isFunctionDeclaration(n) || ts.isArrowFunction(n) || ts.isFunctionExpression(n)) {
-        n.parameters.forEach((param) => {
+    const collectLocalSymbols = (node: ts.Node) => {
+      if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+        node.parameters.forEach((param) => {
           if (ts.isIdentifier(param.name)) {
             localSymbols.add(param.name.text);
           }
         });
       }
 
-      if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name)) {
-        localSymbols.add(n.name.text);
+      if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name)) {
+        localSymbols.add(node.name.text);
       }
 
-      ts.forEachChild(n, collectLocalSymbols);
+      ts.forEachChild(node, collectLocalSymbols);
     };
 
     collectLocalSymbols(node);
 
     // Then find all identifier references.
-    const findRefs = (n: ts.Node) => {
-      if (ts.isIdentifier(n)) {
-        // Skip if it's a local symbol
-        if (!localSymbols.has(n.text)) {
+    const findRefs = (node: ts.Node) => {
+      if (ts.isIdentifier(node)) {
+        // Skip if it's a local symbol.
+        if (!localSymbols.has(node.text)) {
           // Check if it's a reference (not a declaration).
-          const parent = n.parent;
+          const parent = node.parent;
           const isDeclaration =
-            (ts.isVariableDeclaration(parent) && parent.name === n) ||
-            (ts.isFunctionDeclaration(parent) && parent.name === n) ||
-            (ts.isParameter(parent) && parent.name === n);
+            (ts.isVariableDeclaration(parent) && parent.name === node) ||
+            (ts.isFunctionDeclaration(parent) && parent.name === node) ||
+            (ts.isParameter(parent) && parent.name === node);
 
-          if (!isDeclaration && !this.isBuiltIn(n.text)) {
-            references.add(n.text);
+          if (!isDeclaration && !this.isBuiltIn(node.text)) {
+            references.add(node.text);
           }
         }
       }
-      ts.forEachChild(n, findRefs);
+      ts.forEachChild(node, findRefs);
     };
 
     findRefs(node);
@@ -274,7 +285,7 @@ export class VirtualTypeScriptParser {
           const type = typeChecker.getTypeAtLocation(expr.right);
           const typeString = typeChecker.typeToString(type);
 
-          // Get the literal value if it's a literal
+          // Get the literal value if it's a literal.
           let value: any;
           if (ts.isNumericLiteral(expr.right)) {
             value = Number(expr.right.text);
@@ -282,7 +293,7 @@ export class VirtualTypeScriptParser {
             value = expr.right.text;
           }
 
-          // Find references in the right-hand side
+          // Find references in the right-hand side.
           const references = this.findReferences(expr.right, sourceFile, typeChecker);
 
           result = {
@@ -336,15 +347,17 @@ export class VirtualTypeScriptParser {
   }
 
   protected createEnvironment(files: VirtualFile[]) {
+    const allFiles = [...systemFiles, ...files];
+
     const fileMap = new Map<string, string>();
-    files.forEach(({ filename, content }) => {
+    allFiles.forEach(({ filename, content }) => {
       fileMap.set(filename, content);
     });
 
     const system = createSystem(fileMap);
     return createVirtualTypeScriptEnvironment(
       system,
-      files.map(({ filename }) => filename),
+      allFiles.map(({ filename }) => filename),
       ts,
       this.compilerOptions,
     );
@@ -359,7 +372,7 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
    * Analyze notebook cells with full type checking.
    */
   analyzeNotebook(cells: Array<{ id: string; code: string }>) {
-    // Create cumulative environment where each cell can see previous cells
+    // Create cumulative environment where each cell can see previous cells.
     const cumulativeCode: string[] = [];
     const cellAnalysis: Map<
       string,
@@ -390,7 +403,7 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
       });
 
       // Create environment.
-      const env = this.createEnvironment([...files, ...systemFiles]);
+      const env = this.createEnvironment(files);
 
       // Get diagnostics (errors).
       const diagnostics = env.languageService.getSemanticDiagnostics(filename);
@@ -436,55 +449,3 @@ export class NotebookVirtualParser extends VirtualTypeScriptParser {
     return cellAnalysis;
   }
 }
-
-/**
- * Globals.
- */
-const builtIns = new Set([
-  // Types.
-  'Array',
-  'Date',
-  'Error',
-  'JSON',
-  'Map',
-  'Math',
-  'Number',
-  'Promise',
-  'Object',
-  'RegExp',
-  'Set',
-  'String',
-
-  // Functions.
-  'console',
-  'document',
-  'global',
-  'isFinite',
-  'isNaN',
-  'parseFloat',
-  'parseInt',
-  'process',
-  'window',
-]);
-
-/**
- * Default system definitions.
- */
-const systemFiles: VirtualFile[] = [
-  {
-    filename: '/lib.d.ts',
-    content: trim`
-      interface Array<T> { length: number; [n: number]: T; }
-      interface Boolean {}
-      interface Function {}
-      interface IArguments {}
-      interface Number {}
-      interface Object {}
-      interface RegExp {}
-      interface String { length: number; }
-      interface CallableFunction extends Function {}
-      interface NewableFunction extends Function {}
-      declare var console: { log(...args: any[]): void };
-    `,
-  },
-];

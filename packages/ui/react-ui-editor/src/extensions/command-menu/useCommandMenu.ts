@@ -9,9 +9,8 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { type DxAnchorActivate } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from '../../components';
-
 import { commandMenu, commandRangeEffect } from './command-menu';
+import { type CommandMenuGroup, type CommandMenuItem, getItem, getNextItem, getPreviousItem } from './CommandMenu';
 import { type PlaceholderOptions } from './placeholder';
 
 export type UseCommandMenuOptions = {
