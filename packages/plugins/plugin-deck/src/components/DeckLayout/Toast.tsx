@@ -59,3 +59,28 @@ export const Toast = ({
     </NaturalToast.Root>
   );
 };
+
+export type ToasterProps = {
+  toasts?: LayoutAction.Toast[];
+  onDismissToast?: (id: string) => void;
+};
+
+export const Toaster = ({ toasts, onDismissToast }: ToasterProps) => {
+  return (
+    <>
+      {toasts?.map((toast) => (
+        <Toast
+          {...toast}
+          key={toast.id}
+          onOpenChange={(open) => {
+            if (!open) {
+              onDismissToast?.(toast.id);
+            }
+
+            return open;
+          }}
+        />
+      ))}
+    </>
+  );
+};
