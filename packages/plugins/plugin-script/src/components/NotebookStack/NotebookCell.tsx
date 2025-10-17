@@ -96,6 +96,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 
   //
   // Prompt.
+  // TODO(burdon): Add values to context or system message (via blueprint?).
   //
   const services = useChatServices({ space, chat: cell.chat?.target });
   const processor = useChatProcessor({ chat: cell.chat?.target, services });
