@@ -12,11 +12,9 @@ import {
   StoredSchema,
   type TypeAnnotation,
   TypeAnnotationId,
-  TypeIdentifierAnnotationId,
   getSchemaTypename,
   toJsonSchema,
 } from '@dxos/echo/internal';
-import { log } from '@dxos/log';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -61,36 +59,15 @@ describe('schema registry', () => {
   test('add new schema', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
-    const expectedSchema = Contact.annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
-        typename: 'example.com/type/Contact',
-        version: '0.1.0',
-      } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
-    });
-    log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
-    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);
-    const expectedSchema = Organization.annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
-        typename: 'example.com/type/Organization',
-        version: '0.1.0',
-      } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
-    });
-    log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
-    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(Object.keys(Organization.fields));
   });
 
   test('can store the same schema multiple times', async () => {

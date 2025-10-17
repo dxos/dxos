@@ -17,10 +17,9 @@ import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { parseResponse } from '../AiParser';
-import { preprocessPrompt } from '../AiPreprocessor';
-import { tapHttpErrors } from '../testing';
-
+import { parseResponse } from './AiParser';
+import { preprocessPrompt } from './AiPreprocessor';
+import { tapHttpErrors } from './testing';
 import { processMessages } from './testing';
 
 const OLLAMA_ENDPOINT = 'http://localhost:11434/v1';
