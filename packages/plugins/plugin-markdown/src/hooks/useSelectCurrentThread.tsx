@@ -3,7 +3,7 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
 import { LayoutAction, createResolver, useIntentResolver } from '@dxos/app-framework';

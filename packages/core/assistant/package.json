@@ -50,7 +50,6 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -63,20 +62,15 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "^0.19.2",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
-    "@effect/platform-node": "^0.98.3",
     "@preact/signals-core": "^1.12.1",
     "@xenova/transformers": "^2.17.2",
-    "chalk": "^4.1.0",
-    "handlebars": "4.7.8",
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.18.3",
-    "inquirer": "^12.0.0"
+    "effect": "3.18.3"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

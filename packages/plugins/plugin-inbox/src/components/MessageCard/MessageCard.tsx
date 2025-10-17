@@ -9,7 +9,7 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
-import { getMessageProps } from '../util';
+import { getMessageProps } from '../../util';
 
 export type MessageCardProps = {
   message: DataType.Message;
@@ -36,7 +36,7 @@ export const MessageCard = ({ message, role }: MessageCardProps) => {
         <p className='line-clamp-3 text-sm text-description'>{snippet}</p>
         {message.properties?.tags && (
           <div role='none'>
-            {message.properties.tags.map(({ label, hue }: Tag) => (
+            {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
               <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
                 {label}
               </span>

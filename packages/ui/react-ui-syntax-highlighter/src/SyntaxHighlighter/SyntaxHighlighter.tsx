@@ -25,6 +25,7 @@ export type SyntaxHighlighterProps = ThemedClassName<
  * https://github.com/react-syntax-highlighter/react-syntax-highlighter
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
+// TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = ({
   classNames,
   children,
@@ -35,7 +36,7 @@ export const SyntaxHighlighter = ({
   const { themeMode } = useThemeContext();
 
   return (
-    <div className={mx('is-full p-1 overflow-hidden font-thin text-baseText', classNames)}>
+    <div className={mx('flex is-full p-1 overflow-hidden text-baseText', classNames)}>
       <NativeSyntaxHighlighter
         className='is-full overflow-auto scrollbar-thin'
         language={languages[language as keyof typeof languages] || language}

@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ManagedRuntime } from 'effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
 import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo/internal';
 import { type FunctionInvocationService, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Stream } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { log } from '@dxos/log';

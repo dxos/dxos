@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { isNotNullable } from 'effect/Predicate';
+import * as Predicate from 'effect/Predicate';
 import React from 'react';
 
 import { useClient } from '@dxos/react-client';
@@ -63,13 +63,13 @@ export const MapContainer = ({ role, type: _type = 'map', view, map: _map, ...pr
 
       return { id: row.id, location: { lat, lng } } as GeoMarker;
     })
-    .filter(isNotNullable);
+    .filter(Predicate.isNotNullable);
 
   // TODO(burdon): Do something with selected items (ids). (Correlate against `rowsForType`).
   const selected = useSelected(typename, 'multi');
 
   return (
-    <StackItem.Content classNames='h-full' size={role === 'section' ? 'square' : 'intrinsic'}>
+    <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>
       {type === 'map' && (
         <MapControl markers={markers} selected={selected} onToggle={() => setType('globe')} {...props} />
       )}

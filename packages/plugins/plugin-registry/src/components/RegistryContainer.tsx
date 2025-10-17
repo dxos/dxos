@@ -70,7 +70,7 @@ export const RegistryContainer = ({ id, plugins: _plugins }: { id: string; plugi
   );
 
   return (
-    <StackItem.Content classNames='min-bs-0 overflow-y-auto scrollbar-thin contain-layout'>
+    <StackItem.Content scrollable>
       <PluginList
         plugins={plugins}
         enabled={manager.enabled}

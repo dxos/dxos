@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type Filter, type TagMap } from '@dxos/echo';
+import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -17,10 +17,10 @@ import { translations } from '../../translations';
 
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
-const tags: TagMap = {
-  ['tag_1' as const]: { label: 'Important' },
-  ['tag_2' as const]: { label: 'Investor' },
-  ['tag_3' as const]: { label: 'New' },
+const tags: Tag.TagMap = {
+  ['tag_1' as const]: Tag.make({ label: 'Important' }),
+  ['tag_2' as const]: Tag.make({ label: 'Investor' }),
+  ['tag_3' as const]: Tag.make({ label: 'New' }),
 };
 
 const meta = {
@@ -28,9 +28,9 @@ const meta = {
   component: QueryEditor,
   render: (args: QueryEditorProps) => {
     const [space] = useSpaces();
-    const [filter, setFilter] = useState<Filter.Any | null>(null);
+    const [filter, setFilter] = useState<Filter.Any>();
     const builder = useMemo(() => new QueryBuilder(tags), []);
-    const handleChange = useCallback((value: string) => {
+    const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
       setFilter(builder.build(value));
     }, []);
 

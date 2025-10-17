@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
+import { createEchoSchema } from '@dxos/echo/testing';
 import { live } from '@dxos/live-object';
-import { createEchoSchema } from '@dxos/live-object/testing';
 import { createView } from '@dxos/schema';
 
 import { Table } from '../types';

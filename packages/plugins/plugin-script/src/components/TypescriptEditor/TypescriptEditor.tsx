@@ -4,10 +4,9 @@
 
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
-import { defaultHighlightStyle } from '@codemirror/language';
+import { HighlightStyle } from '@codemirror/language';
 import { lintKeymap } from '@codemirror/lint';
 import { Prec } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
@@ -15,14 +14,15 @@ import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
 import React from 'react';
 
-import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Domino, type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import {
+  type BasicExtensionsOptions,
   type EditorInputMode,
   InputModeExtensions,
   type UseTextEditorProps,
   createBasicExtensions,
   createThemeExtensions,
-  folding,
+  defaultStyles,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
@@ -31,18 +31,22 @@ import { isNonNullable } from '@dxos/util';
 export type TypescriptEditorProps = ThemedClassName<
   {
     id: string;
+    role?: string;
     inputMode?: EditorInputMode;
     toolbar?: boolean;
     env?: VirtualTypeScriptEnvironment;
+    options?: BasicExtensionsOptions;
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
 export const TypescriptEditor = ({
   classNames,
   id,
+  role = 'article',
   inputMode = 'vscode',
   toolbar,
   env,
+  options,
   initialValue,
   extensions,
   scrollTo,
@@ -63,21 +67,22 @@ export const TypescriptEditor = ({
           lineNumbers: true,
           lineWrapping: false,
           monospace: true,
-          scrollPastEnd: true,
+          scrollPastEnd: role !== 'section',
           search: true,
+          ...options,
         }),
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         InputModeExtensions[inputMode],
-        folding(),
+
+        javascript({ typescript: true }),
+        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
+
         // Continues block comments when pressing Enter.
         Prec.high(keymap.of(continueKeymap)),
-
-        // TODO(burdon): Factor out.
-        javascript({ typescript: true }),
-        // https://github.com/val-town/codemirror-ts
         keymap.of(completionKeymap),
-        autocompletion({ override: env ? [tsAutocomplete()] : undefined }),
         keymap.of(lintKeymap),
+
+        // https://github.com/val-town/codemirror-ts
         env && [
           tsFacet.of({ env, path: `/src/${id}.ts` }),
           tsSync(),
@@ -89,6 +94,7 @@ export const TypescriptEditor = ({
     [id, extensions, themeMode, inputMode, selection, scrollTo],
   );
 
+  // TODO(brudon): Use react-ui-editor's Editor component.
   return (
     <div
       ref={parentRef}
@@ -99,8 +105,9 @@ export const TypescriptEditor = ({
   );
 };
 
+// TODO(burdon): Factor out (react-ui-editor).
 const createTooltipRenderer = (themeMode: ThemeMode) => {
-  const theme = themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle;
+  const theme = HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light);
 
   const classFromKind = (_kind: string) => {
     // E.g., localName, methodName, parameterName, etc.
@@ -119,18 +126,16 @@ const createTooltipRenderer = (themeMode: ThemeMode) => {
   };
 
   return (info: HoverInfo) => {
-    const div = document.createElement('div');
-    div.className = 'p-1 rounded border border-separator bg-baseSurface xs:max-w-80 max-w-lg';
-
-    if (info.quickInfo?.displayParts) {
-      for (const part of info.quickInfo.displayParts) {
-        const span = div.appendChild(document.createElement('span'));
-        span.className = classFromKind(part.kind);
-        span.innerText = part.text;
-      }
-    }
-
-    return { dom: div };
+    return {
+      dom: Domino.of('div')
+        .classNames('xs:max-is-80 max-is-lg p-1 bg-baseSurface rounded border border-separator')
+        .children(
+          ...(info.quickInfo?.displayParts?.map(({ kind, text }) =>
+            Domino.of('span').classNames(classFromKind(kind)).text(text),
+          ) ?? []),
+        )
+        .build(),
+    };
   };
 };
 

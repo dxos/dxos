@@ -7,7 +7,7 @@ import './mailbox.css';
 import React, { useCallback, useMemo, useState } from 'react';
 import { type OnResizeCallback, useResizeDetector } from 'react-resize-detector';
 
-import { Obj, type TagMap } from '@dxos/echo';
+import { Obj, type Tag } from '@dxos/echo';
 import { useStateWithRef } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
@@ -23,7 +23,7 @@ import { type DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { filterLabel } from '../../functions/email/api';
-import { getMessageProps } from '../util';
+import { getMessageProps } from '../../util';
 
 const ROW_SIZES = {
   DEFAULT: 60,
@@ -37,13 +37,13 @@ const messageColumnDefault = {
   grid: { size: 100 },
 };
 
-const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: TagMap) => {
+const renderMessageCell = (message: DataType.Message, now: Date, current?: boolean, tags?: Tag.TagMap) => {
   const { id, hue, from, date, subject } = getMessageProps(message, now);
 
   // NOTE: Currently all grid cells have borders, so we render a single cell for each row.
   return trim`
     <button
-      class="message__thumb dx-focus-ring-inset"
+      class="message__thumb dx-focus-ring-inset opacity-70"
       data-inbox-action="select-message"
       data-message-id="${id}"
     >
@@ -95,7 +95,7 @@ export type MailboxProps = {
   id: string;
   role?: string;
   messages: DataType.Message[];
-  tags?: TagMap;
+  tags?: Tag.TagMap;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;

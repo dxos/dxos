@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
@@ -44,6 +46,7 @@ export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
   }),
 );
 
+// TODO(burdon): Move to DataType; generalize to Subject relation?
 export const ResearchOn = Schema.Struct({
   id: Type.ObjectId,
   completedAt: Type.Format.DateTime,

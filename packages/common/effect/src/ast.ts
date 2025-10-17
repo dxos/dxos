@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, Schema, SchemaAST, pipe } from 'effect';
-import { isUndefinedKeyword } from 'effect/SchemaAST';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
@@ -289,8 +291,8 @@ export const getAnnotation =
   <T>(annotationId: symbol, noDefault = true) =>
   (node: SchemaAST.AST): T | undefined => {
     // Title fallback seems to be the identifier.
-    const id = pipe(SchemaAST.getIdentifierAnnotation(node), Option.getOrUndefined);
-    const value = pipe(SchemaAST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
+    const id = Function.pipe(SchemaAST.getIdentifierAnnotation(node), Option.getOrUndefined);
+    const value = Function.pipe(SchemaAST.getAnnotation<T>(annotationId)(node), Option.getOrUndefined);
     if (noDefault && (value === defaultAnnotations[node._tag]?.annotations[annotationId] || value === id)) {
       return undefined;
     }
@@ -442,6 +444,7 @@ export const mapAst = (
             ),
         ),
         ast.indexSignatures,
+        ast.annotations,
       );
     }
     case 'Union': {
@@ -474,7 +477,7 @@ export const isArrayType = (node: SchemaAST.AST): boolean => {
     SchemaAST.isTupleType(node) ||
     (SchemaAST.isUnion(node) &&
       node.types.some(isArrayType) &&
-      node.types.some(isUndefinedKeyword) &&
+      node.types.some(SchemaAST.isUndefinedKeyword) &&
       node.types.length === 2)
   );
 };

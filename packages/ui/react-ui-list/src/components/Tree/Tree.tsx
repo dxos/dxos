@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type HasId } from '@dxos/echo-schema';
+import { type HasId } from '@dxos/echo/internal';
 import { Treegrid, type TreegridRootProps } from '@dxos/react-ui';
 
 import { type TreeContextType, TreeProvider } from './TreeContext';
@@ -16,7 +16,10 @@ export type TreeProps<T extends HasId = any, O = any> = {
   id: string;
 } & TreeContextType<T, O> &
   Partial<Pick<TreegridRootProps, 'gridTemplateColumns' | 'classNames'>> &
-  Pick<TreeItemProps<T>, 'draggable' | 'renderColumns' | 'canDrop' | 'onOpenChange' | 'onSelect' | 'levelOffset'>;
+  Pick<
+    TreeItemProps<T>,
+    'draggable' | 'renderColumns' | 'canDrop' | 'canSelect' | 'onOpenChange' | 'onSelect' | 'levelOffset'
+  >;
 
 export const Tree = <T extends HasId = any, O = any>({
   root,
@@ -32,6 +35,7 @@ export const Tree = <T extends HasId = any, O = any>({
   levelOffset,
   renderColumns,
   canDrop,
+  canSelect,
   onOpenChange,
   onSelect,
 }: TreeProps<T, O>) => {
@@ -60,6 +64,7 @@ export const Tree = <T extends HasId = any, O = any>({
             draggable={draggable}
             renderColumns={renderColumns}
             canDrop={canDrop}
+            canSelect={canSelect}
             onOpenChange={onOpenChange}
             onSelect={onSelect}
           />

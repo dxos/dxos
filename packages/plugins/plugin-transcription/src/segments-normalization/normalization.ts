@@ -5,7 +5,7 @@
 // ISSUE(burdon): defineFunction
 // @ts-nocheck
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { AiService, DEFAULT_EDGE_MODEL } from '@dxos/ai';
 import { AiSession } from '@dxos/assistant';

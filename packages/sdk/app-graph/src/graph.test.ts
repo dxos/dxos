@@ -3,7 +3,7 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import { assert, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Graph, ROOT_ID, ROOT_TYPE, getGraph } from './graph';

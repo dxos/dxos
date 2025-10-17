@@ -41,8 +41,6 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -58,8 +56,8 @@
     "lodash.defaultsdeep": "^4.6.1"
   },
   "devDependencies": {
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/random": "workspace:*",
     "@tldraw/indices": "^2.0.0-alpha.14",
     "@types/lodash.defaultsdeep": "^4.6.6"

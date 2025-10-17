@@ -2,14 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { AiConversation, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -58,13 +61,13 @@ const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
 
 // TODO(burdon): Create actual test with mock LLM.
 describe('Chat processor', () => {
-  it.effect(
+  it.scoped(
     'basic',
     Effect.fn(
       function* ({ expect }) {
         const services = yield* Effect.runtime<AiChatServices>();
         const queue = yield* QueueService.createQueue<DataType.Message>();
-        const conversation = new AiConversation({ queue });
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         const processor = new AiChatProcessor(conversation, async () => services);
         const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
         void processor.cancel();

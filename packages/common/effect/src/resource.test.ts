@@ -3,15 +3,15 @@
 //
 
 import { it } from '@effect/vitest';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
-import { accuireReleaseResource } from './resource';
+import { acquireReleaseResource } from './resource';
 
 it.effect(
   'acquire-release',
   Effect.fn(function* ({ expect }) {
     const events: string[] = [];
-    const makeResource = accuireReleaseResource(() => ({
+    const makeResource = acquireReleaseResource(() => ({
       open: () => {
         events.push('open');
       },

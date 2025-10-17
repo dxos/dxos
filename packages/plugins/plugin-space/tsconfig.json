@@ -60,9 +60,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/echo-signals"
     },
     {
@@ -88,6 +85,9 @@
     },
     {
       "path": "../../sdk/shell"
+    },
+    {
+      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"

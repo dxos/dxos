@@ -9,7 +9,7 @@ import { meta } from '../meta';
 import { Meeting } from '../types';
 
 export default () => {
-  const settings = live(Meeting.Settings, {
+  const settings = live<Meeting.Settings>({
     entityExtraction: true,
   });
 

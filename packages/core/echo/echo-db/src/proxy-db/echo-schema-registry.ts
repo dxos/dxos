@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -13,11 +14,11 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   create,
-  createJsonSchema,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  makeTypeJsonSchemaAnnotation,
   toJsonSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -289,11 +290,18 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = create(StoredSchema, { ...meta, jsonSchema: createJsonSchema() });
+    const schemaToStore = create(StoredSchema, { ...meta, jsonSchema: toJsonSchema(Schema.Struct({})) });
+    const typeId = `dxn:echo:@:${schemaToStore.id}`;
     schemaToStore.jsonSchema = toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
-        [TypeIdentifierAnnotationId]: `dxn:echo:@:${schemaToStore.id}`,
+        [TypeIdentifierAnnotationId]: typeId,
+        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+          identifier: typeId,
+          kind: meta.kind,
+          typename: meta.typename,
+          version: meta.version,
+        }),
       }),
     );
 

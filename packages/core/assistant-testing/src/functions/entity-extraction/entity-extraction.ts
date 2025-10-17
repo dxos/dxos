@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Toolkit } from '@effect/ai';
-import { Effect, Layer, Predicate, Schema } from 'effect';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiSession, makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
@@ -61,6 +64,8 @@ export default defineFunction({
           throw new Error('Multiple organizations created');
         } else if (created.length === 1) {
           organization = yield* DatabaseService.resolve(created[0], DataType.Organization);
+          Obj.getMeta(organization).tags ??= [];
+          Obj.getMeta(organization).tags!.push(...(Obj.getMeta(source)?.tags ?? []));
           contact.organization = Ref.make(organization);
         }
       }
@@ -106,6 +111,9 @@ const extractContact = Effect.fn('extractContact')(function* (message: DataType.
   }
 
   const newContact = Obj.make(DataType.Person, {
+    [Obj.Meta]: {
+      tags: Obj.getMeta(message)?.tags,
+    },
     emails: [{ value: email }],
   });
   yield* DatabaseService.add(newContact);

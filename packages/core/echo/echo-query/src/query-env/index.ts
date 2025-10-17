@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type { Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import type { Filter, Order, Query, Ref } from '@dxos/echo';
 import type * as Echo from '@dxos/echo';
@@ -217,14 +217,14 @@ class FilterClass implements Echo.Filter<any> {
     });
   }
 
-  static contains<T>(value: T): Echo.Filter<T[]> {
+  static contains<T>(value: T): Echo.Filter<readonly T[] | undefined> {
     return new FilterClass({
       type: 'contains',
       value,
     });
   }
 
-  static between<T>(from: T, to: T): Echo.Filter<T> {
+  static between<T>(from: T, to: T): Echo.Filter<unknown> {
     return new FilterClass({
       type: 'range',
       from,
@@ -450,7 +450,7 @@ class QueryClass implements Echo.Query<any> {
 export const Query1: typeof Echo.Query = QueryClass;
 export { Query1 as Query };
 
-const RefTypeId: unique symbol = Symbol('@dxos/echo-schema/Ref');
+const RefTypeId: unique symbol = Symbol('@dxos/echo-query/Ref');
 const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };

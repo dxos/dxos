@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Response } from '@effect/ai';
-import { Effect, Function, Option, Predicate, Stream } from 'effect';
+import type * as Response from '@effect/ai/Response';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
+import * as Stream from 'effect/Stream';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

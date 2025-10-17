@@ -7,14 +7,13 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Obj, Query } from '@dxos/echo';
-import { type BaseObject, Expando, Ref, getSchema, getTypename } from '@dxos/echo-schema';
-import { getMeta, getType } from '@dxos/echo-schema';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
+import { Obj, Query, Type } from '@dxos/echo';
+import { Ref, getSchema, getTypename } from '@dxos/echo/internal';
+import { getMeta, getType } from '@dxos/echo/internal';
+import { Testing, updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { type Live, dangerouslySetProxyId, live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
@@ -52,7 +51,7 @@ describe('Database', () => {
     await openAndClose(testBuilder);
     const { db } = await testBuilder.createDatabase();
 
-    db.add(live(Expando, { name: 'Test' }));
+    db.add(Obj.make(Type.Expando, { name: 'Test' }));
     await db.flush();
   });
 
@@ -69,7 +68,7 @@ describe('Database', () => {
       const db = await testPeer.createDatabase();
       spaceKey = db.spaceKey;
       rootUrl = db.rootUrl!;
-      db.add(live(Expando, { name: 'Test' }));
+      db.add(Obj.make(Type.Expando, { name: 'Test' }));
       const { objects } = await db.query(Query.select(Filter.everything())).run();
       expect(objects).to.have.length(1);
       expect(objects[0].name).to.eq('Test');
@@ -122,10 +121,10 @@ describe('Database', () => {
   test('inspect', async () => {
     const { db } = await builder.createDatabase();
 
-    const task = live(Expando, {
+    const task = Obj.make(Type.Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: live(Expando, { name: 'Test' }),
+      assignee: Obj.make(Type.Expando, { name: 'Test' }),
     });
     db.add(task);
     await db.flush();
@@ -141,7 +140,7 @@ describe('Database', () => {
     const add = 10;
     {
       for (const _ of Array.from({ length: add })) {
-        db.add(live(Expando, {}));
+        db.add(Obj.make(Type.Expando, {}));
       }
       await db.flush();
 
@@ -224,7 +223,7 @@ describe('Database', () => {
   test('meta', async () => {
     const { db } = await builder.createDatabase();
 
-    const obj = live(Expando, {});
+    const obj = Obj.make(Type.Expando, {});
     expectObjects(getMeta(obj).keys, []);
     getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
     expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
@@ -237,7 +236,7 @@ describe('Database', () => {
   test('creating objects', async () => {
     const { db } = await createDbWithTypes();
 
-    const task = live(Testing.Task, { title: 'test' });
+    const task = Obj.make(Testing.Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
@@ -258,7 +257,7 @@ describe('Database', () => {
     const { db } = await createDbWithTypes();
 
     {
-      const container = live(Testing.Container, { records: [{ type: Testing.RecordType.WORK }] });
+      const container = Obj.make(Testing.Container, { records: [{ type: Testing.RecordType.WORK }] });
       db.add(container);
     }
 
@@ -274,11 +273,11 @@ describe('Database', () => {
     const { db } = await createDbWithTypes();
 
     {
-      const container = db.add(live(Testing.Container, { objects: [] }));
+      const container = db.add(Obj.make(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(Ref.make(live(Expando, { foo: 100 })));
-      container.objects!.push(Ref.make(live(Expando, { bar: 200 })));
+      container.objects!.push(Ref.make(Obj.make(Type.Expando, { foo: 100 })));
+      container.objects!.push(Ref.make(Obj.make(Type.Expando, { bar: 200 })));
     }
 
     {
@@ -294,24 +293,24 @@ describe('Database', () => {
     const { db } = await createDbWithTypes();
 
     {
-      const container = db.add(live(Testing.Container, { objects: [] }));
+      const container = db.add(Obj.make(Testing.Container, { objects: [] }));
       await db.flush();
 
-      container.objects!.push(Ref.make(live(Testing.Task, {})));
-      container.objects!.push(Ref.make(live(Testing.Contact, {})));
+      container.objects!.push(Ref.make(Obj.make(Testing.Task, {})));
+      container.objects!.push(Ref.make(Obj.make(Testing.Contact, {})));
     }
 
     {
       const { objects } = await db.query(Filter.type(Testing.Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getTypename(container.objects![0].target!)).to.equal(Testing.Task.typename);
-      expect(getTypename(container.objects![1].target!)).to.equal(Testing.Contact.typename);
+      expect(getTypename(container.objects![0].target!)).to.equal(Type.getTypename(Testing.Task));
+      expect(getTypename(container.objects![1].target!)).to.equal(Type.getTypename(Testing.Contact));
     }
   });
 
   test('object fields', async () => {
-    const task = live(Testing.Task, {});
+    const task = Obj.make(Testing.Task, {});
 
     task.title = 'test';
     expect(task.title).to.eq('test');
@@ -325,7 +324,7 @@ describe('Database', () => {
     const { db: db1 } = await createDbWithTypes();
     const { db: db2 } = await createDbWithTypes();
 
-    const task1 = live(Testing.Task, { title: 'Main task' });
+    const task1 = Obj.make(Testing.Task, { title: 'Main task' });
     db1.add(task1);
     await db1.flush();
 
@@ -336,39 +335,24 @@ describe('Database', () => {
 
     db2.add(task2);
     await db2.flush();
-    expect(task2).to.be.instanceOf(Testing.Task);
+    expect(Obj.instanceOf(Testing.Task, task2)).to.be.true;
     expect(task2.id).to.equal(task1.id);
 
     expect(() => db1.add(task1)).to.throw;
   });
 
-  test.skip('Database works with old PublicKey IDs and new Ulid IDs', async () => {
-    const { db } = await builder.createDatabase();
-    const obj = db.add(live(Expando, { string: 'foo' })); // Ulid by default
-
-    // Old format
-    const oldId = PublicKey.random().toHex();
-    const reactiveObjWithOldId = live(Expando, { string: 'foo' });
-    dangerouslySetProxyId(reactiveObjWithOldId, oldId);
-    const expandoWithOldId = db.add(reactiveObjWithOldId);
-
-    // get by id
-    expect(db.getObjectById(obj.id)).to.eq(obj);
-    expect(db.getObjectById(oldId)).to.eq(expandoWithOldId);
-  });
-
   describe('references', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db } = await createDbWithTypes();
-      const firstTask = db.add(live(Testing.Task, { title: 'foo' }));
-      const secondTask = db.add(live(Testing.Task, { title: 'bar', previous: Ref.make(firstTask) }));
+      const firstTask = db.add(Obj.make(Testing.Task, { title: 'foo' }));
+      const secondTask = db.add(Obj.make(Testing.Task, { title: 'bar', previous: Ref.make(firstTask) }));
       expect(secondTask.previous?.target).to.eq(firstTask);
     });
 
     test('add with a reference to a reactive proxy', async () => {
       const { db } = await createDbWithTypes();
       const task = db.add(
-        live(Testing.Task, { title: 'first', previous: Ref.make(live(Testing.Task, { title: 'second' })) }),
+        Obj.make(Testing.Task, { title: 'first', previous: Ref.make(Obj.make(Testing.Task, { title: 'second' })) }),
       );
       expect(task.title).to.eq('first');
       expect(task.previous?.target?.id).to.be.a('string');
@@ -378,9 +362,9 @@ describe('Database', () => {
   test('typenames of nested objects', async () => {
     const { db } = await createDbWithTypes();
     const task = db.add(
-      live(Testing.Task, {
+      Obj.make(Testing.Task, {
         title: 'Main task',
-        subTasks: [Ref.make(live(Testing.Task, { title: 'Sub task' }))],
+        subTasks: [Ref.make(Obj.make(Testing.Task, { title: 'Sub task' }))],
       }),
     );
 
@@ -421,14 +405,14 @@ describe('Database', () => {
       expect(JSON.parse(JSON.stringify(root, undefined, 2)).subTasks).to.have.length(5);
 
       // Iterators.
-      const ids = root.subTasks!.map((task) => task.target!.id);
-      root.subTasks!.forEach((task, i) => expect(task.target!.id).to.eq(ids[i]));
+      const ids = root.subTasks!.map((task: any) => task.target!.id);
+      root.subTasks!.forEach((task: any, i: number) => expect(task.target!.id).to.eq(ids[i]));
       expect(Array.from(root.subTasks!.values())).to.have.length(5);
 
       root.subTasks = [
-        Ref.make(live(Testing.Task, {})),
-        Ref.make(live(Testing.Task, {})),
-        Ref.make(live(Testing.Task, {})),
+        Ref.make(Obj.make(Testing.Task, {})),
+        Ref.make(Obj.make(Testing.Task, {})),
+        Ref.make(Obj.make(Testing.Task, {})),
       ];
       expect(root.subTasks.length).to.eq(3);
 
@@ -444,10 +428,10 @@ describe('Database', () => {
     });
 
     test('array of plain objects', async () => {
-      const root = live(Testing.Container, { records: [] });
+      const root = Obj.make(Testing.Container, { records: [] });
       root.records!.push({
         title: 'test',
-        contacts: [Ref.make(live(Testing.Contact, { name: 'tester' }))],
+        contacts: [Ref.make(Obj.make(Testing.Contact, { name: 'tester' }))],
       });
       const { db } = await addToDatabase(root);
 
@@ -458,7 +442,7 @@ describe('Database', () => {
     });
 
     test('reset array', async () => {
-      const { db, obj: root } = await addToDatabase(live(Testing.Container, { records: [] }));
+      const { db, obj: root } = await addToDatabase(Obj.make(Testing.Container, { records: [] }));
 
       root.records!.push({ title: 'one' });
       expect(root.records).to.have.length(1);
@@ -481,7 +465,7 @@ describe('Database', () => {
     return { db, graph };
   };
 
-  const addToDatabase = async <T extends BaseObject>(obj: Live<T>) => {
+  const addToDatabase = async <T extends Obj.Any>(obj: T) => {
     const { db } = await createDbWithTypes();
     db.add(obj);
     await db.flush();
@@ -497,4 +481,4 @@ const mapEchoToPlainJsObject = (array: any[]): any[] => {
   return array.map((o) => (Array.isArray(o) ? mapEchoToPlainJsObject(o) : { ...o }));
 };
 
-const newTask = () => live(Testing.Task, { subTasks: [] });
+const newTask = () => Obj.make(Testing.Task, { subTasks: [] });

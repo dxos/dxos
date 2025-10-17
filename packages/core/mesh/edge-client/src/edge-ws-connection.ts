@@ -32,6 +32,19 @@ export class EdgeWsConnection extends Resource {
   private _wsMuxer: WebSocketMuxer | undefined;
   private _lastReceivedMessageTimestamp = Date.now();
 
+  private _openTimestamp: number | undefined;
+
+  // Latency tracking.
+  private _pingTimestamp: number | undefined;
+  private _rtt = 0;
+
+  // Rate tracking with sliding window.
+  private _uploadRate = 0;
+  private _downloadRate = 0;
+  private readonly _rateWindow = 10000; // 10 second sliding window.
+  private readonly _rateUpdateInterval = 1000; // Update rates every second.
+  private _bytesSamples: Array<{ timestamp: number; sent: number; received: number }> = [];
+
   constructor(
     private readonly _identity: EdgeIdentity,
     private readonly _connectionInfo: { url: URL; protocolHeader?: string },
@@ -49,6 +62,22 @@ export class EdgeWsConnection extends Resource {
     };
   }
 
+  public get rtt(): number {
+    return this._rtt;
+  }
+
+  public get uptime(): number {
+    return this._openTimestamp ? (Date.now() - this._openTimestamp) / 1000 : 0;
+  }
+
+  public get uploadRate(): number {
+    return this._uploadRate;
+  }
+
+  public get downloadRate(): number {
+    return this._downloadRate;
+  }
+
   public send(message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
@@ -63,8 +92,12 @@ export class EdgeWsConnection extends Resource {
         });
         return;
       }
+      this._recordBytes(binary.byteLength, 0);
       this._ws.send(binary);
     } else {
+      // For muxer, we need to track the size of the message being sent.
+      const binary = buf.toBinary(MessageSchema, message);
+      this._recordBytes(binary.byteLength, 0);
       this._wsMuxer.send(message).catch((e) => log.catch(e));
     }
   }
@@ -83,8 +116,10 @@ export class EdgeWsConnection extends Resource {
     this._ws.onopen = () => {
       if (this.isOpen) {
         log('connected');
+        this._openTimestamp = Date.now();
         this._callbacks.onConnected();
         this._scheduleHeartbeats();
+        this._scheduleRateCalculation();
       } else {
         log.verbose('connected after becoming inactive', { currentIdentity: this._identity });
       }
@@ -114,10 +149,16 @@ export class EdgeWsConnection extends Resource {
       }
       this._lastReceivedMessageTimestamp = Date.now();
       if (event.data === '__pong__') {
+        // Calculate latency.
+        if (this._pingTimestamp) {
+          this._rtt = Date.now() - this._pingTimestamp;
+          this._pingTimestamp = undefined;
+        }
         this._rescheduleHeartbeatTimeout();
         return;
       }
       const bytes = await toUint8Array(event.data);
+      this._recordBytes(0, bytes.byteLength);
       if (!this.isOpen) {
         return;
       }
@@ -145,7 +186,7 @@ export class EdgeWsConnection extends Resource {
       if (err instanceof Error && err.message.includes('WebSocket is closed before the connection is established.')) {
         return;
       }
-      log.warn('Error closing websocket', { err });
+      log.warn('error closing websocket', { err });
     }
   }
 
@@ -156,10 +197,12 @@ export class EdgeWsConnection extends Resource {
       async () => {
         // TODO(mykola): use RFC6455 ping/pong once implemented in the browser?
         // Cloudflare's worker responds to this `without interrupting hibernation`. https://developers.cloudflare.com/durable-objects/api/websockets/#setwebsocketautoresponse
+        this._pingTimestamp = Date.now();
         this._ws?.send('__ping__');
       },
       SIGNAL_KEEPALIVE_INTERVAL,
     );
+    this._pingTimestamp = Date.now();
     this._ws.send('__ping__');
     this._rescheduleHeartbeatTimeout();
   }
@@ -186,5 +229,61 @@ export class EdgeWsConnection extends Resource {
       },
       SIGNAL_KEEPALIVE_TIMEOUT,
     );
+  }
+
+  private _recordBytes(sent: number, received: number): void {
+    const now = Date.now();
+
+    // Find if we have a sample for the current second.
+    const currentSecond = Math.floor(now / 1000) * 1000;
+    const existingSample = this._bytesSamples.find((s) => Math.floor(s.timestamp / 1000) * 1000 === currentSecond);
+
+    if (existingSample) {
+      existingSample.sent += sent;
+      existingSample.received += received;
+    } else {
+      this._bytesSamples.push({ timestamp: now, sent, received });
+    }
+  }
+
+  private _scheduleRateCalculation(): void {
+    scheduleTaskInterval(
+      this._ctx,
+      async () => {
+        this._calculateRates();
+      },
+      this._rateUpdateInterval,
+    );
+    // Calculate initial rates.
+    this._calculateRates();
+  }
+
+  private _calculateRates(): void {
+    const now = Date.now();
+    const cutoff = now - this._rateWindow;
+
+    // Remove old samples.
+    this._bytesSamples = this._bytesSamples.filter((s) => s.timestamp > cutoff);
+
+    if (this._bytesSamples.length === 0) {
+      this._uploadRate = 0;
+      this._downloadRate = 0;
+      return;
+    }
+
+    // Calculate total bytes and time span.
+    let totalSent = 0;
+    let totalReceived = 0;
+    const oldestTimestamp = Math.min(...this._bytesSamples.map((s) => s.timestamp));
+    const timeSpan = (now - oldestTimestamp) / 1000; // Convert to seconds.
+
+    for (const sample of this._bytesSamples) {
+      totalSent += sample.sent;
+      totalReceived += sample.received;
+    }
+
+    // Calculate rates (bytes per second).
+    this._uploadRate = timeSpan > 0 ? Math.round(totalSent / timeSpan) : 0;
+    this._downloadRate = timeSpan > 0 ? Math.round(totalReceived / timeSpan) : 0;
   }
 }

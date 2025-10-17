@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HttpClient, HttpClientRequest } from '@effect/platform';
-import { Effect, Schedule, Schema } from 'effect';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
@@ -11,7 +14,7 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
 import { LabelsResponse, MessageDetails, MessagesResponse } from './types';
-import { createUrl, getPart, parseFromHeader, stripNewlines, turndown } from './util';
+import { createUrl, getPart, normalizeText, parseFromHeader } from './util';
 
 // TODO(burdon): Evolve into general sync engine.
 
@@ -35,6 +38,7 @@ export const SYSTEM_LABELS = [
   'YELLOW_STAR',
 ];
 
+// TODO(burdon): Factor out.
 export const filterLabel = (label: string) => !SYSTEM_LABELS.includes(label);
 
 /**
@@ -91,8 +95,7 @@ export const messageToObject = (last?: DataType.Message) =>
     }
 
     // Normalize text.
-    const text = Buffer.from(data, 'base64').toString('utf-8');
-    const markdown = stripNewlines(turndown.turndown(text));
+    const text = normalizeText(Buffer.from(data, 'base64').toString('utf-8'));
 
     return Obj.make(
       DataType.Message,
@@ -103,7 +106,7 @@ export const messageToObject = (last?: DataType.Message) =>
         blocks: [
           {
             _tag: 'text',
-            text: markdown,
+            text,
           },
         ],
         properties: {

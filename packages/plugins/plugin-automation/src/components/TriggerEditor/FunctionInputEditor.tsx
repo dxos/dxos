@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
-import { type JsonPath } from '@dxos/echo-schema';
+import { type JsonPath } from '@dxos/echo/internal';
 import { type FunctionType } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
@@ -39,7 +39,13 @@ export const FunctionInputEditor = ({
   useOnTransition(
     // Clear function parameter input when the function changes.
     selectedFunctionValue,
-    (prevValue) => prevValue !== undefined && prevValue !== selectedFunctionValue,
+    (prevValue) => {
+      if (!Ref.isRef(prevValue) || !Ref.isRef(selectedFunctionValue)) {
+        return false;
+      }
+
+      return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
+    },
     (currValue) => currValue !== undefined,
     () => onValueChange('object', {}),
   );

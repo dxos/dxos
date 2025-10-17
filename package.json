@@ -16,12 +16,14 @@
     "changed-packages": "scripts/changed",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
+    "create-worktree": "./scripts/create-worktree",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "gh-action": "./scripts/gh-action.mjs",
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",
     "killorphans": "./scripts/killorphans",
+    "knip": "knip",
     "lint": "moon run :lint -- --fix",
     "lint-changed": "moon :lint --affected --remote -- --fix",
     "lockfile": "vite-node scripts/lockfile.ts",
@@ -46,7 +48,6 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log-hook": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/signal": "workspace:*",
@@ -64,7 +65,6 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@rushstack/eslint-patch": "^1.12.0",
-    "@swc-node/register": "1.11.1",
     "@swc/core": "1.13.5",
     "@swc/types": "^0.1.25",
     "@testing-library/dom": "^10.4.1",
@@ -124,9 +124,10 @@
     "globrex": "^0.1.2",
     "husky": "^8.0.0",
     "jiti": "2.4.2",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.0.0",
     "jsdom-global": "^3.0.2",
     "json-stringify-safe": "^5.0.1",
+    "knip": "^5.64.3",
     "loupe": "2.3.7",
     "madge": "^8.0.0",
     "minimatch": "^5.1.6",
@@ -170,7 +171,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "20.19.5"
+    "node": "24.4.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -191,10 +192,14 @@
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",
+      "oxc-resolver",
       "protobufjs",
       "sharp",
       "sodium-native",
-      "workerd"
+      "styled-components",
+      "unrs-resolver",
+      "workerd",
+      "yarn"
     ],
     "overrides": {
       "@automerge/automerge": "3.1.1",

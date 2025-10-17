@@ -9,31 +9,31 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { formatDateTime } from '../util';
+import { formatDateTime } from '../../util';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
 export type MessageHeaderProps = ThemedClassName<{
   message: DataType.Message;
+  contact?: string; // TODO(burdon): Type for DXN?
   viewMode?: ViewMode;
-  contactDxn?: string;
 }>;
 
-export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderProps) => {
+export const MessageHeader = ({ message, contact, viewMode }: MessageHeaderProps) => {
   const { t } = useTranslation(meta.id);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const handleSenderClick = useCallback(() => {
-    if (contactDxn) {
+    if (contact) {
       buttonRef.current?.dispatchEvent(
         new DxAnchorActivate({
           trigger: buttonRef.current,
-          refId: contactDxn,
+          refId: contact,
           label: message.sender.name ?? 'never',
         }),
       );
     }
-  }, [contactDxn, message.sender.name]);
+  }, [contact, message.sender.name]);
 
   return (
     <Avatar.Root>
@@ -41,8 +41,9 @@ export const MessageHeader = ({ message, viewMode, contactDxn }: MessageHeaderPr
         <div className='flex is-full'>
           <Avatar.Label classNames='flex is-full items-center gap-1 pis-2'>
             {/* TODO(burdon): Create dx-tag like border around h3 if link. */}
-            <h3 className='text-lg truncate'>{message.sender.name || 'Unknown'}</h3>
-            {contactDxn && (
+            {/* TODO(burdon): Colors for prominent text fields (coordinate with mailbox.css). */}
+            <h3 className='text-lg truncate text-indigoText'>{message.sender.name || 'Unknown'}</h3>
+            {contact && (
               <IconButton
                 ref={buttonRef}
                 variant='ghost'

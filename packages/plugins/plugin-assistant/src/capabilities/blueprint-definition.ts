@@ -11,6 +11,7 @@ import {
   WEB_SEARCH_BLUEPRINT,
   agent,
   createResearchNote,
+  entityExtraction,
   fetchDiscordMessages,
   research,
   syncLinearIssues,
@@ -51,7 +52,7 @@ const blueprint = createBlueprint();
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
   contributes(Capabilities.Functions, [agent]),
-  contributes(Capabilities.Functions, [research, createResearchNote]),
+  contributes(Capabilities.Functions, [research, createResearchNote, entityExtraction]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
   // TODO(burdon): Move out of assistant.

@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Array, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import type { BaseObject } from '@dxos/echo/internal';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import type { QueryAST } from '@dxos/echo-protocol';
-import type { BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { type QueryContext, type QueryResultEntry, isSimpleSelectionQuery } from '../query';
@@ -41,7 +42,7 @@ export class QueueQueryContext implements QueryContext {
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
 
-    const objects = await pipe(
+    const objects = await Function.pipe(
       await this.#queue.fetchObjectsJSON(),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
       Array.map(async (obj) => this.#queue.hydrateObject(obj)),
@@ -94,7 +95,7 @@ export class QueueQueryContext implements QueryContext {
     invariant(this.#filter);
 
     const spaceId = this.#queue.dxn.asQueueDXN()!.spaceId;
-    return pipe(
+    return Function.pipe(
       this.#queue.getObjectsSync(),
       // TODO(dmaretskyi): We end-up marshaling objects from JSON and back.
       Array.filter((obj) => filterMatchObjectJSON(this.#filter!, Obj.toJSON(obj))),

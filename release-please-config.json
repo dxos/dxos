@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/eslint-plugin-rules/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/feed-store/package.json",
           "jsonpath": "$.version"
         },
@@ -271,11 +276,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-query/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/echo-schema/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -930,11 +930,6 @@
         },
         {
           "type": "json",
-          "path": "tools/codemods/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/codemorph/package.json",
           "jsonpath": "$.version"
         },
@@ -955,22 +950,12 @@
         },
         {
           "type": "json",
-          "path": "tools/eslint-plugin-rules/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "tools/lit-storybook/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "tools/lockfile-explorer/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "tools/log-hook/package.json",
           "jsonpath": "$.version"
         },
         {

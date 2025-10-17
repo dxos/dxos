@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, type Schema, SchemaAST } from 'effect';
+import * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, type Type } from '@dxos/echo';
-import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import {
   type BaseObject,
   FormatEnum,
@@ -16,7 +17,8 @@ import {
   type TypedObject,
   getSchemaReference,
   getTypename,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { type AnyLiveObject, type EchoDatabase, Filter, Query } from '@dxos/echo-db';
 import { findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type Live } from '@dxos/live-object';

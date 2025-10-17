@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
+import { type AnyEchoObject, ObjectId } from '@dxos/echo/internal';
 import { type ObjectVersion } from '@dxos/echo-db';
 import { getVersion } from '@dxos/echo-db';
-import { type AnyEchoObject, ObjectId } from '@dxos/echo-schema';
 import { type ContentBlock } from '@dxos/schema';
 
 // TODO(dmaretskyi): Extract.

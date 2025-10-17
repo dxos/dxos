@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { Type } from '@dxos/echo';
-import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo-schema';
+import { type BaseObject, type TypeAnnotation, ViewAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Space, type SpaceId } from '@dxos/react-client/echo';
 import { Icon, toLocalizedString, useDefaultValue, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

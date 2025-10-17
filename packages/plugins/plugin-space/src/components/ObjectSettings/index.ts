@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './ObjectSettingsContainer';
+import { ObjectSettingsContainer } from './ObjectSettingsContainer';
+
+export default ObjectSettingsContainer;

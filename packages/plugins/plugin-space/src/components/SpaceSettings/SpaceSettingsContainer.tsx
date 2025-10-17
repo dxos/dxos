@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -69,7 +70,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       }
       if (properties.archived && !archived) {
         void dispatch(
-          pipe(
+          Function.pipe(
             createIntent(SpaceAction.Close, { space }),
             chain(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: client.spaces.default.id }),
           ),
@@ -162,7 +163,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   );
 
   return (
-    <StackItem.Content classNames='block overflow-y-auto'>
+    <StackItem.Content scrollable>
       <ControlPage>
         <ControlSection
           title={t('space properties settings verbose label', { ns: meta.id })}

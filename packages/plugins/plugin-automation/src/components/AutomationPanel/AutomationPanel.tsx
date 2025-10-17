@@ -2,11 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Array, Match, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Function from 'effect/Function';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
+import { useTypeOptions } from '@dxos/plugin-space';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, Input, Separator, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -36,6 +40,8 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
   }, [object, triggers]);
+  const tags = useQuery(space, Filter.type(Tag.Tag));
+  const types = useTypeOptions({ space, annotation: ['dynamic', 'limited-static', 'object-form'] });
 
   const [trigger, setTrigger] = useState<FunctionTrigger | undefined>(initialTrigger);
   const [selected, setSelected] = useState<FunctionTrigger>();
@@ -80,6 +86,8 @@ export const AutomationPanel = ({ classNames, space, object, initialTrigger, onD
           space={space}
           trigger={trigger}
           readonlySpec={Boolean(object)}
+          tags={tags}
+          types={types}
           onSave={handleSave}
           onCancel={handleCancel}
         />
@@ -181,7 +189,7 @@ const scriptMatch = (script: ScriptType) => (trigger: FunctionTrigger) => {
 };
 
 const projectMatch = (project: DataType.Project) => {
-  const viewQueries = pipe(
+  const viewQueries = Function.pipe(
     project.collections,
     Array.map((collection) => collection.target),
     Array.filter(Schema.is(DataType.View)),

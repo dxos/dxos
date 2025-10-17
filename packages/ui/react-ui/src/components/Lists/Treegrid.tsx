@@ -2,12 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type CSSProperties, type ComponentPropsWithRef, forwardRef } from 'react';
+import React, {
+  type CSSProperties,
+  type ComponentPropsWithRef,
+  type KeyboardEvent,
+  forwardRef,
+  useCallback,
+} from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -40,12 +46,58 @@ const TreegridRoot = forwardRef<HTMLDivElement, TreegridRootProps>(
   ({ asChild, classNames, children, style, gridTemplateColumns, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Root = asChild ? Slot : Primitive.div;
-    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'vertical', tabbable: false, circular: true });
+    const { findFirstFocusable } = useFocusFinders();
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        switch (event.key) {
+          case 'ArrowDown':
+          case 'ArrowUp': {
+            const direction = event.key === 'ArrowDown' ? 'down' : 'up';
+            const target = event.target as HTMLElement;
+
+            // Find ancestor with data-arrow-keys containing the relevant direction.
+            const ancestorWithArrowKeys = target.closest(`[data-arrow-keys*="${direction}"], [data-arrow-keys="all"]`);
+
+            // If no ancestor with data-arrow-keys found, proceed with row navigation.
+            if (!ancestorWithArrowKeys) {
+              // Find the closest row
+              const currentRow = target.closest('[role="row"]');
+              if (currentRow) {
+                // Find the treegrid container.
+                const treegrid = currentRow.closest('[role="treegrid"]');
+                if (treegrid) {
+                  // Get all rows in the treegrid.
+                  const rows = Array.from(treegrid.querySelectorAll('[role="row"]'));
+                  const currentIndex = rows.indexOf(currentRow as Element);
+
+                  // Find next or previous row.
+                  const nextIndex = direction === 'down' ? currentIndex + 1 : currentIndex - 1;
+                  const targetRow = rows[nextIndex];
+
+                  if (targetRow) {
+                    // Focus the first focusable element in the target row.
+                    const firstFocusable = findFirstFocusable(targetRow as HTMLElement);
+                    if (firstFocusable) {
+                      event.preventDefault();
+                      firstFocusable.focus();
+                    }
+                  }
+                }
+              }
+            }
+            break;
+          }
+        }
+        props.onKeyDown?.(event);
+      },
+      [findFirstFocusable],
+    );
 
     return (
       <Root
         role='treegrid'
-        {...arrowNavigationAttrs}
+        onKeyDown={handleKeyDown}
         {...props}
         className={tx('treegrid.root', 'treegrid', {}, classNames)}
         style={{ ...style, gridTemplateColumns }}
@@ -91,13 +143,6 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
       onChange: propsOnOpenChange,
       defaultProp: defaultOpen,
     });
-    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited' });
-    const arrowGroupAttrs = useArrowNavigationGroup({
-      axis: 'horizontal',
-      tabbable: false,
-      circular: false,
-      memorizeCurrent: false,
-    });
 
     return (
       <TreegridRowProvider open={open} onOpenChange={onOpenChange} scope={__treegridRowScope}>
@@ -106,15 +151,11 @@ const TreegridRow = forwardRef<HTMLDivElement, TreegridRowScopedProps<TreegridRo
           aria-level={level}
           className={tx('treegrid.row', 'treegrid__row', { level }, classNames)}
           {...(parentOf && { 'aria-expanded': open, 'aria-owns': parentOf })}
-          tabIndex={0}
-          {...focusableGroupAttrs}
           {...props}
           id={id}
           ref={forwardedRef}
         >
-          <div role='none' className='contents' {...arrowGroupAttrs}>
-            {children}
-          </div>
+          {children}
         </Root>
       </TreegridRowProvider>
     );

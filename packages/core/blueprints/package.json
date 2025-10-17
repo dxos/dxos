@@ -23,7 +23,6 @@
   "dependencies": {
     "@dxos/ai": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -31,12 +30,9 @@
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "3.18.3",
-    "handlebars": "4.7.8",
-    "lodash.defaultsdeep": "^4.6.1"
+    "handlebars": "4.7.8"
   },
-  "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.6"
-  },
+  "devDependencies": {},
   "peerDependencies": {
     "effect": "^3.13.3"
   },

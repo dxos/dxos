@@ -2,11 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { format, subDays } from 'date-fns';
-import { Array, Chunk, Console, Effect, Ref, Schema, Stream, pipe } from 'effect';
-import { isNotNullable } from 'effect/Predicate';
+import * as Array from 'effect/Array';
+import * as Chunk from 'effect/Chunk';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Predicate from 'effect/Predicate';
+import * as Ref from 'effect/Ref';
+import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
+import { ArtifactId } from '@dxos/assistant';
 import { DXN } from '@dxos/echo';
 import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
@@ -14,16 +22,14 @@ import { type DataType } from '@dxos/schema';
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
 import { Mailbox } from '../../types/mailbox';
 
-import { getMessage, listLabels, listMessages, messageToObject } from './api';
+import { getMessage, listMessages, messageToObject } from './api';
 
 export default defineFunction({
   key: 'dxos.org/function/inbox/gmail-sync',
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox.',
   inputSchema: Schema.Struct({
-    mailboxId: Schema.String.annotations({
-      description: 'The DXN ID of the mailbox object.',
-    }),
+    mailboxId: ArtifactId,
     userId: Schema.optional(Schema.String),
     after: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
     pageSize: Schema.optional(Schema.Number),
@@ -40,11 +46,12 @@ export default defineFunction({
 
       const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
 
+      // TODO(wittjosiah): Consider syncing labels to space.
       // Sync labels.
-      const { labels } = yield* listLabels(userId);
-      labels.forEach((label) => {
-        (mailbox.tags ??= {})[label.id] = { label: label.name };
-      });
+      // const { labels } = yield* listLabels(userId);
+      // labels.forEach((label) => {
+      //   (mailbox.tags ??= {})[label.id] = { label: label.name };
+      // });
 
       const queue = yield* QueueService.getQueue<DataType.Message>(mailbox.queue.dxn);
       const newMessages = yield* Ref.make<DataType.Message[]>([]);
@@ -64,17 +71,17 @@ export default defineFunction({
         yield* Ref.update(nextPage, () => nextPageToken);
 
         // Process messges.
-        const messageObjects = yield* pipe(
+        const messageObjects = yield* Function.pipe(
           messages,
           Array.map((message) =>
-            pipe(
+            Function.pipe(
               // Retrieve details.
               getMessage(userId, message.id),
               Effect.flatMap(messageToObject(last)),
             ),
           ),
           Effect.all,
-          Effect.map((objects) => Array.filter(objects, isNotNullable)),
+          Effect.map((objects) => Array.filter(objects, Predicate.isNotNullable)),
           Effect.map((objects) => Array.reverse(objects)),
         );
 
@@ -85,7 +92,7 @@ export default defineFunction({
       // Append to queue.
       const queueMessages = yield* Ref.get(newMessages);
       if (queueMessages.length > 0) {
-        yield* pipe(
+        yield* Function.pipe(
           queueMessages,
           Stream.fromIterable,
           Stream.grouped(10),

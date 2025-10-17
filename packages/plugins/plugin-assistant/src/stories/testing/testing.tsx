@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
-import { Console, Schema } from 'effect';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Console from 'effect/Console';
+import * as Schema from 'effect/Schema';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
@@ -275,7 +277,10 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
               // Story-specific behaviour to allow chat creation to be extended.
               space.db.add(chat);
               await space.db.flush({ indexes: true });
+
+              await binder.open();
               await onChatCreated?.({ space, chat, binder });
+              await binder.close();
 
               return {
                 data: { object: chat },

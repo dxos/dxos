@@ -19,6 +19,7 @@ import {
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { type ObjectId, Ref } from '@dxos/echo/internal';
 import {
   type DatabaseDirectory,
   type ObjectStructure,
@@ -26,7 +27,6 @@ import {
   type SpaceState,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { type ObjectId, Ref } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';

@@ -4,10 +4,9 @@
 
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, history, historyKeymap, indentWithTab, standardKeymap } from '@codemirror/commands';
-import { bracketMatching, defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { bracketMatching } from '@codemirror/language';
 import { searchKeymap } from '@codemirror/search';
 import { type ChangeSpec, EditorState, type Extension, type TransactionSpec } from '@codemirror/state';
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark';
 import {
   EditorView,
   type KeyBinding,
@@ -20,6 +19,7 @@ import {
   placeholder,
   scrollPastEnd,
 } from '@codemirror/view';
+import { vscodeDarkInit, vscodeDarkStyle, vscodeLightInit, vscodeLightStyle } from '@uiw/codemirror-theme-vscode';
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
@@ -92,6 +92,7 @@ export type BasicExtensionsOptions = {
   /** If true user cannot edit the text, but they can still select and copy it. */
   readOnly?: boolean;
   search?: boolean;
+  /** NOTE: Do not use with stack sections. */
   scrollPastEnd?: boolean;
   standardKeymap?: boolean;
   tabSize?: number;
@@ -201,6 +202,18 @@ export const fullWidth: ThemeExtensionsOptions['slots'] = {
 
 export const defaultThemeSlots = grow;
 
+const semanticTokensSettings = {
+  settings: {
+    background: 'var(--dx-baseSurface)',
+    foreground: 'var(--dx-baseText)',
+  },
+};
+
+export const defaultStyles = {
+  dark: vscodeDarkStyle,
+  light: vscodeLightStyle,
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -208,13 +221,15 @@ export const createThemeExtensions = ({
   themeMode,
   styles,
   syntaxHighlighting: syntaxHighlightingProps,
-  slots: _slots,
+  slots: slotsParam,
 }: ThemeExtensionsOptions = {}): Extension => {
-  const slots = defaultsDeep({}, _slots, defaultThemeSlots);
+  const slots = defaultsDeep({}, slotsParam, defaultThemeSlots);
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
-    syntaxHighlightingProps && syntaxHighlighting(themeMode === 'dark' ? oneDarkHighlightStyle : defaultHighlightStyle),
+    syntaxHighlightingProps && [
+      themeMode === 'dark' ? vscodeDarkInit(semanticTokensSettings) : vscodeLightInit(semanticTokensSettings),
+    ],
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     slots.scroll?.className &&
