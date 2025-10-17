@@ -444,6 +444,7 @@ export const mapAst = (
             ),
         ),
         ast.indexSignatures,
+        ast.annotations,
       );
     }
     case 'Union': {

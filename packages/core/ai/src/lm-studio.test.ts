@@ -18,9 +18,9 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 
-import { parseResponse } from '../AiParser';
-import { preprocessPrompt } from '../AiPreprocessor';
-import { LMSTUDIO_ENDPOINT } from '../AiServiceRouter';
+import { parseResponse } from './AiParser';
+import { preprocessPrompt } from './AiPreprocessor';
+import { LMSTUDIO_ENDPOINT } from './AiServiceRouter';
 
 /**
  * To start the LM Studio server:

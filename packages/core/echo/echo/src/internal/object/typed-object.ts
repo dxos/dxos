@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
 
@@ -10,6 +11,7 @@ import { EntityKind, SchemaVersion, type TypeAnnotation, TypeAnnotationId, type 
 import { type HasId } from '../types';
 
 import { type TypedObjectFields, type TypedObjectOptions, makeTypedEntityClass } from './common';
+import { makeTypeJsonSchemaAnnotation } from './entity';
 
 /**
  * Definition for an object type that can be stored in an ECHO database.
@@ -69,6 +71,11 @@ export const TypedObject = ({
     invariant(typeof EntityKind.Object === 'string');
     const annotatedSchema = typeSchema.annotations({
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
+      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        kind: EntityKind.Object,
+        typename,
+        version,
+      }),
     });
 
     /**

@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import {
@@ -67,6 +67,11 @@ export const EchoObject: {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
+      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        kind: EntityKind.Object,
+        typename,
+        version,
+      }),
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, typename, version);
@@ -85,6 +90,8 @@ export type EchoRelationOptions<
 export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target extends Schema.Schema.AnyNoContext>(
   options: EchoRelationOptions<Source, Target>,
 ) => {
+  assertArgument(Schema.isSchema(options.source), 'source');
+  assertArgument(Schema.isSchema(options.target), 'target');
   const sourceDXN = getDXNForRelationSchemaRef(options.source);
   const targetDXN = getDXNForRelationSchemaRef(options.target);
   if (getEntityKind(options.source) !== EntityKind.Object) {
@@ -113,13 +120,50 @@ export const EchoRelation = <Source extends Schema.Schema.AnyNoContext, Target e
         targetSchema: targetDXN,
       } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
+
+      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        kind: EntityKind.Relation,
+        typename: options.typename,
+        version: options.version,
+        relationSource: sourceDXN,
+        relationTarget: targetDXN,
+      }),
     });
 
     return makeEchoObjectSchema<Self>(/* self.fields, */ ast, options.typename, options.version);
   };
 };
 
+/**
+ * @returns JSON-schema annotation so that the schema can be serialized with correct parameters.
+ */
+export const makeTypeJsonSchemaAnnotation = (options: {
+  identifier?: string;
+  kind: EntityKind;
+  typename: string;
+  version: string;
+  relationSource?: string;
+  relationTarget?: string;
+}) => {
+  assertArgument(!!options.relationSource === (options.kind === EntityKind.Relation), 'relationSource');
+  assertArgument(!!options.relationTarget === (options.kind === EntityKind.Relation), 'relationTarget');
+
+  const obj = {
+    // TODO(dmaretskyi): Should this include the version?
+    $id: options.identifier ?? DXN.fromTypename(options.typename).toString(),
+    entityKind: options.kind,
+    version: options.version,
+    typename: options.typename,
+  } as any;
+  if (options.kind === EntityKind.Relation) {
+    obj.relationSource = { $ref: options.relationSource };
+    obj.relationTarget = { $ref: options.relationTarget };
+  }
+  return obj;
+};
+
 const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
+  assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
     return identifier;

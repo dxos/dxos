@@ -8,7 +8,6 @@ export * as AiService from './AiService';
 
 export * from './defs';
 export * from './errors';
-export * from './experimental';
 export * from './model';
 export * from './status-report';
 export * from './tools';

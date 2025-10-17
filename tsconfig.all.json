@@ -547,9 +547,6 @@
       "path": "tools/beast/tsconfig.json"
     },
     {
-      "path": "tools/codemods/tsconfig.json"
-    },
-    {
       "path": "tools/codemorph/tsconfig.json"
     },
     {
@@ -566,9 +563,6 @@
     },
     {
       "path": "tools/lockfile-explorer/tsconfig.json"
-    },
-    {
-      "path": "tools/log-hook/tsconfig.json"
     },
     {
       "path": "tools/protobuf-test/tsconfig.json"
