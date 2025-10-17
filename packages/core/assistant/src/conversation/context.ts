@@ -9,6 +9,7 @@ import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
+import { Resource } from '@dxos/context';
 import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -60,7 +61,7 @@ export class Bindings {
  * Manages bindings of blueprints and objects to a conversation.
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
-export class AiContextBinder {
+export class AiContextBinder extends Resource {
   /**
    * Reactive query of all bindings.
    */
@@ -68,12 +69,9 @@ export class AiContextBinder {
   private _bindings?: ReadonlySignal<Bindings>;
   private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
   private _objects?: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
-  private _unsubscribe?: () => void;
 
-  constructor(private readonly _queue: Queue) {}
-
-  get isOpen() {
-    return this._bindings !== undefined;
+  constructor(private readonly _queue: Queue) {
+    super();
   }
 
   get bindings() {
@@ -91,21 +89,19 @@ export class AiContextBinder {
     return this._objects;
   }
 
-  open() {
+  // TODO(wittjosiah): Use parent context?
+  protected override async _open(): Promise<void> {
     const query = this._queue.query(Query.select(Filter.everything()));
-    this._unsubscribe = query.subscribe(() => {});
-    // TODO(wittjosiah): These should probably throw or warn if accessed after close.
+    this._ctx.onDispose(query.subscribe(() => {}));
     this._bindings = computed(() => this._reduce(query.objects));
     this._blueprints = computed(() => [...this.bindings.value.blueprints]);
     this._objects = computed(() => [...this.bindings.value.objects]);
   }
 
-  close() {
+  protected override async _close(): Promise<void> {
     this._bindings = undefined;
     this._blueprints = undefined;
     this._objects = undefined;
-    this._unsubscribe?.();
-    this._unsubscribe = undefined;
   }
 
   /**
