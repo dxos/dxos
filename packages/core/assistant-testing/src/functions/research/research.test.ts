@@ -19,7 +19,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -98,13 +98,12 @@ describe('Research', () => {
   );
 
   // TODO(dmaretskyi): Out-of-memory.
-  it.effect.skip(
+  it.scoped.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = new AiConversation({
-          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
-        });
+        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
         yield* DatabaseService.add(org);
