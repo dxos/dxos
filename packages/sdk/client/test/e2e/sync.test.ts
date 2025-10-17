@@ -5,10 +5,12 @@ import type { EchoDatabase, SpaceSyncState } from '@dxos/echo-db';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
+import { sleep } from '@dxos/async';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
   test('sync stuck', async () => {
     const ITERATIONS = 100,
+      BURST_SIZE = 30,
       RESTART_CLIENT = false; // restarting client doesn't work
 
     const config = new Config({
@@ -45,7 +47,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     for (let i = 0; i < ITERATIONS; i++) {
       console.log('\n### Iteration', i);
       const obj = await client.spaces.default.db.ref(dxn).load();
-      obj.counter++;
+      for (let j = 0; j < BURST_SIZE; j++) {
+        obj.counter++;
+        await sleep(20);
+      }
       await client.spaces.default.db.flush();
       await waitForSync(client.spaces.default.db); // its likely that this could miss the mutation and stil report that the sync has completed
 
