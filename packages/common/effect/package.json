@@ -40,7 +40,7 @@
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-node": "^2.1.0",
     "@opentelemetry/semantic-conventions": "^1.37.0",
-    "effect": "3.18.3"
+    "effect": "3.18.4"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

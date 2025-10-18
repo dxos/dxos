@@ -92,11 +92,11 @@ importers:
         specifier: workspace:*
         version: link:tools/vite-plugin-import-source
       '@effect/language-service':
-        specifier: ^0.42.0
-        version: 0.42.0
+        specifier: ^0.45.1
+        version: 0.45.1
       '@effect/vitest':
         specifier: ~0.26.0
-        version: 0.26.0(effect@3.18.3)(vitest@3.2.4)
+        version: 0.26.0(effect@3.18.4)(vitest@3.2.4)
       '@eslint/js':
         specifier: ^9.37.0
         version: 9.37.0
@@ -227,8 +227,8 @@ importers:
         specifier: ^1.4.7
         version: 1.4.7
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       esbuild:
         specifier: 0.25.10
         version: 0.25.10
@@ -672,8 +672,8 @@ importers:
         specifier: ^5.0.20
         version: 5.0.20
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0(encoding@0.1.13)
@@ -740,7 +740,7 @@ importers:
         version: link:../../../tools/vite-plugin-import-source
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@sentry/vite-plugin':
         specifier: ^4.0.2
         version: 4.3.0(encoding@0.1.13)
@@ -1295,7 +1295,7 @@ importers:
         version: link:../util
       '@effect/opentelemetry':
         specifier: ^0.58.0
-        version: 0.58.0(@effect/platform@0.92.1(effect@3.18.3))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)(effect@3.18.3)
+        version: 0.58.0(@effect/platform@0.92.1(effect@3.18.4))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)(effect@3.18.4)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -1325,8 +1325,8 @@ importers:
         specifier: ^1.37.0
         version: 1.37.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/common/errors: {}
 
@@ -1442,8 +1442,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -1555,8 +1555,8 @@ importers:
         specifier: workspace:*
         version: link:../node-std
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       ulidx:
         specifier: ^2.3.0
         version: 2.3.0
@@ -1620,8 +1620,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/async':
         specifier: workspace:*
@@ -2182,26 +2182,26 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/ai-anthropic':
-        specifier: ^0.19.2
-        version: 0.19.2(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: ^0.21.1
+        version: 0.21.1(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/ai-openai':
-        specifier: 0.32.1
-        version: 0.32.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.34.0
+        version: 0.34.0(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@effect/platform-node':
-        specifier: ^0.98.3
-        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: ^0.98.4
+        version: 0.98.4(@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/workflow':
-        specifier: ^0.11.3
-        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: ^0.11.5
+        version: 0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       diff:
         specifier: ^8.0.2
         version: 8.0.2
@@ -2219,8 +2219,8 @@ importers:
         specifier: ^1.10.9
         version: 1.10.9
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/core/assistant:
     dependencies:
@@ -2285,14 +2285,14 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
@@ -2307,8 +2307,8 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/core/assistant-testing:
     dependencies:
@@ -2373,27 +2373,27 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/ai-anthropic':
-        specifier: 0.19.2
-        version: 0.19.2(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.21.1
+        version: 0.21.1(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       dfx:
         specifier: ^0.126.0
-        version: 0.126.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        version: 0.126.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
     devDependencies:
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -2428,8 +2428,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       handlebars:
         specifier: 4.7.8
         version: 4.7.8
@@ -2488,8 +2488,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -2567,14 +2567,14 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
@@ -2582,8 +2582,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       jsonpath-plus:
         specifier: 10.2.0
         version: 10.2.0
@@ -2627,8 +2627,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/core/echo/echo-db:
     dependencies:
@@ -2699,8 +2699,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -2754,8 +2754,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -2869,8 +2869,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2909,8 +2909,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/core/echo/echo-query:
     dependencies:
@@ -3043,8 +3043,8 @@ importers:
         specifier: ^2.17.2
         version: 2.17.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3092,8 +3092,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/core/functions:
     dependencies:
@@ -3168,10 +3168,10 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       esbuild-wasm:
         specifier: ^0.16.14
         version: 0.16.17
@@ -3301,7 +3301,7 @@ importers:
         version: link:../../../common/util
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.18.2)
@@ -3755,8 +3755,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/protobuf-compiler
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/devtools/cli:
     dependencies:
@@ -4108,8 +4108,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -4374,37 +4374,37 @@ importers:
         version: link:../../common/util
       '@effect/cli':
         specifier: 0.71.0
-        version: 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        version: 0.71.0(@effect/platform@0.92.1(effect@3.18.4))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/cluster':
-        specifier: 0.50.3
-        version: 0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.50.6
+        version: 0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@effect/platform-node':
-        specifier: 0.98.3
-        version: 0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.98.4
+        version: 0.98.4(@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/printer':
         specifier: 0.46.0
-        version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
+        version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)
       '@effect/printer-ansi':
         specifier: 0.46.0
-        version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
+        version: 0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)
       '@effect/rpc':
-        specifier: 0.71.0
-        version: 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.71.1
+        version: 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/sql':
         specifier: 0.46.0
-        version: 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        version: 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/typeclass':
         specifier: 0.37.0
-        version: 0.37.0(effect@3.18.3)
+        version: 0.37.0(effect@3.18.4)
       '@effect/workflow':
-        specifier: 0.11.3
-        version: 0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.11.5
+        version: 0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       esbuild:
         specifier: 0.25.10
         version: 0.25.10
@@ -4547,7 +4547,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -4576,8 +4576,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       flame-chart-js:
         specifier: ^3.3.0
         version: 3.3.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(use-resize-observer@9.1.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
@@ -4935,8 +4935,8 @@ importers:
         specifier: ^4.3.4
         version: 4.4.1(supports-color@5.5.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       esbuild:
         specifier: 0.25.10
         version: 0.25.10
@@ -5150,8 +5150,8 @@ importers:
         version: link:../../common/log
     devDependencies:
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -5420,20 +5420,20 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/ai-anthropic':
-        specifier: ^0.19.2
-        version: 0.19.2(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: ^0.21.1
+        version: 0.21.1(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/ai-openai':
-        specifier: ^0.32.1
-        version: 0.32.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        specifier: ^0.34.0
+        version: 0.34.0(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@effect/platform-browser':
         specifier: 0.72.0
-        version: 0.72.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        version: 0.72.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -5447,8 +5447,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       exa-js:
         specifier: ^1.5.12
         version: 1.7.0(encoding@0.1.13)
@@ -5494,10 +5494,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -5544,8 +5544,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@types/react':
         specifier: ~19.2.2
@@ -5635,11 +5635,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/platform-browser':
         specifier: 0.72.0
-        version: 0.72.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+        version: 0.72.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -5658,10 +5658,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -5669,8 +5669,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -5759,8 +5759,8 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -5868,8 +5868,8 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/plugin-theme':
         specifier: workspace:*
@@ -5973,10 +5973,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -5984,8 +5984,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -6050,8 +6050,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -6260,10 +6260,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -6271,8 +6271,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -6358,11 +6358,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@fluentui/react-tabster':
         specifier: ^9.24.2
         version: 9.24.6(@types/react-dom@19.2.1(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -6390,10 +6390,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -6401,8 +6401,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -6482,8 +6482,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6600,8 +6600,8 @@ importers:
         specifier: ^7.9.0
         version: 7.9.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       force-graph:
         specifier: ^1.49.4
         version: 1.49.5
@@ -6735,10 +6735,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -6746,8 +6746,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -6784,10 +6784,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -6795,8 +6795,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -6869,10 +6869,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -6880,8 +6880,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7018,11 +7018,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -7065,10 +7065,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -7082,8 +7082,8 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7169,8 +7169,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -7298,10 +7298,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -7309,8 +7309,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7417,11 +7417,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -7452,10 +7452,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -7463,8 +7463,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7589,11 +7589,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -7630,16 +7630,16 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       preact:
         specifier: ~10.11.0
         version: 10.11.2
@@ -7702,8 +7702,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7739,7 +7739,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: ^0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@tauri-apps/api':
         specifier: ^2.8.0
         version: 2.8.0
@@ -7756,8 +7756,8 @@ importers:
         specifier: ^2.9.0
         version: 2.9.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -7891,10 +7891,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -7902,8 +7902,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -7968,8 +7968,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7985,10 +7985,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8088,10 +8088,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8099,8 +8099,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -8209,10 +8209,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8223,8 +8223,8 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -8305,7 +8305,7 @@ importers:
         version: link:../../common/util
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -8317,8 +8317,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/storybook-utils
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -8404,8 +8404,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/plugin-attention':
         specifier: workspace:*
@@ -8430,7 +8430,7 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8462,8 +8462,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8543,10 +8543,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -8557,8 +8557,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -8787,10 +8787,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8798,8 +8798,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -8896,10 +8896,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -8907,8 +8907,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -9116,10 +9116,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@lezer/generator':
         specifier: ^1.7.1
         version: 1.7.1
@@ -9139,8 +9139,8 @@ importers:
         specifier: ^1.8.8
         version: 1.8.8
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -9244,8 +9244,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -9442,10 +9442,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -9453,8 +9453,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -9531,8 +9531,8 @@ importers:
         specifier: 1.1.3
         version: 1.1.3(@types/react-dom@19.2.1(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       node-fetch:
         specifier: ^2.6.0
         version: 2.7.0(encoding@0.1.13)
@@ -9607,8 +9607,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -9663,8 +9663,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -9764,16 +9764,16 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -9817,8 +9817,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9863,8 +9863,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -9938,10 +9938,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -9949,8 +9949,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10078,11 +10078,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@peermetrics/webrtc-stats':
         specifier: 5.7.1
         version: 5.7.1
@@ -10128,10 +10128,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -10139,8 +10139,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10216,10 +10216,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -10227,8 +10227,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10418,10 +10418,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/dom-speech-recognition':
         specifier: ^0.0.6
         version: 0.0.6
@@ -10429,8 +10429,8 @@ importers:
         specifier: ~19.2.2
         version: 19.2.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10498,8 +10498,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -10607,8 +10607,8 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       idb-keyval:
         specifier: ^6.2.1
         version: 6.2.1
@@ -10707,11 +10707,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -10736,16 +10736,16 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10812,10 +10812,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -10823,8 +10823,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -10940,8 +10940,8 @@ importers:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -11013,8 +11013,8 @@ importers:
         specifier: ~3.0.9
         version: 3.0.9
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
 
   packages/sdk/client-services:
     dependencies:
@@ -11602,7 +11602,7 @@ importers:
         version: link:../../common/util
       '@effect/schema':
         specifier: ^0.75.5
-        version: 0.75.5(effect@3.18.3)
+        version: 0.75.5(effect@3.18.4)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
@@ -11610,8 +11610,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       jsonpath:
         specifier: ^1.1.1
         version: 1.1.1
@@ -11997,11 +11997,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -12471,8 +12471,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0(@types/react@19.2.2)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -12562,8 +12562,8 @@ importers:
         specifier: ^12.8.1
         version: 12.8.1(@types/react@19.2.2)(immer@10.1.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react-resize-detector:
         specifier: ^11.0.1
         version: 11.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -12663,8 +12663,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -12769,7 +12769,7 @@ importers:
         version: link:../../common/util
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -12799,11 +12799,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/storybook-utils
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -12814,8 +12814,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -12944,8 +12944,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -13053,8 +13053,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -13125,11 +13125,11 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/ai':
-        specifier: 0.29.1
-        version: 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
+        specifier: 0.31.1
+        version: 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
       '@effect/experimental':
         specifier: 0.56.0
-        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
+        version: 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
       '@lezer/common':
         specifier: ^1.2.2
         version: 1.2.2
@@ -13155,8 +13155,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       json5:
         specifier: ^2.2.3
         version: 2.2.3
@@ -13429,10 +13429,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/chai':
         specifier: ^4.2.15
         version: 4.3.5
@@ -13464,8 +13464,8 @@ importers:
         specifier: ^1.11.0
         version: 1.11.0(chai@4.4.1)(mocha@10.6.0)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       happy-dom:
         specifier: ^13.3.1
         version: 13.3.4
@@ -13612,8 +13612,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -14065,8 +14065,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -14141,8 +14141,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -14200,10 +14200,10 @@ importers:
         version: link:../../common/storybook-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -14211,8 +14211,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       react:
         specifier: ~19.2.0
         version: 19.2.0
@@ -14698,10 +14698,10 @@ importers:
         version: link:../../common/test-utils
       '@effect-rx/rx-react':
         specifier: 0.42.4
-        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)
+        version: 0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 0.92.1
-        version: 0.92.1(effect@3.18.3)
+        version: 0.92.1(effect@3.18.4)
       '@types/lodash.orderby':
         specifier: ^4.6.9
         version: 4.6.9
@@ -14712,8 +14712,8 @@ importers:
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
       effect:
-        specifier: 3.18.3
-        version: 3.18.3
+        specifier: 3.18.4
+        version: 3.18.4
       fast-check:
         specifier: ^3.19.0
         version: 3.23.1
@@ -16782,29 +16782,29 @@ packages:
       '@effect/platform': '*'
       effect: ^3.17.0
 
-  '@effect/ai-anthropic@0.19.2':
-    resolution: {integrity: sha512-O57IK7tWs/5VlSmlK/rrPbCdcRprKA2KQj+dQFwlyEyXVG3IiA5Jx7kaiVSgjvxMGzmt/GVnjWmGeFYqD+BVug==}
+  '@effect/ai-anthropic@0.21.1':
+    resolution: {integrity: sha512-tuHyoDxFGzILP2SruhCHX74UWY1r7L9HVlTZCn4kcQEjcgdSLI3JyJahIZ5PcdUabqiuNQ4YG6Cuy97dyFRzjQ==}
     peerDependencies:
-      '@effect/ai': ^0.29.1
+      '@effect/ai': ^0.31.1
       '@effect/experimental': ^0.56.0
       '@effect/platform': ^0.92.1
-      effect: ^3.18.2
+      effect: ^3.18.4
 
-  '@effect/ai-openai@0.32.1':
-    resolution: {integrity: sha512-dzeRrc2topetTa1eLpJYltQm9HICpXvrTH4K/cWHYqiC+9kN57Uqrg+RjFaL13ea+8lKMJNg03YquugbvQJ5Jg==}
+  '@effect/ai-openai@0.34.0':
+    resolution: {integrity: sha512-7xcH3xoMZhgbnlvMASOv2L+MqN8Bon+pdNhnwGMH1+F1k/zZSsf1NjPFqw/szz523E3MhEv/YU+80bOBdni1ig==}
     peerDependencies:
-      '@effect/ai': ^0.29.1
+      '@effect/ai': ^0.31.0
       '@effect/experimental': ^0.56.0
       '@effect/platform': ^0.92.1
-      effect: ^3.18.1
+      effect: ^3.18.4
 
-  '@effect/ai@0.29.1':
-    resolution: {integrity: sha512-uSeAPYha2yJVyEl1xdcbwrXF7GpQlt5225HMP2HXH92OIYNQO9jOel/bCiqV7Q2QWk3I0NP/2zfIM+nThAGoVg==}
+  '@effect/ai@0.31.1':
+    resolution: {integrity: sha512-WFXlypbXwHEcBsg/B3+0l6Vi6yNoTgI68K3OpCJOTGKtFITfwxFoMJUB6poENTvFkIAhzQ9k3qU7VILRiX70Xg==}
     peerDependencies:
       '@effect/experimental': ^0.56.0
-      '@effect/platform': ^0.92.0
+      '@effect/platform': ^0.92.1
       '@effect/rpc': ^0.71.0
-      effect: ^3.18.1
+      effect: ^3.18.4
 
   '@effect/cli@0.71.0':
     resolution: {integrity: sha512-ZmJpUVyhMpIUsiurf4UmEWTURPhGHtZrLRXkMOqggkhIeVR1kSxn8EM+ZMXLlT/23gxbHN4ymj7BmBjxP1oodA==}
@@ -16814,14 +16814,14 @@ packages:
       '@effect/printer-ansi': ^0.46.0
       effect: ^3.18.0
 
-  '@effect/cluster@0.50.3':
-    resolution: {integrity: sha512-xh6okxbkvVzjJXnDEsL/byEsVEYiOhqKUAEugwCnH6yNKnT6VWK8GMyHuL9Tlbex2X9soiMxUSWbreqErrzlqQ==}
+  '@effect/cluster@0.50.6':
+    resolution: {integrity: sha512-JZTctj1SjMWZuG8RnkJCd1myAXmpDYEbLPURookJ6jXhpg8ZU29us49YtQa+MCUNmIr80qjeok/I1KVaQmJfrQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
-      '@effect/rpc': ^0.71.0
+      '@effect/rpc': ^0.71.1
       '@effect/sql': ^0.46.0
-      '@effect/workflow': ^0.11.3
-      effect: ^3.18.1
+      '@effect/workflow': ^0.11.5
+      effect: ^3.18.4
 
   '@effect/experimental@0.56.0':
     resolution: {integrity: sha512-ZT9wTUVyDptzdkW4Tfvz5fNzygW9vt5jWcFmKI9SlhZMu9unVJgsBhxWCNYCyfPnxw3n/Z6SEKsqgt8iKQc4MA==}
@@ -16836,8 +16836,8 @@ packages:
       lmdb:
         optional: true
 
-  '@effect/language-service@0.42.0':
-    resolution: {integrity: sha512-a5naAdmFxrp6T6IsKNTbsoPJXgn2/WXcjzHHrvq7O/MCCWWiJepSVeJiD8rhb8YsWhiNXnvV5/MzOtljwWHY7w==}
+  '@effect/language-service@0.45.1':
+    resolution: {integrity: sha512-SEZ9TaVCpRKYumTQJPApg3os9O94bN2lCYQLgZbyK/xD+NSfYPPJZQ+6T5LkpcNgW8BRk1ACI7S1W2/noxm7Qg==}
     hasBin: true
 
   '@effect/opentelemetry@0.58.0':
@@ -16875,23 +16875,23 @@ packages:
       '@effect/platform': ^0.92.0
       effect: ^3.18.0
 
-  '@effect/platform-node-shared@0.51.3':
-    resolution: {integrity: sha512-1NtCP06RFAnqTgBUF5YXuVGwoW396DKhaZutaWfiZMRlODda0t/iTRYq2CHUlvOGG8x/ZvLtJrC+EQXJEywDWQ==}
+  '@effect/platform-node-shared@0.51.6':
+    resolution: {integrity: sha512-0Px0qpKR6vwoSuTbHPap9FOcUvt9MPLyYR6ZrskXJny4wZYHt9MfF0xR8a4MPbBaJ3UtGH9z74ijQw2cmzYxEg==}
     peerDependencies:
-      '@effect/cluster': ^0.50.3
+      '@effect/cluster': ^0.50.6
       '@effect/platform': ^0.92.1
-      '@effect/rpc': ^0.71.0
+      '@effect/rpc': ^0.71.1
       '@effect/sql': ^0.46.0
-      effect: ^3.18.1
+      effect: ^3.18.4
 
-  '@effect/platform-node@0.98.3':
-    resolution: {integrity: sha512-90eMWmFSVHrUEreICCd2qLPiw7qcaAv9XTx9OJ+LLv7igQgt4qkisRSK0oxAr5hqU9TdUrsgFDohqe7q7h3ZRg==}
+  '@effect/platform-node@0.98.4':
+    resolution: {integrity: sha512-16tFBJtTP4hCjRd5p3SEQ7n+X3Sf/I0ovAhV1EWCJaro2gXV14orQ2cPtYFSaD1VdZmgEzbjnTN1CQBVgjRD/Q==}
     peerDependencies:
-      '@effect/cluster': ^0.50.3
+      '@effect/cluster': ^0.50.6
       '@effect/platform': ^0.92.1
-      '@effect/rpc': ^0.71.0
+      '@effect/rpc': ^0.71.1
       '@effect/sql': ^0.46.0
-      effect: ^3.18.1
+      effect: ^3.18.4
 
   '@effect/platform@0.92.1':
     resolution: {integrity: sha512-XXWCBVwyhaKZISN7aM1fv/3fWDGyxr84ObywnUrL8aHvJLoIeskWFAP/fqw3c5MFCrJ3ZV97RWLbv6JiBQugdg==}
@@ -16910,11 +16910,11 @@ packages:
       '@effect/typeclass': ^0.37.0
       effect: ^3.18.0
 
-  '@effect/rpc@0.71.0':
-    resolution: {integrity: sha512-m6mFX0ShdA+fnYAyamz7SRKF4FepaDB/ZhBri6iue26tBF2LrOFJUWewbwv8/LdLSedkO4eukhsHXuEYortL/w==}
+  '@effect/rpc@0.71.1':
+    resolution: {integrity: sha512-WgASRYmLBbCHM+3xfAGACVM8nOl8DJb+46znAN80hURVOzbPDd7/xjepj59idpIZYBsErv4ixRKfVLLtrGGPyg==}
     peerDependencies:
-      '@effect/platform': ^0.92.0
-      effect: ^3.18.0
+      '@effect/platform': ^0.92.1
+      effect: ^3.18.4
 
   '@effect/schema@0.75.5':
     resolution: {integrity: sha512-TQInulTVCuF+9EIbJpyLP6dvxbQJMphrnRqgexm/Ze39rSjfhJuufF7XvU3SxTgg3HnL7B/kpORTJbHhlE6thw==}
@@ -16940,12 +16940,12 @@ packages:
       effect: ^3.18.0
       vitest: ^3.2.0
 
-  '@effect/workflow@0.11.3':
-    resolution: {integrity: sha512-3uyj0yOc2QRtQVOw6NEJVEMOhN/F7khhnf3QSU+2T3wvuDag9iBUzJFvSls8PgNCO3j/GgeaWzbcXwxqpFQYOQ==}
+  '@effect/workflow@0.11.5':
+    resolution: {integrity: sha512-kdv0amQ/F1xTFeK3g/merYZiy31E5kLEoAafz+JZQDsVzShaL3DlRqG+HOZTUFUCeCDX/kSrvsHBRWRBofaLQQ==}
     peerDependencies:
       '@effect/platform': ^0.92.1
-      '@effect/rpc': ^0.71.0
-      effect: ^3.18.1
+      '@effect/rpc': ^0.71.1
+      effect: ^3.18.4
 
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
@@ -25485,8 +25485,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.18.3:
-    resolution: {integrity: sha512-CmsQdMJdcBk+HigAtiNYb0Fp2xHtZmHjuCgYXDF74IGCCk+4EvQwQG4oHwG4XLFSqQ9eTIOIJ/+4FOYP05aBHg==}
+  effect@3.18.4:
+    resolution: {integrity: sha512-b1LXQJLe9D11wfnOKAk3PKxuqYshQ0Heez+y5pnkd3jLj1yx9QhM72zZ9uUrOQyNvrs2GZZd/3maL0ZV18YuDA==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -36043,77 +36043,77 @@ snapshots:
       react: 19.2.0
       tslib: 2.8.1
 
-  '@effect-rx/rx-react@0.42.4(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(react@19.2.0)(scheduler@0.27.0)':
+  '@effect-rx/rx-react@0.42.4(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(react@19.2.0)(scheduler@0.27.0)':
     dependencies:
-      '@effect-rx/rx': 0.48.7(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect-rx/rx': 0.48.7(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
       react: 19.2.0
       scheduler: 0.27.0
     transitivePeerDependencies:
       - '@effect/platform'
 
-  '@effect-rx/rx@0.48.7(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect-rx/rx@0.48.7(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
 
-  '@effect/ai-anthropic@0.19.2(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect/ai-anthropic@0.21.1(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
       '@anthropic-ai/tokenizer': 0.0.4
-      '@effect/ai': 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/ai': 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
 
-  '@effect/ai-openai@0.32.1(@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect/ai-openai@0.34.0(@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/ai': 0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/ai': 0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
       gpt-tokenizer: 2.9.0
 
-  '@effect/ai@0.29.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/ai@0.31.1(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/rpc': 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
       find-my-way-ts: 0.1.6
 
-  '@effect/cli@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/cli@0.71.0(@effect/platform@0.92.1(effect@3.18.4))(@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4))(@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/printer': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
-      '@effect/printer-ansi': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/printer': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)
+      '@effect/printer-ansi': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
       ini: 4.1.3
       toml: 3.0.0
       yaml: 2.7.1
 
-  '@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      '@effect/workflow': 0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/rpc': 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      '@effect/workflow': 0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
 
-  '@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)':
+  '@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
       uuid: 11.1.0
     optionalDependencies:
       ioredis: 5.3.2
 
-  '@effect/language-service@0.42.0': {}
+  '@effect/language-service@0.45.1': {}
 
-  '@effect/opentelemetry@0.58.0(@effect/platform@0.92.1(effect@3.18.3))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)(effect@3.18.3)':
+  '@effect/opentelemetry@0.58.0(@effect/platform@0.92.1(effect@3.18.4))(@opentelemetry/api@1.9.0)(@opentelemetry/resources@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-node@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-web@2.1.0(@opentelemetry/api@1.9.0))(@opentelemetry/semantic-conventions@1.37.0)(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
+      '@effect/platform': 0.92.1(effect@3.18.4)
       '@opentelemetry/semantic-conventions': 1.37.0
-      effect: 3.18.3
+      effect: 3.18.4
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/resources': 2.1.0(@opentelemetry/api@1.9.0)
@@ -36123,34 +36123,34 @@ snapshots:
       '@opentelemetry/sdk-trace-node': 2.1.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-web': 2.1.0(@opentelemetry/api@1.9.0)
 
-  '@effect/platform-browser@0.72.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect/platform-browser@0.72.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
       multipasta: 0.2.7
 
-  '@effect/platform-node-shared@0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/platform-node-shared@0.51.6(@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
+      '@effect/cluster': 0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/rpc': 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
       '@parcel/watcher': 2.5.1
-      effect: 3.18.3
+      effect: 3.18.4
       multipasta: 0.2.7
       ws: 8.18.2
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@0.98.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/platform-node@0.98.4(@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/cluster': 0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/platform-node-shared': 0.51.3(@effect/cluster@0.50.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(effect@3.18.3))(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)
-      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/cluster': 0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/platform-node-shared': 0.51.6(@effect/cluster@0.50.6(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(effect@3.18.4))(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)
+      '@effect/rpc': 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      '@effect/sql': 0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
       mime: 3.0.0
       undici: 7.10.0
       ws: 8.18.2
@@ -36158,56 +36158,56 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform@0.92.1(effect@3.18.3)':
+  '@effect/platform@0.92.1(effect@3.18.4)':
     dependencies:
-      effect: 3.18.3
+      effect: 3.18.4
       find-my-way-ts: 0.1.6
       msgpackr: 1.11.4
       multipasta: 0.2.7
 
-  '@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)':
+  '@effect/printer-ansi@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/printer': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)
-      '@effect/typeclass': 0.37.0(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/printer': 0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)
+      '@effect/typeclass': 0.37.0(effect@3.18.4)
+      effect: 3.18.4
 
-  '@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.3))(effect@3.18.3)':
+  '@effect/printer@0.46.0(@effect/typeclass@0.37.0(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/typeclass': 0.37.0(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/typeclass': 0.37.0(effect@3.18.4)
+      effect: 3.18.4
 
-  '@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
       msgpackr: 1.11.4
 
-  '@effect/schema@0.75.5(effect@3.18.3)':
+  '@effect/schema@0.75.5(effect@3.18.4)':
     dependencies:
-      effect: 3.18.3
+      effect: 3.18.4
       fast-check: 3.23.1
 
-  '@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)':
+  '@effect/sql@0.46.0(@effect/experimental@0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2))(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)(ioredis@5.3.2)
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/experimental': 0.56.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)(ioredis@5.3.2)
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      effect: 3.18.4
       uuid: 11.1.0
 
-  '@effect/typeclass@0.37.0(effect@3.18.3)':
+  '@effect/typeclass@0.37.0(effect@3.18.4)':
     dependencies:
-      effect: 3.18.3
+      effect: 3.18.4
 
-  '@effect/vitest@0.26.0(effect@3.18.3)(vitest@3.2.4)':
+  '@effect/vitest@0.26.0(effect@3.18.4)(vitest@3.2.4)':
     dependencies:
-      effect: 3.18.3
+      effect: 3.18.4
       vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.10.2)(@vitest/browser@3.2.4)(@vitest/ui@3.2.4)(happy-dom@13.3.4)(jiti@2.4.2)(jsdom@27.0.0(canvas@3.2.0)(postcss@8.5.6))(terser@5.19.2)(yaml@2.7.1)
 
-  '@effect/workflow@0.11.3(@effect/platform@0.92.1(effect@3.18.3))(@effect/rpc@0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3))(effect@3.18.3)':
+  '@effect/workflow@0.11.5(@effect/platform@0.92.1(effect@3.18.4))(@effect/rpc@0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4))(effect@3.18.4)':
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
-      '@effect/rpc': 0.71.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3)
-      effect: 3.18.3
+      '@effect/platform': 0.92.1(effect@3.18.4)
+      '@effect/rpc': 0.71.1(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4)
+      effect: 3.18.4
 
   '@emnapi/core@1.4.5':
     dependencies:
@@ -45755,11 +45755,11 @@ snapshots:
 
   dfa@1.2.0: {}
 
-  dfx@0.126.0(@effect/platform@0.92.1(effect@3.18.3))(effect@3.18.3):
+  dfx@0.126.0(@effect/platform@0.92.1(effect@3.18.4))(effect@3.18.4):
     dependencies:
-      '@effect/platform': 0.92.1(effect@3.18.3)
+      '@effect/platform': 0.92.1(effect@3.18.4)
       discord-api-types: 0.38.26
-      effect: 3.18.3
+      effect: 3.18.4
     optionalDependencies:
       discord-verify: 1.2.0
 
@@ -45927,7 +45927,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@3.18.3:
+  effect@3.18.4:
     dependencies:
       '@standard-schema/spec': 1.0.0
       fast-check: 3.23.1

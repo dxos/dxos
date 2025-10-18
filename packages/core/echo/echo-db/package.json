@@ -57,7 +57,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "eventemitter3": "^5.0.1",
     "lodash.isequal": "^4.5.0"
   },
