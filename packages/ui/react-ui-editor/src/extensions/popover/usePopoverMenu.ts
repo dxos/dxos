@@ -16,8 +16,6 @@ import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UsePopoverMenuProps = {
-  // TODO(burdon): Extensions should not depend directly on the editor view.
-  //  Instead this should be encapsulted entirely in the extension.
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
@@ -35,7 +33,6 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
-  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
 
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open, trigger?) => {
@@ -78,6 +75,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
     void item.onSelect?.(view, view.state.selection.main.head);
   }, []);
 
+  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
   const extension = useMemo<Extension>(() => {
     return popoverMenu({
       trigger,

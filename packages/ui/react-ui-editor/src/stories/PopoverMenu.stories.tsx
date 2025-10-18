@@ -33,9 +33,9 @@ const generator: ValueGenerator = faker as any;
 
 type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
-const DefaultStory = ({ text, ...options }: StoryProps) => {
+const DefaultStory = ({ text, ...props }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...options });
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...props });
 
   return (
     <PopoverMenuProvider groups={groupsRef.current} {...menuProps}>
