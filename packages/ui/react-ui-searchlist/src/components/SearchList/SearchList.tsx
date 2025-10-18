@@ -14,7 +14,7 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useComboboxContext } from './ComboBox';
+import { useComboboxContext } from './Combobox';
 
 const SEARCHLIST_NAME = 'SearchList';
 const SEARCHLIST_ITEM_NAME = 'SearchListItem';
@@ -42,7 +42,7 @@ const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
 SearchListRoot.displayName = SEARCHLIST_NAME;
 
 //
-// ListInput
+// Input
 //
 
 type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
@@ -82,7 +82,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 );
 
 //
-// ListContent
+// Content
 //
 
 type SearchListContentProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
@@ -98,7 +98,7 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
 );
 
 //
-// ListEmpty
+// Empty
 //
 
 type SearchListEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
@@ -114,7 +114,7 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 );
 
 //
-// ListItem
+// Item
 //
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
