@@ -23,7 +23,7 @@ export type Template = {
   presetId?: string;
 };
 
-export const templates: Template[] = [
+export const templates = [
   {
     id: 'dxos.org/script/echo',
     name: 'Echo',
@@ -75,4 +75,4 @@ export const templates: Template[] = [
     source: removeHeader(dataGenerator),
     presetId: 'dxos.org/function/data-generator',
   },
-];
+] as const;

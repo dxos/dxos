@@ -8,6 +8,7 @@ import { SpaceSchema } from '@dxos/client/echo';
 import { ScriptType } from '@dxos/functions';
 
 import { meta } from '../meta';
+import { templates } from '../templates';
 
 import { Notebook } from './schema';
 
@@ -16,7 +17,10 @@ export namespace ScriptAction {
     name: Schema.optional(Schema.String),
     // TODO(wittjosiah): Placeholder annotation?
     gistUrl: Schema.optional(Schema.String.annotations({ title: 'Import from Gist (url)' })),
-    initialTemplateId: Schema.optional(Schema.String),
+    initialTemplateId: Schema.Literal(...templates.map(({ id }) => id)).pipe(
+      Schema.annotations({ title: 'Template' }),
+      Schema.optional,
+    ),
   });
 
   export class CreateScript extends Schema.TaggedClass<CreateScript>()(`${meta.id}/action/create-script`, {
