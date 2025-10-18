@@ -36,6 +36,7 @@ export type DxAvatarProps = Partial<
   >
 >;
 
+// TODO(burdon): Needs popover.
 @customElement('dx-avatar')
 export class DxAvatar extends LitElement {
   private maskId: string;
