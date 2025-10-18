@@ -4,10 +4,10 @@
 
 import { commandRangeEffect } from '../../extensions';
 
-import { type MenuGroup } from './menu';
+import { type PopoverMenuGroup } from './menu';
 import { insertAtLineStart } from './util';
 
-export const formattingCommands: MenuGroup = {
+export const formattingCommands: PopoverMenuGroup = {
   id: 'markdown',
   label: 'Markdown',
   items: [
@@ -86,7 +86,7 @@ export const formattingCommands: MenuGroup = {
   ],
 };
 
-export const linkSlashCommands: MenuGroup = {
+export const linkSlashCommands: PopoverMenuGroup = {
   id: 'link',
   label: 'Link',
   items: [

@@ -10,33 +10,33 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type PlaceholderOptions } from '../command-dialog';
 
-import { commandMenu, commandRangeEffect } from './command-menu';
-import { type MenuGroup, type MenuItem } from './menu';
-import { type MenuProviderProps } from './MenuProvider';
+import { popoverMenu, commandRangeEffect } from './popover-menu';
+import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
-export type UseCommandMenuOptions = {
+export type UsePopoverMenuOptions = {
   // TODO(burdon): Extensions should not depend directly on the editor view.
   //  Instead this should be encapsulted entirely in the extension.
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
-  getMenu: (trigger: string, query?: string) => MaybePromise<MenuGroup[]>;
+  getMenu: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
 };
 
-export type UseCommandMenu = {
-  groupsRef: RefObject<MenuGroup[]>;
+export type UsePopoverMenu = {
+  groupsRef: RefObject<PopoverMenuGroup[]>;
   extension: Extension;
-} & Pick<MenuProviderProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
+} & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
 
-export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions): UseCommandMenu => {
-  const currentRef = useRef<MenuItem | null>(null);
-  const groupsRef = useRef<MenuGroup[]>([]);
+export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePopoverMenuOptions): UsePopoverMenu => {
+  const currentRef = useRef<PopoverMenuItem | null>(null);
+  const groupsRef = useRef<PopoverMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
 
-  const handleOpenChange = useCallback<NonNullable<UseCommandMenu['onOpenChange']>>(
+  const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open, trigger?) => {
       if (open && trigger) {
         groupsRef.current = await getMenu(trigger);
@@ -51,7 +51,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [getMenu],
   );
 
-  const handleActivate = useCallback<NonNullable<UseCommandMenu['onActivate']>>(
+  const handleActivate = useCallback<NonNullable<UsePopoverMenu['onActivate']>>(
     async (event) => {
       const item = getMenuItem(groupsRef.current, currentItem);
       if (item) {
@@ -66,7 +66,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
     [open, handleOpenChange],
   );
 
-  const handleSelect = useCallback<NonNullable<UseCommandMenu['onSelect']>>((item) => {
+  const handleSelect = useCallback<NonNullable<UsePopoverMenu['onSelect']>>((item) => {
     if (!viewRef.current) {
       return;
     }
@@ -78,7 +78,7 @@ export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCo
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
 
   const extension = useMemo<Extension>(() => {
-    return commandMenu({
+    return popoverMenu({
       trigger,
       placeholder,
       onClose: () => handleOpenChange(false),

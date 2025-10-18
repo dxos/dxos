@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../command-dialog';
 
-export type CommandMenuOptions = {
+export type PopoverMenuOptions = {
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
 
@@ -21,10 +21,10 @@ export type CommandMenuOptions = {
   onTextChange?: (trigger: string, text: string) => void;
 };
 
-export const commandMenu = (options: CommandMenuOptions): Extension => {
+export const popoverMenu = (options: PopoverMenuOptions): Extension => {
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
 
-  const commandKeymap = keymap.of([
+  const popoverKeymap = keymap.of([
     ...triggers.map((trigger) => ({
       key: trigger,
       run: (view: EditorView) => {
@@ -121,7 +121,7 @@ export const commandMenu = (options: CommandMenuOptions): Extension => {
   });
 
   return [
-    Prec.highest(commandKeymap),
+    Prec.highest(popoverKeymap),
     commandDecorations(options),
     placeholder(
       Object.assign(
@@ -136,7 +136,7 @@ export const commandMenu = (options: CommandMenuOptions): Extension => {
   ];
 };
 
-const commandDecorations = (options: CommandMenuOptions) => {
+const commandDecorations = (options: PopoverMenuOptions) => {
   return ViewPlugin.fromClass(
     class {
       decorations: DecorationSet = Decoration.none;

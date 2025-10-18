@@ -15,8 +15,8 @@ import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import {
-  type MenuGroup,
-  type MenuItem,
+  type PopoverMenuGroup,
+  type PopoverMenuItem,
   type PreviewLinkRef,
   type PreviewOptions,
   insertAtCursor,
@@ -97,7 +97,7 @@ export const MarkdownContainer = ({
   );
 
   const handleLinkQuery = useCallback(
-    async (query?: string): Promise<MenuGroup[]> => {
+    async (query?: string): Promise<PopoverMenuGroup[]> => {
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await space?.db.query(Query.select(filter)).run();
       // TODO(wittjosiah): Use `Obj.Any` type.
@@ -116,7 +116,7 @@ export const MarkdownContainer = ({
         results?.objects
           .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           // TODO(wittjosiah): Remove `any` type.
-          .map((object: any): MenuItem => {
+          .map((object: any): PopoverMenuItem => {
             const metadata = resolve(Obj.getTypename(object)!);
             const label = toLocalizedString(getLabel(object), t);
             return {

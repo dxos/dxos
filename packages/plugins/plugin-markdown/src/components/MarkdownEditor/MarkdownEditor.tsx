@@ -17,8 +17,8 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  type MenuGroup,
-  MenuProvider,
+  type PopoverMenuGroup,
+  type PopoverMenuProvider,
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
@@ -33,9 +33,9 @@ import {
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
+  usePopoverMenu,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -51,13 +51,13 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: MenuGroup[];
+  slashCommandGroups?: PopoverMenuGroup[];
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onLinkQuery?: (query?: string) => Promise<MenuGroup[]>;
+  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -117,13 +117,13 @@ export const MarkdownEditor = ({
     };
   }, [onLinkQuery, getMenu]);
 
-  const { groupsRef, extension: commandMenu, ...commandMenuProps } = useCommandMenu(options);
+  const { groupsRef, extension: commandMenu, ...commandMenuProps } = usePopoverMenu(options);
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
-    <MenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-    </MenuProvider>
+    </PopoverMenuProvider>
   );
 };
 

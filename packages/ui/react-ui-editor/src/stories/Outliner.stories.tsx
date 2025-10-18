@@ -10,9 +10,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import {
-  type MenuGroup,
-  type MenuItem,
-  MenuProvider,
+  type PopoverMenuGroup,
+  type PopoverMenuItem,
+  PopoverMenuProvider,
   deleteItem,
   hashtag,
   listItemToString,
@@ -30,7 +30,7 @@ type StoryProps = {
 const DefaultStory = ({ text }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
 
-  const commandGroups: MenuGroup[] = useMemo(
+  const commandGroups: PopoverMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',
@@ -49,9 +49,9 @@ const DefaultStory = ({ text }: StoryProps) => {
   );
 
   return (
-    <MenuProvider
+    <PopoverMenuProvider
       groups={commandGroups}
-      onSelect={(item: MenuItem) => {
+      onSelect={(item: PopoverMenuItem) => {
         if (viewRef.current && item.onSelect) {
           return item.onSelect(viewRef.current, viewRef.current.state.selection.main.head);
         }
@@ -69,7 +69,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-    </MenuProvider>
+    </PopoverMenuProvider>
   );
 };
 

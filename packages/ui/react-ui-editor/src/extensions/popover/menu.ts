@@ -7,13 +7,13 @@ import { type EditorView } from '@codemirror/view';
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-export type MenuGroup = {
+export type PopoverMenuGroup = {
   id: string;
   label?: Label;
-  items: MenuItem[];
+  items: PopoverMenuItem[];
 };
 
-export type MenuItem = {
+export type PopoverMenuItem = {
   id: string;
   label: Label;
   icon?: string;

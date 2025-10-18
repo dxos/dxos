@@ -14,16 +14,16 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
-  type MenuGroup,
-  type MenuItem,
-  MenuProvider,
-  type UseCommandMenuOptions,
+  type PopoverMenuGroup,
+  type PopoverMenuItem,
+  PopoverMenuProvider,
+  type UsePopoverMenuOptions,
   filterItems,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
-  useCommandMenu,
+  usePopoverMenu,
 } from '../extensions';
 import { str } from '../testing';
 
@@ -31,20 +31,20 @@ import { EditorStory, names } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
+type StoryProps = Omit<UsePopoverMenuOptions, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { groupsRef, extension: commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
+  const { groupsRef, extension: commandMenu, ...commandMenuProps } = usePopoverMenu({ viewRef, ...options });
 
   return (
-    <MenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <EditorStory ref={viewRef} text={text} placeholder={''} extensions={commandMenu} />
-    </MenuProvider>
+    </PopoverMenuProvider>
   );
 };
 
-const groups: MenuGroup[] = [
+const groups: PopoverMenuGroup[] = [
   formattingCommands,
   linkSlashCommands,
   {
@@ -62,7 +62,7 @@ const groups: MenuGroup[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-editor/CommandMenu',
+  title: 'ui/react-ui-editor/PopoverMenu',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
@@ -100,7 +100,7 @@ export const Link: Story = {
   render: (args: StoryProps) => {
     const { space } = useClientProvider();
     const getMenu = useCallback(
-      async (trigger: string, query?: string): Promise<MenuGroup[]> => {
+      async (trigger: string, query?: string): Promise<PopoverMenuGroup[]> => {
         if (trigger === '/') {
           return filterItems(groups, (item) =>
             query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
@@ -116,7 +116,7 @@ export const Link: Story = {
         const items = result.objects
           .filter((object) => object.name.toLowerCase().includes(name))
           .map(
-            (object): MenuItem => ({
+            (object): PopoverMenuItem => ({
               id: object.id,
               label: object.name,
               icon: 'ph--user--regular',

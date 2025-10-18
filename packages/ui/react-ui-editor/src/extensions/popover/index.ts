@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './command-menu';
 export * from './menu';
 export * from './menu-presets';
+export * from './popover-menu';
 export * from './util';
 
-export * from './MenuProvider';
-export * from './useCommandMenu';
+export * from './PopoverMenuProvider';
+export * from './usePopoverMenu';

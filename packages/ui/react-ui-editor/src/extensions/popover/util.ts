@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type MenuGroup, type MenuItem } from './menu';
+import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
 export const insertAtCursor = (view: EditorView, head: number, insert: string) => {
   view.dispatch({
@@ -30,23 +30,26 @@ export const insertAtLineStart = (view: EditorView, head: number, insert: string
   }
 };
 
-export const getMenuItem = (groups: MenuGroup[], id?: string): MenuItem | undefined => {
+export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextMenuItem = (groups: MenuGroup[], id?: string): MenuItem => {
+export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index < items.length - 1 ? items[index + 1] : items[index];
 };
 
-export const getPreviousMenuItem = (groups: MenuGroup[], id?: string): MenuItem => {
+export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index > 0 ? items[index - 1] : items[index];
 };
 
-export const filterItems = (groups: MenuGroup[], filter: (item: MenuItem) => boolean): MenuGroup[] => {
+export const filterItems = (
+  groups: PopoverMenuGroup[],
+  filter: (item: PopoverMenuItem) => boolean,
+): PopoverMenuGroup[] => {
   return groups.map((group) => ({
     ...group,
     items: group.items.filter(filter),

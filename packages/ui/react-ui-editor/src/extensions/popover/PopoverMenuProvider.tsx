@@ -15,20 +15,22 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { type MenuGroup, type MenuItem } from './menu';
+import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
-export type MenuProviderProps = PropsWithChildren<{
-  groups: MenuGroup[];
+export type PopoverMenuProviderProps = PropsWithChildren<{
+  groups: PopoverMenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  onSelect: (item: MenuItem) => void;
+  onSelect: (item: PopoverMenuItem) => void;
   onActivate?: (event: DxAnchorActivate) => void;
   onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
 }>;
 
-// NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
-export const MenuProvider = ({
+/**
+ * NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
+ */
+export const PopoverMenuProvider = ({
   children,
   groups,
   currentItem,
@@ -37,7 +39,7 @@ export const MenuProvider = ({
   onSelect,
   onActivate,
   onOpenChange,
-}: MenuProviderProps) => {
+}: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
   const trigger = useRef<HTMLButtonElement | null>(null);
   const groupsWithItems = groups.filter((group) => group.items.length > 0);
@@ -107,9 +109,9 @@ export const MenuProvider = ({
 };
 
 type MenuGroupComponentProps = {
-  group: MenuGroup;
+  group: PopoverMenuGroup;
   currentItem?: string;
-} & Pick<MenuProviderProps, 'onSelect'>;
+} & Pick<PopoverMenuProviderProps, 'onSelect'>;
 
 const MenuGroupComponent = ({ group, currentItem, onSelect }: MenuGroupComponentProps) => {
   const { tx } = useThemeContext();
@@ -131,9 +133,9 @@ const MenuGroupComponent = ({ group, currentItem, onSelect }: MenuGroupComponent
 };
 
 type MenuItemComponentProps = {
-  item: MenuItem;
+  item: PopoverMenuItem;
   current: boolean;
-  onSelect: (item: MenuItem) => void;
+  onSelect: (item: PopoverMenuItem) => void;
 };
 
 const MenuItemComponent = ({ item, current, onSelect }: MenuItemComponentProps) => {
