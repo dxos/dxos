@@ -11,23 +11,23 @@ import { clientRectsFor, flattenRect } from '../../util';
 type Content = string | HTMLElement | ((view: EditorView) => HTMLElement);
 
 export type PlaceholderOptions = {
-  delay?: number;
   content: Content;
+  delay?: number;
 };
 
 /**
- * Show a transient placeholder at the current cursor position.
+ * Shows a transient placeholder at the current cursor position.
  */
-export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Extension => {
+export const placeholder = ({ content, delay = 3_000 }: PlaceholderOptions): Extension => {
   const plugin = ViewPlugin.fromClass(
     class {
-      decorations = Decoration.none;
-      timeout: ReturnType<typeof setTimeout> | undefined;
+      _timeout: ReturnType<typeof setTimeout> | undefined;
+      _decorations = Decoration.none;
 
       update(update: ViewUpdate) {
-        if (this.timeout) {
-          window.clearTimeout(this.timeout);
-          this.timeout = undefined;
+        if (this._timeout) {
+          window.clearTimeout(this._timeout);
+          this._timeout = undefined;
         }
 
         // Check if the active line (where cursor is) is empty.
@@ -36,10 +36,10 @@ export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Ext
         if (isEmpty) {
           // Create widget decoration at the start of the current line.
           const lineStart = activeLine.from;
-          this.timeout = setTimeout(() => {
-            this.decorations = Decoration.set([
+          this._timeout = setTimeout(() => {
+            this._decorations = Decoration.set([
               Decoration.widget({
-                widget: new Placeholder(content),
+                widget: new PlaceholderWidget(content),
                 side: 1,
               }).range(lineStart),
             ]);
@@ -48,18 +48,18 @@ export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Ext
           }, delay);
         }
 
-        this.decorations = Decoration.none;
+        this._decorations = Decoration.none;
       }
 
       destroy() {
-        if (this.timeout) {
-          clearTimeout(this.timeout);
+        if (this._timeout) {
+          clearTimeout(this._timeout);
         }
       }
     },
     {
       provide: (plugin) => {
-        return [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)];
+        return [EditorView.decorations.of((view) => view.plugin(plugin)?._decorations ?? Decoration.none)];
       },
     },
   );
@@ -69,15 +69,23 @@ export const placeholder = ({ delay = 3_000, content }: PlaceholderOptions): Ext
     : plugin;
 };
 
-class Placeholder extends WidgetType {
+class PlaceholderWidget extends WidgetType {
   constructor(readonly content: Content) {
     super();
   }
 
   toDOM(view: EditorView) {
+    // return Domino.of('span')
+    //   .classNames('cm-placeholder')
+    //   .style({ pointerEvents: 'none' })
+    //   .attr('ariaHidden', 'true')
+    //   .children()
+    //   .build();
+
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';
+    wrap.setAttribute('aria-hidden', 'true');
     wrap.appendChild(
       typeof this.content === 'string'
         ? document.createTextNode(this.content)
@@ -85,7 +93,7 @@ class Placeholder extends WidgetType {
           ? this.content(view)
           : this.content.cloneNode(true),
     );
-    wrap.setAttribute('aria-hidden', 'true');
+
     return wrap;
   }
 
@@ -95,9 +103,9 @@ class Placeholder extends WidgetType {
       return null;
     }
 
-    const style = window.getComputedStyle(dom.parentNode as HTMLElement);
-    const rect = flattenRect(rects[0], style.direction !== 'rtl');
+    const style = getComputedStyle(dom.parentNode as HTMLElement);
     const lineHeight = parseInt(style.lineHeight);
+    const rect = flattenRect(rects[0], style.direction !== 'rtl');
     if (rect.bottom - rect.top > lineHeight * 1.5) {
       return {
         left: rect.left,
