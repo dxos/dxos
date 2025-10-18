@@ -2967,14 +2967,14 @@ importers:
   packages/core/echo/echo-signals:
     dependencies:
       '@preact/signals':
-        specifier: ^2.3.1
-        version: 2.3.1(preact@10.26.9)
+        specifier: ^2.3.2
+        version: 2.3.2(preact@10.26.9)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
     optionalDependencies:
       preact:
         specifier: ^10.26.9
@@ -5441,8 +5441,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
@@ -5756,8 +5756,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       effect:
         specifier: 3.18.3
         version: 3.18.3
@@ -7030,8 +7030,8 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
         version: 3.6.0
@@ -13349,8 +13349,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
@@ -13572,8 +13572,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.2.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
@@ -14174,8 +14174,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react@19.2.0)
+        specifier: ^3.3.1
+        version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
         version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
@@ -19695,13 +19695,13 @@ packages:
   '@preact/signals-core@1.12.1':
     resolution: {integrity: sha512-BwbTXpj+9QutoZLQvbttRg5x3l5468qaV2kufh+51yha1c53ep5dY4kTuZR35+3pAZxpfQerGJiQqg34ZNZ6uA==}
 
-  '@preact/signals-react@3.3.0':
-    resolution: {integrity: sha512-Hxb7jQVuEA5y6EzlENcjpJLoxMf2rwUYU3KdJMHS+nYbA69+8elRbu6upiAOWtleXV4K7GZGQAD3KxB3Wk43KQ==}
+  '@preact/signals-react@3.3.1':
+    resolution: {integrity: sha512-VMVDVt2zxtv/uvYBfuaAX1KJPZjpSB23ohbbCAzWAv0J0IXRxyDMSVUirxq1nY6nzeyldAAXJOykAtlVIyQ/jA==}
     peerDependencies:
       react: ~19.2.0
 
-  '@preact/signals@2.3.1':
-    resolution: {integrity: sha512-nyuRIGmcwM/HjvFHhN2xUWfyla9D4llHt+prWoxjQfD6b5prO7CFPlG/xjJkP31Oic4KQXfH9SIhJFP9cy4lmg==}
+  '@preact/signals@2.3.2':
+    resolution: {integrity: sha512-Q22avIn4z0BQnmFeo6Y5HCnJTo8VufN84zN51OtqeNgZOVCYgdwEOcJKVX1x/IrjRVxUnOy6Ubn7H5aVFujXaQ==}
     peerDependencies:
       preact: '>= 10.25.0 || >=11.0.0-0'
 
@@ -39246,13 +39246,13 @@ snapshots:
 
   '@preact/signals-core@1.12.1': {}
 
-  '@preact/signals-react@3.3.0(react@19.2.0)':
+  '@preact/signals-react@3.3.1(react@19.2.0)':
     dependencies:
       '@preact/signals-core': 1.12.1
       react: 19.2.0
-      use-sync-external-store: 1.2.2(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
-  '@preact/signals@2.3.1(preact@10.26.9)':
+  '@preact/signals@2.3.2(preact@10.26.9)':
     dependencies:
       '@preact/signals-core': 1.12.1
       preact: 10.26.9
