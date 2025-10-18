@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { commandRangeEffect } from '../../extensions';
+import { popoverRangeEffect } from '../../extensions';
 
 import { type PopoverMenuGroup } from './menu';
 import { insertAtLineStart } from './util';
@@ -98,7 +98,7 @@ export const linkSlashCommands: PopoverMenuGroup = {
         view.dispatch({
           changes: { from: head, insert: '@' },
           selection: { anchor: head + 1, head: head + 1 },
-          effects: commandRangeEffect.of({
+          effects: popoverRangeEffect.of({
             trigger: '@',
             range: { from: head, to: head + 1 },
           }),
@@ -113,7 +113,7 @@ export const linkSlashCommands: PopoverMenuGroup = {
         view.dispatch({
           changes: { from: head, insert: '@@' },
           selection: { anchor: head + 2, head: head + 2 },
-          effects: commandRangeEffect.of({
+          effects: popoverRangeEffect.of({
             trigger: '@',
             range: { from: head, to: head + 2 },
           }),

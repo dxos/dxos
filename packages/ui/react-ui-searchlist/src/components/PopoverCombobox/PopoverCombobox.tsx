@@ -29,14 +29,14 @@ type PopoverComboboxRootProps = ComboboxRootProps & { modal?: boolean };
 const PopoverComboboxRoot = ({
   modal,
   children,
-  open: propsOpen,
-  onOpenChange: propsOnOpenChange,
+  open: openParam,
   defaultOpen,
+  onOpenChange: onOpenChangeParam,
   ...props
 }: PopoverComboboxRootProps) => {
   const [open, onOpenChange] = useControllableState({
-    prop: propsOpen,
-    onChange: propsOnOpenChange,
+    prop: openParam,
+    onChange: onOpenChangeParam,
     defaultProp: defaultOpen,
   });
   return (

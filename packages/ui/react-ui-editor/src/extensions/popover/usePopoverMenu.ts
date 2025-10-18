@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { commandRangeEffect, popoverMenu } from './popover-menu';
+import { popoverRangeEffect, popoverMenu } from './popover-menu';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
@@ -44,7 +44,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
       if (!open) {
         setCurrentItem(undefined);
         viewRef.current?.dispatch({
-          effects: [commandRangeEffect.of(null)],
+          effects: [popoverRangeEffect.of(null)],
         });
       }
     },

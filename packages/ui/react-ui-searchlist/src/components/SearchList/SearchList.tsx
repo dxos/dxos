@@ -2,23 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
-import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
 
 import {
-  Button,
-  type ButtonProps,
-  Icon,
   type TextInputProps,
   type ThemedClassName,
   useDensityContext,
   useElevationContext,
-  useId,
   useThemeContext,
 } from '@dxos/react-ui';
-import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
+import { mx } from '@dxos/react-ui-theme';
+
+import { useComboboxContext } from './ComboBox';
+
+const SEARCHLIST_NAME = 'SearchList';
+const SEARCHLIST_ITEM_NAME = 'SearchListItem';
+
+//
+// Root
+//
 
 type SearchListVariant = 'list' | 'menu' | 'listbox';
 
@@ -26,31 +29,10 @@ type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandR
   variant?: SearchListVariant;
 };
 
-type ComboboxContextValue = {
-  modalId: string;
-  isCombobox: true;
-  placeholder?: string;
-  open: boolean;
-  onOpenChange: (nextOpen: boolean) => void;
-  value: string;
-  onValueChange: (nextValue: string) => void;
-};
-
-const COMBOBOX_NAME = 'Combobox';
-const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
-const SEARCHLIST_NAME = 'SearchList';
-const SEARCHLIST_ITEM_NAME = 'SearchListItem';
-
-const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxContextValue>>(COMBOBOX_NAME, {});
-
-type ComboboxRootProps = PropsWithChildren<
-  Partial<ComboboxContextValue & { defaultOpen: boolean; defaultValue: string; placeholder: string }>
->;
-
 const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandRoot {...props} className={mx('', classNames)} ref={forwardedRef}>
+      <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
         {children}
       </CommandRoot>
     );
@@ -58,6 +40,10 @@ const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
 );
 
 SearchListRoot.displayName = SEARCHLIST_NAME;
+
+//
+// ListInput
+//
 
 type CommandInputPrimitiveProps = ComponentPropsWithRef<typeof CommandInput>;
 
@@ -67,7 +53,7 @@ type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onC
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
-    // CHORE(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
+    // TODO(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -95,6 +81,10 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   },
 );
 
+//
+// ListContent
+//
+
 type SearchListContentProps = ThemedClassName<ComponentPropsWithRef<typeof CommandList>>;
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
@@ -107,6 +97,10 @@ const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
   },
 );
 
+//
+// ListEmpty
+//
+
 type SearchListEmptyProps = ThemedClassName<ComponentPropsWithRef<typeof CommandEmpty>>;
 
 const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
@@ -118,6 +112,10 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
     );
   },
 );
+
+//
+// ListItem
+//
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
@@ -147,83 +145,9 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
 
 SearchListItem.displayName = SEARCHLIST_ITEM_NAME;
 
-const ComboboxRoot = ({
-  modalId: propsModalId,
-  open: propsOpen,
-  defaultOpen,
-  onOpenChange: propsOnOpenChange,
-  value: propsValue,
-  defaultValue,
-  onValueChange: propsOnValueChange,
-  placeholder,
-  children,
-}: ComboboxRootProps) => {
-  const modalId = useId(COMBOBOX_NAME, propsModalId);
-  const [open = false, onOpenChange] = useControllableState({
-    prop: propsOpen,
-    onChange: propsOnOpenChange,
-    defaultProp: defaultOpen,
-  });
-  const [value = '', onValueChange] = useControllableState({
-    prop: propsValue,
-    onChange: propsOnValueChange,
-    defaultProp: defaultValue,
-  });
-  return (
-    <ComboboxProvider
-      isCombobox
-      modalId={modalId}
-      open={open}
-      onOpenChange={onOpenChange}
-      value={value}
-      onValueChange={onValueChange}
-      placeholder={placeholder}
-    >
-      {children}
-    </ComboboxProvider>
-  );
-};
-
-ComboboxRoot.displayName = COMBOBOX_NAME;
-
-type ComboboxTriggerProps = ButtonProps;
-
-const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
-  ({ children, onClick, ...props }, forwardedRef) => {
-    const { modalId, open, onOpenChange, placeholder, value } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
-    const handleClick = useCallback(
-      (event: Parameters<Exclude<ButtonProps['onClick'], undefined>>[0]) => {
-        onClick?.(event);
-        onOpenChange?.(true);
-      },
-      [onClick, onOpenChange],
-    );
-    return (
-      <Button
-        {...props}
-        role='combobox'
-        aria-expanded={open}
-        aria-controls={modalId}
-        aria-haspopup='dialog'
-        onClick={handleClick}
-        ref={forwardedRef}
-      >
-        {children ?? (
-          <>
-            <span
-              className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
-            >
-              {value || placeholder}
-            </span>
-            <Icon icon='ph--caret-down--bold' size={3} />
-          </>
-        )}
-      </Button>
-    );
-  },
-);
-
-ComboboxTrigger.displayName = COMBOBOX_TRIGGER_NAME;
+//
+// SearchList
+//
 
 export const SearchList = {
   Root: SearchListRoot,
@@ -233,20 +157,12 @@ export const SearchList = {
   Item: SearchListItem,
 };
 
-export const Combobox = {
-  Root: ComboboxRoot,
-  Trigger: ComboboxTrigger,
-  useComboboxContext,
-};
-
 export type {
   SearchListRootProps,
   SearchListInputProps,
   SearchListContentProps,
   SearchListEmptyProps,
   SearchListItemProps,
-  ComboboxRootProps,
-  ComboboxTriggerProps,
 };
 
 export { commandItem, searchListItem };
