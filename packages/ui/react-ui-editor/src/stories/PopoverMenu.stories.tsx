@@ -14,16 +14,16 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
-  type CommandMenuGroup,
-  type CommandMenuItem,
-  CommandMenuProvider,
-  type UseCommandMenuOptions,
-  coreSlashCommands,
+  type PopoverMenuGroup,
+  type PopoverMenuItem,
+  PopoverMenuProvider,
+  type UsePopoverMenuProps,
   filterItems,
+  formattingCommands,
   insertAtCursor,
   insertAtLineStart,
   linkSlashCommands,
-  useCommandMenu,
+  usePopoverMenu,
 } from '../extensions';
 import { str } from '../testing';
 
@@ -31,21 +31,21 @@ import { EditorStory, names } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-type StoryProps = Omit<UseCommandMenuOptions, 'viewRef'> & { text: string };
+type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
-const DefaultStory = ({ text, ...options }: StoryProps) => {
+const DefaultStory = ({ text, ...props }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...props });
 
   return (
-    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
-      <EditorStory ref={viewRef} text={text} placeholder={''} extensions={commandMenu} />
-    </CommandMenuProvider>
+    <PopoverMenuProvider groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={viewRef} text={text} extensions={extension} />
+    </PopoverMenuProvider>
   );
 };
 
-const groups: CommandMenuGroup[] = [
-  coreSlashCommands,
+const groups: PopoverMenuGroup[] = [
+  formattingCommands,
   linkSlashCommands,
   {
     id: 'custom',
@@ -62,7 +62,7 @@ const groups: CommandMenuGroup[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-editor/CommandMenu',
+  title: 'ui/react-ui-editor/PopoverMenu',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
@@ -74,7 +74,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burdon): Not working.
 export const Slash: Story = {
   args: {
     text: str('# Slash', '', names.join(' '), ''),
@@ -101,7 +100,7 @@ export const Link: Story = {
   render: (args: StoryProps) => {
     const { space } = useClientProvider();
     const getMenu = useCallback(
-      async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
+      async (trigger: string, query?: string): Promise<PopoverMenuGroup[]> => {
         if (trigger === '/') {
           return filterItems(groups, (item) =>
             query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
@@ -117,7 +116,7 @@ export const Link: Story = {
         const items = result.objects
           .filter((object) => object.name.toLowerCase().includes(name))
           .map(
-            (object): CommandMenuItem => ({
+            (object): PopoverMenuItem => ({
               id: object.id,
               label: object.name,
               icon: 'ph--user--regular',
@@ -152,7 +151,7 @@ export const Link: Story = {
     }),
   ],
   args: {
-    text: str('# Link', '', names.join(' '), ''),
+    text: str('# Link', ''),
     trigger: ['/', '@'],
     getMenu: () => [],
   },

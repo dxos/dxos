@@ -64,14 +64,15 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 };
 
 const meta = {
-  title: 'ui/react-ui-editor/CommandDialog',
+  title: 'ui/react-ui-editor/Autocomplete',
   render: () => (
     <EditorStory
-      text={str('# Command', '', '', '')}
+      text={str('# Command', '', '')}
       extensions={[
         commandDialog({
           renderDialog: createRenderer(CommandDialog),
           onHint: () => "Press '?' to ask a question",
+          delay: 1_000,
         }),
       ]}
     />

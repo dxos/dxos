@@ -35,7 +35,6 @@ import {
   links,
   longText,
   names,
-  renderLinkButton,
   text,
 } from './components';
 
@@ -198,7 +197,6 @@ export const Autocomplete: Story = {
     <EditorStory
       text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
       extensions={[
-        decorateMarkdown({ renderLinkButton }),
         autocomplete({
           onSuggest: (text) => {
             return links
@@ -215,14 +213,13 @@ export const Autocomplete: Story = {
 // Typeahead
 //
 
-const completions = ['type', 'AND', 'OR', 'NOT', 'dxos.org'];
+const completions = ['hello world!', 'AND', 'OR', 'NOT', 'dxos.org'];
 
 export const Typeahead: Story = {
   render: () => (
     <EditorStory
       text={str('# Typeahead', '')}
       extensions={[
-        decorateMarkdown({ renderLinkButton }),
         typeahead({
           onComplete: staticCompletion(completions, { minLength: 2 }),
         }),

@@ -22,21 +22,22 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
-} from '../components';
+  useComboboxContext,
+} from '../SearchList';
 
 type PopoverComboboxRootProps = ComboboxRootProps & { modal?: boolean };
 
 const PopoverComboboxRoot = ({
   modal,
   children,
-  open: propsOpen,
-  onOpenChange: propsOnOpenChange,
+  open: openParam,
   defaultOpen,
+  onOpenChange: onOpenChangeParam,
   ...props
 }: PopoverComboboxRootProps) => {
   const [open, onOpenChange] = useControllableState({
-    prop: propsOpen,
-    onChange: propsOnOpenChange,
+    prop: openParam,
+    onChange: onOpenChangeParam,
     defaultProp: defaultOpen,
   });
   return (
@@ -78,7 +79,7 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
     },
     forwardedRef,
   ) => {
-    const { modalId } = Combobox.useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
+    const { modalId } = useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
     return (
       <Popover.Content
         {...{

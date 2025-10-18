@@ -11,7 +11,7 @@ import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, 
 import { Icon, type IconProps, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { commandItem, searchListItem } from './SearchList';
+import { commandItem, searchListItem } from '../SearchList';
 
 const LISTBOX_NAME = 'Listbox';
 const LISTBOX_OPTION_NAME = 'ListboxOption';
