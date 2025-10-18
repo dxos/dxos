@@ -8,9 +8,9 @@ import React, { forwardRef, useCallback, useImperativeHandle, useMemo } from 're
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type MenuGroup,
-  type MenuItem,
-  MenuProvider,
+  type PopoverMenuGroup,
+  type PopoverMenuItem,
+  PopoverMenuProvider,
   type UseTextEditorProps,
   createBasicExtensions,
   createDataExtensions,
@@ -69,7 +69,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
       [view],
     );
 
-    const commandGroups: MenuGroup[] = useMemo(
+    const commandGroups: PopoverMenuGroup[] = useMemo(
       () => [
         {
           id: 'outliner-actions',
@@ -92,7 +92,7 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     const handleSelect = useCallback(
-      (item: MenuItem) => {
+      (item: PopoverMenuItem) => {
         if (view && item.onSelect) {
           return item.onSelect(view, view.state.selection.main.head);
         }
@@ -101,9 +101,9 @@ export const Outliner = forwardRef<OutlinerController, OutlinerProps>(
     );
 
     return (
-      <MenuProvider groups={commandGroups} onSelect={handleSelect}>
+      <PopoverMenuProvider groups={commandGroups} onSelect={handleSelect}>
         <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />
-      </MenuProvider>
+      </PopoverMenuProvider>
     );
   },
 );
