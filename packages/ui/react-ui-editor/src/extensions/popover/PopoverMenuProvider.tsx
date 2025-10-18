@@ -34,17 +34,18 @@ export const PopoverMenuProvider = ({
   children,
   groups,
   currentItem,
-  open: propsOpen,
+  open: openParam,
   defaultOpen,
   onSelect,
   onActivate,
   onOpenChange,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
+  const menuGroups = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const groupsWithItems = groups.filter((group) => group.items.length > 0);
+  const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useControllableState({
-    prop: propsOpen,
+    prop: openParam,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
@@ -65,7 +66,6 @@ export const PopoverMenuProvider = ({
     [onActivate],
   );
 
-  const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!rootRef || !handleDxAnchorActivate) {
       return;
@@ -79,41 +79,60 @@ export const PopoverMenuProvider = ({
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
+      <div role='none' className='contents' ref={setRootRef}>
+        {children}
+      </div>
+
+      <Popover.VirtualTrigger virtualRef={trigger} />
       <Popover.Portal>
         <Popover.Content
           align='start'
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+          classNames={tx(
+            'menu.content',
+            'menu--exotic-unfocusable',
+            { elevation: 'positioned' },
             'max-bs-80 overflow-y-auto',
-          ])}
+          )}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
-            <ul>
-              {groupsWithItems.map((group, index) => (
-                <Fragment key={group.id}>
-                  <MenuGroupComponent group={group} currentItem={currentItem} onSelect={onSelect} />
-                  {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
-                </Fragment>
-              ))}
-            </ul>
+            <Menu groups={menuGroups} currentItem={currentItem} onSelect={onSelect} />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
-      <Popover.VirtualTrigger virtualRef={trigger} />
-      <div role='none' className='contents' ref={setRootRef}>
-        {children}
-      </div>
     </Popover.Root>
   );
 };
 
-type MenuGroupComponentProps = {
+//
+// Menu
+//
+
+type MenuProps = {
+  groups: PopoverMenuGroup[];
+} & Pick<PopoverMenuProviderProps, 'currentItem' | 'onSelect'>;
+
+const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
+  const { tx } = useThemeContext();
+  return (
+    <ul>
+      {groups.map((group, index) => (
+        <Fragment key={group.id}>
+          <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
+          {index < groups.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
+        </Fragment>
+      ))}
+    </ul>
+  );
+};
+
+type MenuGroupProps = {
   group: PopoverMenuGroup;
   currentItem?: string;
 } & Pick<PopoverMenuProviderProps, 'onSelect'>;
 
-const MenuGroupComponent = ({ group, currentItem, onSelect }: MenuGroupComponentProps) => {
+const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
 
@@ -126,19 +145,19 @@ const MenuGroupComponent = ({ group, currentItem, onSelect }: MenuGroupComponent
       )}
 
       {group.items.map((item) => (
-        <MenuItemComponent key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
+        <MenuItem key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
       ))}
     </>
   );
 };
 
-type MenuItemComponentProps = {
+type MenuItemProps = {
   item: PopoverMenuItem;
   current: boolean;
   onSelect: (item: PopoverMenuItem) => void;
 };
 
-const MenuItemComponent = ({ item, current, onSelect }: MenuItemComponentProps) => {
+const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
 

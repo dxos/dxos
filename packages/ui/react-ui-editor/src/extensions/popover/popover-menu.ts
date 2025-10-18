@@ -15,9 +15,8 @@ export type PopoverMenuOptions = {
   // TODO(burdon): Replace with onKey?
   onClose?: () => void;
   onEnter?: () => void;
-  onArrowDown?: () => void;
   onArrowUp?: () => void;
-
+  onArrowDown?: () => void;
   onTextChange?: (trigger: string, text: string) => void;
 };
 
@@ -66,11 +65,11 @@ export const popoverMenu = (options: PopoverMenuOptions): Extension => {
       },
     },
     {
-      key: 'ArrowDown',
+      key: 'ArrowUp',
       run: (view) => {
         const activeRange = view.state.field(commandMenuState)?.range;
         if (activeRange) {
-          options.onArrowDown?.();
+          options.onArrowUp?.();
           return true;
         }
 
@@ -78,11 +77,11 @@ export const popoverMenu = (options: PopoverMenuOptions): Extension => {
       },
     },
     {
-      key: 'ArrowUp',
+      key: 'ArrowDown',
       run: (view) => {
         const activeRange = view.state.field(commandMenuState)?.range;
         if (activeRange) {
-          options.onArrowUp?.();
+          options.onArrowDown?.();
           return true;
         }
 
@@ -122,7 +121,7 @@ export const popoverMenu = (options: PopoverMenuOptions): Extension => {
 
   return [
     Prec.highest(popoverKeymap),
-    commandDecorations(options),
+    anchorDecorations(options),
     placeholder(
       Object.assign(
         {
@@ -136,10 +135,10 @@ export const popoverMenu = (options: PopoverMenuOptions): Extension => {
   ];
 };
 
-const commandDecorations = (options: PopoverMenuOptions) => {
+const anchorDecorations = (options: PopoverMenuOptions) => {
   return ViewPlugin.fromClass(
     class {
-      decorations: DecorationSet = Decoration.none;
+      _decorations: DecorationSet = Decoration.none;
 
       constructor(readonly view: EditorView) {}
 
@@ -149,7 +148,7 @@ const commandDecorations = (options: PopoverMenuOptions) => {
         const selection = update.view.state.selection.main;
         const { range: activeRange, trigger } = update.view.state.field(commandMenuState) ?? {};
 
-        // Check if we should show the widget - only if cursor is within the active command range.
+        // Check if we should show the widget (only if cursor is within the active command range).
         const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
         if (shouldShowWidget) {
           // Create mark decoration that wraps the entire line content in a dx-anchor.
@@ -179,11 +178,11 @@ const commandDecorations = (options: PopoverMenuOptions) => {
           options.onTextChange?.(trigger, content);
         }
 
-        this.decorations = builder.finish();
+        this._decorations = builder.finish();
       }
     },
     {
-      decorations: (v) => v.decorations,
+      decorations: (v) => v._decorations,
     },
   );
 };

@@ -10,12 +10,12 @@ import { type MaybePromise } from '@dxos/util';
 
 import { type PlaceholderOptions } from '../command-dialog';
 
-import { popoverMenu, commandRangeEffect } from './popover-menu';
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { commandRangeEffect, popoverMenu } from './popover-menu';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
-export type UsePopoverMenuOptions = {
+export type UsePopoverMenuProps = {
   // TODO(burdon): Extensions should not depend directly on the editor view.
   //  Instead this should be encapsulted entirely in the extension.
   viewRef: RefObject<EditorView | null>;
@@ -29,12 +29,13 @@ export type UsePopoverMenu = {
   extension: Extension;
 } & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
 
-export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePopoverMenuOptions): UsePopoverMenu => {
+export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePopoverMenuProps): UsePopoverMenu => {
   const currentRef = useRef<PopoverMenuItem | null>(null);
   const groupsRef = useRef<PopoverMenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
+  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
 
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open, trigger?) => {
@@ -45,7 +46,9 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
       setOpen(open);
       if (!open) {
         setCurrentItem(undefined);
-        viewRef.current?.dispatch({ effects: [commandRangeEffect.of(null)] }); // TODO(burdon): Move into extension.
+        viewRef.current?.dispatch({
+          effects: [commandRangeEffect.of(null)],
+        });
       }
     },
     [getMenu],
@@ -60,22 +63,20 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
 
       const triggerKey = event.trigger.getAttribute('data-trigger');
       if (!open && triggerKey) {
-        await handleOpenChange(true, triggerKey);
+        handleOpenChange(true, triggerKey);
       }
     },
     [open, handleOpenChange],
   );
 
   const handleSelect = useCallback<NonNullable<UsePopoverMenu['onSelect']>>((item) => {
-    if (!viewRef.current) {
+    const view = viewRef.current;
+    if (!view) {
       return;
     }
 
-    const selection = viewRef.current.state.selection.main;
-    void item.onSelect?.(viewRef.current, selection.head);
+    void item.onSelect?.(view, view.state.selection.main.head);
   }, []);
-
-  const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
 
   const extension = useMemo<Extension>(() => {
     return popoverMenu({

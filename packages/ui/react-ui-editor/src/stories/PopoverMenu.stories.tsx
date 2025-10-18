@@ -17,7 +17,7 @@ import {
   type PopoverMenuGroup,
   type PopoverMenuItem,
   PopoverMenuProvider,
-  type UsePopoverMenuOptions,
+  type UsePopoverMenuProps,
   filterItems,
   formattingCommands,
   insertAtCursor,
@@ -31,15 +31,15 @@ import { EditorStory, names } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-type StoryProps = Omit<UsePopoverMenuOptions, 'viewRef'> & { text: string };
+type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...options }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
-  const { groupsRef, extension: commandMenu, ...commandMenuProps } = usePopoverMenu({ viewRef, ...options });
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...options });
 
   return (
-    <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
-      <EditorStory ref={viewRef} text={text} placeholder={''} extensions={commandMenu} />
+    <PopoverMenuProvider groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={viewRef} text={text} extensions={extension} />
     </PopoverMenuProvider>
   );
 };

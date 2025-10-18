@@ -98,7 +98,10 @@ export const linkSlashCommands: PopoverMenuGroup = {
         view.dispatch({
           changes: { from: head, insert: '@' },
           selection: { anchor: head + 1, head: head + 1 },
-          effects: commandRangeEffect.of({ trigger: '@', range: { from: head, to: head + 1 } }),
+          effects: commandRangeEffect.of({
+            trigger: '@',
+            range: { from: head, to: head + 1 },
+          }),
         });
       },
     },
@@ -110,7 +113,10 @@ export const linkSlashCommands: PopoverMenuGroup = {
         view.dispatch({
           changes: { from: head, insert: '@@' },
           selection: { anchor: head + 2, head: head + 2 },
-          effects: commandRangeEffect.of({ trigger: '@', range: { from: head, to: head + 2 } }),
+          effects: commandRangeEffect.of({
+            trigger: '@',
+            range: { from: head, to: head + 2 },
+          }),
         });
       },
     },
