@@ -7,6 +7,7 @@ import { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
 /**
  * A stateful hook with a controlled value.
  * NOTE: Be careful not to provide an inlinde default array.
+ * @deprecated Use Radix `useControllableState`.
  */
 export const useControlledState = <T>(
   controlledValue: T,

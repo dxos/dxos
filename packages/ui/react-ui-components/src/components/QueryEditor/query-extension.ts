@@ -14,7 +14,7 @@ import { type EchoDatabase } from '@dxos/client/echo';
 import { Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
-import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
@@ -80,7 +80,7 @@ export const query = ({ db, tags }: QueryOptions = {}): Extension => {
       ],
     }),
     typeahead({
-      onComplete: ({ line }: TypeaheadContext) => {
+      onComplete: ({ line }: CompoetionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
           // TODO(burdon): Get suggestion from parser.
