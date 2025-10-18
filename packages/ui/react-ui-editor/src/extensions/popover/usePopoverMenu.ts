@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { popoverRangeEffect, popoverMenu } from './popover-menu';
+import { popoverMenu, popoverRangeEffect } from './popover-menu';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
@@ -81,18 +81,18 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
       trigger,
       placeholder,
       onClose: () => handleOpenChange(false),
-      onArrowDown: () => {
-        setCurrentItem((currentItem) => {
-          const next = getNextMenuItem(groupsRef.current, currentItem);
-          currentRef.current = next;
-          return next.id;
-        });
-      },
       onArrowUp: () => {
         setCurrentItem((currentItem) => {
           const previous = getPreviousMenuItem(groupsRef.current, currentItem);
           currentRef.current = previous;
           return previous.id;
+        });
+      },
+      onArrowDown: () => {
+        setCurrentItem((currentItem) => {
+          const next = getNextMenuItem(groupsRef.current, currentItem);
+          currentRef.current = next;
+          return next.id;
         });
       },
       onEnter: () => {

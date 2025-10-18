@@ -8,6 +8,8 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
+// TODO(burdon): Factor out popover vs. menu.
+
 export type PopoverMenuOptions = {
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
@@ -19,6 +21,7 @@ export type PopoverMenuOptions = {
   onEnter?: () => void;
   onArrowUp?: () => void;
   onArrowDown?: () => void;
+
   onTextChange?: (trigger: string, text: string) => void;
 };
 
@@ -26,20 +29,39 @@ export type PopoverMenuOptions = {
  * Creates a popover menu that appears when the trigger character is inserted.
  * This can be used for context menus or autocompletion.
  */
-// TODO(burdon): Factor out popover vs. menu.
 export const popoverMenu = (options: PopoverMenuOptions): Extension => {
-  // Listen for selection and document changes to clean up the command menu.
-  const updateListener = EditorView.updateListener.of(({ view, docChanged }) => {
-    const { trigger, range: activeRange } = view.state.field(popoverState) ?? {};
+  return [
+    Prec.highest(popoverKeymap(options)),
+    popoverStateField,
+    popoverTriggerListener(options),
+    popoverAnchorDecoration(options),
+    placeholder(
+      Object.assign(
+        {
+          // TODO(burdon): Translations.
+          content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+        },
+        options.placeholder,
+      ),
+    ),
+  ];
+};
+
+/**
+ * Listen for selection and document changes to clean up the command menu.
+ */
+const popoverTriggerListener = (options: PopoverMenuOptions) =>
+  EditorView.updateListener.of(({ view, docChanged }) => {
+    const { trigger, range: activeRange } = view.state.field(popoverStateField) ?? {};
     if (!activeRange || !trigger) {
       return;
     }
 
     const selection = view.state.selection.main;
-    const firstChar = view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
+    const char = view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
     const shouldRemove =
       // Trigger deleted.
-      firstChar !== trigger ||
+      char !== trigger ||
       // Cursor moved before the range.
       selection.head < activeRange.from ||
       // Cursor moved after the range (+1 to handle selection changing before doc).
@@ -56,22 +78,9 @@ export const popoverMenu = (options: PopoverMenuOptions): Extension => {
     }
   });
 
-  return [
-    Prec.highest(popoverKeymap(options)),
-    popoverAnchorDecoration(options),
-    popoverState,
-    updateListener,
-    placeholder(
-      Object.assign(
-        {
-          content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
-        },
-        options.placeholder,
-      ),
-    ),
-  ];
-};
-
+/**
+ * Popover menu navigation.
+ */
 const popoverKeymap = (options: PopoverMenuOptions) => {
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
   return keymap.of([
@@ -103,23 +112,10 @@ const popoverKeymap = (options: PopoverMenuOptions) => {
     })),
 
     {
-      key: 'Enter',
-      run: (view) => {
-        const activeRange = view.state.field(popoverState)?.range;
-        if (activeRange) {
-          view.dispatch({ changes: { from: activeRange.from, to: activeRange.to, insert: '' } });
-          options.onEnter?.();
-          return true;
-        }
-
-        return false;
-      },
-    },
-    {
       key: 'ArrowUp',
       run: (view) => {
-        const activeRange = view.state.field(popoverState)?.range;
-        if (activeRange) {
+        const range = view.state.field(popoverStateField)?.range;
+        if (range) {
           options.onArrowUp?.();
           return true;
         }
@@ -130,9 +126,22 @@ const popoverKeymap = (options: PopoverMenuOptions) => {
     {
       key: 'ArrowDown',
       run: (view) => {
-        const activeRange = view.state.field(popoverState)?.range;
-        if (activeRange) {
+        const range = view.state.field(popoverStateField)?.range;
+        if (range) {
           options.onArrowDown?.();
+          return true;
+        }
+
+        return false;
+      },
+    },
+    {
+      key: 'Enter',
+      run: (view) => {
+        const range = view.state.field(popoverStateField)?.range;
+        if (range) {
+          view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+          options.onEnter?.();
           return true;
         }
 
@@ -153,18 +162,19 @@ const popoverAnchorDecoration = (options: PopoverMenuOptions) => {
       constructor(readonly view: EditorView) {}
 
       // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
-      update(update: ViewUpdate) {
-        const builder = new RangeSetBuilder<Decoration>();
-        const selection = update.view.state.selection.main;
-        const { range: activeRange, trigger } = update.view.state.field(popoverState) ?? {};
+      update({ view, transactions }: ViewUpdate) {
+        const { range, trigger } = view.state.field(popoverStateField) ?? {};
 
         // Check if we should show the widget (only if cursor is within the active command range).
-        const shouldShowWidget = activeRange && selection.head >= activeRange.from && selection.head <= activeRange.to;
-        if (shouldShowWidget) {
-          // Create mark decoration that wraps the entire line content in a dx-anchor.
+        const selection = view.state.selection.main;
+        const showWidget = range && selection.head >= range.from && selection.head <= range.to;
+
+        const builder = new RangeSetBuilder<Decoration>();
+        if (showWidget) {
+          // Create decoration that wraps the entire line content in a dx-anchor.
           builder.add(
-            activeRange.from,
-            activeRange.to,
+            range.from,
+            range.to,
             Decoration.mark({
               tagName: 'dx-anchor',
               class: 'cm-floating-menu-trigger',
@@ -177,15 +187,10 @@ const popoverAnchorDecoration = (options: PopoverMenuOptions) => {
           );
         }
 
-        const activeRangeChanged = update.transactions.some((tr) =>
-          tr.effects.some((effect) => effect.is(popoverRangeEffect)),
-        );
-
-        if (activeRange && activeRangeChanged && trigger) {
-          const content = update.view.state.sliceDoc(
-            activeRange.from + 1, // Skip the trigger character.
-            activeRange.to,
-          );
+        const rangeChanged = transactions.some((tr) => tr.effects.some((effect) => effect.is(popoverRangeEffect)));
+        if (range && rangeChanged && trigger) {
+          // NOTE: Content skips the trigger character.
+          const content = view.state.sliceDoc(range.from + 1, range.to);
           options.onTextChange?.(trigger, content);
         }
 
@@ -207,7 +212,7 @@ type PopoverState = {
 export const popoverRangeEffect = StateEffect.define<PopoverState | null>();
 
 // State field to track the active popover menu range.
-const popoverState = StateField.define<PopoverState | null>({
+const popoverStateField = StateField.define<PopoverState | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;
