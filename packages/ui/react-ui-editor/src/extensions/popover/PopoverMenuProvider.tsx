@@ -43,43 +43,43 @@ export const PopoverMenuProvider = ({
   const { tx } = useThemeContext();
   const menuGroups = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
-  const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
+  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useControllableState({
     prop: openParam,
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
 
-  const handleDxAnchorActivate = useCallback(
-    (event: DxAnchorActivate) => {
-      const { trigger: dxTrigger, refId } = event;
-      // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
-      if (!refId) {
-        trigger.current = dxTrigger as HTMLButtonElement;
-        if (onActivate) {
-          onActivate(event);
-        } else {
-          queueMicrotask(() => setOpen(true));
-        }
-      }
-    },
-    [onActivate],
-  );
-
   useEffect(() => {
-    if (!rootRef || !handleDxAnchorActivate) {
+    if (!root) {
       return;
     }
 
-    return addEventListener(rootRef, 'dx-anchor-activate' as any, handleDxAnchorActivate, {
-      capture: true,
-      passive: false,
-    });
-  }, [rootRef, handleDxAnchorActivate]);
+    return addEventListener(
+      root,
+      'dx-anchor-activate' as any,
+      (event: DxAnchorActivate) => {
+        const { trigger: dxTrigger, refId } = event;
+        // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
+        if (!refId) {
+          trigger.current = dxTrigger as HTMLButtonElement;
+          if (onActivate) {
+            onActivate(event);
+          } else {
+            queueMicrotask(() => setOpen(true));
+          }
+        }
+      },
+      {
+        capture: true,
+        passive: false,
+      },
+    );
+  }, [root, onActivate]);
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <div role='none' className='contents' ref={setRootRef}>
+      <div ref={setRoot} role='none' className='contents'>
         {children}
       </div>
 
@@ -91,7 +91,8 @@ export const PopoverMenuProvider = ({
             'menu.content',
             'menu--exotic-unfocusable',
             { elevation: 'positioned' },
-            'max-bs-80 overflow-y-auto',
+            // TODO(burdon): Extract height to theme.
+            'max-bs-[16rem] overflow-y-auto',
           )}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
