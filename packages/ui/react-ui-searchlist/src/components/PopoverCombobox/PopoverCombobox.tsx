@@ -3,7 +3,7 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useCallback } from 'react';
 
 import {
   Popover,
@@ -18,11 +18,13 @@ import {
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
-  SearchListProvider,
   type SearchListRootProps,
 } from '../SearchList';
 
 import { Combobox, type ComboboxRootProps, type ComboboxTriggerProps, useComboboxContext } from './Combobox';
+
+const POPOVER_COMBOBOX_CONTENT_NAME = 'PopoverComboboxContent';
+const POPOVER_COMBOBOX_ITEM = 'PopoverComboboxItem';
 
 //
 // Root
@@ -44,14 +46,10 @@ const PopoverComboboxRoot = ({
     defaultProp: defaultOpen,
   });
 
-  console.log(props.onValueChange);
-
   return (
     <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
       <Combobox.Root open={open} onOpenChange={onOpenChange} {...props}>
-        <SearchListProvider onOpenChange={onOpenChange} onValueChange={props.onValueChange}>
-          {children}
-        </SearchListProvider>
+        {children}
       </Combobox.Root>
     </Popover.Root>
   );
@@ -60,8 +58,6 @@ const PopoverComboboxRoot = ({
 //
 // ContentProps
 //
-
-const POPOVER_COMBOBOX_CONTENT_NAME = 'PopoverComboboxContent';
 
 type PopoverComboboxContentProps = SearchListRootProps & PopoverContentProps;
 
@@ -92,6 +88,7 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
     forwardedRef,
   ) => {
     const { modalId } = useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
+
     return (
       <Popover.Content
         {...{
@@ -194,16 +191,29 @@ const PopoverComboboxList = forwardRef<HTMLDivElement, PopoverComboboxListProps>
 type PopoverComboboxItemProps = SearchListItemProps;
 
 const PopoverComboboxItem = forwardRef<HTMLDivElement, PopoverComboboxItemProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, onSelect, ...props }, forwardedRef) => {
+    const { onValueChange, onOpenChange } = useComboboxContext(POPOVER_COMBOBOX_ITEM);
+    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(
+      (nextValue) => {
+        onSelect?.(nextValue);
+        onValueChange?.(nextValue);
+        onOpenChange?.(false);
+      },
+      [onSelect, onValueChange, onOpenChange],
+    );
+
     return (
       <SearchList.Item
         {...props}
         classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
+        onSelect={handleSelect}
         ref={forwardedRef}
       />
     );
   },
 );
+
+PopoverComboboxItem.displayName = POPOVER_COMBOBOX_ITEM;
 
 //
 // Arrow

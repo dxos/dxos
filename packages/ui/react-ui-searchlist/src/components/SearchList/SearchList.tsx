@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
-import React, { type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import {
   type TextInputProps,
@@ -18,7 +17,6 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
-// TODO(burdon): Factor out.
 const commandItem = 'flex items-center overflow-hidden';
 const searchListItem =
   'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
@@ -27,38 +25,21 @@ const SEARCHLIST_NAME = 'SearchList';
 const SEARCHLIST_ITEM_NAME = 'SearchListItem';
 
 //
-// Context
-//
-
-type SearchListContextValue = {
-  onOpenChange: (nextOpen: boolean) => void;
-  onValueChange: (nextValue: string) => void;
-};
-
-export const [SearchListProvider, useSearchListContext] = createContext<Partial<SearchListContextValue>>(
-  SEARCHLIST_NAME,
-  {},
-);
-
-//
 // Root
 //
 
 type SearchListVariant = 'list' | 'menu' | 'listbox';
 
-type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>> &
-  Partial<SearchListContextValue> & {
-    variant?: SearchListVariant;
-  };
+type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>> & {
+  variant?: SearchListVariant;
+};
 
 const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <SearchListProvider {...props}>
-        <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
-          {children}
-        </CommandRoot>
-      </SearchListProvider>
+      <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
+        {children}
+      </CommandRoot>
     );
   },
 );
@@ -148,20 +129,9 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ children, classNames, onSelect, ...props }, forwardedRef) => {
-    const { onValueChange, onOpenChange } = useSearchListContext(SEARCHLIST_ITEM_NAME);
-    const handleSelect = useCallback(
-      (nextValue: string) => {
-        console.log(nextValue, onValueChange);
-        onValueChange?.(nextValue);
-        onOpenChange?.(false);
-        onSelect?.(nextValue);
-      },
-      [onValueChange, onOpenChange, onSelect],
-    );
-
+  ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandItem {...props} onSelect={handleSelect} className={mx(searchListItem, classNames)} ref={forwardedRef}>
+      <CommandItem {...props} className={mx(searchListItem, classNames)} ref={forwardedRef}>
         {children}
       </CommandItem>
     );
