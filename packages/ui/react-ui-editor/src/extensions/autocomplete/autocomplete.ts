@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prec } from '@codemirror/state';
+import { type Extension, Prec } from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
