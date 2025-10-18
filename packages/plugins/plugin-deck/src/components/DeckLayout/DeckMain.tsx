@@ -183,6 +183,7 @@ export const DeckMain = () => {
           classNames={mainPosition}
           style={
             {
+              '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
               '--dx-main-sidebarWidth':
                 sidebarState === 'expanded'
                   ? 'var(--nav-sidebar-size)'
@@ -223,7 +224,7 @@ export const DeckMain = () => {
             >
               {active.map((entryId) => (
                 <Fragment key={entryId}>
-                  <PlankSeparator order={order[entryId] - 1} />
+                  <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.enableDeck} />
                   <Plank
                     id={entryId}
                     companionId={activeCompanions?.[entryId]}
