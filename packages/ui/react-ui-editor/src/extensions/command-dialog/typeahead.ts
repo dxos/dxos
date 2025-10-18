@@ -13,7 +13,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { Hint } from './hint';
+import { PlaceholderWidget } from './hint';
 
 export type TypeaheadContext = { line: string };
 
@@ -57,7 +57,7 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
             const str = update.state.sliceDoc(line.from, selection.from);
             hint = onComplete?.({ line: str });
             if (hint) {
-              builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
+              builder.add(selection.from, selection.to, Decoration.widget({ widget: new PlaceholderWidget(hint) }));
             }
           }
 

@@ -15,16 +15,20 @@ export type HintOptions = {
   onHint?: () => string | undefined;
 };
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Reconcile with `placeholder`.
 export const hint = ({ delay = 3_000, onHint }: HintOptions): Extension => {
   return ViewPlugin.fromClass(
     class {
-      decorations = Decoration.none;
-      timeout: ReturnType<typeof setTimeout> | undefined;
+      _timeout: ReturnType<typeof setTimeout> | undefined;
+      _decorations = Decoration.none;
 
       update(update: ViewUpdate) {
-        if (this.timeout) {
-          clearTimeout(this.timeout);
-          this.timeout = undefined;
+        if (this._timeout) {
+          clearTimeout(this._timeout);
+          this._timeout = undefined;
         }
 
         const builder = new RangeSetBuilder<Decoration>();
@@ -35,34 +39,34 @@ export const hint = ({ delay = 3_000, onHint }: HintOptions): Extension => {
           // Only show if blank line.
           if (selection.from === selection.to && line.from === line.to) {
             // Set timeout to add decoration after delay.
-            this.timeout = setTimeout(() => {
+            this._timeout = setTimeout(() => {
               const hint = onHint?.();
               if (hint) {
                 const builder = new RangeSetBuilder<Decoration>();
-                builder.add(selection.from, selection.to, Decoration.widget({ widget: new Hint(hint) }));
-                this.decorations = builder.finish();
+                builder.add(selection.from, selection.to, Decoration.widget({ widget: new PlaceholderWidget(hint) }));
+                this._decorations = builder.finish();
                 update.view.update([]);
               }
             }, delay);
           }
         }
 
-        this.decorations = builder.finish();
+        this._decorations = builder.finish();
       }
 
       destroy() {
-        if (this.timeout) {
-          clearTimeout(this.timeout);
+        if (this._timeout) {
+          clearTimeout(this._timeout);
         }
       }
     },
     {
-      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?.decorations ?? Decoration.none)],
+      provide: (plugin) => [EditorView.decorations.of((view) => view.plugin(plugin)?._decorations ?? Decoration.none)],
     },
   );
 };
 
-export class Hint extends WidgetType {
+export class PlaceholderWidget extends WidgetType {
   constructor(readonly content: string | HTMLElement) {
     super();
   }
@@ -91,7 +95,12 @@ export class Hint extends WidgetType {
     const rect = flattenRect(rects[0], style.direction !== 'rtl');
     const lineHeight = parseInt(style.lineHeight);
     if (rect.bottom - rect.top > lineHeight * 1.5) {
-      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.top + lineHeight };
+      return {
+        left: rect.left,
+        right: rect.right,
+        top: rect.top,
+        bottom: rect.top + lineHeight,
+      };
     }
 
     return rect;
