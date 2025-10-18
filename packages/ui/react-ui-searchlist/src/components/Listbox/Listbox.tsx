@@ -92,7 +92,7 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
         <ul
           role='listbox'
           {...rootProps}
-          className={mx('p-cardSpacingChrome', classNames)}
+          className={mx('is-full p-cardSpacingChrome', classNames)}
           ref={rootRef}
           {...arrowGroup}
         >

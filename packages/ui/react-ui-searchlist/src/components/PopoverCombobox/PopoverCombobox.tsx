@@ -13,17 +13,20 @@ import {
 } from '@dxos/react-ui';
 
 import {
-  Combobox,
-  type ComboboxRootProps,
-  type ComboboxTriggerProps,
   SearchList,
   type SearchListContentProps,
   type SearchListEmptyProps,
   type SearchListInputProps,
   type SearchListItemProps,
+  SearchListProvider,
   type SearchListRootProps,
-  useComboboxContext,
 } from '../SearchList';
+
+import { Combobox, type ComboboxRootProps, type ComboboxTriggerProps, useComboboxContext } from './Combobox';
+
+//
+// Root
+//
 
 type PopoverComboboxRootProps = ComboboxRootProps & { modal?: boolean };
 
@@ -40,18 +43,27 @@ const PopoverComboboxRoot = ({
     onChange: onOpenChangeParam,
     defaultProp: defaultOpen,
   });
+
+  console.log(props.onValueChange);
+
   return (
-    <Combobox.Root open={open} onOpenChange={onOpenChange} {...props}>
-      <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
-        {children}
-      </Popover.Root>
-    </Combobox.Root>
+    <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+      <Combobox.Root open={open} onOpenChange={onOpenChange} {...props}>
+        <SearchListProvider onOpenChange={onOpenChange} onValueChange={props.onValueChange}>
+          {children}
+        </SearchListProvider>
+      </Combobox.Root>
+    </Popover.Root>
   );
 };
 
-type PopoverComboboxContentProps = SearchListRootProps & PopoverContentProps;
+//
+// ContentProps
+//
 
 const POPOVER_COMBOBOX_CONTENT_NAME = 'PopoverComboboxContent';
+
+type PopoverComboboxContentProps = SearchListRootProps & PopoverContentProps;
 
 const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContentProps>(
   (
@@ -118,6 +130,10 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
 
 PopoverComboboxContent.displayName = POPOVER_COMBOBOX_CONTENT_NAME;
 
+//
+// Trigger
+//
+
 type PopoverComboboxTriggerProps = ComboboxTriggerProps;
 
 const PopoverComboboxTrigger = forwardRef<HTMLButtonElement, PopoverComboboxTriggerProps>((props, forwardedRef) => {
@@ -127,6 +143,10 @@ const PopoverComboboxTrigger = forwardRef<HTMLButtonElement, PopoverComboboxTrig
     </Popover.Trigger>
   );
 });
+
+//
+// VirtualTrigger
+//
 
 type PopoverComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
 
@@ -149,6 +169,10 @@ const PopoverComboboxInput = forwardRef<HTMLInputElement, PopoverComboboxInputPr
   },
 );
 
+//
+// List
+//
+
 type PopoverComboboxListProps = SearchListContentProps;
 
 const PopoverComboboxList = forwardRef<HTMLDivElement, PopoverComboboxListProps>(
@@ -162,6 +186,10 @@ const PopoverComboboxList = forwardRef<HTMLDivElement, PopoverComboboxListProps>
     );
   },
 );
+
+//
+// Item
+//
 
 type PopoverComboboxItemProps = SearchListItemProps;
 
@@ -177,13 +205,25 @@ const PopoverComboboxItem = forwardRef<HTMLDivElement, PopoverComboboxItemProps>
   },
 );
 
+//
+// Arrow
+//
+
 type PopoverComboboxArrowProps = PopoverArrowProps;
 
 const PopoverComboboxArrow = Popover.Arrow;
 
+//
+// Empty
+//
+
 type PopoverComboboxEmptyProps = SearchListEmptyProps;
 
 const PopoverComboboxEmpty = SearchList.Empty;
+
+//
+// PopoverCombobox
+//
 
 export const PopoverCombobox = {
   Root: PopoverComboboxRoot,

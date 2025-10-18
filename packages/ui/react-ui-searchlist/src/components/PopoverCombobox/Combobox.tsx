@@ -9,6 +9,8 @@ import React, { type PropsWithChildren, forwardRef, useCallback } from 'react';
 import { Button, type ButtonProps, Icon, useId } from '@dxos/react-ui';
 import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
 
+// TOOD(burdon): Merge with PopoverCombobox.
+
 type ComboboxContextValue = {
   modalId: string;
   isCombobox: true;

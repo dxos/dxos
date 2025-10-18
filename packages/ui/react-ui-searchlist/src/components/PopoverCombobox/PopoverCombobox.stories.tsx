@@ -8,20 +8,27 @@ import React from 'react';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
+
 import { PopoverCombobox } from './PopoverCombobox';
 
 faker.seed(1234);
 
-const storybookItems = faker.helpers.uniqueArray(faker.commerce.productName, 16);
+const items = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
 const DefaultStory = () => {
   return (
-    <PopoverCombobox.Root placeholder='Nothing selected'>
+    <PopoverCombobox.Root
+      placeholder='Nothing selected'
+      onValueChange={(value) => {
+        console.log('[PopoverCombobox.Root.onValueChange]', value);
+      }}
+    >
       <PopoverCombobox.Trigger />
       <PopoverCombobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
         <PopoverCombobox.Input placeholder='Search...' />
         <PopoverCombobox.List>
-          {storybookItems.map((value) => (
+          {items.map((value) => (
             <PopoverCombobox.Item key={value}>{value}</PopoverCombobox.Item>
           ))}
         </PopoverCombobox.List>
@@ -36,6 +43,13 @@ const meta = {
   component: PopoverCombobox.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    translations,
+    layout: {
+      type: 'column',
+      className: 'p-2',
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

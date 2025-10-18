@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { createContext } from '@radix-ui/react-context';
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
 
@@ -11,13 +12,33 @@ import {
   useDensityContext,
   useElevationContext,
   useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useComboboxContext } from './Combobox';
+import { translationKey } from '../../translations';
+
+// TODO(burdon): Factor out.
+const commandItem = 'flex items-center overflow-hidden';
+const searchListItem =
+  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
 
 const SEARCHLIST_NAME = 'SearchList';
 const SEARCHLIST_ITEM_NAME = 'SearchListItem';
+
+//
+// Context
+//
+
+type SearchListContextValue = {
+  onOpenChange: (nextOpen: boolean) => void;
+  onValueChange: (nextValue: string) => void;
+};
+
+export const [SearchListProvider, useSearchListContext] = createContext<Partial<SearchListContextValue>>(
+  SEARCHLIST_NAME,
+  {},
+);
 
 //
 // Root
@@ -25,16 +46,19 @@ const SEARCHLIST_ITEM_NAME = 'SearchListItem';
 
 type SearchListVariant = 'list' | 'menu' | 'listbox';
 
-type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>> & {
-  variant?: SearchListVariant;
-};
+type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandRoot>> &
+  Partial<SearchListContextValue> & {
+    variant?: SearchListVariant;
+  };
 
 const SearchListRoot = forwardRef<HTMLDivElement, SearchListRootProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
-        {children}
-      </CommandRoot>
+      <SearchListProvider {...props}>
+        <CommandRoot {...props} className={mx(classNames)} ref={forwardedRef}>
+          {children}
+        </CommandRoot>
+      </SearchListProvider>
     );
   },
 );
@@ -53,6 +77,9 @@ type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onC
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const placeholder = props.placeholder ?? t('search.placeholder');
+
     // TODO(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
@@ -62,6 +89,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <CommandInput
         {...props}
+        placeholder={placeholder}
         className={tx(
           'input.input',
           'input',
@@ -119,22 +147,19 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
-// TODO(burdon): Factor out.
-const commandItem = 'flex items-center overflow-hidden';
-const searchListItem =
-  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
-
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
   ({ children, classNames, onSelect, ...props }, forwardedRef) => {
-    const { onValueChange, onOpenChange } = useComboboxContext(SEARCHLIST_ITEM_NAME);
+    const { onValueChange, onOpenChange } = useSearchListContext(SEARCHLIST_ITEM_NAME);
     const handleSelect = useCallback(
       (nextValue: string) => {
+        console.log(nextValue, onValueChange);
         onValueChange?.(nextValue);
         onOpenChange?.(false);
         onSelect?.(nextValue);
       },
       [onValueChange, onOpenChange, onSelect],
     );
+
     return (
       <CommandItem {...props} onSelect={handleSelect} className={mx(searchListItem, classNames)} ref={forwardedRef}>
         {children}
