@@ -41,7 +41,7 @@ export default () =>
           const template = templates.find((template) => template.id === initialTemplateId);
           if (template) {
             content = template.source;
-            name = name ?? template.name;
+            name = name || template.name;
           }
         }
 
