@@ -77,7 +77,7 @@
     "@tldraw/tldraw": "^3.0.0",
     "@tldraw/tlschema": "^3.0.0",
     "@tldraw/utils": "^3.0.0",
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "lodash.defaultsdeep": "^4.6.1",
     "react-resize-detector": "^11.0.1"
   },
