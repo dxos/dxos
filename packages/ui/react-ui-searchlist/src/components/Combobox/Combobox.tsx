@@ -56,6 +56,7 @@ const ComboboxRoot = ({
     onChange: propsOnValueChange,
     defaultProp: defaultValue,
   });
+
   return (
     <ComboboxProvider
       isCombobox
@@ -89,6 +90,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
       },
       [onClick, onOpenChange],
     );
+
     return (
       <Button
         {...props}

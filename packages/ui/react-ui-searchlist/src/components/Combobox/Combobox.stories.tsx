@@ -21,7 +21,7 @@ const DefaultStory = () => {
     <PopoverCombobox.Root
       placeholder='Nothing selected'
       onValueChange={(value) => {
-        console.log('[PopoverCombobox.Root.onValueChange]', value);
+        console.log('[Combobox.Root.onValueChange]', value);
       }}
     >
       <PopoverCombobox.Trigger />
@@ -39,7 +39,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-searchlist/PopoverCombobox',
+  title: 'ui/react-ui-searchlist/Combobox',
   component: PopoverCombobox.Root as any,
   render: DefaultStory,
   decorators: [withTheme],

@@ -18,15 +18,12 @@ const LISTBOX_OPTION_NAME = 'ListboxOption';
 const LISTBOX_OPTION_LABEL_NAME = 'ListboxOptionLabel';
 const LISTBOX_OPTION_INDICATOR_NAME = 'ListboxOptionIndicator';
 
+//
+// Context
+//
+
 type ListboxScopedProps<P> = P & { __listboxScope?: Scope };
 type ListboxOptionScopedProps<P> = P & { __listboxOptionScope?: Scope };
-
-type ListboxRootProps = ThemedClassName<ComponentPropsWithRef<'ul'>> & {
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-  autoFocus?: boolean;
-};
 
 type ListboxOptionProps = ThemedClassName<ComponentPropsWithRef<'li'>> & {
   value: string;
@@ -50,6 +47,17 @@ type ListboxOptionContextValue = {
 const [ListboxProvider, useListboxContext] = createListboxContext<ListboxContextValue>(LISTBOX_NAME);
 const [ListboxOptionProvider, useListboxOptionContext] =
   createListboxOptionContext<ListboxOptionContextValue>(LISTBOX_OPTION_NAME);
+
+//
+// Root
+//
+
+type ListboxRootProps = ThemedClassName<ComponentPropsWithRef<'ul'>> & {
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  autoFocus?: boolean;
+};
 
 // TODO(thure): Note that this overlaps significantly with the the `SelectableListbox` story of `List.tsx` in `react-ui`,
 //  making this an exemplar of `List` specifying standard `role="listbox"` interactivity, though it is here because it
@@ -105,6 +113,10 @@ const ListboxRoot = forwardRef<HTMLUListElement, ListboxRootProps>(
 
 ListboxRoot.displayName = LISTBOX_NAME;
 
+//
+// Option
+//
+
 const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
   (props: ListboxScopedProps<ListboxOptionProps>, forwardedRef) => {
     const { __listboxScope, children, classNames, value, ...rootProps } = props;
@@ -141,6 +153,10 @@ const ListboxOption = forwardRef<HTMLLIElement, ListboxOptionProps>(
 
 ListboxOption.displayName = LISTBOX_OPTION_NAME;
 
+//
+// OptionLabel
+//
+
 const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentPropsWithRef<'div'>>>(
   ({ children, classNames, ...rootProps }, forwardedRef) => {
     return (
@@ -154,6 +170,10 @@ const ListboxOptionLabel = forwardRef<HTMLDivElement, ThemedClassName<ComponentP
 ListboxOptionLabel.displayName = LISTBOX_OPTION_LABEL_NAME;
 
 type ListboxOptionIndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
+
+//
+// OptionIndicator
+//
 
 const ListboxOptionIndicator = forwardRef<SVGSVGElement, ListboxOptionIndicatorProps>(
   (props: ListboxOptionScopedProps<ListboxOptionIndicatorProps>, forwardedRef) => {
@@ -172,6 +192,10 @@ const ListboxOptionIndicator = forwardRef<SVGSVGElement, ListboxOptionIndicatorP
 );
 
 ListboxOptionIndicator.displayName = LISTBOX_OPTION_INDICATOR_NAME;
+
+//
+// Listbox
+//
 
 export const Listbox = {
   Root: ListboxRoot,
