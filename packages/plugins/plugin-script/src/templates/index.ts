@@ -6,11 +6,11 @@ import chat from './chat.ts?raw';
 import chess from './chess.ts?raw';
 import dataGenerator from './data-generator.ts?raw';
 import discord from './discord.ts?raw';
-import echo from './echo.ts?raw';
 import email from './email.ts?raw';
 import forexEffect from './forex-effect.ts?raw';
 import forex from './forex.ts?raw';
 import gmail from './gmail.ts?raw';
+import ping from './ping.ts?raw';
 
 const removeHeader = (str: string) => str.split('\n').slice(4).join('\n');
 
@@ -23,11 +23,11 @@ export type Template = {
   presetId?: string;
 };
 
-export const templates: Template[] = [
+export const templates = [
   {
-    id: 'dxos.org/script/echo',
-    name: 'Echo',
-    source: removeHeader(echo),
+    id: 'dxos.org/script/ping',
+    name: 'Ping',
+    source: removeHeader(ping),
   },
   {
     id: 'dxos.org/script/forex',
@@ -75,4 +75,4 @@ export const templates: Template[] = [
     source: removeHeader(dataGenerator),
     presetId: 'dxos.org/function/data-generator',
   },
-];
+] as const;
