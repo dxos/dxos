@@ -121,6 +121,7 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
+// TODO(burdon): Factor out.
 const commandItem = 'flex items-center overflow-hidden';
 const searchListItem =
   'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
