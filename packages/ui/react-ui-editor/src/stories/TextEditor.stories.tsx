@@ -13,7 +13,6 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { editorMonospace } from '../defaults';
 import {
   InputModeExtensions,
-  autocomplete,
   decorateMarkdown,
   folding,
   image,
@@ -32,7 +31,6 @@ import {
   defaultExtensions,
   global,
   largeWithImages,
-  links,
   longText,
   names,
   text,
@@ -189,31 +187,10 @@ export const Typescript: Story = {
 };
 
 //
-// Autocomplete
-//
-
-export const Autocomplete: Story = {
-  render: () => (
-    <EditorStory
-      text={str('# Autocomplete', '', 'Press Ctrl-Space...', content.footer)}
-      extensions={[
-        autocomplete({
-          onSuggest: (text) => {
-            return links
-              .filter(({ label }) => label.toLowerCase().includes(text.toLowerCase()))
-              .map(({ label }) => label);
-          },
-        }),
-      ]}
-    />
-  ),
-};
-
-//
 // Typeahead
 //
 
-const completions = ['hello world!', 'AND', 'OR', 'NOT', 'dxos.org'];
+const completions = ['hello world!', 'dxos.org'];
 
 export const Typeahead: Story = {
   render: () => (

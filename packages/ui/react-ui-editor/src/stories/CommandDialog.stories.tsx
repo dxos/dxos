@@ -10,13 +10,12 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 import { editorWidth } from '../defaults';
-import { type Action, commandDialog } from '../extensions';
 import { str } from '../testing';
-import { createRenderer } from '../util';
 
 import { EditorStory } from './components';
 
-const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) => {
+// TODO(burdon): Reimplement with Popover.
+const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
   const [text, setText] = useState('');
 
   const handleInsert = () => {
@@ -64,19 +63,8 @@ const CommandDialog = ({ onAction }: { onAction: (action?: Action) => void }) =>
 };
 
 const meta = {
-  title: 'ui/react-ui-editor/Autocomplete',
-  render: () => (
-    <EditorStory
-      text={str('# Command', '', '')}
-      extensions={[
-        commandDialog({
-          renderDialog: createRenderer(CommandDialog),
-          onHint: () => "Press '?' to ask a question",
-          delay: 1_000,
-        }),
-      ]}
-    />
-  ),
+  title: 'ui/react-ui-editor/CommandDialog',
+  render: () => <EditorStory text={str('# Command', '', '')} extensions={[]} />,
   decorators: [withTheme],
   parameters: {
     layout: 'fullscreen',

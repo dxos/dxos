@@ -8,49 +8,43 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
-// TODO(burdon): Factor out popover vs. menu.
-
-export type PopoverMenuOptions = {
+export type PopoverOptions = {
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
 
-  // TODO(burdon): Replace with onKey?
+  // Trigger update.
+  onTextChange?: (trigger: string, text: string) => void;
   onClose?: () => void;
 
-  // TOOD(burdon): Menu specific.
+  // Menu specific.
+  // TODO(burdon): Handle Escape.
   onEnter?: () => void;
   onArrowUp?: () => void;
   onArrowDown?: () => void;
-
-  onTextChange?: (trigger: string, text: string) => void;
 };
 
 /**
- * Creates a popover menu that appears when the trigger character is inserted.
+ * Creates a popover that appears when the trigger character is inserted.
  * This can be used for context menus or autocompletion.
  */
-export const popoverMenu = (options: PopoverMenuOptions): Extension => {
+export const popover = (options: PopoverOptions): Extension => {
   return [
     Prec.highest(popoverKeymap(options)),
     popoverStateField,
     popoverTriggerListener(options),
     popoverAnchorDecoration(options),
-    placeholder(
-      Object.assign(
-        {
-          // TODO(burdon): Translations.
-          content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
-        },
-        options.placeholder,
-      ),
-    ),
+    placeholder({
+      // TODO(burdon): Translations.
+      content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+      ...options.placeholder,
+    }),
   ];
 };
 
 /**
- * Listen for selection and document changes to clean up the command menu.
+ * Listen for selection and document changes.
  */
-const popoverTriggerListener = (options: PopoverMenuOptions) =>
+const popoverTriggerListener = (options: PopoverOptions) =>
   EditorView.updateListener.of(({ view, docChanged }) => {
     const { trigger, range: activeRange } = view.state.field(popoverStateField) ?? {};
     if (!activeRange || !trigger) {
@@ -79,15 +73,15 @@ const popoverTriggerListener = (options: PopoverMenuOptions) =>
   });
 
 /**
- * Popover menu navigation.
+ * Popover navigation.
  */
-const popoverKeymap = (options: PopoverMenuOptions) => {
+const popoverKeymap = (options: PopoverOptions) => {
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
   return keymap.of([
     ...triggers.map((trigger) => ({
       key: trigger,
       run: (view: EditorView) => {
-        // Determine if we should trigger the popover menu:
+        // Determine if we should trigger the popover:
         // 1. Empty lines or at the beginning of a line
         // 2. When there's a preceding space
         const from = view.state.selection.main.head;
@@ -154,7 +148,7 @@ const popoverKeymap = (options: PopoverMenuOptions) => {
 /**
  * Creates a <dx-anchor> tag, which is used to anchor the Popver.
  */
-const popoverAnchorDecoration = (options: PopoverMenuOptions) => {
+const popoverAnchorDecoration = (options: PopoverOptions) => {
   return ViewPlugin.fromClass(
     class {
       _decorations: DecorationSet = Decoration.none;
@@ -177,7 +171,7 @@ const popoverAnchorDecoration = (options: PopoverMenuOptions) => {
             range.to,
             Decoration.mark({
               tagName: 'dx-anchor',
-              class: 'cm-floating-menu-trigger',
+              class: 'cm-popover-trigger',
               attributes: {
                 'data-visible-focus': 'false',
                 'data-auto-trigger': 'true',
@@ -208,10 +202,10 @@ type PopoverState = {
   range: Range;
 };
 
-// State effects for managing popover menu state.
+// State effects for managing popover state.
 export const popoverRangeEffect = StateEffect.define<PopoverState | null>();
 
-// State field to track the active popover menu range.
+// State field to track the active popover trigger range.
 const popoverStateField = StateField.define<PopoverState | null>({
   create: () => null,
   update: (value, tr) => {

@@ -13,17 +13,16 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { PlaceholderWidget } from './hint';
+import { type CompoetionContext } from './match';
+import { PlaceholderWidget } from './placeholder';
 
-export type TypeaheadContext = { line: string };
-
-// TODO(burdon): Option to complete only at end of line?
+// TODO(burdon): Option to complete only at end of line.
 export type TypeaheadOptions = {
-  onComplete?: (context: TypeaheadContext) => string | undefined;
+  onComplete?: (context: CompoetionContext) => string | undefined;
 };
 
 /**
- * CodeMirror extension for typeahead completion.
+ * Shows a completion placeholder.
  */
 export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
   let hint: string | undefined;
@@ -85,45 +84,4 @@ export const typeahead = ({ onComplete }: TypeaheadOptions = {}): Extension => {
       ]),
     ),
   ];
-};
-
-type CompletionOptions = {
-  default?: string;
-  minLength?: number;
-};
-
-/**
- * Util to match current line to a static list of completions.
- */
-export const staticCompletion =
-  (completions: string[], options: CompletionOptions = {}) =>
-  ({ line }: TypeaheadContext) => {
-    if (line.length === 0 && options.default) {
-      return options.default;
-    }
-
-    const parts = line.split(/\s+/).filter(Boolean);
-    if (parts.length) {
-      const str = parts.at(-1)!;
-      if (str.length >= (options.minLength ?? 0)) {
-        for (const completion of completions) {
-          const match = matchCompletion(completion, str);
-          if (match) {
-            return match;
-          }
-        }
-      }
-    }
-  };
-
-export const matchCompletion = (completion: string, str: string, minLength = 0): string | undefined => {
-  if (
-    str.length >= minLength &&
-    completion.length > str.length &&
-    completion.startsWith(str)
-    // TODO(burdon): If case insensitive, need to replace existing chars.
-    // completion.toLowerCase().startsWith(str.toLowerCase())
-  ) {
-    return completion.slice(str.length);
-  }
 };

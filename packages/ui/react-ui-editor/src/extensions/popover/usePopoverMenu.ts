@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { popoverMenu, popoverRangeEffect } from './popover-menu';
+import { popover as popover, popoverRangeEffect } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
@@ -77,7 +77,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
   const extension = useMemo<Extension>(() => {
-    return popoverMenu({
+    return popover({
       trigger,
       placeholder,
       onClose: () => handleOpenChange(false),

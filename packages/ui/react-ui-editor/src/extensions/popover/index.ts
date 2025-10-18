@@ -4,7 +4,7 @@
 
 export * from './menu';
 export * from './menu-presets';
-export * from './popover-menu';
+export * from './popover';
 export * from './util';
 
 export * from './PopoverMenuProvider';

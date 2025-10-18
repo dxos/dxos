@@ -69,19 +69,12 @@ export const placeholder = ({ content, delay = 3_000 }: PlaceholderOptions): Ext
     : plugin;
 };
 
-class PlaceholderWidget extends WidgetType {
+export class PlaceholderWidget extends WidgetType {
   constructor(readonly content: Content) {
     super();
   }
 
   toDOM(view: EditorView) {
-    // return Domino.of('span')
-    //   .classNames('cm-placeholder')
-    //   .style({ pointerEvents: 'none' })
-    //   .attr('ariaHidden', 'true')
-    //   .children()
-    //   .build();
-
     const wrap = document.createElement('span');
     wrap.className = 'cm-placeholder';
     wrap.style.pointerEvents = 'none';
@@ -104,8 +97,8 @@ class PlaceholderWidget extends WidgetType {
     }
 
     const style = getComputedStyle(dom.parentNode as HTMLElement);
-    const lineHeight = parseInt(style.lineHeight);
     const rect = flattenRect(rects[0], style.direction !== 'rtl');
+    const lineHeight = parseInt(style.lineHeight);
     if (rect.bottom - rect.top > lineHeight * 1.5) {
       return {
         left: rect.left,
