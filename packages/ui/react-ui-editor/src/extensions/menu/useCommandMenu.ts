@@ -11,8 +11,8 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../command-dialog';
 
 import { commandMenu, commandRangeEffect } from './command-menu';
-import { type CommandMenuProps } from './CommandMenu';
-import { type CommandMenuGroup, type CommandMenuItem } from './menu';
+import { type MenuGroup, type MenuItem } from './menu';
+import { type MenuProviderProps } from './MenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UseCommandMenuOptions = {
@@ -21,17 +21,17 @@ export type UseCommandMenuOptions = {
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
-  getMenu: (trigger: string, query?: string) => MaybePromise<CommandMenuGroup[]>;
+  getMenu: (trigger: string, query?: string) => MaybePromise<MenuGroup[]>;
 };
 
 export type UseCommandMenu = {
-  groupsRef: RefObject<CommandMenuGroup[]>;
+  groupsRef: RefObject<MenuGroup[]>;
   extension: Extension;
-} & Pick<CommandMenuProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
+} & Pick<MenuProviderProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
 
 export const useCommandMenu = ({ viewRef, trigger, placeholder, getMenu }: UseCommandMenuOptions): UseCommandMenu => {
-  const currentRef = useRef<CommandMenuItem | null>(null);
-  const groupsRef = useRef<CommandMenuGroup[]>([]);
+  const currentRef = useRef<MenuItem | null>(null);
+  const groupsRef = useRef<MenuGroup[]>([]);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});

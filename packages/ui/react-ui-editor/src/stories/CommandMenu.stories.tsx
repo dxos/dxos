@@ -14,9 +14,9 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { Testing, type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import {
-  type CommandMenuGroup,
-  type CommandMenuItem,
-  CommandMenuProvider,
+  type MenuGroup,
+  type MenuItem,
+  MenuProvider,
   type UseCommandMenuOptions,
   filterItems,
   formattingCommands,
@@ -38,13 +38,13 @@ const DefaultStory = ({ text, ...options }: StoryProps) => {
   const { groupsRef, extension: commandMenu, ...commandMenuProps } = useCommandMenu({ viewRef, ...options });
 
   return (
-    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <MenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <EditorStory ref={viewRef} text={text} placeholder={''} extensions={commandMenu} />
-    </CommandMenuProvider>
+    </MenuProvider>
   );
 };
 
-const groups: CommandMenuGroup[] = [
+const groups: MenuGroup[] = [
   formattingCommands,
   linkSlashCommands,
   {
@@ -100,7 +100,7 @@ export const Link: Story = {
   render: (args: StoryProps) => {
     const { space } = useClientProvider();
     const getMenu = useCallback(
-      async (trigger: string, query?: string): Promise<CommandMenuGroup[]> => {
+      async (trigger: string, query?: string): Promise<MenuGroup[]> => {
         if (trigger === '/') {
           return filterItems(groups, (item) =>
             query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
@@ -116,7 +116,7 @@ export const Link: Story = {
         const items = result.objects
           .filter((object) => object.name.toLowerCase().includes(name))
           .map(
-            (object): CommandMenuItem => ({
+            (object): MenuItem => ({
               id: object.id,
               label: object.name,
               icon: 'ph--user--regular',

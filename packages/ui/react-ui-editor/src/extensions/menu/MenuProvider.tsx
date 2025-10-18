@@ -15,20 +15,20 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { type CommandMenuGroup, type CommandMenuItem } from './menu';
+import { type MenuGroup, type MenuItem } from './menu';
 
-export type CommandMenuProps = PropsWithChildren<{
-  groups: CommandMenuGroup[];
+export type MenuProviderProps = PropsWithChildren<{
+  groups: MenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  onSelect: (item: CommandMenuItem) => void;
+  onSelect: (item: MenuItem) => void;
   onActivate?: (event: DxAnchorActivate) => void;
   onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
 }>;
 
 // NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
-export const CommandMenuProvider = ({
+export const MenuProvider = ({
   children,
   groups,
   currentItem,
@@ -37,15 +37,14 @@ export const CommandMenuProvider = ({
   onSelect,
   onActivate,
   onOpenChange,
-}: CommandMenuProps) => {
+}: MenuProviderProps) => {
   const { tx } = useThemeContext();
-  const groupsWithItems = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
-
+  const groupsWithItems = groups.filter((group) => group.items.length > 0);
   const [open, setOpen] = useControllableState({
     prop: propsOpen,
-    onChange: onOpenChange,
     defaultProp: defaultOpen,
+    onChange: onOpenChange,
   });
 
   const handleDxAnchorActivate = useCallback(
@@ -65,7 +64,6 @@ export const CommandMenuProvider = ({
   );
 
   const [rootRef, setRootRef] = useState<HTMLDivElement | null>(null);
-
   useEffect(() => {
     if (!rootRef || !handleDxAnchorActivate) {
       return;
@@ -91,7 +89,7 @@ export const CommandMenuProvider = ({
             <ul>
               {groupsWithItems.map((group, index) => (
                 <Fragment key={group.id}>
-                  <CommandGroup group={group} currentItem={currentItem} onSelect={onSelect} />
+                  <MenuGroupComponent group={group} currentItem={currentItem} onSelect={onSelect} />
                   {index < groupsWithItems.length - 1 && <div className={tx('menu.separator', 'menu__item', {})} />}
                 </Fragment>
               ))}
@@ -108,17 +106,15 @@ export const CommandMenuProvider = ({
   );
 };
 
-const CommandGroup = ({
-  group,
-  currentItem,
-  onSelect,
-}: {
-  group: CommandMenuGroup;
+type MenuGroupComponentProps = {
+  group: MenuGroup;
   currentItem?: string;
-  onSelect: (item: CommandMenuItem) => void;
-}) => {
+} & Pick<MenuProviderProps, 'onSelect'>;
+
+const MenuGroupComponent = ({ group, currentItem, onSelect }: MenuGroupComponentProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
+
   return (
     <>
       {group.label && (
@@ -126,27 +122,27 @@ const CommandGroup = ({
           <span>{toLocalizedString(group.label, t)}</span>
         </div>
       )}
+
       {group.items.map((item) => (
-        <CommandItem key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
+        <MenuItemComponent key={item.id} item={item} current={currentItem === item.id} onSelect={onSelect} />
       ))}
     </>
   );
 };
 
-const CommandItem = ({
-  item,
-  current,
-  onSelect,
-}: {
-  item: CommandMenuItem;
+type MenuItemComponentProps = {
+  item: MenuItem;
   current: boolean;
-  onSelect: (item: CommandMenuItem) => void;
-}) => {
-  const ref = useRef<HTMLLIElement>(null);
+  onSelect: (item: MenuItem) => void;
+};
+
+const MenuItemComponent = ({ item, current, onSelect }: MenuItemComponentProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
+
   const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
 
+  const ref = useRef<HTMLLIElement>(null);
   useEffect(() => {
     if (current && ref.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

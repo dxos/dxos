@@ -10,8 +10,6 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Domino, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type CommandMenuGroup,
-  CommandMenuProvider,
   type DNDOptions,
   type EditorInputMode,
   type EditorSelectionState,
@@ -19,6 +17,8 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
+  type MenuGroup,
+  MenuProvider,
   type UseCommandMenuOptions,
   type UseTextEditorProps,
   addLink,
@@ -51,13 +51,13 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: CommandMenuGroup[];
+  slashCommandGroups?: MenuGroup[];
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onLinkQuery?: (query?: string) => Promise<CommandMenuGroup[]>;
+  onLinkQuery?: (query?: string) => Promise<MenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -121,9 +121,9 @@ export const MarkdownEditor = ({
   const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
 
   return (
-    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <MenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-    </CommandMenuProvider>
+    </MenuProvider>
   );
 };
 

@@ -7,5 +7,5 @@ export * from './menu';
 export * from './menu-presets';
 export * from './util';
 
-export * from './CommandMenu';
+export * from './MenuProvider';
 export * from './useCommandMenu';

@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import { type CommandMenuGroup, type CommandMenuItem } from './menu';
+import { type MenuGroup, type MenuItem } from './menu';
 
 export const insertAtCursor = (view: EditorView, head: number, insert: string) => {
   view.dispatch({
@@ -30,26 +30,23 @@ export const insertAtLineStart = (view: EditorView, head: number, insert: string
   }
 };
 
-export const getMenuItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem | undefined => {
+export const getMenuItem = (groups: MenuGroup[], id?: string): MenuItem | undefined => {
   return groups.flatMap((group) => group.items).find((item) => item.id === id);
 };
 
-export const getNextMenuItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem => {
+export const getNextMenuItem = (groups: MenuGroup[], id?: string): MenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index < items.length - 1 ? items[index + 1] : items[index];
 };
 
-export const getPreviousMenuItem = (groups: CommandMenuGroup[], id?: string): CommandMenuItem => {
+export const getPreviousMenuItem = (groups: MenuGroup[], id?: string): MenuItem => {
   const items = groups.flatMap((group) => group.items);
   const index = items.findIndex((item) => item.id === id);
   return index > 0 ? items[index - 1] : items[index];
 };
 
-export const filterItems = (
-  groups: CommandMenuGroup[],
-  filter: (item: CommandMenuItem) => boolean,
-): CommandMenuGroup[] => {
+export const filterItems = (groups: MenuGroup[], filter: (item: MenuItem) => boolean): MenuGroup[] => {
   return groups.map((group) => ({
     ...group,
     items: group.items.filter(filter),
