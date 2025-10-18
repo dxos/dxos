@@ -148,6 +148,11 @@ export const systemSememes = {
     dark: ['neutral', 1000],
   },
 
+  deckSurface: {
+    light: ['neutral', 50],
+    dark: ['neutral', 950],
+  },
+
   // For tooltips only; the highest elevation from the opposite theme
   inverseSurface: {
     light: ['neutral', DARK_ELEVATION_MIN],
@@ -225,12 +230,6 @@ type SememeKey = 'root' | 'group' | 'modal';
  * Alias map.
  */
 const aliasDefs: Record<string, Partial<Record<SememeKey, SememeName>>> = {
-  // The background color appearing in overscroll and between planks when Deck is enabled.
-  // TODO(burdon): Make distinct from groupSurface.
-  deckSurface: {
-    root: 'groupSurface',
-  },
-
   // Selected items, current items, other surfaces needing special contrast against baseSurface.
   activeSurface: {
     root: 'inputSurfaceBase',
