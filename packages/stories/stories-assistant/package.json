@@ -111,7 +111,7 @@
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",

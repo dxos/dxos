@@ -48,7 +48,7 @@
     "@dxos/test-utils": "workspace:*",
     "@sentry/vite-plugin": "^4.0.2",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "partykit": "^0.0.103",
     "vite": "7.1.9",
     "vite-plugin-top-level-await": "^1.6.0",
