@@ -7,11 +7,11 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/react-ui-theme';
 
-import { floatingMenu } from '../floating-menu';
 import { decorateMarkdown } from '../markdown';
 
 import { commands } from './commands';
 import { editor } from './editor';
+import { menu } from './menu';
 import { selectionCompartment, selectionEquals, selectionFacet } from './selection';
 import { outlinerTree, treeFacet } from './tree';
 
@@ -52,7 +52,7 @@ export const outliner = (_options: OutlinerProps = {}): Extension => [
   editor(),
 
   // Floating menu.
-  floatingMenu(),
+  menu(),
 
   // Line decorations.
   decorations(),

@@ -2,17 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
 import { type CleanupFn, addEventListener } from '@dxos/async';
 
-export type FloatingMenuOptions = {
+export type MenuOptions = {
   icon?: string;
   height?: number;
   padding?: number;
 };
 
-export const floatingMenu = (options: FloatingMenuOptions = {}) => [
+// TODO(burdon): Replace with popover.
+export const menu = (options: MenuOptions = {}): Extension => [
   ViewPlugin.fromClass(
     class {
       view: EditorView;
@@ -34,7 +36,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
           icon.setAttribute('icon', options.icon ?? 'ph--dots-three-vertical--regular');
 
           this.tag = document.createElement('dx-anchor');
-          this.tag.classList.add('cm-floating-menu-trigger');
+          this.tag.classList.add('cm-popover-trigger');
           this.tag.appendChild(icon);
         }
 
@@ -109,7 +111,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
   ),
 
   EditorView.theme({
-    '.cm-floating-menu-trigger': {
+    '.cm-popover-trigger': {
       position: 'fixed',
       padding: '0',
       border: 'none',
@@ -119,7 +121,7 @@ export const floatingMenu = (options: FloatingMenuOptions = {}) => [
       width: '2rem',
       height: '2rem',
     },
-    '&:focus-within .cm-floating-menu-trigger': {
+    '&:focus-within .cm-popover-trigger': {
       opacity: '1',
     },
   }),

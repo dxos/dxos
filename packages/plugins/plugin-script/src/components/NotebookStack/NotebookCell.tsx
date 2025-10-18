@@ -165,8 +165,8 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 
       return (
         <Chat.Root chat={cell.chat.target} processor={processor}>
-          <Chat.Prompt settings={false} classNames='p-2 border-b border-subduedSeparator' />
           <Chat.Thread overscroll={0} />
+          <Chat.Prompt settings={false} classNames='p-2 border-t border-subduedSeparator' />
         </Chat.Root>
       );
 
