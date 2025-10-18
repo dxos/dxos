@@ -14,7 +14,7 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useComboboxContext } from './ComboBox';
+import { useComboboxContext } from './Combobox';
 
 const SEARCHLIST_NAME = 'SearchList';
 const SEARCHLIST_ITEM_NAME = 'SearchListItem';

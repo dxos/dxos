@@ -22,6 +22,7 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
+  useComboboxContext,
 } from '../SearchList';
 
 type PopoverComboboxRootProps = ComboboxRootProps & { modal?: boolean };
@@ -78,7 +79,7 @@ const PopoverComboboxContent = forwardRef<HTMLDivElement, PopoverComboboxContent
     },
     forwardedRef,
   ) => {
-    const { modalId } = Combobox.useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
+    const { modalId } = useComboboxContext(POPOVER_COMBOBOX_CONTENT_NAME);
     return (
       <Popover.Content
         {...{
