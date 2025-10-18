@@ -174,8 +174,6 @@ const storybook: Meta<typeof DefaultStory> = {
         PreviewPlugin(),
         StorybookLayoutPlugin({}),
       ],
-      // TODO(thure): `commandDialog` doesn’t do anything without a `renderDialog` option.
-      // capabilities: [contributes(MarkdownCapabilities.Extensions, [() => commandDialog()])],
     }),
   ],
   parameters: {

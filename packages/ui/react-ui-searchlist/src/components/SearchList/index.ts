@@ -2,6 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './PopoverCombobox';
+export * from './Combobox';
 export * from './SearchList';
-export * from './Listbox';
