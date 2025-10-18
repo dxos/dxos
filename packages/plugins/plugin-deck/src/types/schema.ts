@@ -31,6 +31,7 @@ export const DeckSettingsSchema = Schema.Struct({
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
   overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+  // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
 export type DeckSettingsProps = Schema.Schema.Type<typeof DeckSettingsSchema>;

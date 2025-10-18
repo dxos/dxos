@@ -240,14 +240,20 @@ export const DeckMain = () => {
           </div>
           <div
             role='none'
-            className={solo ? 'relative bg-deckSurface overflow-hidden' : 'sr-only'}
+            className={solo ? 'relative overflow-hidden bg-deckSurface' : 'sr-only'}
             {...(!solo && { inert: true })}
           >
             {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
             {!topbar && !fullscreen && (
               <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
             )}
-            <StackContext.Provider value={{ size: 'contain', orientation: 'horizontal', rail: true }}>
+            <StackContext.Provider
+              value={{
+                orientation: 'horizontal',
+                size: 'contain',
+                rail: true,
+              }}
+            >
               <Plank
                 id={solo}
                 companionId={solo ? activeCompanions?.[solo] : undefined}
