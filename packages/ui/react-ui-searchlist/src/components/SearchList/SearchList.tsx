@@ -27,13 +27,13 @@ type SearchListRootProps = ThemedClassName<ComponentPropsWithRef<typeof CommandR
 };
 
 type ComboboxContextValue = {
-  isCombobox: true;
   modalId: string;
+  isCombobox: true;
+  placeholder?: string;
   open: boolean;
   onOpenChange: (nextOpen: boolean) => void;
   value: string;
   onValueChange: (nextValue: string) => void;
-  placeholder?: string;
 };
 
 const COMBOBOX_NAME = 'Combobox';

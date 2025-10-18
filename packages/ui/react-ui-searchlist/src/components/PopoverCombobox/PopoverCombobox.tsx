@@ -22,7 +22,7 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
-} from '../components';
+} from '../SearchList';
 
 type PopoverComboboxRootProps = ComboboxRootProps & { modal?: boolean };
 

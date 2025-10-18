@@ -19,7 +19,7 @@ import {
   type EditorViewMode,
   type PopoverMenuGroup,
   PopoverMenuProvider,
-  type UsePopoverMenuOptions,
+  type UsePopoverMenuProps,
   type UseTextEditorProps,
   addLink,
   createBasicExtensions,
@@ -76,7 +76,7 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback<UsePopoverMenuOptions['getMenu']>(
+  const getMenu = useCallback<UsePopoverMenuProps['getMenu']>(
     (trigger: string, query?: string) => {
       switch (trigger) {
         case '@': {
@@ -93,7 +93,7 @@ export const MarkdownEditor = ({
     [onLinkQuery, slashCommandGroups],
   );
 
-  const options = useMemo<UsePopoverMenuOptions>(() => {
+  const options = useMemo<UsePopoverMenuProps>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     return {
       viewRef,

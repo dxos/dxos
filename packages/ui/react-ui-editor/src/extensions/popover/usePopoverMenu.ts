@@ -8,7 +8,7 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type MaybePromise } from '@dxos/util';
 
-import { type PlaceholderOptions } from '../command-dialog';
+import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 import { commandRangeEffect, popoverMenu } from './popover-menu';

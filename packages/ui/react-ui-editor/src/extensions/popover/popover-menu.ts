@@ -6,7 +6,7 @@ import { type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 
 import { type Range } from '../../types';
-import { type PlaceholderOptions, placeholder } from '../command-dialog';
+import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
 export type PopoverMenuOptions = {
   trigger: string | string[];

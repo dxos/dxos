@@ -6,6 +6,5 @@ TODO: Reconcile
 - command-dialog
 - preview
 
-- hint
-- placeholder
+- placeholder/hint
 - typeahead

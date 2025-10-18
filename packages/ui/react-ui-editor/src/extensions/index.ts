@@ -3,11 +3,11 @@
 //
 
 export * from './annotations';
+export * from './autocomplete';
 export * from './autoscroll';
 export * from './automerge';
 export * from './awareness';
 export * from './blast';
-export * from './command-dialog';
 export * from './comments';
 export * from './debug';
 export * from './dnd';
