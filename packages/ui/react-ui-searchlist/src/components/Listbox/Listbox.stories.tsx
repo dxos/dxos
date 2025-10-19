@@ -5,69 +5,53 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
+
+import { translations } from '../../translations';
 
 import { Listbox } from './Listbox';
 
+faker.seed(1234);
+
+type StoryItem = { value: string; label: string };
+
+const options: StoryItem[] = faker.helpers.multiple(
+  () => ({ value: faker.string.uuid(), label: faker.commerce.productName() }) satisfies StoryItem,
+  { count: 16 },
+);
+
 const DefaultStory = () => {
-  const [selectedValue, setSelectedValue] = useState<string>('option-2');
-
-  const options = [
-    { value: 'option-1', label: 'First Option' },
-    { value: 'option-2', label: 'Second Option' },
-    { value: 'option-3', label: 'Third Option' },
-  ];
+  const [selectedValue, setSelectedValue] = useState<string>();
 
   return (
-    <div className='w-64'>
-      <Listbox.Root value={selectedValue} onValueChange={setSelectedValue}>
-        {options.map((option) => (
-          <Listbox.Option key={option.value} value={option.value}>
-            <Listbox.OptionLabel>{option.label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        ))}
-      </Listbox.Root>
-    </div>
-  );
-};
-
-const DefaultValueStory = () => {
-  const options = [
-    { value: 'apple', label: 'Apple' },
-    { value: 'banana', label: 'Banana' },
-    { value: 'cherry', label: 'Cherry' },
-  ];
-
-  return (
-    <div className='w-64'>
-      <Listbox.Root defaultValue='banana'>
-        {options.map((option) => (
-          <Listbox.Option key={option.value} value={option.value}>
-            <Listbox.OptionLabel>{option.label}</Listbox.OptionLabel>
-            <Listbox.OptionIndicator />
-          </Listbox.Option>
-        ))}
-      </Listbox.Root>
-    </div>
+    <Listbox.Root value={selectedValue} onValueChange={setSelectedValue}>
+      {options.map((option) => (
+        <Listbox.Option key={option.value} value={option.value}>
+          <Listbox.OptionLabel>{option.label}</Listbox.OptionLabel>
+          <Listbox.OptionIndicator />
+        </Listbox.Option>
+      ))}
+    </Listbox.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
+  render: DefaultStory,
   decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    translations,
+    layout: {
+      type: 'column',
+      className: 'p-2',
+    },
   },
 } satisfies Meta<typeof Listbox.Root>;
 
 export default meta;
 
-export const Default: StoryObj<typeof DefaultStory> = {
-  render: DefaultStory,
-};
+type Story = StoryObj<typeof meta>;
 
-export const DefaultValue: StoryObj<typeof DefaultValueStory> = {
-  render: DefaultValueStory,
-};
+export const Default: Story = {};

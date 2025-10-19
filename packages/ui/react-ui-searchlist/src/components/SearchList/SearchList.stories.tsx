@@ -8,7 +8,11 @@ import React from 'react';
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '../../translations';
+
 import { SearchList } from './SearchList';
+
+faker.seed(1234);
 
 type StoryItems = Record<string, string>;
 
@@ -26,11 +30,15 @@ type StoryProps = {
 
 const DefaultStory = ({ items = defaultItems }: StoryProps) => {
   return (
-    <SearchList.Root filter={(value, search) => (items[value].includes(search) ? 1 : 0)}>
-      <SearchList.Input placeholder='Search...' />
+    <SearchList.Root filter={(value, search) => (items[value].toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}>
+      <SearchList.Input />
       <SearchList.Content>
         {Object.entries(items).map(([value, label]) => (
-          <SearchList.Item key={value} value={value} onSelect={(value) => console.log('[item select]', value)}>
+          <SearchList.Item
+            key={value}
+            value={value}
+            onSelect={(value) => console.log('[SearchList.Item.onSelect]', value)}
+          >
             {label}
           </SearchList.Item>
         ))}
@@ -44,12 +52,17 @@ const meta = {
   component: SearchList.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
+  parameters: {
+    translations,
+    layout: {
+      type: 'column',
+      className: 'p-2',
+    },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {},
-};
+export const Default: Story = {};

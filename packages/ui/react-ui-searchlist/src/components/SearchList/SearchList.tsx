@@ -3,7 +3,7 @@
 //
 
 import { CommandEmpty, CommandInput, CommandItem, CommandList, CommandRoot } from 'cmdk';
-import React, { type ComponentPropsWithRef, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import {
   type TextInputProps,
@@ -11,10 +11,15 @@ import {
   useDensityContext,
   useElevationContext,
   useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { useComboboxContext } from './Combobox';
+import { translationKey } from '../../translations';
+
+const commandItem = 'flex items-center overflow-hidden';
+const searchListItem =
+  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
 
 const SEARCHLIST_NAME = 'SearchList';
 const SEARCHLIST_ITEM_NAME = 'SearchListItem';
@@ -53,6 +58,9 @@ type SearchListInputProps = Omit<TextInputProps, 'value' | 'defaultValue' | 'onC
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, variant, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const placeholder = props.placeholder ?? t('search.placeholder');
+
     // TODO(thure): Keep this in-sync with `TextInput`, or submit a PR for `cmdk` to support `asChild` so we don’t have to.
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
@@ -62,6 +70,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <CommandInput
         {...props}
+        placeholder={placeholder}
         className={tx(
           'input.input',
           'input',
@@ -119,24 +128,10 @@ const SearchListEmpty = forwardRef<HTMLDivElement, SearchListEmptyProps>(
 
 type SearchListItemProps = ThemedClassName<ComponentPropsWithRef<typeof CommandItem>>;
 
-// TODO(burdon): Factor out.
-const commandItem = 'flex items-center overflow-hidden';
-const searchListItem =
-  'plb-1 pli-2 rounded-sm select-none cursor-pointer data-[selected]:bg-hoverOverlay hover:bg-hoverOverlay';
-
 const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
-  ({ children, classNames, onSelect, ...props }, forwardedRef) => {
-    const { onValueChange, onOpenChange } = useComboboxContext(SEARCHLIST_ITEM_NAME);
-    const handleSelect = useCallback(
-      (nextValue: string) => {
-        onValueChange?.(nextValue);
-        onOpenChange?.(false);
-        onSelect?.(nextValue);
-      },
-      [onValueChange, onOpenChange, onSelect],
-    );
+  ({ children, classNames, ...props }, forwardedRef) => {
     return (
-      <CommandItem {...props} onSelect={handleSelect} className={mx(searchListItem, classNames)} ref={forwardedRef}>
+      <CommandItem {...props} className={mx(searchListItem, classNames)} ref={forwardedRef}>
         {children}
       </CommandItem>
     );
