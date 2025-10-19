@@ -151,6 +151,7 @@ export const useTextEditor = (
             return;
           }
 
+          // Focus the closest focusable parent.
           const element = view?.contentDOM.closest('[tabindex="0"]') as HTMLDivElement | null;
           element?.focus();
           break;
