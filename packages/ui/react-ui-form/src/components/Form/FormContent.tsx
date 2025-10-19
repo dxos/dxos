@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, SchemaAST, pipe } from 'effect';
-import { capitalize } from 'effect/String';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
+import * as StringEffect from 'effect/String';
 import React, { forwardRef, useMemo } from 'react';
 
 import { createJsonPath, findNode, getDiscriminatedType, isDiscriminatedUnion } from '@dxos/effect';
@@ -60,7 +62,7 @@ export const FormField = ({
   const { ast, name, type, format, title, description, options, examples, array } = property;
   const inputProps = useInputProps(path);
 
-  const label = useMemo(() => title ?? pipe(name, capitalize), [title, name]);
+  const label = useMemo(() => title ?? Function.pipe(name, StringEffect.capitalize), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `Example: "${examples[0]}"` : description),
     [examples, description],

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import {
   Capabilities,
@@ -75,7 +75,7 @@ export default ({ context, appName = 'Composer' }: IntentResolverOptions) =>
       resolve: async () => {
         return {
           intents: [
-            pipe(
+            Function.pipe(
               createIntent(LayoutAction.SwitchWorkspace, {
                 part: 'workspace',
                 subject: Account.id,

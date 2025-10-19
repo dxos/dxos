@@ -3,7 +3,13 @@
 //
 
 import { it } from '@effect/vitest';
-import { Chunk, Console, Effect, Exit, Option, Scope, Stream } from 'effect';
+import * as Chunk from 'effect/Chunk';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
+import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
 import { createTestServices } from '@dxos/functions/testing';

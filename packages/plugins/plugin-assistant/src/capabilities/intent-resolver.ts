@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
@@ -41,7 +41,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.CreateChat,
       resolve: async ({ space, name }) => {
         const queue = space.queues.create();
-        const chat = Obj.make(Assistant.Chat, { name, queue: Ref.fromDXN(queue.dxn) });
+        const chat = Assistant.makeChat({ name, queue });
         const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.

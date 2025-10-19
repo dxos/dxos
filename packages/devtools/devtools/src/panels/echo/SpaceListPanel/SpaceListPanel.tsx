@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { FormatEnum } from '@dxos/echo-schema';
+import { FormatEnum } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';

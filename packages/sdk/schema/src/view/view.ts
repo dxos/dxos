@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, Schema, SchemaAST, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import {
   FormatAnnotation,
   FormatEnum,
@@ -19,11 +22,12 @@ import {
   type RuntimeSchemaRegistry,
   TypeEnum,
   toEffectSchema,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { type EchoSchemaRegistry } from '@dxos/echo-db';
 import { type JsonPath, type JsonProp, findAnnotation } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 
 import { getSchemaProperties } from '../properties';
 
@@ -71,7 +75,7 @@ const View_ = Schema.Struct({
    * Can be a user-provided query grammar string or a query AST.
    */
   query: Schema.Struct({
-    string: Schema.optional(Schema.String),
+    raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
   }).pipe(Schema.mutable),
 
@@ -111,7 +115,7 @@ export const createFieldId = () => PublicKey.random().truncate();
 type CreateViewProps = {
   name?: string;
   query: Query.Any;
-  queryString?: string;
+  queryRaw?: string;
   jsonSchema: JsonSchemaType; // Base schema.
   overrideSchema?: JsonSchemaType; // Override schema.
   presentation: Obj.Any;
@@ -127,7 +131,7 @@ type CreateViewProps = {
 export const createView = ({
   name,
   query,
-  queryString,
+  queryRaw,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -136,7 +140,7 @@ export const createView = ({
 }: CreateViewProps): Live<View> => {
   const view = Obj.make(View, {
     name,
-    query: { string: queryString, ast: query.ast },
+    query: { raw: queryRaw, ast: query.ast },
     projection: {
       schema: overrideSchema,
       fields: [],
@@ -214,7 +218,7 @@ type CreateViewWithReferencesProps = CreateViewProps & {
 export const createViewWithReferences = async ({
   name,
   query,
-  queryString,
+  queryRaw,
   jsonSchema,
   overrideSchema,
   presentation,
@@ -226,7 +230,7 @@ export const createViewWithReferences = async ({
   const view = createView({
     name,
     query,
-    queryString,
+    queryRaw,
     jsonSchema,
     overrideSchema,
     presentation,
@@ -250,7 +254,7 @@ export const createViewWithReferences = async ({
     projection.showFieldProjection(property.name as JsonProp);
 
     await Effect.gen(function* () {
-      const referenceDxn = yield* pipe(
+      const referenceDxn = yield* Function.pipe(
         findAnnotation<ReferenceAnnotationValue>(property.ast, ReferenceAnnotationId),
         Option.fromNullable,
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
@@ -258,7 +262,7 @@ export const createViewWithReferences = async ({
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry, echoRegistry));
 
-      const referencePath = yield* pipe(
+      const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
@@ -295,7 +299,7 @@ export const createViewWithReferences = async ({
 
 export type CreateViewFromSpaceProps = Omit<
   CreateViewWithReferencesProps,
-  'query' | 'queryString' | 'jsonSchema' | 'registry'
+  'query' | 'queryRaw' | 'jsonSchema' | 'registry'
 > & {
   client?: Client;
   space: Space;
@@ -328,7 +332,7 @@ export const createViewFromSpace = async ({
   invariant(schema, `Schema not found: ${typename}`);
 
   Array.from({ length: createInitial }).forEach(() => {
-    space.db.add(live(schema, {}));
+    space.db.add(Obj.make(schema, {}));
   });
 
   return {

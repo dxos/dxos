@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { DiscordConfig, DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import type {
   GuildChannelResponse,
@@ -11,7 +11,12 @@ import type {
   PrivateGroupChannelResponse,
   ThreadResponse,
 } from 'dfx/types';
-import { Array, Effect, Layer, Option, Schema, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { CredentialsService, TracingService, defineFunction } from '@dxos/functions';
@@ -140,7 +145,7 @@ export default defineFunction({
 
           let lastMessage: Option.Option<DataType.Message> = Option.none();
           while (true) {
-            const { id: lastId = undefined } = pipe(
+            const { id: lastId = undefined } = Function.pipe(
               lastMessage,
               Option.map(Obj.getKeys('discord.com')),
               Option.flatMap(Option.fromIterable),

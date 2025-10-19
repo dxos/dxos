@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, type Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
 // import { Ollama } from 'ollama';
-import { SchemaAST } from 'effect';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ComputeGraph, ValueBag, type WorkflowLoader } from '@dxos/conductor';

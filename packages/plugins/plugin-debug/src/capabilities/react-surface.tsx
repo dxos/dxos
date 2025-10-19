@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import {
@@ -381,7 +381,10 @@ export default (context: PluginContext) =>
           async (space: Space) => {
             await space.waitUntilReady();
             const result = await dispatch(
-              pipe(createIntent(ScriptAction.Create, { space }), chain(SpaceAction.AddObject, { target: space })),
+              Function.pipe(
+                createIntent(ScriptAction.CreateScript, { space }),
+                chain(SpaceAction.AddObject, { target: space }),
+              ),
             );
             log.info('script created', { result });
             await dispatch(

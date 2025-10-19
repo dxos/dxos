@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { SchemaAST } from 'effect';
+import * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo-schema';
+import { type PropertyMetaAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';

@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -29,7 +30,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/active-call`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {
@@ -64,7 +65,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/channel-chat-companion`,
       connector: (node) => {
         return Rx.make((get) => {
-          return pipe(
+          return Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
             Option.map((channel) => {
@@ -99,7 +100,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/comments-companion`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
@@ -129,7 +130,7 @@ export default (context: PluginContext) => {
       id: `${meta.id}/comment-toolbar`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => {
               if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {

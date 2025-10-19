@@ -3,7 +3,7 @@
 //
 
 import { type Registry, Rx } from '@effect-rx/rx-react';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { Trigger } from '@dxos/async';
 import { invariant } from '@dxos/invariant';

@@ -112,7 +112,7 @@ export const EmojiPickerBlock = ({
   classNames,
 }: EmojiPickerProps) => {
   const { t } = useTranslation('os');
-  const [isMd] = useMediaQuery('md', { ssr: false });
+  const [isMd] = useMediaQuery('md');
 
   const [emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,

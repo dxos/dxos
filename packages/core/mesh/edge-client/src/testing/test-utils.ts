@@ -36,11 +36,11 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
   const closeTrigger = new Trigger();
   const sendResponseMessage = createResponseSender(() => connection!.muxer);
 
-  wsServer.on('connection', (ws) => {
+  wsServer.on('connection', (ws: WebSocket) => {
     const muxer = new WebSocketMuxer(ws);
     connection = { ws, muxer };
-    ws.on('error', (err) => log.catch(err));
-    ws.on('message', async (data) => {
+    ws.on('error', (err: Error) => log.catch(err));
+    ws.on('message', async (data: any) => {
       if (String(data) === '__ping__') {
         ws.send('__pong__');
         return;

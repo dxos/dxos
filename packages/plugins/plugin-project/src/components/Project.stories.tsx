@@ -29,7 +29,7 @@ const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.typename(DataType.Project.typename));
+  const projects = useQuery(space, Filter.type(DataType.Project));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {
@@ -65,8 +65,8 @@ const DefaultStory = () => {
 
 const MutationsStory = () => {
   const { space } = useClientProvider();
-  const projects = useQuery(space, Filter.typename(DataType.Project.typename));
-  const contacts = useQuery(space, Filter.typename(DataType.Person.typename));
+  const projects = useQuery(space, Filter.type(DataType.Project));
+  const contacts = useQuery(space, Filter.type(DataType.Person));
   const project = projects[0];
 
   const handleAddColumn = useCallback(() => {

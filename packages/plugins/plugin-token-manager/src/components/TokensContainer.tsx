@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';

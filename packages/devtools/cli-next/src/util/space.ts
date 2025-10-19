@@ -2,7 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Console, Effect, Fiber, Logger, Option, Schedule, type Schema } from 'effect';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Logger from 'effect/Logger';
+import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
+import type * as Schema from 'effect/Schema';
 
 import { type Space, SpaceId, type SpaceSyncState } from '@dxos/client/echo';
 import { contextFromScope } from '@dxos/effect';

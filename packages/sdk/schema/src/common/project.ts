@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
-import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo-schema';
+import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 import { IconAnnotation, ItemAnnotation } from '../annotations';
 import { View } from '../view';

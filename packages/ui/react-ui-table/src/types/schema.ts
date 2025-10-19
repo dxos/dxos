@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo-schema';
-import { ViewAnnotation } from '@dxos/echo-schema';
+import { JsonPath, type JsonSchemaType, toEffectSchema } from '@dxos/echo/internal';
+import { ViewAnnotation } from '@dxos/echo/internal';
 import { type SimpleType } from '@dxos/effect';
 import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace, getSchemaProperties } from '@dxos/schema';
 

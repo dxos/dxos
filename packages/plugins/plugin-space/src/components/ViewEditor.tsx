@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Filter, Query, Type } from '@dxos/echo';
+import { type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useSchema } from '@dxos/react-client/echo';
@@ -24,13 +24,12 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   const schema = useSchema(client, space, typename);
 
   const handleUpdateQuery = useCallback(
-    (typename: string) => {
+    (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
 
-      const newQuery = Query.select(Filter.typename(typename));
-      view.query.ast = newQuery.ast;
-      schema.updateTypename(typename);
+      view.query.ast = newQuery;
+      schema.updateTypename(getTypenameFromQuery(newQuery));
     },
     [view, schema],
   );

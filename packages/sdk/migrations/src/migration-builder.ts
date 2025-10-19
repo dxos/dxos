@@ -4,10 +4,11 @@
 
 import { next as A, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
+import { requireTypeReference } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import {
   type DatabaseDirectory,
@@ -16,7 +17,6 @@ import {
   SpaceDocVersion,
   encodeReference,
 } from '@dxos/echo-protocol';
-import { requireTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 

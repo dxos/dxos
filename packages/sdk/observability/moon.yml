@@ -13,7 +13,7 @@ tasks:
     deps:
       - prebuild
   prebuild:
-    command: pnpm run --silent api-keys
+    command: node ./scripts/inject_api_keys.mjs
     inputs:
       - scripts/inject_api_keys.mjs
       - $DX_IPDATA_API_KEY

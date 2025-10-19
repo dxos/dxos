@@ -23,16 +23,17 @@ import { type QueryOptions, query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
+    value?: string;
     readonly?: boolean;
   } & QueryOptions &
-    EditorProps
+    Omit<EditorProps, 'initialValue'>
 >;
 
 /**
  * Query editor with decorations and autocomplete.
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
-  ({ space, tags, value, readonly, ...props }, forwardedRef) => {
+  ({ db, tags, value, readonly, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
@@ -50,11 +51,11 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
             },
           ]),
         ),
-        query({ space, tags }),
+        query({ db, tags }),
       ],
-      [space, readonly],
+      [db, readonly],
     );
 
-    return <Editor {...props} moveToEnd value={value} extensions={extensions} ref={forwardedRef} />;
+    return <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={forwardedRef} />;
   },
 );

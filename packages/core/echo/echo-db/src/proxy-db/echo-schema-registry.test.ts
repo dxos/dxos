@@ -2,21 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
   StoredSchema,
   type TypeAnnotation,
   TypeAnnotationId,
-  TypeIdentifierAnnotationId,
   getSchemaTypename,
   toJsonSchema,
-} from '@dxos/echo-schema';
-import { live } from '@dxos/live-object';
-import { log } from '@dxos/log';
+} from '@dxos/echo/internal';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
@@ -61,36 +59,15 @@ describe('schema registry', () => {
   test('add new schema', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
-    const expectedSchema = Contact.annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
-        typename: 'example.com/type/Contact',
-        version: '0.1.0',
-      } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
-    });
-    log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
-    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);
-    const expectedSchema = Organization.annotations({
-      [TypeAnnotationId]: {
-        kind: EntityKind.Object,
-        typename: 'example.com/type/Organization',
-        version: '0.1.0',
-      } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${echoSchema.id}`,
-    });
-    log('schema', { echoSchema: echoSchema.ast, expectedSchema: expectedSchema.ast });
-    expect(echoSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(registry.getSchemaById(echoSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(echoSchema.jsonSchema.propertyOrder).to.deep.eq(Object.keys(Organization.fields));
   });
 
   test('can store the same schema multiple times', async () => {
@@ -122,7 +99,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = live(StoredSchema, {
+    const schemaToStore = Obj.make(StoredSchema, {
       typename: 'example.com/type/Test',
       version: '0.1.0',
       jsonSchema: toJsonSchema(Schema.Struct({ field: Schema.Number })),

@@ -2,8 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Args, Command, Prompt } from '@effect/cli';
-import { Effect, Match } from 'effect';
+import * as Args from '@effect/cli/Args';
+import * as Command from '@effect/cli/Command';
+import * as Prompt from '@effect/cli/Prompt';
+import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 
 import { type Client } from '@dxos/client';
 import { type AuthenticatingInvitationObservable, Invitation, InvitationEncoder } from '@dxos/client/invitations';

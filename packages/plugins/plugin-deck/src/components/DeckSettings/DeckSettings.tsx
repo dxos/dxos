@@ -31,6 +31,12 @@ export const DeckSettings = ({ settings }: { settings: DeckSettingsProps }) => {
               onCheckedChange={(checked) => (settings.enableDeck = checked)}
             />
           </ControlItemInput>
+          <ControlItemInput title={t('settings encapsulated planks label')}>
+            <Input.Switch
+              checked={settings.encapsulatedPlanks ?? false}
+              onCheckedChange={(checked) => (settings.encapsulatedPlanks = checked)}
+            />
+          </ControlItemInput>
           <ControlItemInput title={t('select new plank positioning label')}>
             <Select.Root
               disabled={!settings.enableDeck}

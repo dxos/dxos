@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
+import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo/internal';
 import { defineObjectMigration } from '@dxos/echo-db';
-import { GeneratorAnnotation, ObjectId, TypedObject } from '@dxos/echo-schema';
 import { Unit, isTruthy } from '@dxos/util';
 
 import { Actor, type ActorRole } from './actor';

@@ -2,7 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer, Option, type Schema } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import {
   type Filter,
@@ -14,9 +18,9 @@ import {
   type Relation,
   type Type,
 } from '@dxos/echo';
+import type { EchoSchema } from '@dxos/echo/internal';
 import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
-import type { EchoSchema } from '@dxos/echo-schema';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';

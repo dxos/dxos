@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
@@ -28,7 +31,7 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { id, typename } }) {
     const object = yield* DatabaseService.resolve(ArtifactId.toDXN(id));
-    return yield* pipe(
+    return yield* Function.pipe(
       Option.fromNullable(object),
       Option.flatMap((object) => (Obj.getTypename(object) === typename ? Option.some(object) : Option.none())),
       Option.match({

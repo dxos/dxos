@@ -3,7 +3,10 @@
 //
 
 import { batch } from '@preact/signals-core';
-import { Effect, Option, Schema, pipe } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 import {
   Capabilities,
@@ -403,7 +406,7 @@ export default (context: PluginContext) =>
           }
 
           if (adjustment.type === 'companion') {
-            return pipe(
+            return Function.pipe(
               graph.getNode(adjustment.id),
               Option.map((node) =>
                 graph
@@ -454,7 +457,7 @@ export default (context: PluginContext) =>
                 return {
                   intents: [
                     // NOTE: The order of these is important.
-                    pipe(
+                    Function.pipe(
                       createIntent(LayoutAction.SetLayoutMode, { part: 'mode', options: { mode: 'deck' } }),
                       chain(LayoutAction.Open, { part: 'main', subject: [entryId] }),
                     ),

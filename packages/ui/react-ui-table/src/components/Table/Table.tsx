@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema } from 'effect/Schema';
-import { trim } from 'effect/String';
+import type * as Schema from 'effect/Schema';
+import * as String from 'effect/String';
 import React, {
   type MouseEvent,
   type PropsWithChildren,
@@ -80,7 +80,7 @@ export type TableController = {
 export type TableMainProps = {
   model?: TableModel;
   presentation?: TablePresentation;
-  schema?: Schema.AnyNoContext;
+  schema?: Schema.Schema.AnyNoContext;
   client?: Client;
   // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
   ignoreAttention?: boolean;
@@ -322,7 +322,7 @@ const TableMain = forwardRef<TableController, TableMainProps>(
               void navigator.clipboard.readText().then((clipboardText) => {
                 try {
                   // Attempt to set the cell's content to clipboard content
-                  model.setCellData(cell, trim(clipboardText).replace(/[\n\r]+/, ' '));
+                  model.setCellData(cell, String.trim(clipboardText).replace(/[\n\r]+/, ' '));
                   handleSave();
                 } catch {
                   // If validation fails, emit a DxEditRequest event with initialContent from clipboard

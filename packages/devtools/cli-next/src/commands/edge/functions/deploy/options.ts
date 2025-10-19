@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Option } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { type Space } from '@dxos/client/echo';
 import { type FunctionType } from '@dxos/functions';

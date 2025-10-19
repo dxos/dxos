@@ -3,7 +3,11 @@
 //
 
 import { it } from '@effect/vitest';
-import { Context, Duration, Effect, Layer, ManagedRuntime } from 'effect';
+import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { test } from 'vitest';
 
 class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}

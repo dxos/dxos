@@ -5,7 +5,8 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
@@ -98,7 +99,7 @@ export default () => {
             }
           }
 
-          const intent = pipe(
+          const intent = Function.pipe(
             createIntent(MapAction.Create, {
               space: extensions.space,
               typename,

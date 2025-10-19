@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import { Capabilities, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -42,7 +42,7 @@ export default (context: PluginContext) =>
 
         const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
         const result = await dispatch(
-          pipe(
+          Function.pipe(
             createIntent(MarkdownAction.Create, { name: data.name, content: data.data }),
             chain(SpaceAction.AddObject, { target }),
           ),

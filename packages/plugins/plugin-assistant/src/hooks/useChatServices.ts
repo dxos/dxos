@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, type Runtime } from 'effect';
+import * as Effect from 'effect/Effect';
+import type * as Runtime from 'effect/Runtime';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework';

@@ -16,7 +16,7 @@
   },
   "scripts": {
     "info": "tsc --showConfig | jq",
-    "update": "node -r @dxos/log-hook/register -r @swc-node/register ./src/main.ts docs"
+    "update": "vite-node ./src/main.ts docs"
   },
   "dependencies": {
     "@dxos/log": "workspace:*",

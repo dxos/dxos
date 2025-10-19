@@ -3,7 +3,7 @@
 //
 
 import { Octokit } from '@octokit/core';
-import { Predicate } from 'effect';
+import * as Predicate from 'effect/Predicate';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
@@ -14,12 +14,12 @@ import { DataType } from '@dxos/schema';
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
-import { ScriptAction } from '../types';
+import { Notebook, ScriptAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
-      intent: ScriptAction.Create,
+      intent: ScriptAction.CreateScript,
       resolve: async ({ name, gistUrl, initialTemplateId }) => {
         let content = templates[0].source;
 
@@ -48,6 +48,16 @@ export default () =>
         return {
           data: {
             object: Obj.make(ScriptType, { name, source: Ref.make(DataType.makeText(content)) }),
+          },
+        };
+      },
+    }),
+    createResolver({
+      intent: ScriptAction.CreateNotebook,
+      resolve: async ({ name }) => {
+        return {
+          data: {
+            object: Obj.make(Notebook.Notebook, { name, cells: [] }),
           },
         };
       },

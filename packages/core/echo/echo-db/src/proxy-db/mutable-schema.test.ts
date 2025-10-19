@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { Obj, Type } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -12,24 +13,20 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
-  TypedObject,
+  getSchema,
+  getType,
   getTypeReference,
   getTypename,
-} from '@dxos/echo-schema';
-import { getSchema, getType } from '@dxos/echo-schema';
-import { Testing } from '@dxos/echo-schema/testing';
-import { live } from '@dxos/live-object';
+} from '@dxos/echo/internal';
+import { TestingDeprecated } from '@dxos/echo/testing';
 
 import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
-class TestSchema extends TypedObject({
-  typename: 'example.com/type/Test',
-  version: '0.1.0',
-})({
+const TestSchema = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.mutable(Schema.Array(Ref(EchoSchema)))),
-}) {}
+}).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
 describe('EchoSchema', () => {
   let builder: EchoTestBuilder;
@@ -44,13 +41,10 @@ describe('EchoSchema', () => {
 
   test('set EchoSchema as echo object field', async () => {
     const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(live(TestSchema, {}));
-    class GeneratedSchema extends TypedObject({
-      typename: 'example.com/type/Test',
-      version: '0.1.0',
-    })({
+    const instanceWithSchemaRef = db.add(Obj.make(TestSchema, {}));
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schema = Ref.make(schema);
@@ -71,21 +65,20 @@ describe('EchoSchema', () => {
 
   test('create echo object with EchoSchema', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
-
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    const instanceWithSchemaRef = db.add(live(TestSchema, { schema: Ref.make(schema) }));
+    const instanceWithSchemaRef = db.add(Obj.make(TestSchema, { schema: Ref.make(schema) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
   });
 
   test('push EchoSchema to echo object schema array', async () => {
     const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(live(TestSchema, { schemaArray: [] }));
-    class GeneratedSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+    const instanceWithSchemaRef = db.add(Obj.make(TestSchema, { schemaArray: [] }));
+    const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }) {}
+    }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
     expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
@@ -93,8 +86,8 @@ describe('EchoSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
-    const object = live(schema, {});
+    const [schema] = await db.schemaRegistry.register([TestingDeprecated.EmptySchemaType]);
+    const object = Obj.make(schema, {});
     schema.addFields({ field1: Schema.String });
     object.field1 = 'works';
     object.field1 = undefined;
@@ -109,7 +102,7 @@ describe('EchoSchema', () => {
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
     expect(getType(object)?.asEchoDXN()?.echoId).to.be.eq(schema.id);
-    expect(getTypename(object)).to.be.eq(Testing.EmptySchemaType.typename);
+    expect(getTypename(object)).to.be.eq(TestingDeprecated.EmptySchemaType.typename);
 
     db.add(object);
     const queried = (await db.query(Filter.type(schema)).run()).objects;
@@ -119,13 +112,13 @@ describe('EchoSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([TestingDeprecated.EmptySchemaType]);
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
 
   test('getTypeReference on schema with updated typename', async () => {
     const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([Testing.EmptySchemaType]);
+    const [schema] = await db.schemaRegistry.register([TestingDeprecated.EmptySchemaType]);
     schema.updateTypename('example.com/type/Updated');
     expect(getTypeReference(schema)?.objectId).to.eq(schema.id);
   });
@@ -133,25 +126,19 @@ describe('EchoSchema', () => {
   test('mutable schema refs', async () => {
     const { db } = await setupTest();
 
-    const OrgSchema = TypedObject({
-      typename: 'example.com/type/org',
-      version: '0.1.0',
-    })({
+    const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    });
+    }).pipe(Type.Obj({ typename: 'example.com/type/org', version: '0.1.0' }));
 
-    const ContactSchema = TypedObject({
-      typename: 'example.com/type/contact',
-      version: '0.1.0',
-    })({
+    const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    });
+    }).pipe(Type.Obj({ typename: 'example.com/type/contact', version: '0.1.0' }));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
-    const org = db.add(live(orgSchema, { name: 'DXOS' }));
-    const contact = db.add(live(contactSchema, { name: 'Bot', org: Ref.make(org) }));
+    const org = db.add(Obj.make(orgSchema, { name: 'DXOS' }));
+    const contact = db.add(Obj.make(contactSchema, { name: 'Bot', org: Ref.make(org) }));
     expect(contact.org?.target?.id).to.eq(org.id);
   });
 

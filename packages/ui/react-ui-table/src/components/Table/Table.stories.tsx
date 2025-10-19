@@ -3,10 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Obj, type QueryAST, Type } from '@dxos/echo';
 import {
   EchoObject,
   FormatAnnotation,
@@ -14,16 +14,17 @@ import {
   GeneratorAnnotation,
   LabelAnnotation,
   PropertyMetaAnnotationId,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, live } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { DataType, getSchemaFromPropertyDefinitions } from '@dxos/schema';
+import { DataType, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { Testing, createObjectFactory } from '@dxos/schema/testing';
 
 import { useTestTableModel } from '../../testing';
@@ -75,12 +76,12 @@ const StoryViewEditor = ({
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
   const handleQueryChanged = useCallback(
-    (typename: string) => {
+    (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      schema.updateTypename(typename);
+      schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      view.query.ast = Query.select(Filter.typename(typename)).ast;
+      view.query.ast = newQuery;
     },
     [schema, view],
   );

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
 
 import { generateName } from '@dxos/display-name';
 import { type Selection } from '@dxos/plugin-attention';

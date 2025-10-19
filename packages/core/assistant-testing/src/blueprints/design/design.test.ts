@@ -3,7 +3,8 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
@@ -16,7 +17,7 @@ import {
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj, Ref } from '@dxos/echo';
-import { TestHelpers } from '@dxos/effect';
+import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
   DatabaseService,
@@ -36,14 +37,13 @@ import { testToolkit } from '../testing';
 import blueprint from './design';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
-  it.effect(
+  it.scoped(
     'design blueprint',
     Effect.fn(
       function* ({ expect }) {
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        const conversation = new AiConversation({
-          queue: yield* QueueService.createQueue<DataType.Message | ContextBinding>(),
-        });
+        const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
         yield* DatabaseService.add(blueprint);
         yield* Effect.promise(() =>

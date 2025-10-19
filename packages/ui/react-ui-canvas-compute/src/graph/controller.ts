@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, Effect, Either, Exit, Scope } from 'effect';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
 
 import { Event, synchronized } from '@dxos/async';
 import {

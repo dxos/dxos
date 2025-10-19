@@ -2,7 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Cause, Context, Cron, Duration, Effect, Either, Exit, Fiber, Layer, Option, Record, Schedule } from 'effect';
+import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
+import * as Cron from 'effect/Cron';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import * as Record from 'effect/Record';
+import * as Schedule from 'effect/Schedule';
 
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';

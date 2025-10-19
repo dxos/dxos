@@ -8,8 +8,8 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
-import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo-schema';
-import { getSchema, getType } from '@dxos/echo-schema';
+import { type BaseObject, type HasId, assertObjectModelShape, setRefResolver } from '@dxos/echo/internal';
+import { getSchema, getType } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type Live, getProxyTarget, isLiveObject } from '@dxos/live-object';
@@ -60,6 +60,7 @@ export type AddOptions = {
 /**
  * Database API.
  */
+// TODO(burdon): Rename (no product name in types).
 export interface EchoDatabase {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;

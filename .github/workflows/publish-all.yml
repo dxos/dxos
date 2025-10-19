@@ -24,7 +24,7 @@ jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4
     container:
-      image: ghcr.io/dxos/gh-actions:20.19.5
+      image: ghcr.io/dxos/gh-actions:24.4.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}

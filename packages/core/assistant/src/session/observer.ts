@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Function } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { type AiParser, type ConsolePrinter } from '@dxos/ai';
 import { type DataType } from '@dxos/schema';

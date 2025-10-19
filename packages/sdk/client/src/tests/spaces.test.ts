@@ -9,11 +9,11 @@ import { type Space } from '@dxos/client-protocol';
 import { TYPE_PROPERTIES } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
+import { type Expando, type HasId, Ref } from '@dxos/echo/internal';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, type HasId, Ref } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { type Live, live } from '@dxos/live-object';
+import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
@@ -315,7 +315,7 @@ describe('Spaces', () => {
     await hostSpace.db.flush();
     await waitForObject(guestSpace, hostDocument);
 
-    const text = live(TextV0Type, { content: 'Hello, world!' });
+    const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
     hostDocument.content = Ref.make(text);
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -407,7 +407,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = live(TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -420,7 +420,7 @@ describe('Spaces', () => {
       await hostSpace.db.flush();
       await waitForObject(guestSpace, hostDocument);
 
-      const text = live(TextV0Type, { content: 'Hello, world!' });
+      const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
       hostDocument.content = Ref.make(text);
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -558,15 +558,15 @@ describe('Spaces', () => {
   };
 
   const createDocument = (): Live<DocumentType> => {
-    const text = live(TextV0Type, { content: 'Hello, world!' });
-    return live(DocumentType, {
+    const text = Obj.make(TextV0Type, { content: 'Hello, world!' });
+    return Obj.make(DocumentType, {
       title: 'Test document',
       content: Ref.make(text),
     });
   };
 
   const createObject = <T extends {}>(props: T): Live<Expando> => {
-    return live(Expando, props);
+    return Obj.make(Type.Expando, props);
   };
 
   const waitForObject = async (space: Space, object: HasId) => {

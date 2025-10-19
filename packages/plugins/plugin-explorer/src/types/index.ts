@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './schema';
-export * from './types';
+export * as ExplorerAction from './ExplorerAction';
+export * as Graph from './Graph';

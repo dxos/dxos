@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { ObjectId } from '@dxos/echo-schema';
+import { ObjectId } from '@dxos/echo/internal';
 import { AbstractGraphBuilder, AbstractGraphModel, type Graph, createEdgeId } from '@dxos/graph';
 import { DXN } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';

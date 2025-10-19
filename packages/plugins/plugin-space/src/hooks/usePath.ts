@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
 import { type ReadableGraph } from '@dxos/plugin-graph';

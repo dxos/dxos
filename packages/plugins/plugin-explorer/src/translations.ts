@@ -6,12 +6,12 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 
 import { meta } from './meta';
-import { ViewType } from './types';
+import { Graph } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [ViewType.typename]: {
+      [Graph.Graph.typename]: {
         'typename label': 'Explorer',
         'typename label_zero': 'Explorers',
         'typename label_one': 'Explorer',

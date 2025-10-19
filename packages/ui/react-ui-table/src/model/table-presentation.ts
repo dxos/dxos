@@ -3,10 +3,10 @@
 //
 
 import { signal } from '@preact/signals-core';
-import { isNotNullable } from 'effect/Predicate';
+import * as Predicate from 'effect/Predicate';
 
 import { Obj } from '@dxos/echo';
-import { FormatEnum, TypeEnum, getValue } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
@@ -190,7 +190,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
         const tags = targetArray
           .map(getLabel)
-          .filter(isNotNullable)
+          .filter(Predicate.isNotNullable)
           .map((title) => {
             return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
           })

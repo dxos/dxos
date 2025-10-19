@@ -4,9 +4,13 @@
 
 import path from 'node:path';
 
-import { Command } from '@effect/cli';
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Config, Console, Effect, pipe } from 'effect';
+import * as Command from '@effect/cli/Command';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Config from 'effect/Config';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 
 import { withRetry } from '@dxos/edge-client';
 
@@ -24,7 +28,7 @@ export const list = Command.make(
     }
 
     const apiKey = yield* Config.string('DX_HUB_API_KEY');
-    const result = yield* pipe(
+    const result = yield* Function.pipe(
       withRetry(
         HttpClient.get(url, {
           headers: {

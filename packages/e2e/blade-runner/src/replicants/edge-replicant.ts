@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { DeviceType, type Identity } from '@dxos/client/halo';
 import { type ConfigProto } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { getInvocationUrl } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { uploadWorkerFunction } from '@dxos/functions/edge';

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -46,7 +46,7 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   const handleNavigate = useCallback(
     () =>
       dispatch(
-        pipe(
+        Function.pipe(
           createIntent(LayoutAction.UpdatePopover, {
             part: 'popover',
             subject: null,

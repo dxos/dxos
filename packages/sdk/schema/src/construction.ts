@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import {
   type EchoSchema,
@@ -11,8 +11,8 @@ import {
   TypeEnum,
   TypedObject,
   formatToType,
-} from '@dxos/echo-schema';
-import { createEchoSchema } from '@dxos/live-object/testing';
+} from '@dxos/echo/internal';
+import { createEchoSchema } from '@dxos/echo/testing';
 
 import { makeMultiSelectAnnotations, makeSingleSelectAnnotations } from './util';
 

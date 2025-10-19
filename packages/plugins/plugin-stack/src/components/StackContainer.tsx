@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
 import {
@@ -133,7 +133,6 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
   return (
     <StackItem.Content
       toolbar
-      // TODO(burdon): Common border fragments?
       classNames='container-max-width overflow-hidden border-l border-r border-subduedSeparator'
     >
       <Toolbar.Root>

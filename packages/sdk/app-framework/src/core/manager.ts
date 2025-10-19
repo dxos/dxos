@@ -4,7 +4,14 @@
 
 import { Registry } from '@effect-rx/rx-react';
 import { untracked } from '@preact/signals-core';
-import { Array, Duration, Effect, Fiber, HashSet, Match, Ref, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Function from 'effect/Function';
+import * as HashSet from 'effect/HashSet';
+import * as Match from 'effect/Match';
+import * as Ref from 'effect/Ref';
 
 import { Event } from '@dxos/async';
 import { type Live, live } from '@dxos/live-object';
@@ -396,7 +403,7 @@ export class PluginManager {
       this.activation.emit({ event: key, state: 'activating' });
 
       // Fire activatesBefore events.
-      yield* pipe(
+      yield* Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesBefore ?? []),
         HashSet.fromIterable,
@@ -407,7 +414,7 @@ export class PluginManager {
       );
 
       // Concurrently triggers loading of lazy capabilities.
-      const getCapabilities = yield* pipe(
+      const getCapabilities = yield* Function.pipe(
         modules,
         Array.map((mod) => this._loadModule(mod)),
         Effect.allWith({ concurrency: 'unbounded' }),
@@ -418,7 +425,7 @@ export class PluginManager {
       );
 
       // Contribute the capabilities from the activated modules.
-      yield* pipe(
+      yield* Function.pipe(
         modules,
         Array.zip(getCapabilities),
         Array.map(([module, capabilities]) => this._contributeCapabilities(module, capabilities)),
@@ -428,7 +435,7 @@ export class PluginManager {
       );
 
       // Fire activatesAfter events.
-      yield* pipe(
+      yield* Function.pipe(
         modules,
         Array.flatMap((module) => module.activatesAfter ?? []),
         HashSet.fromIterable,

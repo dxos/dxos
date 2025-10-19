@@ -2,7 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option, type Schema, SchemaAST, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { decamelize } from '@dxos/util';
 
@@ -59,7 +62,7 @@ export class UrlParser<T extends Record<string, any>> {
       if (value !== undefined) {
         const field = this._schema.fields[key];
         if (field) {
-          const { key: serializedKey } = pipe(
+          const { key: serializedKey } = Function.pipe(
             getParamKeyAnnotation(field.ast),
             Option.getOrElse(() => ({
               key: decamelize(key),

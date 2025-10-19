@@ -106,9 +106,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-schema"
-    },
-    {
       "path": "../indexing"
     }
   ]

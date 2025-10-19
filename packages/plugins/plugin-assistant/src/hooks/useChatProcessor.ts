@@ -3,13 +3,14 @@
 //
 
 import { RegistryContext } from '@effect-rx/rx-react';
-import { type Runtime } from 'effect';
-import { useContext, useMemo } from 'react';
+import type * as Runtime from 'effect/Runtime';
+import { useContext, useMemo, useState } from 'react';
 
 import { AiConversation } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
 import { type Queue } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
 
 import { AiChatProcessor, type AiChatServices, type AiServicePreset } from '../processor';
 import { type Assistant } from '../types';
@@ -35,12 +36,19 @@ export const useChatProcessor = ({
   const observableRegistry = useContext(RegistryContext);
 
   // Create conversation from chat queue.
-  const conversation = useMemo(() => {
+  const [conversation, setConversation] = useState<AiConversation>();
+  useAsyncEffect(async () => {
     if (!chat?.queue.target) {
       return;
     }
 
-    return new AiConversation({ queue: chat.queue.target as Queue<any> });
+    const conversation = new AiConversation({ queue: chat.queue.target as Queue<any> });
+    await conversation.open();
+    setConversation(conversation);
+
+    return () => {
+      void conversation.close();
+    };
   }, [chat?.queue.target]);
 
   // Create processor.

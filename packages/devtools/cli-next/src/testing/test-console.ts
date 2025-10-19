@@ -4,7 +4,10 @@
 
 import util from 'node:util';
 
-import { Console, Context, Effect, Layer } from 'effect';
+import * as Console from 'effect/Console';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 function logToString(...args: any[]): string {
   return args

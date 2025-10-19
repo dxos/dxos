@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Layer, Schema, Scope } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
+import * as Scope from 'effect/Scope';
 
 import { AiService } from '@dxos/ai';
 import { raise } from '@dxos/debug';

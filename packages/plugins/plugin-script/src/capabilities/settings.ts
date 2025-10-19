@@ -6,16 +6,16 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { live } from '@dxos/live-object';
 
 import { meta } from '../meta';
-import { ScriptSettingsSchema } from '../types';
+import { ScriptSettings } from '../types';
 
 export default () => {
-  const settings = live(ScriptSettingsSchema, {
+  const settings = live<ScriptSettings>({
     editorInputMode: 'vscode',
   });
 
   return contributes(Capabilities.Settings, {
     prefix: meta.id,
-    schema: ScriptSettingsSchema,
+    schema: ScriptSettings,
     value: settings,
   });
 };

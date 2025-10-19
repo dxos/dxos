@@ -2,36 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client/echo';
-import { ScriptType } from '@dxos/functions';
+import { Obj, Type } from '@dxos/echo';
+import { LabelAnnotation } from '@dxos/echo/internal';
+import { Assistant } from '@dxos/plugin-assistant/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
+import { DataType } from '@dxos/schema';
 
-import { meta } from '../meta';
+export namespace Notebook {
+  export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
-export namespace ScriptAction {
-  export const CreateScriptSchema = Schema.Struct({
+  export const Cell = Schema.Struct({
+    id: Schema.String,
+    type: Schema.String,
+    script: Schema.optional(Type.Ref(DataType.Text)),
+    view: Schema.optional(Type.Ref(DataType.View)),
+    chat: Schema.optional(Type.Ref(Assistant.Chat)),
+  }).pipe(Schema.mutable);
+
+  export type Cell = Schema.Schema.Type<typeof Cell>;
+
+  export const Notebook = Schema.Struct({
     name: Schema.optional(Schema.String),
-    // TODO(wittjosiah): Placeholder annotation?
-    gistUrl: Schema.optional(Schema.String.annotations({ title: 'Import from Gist (url)' })),
-    initialTemplateId: Schema.optional(Schema.String),
-  });
-
-  export type CreateScriptProps = Schema.Schema.Type<typeof CreateScriptSchema>;
-
-  export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
-    input: Schema.extend(CreateScriptSchema, Schema.Struct({ space: SpaceSchema })),
-    output: Schema.Struct({
-      object: ScriptType,
+    cells: Schema.mutable(Schema.Array(Cell)),
+  }).pipe(
+    Type.Obj({
+      typename: 'dxos.org/type/Notebook',
+      version: '0.1.0',
     }),
-  }) {}
+    LabelAnnotation.set(['name']),
+  );
+
+  export type Notebook = Schema.Schema.Type<typeof Notebook>;
+
+  export const make = (props: Obj.MakeProps<typeof Notebook> = { cells: [] }) => Obj.make(Notebook, props);
 }
 
-export const ScriptSettingsSchema = Schema.mutable(
+export const ScriptSettings = Schema.mutable(
   Schema.Struct({
     editorInputMode: EditorInputMode,
   }),
 );
 
-export type ScriptSettingsProps = Schema.Schema.Type<typeof ScriptSettingsSchema>;
+export type ScriptSettings = Schema.Schema.Type<typeof ScriptSettings>;

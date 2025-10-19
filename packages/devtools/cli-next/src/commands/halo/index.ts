@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
+import * as Command from '@effect/cli/Command';
 
 import { create } from './create';
 import { identity } from './identity';

@@ -40,7 +40,6 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",

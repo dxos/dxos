@@ -70,9 +70,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-schema"
-    },
-    {
       "path": "../echo-signals"
     },
     {

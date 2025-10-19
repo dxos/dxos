@@ -13,9 +13,6 @@
   "bin": {
     "dx-build": "cli.js"
   },
-  "scripts": {
-    "build": "vite-node ./src/main.ts"
-  },
   "dependencies": {
     "chalk": "^4.1.0",
     "comment-json": "^4.2.3"

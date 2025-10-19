@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { HttpBody } from '@effect/platform';
+import * as HttpBody from '@effect/platform/HttpBody';
 
 /**
  * Template tag literal to get syntax highlighting for the query.

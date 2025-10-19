@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { ROOT_ID, createExtension } from '@dxos/app-graph';
 import { type SettingsStore, type SettingsValue } from '@dxos/local-storage';
@@ -22,7 +23,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/action`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -51,7 +52,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/core`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -75,7 +76,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/core-plugins`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id !== SETTINGS_ID ? Option.none() : Option.some(node))),
             Option.map(() => {
@@ -123,7 +124,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/custom-plugins`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) =>
               node.id !== `${SETTINGS_KEY}:custom-plugins` ? Option.none() : Option.some(node),

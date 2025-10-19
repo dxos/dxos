@@ -87,7 +87,7 @@ export class EdgeFeedReplicator extends Resource {
 
   private async _handleReconnect(): Promise<void> {
     await this._resetConnection();
-    if (this._messenger.status === EdgeStatus.CONNECTED) {
+    if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
       this._startReplication();
     }
   }

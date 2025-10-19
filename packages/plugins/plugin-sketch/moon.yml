@@ -17,7 +17,8 @@ tasks:
     deps:
       - prebuild
   prebuild:
-    script: pnpm run copy:assets
+    command: bash ./scripts/copy_assets.sh
+    platform: node # enforce that deps are installed
     inputs:
       - scripts/copy_assets.sh
       - package.json

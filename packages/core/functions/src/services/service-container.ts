@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Context, Layer } from 'effect';
+import type * as Context from 'effect/Context';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { entries } from '@dxos/util';

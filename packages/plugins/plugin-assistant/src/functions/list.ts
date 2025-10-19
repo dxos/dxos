@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';

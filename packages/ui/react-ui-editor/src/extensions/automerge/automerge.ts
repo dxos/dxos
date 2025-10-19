@@ -5,12 +5,13 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { type Extension, StateField } from '@codemirror/state';
+import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { type DocAccessor } from '@dxos/react-client/echo';
+import { DocAccessor } from '@dxos/react-client/echo';
 
 import { Cursor } from '../../util';
+import { initialSync } from '../state';
 
 import { cursorConverter } from './cursor';
 import { type State, isReconcile, updateHeadsEffect } from './defs';
@@ -18,11 +19,13 @@ import { Syncer } from './sync';
 
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
-    create: () => ({
-      path: accessor.path.slice(),
-      lastHeads: A.getHeads(accessor.handle.doc()!),
-      unreconciledTransactions: [],
-    }),
+    create: () => {
+      return {
+        path: accessor.path.slice(),
+        lastHeads: A.getHeads(accessor.handle.doc()!),
+        unreconciledTransactions: [],
+      };
+    },
 
     update: (value, tr) => {
       const result: State = {
@@ -64,6 +67,18 @@ export const automerge = (accessor: DocAccessor): Extension => {
       class {
         constructor(private readonly _view: EditorView) {
           accessor.handle.addListener('change', this._handleChange);
+
+          requestAnimationFrame(() => {
+            const value = DocAccessor.getValue<string>(accessor);
+            const current = this._view.state.doc.toString();
+            if (value !== current) {
+              // TODO(burdon): This attempts to set the initial state, but creates problems.
+              // this._view.dispatch({
+              //   changes: { from: 0, to: this._view.state.doc.length, insert: value },
+              //   annotations: initialSync,
+              // });
+            }
+          });
         }
 
         destroy() {
@@ -77,9 +92,13 @@ export const automerge = (accessor: DocAccessor): Extension => {
     ),
 
     // Reconcile local updates.
-    EditorView.updateListener.of(({ view, changes }) => {
+    EditorView.updateListener.of(({ view, changes, transactions }) => {
       if (!changes.empty) {
-        syncer.reconcile(view, true);
+        // Only reconcile if it's not an initial sync (to avoid loops)
+        const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
+        if (!isInitialSync) {
+          syncer.reconcile(view, true);
+        }
       }
     }),
   ];

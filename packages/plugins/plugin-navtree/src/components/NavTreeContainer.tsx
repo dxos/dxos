@@ -98,7 +98,7 @@ export type NavTreeContainerProps = {
 } & Pick<NavTreeContextValue, 'tab'>;
 
 export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeContainerProps) => {
-  const [isLg] = useMediaQuery('lg', { ssr: false });
+  const [isLg] = useMediaQuery('lg');
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { graph } = useAppGraph();
   const { isOpen, isCurrent, isAlternateTree, setItem } = useCapability(NavTreeCapabilities.State);

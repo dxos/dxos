@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo-schema';
+import { LabelAnnotation } from '@dxos/echo/internal';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { Template } from '../template';

@@ -10,7 +10,7 @@ tasks:
     inputs:
       - bin/main.js
   prebuild:
-    command: pnpm run --silent prebuild
+    command: vite-node ./src/main.ts --src ./test/proto/**/*.proto -s ./test/proto/substitutions.ts --baseDir ./test/proto -o ./test/proto/gen
     deps:
       - ^:build
     inputs:

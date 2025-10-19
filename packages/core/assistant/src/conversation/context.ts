@@ -3,12 +3,16 @@
 //
 
 import { type ReadonlySignal, computed } from '@preact/signals-core';
-import { Context, Schema } from 'effect';
-import { Array, pipe } from 'effect';
+import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
-import { DXN, Obj, type Ref, type Relation, Type } from '@dxos/echo';
+import { Resource } from '@dxos/context';
+import { DXN, Filter, Obj, Query, type Ref, type Relation, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { ComplexSet } from '@dxos/util';
 
 /**
@@ -57,40 +61,68 @@ export class Bindings {
  * Manages bindings of blueprints and objects to a conversation.
  */
 // TODO(burdon): Context should manage ephemeral state of bindings until prompt is issued?
-export class AiContextBinder {
+export class AiContextBinder extends Resource {
   /**
    * Reactive query of all bindings.
    */
   // TODO(burdon): Cache value?
-  readonly bindings: ReadonlySignal<Bindings> = computed(() => this._reduce(this._queue.objects));
+  private _bindings?: ReadonlySignal<Bindings>;
+  private _blueprints?: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]>;
+  private _objects?: ReadonlySignal<Ref.Ref<Type.Expando>[]>;
 
-  readonly blueprints: ReadonlySignal<Ref.Ref<Blueprint.Blueprint>[]> = computed(() => [
-    ...this.bindings.value.blueprints,
-  ]);
+  constructor(private readonly _queue: Queue) {
+    super();
+  }
 
-  readonly objects: ReadonlySignal<Ref.Ref<Type.Expando>[]> = computed(() => [...this.bindings.value.objects]);
+  get bindings() {
+    invariant(this._bindings, 'AiContextBinder not open');
+    return this._bindings;
+  }
 
-  constructor(private readonly _queue: Queue) {}
+  get blueprints() {
+    invariant(this._blueprints, 'AiContextBinder not open');
+    return this._blueprints;
+  }
+
+  get objects() {
+    invariant(this._objects, 'AiContextBinder not open');
+    return this._objects;
+  }
+
+  // TODO(wittjosiah): Use parent context?
+  protected override async _open(): Promise<void> {
+    const query = this._queue.query(Query.select(Filter.everything()));
+    this._ctx.onDispose(query.subscribe(() => {}));
+    this._bindings = computed(() => this._reduce(query.objects));
+    this._blueprints = computed(() => [...this.bindings.value.blueprints]);
+    this._objects = computed(() => [...this.bindings.value.objects]);
+  }
+
+  protected override async _close(): Promise<void> {
+    this._bindings = undefined;
+    this._blueprints = undefined;
+    this._objects = undefined;
+  }
 
   /**
    * Asynchronous query of all bindings.
    */
   async query(): Promise<Bindings> {
-    const queueItems = await this._queue.queryObjects();
-    return this._reduce(queueItems);
+    const { objects } = await this._queue.query(Query.select(Filter.everything())).run();
+    return this._reduce(objects);
   }
 
   // TODO(burdon): Pass in Blueprint obj (from registry?) and create reference.
   async bind(props: BindingProps): Promise<void> {
-    if (!props.blueprints?.length && !props.objects?.length) {
-      return;
-    }
-
     const blueprints =
       props.blueprints?.filter((ref) => !this.blueprints.peek().find((b) => b.dxn.toString() === ref.dxn.toString())) ??
       [];
     const objects =
       props.objects?.filter((ref) => !this.objects.peek().find((o) => o.dxn.toString() === ref.dxn.toString())) ?? [];
+
+    if (!blueprints.length && !objects.length) {
+      return;
+    }
 
     await this._queue.append([
       Obj.make(ContextBinding, {
@@ -126,7 +158,7 @@ export class AiContextBinder {
   }
 
   private _reduce(items: (Obj.Any | Relation.Any)[]): Bindings {
-    return pipe(
+    return Function.pipe(
       items,
       Array.filter(Obj.instanceOf(ContextBinding)),
       Array.reduce(new Bindings(), (context, item) => {

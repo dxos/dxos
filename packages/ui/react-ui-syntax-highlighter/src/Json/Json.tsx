@@ -10,7 +10,7 @@ import { Input, type ThemedClassName } from '@dxos/react-ui';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
-const defaultClassNames = '!m-0 grow overflow-y-auto';
+const defaultClassNames = '!m-0 grow overflow-y-auto text-sm';
 
 export type JsonProps = ThemedClassName<{
   data?: any;

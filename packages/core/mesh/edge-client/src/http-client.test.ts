@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Effect, pipe } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -30,7 +32,7 @@ describe('HttpClient', () => {
     invariant(server);
 
     {
-      const result = await pipe(
+      const result = await Function.pipe(
         withRetry(HttpClient.get(server.url)),
         Effect.provide(FetchHttpClient.layer),
         Effect.withSpan('EdgeHttpClient'),
@@ -40,7 +42,7 @@ describe('HttpClient', () => {
     }
 
     {
-      const result = await pipe(
+      const result = await Function.pipe(
         HttpClient.get(server.url),
         withLogging,
         withRetryConfig,

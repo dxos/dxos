@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { getSnapshot } from '@dxos/echo-schema';
+import { getSnapshot } from '@dxos/echo/internal';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { FormProvider, useFormContext, useInputProps } from '@dxos/react-ui-form';
 

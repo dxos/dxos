@@ -2,8 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FetchHttpClient, HttpClient } from '@effect/platform';
-import { Duration, Effect, Schedule, pipe } from 'effect';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Schedule from 'effect/Schedule';
 import { type BuildOptions, type BuildResult, type Loader, type Plugin, build, initialize } from 'esbuild-wasm';
 
 import { subtleCrypto } from '@dxos/crypto';
@@ -277,7 +281,7 @@ const httpPlugin: Plugin = {
         return { contents: text, loader: 'jsx' as Loader };
       }).pipe(
         Effect.retry(
-          pipe(
+          Function.pipe(
             Schedule.exponential(Duration.millis(INITIAL_DELAY)),
             Schedule.jittered,
             Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),

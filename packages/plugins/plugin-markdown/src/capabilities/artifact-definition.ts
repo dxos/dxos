@@ -5,7 +5,8 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, chain, contributes, createIntent } from '@dxos/app-framework';
@@ -46,7 +47,7 @@ export default () => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
 
-          const intent = pipe(
+          const intent = Function.pipe(
             createIntent(MarkdownAction.Create, {
               spaceId: extensions.space.id,
               name,

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 // Based on https://schema.org/PostalAddress
 export const PostalAddress = Schema.Struct({

@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Args, Command, Options } from '@effect/cli';
-import { Console, Effect, Option } from 'effect';
+import * as Args from '@effect/cli/Args';
+import * as Command from '@effect/cli/Command';
+import * as Options from '@effect/cli/Options';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { type FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

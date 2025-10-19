@@ -3,7 +3,9 @@
 //
 
 import { describe, it } from '@effect/vitest';
-import { Effect, Stream, TestContext } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import * as TestContext from 'effect/TestContext';
 
 import { createStreamer, splitFragments, splitSentences, splitSpans } from './stream';
 

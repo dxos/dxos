@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import { useCallback } from 'react';
 
 import { type Space } from '@dxos/client/echo';

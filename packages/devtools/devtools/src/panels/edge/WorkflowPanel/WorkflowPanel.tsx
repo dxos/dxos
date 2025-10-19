@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
-import { SchemaAST } from 'effect';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo, useState } from 'react';
 
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
+import { FormatEnum } from '@dxos/echo/internal';
 import { Filter } from '@dxos/echo-db';
-import { FormatEnum } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';

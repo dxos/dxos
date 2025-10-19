@@ -13,22 +13,12 @@ import { createDataExtensions } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { trim } from '@dxos/util';
-import { type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 
 import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor';
 
 const SCRIPT = trim`
   x * 2
 `;
-
-// Caching the wasm module.
-let quickJS: Promise<QuickJSWASMModule> | null = null;
-const getQuickJS = () => {
-  if (!quickJS) {
-    quickJS = createQuickJS();
-  }
-  return quickJS;
-};
 
 const DefaultStory = (props: TypescriptEditorProps) => {
   const object = useMemo(() => createObject({ content: SCRIPT }), []);
@@ -52,9 +42,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   const handleRun = useCallback(async () => {
     try {
       const definitions: [string, any][] = [['x', 100]];
-      const quickJS = await getQuickJS();
 
-      // TODO(burdon): Eval.
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
       const result = new Function(...definitions.map(([name]) => name), `return ${object.content.trim()}`)(
         ...definitions.map(([, value]) => value),

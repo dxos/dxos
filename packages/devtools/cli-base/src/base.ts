@@ -9,7 +9,7 @@ import readline from 'node:readline';
 
 import { Args, Command, Flags, type Interfaces, type Config as OclifConfig, settings } from '@oclif/core';
 import chalk from 'chalk';
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import pkgUp from 'pkg-up';

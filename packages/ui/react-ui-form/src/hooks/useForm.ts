@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type BaseObject, getValue, setValue } from '@dxos/echo-schema';
+import { type BaseObject, getValue, setValue } from '@dxos/echo/internal';
 import { type JsonPath, type SimpleType, createJsonPath, fromEffectValidationPath } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -219,12 +220,13 @@ export const useForm = <T extends BaseObject>({
 
       const newValues = { ...setValue(values, jsonPath, parsedValue) };
       setValues(newValues);
-      setChanged((prev) => ({ ...prev, [jsonPath]: true }));
+      const newChanged = { ...changed, [jsonPath]: true };
+      setChanged(newChanged);
       onValuesChanged?.(newValues);
 
       const isValid = validate(newValues);
       if (isValid && onValid) {
-        onValid(newValues, { changed });
+        onValid(newValues, { changed: newChanged });
       }
     },
     [values, onValuesChanged, validate, onValid, changed],

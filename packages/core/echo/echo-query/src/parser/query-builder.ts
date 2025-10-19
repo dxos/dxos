@@ -4,7 +4,7 @@
 
 import { type Parser, type Tree, type TreeCursor } from '@lezer/common';
 
-import { Filter, type TagMap } from '@dxos/echo';
+import { Filter, type Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { QueryDSL } from './gen';
@@ -18,7 +18,7 @@ import { QueryDSL } from './gen';
 export class QueryBuilder {
   private readonly _parser: Parser = QueryDSL.Parser.configure({ strict: true });
 
-  constructor(private readonly _tags?: TagMap) {}
+  constructor(private readonly _tags?: Tag.TagMap) {}
 
   /**
    * Check valid input.

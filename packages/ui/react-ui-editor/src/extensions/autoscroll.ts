@@ -12,8 +12,8 @@ const lineHeight = 24;
 export const scrollToBottomEffect = StateEffect.define<any>();
 
 export type AutoScrollOptions = {
-  overscroll: number;
-  throttle: number;
+  overscroll?: number;
+  throttle?: number;
 };
 
 /**

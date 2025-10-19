@@ -12,7 +12,7 @@ export const translations = [
       [translationKey]: {
         'scroll-down.button': 'Scroll down',
         'no commits message': 'No events yet',
-        'query placeholder': 'Enter query (e.g., "type:")',
+        'query placeholder': 'Enter query (e.g., "#tag", "type")',
         'picker select': 'Select',
         'picker none': 'None',
         'picker type placeholder': 'Type',

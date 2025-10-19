@@ -14,7 +14,17 @@ import {
 // @ts-ignore
 import { format, subDays } from 'https://esm.sh/date-fns@3.3.1?bundle=false';
 // @ts-ignore
-import { Chunk, Effect, Ref, Schedule, Stream, pipe } from 'https://esm.sh/effect@3.17.0?bundle=false';
+import * as Chunk from 'https://esm.sh/effect@3.17.0/Chunk?bundle=false';
+// @ts-ignore
+import * as Effect from 'https://esm.sh/effect@3.17.0/Effect?bundle=false';
+// @ts-ignore
+import * as Function from 'https://esm.sh/effect@3.17.0/Function?bundle=false';
+// @ts-ignore
+import * as Ref from 'https://esm.sh/effect@3.17.0/Ref?bundle=false';
+// @ts-ignore
+import * as Schedule from 'https://esm.sh/effect@3.17.0/Schedule?bundle=false';
+// @ts-ignore
+import * as Stream from 'https://esm.sh/effect@3.17.0/Stream?bundle=false';
 
 export default defineFunction({
   key: 'dxos.org/script/gmail',
@@ -43,7 +53,7 @@ export default defineFunction({
 
       // NOTE: Google API bundles size is v. large and caused runtime issues.
       const makeRequest = (url: string) =>
-        pipe(
+        Function.pipe(
           url,
           HttpClientRequest.get,
           HttpClientRequest.setHeaders({ Authorization: `Bearer ${token}`, Accept: 'application/json' }),
@@ -116,7 +126,7 @@ export default defineFunction({
 
       const queueMessages = yield* Ref.get(newMessages);
       if (queueMessages.length > 0) {
-        yield* pipe(
+        yield* Function.pipe(
           queueMessages,
           Stream.fromIterable,
           Stream.grouped(10),

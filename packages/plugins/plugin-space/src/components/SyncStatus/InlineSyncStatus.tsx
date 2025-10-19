@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';
@@ -16,12 +16,12 @@ import { AttentionGlyph, useAttended, useAttention } from '@dxos/react-ui-attent
 import { usePath } from '../../hooks';
 import { meta } from '../../meta';
 
-const useEdgeStatus = (): EdgeStatus => {
-  const [status, setStatus] = useState(EdgeStatus.NOT_CONNECTED);
+const useEdgeStatus = (): EdgeStatus.ConnectionState => {
+  const [status, setStatus] = useState(EdgeStatus.ConnectionState.NOT_CONNECTED);
   const client = useClient();
   useEffect(() => {
     client.services.services.EdgeAgentService?.queryEdgeStatus().subscribe(({ status }) => {
-      setStatus(status);
+      setStatus(status.state);
     });
   }, [client]);
 
@@ -43,7 +43,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const path = usePath(graph, startOfAttention);
   const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
 
-  const connectedToEdge = useEdgeStatus() === EdgeStatus.CONNECTED;
+  const connectedToEdge = useEdgeStatus() === EdgeStatus.ConnectionState.CONNECTED;
   // TODO(wittjosiah): This is not reactive.
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);

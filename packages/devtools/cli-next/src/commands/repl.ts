@@ -2,8 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command, Prompt } from '@effect/cli';
-import { Effect } from 'effect';
+import * as Command from '@effect/cli/Command';
+import * as Prompt from '@effect/cli/Prompt';
+import * as Effect from 'effect/Effect';
 
 import { run } from './dx';
 

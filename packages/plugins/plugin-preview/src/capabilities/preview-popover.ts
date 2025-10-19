@@ -22,7 +22,7 @@ const handlePreviewLookup = async (
   try {
     const object = await defaultSpace.db.ref(DXN.parse(ref)).load();
     return { label, object };
-  } catch (err) {
+  } catch {
     return null;
   }
 };

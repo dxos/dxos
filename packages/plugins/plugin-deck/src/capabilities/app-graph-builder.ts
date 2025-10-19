@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -20,7 +21,7 @@ export default (context: PluginContext) =>
       id: meta.id,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => {

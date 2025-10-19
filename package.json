@@ -16,6 +16,7 @@
     "changed-packages": "scripts/changed",
     "check-cycles": "node scripts/check-cycles.mjs",
     "check-dependencies": "syncpack list-mismatches --filter '!ink'",
+    "create-worktree": "./scripts/create-worktree",
     "fix-dependencies": "syncpack fix-mismatches",
     "format-package": "syncpack format",
     "gh-action": "./scripts/gh-action.mjs",
@@ -47,7 +48,6 @@
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/eslint-plugin-rules": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log-hook": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protobuf-compiler": "workspace:*",
     "@dxos/signal": "workspace:*",
@@ -65,7 +65,6 @@
     "@preact-signals/safe-react": "^0.9.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@rushstack/eslint-patch": "^1.12.0",
-    "@swc-node/register": "1.11.1",
     "@swc/core": "1.13.5",
     "@swc/types": "^0.1.25",
     "@testing-library/dom": "^10.4.1",
@@ -114,7 +113,7 @@
     "eslint-plugin-prefer-arrow-functions": "^3.6.2",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-storybook": "9.1.6",
+    "eslint-plugin-storybook": "9.1.13",
     "eslint-plugin-unused-imports": "^4.1.4",
     "execa": "^5.1.1",
     "extensionless": "^1.9.9",
@@ -125,7 +124,7 @@
     "globrex": "^0.1.2",
     "husky": "^8.0.0",
     "jiti": "2.4.2",
-    "jsdom": "^26.1.0",
+    "jsdom": "^27.0.0",
     "jsdom-global": "^3.0.2",
     "json-stringify-safe": "^5.0.1",
     "knip": "^5.64.3",
@@ -146,7 +145,7 @@
     "rollup-plugin-sourcemaps": "^0.6.3",
     "semver": "^7.5.4",
     "serve": "^14.1.2",
-    "storybook": "^9.1.10",
+    "storybook": "^9.1.13",
     "syncpack": "^8.2.4",
     "ts-morph": "^16.0.0",
     "types-package-json": "^2.0.39",
@@ -172,7 +171,7 @@
   },
   "packageManager": "pnpm@10.13.1",
   "engines": {
-    "node": "20.19.5"
+    "node": "24.4.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -193,10 +192,14 @@
       "msgpackr-extract",
       "node-datachannel",
       "onnxruntime-node",
+      "oxc-resolver",
       "protobufjs",
       "sharp",
       "sodium-native",
-      "workerd"
+      "styled-components",
+      "unrs-resolver",
+      "workerd",
+      "yarn"
     ],
     "overrides": {
       "@automerge/automerge": "3.1.1",

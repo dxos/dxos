@@ -3,7 +3,7 @@
 //
 
 import { Registry } from '@effect-rx/rx-react';
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 import { describe, expect, it, onTestFinished } from 'vitest';
 
 import { PluginContext, defineCapability } from './capabilities';

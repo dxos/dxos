@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Stream } from 'effect';
+import * as Stream from 'effect/Stream';
 
 import { Obj } from '@dxos/echo';
 

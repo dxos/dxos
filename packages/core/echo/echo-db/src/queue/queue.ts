@@ -13,7 +13,7 @@ import {
   assertObjectModelShape,
   defineHiddenProperty,
   setRefResolverOnData,
-} from '@dxos/echo-schema';
+} from '@dxos/echo/internal';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';

@@ -2,18 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { ExplorerAction, ViewType } from '../types';
+import { ExplorerAction, Graph } from '../types';
 
-export default () =>
+export default (context: PluginContext) =>
   contributes(
     Capabilities.IntentResolver,
     createResolver({
-      intent: ExplorerAction.Create,
-      resolve: ({ name }) => ({
-        data: { object: Obj.make(ViewType, { name, type: '' }) },
-      }),
+      intent: ExplorerAction.CreateGraph,
+      resolve: async ({ space, name, typename }) => {
+        const client = context.getCapability(ClientCapabilities.Client);
+        const { view } = await Graph.makeView({ client, space, name, typename });
+        return { data: { object: view } };
+      },
     }),
   );

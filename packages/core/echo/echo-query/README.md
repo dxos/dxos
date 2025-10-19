@@ -5,7 +5,7 @@ ECHO queries.
 ## Installation
 
 ```bash
-pnpm i @dxos/echo-schema
+pnpm i @dxos/echo-query
 ```
 
 ## DXOS Resources

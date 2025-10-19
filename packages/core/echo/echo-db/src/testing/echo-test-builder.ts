@@ -3,7 +3,7 @@
 //
 
 import type { AutomergeUrl } from '@automerge/automerge-repo';
-import type { Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import isEqual from 'lodash.isequal';
 
 import { waitForCondition } from '@dxos/async';

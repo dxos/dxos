@@ -3,7 +3,9 @@
 //
 
 import { it } from '@effect/vitest';
-import { Cause, Effect, Fiber } from 'effect';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 
 const doWork = Effect.fn('doWork')(function* () {
   yield* Effect.sleep('1 minute');

@@ -4,7 +4,7 @@
 
 import { getHeads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { DeferredTask, scheduleMicroTask, synchronized } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';

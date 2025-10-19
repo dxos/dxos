@@ -15,6 +15,7 @@ import {
   Stack,
   StackItem,
   autoScrollRootAttributes,
+  cardStackDefaultInlineSizeRem,
   cardStackHeading,
 } from '@dxos/react-ui-stack';
 
@@ -57,7 +58,7 @@ export const Kanban = ({ model, onAddCard, onRemoveCard }: KanbanProps) => {
           <CardStack.Root asChild key={columnValue}>
             <StackItem.Root
               item={{ id: columnValue }}
-              size={20}
+              size={cardStackDefaultInlineSizeRem}
               disableRearrange={uncategorized}
               focusIndicatorVariant='group'
               prevSiblingId={prevSiblingId}

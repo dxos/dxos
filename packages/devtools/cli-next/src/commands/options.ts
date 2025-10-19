@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Options } from '@effect/cli';
+import * as Options from '@effect/cli/Options';
 
 //
 // Common options.
-// NOTE: Sub-commands should pipe(Options.optional) if required.
+// NOTE: Sub-commands should Function.pipe(Options.optional) if required.
 //
 
 export const Common = {

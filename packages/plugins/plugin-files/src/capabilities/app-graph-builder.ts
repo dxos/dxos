@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, LayoutAction, type PluginContext, chain, contributes, createIntent } from '@dxos/app-framework';
 import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
@@ -21,7 +22,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/export`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -58,7 +59,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/root`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.flatMap(() => {
@@ -93,7 +94,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/files`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
             Option.map(() => [
@@ -102,7 +103,7 @@ export default (context: PluginContext) =>
                 data: async () => {
                   const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                   await dispatch(
-                    pipe(createIntent(LocalFilesAction.OpenFile), chain(LayoutAction.Open, { part: 'main' })),
+                    Function.pipe(createIntent(LocalFilesAction.OpenFile), chain(LayoutAction.Open, { part: 'main' })),
                   );
                 },
                 properties: {
@@ -117,7 +118,7 @@ export default (context: PluginContext) =>
                       data: async () => {
                         const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
                         await dispatch(
-                          pipe(
+                          Function.pipe(
                             createIntent(LocalFilesAction.OpenDirectory),
                             chain(LayoutAction.Open, { part: 'main' }),
                           ),
@@ -136,7 +137,7 @@ export default (context: PluginContext) =>
         ),
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === meta.id ? Option.some(node) : Option.none())),
             Option.map(() => {
@@ -162,7 +163,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/sub-files`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (isLocalDirectory(node.data) ? Option.some(node.data.children) : Option.none())),
             Option.map((children) =>
@@ -186,7 +187,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/actions`,
       actions: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none())),
             Option.map((entity) => [

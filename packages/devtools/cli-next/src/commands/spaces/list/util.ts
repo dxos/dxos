@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Effect } from 'effect';
+import * as Effect from 'effect/Effect';
 
 import { type PublicKey } from '@dxos/client';
 import { type Space, SpaceState, type SpaceSyncState } from '@dxos/client/echo';

@@ -7,7 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { invariant } from '@dxos/invariant';
 import { live } from '@dxos/live-object';

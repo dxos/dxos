@@ -9,7 +9,9 @@ export const translationKey = 'react-ui-searchlist';
 export const translations = [
   {
     'en-US': {
-      [translationKey]: {},
+      [translationKey]: {
+        'search.placeholder': 'Search...',
+      },
     },
   },
 ] as const satisfies Resource[];

@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { ROOT_ID, createExtension } from '@dxos/plugin-graph';
@@ -21,7 +22,7 @@ export default (_context: PluginContext) =>
       id: `${meta.id}/help`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.id === ROOT_ID ? Option.some(node) : Option.none())),
             Option.map((node) => {

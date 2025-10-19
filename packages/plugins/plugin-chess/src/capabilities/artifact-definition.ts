@@ -6,7 +6,8 @@
 // @ts-nocheck
 
 import { Chess as ChessJS } from 'chess.js';
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
@@ -50,7 +51,7 @@ export default () => {
         execute: async ({ pgn }, { extensions }) => {
           invariant(extensions?.space, 'No space');
           invariant(extensions?.dispatch, 'No intent dispatcher');
-          const intent = pipe(
+          const intent = Function.pipe(
             createIntent(ChessAction.Create, { pgn }),
             chain(SpaceAction.AddObject, { target: extensions.space }),
           );

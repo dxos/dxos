@@ -59,6 +59,7 @@ export const translations = [
         'settings overscroll none label': 'None',
         'settings enable statusbar label': 'Show status bar',
         'settings enable deck label': 'Enable Deck',
+        'settings encapsulated planks label': 'Encapsulated planks',
         'close current label': 'Close current plank',
         'close others label': 'Close other planks',
         'close all label': 'Close all planks',

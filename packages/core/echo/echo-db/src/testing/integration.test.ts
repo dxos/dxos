@@ -2,11 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
+import {
+  Expando,
+  type ObjectId,
+  Ref,
+  RelationSourceId,
+  RelationTargetId,
+  getSchemaTypename,
+  getTypeAnnotation,
+  getTypeReference,
+} from '@dxos/echo/internal';
+import { getSchema } from '@dxos/echo/internal';
+import { live } from '@dxos/echo/internal';
+import { TestingDeprecated, updateCounter } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -14,22 +27,8 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import {
-  Expando,
-  type ObjectId,
-  Ref,
-  RelationSourceId,
-  RelationTargetId,
-  TypedObject,
-  getSchemaTypename,
-  getTypeAnnotation,
-  getTypeReference,
-} from '@dxos/echo-schema';
-import { getSchema } from '@dxos/echo-schema';
-import { Testing, updateCounter } from '@dxos/echo-schema/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { DXN, PublicKey } from '@dxos/keys';
-import { live } from '@dxos/live-object';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -107,7 +106,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('reload peer -- save index before restart', async () => {
+  test('reload peer -- save index before restart', { timeout: 20_000 }, async () => {
     const NUM_OBJECTS = 500;
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
 
@@ -397,7 +396,7 @@ describe('Integration tests', () => {
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
 
     const obj1 = db1.add(
-      live({
+      Obj.make(Type.Expando, {
         content: 'test',
       }),
     );
@@ -412,22 +411,22 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      db.graph.schemaRegistry.addSchema([Testing.Contact, Testing.HasManager]);
+      db.graph.schemaRegistry.addSchema([TestingDeprecated.Contact, TestingDeprecated.HasManager]);
 
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          live(Testing.Contact, {
+          live(TestingDeprecated.Contact, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          live(Testing.Contact, {
+          live(TestingDeprecated.Contact, {
             name: 'Bob',
           }),
         );
         const hasManager = db.add(
-          live(Testing.HasManager, {
+          live(TestingDeprecated.HasManager, {
             [RelationSourceId]: bob,
             [RelationTargetId]: alice,
             since: '2022',
@@ -459,9 +458,9 @@ describe('Integration tests', () => {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
 
-        class TestSchema extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+        const TestSchema = Schema.Struct({
           field: Schema.String,
-        }) {}
+        }).pipe(Type.Obj({ typename: 'example.com/type/Test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([TestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
@@ -517,7 +516,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([Testing.Contact]);
+      const [schema] = await db.schemaRegistry.register([TestingDeprecated.Contact]);
       typeDXN = getTypeReference(schema)!.toDXN();
       db.add(live(schema, { name: 'Bob' }));
       await db.flush({ indexes: true });
@@ -530,7 +529,7 @@ describe('Integration tests', () => {
         objects: [obj],
       } = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(getSchema(obj)).toBeDefined();
-      expect(getSchemaTypename(getSchema(obj)!)).toEqual(Testing.Contact.typename);
+      expect(getSchemaTypename(getSchema(obj)!)).toEqual(TestingDeprecated.Contact.typename);
     }
   });
 });

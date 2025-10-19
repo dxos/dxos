@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OpenAiClient } from '@effect/ai-openai';
-import { FetchHttpClient } from '@effect/platform';
-import { Layer } from 'effect';
+import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 
-import { AiServiceRouter } from '@dxos/ai';
+import * as AiServiceRouter from '@dxos/ai/AiServiceRouter';
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 
 /**

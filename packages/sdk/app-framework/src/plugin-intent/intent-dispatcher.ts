@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Effect, Option, Ref, pipe } from 'effect';
-import { type Simplify } from 'effect/Types';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
+import * as Ref from 'effect/Ref';
+import type * as Types from 'effect/Types';
 
 import { live } from '@dxos/live-object';
 import { log } from '@dxos/log';
@@ -132,7 +135,7 @@ export const createResolver = <Tag extends string, Fields extends IntentParams, 
  */
 export type PromiseIntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
-) => Promise<Simplify<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>>;
+) => Promise<Types.Simplify<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>>;
 
 /**
  * Creates an effect for intents.
@@ -141,7 +144,7 @@ export type IntentDispatcher = <Fields extends IntentParams>(
   intent: IntentChain<any, any, any, Fields>,
   depth?: number,
 ) => Effect.Effect<
-  Simplify<Required<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>['data']>,
+  Types.Simplify<Required<IntentDispatcherResult<IntentData<Fields>, IntentResultData<Fields>>>['data']>,
   Error
 >;
 
@@ -252,7 +255,7 @@ export const createDispatcher = (
 
       if (result.undoable && isUndoable(results)) {
         // TODO(wittjosiah): Is there a better way to handle showing undo for chains?
-        yield* pipe(
+        yield* Function.pipe(
           dispatch(createIntent(IntentAction.ShowUndo, { message: result.undoable.message })),
           Effect.catchSome((err) =>
             err instanceof NoResolversError ? Option.some(Effect.succeed(undefined)) : Option.none(),

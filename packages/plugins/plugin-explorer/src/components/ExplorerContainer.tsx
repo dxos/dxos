@@ -11,15 +11,15 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
+import { type DataType } from '@dxos/schema';
 
 import { useGraphModel } from '../hooks';
-import { type ViewType } from '../types';
 
 import { D3ForceGraph } from './Graph';
 
 type ExplorerContainerProps = {
   role: string;
-  view: ViewType;
+  view: DataType.View;
 };
 
 const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
@@ -33,15 +33,19 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
     setFilter(builder.build(value));
   }, []);
 
+  const showToolbar = role === 'article';
+
   if (!space || !model) {
     return null;
   }
 
   return (
-    <StackItem.Content toolbar size={role === 'section' ? 'square' : 'intrinsic'}>
-      <Toolbar.Root>
-        <QueryEditor space={space} onChange={handleChange} />
-      </Toolbar.Root>
+    <StackItem.Content toolbar={showToolbar}>
+      {showToolbar && (
+        <Toolbar.Root>
+          <QueryEditor db={space.db} onChange={handleChange} />
+        </Toolbar.Root>
+      )}
       <D3ForceGraph model={model} match={match} />
     </StackItem.Content>
   );

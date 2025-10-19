@@ -42,9 +42,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/functions"
     },
     {

@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { raise } from '@dxos/debug';
-import { type BaseObject, getValue } from '@dxos/echo-schema';
+import { type BaseObject, getValue } from '@dxos/echo/internal';
 import { type SimpleType, createJsonPath } from '@dxos/effect';
 
 import { type FormHandler, type FormOptions, useForm } from '../../hooks';
@@ -92,7 +92,7 @@ export const FormProvider = ({
         }
       }
     },
-    [form, autoSave],
+    [form.canSave, form.formIsValid, form.handleSave, autoSave],
   );
 
   useEffect(() => {

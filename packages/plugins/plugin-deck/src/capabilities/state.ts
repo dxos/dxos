@@ -30,6 +30,9 @@ const migrateSidebarState = () => {
   });
 };
 
+/**
+ * @deprecated
+ */
 export const DeckStateFactory = () => {
   migrateSidebarState();
 

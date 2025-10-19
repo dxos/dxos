@@ -10,7 +10,6 @@ export * from './CollectionSection';
 export * from './JoinDialog';
 export * from './MembersContainer';
 export * from './MenuFooter';
-export * from './ObjectSettings';
 export * from './PersistenceStatus';
 export * from './PopoverRenameObject';
 export * from './PopoverRenameSpace';
@@ -23,4 +22,5 @@ export * from './ViewEditor';
 
 export const CollectionMain = lazy(() => import('./CollectionMain'));
 export const ObjectDetailsPanel = lazy(() => import('./ObjectDetailsPanel'));
+export const ObjectSettingsContainer = lazy(() => import('./ObjectSettings'));
 export const RecordMain = lazy(() => import('./RecordMain'));

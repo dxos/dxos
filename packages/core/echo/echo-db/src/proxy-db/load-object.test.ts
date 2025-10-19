@@ -2,17 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { Obj, Ref, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
-import { Expando, Ref, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { live } from '@dxos/live-object';
 import { openAndClose } from '@dxos/test-utils';
 
-import { type AnyLiveObject } from '../echo-handler';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { loadObjectReferences } from './load-object';
@@ -28,7 +26,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = createExpando({ nested: createExpando({ value: nestedValue }) });
+    const object = Obj.make(Type.Expando, { nested: Obj.make(Type.Expando, { value: nestedValue }) });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -48,7 +46,10 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = createExpando({ foo: createExpando({ value: 1 }), bar: createExpando({ value: 2 }) });
+    const object = Obj.make(Type.Expando, {
+      foo: Obj.make(Type.Expando, { value: 1 }),
+      bar: Obj.make(Type.Expando, { value: 2 }),
+    });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -69,7 +70,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = createExpando({ nestedArray: [createExpando(), createExpando()] });
+    const object = Obj.make(Type.Expando, { nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})] });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -90,8 +91,10 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const objects = [
-      createExpando({ nestedArray: [createExpando(), createExpando()] }),
-      createExpando({ nestedArray: [createExpando(), createExpando(), createExpando()] }),
+      Obj.make(Type.Expando, { nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})] }),
+      Obj.make(Type.Expando, {
+        nestedArray: [Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {}), Obj.make(Type.Expando, {})],
+      }),
     ];
     const db = await testPeer.createDatabase(spaceKey);
     objects.forEach((o) => db.add(o));
@@ -115,7 +118,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = createExpando({ nestedArray: [] });
+    const object = Obj.make(Type.Expando, { nestedArray: [] });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -134,7 +137,7 @@ describe.skip('loadObjectReferences', () => {
 
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const db = await testPeer.createDatabase(spaceKey);
-    const object = createExpando({ nested: createExpando() });
+    const object = Obj.make(Type.Expando, { nested: Obj.make(Type.Expando, {}) });
     db.add(object);
     await db.flush();
     await testPeer.close();
@@ -153,18 +156,20 @@ describe.skip('loadObjectReferences', () => {
   });
 
   test('loads as array of non-nullable items', async () => {
-    class Nested extends TypedObject({ typename: 'example.com/Nested', version: '0.1.0' })({ value: Schema.Number }) {}
+    const Nested = Schema.Struct({ value: Schema.Number }).pipe(
+      Type.Obj({ typename: 'example.com/Nested', version: '0.1.0' }),
+    );
 
-    class TestSchema extends TypedObject({ typename: 'example.com/Test', version: '0.1.0' })({
-      nested: Schema.mutable(Schema.Array(Ref(Nested))),
-    }) {}
+    const TestSchema = Schema.Struct({
+      nested: Schema.mutable(Schema.Array(Type.Ref(Nested))),
+    }).pipe(Type.Obj({ typename: 'example.com/Test', version: '0.1.0' }));
 
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
     const tmpPath = createTmpPath();
     const spaceKey = PublicKey.random();
     const testPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
-    const object = live(TestSchema, { nested: [Ref.make(live(Nested, { value: 42 }))] });
+    const object = Obj.make(TestSchema, { nested: [Ref.make(Obj.make(Nested, { value: 42 }))] });
     const db = await testPeer.createDatabase(spaceKey);
     db.graph.schemaRegistry.addSchema([TestSchema, Nested]);
     db.add(object);
@@ -173,13 +178,9 @@ describe.skip('loadObjectReferences', () => {
 
     const restartedPeer = await testBuilder.createPeer({ kv: createTestLevel(tmpPath) });
     const restartedDb = await restartedPeer.openDatabase(spaceKey, db.rootUrl!);
-    const loaded = (await restartedDb.query(Filter.ids(object.id)).first()) as TestSchema;
-    const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested.map((n) => n.target));
+    const loaded = await restartedDb.query(Filter.ids(object.id)).first();
+    const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested.map((n: any) => n.target));
     const value: number = loadedNested[0].value;
     expect(value).to.eq(42);
   });
 });
-
-const createExpando = (props: any = {}): AnyLiveObject<Expando> => {
-  return live(Expando, props);
-};

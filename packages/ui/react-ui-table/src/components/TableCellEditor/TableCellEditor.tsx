@@ -4,12 +4,12 @@
 
 import { type Completion } from '@codemirror/autocomplete';
 import { EditorView } from '@codemirror/view';
-import { type Schema } from 'effect/Schema';
+import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { debounce } from '@dxos/async';
 import type { Client } from '@dxos/client';
-import { FormatEnum, TypeEnum } from '@dxos/echo-schema';
+import { FormatEnum, TypeEnum } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DxGridAxis, type DxGridPosition } from '@dxos/lit-grid';
 import {
@@ -38,7 +38,7 @@ export type QueryResult = Pick<Completion, 'label'> & { data: any };
 export type TableCellEditorProps = {
   model?: TableModel;
   modals?: ModalController;
-  schema?: Schema.AnyNoContext;
+  schema?: Schema.Schema.AnyNoContext;
   onFocus?: (axis?: DxGridAxis, delta?: -1 | 0 | 1, cell?: DxGridPosition) => void;
   onCreate?: OnCreateHandler;
   onSave?: () => void;

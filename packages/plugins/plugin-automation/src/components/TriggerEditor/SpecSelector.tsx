@@ -27,7 +27,6 @@ export const SpecSelector = (props: SpecSelectorProps) => {
             return {
               kind: 'subscription',
               query: {
-                string: 'Query.select(Filter.nothing())',
                 ast: Query.select(Filter.nothing()).ast,
               },
             };

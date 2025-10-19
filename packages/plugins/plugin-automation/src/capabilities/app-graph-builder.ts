@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
@@ -20,7 +21,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/space-settings-automation`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
             Option.map((node) => [
@@ -42,7 +43,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/space-settings-functions`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
             Option.map((node) => [
@@ -64,7 +65,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/script-companion`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (Obj.instanceOf(ScriptType, node.data) ? Option.some(node) : Option.none())),
             Option.map((node) => [

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type BaseObject } from '@dxos/echo-schema';
+import { type BaseObject } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
 import { type Live, isLiveObject } from '@dxos/live-object';
 

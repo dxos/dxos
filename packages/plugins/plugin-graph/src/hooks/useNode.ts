@@ -3,7 +3,7 @@
 //
 
 import { useRxValue } from '@effect-rx/rx-react';
-import { Option } from 'effect';
+import * as Option from 'effect/Option';
 
 import { type Node, type ReadableGraph, type Relation } from '@dxos/app-graph';
 

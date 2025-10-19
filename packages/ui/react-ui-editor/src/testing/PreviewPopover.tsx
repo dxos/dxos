@@ -24,6 +24,7 @@ type PopoverLookupProviderProps = PropsWithChildren<{
   onLookup?: PreviewLookup;
 }>;
 
+// TOOD(burdon): Reconcile with PreviewPlugin?
 const PreviewPopoverProvider = ({ children, onLookup }: PopoverLookupProviderProps) => {
   const trigger = useRef<HTMLElement | null>(null);
   const [value, setValue] = useState<PreviewPopoverValue>({});
@@ -73,6 +74,7 @@ const PreviewPopoverProvider = ({ children, onLookup }: PopoverLookupProviderPro
     </PreviewPopoverContextProvider>
   );
 };
+
 export { PreviewPopoverProvider, usePreviewPopover };
 
 export type { PopoverLookupProviderProps, PreviewPopoverValue };

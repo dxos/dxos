@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
@@ -18,7 +18,7 @@ export const HelpContainer = () => {
   const handleSave = useCallback(
     (values: UserFeedback) =>
       dispatch(
-        pipe(
+        Function.pipe(
           createIntent(ObservabilityAction.CaptureUserFeedback, values),
           chain(LayoutAction.UpdateComplementary, { part: 'complementary', options: { state: 'collapsed' } }),
           chain(LayoutAction.AddToast, {

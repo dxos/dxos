@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type AnyIntentChain } from '@dxos/app-framework';
 import { type Obj, Type } from '@dxos/echo';
-import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo-schema';
+import { type BaseObject, EchoSchema, StoredSchema } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/react-client';
 // TODO(wittjosiah): This pulls in full client.
 import { EchoObjectSchema, ReactiveObjectSchema, type Space, SpaceSchema } from '@dxos/react-client/echo';

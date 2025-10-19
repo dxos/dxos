@@ -6,7 +6,7 @@
 // @ts-nocheck
 
 import { asyncTimeout } from '@dxos/async';
-import { create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo/internal';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

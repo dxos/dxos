@@ -28,38 +28,38 @@
   }
 
   .dx-main-intrinsic-size {
-    @apply is-dvw transition-[inline-size] ease-in-out-symmetric duration-200;
+    @apply is-[calc(100dvw)-2*var(--main-spacing)] transition-[inline-size] ease-in-out-symmetric duration-200;
 
     @media (min-width: theme('screens.lg')) {
 
       &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="closed"] {
-        inline-size: calc(100dvw);
+        inline-size: calc(100dvw - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="closed"] {
-        inline-size: calc(100dvw - var(--l0-size));
+        inline-size: calc(100dvw - var(--l0-size) - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="closed"] {
-        inline-size: calc(100dvw - var(--nav-sidebar-size));
+        inline-size: calc(100dvw - var(--nav-sidebar-size) - 2 * var(--main-spacing));
       }
 
       &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="collapsed"] {
-        inline-size: calc(100dvw - var(--r0-size));
+        inline-size: calc(100dvw - var(--r0-size) - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="collapsed"] {
-        inline-size: calc(100dvw - var(--l0-size) - var(--r0-size));
+        inline-size: calc(100dvw - var(--l0-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="collapsed"] {
-        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--r0-size));
+        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--r0-size) - 2 * var(--main-spacing));
       }
 
       &[data-sidebar-inline-start-state="closed"][data-sidebar-inline-end-state="expanded"] {
-        inline-size: calc(100dvw - var(--complementary-sidebar-size));
+        inline-size: calc(100dvw - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="collapsed"][data-sidebar-inline-end-state="expanded"] {
-        inline-size: calc(100dvw - var(--l0-size) - var(--complementary-sidebar-size));
+        inline-size: calc(100dvw - var(--l0-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
       &[data-sidebar-inline-start-state="expanded"][data-sidebar-inline-end-state="expanded"] {
-        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size));
+        inline-size: calc(100dvw - var(--nav-sidebar-size) - var(--complementary-sidebar-size) - 2 * var(--main-spacing));
       }
     }
   }

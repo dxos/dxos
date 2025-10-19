@@ -2,8 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AiError, LanguageModel, type Tool, type Toolkit } from '@effect/ai';
-import { Chunk, Effect, type Schema, Stream } from 'effect';
+import type * as AiError from '@effect/ai/AiError';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+import type * as Tool from '@effect/ai/Tool';
+import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Chunk from 'effect/Chunk';
+import * as Effect from 'effect/Effect';
+import type * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import {
   AiParser,

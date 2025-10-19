@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 // TODO(burdon): Base UI type (should not depend on ECHO).
 export type HasId = { id: string };

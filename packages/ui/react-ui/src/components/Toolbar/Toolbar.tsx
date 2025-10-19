@@ -4,7 +4,7 @@
 
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { forwardRef } from 'react';
+import React, { Fragment, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -22,11 +22,21 @@ import {
 import { Link, type LinkProps } from '../Link';
 import { Separator, type SeparatorProps } from '../Separator';
 
-type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps> & { layoutManaged?: boolean };
+type ToolbarRootProps = ThemedClassName<
+  ToolbarPrimitive.ToolbarProps & {
+    layoutManaged?: boolean;
+    textBlockWidth?: boolean;
+  }
+>;
 
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ classNames, children, layoutManaged, ...props }, forwardedRef) => {
+  ({ classNames, children, layoutManaged, textBlockWidth: wrapContents, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+    const InnerRoot = wrapContents ? 'div' : Fragment;
+    const innerRootProps = wrapContents
+      ? { role: 'none', className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames) }
+      : {};
+
     return (
       <ToolbarPrimitive.Root
         {...props}
@@ -34,7 +44,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
         className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <InnerRoot {...innerRootProps}>{children}</InnerRoot>
       </ToolbarPrimitive.Root>
     );
   },

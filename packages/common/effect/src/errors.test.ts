@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Data } from 'effect';
+import * as Data from 'effect/Data';
 import { test } from 'vitest';
 
 class MyError extends Data.TaggedError('MyError')<{

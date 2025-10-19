@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Tool } from '@effect/ai';
+import type * as Tool from '@effect/ai/Tool';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AgentStatus } from '@dxos/ai';

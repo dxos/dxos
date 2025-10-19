@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Toolkit } from '@effect/ai';
-import { Effect } from 'effect';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Effect from 'effect/Effect';
 
 import { ConsolePrinter } from '@dxos/ai';
 import { type AiConversation, type AiConversationRunParams, GenerationObserver } from '@dxos/assistant';

@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { FetchHttpClient } from '@effect/platform';
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import { describe, it } from '@effect/vitest';
-import { Duration, Effect, Exit, Layer, pipe } from 'effect';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -29,7 +33,7 @@ import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
-const TestLayer = pipe(
+const TestLayer = Function.pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(

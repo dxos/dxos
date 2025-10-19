@@ -3,7 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { Effect, Fiber, Layer } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { ContextQueueService, DatabaseService } from '@dxos/functions';

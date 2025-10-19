@@ -2,12 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Context, Effect, type Layer, type Scope } from 'effect';
+import type * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
+import type * as Scope from 'effect/Scope';
 import { describe, expect, test } from 'vitest';
 
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
-import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo-schema';
+import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
 import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

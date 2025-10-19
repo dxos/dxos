@@ -4,7 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';
 import {
@@ -21,9 +21,9 @@ import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { getTypename } from '@dxos/echo/internal';
 import { EchoClient, type Hypergraph, type QueueService, QueueServiceImpl } from '@dxos/echo-db';
 import { MockQueueService } from '@dxos/echo-db';
-import { getTypename } from '@dxos/echo-schema';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

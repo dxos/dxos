@@ -2,7 +2,7 @@ type: tool
 language: typescript
 tasks:
   compile:
-    command: pnpm run --silent build
+    command: vite-node ./src/main.ts
     inputs:
       - tsconfig.json
       - '@group(production)'

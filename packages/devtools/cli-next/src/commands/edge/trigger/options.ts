@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Options } from '@effect/cli';
+import * as Options from '@effect/cli/Options';
 
 export const TriggerId = Options.text('id').pipe(Options.withDescription('The id of the trigger.'));
 

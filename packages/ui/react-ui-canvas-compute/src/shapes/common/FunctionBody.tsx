@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Schema, SchemaAST } from 'effect';
+import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';

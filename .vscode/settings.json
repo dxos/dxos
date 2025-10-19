@@ -1,10 +1,7 @@
 {
-  "json.schemas": [
-    {
-      "fileMatch": ["packages/wallet/extension/public/manifest.json"],
-      "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
-    }
-  ],
+  "[proto3]": {
+    "editor.defaultFormatter": "zxh404.vscode-proto3"
+  },
   "cSpell.words": [
     "Automerge",
     "bitfield",
@@ -13,6 +10,7 @@
     "COOLDOWN",
     "CRDT",
     "dedup",
+    "dmaretskyi",
     "dxos",
     "DXOS",
     "excalidraw",
@@ -28,6 +26,13 @@
     "typenames",
     "wittjosiah"
   ],
+  "debug.javascript.terminalOptions": {
+    "skipFiles": ["**/**/tracing/src/api.ts"]
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }],
+  "eslint.workingDirectories": [{ "mode": "auto" }],
   "files.associations": {
     "workspace.json": "jsonc",
     "schema.json": "jsonc",
@@ -40,33 +45,6 @@
     "build-cache.json": "jsonc",
     "command-versions.json": "jsonc"
   },
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "search.followSymlinks": false,
-  "editor.tabSize": 2,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "hediet.vscode-drawio.theme": "Kennedy",
-  "eslint.workingDirectories": [{ "mode": "auto" }],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "[proto3]": {
-    "editor.defaultFormatter": "zxh404.vscode-proto3"
-  },
-  "debug.javascript.terminalOptions": {
-    "skipFiles": ["**/**/tracing/src/api.ts"]
-  },
-  "vitest.disableWorkspaceWarning": true,
-  "vitest.rootConfig": "vitest.all.config.ts",
-  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
-    "^.*/src/.*$",
-    "node:console",
-    "console",
-    "effect/Effect",
-    "effect/Console"
-  ],
-  "search.useParentIgnoreFiles": true,
-  "search.useGlobalIgnoreFiles": false,
-  "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
-  // Doesn't work in a big monorepo.
-  "typescript.updateImportsOnPaste.enabled": false,
   "hediet.vscode-drawio.customColorSchemes": [
     [
       {
@@ -387,10 +365,37 @@
     "6B2210"
   ],
   "hediet.vscode-drawio.resizeImages": null,
-  "eslint.rules.customizations": [{ "rule": "prettier/*", "severity": "off" }],
-  "storyExplorer.storybookConfigDir": "tools/storybook/.storybook",
+  "hediet.vscode-drawio.theme": "kennedy",
+  "javascript.suggest.autoImports": true,
+  "json.schemas": [
+    {
+      "fileMatch": ["packages/wallet/extension/public/manifest.json"],
+      "url": "https://raw.githubusercontent.com/PrsPrsBK/ffext-manifest-schema/master/ffext.json"
+    }
+  ],
+  "rust-analyzer.linkedProjects": ["packages/apps/composer-app/src-tauri/Cargo.toml"],
+  "search.followSymlinks": false,
+  "search.useGlobalIgnoreFiles": false,
+  "search.useParentIgnoreFiles": true,
   "storyExplorer.preview.mode": "canvas",
   "storyExplorer.server.external.url": "http://localhost:9009",
   "storyExplorer.server.internal.enabled": false,
-  "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx"
+  "storyExplorer.storiesGlobs": "**/src/**/*.stories.tsx",
+  "storyExplorer.storybookConfigDir": "tools/storybook/.storybook",
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^.*/src/.*$",
+    "node:console",
+    "console",
+    "effect/Effect",
+    "effect/Console"
+  ],
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.tsserver.log": "terse",
+  // Doesn't work in a big monorepo.
+  "typescript.updateImportsOnPaste.enabled": false,
+  "vitest.disableWorkspaceWarning": true,
+  "vitest.rootConfig": "vitest.all.config.ts"
 }

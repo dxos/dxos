@@ -5,15 +5,12 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { type Query, Type } from '@dxos/echo';
 import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
-import { Input, useDensityContext, useElevationContext, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { Editor, createBasicExtensions, createThemeExtensions } from '@dxos/react-ui-editor';
+import { Input } from '@dxos/react-ui';
+import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { type CustomInputMap, Form, InputHeader, SelectInput, useRefQueryLookupHandler } from '@dxos/react-ui-form';
-import { inputTheme, mx } from '@dxos/react-ui-theme';
-
-import { meta } from '../../meta';
 
 import { FunctionInputEditor, type FunctionInputEditorProps } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
@@ -25,15 +22,15 @@ export type TriggerEditorProps = {
   readonlySpec?: boolean;
   onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
   onCancel?: () => void;
-};
+} & Pick<QueryFormProps, 'types' | 'tags'>;
 
-export const TriggerEditor = ({ space, trigger, readonlySpec, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = (values: FunctionTrigger) => {
+export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSave, onCancel }: TriggerEditorProps) => {
+  const handleSave = ({ id: _, ...values }: FunctionTrigger) => {
     onSave?.(values);
   };
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-  const Custom = useCustomInputs({ space, readonlySpec, onQueryRefOptions: handleRefQueryLookup });
+  const Custom = useCustomInputs({ space, readonlySpec, types, tags, onQueryRefOptions: handleRefQueryLookup });
 
   return (
     <Form
@@ -48,16 +45,13 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, onSave, onCancel }
   );
 };
 
-const useCustomInputs = ({
-  space,
-  readonlySpec,
-  onQueryRefOptions,
-}: {
+type UseCustomInputsProps = {
   space: Space;
   readonlySpec?: boolean;
   onQueryRefOptions: FunctionInputEditorProps['onQueryRefOptions'];
-}) => {
-  const { t } = useTranslation(meta.id);
+} & Pick<QueryFormProps, 'types' | 'tags'>;
+
+const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }: UseCustomInputsProps) => {
   const functions = useQuery(space, Filter.type(FunctionType));
   const workflows = useQuery(space, Filter.type(ComputeGraph));
   const scripts = useQuery(space, Filter.type(ScriptType));
@@ -101,39 +95,15 @@ const useCustomInputs = ({
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
       ['spec.query' as const]: (props) => {
-        const { themeMode } = useThemeContext();
-        const density = useDensityContext();
-        const elevation = useElevationContext();
-        const value = props.getValue() as any;
-
-        // TODO(wittjosiah): Including props.onValueChange in deps causes infinite loop.
         const handleChange = useCallback(
-          (text: string) => props.onValueChange('object', { ...value, string: text }),
-          [],
+          (query: Query.Any) => props.onValueChange('object', { ast: query.ast }),
+          [props.onValueChange],
         );
 
-        const extensions = useMemo(
-          () => [
-            createBasicExtensions({ readOnly: readonlySpec, placeholder: t('query placeholder') }),
-            createThemeExtensions({ themeMode }),
-          ],
-          [],
-        );
-
-        // TODO(wittjosiah): This is probably not the right way to do these styles.
         return (
           <Input.Root>
             <InputHeader label={props.label} />
-            <Editor
-              classNames={mx(
-                inputTheme.input({ density, elevation }),
-                'flex items-center',
-                'focus-within:bg-focusSurface focus-within:border-separator focus-within:hover:bg-focusSurface',
-              )}
-              extensions={extensions}
-              value={value.string}
-              onChange={handleChange}
-            />
+            <QueryForm initialQuery={(props.getValue() as any).ast} types={types} tags={tags} onChange={handleChange} />
           </Input.Root>
         );
       },

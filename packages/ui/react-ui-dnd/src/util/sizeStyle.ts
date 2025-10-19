@@ -18,5 +18,8 @@ export const sizeStyle = (
     case 'block-end':
       sizeProperty = 'blockSize';
   }
-  return { [sizeProperty]: size === 'min-content' ? (calcSize ? 'var(--dx-calc-min)' : 'min-content') : `${size}rem` };
+
+  return {
+    [sizeProperty]: size === 'min-content' ? (calcSize ? 'var(--dx-calc-min)' : 'min-content') : `${size}rem`,
+  };
 };

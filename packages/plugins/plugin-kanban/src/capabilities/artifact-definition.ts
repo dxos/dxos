@@ -5,7 +5,8 @@
 // ISSUE(burdon): defineArtifact
 // @ts-nocheck
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, type PromiseIntentDispatcher, chain, contributes, createIntent } from '@dxos/app-framework';
@@ -68,7 +69,7 @@ export default () => {
             return ToolResult.Error(`Schema not found: ${typename}`);
           }
 
-          const intent = pipe(
+          const intent = Function.pipe(
             createIntent(KanbanAction.Create, {
               space: extensions.space,
               typename,

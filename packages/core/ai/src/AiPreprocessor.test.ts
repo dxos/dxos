@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Prompt } from '@effect/ai';
+import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
-import { Effect, Either } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Either from 'effect/Either';
 
 import { Obj } from '@dxos/echo';
 import { DataType } from '@dxos/schema';

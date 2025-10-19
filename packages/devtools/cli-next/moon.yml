@@ -29,7 +29,7 @@ tasks:
       - ^:compile
     local: true
   prebuild:
-    script: pnpm vite-node ./scripts/copy-package-json.ts
+    command: vite-node ./scripts/copy-package-json.ts
     deps:
       - compile
     inputs:

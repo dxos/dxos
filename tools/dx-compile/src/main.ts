@@ -17,6 +17,7 @@ import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { bundleDepsPlugin } from './bundle-deps-plugin';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
 import { fixRequirePlugin } from './fix-require-plugin';
+import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
 import { SwcTransformPlugin } from './swc-transform-plugin';
 
 export interface EsbuildExecutorOptions {
@@ -160,6 +161,9 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
               }
             : undefined,
         plugins: [
+          restrictRelativeImportsPlugin({
+            allowedDirectory: process.cwd(),
+          }),
           NodeExternalPlugin({
             injectGlobals: options.injectGlobals,
             importGlobals: options.importGlobals,

@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, Trigger, scheduleMicroTask, synchronized } from '@dxos/async';

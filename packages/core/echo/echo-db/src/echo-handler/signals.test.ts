@@ -4,7 +4,7 @@
 
 import { test } from 'vitest';
 
-import { updateCounter } from '@dxos/echo-schema/testing';
+import { updateCounter } from '@dxos/echo/testing';
 import { registerSignalsRuntime } from '@dxos/echo-signals';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 

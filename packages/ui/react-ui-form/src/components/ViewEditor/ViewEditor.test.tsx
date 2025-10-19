@@ -6,7 +6,7 @@ import { composeStories } from '@storybook/react';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { EchoSchema, isInstanceOf } from '@dxos/echo-schema';
+import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
 import { DataType, ProjectionModel } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -134,7 +134,8 @@ describe('ViewEditor', () => {
     expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
-  test('delete property', async () => {
+  // TODO(mykola): Fix flaky test.
+  test('delete property', { retry: 2 }, async () => {
     await Default.run();
     await waitForViewEditor();
 

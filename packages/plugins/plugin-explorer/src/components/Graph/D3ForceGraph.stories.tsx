@@ -3,20 +3,20 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { render } from '@dxos/storybook-utils';
 
 import { useGraphModel } from '../../hooks';
-import { ViewType } from '../../types';
+import { Graph } from '../../types';
 
 import { D3ForceGraph } from './D3ForceGraph';
 import { generate } from './testing';
@@ -28,11 +28,13 @@ faker.seed(1);
 const DefaultStory = () => {
   const client = useClient();
   const [space, setSpace] = useState<Space>();
-  const [view, setView] = useState<ViewType>();
-  useEffect(() => {
+  const [view, setView] = useState<DataType.View>();
+
+  useAsyncEffect(async () => {
     const space = client.spaces.default;
     void generate(space, generator);
-    const view = space.db.add(Obj.make(ViewType, { name: '', type: '' }));
+    const { view } = await Graph.makeView({ client, space, name: 'Test', typename: Graph.Graph.typename });
+    space.db.add(view);
     setSpace(space);
     setView(view);
   }, []);
@@ -53,7 +55,14 @@ const meta = {
     withTheme,
     withClientProvider({
       createSpace: true,
-      types: [ViewType, DataType.Organization, DataType.Project, DataType.Person, DataType.HasRelationship],
+      types: [
+        Graph.Graph,
+        DataType.View,
+        DataType.Organization,
+        DataType.Project,
+        DataType.Person,
+        DataType.HasRelationship,
+      ],
     }),
   ],
   parameters: {

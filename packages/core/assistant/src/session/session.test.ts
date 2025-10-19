@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Tool, Toolkit } from '@effect/ai';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
-import { Effect, Layer, Schema } from 'effect';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { AiService, MemoizedAiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';

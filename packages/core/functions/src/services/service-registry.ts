@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, type Option, flow } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
+import type * as Option from 'effect/Option';
 
 import { ServiceNotAvailableError } from '../errors';
 
@@ -40,7 +43,8 @@ export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistr
       E | ServiceNotAvailableError,
       Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
-  } = (...tags) => (flow as any)(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
+  } = (...tags) =>
+    (Function.flow as any)(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
 
   static provideOrDie: {
     <Tags extends [Context.Tag<any, any>, ...Context.Tag<any, any>[]]>(
@@ -53,7 +57,7 @@ export class ServiceRegistry extends Context.Tag('@dxos/functions/ServiceRegistr
       Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>
-    (flow as any)(
+    (Function.flow as any)(
       ...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag).pipe(Effect.orDie))),
     );
 }

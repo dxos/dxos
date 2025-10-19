@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space } from '@dxos/client/echo';
+import { Obj } from '@dxos/echo';
+import { EchoSchema, getSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { type AnyLiveObject } from '@dxos/echo-db';
-import { EchoSchema, getSchema, getTypeAnnotation } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type Live, isLiveObject, live } from '@dxos/live-object';
 import { faker } from '@dxos/random';
@@ -53,7 +54,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     }
 
     const schema = this.getSchema(type);
-    return schema ? live(schema, data) : live(data);
+    return schema ? Obj.make(schema, data) : live(data);
   }
 
   // TODO(burdon): Based on dependencies (e.g., organization before contact).

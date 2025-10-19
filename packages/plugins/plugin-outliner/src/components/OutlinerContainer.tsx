@@ -15,14 +15,14 @@ export type OutlinerContainerProps = {
   outline: OutlineType;
 };
 
-export const OutlinerContainer = ({ role, outline }: OutlinerContainerProps) => {
+export const OutlinerContainer = ({ outline }: OutlinerContainerProps) => {
   if (!outline.content.target) {
     return null;
   }
 
   return (
-    <StackItem.Content classNames='container-max-width'>
-      <Outliner id={outline.content.target.id} text={outline.content.target} />
+    <StackItem.Content>
+      <Outliner id={outline.content.target.id} text={outline.content.target} classNames='container-max-width' />
     </StackItem.Content>
   );
 };

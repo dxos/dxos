@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Command } from '@effect/cli';
-import { Effect } from 'effect';
+import * as Command from '@effect/cli/Command';
+import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
 import { DatabaseService, FunctionType } from '@dxos/functions';

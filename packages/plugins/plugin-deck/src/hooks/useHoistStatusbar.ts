@@ -11,9 +11,10 @@ import { meta } from '../meta';
 import type { DeckSettingsProps, LayoutMode } from '../types';
 
 export const useHoistStatusbar = (breakpoint: string, layoutMode?: LayoutMode): boolean => {
-  const enableStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)!.value
-    .enableStatusbar;
   const { safeAreaPadding } = useThemeContext();
+  const enableStatusbar = useCapability(Capabilities.SettingsStore).getStore<DeckSettingsProps>(meta.id)?.value
+    .enableStatusbar;
+
   return useMemo(() => {
     return (
       breakpoint === 'desktop' &&

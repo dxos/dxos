@@ -3,7 +3,7 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';

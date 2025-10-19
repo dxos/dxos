@@ -109,16 +109,16 @@ describe('identity/identity', () => {
 
   test('edge feed replicator', async () => {
     let replicationStarted = false;
-    let status = EdgeStatus.NOT_CONNECTED;
+    let status = EdgeStatus.ConnectionState.NOT_CONNECTED;
     const listeners: Array<() => void> = [];
     const setup = await setupIdentity({
       edgeConnection: {
         statusChanged: new Event(),
         get status() {
-          return status;
+          return { state: status };
         },
         onReconnected: (listener) => {
-          if (status === EdgeStatus.CONNECTED) {
+          if (status === EdgeStatus.ConnectionState.CONNECTED) {
             listener();
           } else {
             listeners.push(listener);
@@ -138,7 +138,7 @@ describe('identity/identity', () => {
 
     await writeGenesisCredential(setup);
     listeners.forEach((callback) => callback());
-    status = EdgeStatus.CONNECTED;
+    status = EdgeStatus.ConnectionState.CONNECTED;
 
     await expect.poll(() => replicationStarted).toBeTruthy();
   });

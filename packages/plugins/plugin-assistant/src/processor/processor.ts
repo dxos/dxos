@@ -3,7 +3,12 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Cause, Effect, Exit, Fiber, Option, Runtime } from 'effect';
+import * as Cause from 'effect/Cause';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
+import * as Runtime from 'effect/Runtime';
 
 import {
   AiService,
@@ -217,7 +222,6 @@ export class AiChatProcessor {
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
     const runtime = await this._services();
-
     const system = trim`
       It is extremely important that you respond only with the title and nothing else.
       If you cannot do this effectively respond with "New Chat".

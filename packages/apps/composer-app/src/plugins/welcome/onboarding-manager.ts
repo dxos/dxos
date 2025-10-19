@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { pipe } from 'effect';
+import * as Function from 'effect/Function';
 
 import { LayoutAction, type PromiseIntentDispatcher, chain, createIntent } from '@dxos/app-framework';
 import { SubscriptionList, type Trigger } from '@dxos/async';
@@ -164,7 +164,7 @@ export class OnboardingManager {
           actionLabel: ['passkey setup toast action label', { ns: meta.id }],
           actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
           onAction: () => {
-            const intent = pipe(
+            const intent = Function.pipe(
               createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: Account.id }),
               chain(LayoutAction.Open, { part: 'main', subject: [Account.Security] }),
             );

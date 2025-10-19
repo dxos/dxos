@@ -82,9 +82,6 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/echo/echo-schema"
-    },
-    {
       "path": "../../core/echo/live-object"
     },
     {
@@ -181,9 +178,6 @@
       "path": "../plugin-automation"
     },
     {
-      "path": "../plugin-board"
-    },
-    {
       "path": "../plugin-chess"
     },
     {
@@ -193,55 +187,19 @@
       "path": "../plugin-deck"
     },
     {
-      "path": "../plugin-explorer"
-    },
-    {
       "path": "../plugin-graph"
-    },
-    {
-      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-map"
     },
     {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-preview"
-    },
-    {
-      "path": "../plugin-project"
-    },
-    {
-      "path": "../plugin-script"
-    },
-    {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-stack"
     },
     {
       "path": "../plugin-table"
     },
     {
-      "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
-    },
-    {
-      "path": "../plugin-token-manager"
-    },
-    {
       "path": "../plugin-transcription"
-    },
-    {
-      "path": "../plugin-wnfs"
     }
   ]
 }

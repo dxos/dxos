@@ -5,24 +5,33 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FunctionTrigger, FunctionType } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
-import { ContactType, withClientProvider } from '@dxos/react-client/testing';
+import { useQuery } from '@dxos/react-client/echo';
+import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 
 import { functions } from '../../testing';
 import { translations } from '../../translations';
 
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
+const types = [
+  // TODO(burdon): Get label from annotation.
+  { value: Type.getTypename(DataType.Organization), label: 'Organization' },
+  { value: Type.getTypename(DataType.Person), label: 'Person' },
+  { value: Type.getTypename(DataType.Project), label: 'Project' },
+  { value: Type.getTypename(DataType.Employer), label: 'Employer' },
+];
+
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
-  const spaces = useSpaces();
-  const space = spaces[1];
+  const { space } = useClientProvider();
   const [trigger, setTrigger] = useState<FunctionTrigger>();
+  const tags = useQuery(space, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
     if (!space) {
@@ -51,7 +60,14 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
 
   return (
     <div role='none' className='w-[32rem] bs-fit border border-separator rounded-sm'>
-      <TriggerEditor space={space} trigger={trigger} onSave={(values) => console.log('on save', values)} {...props} />
+      <TriggerEditor
+        space={space}
+        trigger={trigger}
+        types={types}
+        tags={tags}
+        onSave={(values) => console.log('on save', values)}
+        {...props}
+      />
     </div>
   );
 };
@@ -65,8 +81,12 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [FunctionType, FunctionTrigger, ContactType],
+      types: [Tag.Tag, FunctionType, FunctionTrigger, ContactType],
       onCreateSpace: ({ space }) => {
+        space.db.add(Tag.make({ label: 'Important' }));
+        space.db.add(Tag.make({ label: 'Investor' }));
+        space.db.add(Tag.make({ label: 'New' }));
+
         for (const fn of functions) {
           space.db.add(Obj.make(FunctionType, fn));
         }

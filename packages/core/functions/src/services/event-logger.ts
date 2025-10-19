@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context, Effect, Layer, Schema } from 'effect';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Schema, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
@@ -75,7 +76,7 @@ export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
   const getId = useCallback((meeting: Meeting.Meeting) => meeting.id, []);
   const handleCreateMeeting = useCallback(async () => {
     invariant(space);
-    const intent = pipe(
+    const intent = Function.pipe(
       createIntent(MeetingAction.Create, { channel }),
       chain(SpaceAction.AddObject, { target: space, hidden: true }),
       chain(MeetingAction.SetActive),

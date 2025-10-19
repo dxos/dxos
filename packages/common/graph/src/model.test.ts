@@ -3,7 +3,7 @@
 //
 
 import { effect } from '@preact/signals-core';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';

@@ -7,7 +7,7 @@ import { type LintSource, linter } from '@codemirror/lint';
 import { type Extension } from '@codemirror/state';
 import Ajv, { type ValidateFunction } from 'ajv';
 
-import { type JsonSchemaType } from '@dxos/echo-schema';
+import { type JsonSchemaType } from '@dxos/echo/internal';
 
 export type JsonExtensionsOptions = {
   schema?: JsonSchemaType;

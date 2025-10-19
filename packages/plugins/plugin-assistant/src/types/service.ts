@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
-import { TypedObject } from '@dxos/echo-schema';
+import { TypedObject } from '@dxos/echo/internal';
 import { FunctionType } from '@dxos/functions';
+
+// TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
 
 const ApiAuthorizationKey = Schema.Struct({
   type: Schema.Literal('api-key'),
@@ -63,7 +65,13 @@ const ServiceInterfaceApi = Schema.Struct({
   authorization: Schema.optional(ApiAuthorization),
 });
 
-const ServiceInterface = Schema.Union(ServiceInterfaceFunction, ServiceInterfaceWorkflow, ServiceInterfaceApi);
+const ServiceInterface = Schema.Union(
+  // Service types.
+  ServiceInterfaceFunction,
+  ServiceInterfaceWorkflow,
+  ServiceInterfaceApi,
+);
+
 export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
 export class ServiceType extends TypedObject({
@@ -86,14 +94,14 @@ export class ServiceType extends TypedObject({
 // Service Registry
 //
 
+export interface BaseServiceRegistry {
+  queryServices(query?: ServiceQuery): Promise<ServiceType[]>;
+}
+
 export type ServiceQuery = {
   name?: string;
   category?: string;
 };
-
-export interface BaseServiceRegistry {
-  queryServices(query?: ServiceQuery): Promise<ServiceType[]>;
-}
 
 export const categoryIcons: Record<string, string> = {
   finance: 'ph--bank--regular',

@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AiError } from '@effect/ai';
-import { Effect, Layer } from 'effect';
+import type * as AiError from '@effect/ai/AiError';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import {
   type AiModelNotAvailableError,

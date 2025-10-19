@@ -3,7 +3,8 @@
 //
 
 import { Registry, Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
@@ -238,7 +239,7 @@ describe('GraphBuilder', () => {
           id: 'root',
           connector: (node) =>
             Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
                 Option.filter((name) => name !== 'removed'),
@@ -330,7 +331,7 @@ describe('GraphBuilder', () => {
           id: 'root',
           connector: (node) =>
             Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === 'root' ? Option.some(get(name)) : Option.none())),
                 Option.filter((name) => name !== 'removed'),
@@ -343,7 +344,7 @@ describe('GraphBuilder', () => {
           id: 'connector1',
           connector: (node) =>
             Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(get(sub)) : Option.none())),
                 Option.map((sub) => [{ id: exampleId(2), type: EXAMPLE_TYPE, data: sub }]),
@@ -355,7 +356,7 @@ describe('GraphBuilder', () => {
           id: 'connector2',
           connector: (node) =>
             Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.flatMap((node) => (node.id === EXAMPLE_ID ? Option.some(node.data) : Option.none())),
                 Option.map((data) => [{ id: exampleId(3), type: EXAMPLE_TYPE, data }]),
@@ -439,7 +440,7 @@ describe('GraphBuilder', () => {
           id: 'connector',
           connector: (node) => {
             return Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.map((node) => (node.data ? node.data + 1 : 1)),
                 Option.filter((data) => data <= 5),
@@ -475,7 +476,7 @@ describe('GraphBuilder', () => {
           id: 'connector',
           connector: (node) =>
             Rx.make((get) =>
-              pipe(
+              Function.pipe(
                 get(node),
                 Option.map((node) => (node.data ? node.data + 1 : 1)),
                 Option.filter((data) => data <= 5),

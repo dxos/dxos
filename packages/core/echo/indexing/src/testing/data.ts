@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { ObjectId } from '@dxos/echo/internal';
 import type { ObjectStructure } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/echo-schema';
 import { DXN } from '@dxos/keys';
 
 export const TYPES = {

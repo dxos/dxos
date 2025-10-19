@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { ObjectId, Ref } from '@dxos/echo-schema';
+import { ObjectId, Ref } from '@dxos/echo/internal';
 import {
   type EmailTrigger,
   EmailTriggerOutput,
@@ -131,7 +131,6 @@ const createTriggerSpec = (props: { triggerKind?: TriggerKind; spaceId?: SpaceId
       return {
         kind: 'subscription',
         query: {
-          string: 'Query.select(Filter.nothing())',
           ast: Query.select(Filter.nothing()).ast,
         },
       } satisfies SubscriptionTrigger;

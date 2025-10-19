@@ -4,7 +4,7 @@
 
 import type { InspectOptionsStylized, inspect } from 'node:util';
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';

@@ -3,7 +3,8 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Option, type Schema } from 'effect';
+import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import {
   Capabilities,

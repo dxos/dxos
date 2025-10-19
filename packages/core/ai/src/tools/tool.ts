@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 
 export const ToolId = Schema.String.pipe(Schema.brand('ToolId')).annotations({
   identifier: 'ToolId',

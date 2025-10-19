@@ -9,7 +9,7 @@ import { defaultRowSize } from '@dxos/lit-grid';
 import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
-import { PopoverCombobox, type PopoverComboboxRootProps } from '@dxos/react-ui-searchlist';
+import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-searchlist';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 
@@ -31,7 +31,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   // Multiselect
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [multiSelectValue, setInternalMultiselectValue] = useState('');
-  const setMultiselectValue = useCallback<NonNullable<PopoverComboboxRootProps['onValueChange']>>((nextValue) => {
+  const setMultiselectValue = useCallback<NonNullable<ComboboxRootProps['onValueChange']>>((nextValue) => {
     setInternalMultiselectValue(nextValue);
     setCells((cells) => {
       // TODO(burdon): How can we get the cell address to update?
@@ -78,23 +78,23 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
       </DropdownMenu.Root>
 
       {/* Multiselect */}
-      <PopoverCombobox.Root
+      <Combobox.Root
         open={popoverOpen}
         onOpenChange={setPopoverOpen}
         value={multiSelectValue}
         onValueChange={setMultiselectValue}
       >
-        <PopoverCombobox.VirtualTrigger virtualRef={triggerRef} />
-        <PopoverCombobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
-          <PopoverCombobox.Input placeholder='Search...' />
-          <PopoverCombobox.List>
+        <Combobox.VirtualTrigger virtualRef={triggerRef} />
+        <Combobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
+          <Combobox.Input placeholder='Search...' />
+          <Combobox.List>
             {storybookItems.map((value) => (
-              <PopoverCombobox.Item key={value}>{value}</PopoverCombobox.Item>
+              <Combobox.Item key={value}>{value}</Combobox.Item>
             ))}
-          </PopoverCombobox.List>
-          <PopoverCombobox.Arrow />
-        </PopoverCombobox.Content>
-      </PopoverCombobox.Root>
+          </Combobox.List>
+          <Combobox.Arrow />
+        </Combobox.Content>
+      </Combobox.Root>
     </div>
   );
 };

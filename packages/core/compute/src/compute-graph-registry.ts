@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ManagedRuntime } from 'effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';

@@ -3,7 +3,8 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import { Option, pipe } from 'effect';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 
 import { Capabilities, type PluginContext, contributes } from '@dxos/app-framework';
 import { createExtension } from '@dxos/plugin-graph';
@@ -17,7 +18,7 @@ export default (context: PluginContext) =>
       id: `${meta.id}/space-settings`,
       connector: (node) =>
         Rx.make((get) =>
-          pipe(
+          Function.pipe(
             get(node),
             Option.flatMap((node) => (node.type === `${spaceMeta.id}/settings` ? Option.some(node) : Option.none())),
             Option.map((node) => [

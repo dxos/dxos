@@ -33,6 +33,7 @@ export default async (context: PluginContext) => {
   defaultSpaceCollection?.objects.push(
     Ref.make(
       Obj.make(DataType.QueryCollection, {
+        // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
         query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
       }),
     ),

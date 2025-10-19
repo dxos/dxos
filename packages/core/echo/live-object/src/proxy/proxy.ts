@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type BaseObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import type { Live } from '../live';
@@ -31,17 +30,17 @@ export const isValidProxyTarget = (value: any): value is object => {
 /**
  * @deprecated
  */
-export const getProxySlot = <T extends BaseObject>(proxy: Live<any>): ProxyHandlerSlot<T> => {
+export const getProxySlot = <T extends object>(proxy: Live<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];
   invariant(value instanceof ProxyHandlerSlot);
   return value;
 };
 
-export const getProxyTarget = <T extends BaseObject>(proxy: Live<any>): T => {
+export const getProxyTarget = <T extends object>(proxy: Live<any>): T => {
   return getProxySlot<T>(proxy).target;
 };
 
-export const getProxyHandler = <T extends BaseObject>(proxy: Live<any>): ReactiveHandler<T> => {
+export const getProxyHandler = <T extends object>(proxy: Live<any>): ReactiveHandler<T> => {
   return getProxySlot<T>(proxy).handler;
 };
 
@@ -49,7 +48,7 @@ export const getProxyHandler = <T extends BaseObject>(proxy: Live<any>): Reactiv
  * Unsafe method to override id for debugging/testing and migration purposes.
  * @deprecated
  */
-export const dangerouslySetProxyId = <T extends BaseObject>(obj: Live<T>, id: string) => {
+export const dangerouslySetProxyId = <T>(obj: Live<T>, id: string) => {
   (getProxySlot(obj).target as any).id = id;
 };
 
@@ -62,7 +61,7 @@ export const dangerouslySetProxyId = <T extends BaseObject>(obj: Live<T>, id: st
  */
 // TODO(burdon): Document.
 // TODO(burdon): Tests for low-level functions.
-export const createProxy = <T extends BaseObject>(target: T, handler: ReactiveHandler<T>): Live<T> => {
+export const createProxy = <T extends object>(target: T, handler: ReactiveHandler<T>): Live<T> => {
   const existingProxy = handler._proxyMap.get(target);
   if (existingProxy) {
     return existingProxy;
@@ -81,7 +80,7 @@ export const createProxy = <T extends BaseObject>(target: T, handler: ReactiveHa
  * Passed as the handler to the Proxy constructor.
  * Maintains a mutable slot for the actual handler.
  */
-class ProxyHandlerSlot<T extends BaseObject> implements ProxyHandler<T> {
+class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   /**
    * @param target Original object.
    * @param _handler Handles intercepted operations.

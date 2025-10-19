@@ -3,12 +3,12 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Schema } from 'effect';
+import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
+import { TypedObject, getType } from '@dxos/echo/internal';
 import { getObjectCore } from '@dxos/echo-db';
-import { TypedObject, getType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { TestSchemaType, createSpaceObjectGenerator, createTestObjectGenerator } from './data';

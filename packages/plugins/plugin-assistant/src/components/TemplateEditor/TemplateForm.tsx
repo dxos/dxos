@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema } from 'effect';
+import type * as Schema from 'effect/Schema';
 import React, { Fragment, useEffect } from 'react';
 
 import { type Template } from '@dxos/blueprints';
