@@ -146,7 +146,7 @@ export const useTextEditor = (
   const focusableGroupAttrs = useFocusableGroup({
     tabBehavior: 'limited',
     ignoreDefaultKeydown: {
-      Escape: view?.state.facet(editorInputMode).noTabster,
+      Escape: view?.state.facet(editorInputMode).ignoreEscape,
     },
   });
 

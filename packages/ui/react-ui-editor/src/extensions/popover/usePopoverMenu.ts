@@ -11,7 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { popover, popoverRangeEffect } from './popover';
+import { popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
@@ -76,8 +76,21 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
     void item.onSelect?.(view, view.state.selection.main.head);
   }, []);
 
-  // TODO(burdon): Delete trigger.
   const handleCancel = useCallback<NonNullable<UsePopoverMenu['onCancel']>>(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+
+    // Delete trigger.
+    const range = view.state.field(popoverStateField)?.range;
+    if (range) {
+      view.dispatch({
+        changes: { ...range, insert: '' },
+      });
+    }
+
+    // TODO(burdon): Prevent tabster from escaping.
     handleOpenChange(false);
     setTimeout(() => {
       viewRef.current?.focus();

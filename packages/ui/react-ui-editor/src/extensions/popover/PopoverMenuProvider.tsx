@@ -97,7 +97,7 @@ export const PopoverMenuProvider = ({
           }}
           onEscapeKeyDown={(event) => {
             console.log('onEscapeKeyDown');
-            // TODO(burdon): Prevent focus moving to editor (not working).
+            // TODO(burdon): Prevent Tabster from handling escape.
             event.preventDefault();
             event.stopPropagation();
             onCancel?.();

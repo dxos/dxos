@@ -62,7 +62,9 @@ const popoverTriggerListener = (options: PopoverOptions) =>
 
     const nextRange = shouldRemove ? null : docChanged ? { from: activeRange.from, to: selection.head } : activeRange;
     if (nextRange !== activeRange) {
-      view.dispatch({ effects: popoverRangeEffect.of(nextRange ? { trigger, range: nextRange } : null) });
+      view.dispatch({
+        effects: popoverRangeEffect.of(nextRange ? { trigger, range: nextRange } : null),
+      });
     }
 
     // TODO(burdon): Should delete if user presses escape? How else to insert the trigger character?
@@ -205,7 +207,7 @@ type PopoverState = {
 export const popoverRangeEffect = StateEffect.define<PopoverState | null>();
 
 // State field to track the active popover trigger range.
-const popoverStateField = StateField.define<PopoverState | null>({
+export const popoverStateField = StateField.define<PopoverState | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;
