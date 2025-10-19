@@ -10,7 +10,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
-import { PopoverCombobox } from './PopoverCombobox';
+import { Combobox } from './Combobox';
 
 faker.seed(1234);
 
@@ -18,29 +18,29 @@ const items = faker.helpers.uniqueArray(faker.commerce.productName, 16);
 
 const DefaultStory = () => {
   return (
-    <PopoverCombobox.Root
+    <Combobox.Root
       placeholder='Nothing selected'
       onValueChange={(value) => {
         console.log('[Combobox.Root.onValueChange]', value);
       }}
     >
-      <PopoverCombobox.Trigger />
-      <PopoverCombobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
-        <PopoverCombobox.Input placeholder='Search...' />
-        <PopoverCombobox.List>
+      <Combobox.Trigger />
+      <Combobox.Content filter={(value, search) => (value.includes(search) ? 1 : 0)}>
+        <Combobox.Input placeholder='Search...' />
+        <Combobox.List>
           {items.map((value) => (
-            <PopoverCombobox.Item key={value}>{value}</PopoverCombobox.Item>
+            <Combobox.Item key={value}>{value}</Combobox.Item>
           ))}
-        </PopoverCombobox.List>
-        <PopoverCombobox.Arrow />
-      </PopoverCombobox.Content>
-    </PopoverCombobox.Root>
+        </Combobox.List>
+        <Combobox.Arrow />
+      </Combobox.Content>
+    </Combobox.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-searchlist/Combobox',
-  component: PopoverCombobox.Root as any,
+  component: Combobox.Root as any,
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

@@ -6,10 +6,35 @@ import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type PropsWithChildren, forwardRef, useCallback } from 'react';
 
-import { Button, type ButtonProps, Icon, useId } from '@dxos/react-ui';
+import {
+  Button,
+  type ButtonProps,
+  Icon,
+  Popover,
+  type PopoverArrowProps,
+  type PopoverContentProps,
+  type PopoverVirtualTriggerProps,
+} from '@dxos/react-ui';
+import { useId } from '@dxos/react-ui';
 import { mx, staticPlaceholderText } from '@dxos/react-ui-theme';
 
-// TOOD(burdon): Merge with PopoverCombobox.
+import {
+  SearchList,
+  type SearchListContentProps,
+  type SearchListEmptyProps,
+  type SearchListInputProps,
+  type SearchListItemProps,
+  type SearchListRootProps,
+} from '../SearchList';
+
+const COMBOBOX_NAME = 'Combobox';
+const COMBOBOX_CONTENT_NAME = 'ComboboxContent';
+const COMBOBOX_ITEM = 'ComboboxItem';
+const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
+
+//
+// Context
+//
 
 type ComboboxContextValue = {
   modalId: string;
@@ -21,9 +46,6 @@ type ComboboxContextValue = {
   onValueChange: (nextValue: string) => void;
 };
 
-const COMBOBOX_NAME = 'Combobox';
-const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
-
 const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxContextValue>>(COMBOBOX_NAME, {});
 
 //
@@ -31,10 +53,11 @@ const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxCon
 //
 
 type ComboboxRootProps = PropsWithChildren<
-  Partial<ComboboxContextValue & { defaultOpen: boolean; defaultValue: string; placeholder: string }>
+  Partial<ComboboxContextValue & { modal: boolean; defaultOpen: boolean; defaultValue: string; placeholder: string }>
 >;
 
 const ComboboxRoot = ({
+  modal,
   modalId: propsModalId,
   open: propsOpen,
   defaultOpen,
@@ -58,21 +81,93 @@ const ComboboxRoot = ({
   });
 
   return (
-    <ComboboxProvider
-      isCombobox
-      modalId={modalId}
-      open={open}
-      onOpenChange={onOpenChange}
-      value={value}
-      onValueChange={onValueChange}
-      placeholder={placeholder}
-    >
-      {children}
-    </ComboboxProvider>
+    <Popover.Root open={open} onOpenChange={onOpenChange} modal={modal}>
+      <ComboboxProvider
+        isCombobox
+        modalId={modalId}
+        placeholder={placeholder}
+        open={open}
+        onOpenChange={onOpenChange}
+        value={value}
+        onValueChange={onValueChange}
+      >
+        {children}
+      </ComboboxProvider>
+    </Popover.Root>
   );
 };
 
-ComboboxRoot.displayName = COMBOBOX_NAME;
+//
+// ContentProps
+//
+
+type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
+
+const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
+  (
+    {
+      side = 'bottom',
+      collisionPadding = 48,
+      sideOffset,
+      align,
+      alignOffset,
+      avoidCollisions,
+      collisionBoundary,
+      arrowPadding,
+      sticky,
+      hideWhenDetached,
+      onOpenAutoFocus,
+      onCloseAutoFocus,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      onFocusOutside,
+      onInteractOutside,
+      forceMount,
+      children,
+      classNames,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
+
+    return (
+      <Popover.Content
+        {...{
+          side,
+          sideOffset,
+          align,
+          alignOffset,
+          avoidCollisions,
+          collisionBoundary,
+          collisionPadding,
+          arrowPadding,
+          sticky,
+          hideWhenDetached,
+          onOpenAutoFocus,
+          onCloseAutoFocus,
+          onEscapeKeyDown,
+          onPointerDownOutside,
+          onFocusOutside,
+          onInteractOutside,
+          forceMount,
+        }}
+        classNames={[
+          'is-[--radix-popover-trigger-width] max-bs-[--radix-popover-content-available-height] grid grid-rows-[min-content_1fr]',
+          classNames,
+        ]}
+        id={modalId}
+        ref={forwardedRef}
+      >
+        <SearchList.Root {...props} classNames='contents density-fine' role='none'>
+          {children}
+        </SearchList.Root>
+      </Popover.Content>
+    );
+  },
+);
+
+ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 
 //
 // Trigger
@@ -92,26 +187,28 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
     );
 
     return (
-      <Button
-        {...props}
-        role='combobox'
-        aria-expanded={open}
-        aria-controls={modalId}
-        aria-haspopup='dialog'
-        onClick={handleClick}
-        ref={forwardedRef}
-      >
-        {children ?? (
-          <>
-            <span
-              className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
-            >
-              {value || placeholder}
-            </span>
-            <Icon icon='ph--caret-down--bold' size={3} />
-          </>
-        )}
-      </Button>
+      <Popover.Trigger asChild>
+        <Button
+          {...props}
+          role='combobox'
+          aria-expanded={open}
+          aria-controls={modalId}
+          aria-haspopup='dialog'
+          onClick={handleClick}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              <span
+                className={mx('font-normal text-start flex-1 min-is-0 truncate mie-2', !value && staticPlaceholderText)}
+              >
+                {value || placeholder}
+              </span>
+              <Icon icon='ph--caret-down--bold' size={3} />
+            </>
+          )}
+        </Button>
+      </Popover.Trigger>
     );
   },
 );
@@ -119,14 +216,119 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
 ComboboxTrigger.displayName = COMBOBOX_TRIGGER_NAME;
 
 //
+// VirtualTrigger
+//
+
+type ComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
+
+const ComboboxVirtualTrigger = Popover.VirtualTrigger;
+
+//
+// Input
+//
+
+type ComboboxInputProps = SearchListInputProps;
+
+const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
+  return (
+    <SearchList.Input
+      {...props}
+      classNames={[
+        'mli-cardSpacingChrome mbs-cardSpacingChrome mbe-0 is-[calc(100%-2*var(--dx-cardSpacingChrome))]',
+        classNames,
+      ]}
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
+// List
+//
+
+type ComboboxListProps = SearchListContentProps;
+
+const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
+  return (
+    <SearchList.Content
+      {...props}
+      classNames={['min-bs-0 overflow-y-auto plb-cardSpacingChrome', classNames]}
+      ref={forwardedRef}
+    />
+  );
+});
+
+//
+// Item
+//
+
+type ComboboxItemProps = SearchListItemProps;
+
+const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
+  ({ classNames, onSelect, ...props }, forwardedRef) => {
+    const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM);
+    const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(
+      (nextValue) => {
+        onSelect?.(nextValue);
+        onValueChange?.(nextValue);
+        onOpenChange?.(false);
+      },
+      [onSelect, onValueChange, onOpenChange],
+    );
+
+    return (
+      <SearchList.Item
+        {...props}
+        classNames={['mli-cardSpacingChrome pli-cardSpacingChrome', classNames]}
+        onSelect={handleSelect}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+ComboboxItem.displayName = COMBOBOX_ITEM;
+
+//
+// Arrow
+//
+
+type ComboboxArrowProps = PopoverArrowProps;
+
+const ComboboxArrow = Popover.Arrow;
+
+//
+// Empty
+//
+
+type ComboboxEmptyProps = SearchListEmptyProps;
+
+const ComboboxEmpty = SearchList.Empty;
+
+//
 // Combobox
 //
 
 export const Combobox = {
   Root: ComboboxRoot,
+  Content: ComboboxContent,
   Trigger: ComboboxTrigger,
+  VirtualTrigger: ComboboxVirtualTrigger,
+  Input: ComboboxInput,
+  List: ComboboxList,
+  Item: ComboboxItem,
+  Arrow: ComboboxArrow,
+  Empty: ComboboxEmpty,
 };
 
-export { useComboboxContext };
-
-export type { ComboboxRootProps, ComboboxTriggerProps };
+export type {
+  ComboboxRootProps,
+  ComboboxContentProps,
+  ComboboxTriggerProps,
+  ComboboxVirtualTriggerProps,
+  ComboboxInputProps,
+  ComboboxListProps,
+  ComboboxItemProps,
+  ComboboxArrowProps,
+  ComboboxEmptyProps,
+};
