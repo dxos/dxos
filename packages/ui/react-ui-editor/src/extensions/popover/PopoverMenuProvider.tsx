@@ -22,13 +22,14 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
+  numLines?: number;
   onSelect: (item: PopoverMenuItem) => void;
   onActivate?: (event: DxAnchorActivate) => void;
   onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
 }>;
 
 /**
- * NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
+ * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
  */
 export const PopoverMenuProvider = ({
   children,
@@ -36,12 +37,12 @@ export const PopoverMenuProvider = ({
   currentItem,
   open: openParam,
   defaultOpen,
+  numLines = 8,
   onSelect,
   onActivate,
   onOpenChange,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
-  const menuGroups = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useControllableState({
@@ -77,6 +78,8 @@ export const PopoverMenuProvider = ({
     );
   }, [root, onActivate]);
 
+  const menuGroups = groups.filter((group) => group.items.length > 0);
+
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
       <div ref={setRoot} role='none' className='contents'>
@@ -87,14 +90,14 @@ export const PopoverMenuProvider = ({
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={tx(
-            'menu.content',
-            'menu--exotic-unfocusable',
-            { elevation: 'positioned' },
-            // TODO(burdon): Extract height to theme.
-            'max-bs-[16rem] overflow-y-auto',
-          )}
+          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+            'overflow-y-auto',
+            !menuGroups.length && 'hidden',
+          ])}
           onOpenAutoFocus={(event) => event.preventDefault()}
+          style={{
+            maxBlockSize: 36 * numLines + 4,
+          }}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
             <Menu groups={menuGroups} currentItem={currentItem} onSelect={onSelect} />
