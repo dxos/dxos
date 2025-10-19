@@ -94,10 +94,10 @@ export const PopoverMenuProvider = ({
             'overflow-y-auto',
             !menuGroups.length && 'hidden',
           ])}
-          onOpenAutoFocus={(event) => event.preventDefault()}
           style={{
-            maxBlockSize: 36 * numLines + 4,
+            maxBlockSize: 36 * numLines + 6,
           }}
+          onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
             <Menu groups={menuGroups} currentItem={currentItem} onSelect={onSelect} />
@@ -165,18 +165,18 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
 
-  const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
-
-  const ref = useRef<HTMLLIElement>(null);
+  const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    if (current && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (current && listRef.current) {
+      listRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [current]);
 
+  const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
+
   return (
     <li
-      ref={ref}
+      ref={listRef}
       className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
       onClick={handleSelect}
     >
