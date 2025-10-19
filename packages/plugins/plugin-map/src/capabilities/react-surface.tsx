@@ -112,7 +112,7 @@ export default () =>
         const staticSchema = client.graph.schemaRegistry.schemas.find(
           (schema) => Type.getTypename(schema) === typename,
         );
-        const [dynamicSchema] = space?.db.schemaRegistry.query({ typename }).runSync();
+        const [dynamicSchema] = space?.db.schemaRegistry.query({ typename }).runSync() ?? [];
         const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
 
         const coordinateProperties = useMemo(() => {
