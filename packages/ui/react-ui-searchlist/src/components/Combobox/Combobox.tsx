@@ -29,7 +29,7 @@ import {
 
 const COMBOBOX_NAME = 'Combobox';
 const COMBOBOX_CONTENT_NAME = 'ComboboxContent';
-const COMBOBOX_ITEM = 'ComboboxItem';
+const COMBOBOX_ITEM_NAME = 'ComboboxItem';
 const COMBOBOX_TRIGGER_NAME = 'ComboboxTrigger';
 
 //
@@ -266,7 +266,7 @@ type ComboboxItemProps = SearchListItemProps;
 
 const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
   ({ classNames, onSelect, ...props }, forwardedRef) => {
-    const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM);
+    const { onValueChange, onOpenChange } = useComboboxContext(COMBOBOX_ITEM_NAME);
     const handleSelect = useCallback<NonNullable<SearchListItemProps['onSelect']>>(
       (nextValue) => {
         onSelect?.(nextValue);
@@ -287,7 +287,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
   },
 );
 
-ComboboxItem.displayName = COMBOBOX_ITEM;
+ComboboxItem.displayName = COMBOBOX_ITEM_NAME;
 
 //
 // Arrow

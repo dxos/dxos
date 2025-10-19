@@ -16,7 +16,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { type Specialize } from '@dxos/util';
 
-import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../shaders';
+import { DofPointsMaterial, type ShaderOptions, SimulationMaterial } from '../../shaders';
 
 export const shaderPresets: Record<string, ShaderOptions> = {
   heptapod: {
