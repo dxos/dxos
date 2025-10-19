@@ -23,9 +23,10 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   open?: boolean;
   defaultOpen?: boolean;
   numLines?: number;
-  onSelect: (item: PopoverMenuItem) => void;
-  onActivate?: (event: DxAnchorActivate) => void;
   onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
+  onActivate?: (event: DxAnchorActivate) => void;
+  onSelect: (item: PopoverMenuItem) => void;
+  onCancel?: () => void;
 }>;
 
 /**
@@ -38,9 +39,10 @@ export const PopoverMenuProvider = ({
   open: openParam,
   defaultOpen,
   numLines = 8,
-  onSelect,
-  onActivate,
   onOpenChange,
+  onActivate,
+  onSelect,
+  onCancel,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -82,10 +84,6 @@ export const PopoverMenuProvider = ({
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <div ref={setRoot} role='none' className='contents'>
-        {children}
-      </div>
-
       <Popover.VirtualTrigger virtualRef={trigger} />
       <Popover.Portal>
         <Popover.Content
@@ -97,6 +95,13 @@ export const PopoverMenuProvider = ({
           style={{
             maxBlockSize: 36 * numLines + 6,
           }}
+          onEscapeKeyDown={(event) => {
+            console.log('onEscapeKeyDown');
+            // TODO(burdon): Prevent focus moving to editor (not working).
+            event.preventDefault();
+            event.stopPropagation();
+            onCancel?.();
+          }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
@@ -105,6 +110,10 @@ export const PopoverMenuProvider = ({
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
+
+      <div ref={setRoot} role='none' className='contents'>
+        {children}
+      </div>
     </Popover.Root>
   );
 };

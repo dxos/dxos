@@ -130,7 +130,8 @@ export const Link: Story = {
               },
             }),
           );
-        return [{ id: 'echo', items }];
+
+        return [{ id: 'test', items }];
       },
       [space],
     );

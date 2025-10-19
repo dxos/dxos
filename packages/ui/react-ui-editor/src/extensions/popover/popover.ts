@@ -17,7 +17,6 @@ export type PopoverOptions = {
   onClose?: () => void;
 
   // Menu specific.
-  // TODO(burdon): Handle Escape.
   onEnter?: () => void;
   onArrowUp?: () => void;
   onArrowDown?: () => void;
