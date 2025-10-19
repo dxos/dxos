@@ -31,7 +31,7 @@ const createTemplateSelectActions = (script: ScriptType) => {
         if (oldPresetIndex >= 0) {
           metaKeys.splice(oldPresetIndex, 1);
         }
-        if (template.presetId) {
+        if ('presetId' in template) {
           metaKeys.push({ source: FUNCTIONS_PRESET_META_KEY, id: template.presetId });
         }
       },
