@@ -5,6 +5,10 @@
 import { StateEffect, StateField } from '@codemirror/state';
 
 export const modalStateEffect = StateEffect.define<boolean>();
+
+/**
+ * Determines if a modal dialog (e.g., popover) is active.
+ */
 export const modalStateField = StateField.define<boolean>({
   create: () => false,
   update: (value, tr) => {
