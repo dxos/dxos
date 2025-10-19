@@ -307,6 +307,7 @@ const ComboboxEmpty = SearchList.Empty;
 
 //
 // Combobox
+// https://www.w3.org/WAI/ARIA/apg/patterns/combobox
 //
 
 export const Combobox = {
