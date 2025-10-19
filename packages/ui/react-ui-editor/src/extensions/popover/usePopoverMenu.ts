@@ -11,6 +11,7 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
+import { modalStateEffect } from './modal';
 import { popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
@@ -36,7 +37,6 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
 
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open, trigger?) => {
-      console.log('handleOpenChange', open);
       if (open && trigger) {
         groupsRef.current = await getMenu(trigger);
       }
@@ -48,6 +48,14 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
           effects: [popoverRangeEffect.of(null)],
         });
       }
+
+      // TODO(burdon): Possible race condition.
+      //  useTextEditor.handleKeyDown will get called after this handler completes.
+      requestAnimationFrame(() => {
+        viewRef.current?.dispatch({
+          effects: [modalStateEffect.of(open)],
+        });
+      });
     },
     [getMenu],
   );
@@ -89,12 +97,6 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
         changes: { ...range, insert: '' },
       });
     }
-
-    // TODO(burdon): Prevent tabster from escaping.
-    handleOpenChange(false);
-    setTimeout(() => {
-      viewRef.current?.focus();
-    }, 100);
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;

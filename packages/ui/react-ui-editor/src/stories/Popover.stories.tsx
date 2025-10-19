@@ -62,7 +62,7 @@ const groups: PopoverMenuGroup[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-editor/PopoverMenu',
+  title: 'ui/react-ui-editor/Popover',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {

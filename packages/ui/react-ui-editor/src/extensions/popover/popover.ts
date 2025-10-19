@@ -8,6 +8,8 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
+import { modalStateField } from './modal';
+
 export type PopoverOptions = {
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
@@ -32,6 +34,7 @@ export const popover = (options: PopoverOptions): Extension => {
     popoverStateField,
     popoverTriggerListener(options),
     popoverAnchorDecoration(options),
+    modalStateField,
     placeholder({
       // TODO(burdon): Translations.
       content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
@@ -141,14 +144,6 @@ const popoverKeymap = (options: PopoverOptions) => {
         }
 
         return false;
-      },
-    },
-    {
-      key: 'Escape',
-      preventDefault: true,
-      run: (view) => {
-        console.log('@@@@@@@@@@@@@@@@');
-        return true;
       },
     },
   ]);

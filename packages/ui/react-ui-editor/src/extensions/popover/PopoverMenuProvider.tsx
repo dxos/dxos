@@ -30,7 +30,11 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
 }>;
 
 /**
+ * Implements the Popover and listens for the `dx-anchor-activate` event from the
+ * `popover` extension's decoration.
+ *
  * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
+ * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
 export const PopoverMenuProvider = ({
   children,
@@ -58,6 +62,7 @@ export const PopoverMenuProvider = ({
       return;
     }
 
+    // Listen for trigger.
     return addEventListener(
       root,
       'dx-anchor-activate' as any,
@@ -69,7 +74,7 @@ export const PopoverMenuProvider = ({
           if (onActivate) {
             onActivate(event);
           } else {
-            queueMicrotask(() => setOpen(true));
+            requestAnimationFrame(() => setOpen(true));
           }
         }
       },
@@ -95,11 +100,12 @@ export const PopoverMenuProvider = ({
           style={{
             maxBlockSize: 36 * numLines + 6,
           }}
-          onEscapeKeyDown={(event) => {
-            console.log('onEscapeKeyDown');
-            // TODO(burdon): Prevent Tabster from handling escape.
-            event.preventDefault();
-            event.stopPropagation();
+          /**
+           * NOTE: We keep the focus in the editor, but Radix routes escape key.
+           */
+          onEscapeKeyDown={(_event) => {
+            // NOTE: Able to cancel if not in valid state.
+            // event.preventDefault();
             onCancel?.();
           }}
           onOpenAutoFocus={(event) => event.preventDefault()}

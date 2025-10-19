@@ -4,7 +4,6 @@
 
 import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type TabsterTypes, useFocusableGroup } from '@fluentui/react-tabster';
 import {
   type ComponentPropsWithoutRef,
   type DependencyList,
@@ -20,7 +19,7 @@ import {
 import { log } from '@dxos/log';
 import { type MaybeProvider, getProviderValue, isTruthy } from '@dxos/util';
 
-import { type EditorSelection, createEditorStateTransaction, documentId, editorInputMode } from '../extensions';
+import { type EditorSelection, createEditorStateTransaction, documentId, modalStateField } from '../extensions';
 import { debugDispatcher } from '../util';
 
 let instanceCount = 0;
@@ -35,10 +34,9 @@ export type CursorInfo = {
 };
 
 export type UseTextEditor = {
-  // TODO(burdon): Rename.
   parentRef: RefObject<HTMLDivElement | null>;
   view: EditorView | null;
-  focusAttributes?: TabsterTypes.TabsterDOMAttribute & ComponentPropsWithoutRef<'div'>;
+  focusAttributes?: ComponentPropsWithoutRef<'div'>;
 };
 
 export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
@@ -141,28 +139,27 @@ export const useTextEditor = (
     }
   }, [autoFocus, view]);
 
-  //
-  const focusableGroupAttrs = useFocusableGroup({
-    tabBehavior: 'limited',
-    ignoreDefaultKeydown: {
-      Escape: view?.state.facet(editorInputMode).ignoreEscape,
-    },
-  });
-
   // Focus editor on Enter (e.g., when tabbing to this component).
   const handleKeyDown = useCallback<KeyboardEventHandler<HTMLDivElement>>(
     (event) => {
       const { key, target, currentTarget } = event;
-      if (target === currentTarget) {
-        switch (key) {
-          case 'Enter': {
+      switch (key) {
+        case 'Escape': {
+          // Check if popover is open.
+          const modal = view?.state.field(modalStateField, false);
+          if (modal) {
+            return;
+          }
+
+          const element = view?.contentDOM.closest('[tabindex="0"]') as HTMLDivElement | null;
+          element?.focus();
+          break;
+        }
+        case 'Enter': {
+          if (target === currentTarget) {
             view?.focus();
-            break;
           }
-          case 'Escape': {
-            console.log('[use text editor]', 'keyup', 'escape');
-            break;
-          }
+          break;
         }
       }
     },
@@ -174,7 +171,6 @@ export const useTextEditor = (
     view,
     focusAttributes: {
       tabIndex: 0 as const,
-      ...focusableGroupAttrs,
       onKeyDown: handleKeyDown,
     },
   };
