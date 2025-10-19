@@ -4,6 +4,7 @@
 
 export * from './menu';
 export * from './menu-presets';
+export * from './modal';
 export * from './popover';
 export * from './util';
 

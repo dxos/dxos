@@ -11,7 +11,8 @@ import { type MaybePromise } from '@dxos/util';
 import { type PlaceholderOptions } from '../autocomplete';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { popover as popover, popoverRangeEffect } from './popover';
+import { modalStateEffect } from './modal';
+import { popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
@@ -25,11 +26,11 @@ export type UsePopoverMenuProps = {
 export type UsePopoverMenu = {
   groupsRef: RefObject<PopoverMenuGroup[]>;
   extension: Extension;
-} & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onActivate' | 'onOpenChange' | 'onSelect'>;
+} & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
 
 export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePopoverMenuProps): UsePopoverMenu => {
-  const currentRef = useRef<PopoverMenuItem | null>(null);
   const groupsRef = useRef<PopoverMenuGroup[]>([]);
+  const currentRef = useRef<PopoverMenuItem | null>(null);
   const [currentItem, setCurrentItem] = useState<string>();
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
@@ -47,6 +48,14 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
           effects: [popoverRangeEffect.of(null)],
         });
       }
+
+      // TODO(burdon): Possible race condition.
+      //  useTextEditor.handleKeyDown will get called after this handler completes.
+      requestAnimationFrame(() => {
+        viewRef.current?.dispatch({
+          effects: [modalStateEffect.of(open)],
+        });
+      });
     },
     [getMenu],
   );
@@ -73,6 +82,21 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
     }
 
     void item.onSelect?.(view, view.state.selection.main.head);
+  }, []);
+
+  const handleCancel = useCallback<NonNullable<UsePopoverMenu['onCancel']>>(() => {
+    const view = viewRef.current;
+    if (!view) {
+      return;
+    }
+
+    // Delete trigger.
+    const range = view.state.field(popoverStateField)?.range;
+    if (range) {
+      view.dispatch({
+        changes: { ...range, insert: '' },
+      });
+    }
   }, []);
 
   const serializedTrigger = Array.isArray(trigger) ? trigger.join(',') : trigger;
@@ -102,7 +126,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
       },
       onTextChange: async (trigger, text) => {
         if (/\W/.test(text)) {
-          return queueMicrotask(() => handleOpenChange(false));
+          return requestAnimationFrame(() => handleOpenChange(false));
         }
 
         groupsRef.current = await getMenu(trigger, text);
@@ -125,5 +149,6 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
     onOpenChange: setOpen,
     onActivate: handleActivate,
     onSelect: handleSelect,
+    onCancel: handleCancel,
   };
 };
