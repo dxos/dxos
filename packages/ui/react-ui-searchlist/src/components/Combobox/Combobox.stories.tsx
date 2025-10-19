@@ -14,7 +14,7 @@ import { Combobox } from './Combobox';
 
 faker.seed(1234);
 
-const items = faker.helpers.uniqueArray(faker.commerce.productName, 16);
+const items = faker.helpers.uniqueArray(faker.commerce.productName, 16).sort();
 
 const DefaultStory = () => {
   return (
