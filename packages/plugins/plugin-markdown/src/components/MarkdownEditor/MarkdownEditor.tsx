@@ -117,8 +117,8 @@ export const MarkdownEditor = ({
     };
   }, [onLinkQuery, getMenu]);
 
-  const { groupsRef, extension: commandMenu, ...commandMenuProps } = usePopoverMenu(options);
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
+  const { groupsRef, extension, ...commandMenuProps } = usePopoverMenu(options);
+  const extensions = useMemo(() => [extensionsParam, extension].filter(isTruthy), [extensionsParam, extension]);
 
   return (
     <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
