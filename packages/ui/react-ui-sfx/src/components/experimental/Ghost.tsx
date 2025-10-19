@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Particle effects.
@@ -60,12 +61,12 @@ export const Ghost = (props: Partial<GhostProps>) => {
 
 const useGhost = (canvas: HTMLCanvasElement | null, props: Partial<GhostProps>): GhostRenderer | undefined => {
   const ghost = useMemo(() => {
-    if (!canvas) {
+    if (!canvas?.width || !canvas?.height) {
       return undefined;
     }
 
     return createRenderer(canvas, props);
-  }, [canvas, props]);
+  }, [canvas?.width, canvas?.height, props]);
 
   useEffect(() => {
     if (!ghost) {
@@ -125,6 +126,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 
   const createProgram = (vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram => {
     const program = gl.createProgram();
+    invariant(program, 'Failed to create WebGL program');
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
@@ -584,9 +586,16 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     pressure = createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
   };
 
-  const createFBO = (w: number, h: number, internalFormat: number, format: number, type: number, param: number) => {
+  const createFBO = (
+    w: number,
+    h: number,
+    internalFormat: number,
+    format: number,
+    type: number,
+    param: number,
+  ): FBO | null => {
     gl.activeTexture(gl.TEXTURE0);
-    const texture = gl.createTexture();
+    const texture = gl.createTexture()!;
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param);
@@ -594,7 +603,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
 
-    const fbo = gl.createFramebuffer();
+    const fbo = gl.createFramebuffer()!;
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     gl.viewport(0, 0, w, h);
@@ -625,8 +634,8 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     type: number,
     param: number,
   ): DoubleFBO => {
-    let fbo1 = createFBO(w, h, internalFormat, format, type, param);
-    let fbo2 = createFBO(w, h, internalFormat, format, type, param);
+    let fbo1 = createFBO(w, h, internalFormat, format, type, param)!;
+    let fbo2 = createFBO(w, h, internalFormat, format, type, param)!;
     return {
       width: w,
       height: h,
@@ -685,7 +694,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
     copyProgram.bind();
     gl.uniform1i(copyProgram.uniforms.uTexture, target.attach(0));
     blit(newFBO);
-    return newFBO;
+    return newFBO!;
   };
 
   const resizeDoubleFBO = (
@@ -701,8 +710,8 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
       return target;
     }
 
-    target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param);
-    target.write = createFBO(w, h, internalFormat, format, type, param);
+    target.read = resizeFBO(target.read, w, h, internalFormat, format, type, param)!;
+    target.write = createFBO(w, h, internalFormat, format, type, param)!;
     target.width = w;
     target.height = h;
     target.texelSizeX = 1.0 / w;
@@ -711,7 +720,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
   };
 
   const updateKeywords = () => {
-    const displayKeywords = [];
+    const displayKeywords: string[] = [];
     if (config.SHADING) {
       displayKeywords.push('SHADING');
     }
@@ -947,7 +956,7 @@ export const createRenderer = (canvas: HTMLCanvasElement, _config: Partial<Ghost
 };
 
 export const useGhostController = (ghost: GhostRenderer | undefined, config: Partial<GhostProps>) => {
-  return useMemo(() => {
+  useEffect(() => {
     if (!ghost) {
       return;
     }
@@ -955,6 +964,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
     const canvas = ghost.canvas;
 
     const correctDeltaX = (delta: number) => {
+      invariant(canvas.width && canvas.height);
       const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio < 1) {
         delta *= aspectRatio;
@@ -963,6 +973,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
     };
 
     const correctDeltaY = (delta: number) => {
+      invariant(canvas.width && canvas.height);
       const aspectRatio = canvas.width / canvas.height;
       if (aspectRatio > 1) {
         delta /= aspectRatio;
@@ -971,6 +982,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
     };
 
     const updatePointerDownData = (pointer: Pointer, id: number, posX: number, posY: number) => {
+      invariant(canvas.width && canvas.height);
       pointer.id = id;
       pointer.down = true;
       pointer.moved = false;
@@ -984,6 +996,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
     };
 
     const updatePointerMoveData = (pointer: Pointer, posX: number, posY: number, color: Color) => {
+      invariant(canvas.width && canvas.height);
       pointer.prevTexcoordX = pointer.texcoordX;
       pointer.prevTexcoordY = pointer.texcoordY;
       pointer.texcoordX = posX / canvas.width;
@@ -1020,7 +1033,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
         updatePointerMoveData(pointer, x, y, pointer.color);
       }),
 
-      // TODO(burdon): Create pointer for each touch.
+      // TODO(burdon): Create pointer for each touch (multi-finger).
       addEventListener(window, 'touchstart', (e) => {
         const pointer = ghost.getPointer();
         const touches = e.targetTouches;
@@ -1047,7 +1060,7 @@ export const useGhostController = (ghost: GhostRenderer | undefined, config: Par
         }
       }),
     );
-  }, [ghost]);
+  }, [ghost, config]);
 };
 
 //
@@ -1087,12 +1100,14 @@ const wrap = (value: number, min: number, max: number) => {
 };
 
 const HSVtoRGB = (h: number, s: number, v: number) => {
-  let r, g, b;
   const i = Math.floor(h * 6);
   const f = h * 6 - i;
   const p = v * (1 - s);
   const q = v * (1 - f * s);
   const t = v * (1 - (1 - f) * s);
+  let r = 0;
+  let g = 0;
+  let b = 0;
   switch (i % 6) {
     case 0:
       r = v;
@@ -1148,7 +1163,7 @@ const hashCode = (s: string) => {
   return hash;
 };
 
-const getWebGLContext = (canvas: any) => {
+const getWebGLContext = (canvas: HTMLCanvasElement) => {
   const params = {
     alpha: true,
     depth: false,
@@ -1156,13 +1171,17 @@ const getWebGLContext = (canvas: any) => {
     antialias: false,
     preserveDrawingBuffer: false,
   };
-  let gl: WebGL2RenderingContext = canvas.getContext('webgl2', params);
+  let gl = canvas.getContext('webgl2', params) as WebGL2RenderingContext | null;
   const isWebGL2 = !!gl;
   if (!isWebGL2) {
-    gl = canvas.getContext('webgl', params) || canvas.getContext('experimental-webgl', params);
+    gl = (canvas.getContext('webgl', params) ||
+      canvas.getContext('experimental-webgl', params)) as WebGL2RenderingContext;
   }
-  let halfFloat;
-  let supportLinearFiltering;
+
+  invariant(gl, 'WebGL context not available');
+
+  let halfFloat: OES_texture_half_float | null = null;
+  let supportLinearFiltering: OES_texture_float_linear | OES_texture_half_float_linear | null = null;
   if (isWebGL2) {
     gl.getExtension('EXT_color_buffer_float');
     supportLinearFiltering = gl.getExtension('OES_texture_float_linear');
@@ -1173,9 +1192,9 @@ const getWebGLContext = (canvas: any) => {
 
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
   const halfFloatTexType = isWebGL2 ? gl.HALF_FLOAT : ((halfFloat && halfFloat.HALF_FLOAT_OES) as number);
-  let formatRGBA;
-  let formatRG;
-  let formatR;
+  let formatRGBA: { internalFormat: number; format: number } | null;
+  let formatRG: { internalFormat: number; format: number } | null;
+  let formatR: { internalFormat: number; format: number } | null;
 
   if (isWebGL2) {
     formatRGBA = getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, halfFloatTexType);
@@ -1219,7 +1238,12 @@ const supportRenderTextureFormat = (
   return status === gl.FRAMEBUFFER_COMPLETE;
 };
 
-const getSupportedFormat = (gl: WebGL2RenderingContext, internalFormat: number, format: number, type: number) => {
+const getSupportedFormat = (
+  gl: WebGL2RenderingContext,
+  internalFormat: number,
+  format: number,
+  type: number,
+): { internalFormat: number; format: number } | null => {
   if (!supportRenderTextureFormat(gl, internalFormat, format, type)) {
     switch (internalFormat) {
       case gl.R16F:
