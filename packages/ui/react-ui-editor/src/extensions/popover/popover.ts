@@ -143,6 +143,14 @@ const popoverKeymap = (options: PopoverOptions) => {
         return false;
       },
     },
+    {
+      key: 'Escape',
+      preventDefault: true,
+      run: (view) => {
+        console.log('@@@@@@@@@@@@@@@@');
+        return true;
+      },
+    },
   ]);
 };
 
