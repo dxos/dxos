@@ -107,7 +107,11 @@ const placeholder = (trigger: string[]) =>
   Domino.of('div')
     .children(
       Domino.of('span').text('Press'),
-      ...trigger.map((t) => Domino.of('span').text(t).classNames('border border-separator rounded-sm mx-1 px-1')),
+      ...trigger.map((trigger) =>
+        Domino.of('span')
+          .text(trigger)
+          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
+      ),
       Domino.of('span').text('for commands'),
     )
     .build();
@@ -137,7 +141,6 @@ export const Formatting: Story = {
   args: {
     text: str('# Slash command', '', ''),
     trigger: '/',
-    triggerKey: 'Ctrl-Space',
     placeholder: {
       content: () => placeholder(['/']),
     },
