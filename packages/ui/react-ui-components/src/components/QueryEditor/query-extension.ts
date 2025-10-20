@@ -32,6 +32,8 @@ export const query = ({ db, tags }: QueryOptions = {}): Extension => {
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
+
+    // TODO(burdon): Replace with popover.
     autocompletion({
       activateOnTyping: true,
       override: [
