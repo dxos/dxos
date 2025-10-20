@@ -125,12 +125,12 @@ export const createTestHaloEdgeIdentity = async (
   ]);
 };
 
-export const createStubEdgeIdentity = (): EdgeIdentity => {
-  const identityKey = PublicKey.random();
-  const deviceKey = PublicKey.random();
+export const createStubEdgeIdentity = (
+  { identityKey, deviceKey } = { identityKey: PublicKey.random().toHex(), deviceKey: PublicKey.random().toHex() },
+): EdgeIdentity => {
   return {
-    identityKey: identityKey.toHex(),
-    peerKey: deviceKey.toHex(),
+    identityKey,
+    peerKey: deviceKey,
     presentCredentials: async () => {
       throw new Error('Stub identity does not support authentication.');
     },
