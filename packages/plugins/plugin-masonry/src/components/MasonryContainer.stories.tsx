@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react';
 
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
@@ -17,7 +16,7 @@ import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { DataType, createViewFromSpace } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 
 import { Masonry } from '../types';
@@ -50,20 +49,13 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [DataType.Organization, DataType.View, Masonry],
+          types: [DataType.Organization, DataType.View, Masonry.Masonry],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             const space = await client.spaces.create();
             await space.waitUntilReady();
 
-            const masonry = Obj.make(Masonry, {});
-            const { view } = await createViewFromSpace({
-              client,
-              space,
-              typename: DataType.Organization.typename,
-              presentation: masonry,
-            });
-            space.db.add(masonry);
+            const { view } = await Masonry.makeView({ space, client });
             space.db.add(view);
 
             const factory = createObjectFactory(space.db, faker as any);

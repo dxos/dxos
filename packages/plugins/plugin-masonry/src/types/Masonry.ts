@@ -5,11 +5,10 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation, ViewAnnotation } from '@dxos/echo/internal';
-import { type CreateViewFromSpaceProps } from '@dxos/schema';
+import { type JsonSchemaType, ViewAnnotation, toEffectSchema } from '@dxos/echo/internal';
+import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
-  name: Schema.optional(Schema.String),
   arrangement: Schema.Array(
     Schema.Struct({
       ids: Schema.Array(Type.ObjectId),
@@ -22,7 +21,6 @@ export const Masonry = Schema.Struct({
     typename: 'dxos.org/type/Masonry',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
 );
 
@@ -33,10 +31,20 @@ export type Masonry = Schema.Schema.Type<typeof Masonry>;
  */
 export const make = (props: Obj.MakeProps<typeof Masonry> = {}) => Obj.make(Masonry, props);
 
-export const SettingsSchema = Schema.Struct({
-  columnFieldId: Schema.String.annotations({
-    title: 'Column field identifier',
-  }),
-});
-
 export type MakeViewProps = Omit<CreateViewFromSpaceProps, 'presentation'>;
+
+export const makeView = async ({
+  ...props
+}: MakeViewProps): Promise<{
+  jsonSchema: JsonSchemaType;
+  view: DataType.View;
+  schema: ReturnType<typeof toEffectSchema>;
+}> => {
+  const masonry = Obj.make(Masonry, {});
+  const { jsonSchema, view } = await createViewFromSpace({ ...props, presentation: masonry });
+
+  // Preset sizes.
+  const schema = toEffectSchema(jsonSchema);
+
+  return { jsonSchema, schema, view };
+};
