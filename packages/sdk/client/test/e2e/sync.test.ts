@@ -7,6 +7,7 @@ import type { SpaceId } from '@dxos/keys';
 import { EdgeService } from '@dxos/protocols';
 import { sleep } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { log } from '@dxos/log';
 
 // DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
 describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
@@ -20,7 +21,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
       version: 1,
       runtime: {
         services: {
-          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge.dxos.workers.dev' },
+          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev' },
         },
         client: {
           edgeFeatures: {
@@ -38,6 +39,10 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     const client = new Client({ config });
     await client.initialize();
     await client.halo.createIdentity();
+
+    log.info('client initialized', {
+      spaceId: client.spaces.default.id,
+    });
 
     setInterval(async () => {
       const { status } = (await Stream.first(client.services.services.EdgeAgentService!.queryEdgeStatus())) ?? {};
