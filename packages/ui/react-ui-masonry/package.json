@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/react-hooks",
+  "name": "@dxos/react-ui-masonry",
   "version": "0.8.3",
-  "description": "React hooks supporting DXOS React primitives.",
+  "description": "A masonry component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -17,29 +17,33 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {}
-  },
   "files": [
     "dist",
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@preact-signals/safe-react": "^0.9.0",
-    "alea": "^1.0.1",
-    "lodash.defaultsdeep": "^4.6.1",
-    "mini-virtual-list": "^0.3.2"
+    "@dxos/react-hooks": "workspace:*",
+    "@radix-ui/react-compose-refs": "1.1.1",
+    "masonic": "^4.1.0"
   },
   "devDependencies": {
-    "@types/lodash.defaultsdeep": "^4.6.6",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
     "react": "~19.2.0",
-    "react-dom": "~19.2.0"
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
   },
   "peerDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
