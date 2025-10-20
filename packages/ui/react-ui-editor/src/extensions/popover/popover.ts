@@ -64,8 +64,8 @@ const popoverTriggerListener = (options: PopoverOptions) =>
       return;
     }
 
-    const selection = view.state.selection.main;
     const text = view.state.doc.sliceString(activeRange.from, activeRange.to);
+    const selection = view.state.selection.main;
     const shouldClose =
       // Trigger deleted.
       (trigger ? trigger !== text[0] : text.length === 0) ||
