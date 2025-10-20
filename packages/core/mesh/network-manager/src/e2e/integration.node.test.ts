@@ -2,26 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { EdgeClient, createStubEdgeIdentity } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
-import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
-import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
+import { EdgeSignalManager, Messenger, type PeerInfo } from '@dxos/messaging';
+import { TEST_EDGE_SERVER_URL } from '@dxos/messaging/testing';
 
-import { type SignalMessage } from './signal-messenger';
-import { SwarmMessenger } from './swarm-messenger';
+import { type SignalMessage } from '../signal/signal-messenger';
+import { SwarmMessenger } from '../signal/swarm-messenger';
 
-describe('Signal Integration Test', () => {
-  let broker: SignalServerRunner;
-
-  beforeAll(async () => {
-    broker = await runTestSignalServer();
-  });
-
-  afterAll(() => {
-    void broker.stop();
-  });
-
+describe.runIf(process.env.DX_RUN_NETWORK_MANAGER_E2E === '1')('Signal Integration Test', () => {
   const setupPeer = async ({
     peer = { peerKey: PublicKey.random().toHex() },
     topic = PublicKey.random(),
@@ -29,7 +20,13 @@ describe('Signal Integration Test', () => {
     peer?: PeerInfo;
     topic?: PublicKey;
   }) => {
-    const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
+    const edgeConnection = new EdgeClient(
+      createStubEdgeIdentity({ identityKey: peer.peerKey, deviceKey: peer.peerKey }),
+      {
+        socketEndpoint: TEST_EDGE_SERVER_URL,
+      },
+    );
+    const signalManager = new EdgeSignalManager({ edgeConnection });
     await signalManager.open();
     onTestFinished(async () => {
       await signalManager.close();

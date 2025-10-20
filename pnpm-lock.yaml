@@ -3376,6 +3376,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../edge-client
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -3410,9 +3413,6 @@ importers:
         specifier: ^0.30.0
         version: 0.30.0
     devDependencies:
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../edge-client
       '@dxos/keyring':
         specifier: workspace:*
         version: link:../../halo/keyring
