@@ -1,0 +1,62 @@
+{
+  "name": "@dxos/plugin-masonry",
+  "version": "0.0.0",
+  "description": "Masonry DXOS Surface plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@preact-signals/safe-react": "^0.9.0",
+    "@preact/signals-core": "^1.12.1",
+    "@preact/signals-react": "^3.3.0"
+  },
+  "devDependencies": {
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-theme": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
