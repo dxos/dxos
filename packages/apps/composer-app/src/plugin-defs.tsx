@@ -28,6 +28,7 @@ import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
+import { MobileLayoutPlugin } from '@dxos/plugin-mobile-layout';
 import { NativePlugin } from '@dxos/plugin-native';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
@@ -67,20 +68,22 @@ export type PluginConfig = State & {
   isDev?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
+  isMobile?: boolean;
   isLabs?: boolean;
   isStrict?: boolean;
 };
 
-export const getCore = ({ isPwa, isTauri }: PluginConfig): string[] =>
+export const getCore = async ({ isPwa, isTauri, isMobile }: PluginConfig): Promise<string[]> =>
   [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    DeckPlugin.meta.id,
+    !isMobile && DeckPlugin.meta.id,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     IntentPlugin.meta.id,
+    isMobile && MobileLayoutPlugin.meta.id,
     isTauri && NativePlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -123,7 +126,17 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     .filter(isTruthy)
     .flat();
 
-export const getPlugins = ({ appKey, config, services, observability, isDev, isLabs, isPwa, isTauri }: PluginConfig) =>
+export const getPlugins = ({
+  appKey,
+  config,
+  services,
+  observability,
+  isDev,
+  isLabs,
+  isPwa,
+  isTauri,
+  isMobile,
+}: PluginConfig) =>
   [
     AssistantPlugin(),
     AttentionPlugin(),
@@ -137,7 +150,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     }),
     ConductorPlugin(),
     DebugPlugin(),
-    DeckPlugin(),
+    !isMobile && DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
@@ -150,8 +163,9 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
     MarkdownPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
+    isMobile && MobileLayoutPlugin({}),
     isTauri && NativePlugin(),
-    NavTreePlugin(),
+    !isMobile && NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
       observability: () => observability,
@@ -171,7 +185,7 @@ export const getPlugins = ({ appKey, config, services, observability, isDev, isL
       observability: true,
     }),
     StackPlugin(),
-    StatusBarPlugin(),
+    !isMobile && StatusBarPlugin(),
     ThemeEditorPlugin(),
     TablePlugin(),
     ThemePlugin({

@@ -11,7 +11,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { DeckStateFactory, LayoutIntentResolver } from '../../capabilities';
+import { DeckStateImpl, LayoutIntentResolver } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
@@ -46,7 +46,7 @@ const meta = {
         )(),
       ],
       // TODO(burdon): Remove?
-      capabilities: () => DeckStateFactory(),
+      capabilities: () => DeckStateImpl(),
     }),
   ],
   parameters: {

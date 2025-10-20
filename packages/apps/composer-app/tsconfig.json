@@ -139,6 +139,9 @@
       "path": "../../plugins/plugin-mermaid"
     },
     {
+      "path": "../../plugins/plugin-mobile-layout"
+    },
+    {
       "path": "../../plugins/plugin-native"
     },
     {
