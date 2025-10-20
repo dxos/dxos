@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { readFile } from 'node:fs/promises';
+
 import { describe, expect, test } from 'vitest';
 
 import { Client, Config } from '@dxos/client';
@@ -12,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 describe('Functions deployment', () => {
-  test('deploys function and invokes it via EDGE', { timeout: 120_000 }, async () => {
+  test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = new Config({
       version: 1,
       runtime: {
@@ -29,9 +31,8 @@ describe('Functions deployment', () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
-    const source = 'export default async ({ data }) => data;';
     // Inline echo function source.
-    // const source = await readFile(new URL('../examples/forex-effect.ts', import.meta.url), 'utf-8');
+    const source = await readFile(new URL('../examples/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });
@@ -59,9 +60,9 @@ describe('Functions deployment', () => {
     const input = { from: 'USD', to: 'EUR' };
     const result = await edgeClient.invokeFunction({ functionId }, input);
     log.info('>>> result', { result, functionId });
-    // const resultNumber = Number(result);
-    // expect(resultNumber).toBeGreaterThan(0);
-    // expect(resultNumber).toBeLessThan(100);
+    const resultNumber = Number(result);
+    expect(resultNumber).toBeGreaterThan(0);
+    expect(resultNumber).toBeLessThan(100);
 
     await client.destroy();
   });

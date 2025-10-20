@@ -12,7 +12,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
   e2e:
-    command: pnpm vitest run -c vitest.config.ts --reporter=verbose src/e2e/deploy.test.ts
+    command: pnpm vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
     deps:
       - ^:build
       - ^:compile
