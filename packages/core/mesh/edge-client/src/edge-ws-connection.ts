@@ -138,7 +138,7 @@ export class EdgeWsConnection extends Resource {
     };
     this._ws.onclose = (event) => {
       if (this.isOpen) {
-        log.warn('disconnected while being open', { code: event.code, reason: event.reason });
+        log.warn('server disconnected', { code: event.code, reason: event.reason });
         this._callbacks.onRestartRequired();
         muxer.destroy();
       }
