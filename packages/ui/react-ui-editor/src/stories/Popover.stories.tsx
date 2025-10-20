@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -53,12 +53,12 @@ const placeholder = (trigger: string[]) =>
 type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...props }: StoryProps) => {
-  const viewRef = useRef<EditorView>(null);
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...props });
+  const [view, setView] = useState<EditorView | null>(null);
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
 
   return (
-    <PopoverMenuProvider groups={groupsRef.current} {...menuProps}>
-      <EditorStory ref={viewRef} text={text} extensions={extension} />
+    <PopoverMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={setView} text={text} extensions={extension} />
     </PopoverMenuProvider>
   );
 };

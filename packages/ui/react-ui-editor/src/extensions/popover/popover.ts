@@ -25,14 +25,17 @@ export type PopoverOptions = {
   triggerKey?: string;
   placeholder?: Partial<PlaceholderOptions>;
 
+  // TODO(burdon): Auto.
+  // activateOnTyping?: boolean;
+
   // Trigger update.
   onTextChange?: (text: string, trigger?: string) => void;
-  onClose?: () => void;
+  onClose?: (event: { view: EditorView }) => void;
 
   // Menu specific.
-  onEnter?: () => void;
-  onArrowUp?: () => void;
-  onArrowDown?: () => void;
+  onEnter?: (event: { view: EditorView }) => void;
+  onArrowUp?: (event: { view: EditorView }) => void;
+  onArrowDown?: (event: { view: EditorView }) => void;
 };
 
 /**
@@ -85,7 +88,7 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     }
 
     if (shouldClose) {
-      options.onClose?.();
+      options.onClose?.({ view });
     }
   });
 
@@ -161,7 +164,7 @@ const popoverKeymap = (options: PopoverOptions) => {
         run: (view: EditorView) => {
           const range = view.state.field(popoverStateField)?.range;
           if (range) {
-            options.onArrowUp?.();
+            options.onArrowUp?.({ view });
             return true;
           }
 
@@ -173,7 +176,7 @@ const popoverKeymap = (options: PopoverOptions) => {
         run: (view: EditorView) => {
           const range = view.state.field(popoverStateField)?.range;
           if (range) {
-            options.onArrowDown?.();
+            options.onArrowDown?.({ view });
             return true;
           }
 
@@ -186,7 +189,7 @@ const popoverKeymap = (options: PopoverOptions) => {
           const range = view.state.field(popoverStateField)?.range;
           if (range) {
             view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
-            options.onEnter?.();
+            options.onEnter?.({ view });
             return true;
           }
 

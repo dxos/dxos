@@ -6,12 +6,13 @@ import { completionStatus } from '@codemirror/autocomplete';
 import { Prec } from '@codemirror/state';
 import React, { forwardRef, useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useForwardedRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
   type EditorProps,
   type Extension,
+  PopoverMenuProvider,
   createBasicExtensions,
   createThemeExtensions,
   keymap,
@@ -25,8 +26,7 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & QueryOptions &
-    Omit<EditorProps, 'initialValue'>
+  } & (QueryOptions & Omit<EditorProps, 'initialValue'>)
 >;
 
 /**
@@ -34,6 +34,7 @@ export type QueryEditorProps = ThemedClassName<
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, ...props }, forwardedRef) => {
+    const ref = useForwardedRef(forwardedRef);
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
@@ -56,6 +57,10 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       [db, readonly],
     );
 
-    return <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={forwardedRef} />;
+    return (
+      <PopoverMenuProvider view={ref.current?.view} groups={[]}>
+        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={forwardedRef} />
+      </PopoverMenuProvider>
+    );
   },
 );
