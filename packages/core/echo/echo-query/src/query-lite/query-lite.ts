@@ -10,6 +10,10 @@ import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import type { DXN, ObjectId } from '@dxos/keys';
 
+//
+// Light-weight implementation of query execution.
+//
+
 class OrderClass implements Echo.Order<any> {
   private static variance: Echo.Order<any>['~Order'] = {} as Echo.Order<any>['~Order'];
 
@@ -21,6 +25,7 @@ class OrderClass implements Echo.Order<any> {
 
   '~Order' = OrderClass.variance;
 }
+
 namespace Order1 {
   export const natural: Echo.Order<any> = new OrderClass({ kind: 'natural' });
   export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Echo.Order<T> =>

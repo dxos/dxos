@@ -59,8 +59,8 @@ export type MarkdownEditorProps = {
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
-  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
+} & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
+  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>);
 
 /**
  * Base markdown editor component.
