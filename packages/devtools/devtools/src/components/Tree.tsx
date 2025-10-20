@@ -8,7 +8,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex is-full ml-2 py-2 border-l-2 border-blue-500 overflow-auto '>
+    <div className='flex is-full py-2 overflow-auto'>
       <Node data={data} root />
     </div>
   );
