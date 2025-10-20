@@ -2,14 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { isNonNullable } from '@dxos/util';
 
 import {
   AppGraphBuilder,
@@ -58,7 +57,9 @@ export const ScriptPlugin = definePlugin(meta, () => [
           icon: 'ph--notebook--regular',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (notebook: Notebook.Notebook) =>
-            await Ref.Array.loadAll(notebook.cells.map((cell) => cell.script)),
+            await Ref.Array.loadAll(
+              notebook.cells.flatMap((cell) => [cell.script, cell.view, cell.chat].filter(isNonNullable)) as any,
+            ),
         },
       }),
     ],
@@ -76,7 +77,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: ScriptType,
-          formSchema: ScriptAction.ScriptProps.pipe(Schema.omit('initialTemplateId')),
+          formSchema: ScriptAction.ScriptProps,
           getIntent: (props, options) => createIntent(ScriptAction.CreateScript, { ...props, space: options.space }),
         }),
       ),

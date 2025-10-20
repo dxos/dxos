@@ -10,8 +10,6 @@ import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { Domino, toLocalizedString, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  type CommandMenuGroup,
-  CommandMenuProvider,
   type DNDOptions,
   type EditorInputMode,
   type EditorSelectionState,
@@ -19,10 +17,11 @@ import {
   EditorToolbar,
   type EditorToolbarActionGraphProps,
   type EditorViewMode,
-  type UseCommandMenuOptions,
+  type PopoverMenuGroup,
+  PopoverMenuProvider,
+  type UsePopoverMenuProps,
   type UseTextEditorProps,
   addLink,
-  coreSlashCommands,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -30,12 +29,13 @@ import {
   editorGutter,
   editorSlots,
   filterItems,
+  formattingCommands,
   linkSlashCommands,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useCommandMenu,
   useEditorToolbarState,
   useFormattingState,
+  usePopoverMenu,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -51,13 +51,13 @@ export type MarkdownEditorProps = {
   toolbar?: boolean;
   inputMode?: EditorInputMode;
   scrollPastEnd?: boolean;
-  slashCommandGroups?: CommandMenuGroup[];
+  slashCommandGroups?: PopoverMenuGroup[];
   customActions?: EditorToolbarActionGraphProps['customActions'];
   // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  onLinkQuery?: (query?: string) => Promise<CommandMenuGroup[]>;
+  onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
@@ -76,7 +76,7 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback<UseCommandMenuOptions['getMenu']>(
+  const getMenu = useCallback<UsePopoverMenuProps['getMenu']>(
     (trigger: string, query?: string) => {
       switch (trigger) {
         case '@': {
@@ -84,7 +84,7 @@ export const MarkdownEditor = ({
         }
         case '/':
         default: {
-          return filterItems([coreSlashCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+          return filterItems([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
             query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
           );
         }
@@ -93,7 +93,7 @@ export const MarkdownEditor = ({
     [onLinkQuery, slashCommandGroups],
   );
 
-  const options = useMemo<UseCommandMenuOptions>(() => {
+  const options = useMemo<UsePopoverMenuProps>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     return {
       viewRef,
@@ -117,14 +117,13 @@ export const MarkdownEditor = ({
     };
   }, [onLinkQuery, getMenu]);
 
-  const { groupsRef, commandMenu, ...commandMenuProps } = useCommandMenu(options);
-
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
+  const { groupsRef, extension, ...commandMenuProps } = usePopoverMenu(options);
+  const extensions = useMemo(() => [extensionsParam, extension].filter(isTruthy), [extensionsParam, extension]);
 
   return (
-    <CommandMenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
-    </CommandMenuProvider>
+    </PopoverMenuProvider>
   );
 };
 

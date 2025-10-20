@@ -142,7 +142,7 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
       processor={processor}
       {...props}
     >
-      <div role='none' className={mx('flex flex-col h-full overflow-hidden', classNames)}>
+      <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
         {children}
       </div>
     </ChatContextProvider>
@@ -158,6 +158,7 @@ ChatRoot.displayName = 'Chat.Root';
 type ChatPromptProps = ThemedClassName<
   {
     outline?: boolean;
+    settings?: boolean;
   } & Pick<ChatEditorProps, 'placeholder'> &
     Omit<ChatPresetsProps, 'onChange'> & {
       expandable?: boolean;
@@ -170,6 +171,7 @@ type ChatPromptProps = ThemedClassName<
 const ChatPrompt = ({
   classNames,
   outline,
+  settings = true,
   placeholder,
   expandable,
   online,
@@ -275,7 +277,7 @@ const ChatPrompt = ({
     <div
       role='group'
       className={mx(
-        'is-full flex flex-col density-fine',
+        'flex flex-col is-full density-fine',
         outline && [
           'p-2 bg-groupSurface border border-subduedSeparator transition transition-border [&:has(.cm-content:focus)]:border-separator rounded',
         ],
@@ -296,35 +298,37 @@ const ChatPrompt = ({
         />
       </div>
 
-      <div role='none' className='flex pbs-2 items-center'>
-        <ChatOptions
-          space={space}
-          blueprintRegistry={processor.blueprintRegistry}
-          context={processor.context}
-          preset={preset}
-          presets={presets}
-          onPresetChange={onPresetChange}
-        />
+      {settings && (
+        <div role='none' className='flex pbs-2 items-center'>
+          <ChatOptions
+            space={space}
+            blueprintRegistry={processor.blueprintRegistry}
+            context={processor.context}
+            preset={preset}
+            presets={presets}
+            onPresetChange={onPresetChange}
+          />
 
-        <div role='none' className='pli-cardSpacingChrome grow'>
-          <ChatReferences space={space} context={processor.context} />
+          <div role='none' className='pli-cardSpacingChrome grow'>
+            <ChatReferences space={space} context={processor.context} />
+          </div>
+
+          <ChatActions
+            classNames='col-span-2'
+            microphone={true}
+            recording={recording}
+            processing={streaming}
+            onEvent={handleEvent}
+          >
+            {online !== undefined && (
+              <Input.Root>
+                <Input.Label srOnly>{t('online switch label')}</Input.Label>
+                <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
+              </Input.Root>
+            )}
+          </ChatActions>
         </div>
-
-        <ChatActions
-          classNames='col-span-2'
-          microphone={true}
-          recording={recording}
-          processing={streaming}
-          onEvent={handleEvent}
-        >
-          {online !== undefined && (
-            <Input.Root>
-              <Input.Label srOnly>{t('online switch label')}</Input.Label>
-              <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
-            </Input.Root>
-          )}
-        </ChatActions>
-      </div>
+      )}
     </div>
   );
 };

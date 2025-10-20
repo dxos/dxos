@@ -158,7 +158,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
                 ref={filterEditorRef}
                 classNames='min-is-0 pis-1'
                 autoFocus
-                space={getSpace(mailbox)}
+                db={getSpace(mailbox)?.db}
                 tags={tagMap}
                 value={filterText}
                 onChange={setFilterText}

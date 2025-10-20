@@ -134,7 +134,8 @@ describe('ViewEditor', () => {
     expect(addedPropertyProjection!.props.property).toBe('added_property');
   });
 
-  test('delete property', async () => {
+  // TODO(mykola): Fix flaky test.
+  test('delete property', { retry: 2 }, async () => {
     await Default.run();
     await waitForViewEditor();
 

@@ -13,7 +13,8 @@ import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/react-ui-theme';
 
 import { type Side, type Size } from '../types';
-import { REM } from '../util';
+
+const REM = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
 const measureSubject = (element: HTMLButtonElement, fallbackSize: number): { width: number; height: number } => {
   const stackItemElement = element.closest('[data-dx-resize-subject]');

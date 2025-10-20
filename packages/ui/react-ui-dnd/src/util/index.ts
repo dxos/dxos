@@ -3,4 +3,3 @@
 //
 
 export * from './sizeStyle';
-export * from './rem';

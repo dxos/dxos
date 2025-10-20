@@ -433,6 +433,9 @@
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {

@@ -33,15 +33,19 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
     setFilter(builder.build(value));
   }, []);
 
+  const showToolbar = role === 'article';
+
   if (!space || !model) {
     return null;
   }
 
   return (
-    <StackItem.Content toolbar size={role === 'section' ? 'square' : 'intrinsic'}>
-      <Toolbar.Root>
-        <QueryEditor space={space} onChange={handleChange} />
-      </Toolbar.Root>
+    <StackItem.Content toolbar={showToolbar}>
+      {showToolbar && (
+        <Toolbar.Root>
+          <QueryEditor db={space.db} onChange={handleChange} />
+        </Toolbar.Root>
+      )}
       <D3ForceGraph model={model} match={match} />
     </StackItem.Content>
   );

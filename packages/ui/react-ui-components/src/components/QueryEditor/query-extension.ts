@@ -10,22 +10,22 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
-import { type Space } from '@dxos/client/echo';
+import { type EchoDatabase } from '@dxos/client/echo';
 import { Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
-import { type TypeaheadContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  space?: Space; // TODO(burdon): Replace with schema registry lookup to remove Space dep.
+  db?: EchoDatabase;
   tags?: Tag.TagMap;
 };
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ space, tags }: QueryOptions = {}): Extension => {
+export const query = ({ db, tags }: QueryOptions = {}): Extension => {
   const parser = QueryDSL.Parser.configure({ strict: false });
 
   return [
@@ -38,8 +38,8 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
         async (context: CompletionContext) => {
           const tree = parser.parse(context.state.sliceDoc());
           const node = tree.cursorAt(context.pos, -1).node;
-          let range = undefined;
 
+          let range = undefined;
           switch (node.parent?.type.id) {
             case QueryDSL.Node.TypeFilter: {
               if (node?.type.id === QueryDSL.Node.Identifier) {
@@ -49,7 +49,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
               }
 
               if (range) {
-                const schema = space?.db.graph.schemaRegistry.schemas ?? [];
+                const schema = db?.graph.schemaRegistry.schemas ?? [];
                 return {
                   ...range,
                   filter: true,
@@ -60,7 +60,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
               break;
             }
 
-            // TODO(burdon): Trigger on #
+            // TODO(burdon): Trigger on #.
             case QueryDSL.Node.TagFilter: {
               if (tags) {
                 range = { from: node.from + 1, to: node.to };
@@ -80,7 +80,7 @@ export const query = ({ space, tags }: QueryOptions = {}): Extension => {
       ],
     }),
     typeahead({
-      onComplete: ({ line }: TypeaheadContext) => {
+      onComplete: ({ line }: CompoetionContext) => {
         const words = line.split(/\s+/).filter(Boolean);
         if (words.length > 0) {
           // TODO(burdon): Get suggestion from parser.
