@@ -37,6 +37,7 @@ import {
 } from '../automerge';
 
 import { InflightRequestLimiter } from './inflight-request-limiter';
+import * as Automerge from '@automerge/automerge';
 
 /**
  * Delay before restarting the connection after receiving a forbidden error.
@@ -349,8 +350,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 
     const payload = cbor.decode(message.payload!.value) as AutomergeProtocolMessage;
     log.verbose('received', {
-      type: payload.type,
-      documentId: payload.type === 'sync' && payload.documentId,
+      ...getMessageInfo(payload),
       remoteId: this._remotePeerId,
     });
 
@@ -399,8 +399,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     (message as any).targetId = this._targetServiceId as PeerId;
 
     log.verbose('sending...', {
-      type: message.type,
-      documentId: message.type === 'sync' && message.documentId,
+      ...getMessageInfo(message),
       remoteId: this._remotePeerId,
     });
 
@@ -428,3 +427,15 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
  */
 const isForbiddenErrorMessage = (message: AutomergeProtocolMessage) =>
   message.type === 'error' && message.message === 'Forbidden';
+
+const getMessageInfo = (msg: AutomergeProtocolMessage) => {
+  const { have, heads, need, changes } = msg.type === 'sync' ? Automerge.decodeSyncMessage(msg.data) : {};
+  return {
+    type: msg.type,
+    documentId: 'documentId' in msg ? msg.documentId : undefined,
+    have,
+    heads,
+    need,
+    changes: changes?.length,
+  };
+};
