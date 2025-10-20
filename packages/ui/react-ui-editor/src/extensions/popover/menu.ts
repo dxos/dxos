@@ -22,6 +22,22 @@ export type PopoverMenuItem = {
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
+export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
+  return groups.flatMap((group) => group.items).find((item) => item.id === id);
+};
+
+export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+  const items = groups.flatMap((group) => group.items);
+  const index = items.findIndex((item) => item.id === id);
+  return index < items.length - 1 ? items[index + 1] : items[index];
+};
+
+export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+  const items = groups.flatMap((group) => group.items);
+  const index = items.findIndex((item) => item.id === id);
+  return index > 0 ? items[index - 1] : items[index];
+};
+
 export const createMenuGroup = ({
   id,
   label,
@@ -40,23 +56,7 @@ export const createMenuGroup = ({
   })),
 });
 
-export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
-  return groups.flatMap((group) => group.items).find((item) => item.id === id);
-};
-
-export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
-  const items = groups.flatMap((group) => group.items);
-  const index = items.findIndex((item) => item.id === id);
-  return index < items.length - 1 ? items[index + 1] : items[index];
-};
-
-export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
-  const items = groups.flatMap((group) => group.items);
-  const index = items.findIndex((item) => item.id === id);
-  return index > 0 ? items[index - 1] : items[index];
-};
-
-export const filterMenuItems = (
+export const filterMenuGroups = (
   groups: PopoverMenuGroup[],
   filter: (item: PopoverMenuItem) => boolean,
 ): PopoverMenuGroup[] => {

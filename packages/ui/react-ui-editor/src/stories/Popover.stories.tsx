@@ -19,7 +19,7 @@ import {
   PopoverMenuProvider,
   type UsePopoverMenuProps,
   createMenuGroup,
-  filterMenuItems,
+  filterMenuGroups,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
@@ -36,8 +36,6 @@ const customCompletions: PopoverMenuGroup = createMenuGroup({
   id: 'test',
   items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
 });
-
-// const groups: PopoverMenuGroup[] = [formattingCommands, linkSlashCommands];
 
 const placeholder = (trigger: string[]) =>
   Domino.of('div')
@@ -70,7 +68,7 @@ const LinkStory = (args: StoryProps) => {
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
     async (text, trigger): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
-        return filterMenuItems([linkSlashCommands], (item) =>
+        return filterMenuGroups([linkSlashCommands], (item) =>
           text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
         );
       }

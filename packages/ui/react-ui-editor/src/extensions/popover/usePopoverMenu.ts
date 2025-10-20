@@ -9,7 +9,7 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 import { type MaybePromise } from '@dxos/util';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
-import { filterMenuItems, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
+import { filterMenuGroups, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './menu';
 import { modalStateEffect } from './modal';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
@@ -46,7 +46,7 @@ export const usePopoverMenu = ({
     async (text, trigger) => {
       const groups = (await getMenu?.(text, trigger)) ?? [];
       return filter
-        ? filterMenuItems(groups, (item) =>
+        ? filterMenuGroups(groups, (item) =>
             text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
           )
         : groups;

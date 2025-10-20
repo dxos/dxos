@@ -143,6 +143,7 @@ const popoverKeymap = (options: PopoverOptions) => {
               view.dispatch({
                 effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
               });
+
               return true;
             }
 
