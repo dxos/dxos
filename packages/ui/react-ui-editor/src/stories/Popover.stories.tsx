@@ -46,11 +46,11 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
 
 const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
-  const getMenu = useCallback(
-    async (trigger: string, query?: string): Promise<PopoverMenuGroup[]> => {
+  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    async (text, trigger): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
         return filterItems(groups, (item) =>
-          query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
+          text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
         );
       }
 
@@ -58,7 +58,7 @@ const LinkStory = (args: StoryProps) => {
         return [];
       }
 
-      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
+      const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
       const result = await space?.db.query(Query.type(Testing.Contact)).run();
       const items = result.objects
         .filter((object) => object.name.toLowerCase().includes(name))
@@ -69,7 +69,7 @@ const LinkStory = (args: StoryProps) => {
             icon: 'ph--user--regular',
             onSelect: (view, head) => {
               const link = `[${object.name}](${Obj.getDXN(object)})`;
-              if (query?.startsWith('@')) {
+              if (text?.startsWith('@')) {
                 insertAtLineStart(view, head, `!${link}\n`);
               } else {
                 insertAtCursor(view, head, `${link} `);
@@ -86,22 +86,20 @@ const LinkStory = (args: StoryProps) => {
   return <DefaultStory {...args} getMenu={getMenu} />;
 };
 
-const groups: PopoverMenuGroup[] = [
-  formattingCommands,
-  linkSlashCommands,
-  {
-    id: 'custom',
-    label: 'Custom',
-    items: [
-      {
-        id: 'custom-1',
-        label: 'Log',
-        icon: 'ph--log--regular',
-        onSelect: console.log,
-      },
-    ],
-  },
-];
+const customCommands: PopoverMenuGroup = {
+  id: 'custom',
+  label: 'Custom',
+  items: [
+    {
+      id: 'custom-1',
+      label: 'Hello world!',
+      icon: 'ph--log--regular',
+      onSelect: (view, head) => insertAtLineStart(view, head, 'Hello world!'),
+    },
+  ],
+};
+
+const groups: PopoverMenuGroup[] = [formattingCommands, linkSlashCommands, customCommands];
 
 const placeholder = (trigger: string[]) =>
   Domino.of('div')
@@ -133,6 +131,7 @@ export const Default: Story = {
   args: {
     text: str('# Autocomplete', '', ''),
     triggerKey: 'Ctrl-Space',
+    filter: true,
     getMenu: () => groups,
   },
 };

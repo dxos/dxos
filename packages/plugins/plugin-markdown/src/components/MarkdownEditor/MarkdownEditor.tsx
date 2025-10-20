@@ -77,15 +77,16 @@ export const MarkdownEditor = ({
   const viewRef = useRef<EditorView>(null);
 
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-    (trigger: string, query?: string) => {
+    (text, trigger) => {
       switch (trigger) {
         case '@': {
-          return onLinkQuery?.(query) ?? [];
+          return onLinkQuery?.(text) ?? [];
         }
+
         case '/':
         default: {
           return filterItems([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
+            text ? toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }
       }

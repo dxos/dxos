@@ -12,11 +12,12 @@ import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 import { modalStateEffect } from './modal';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
-import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
+import { filterItems, getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UsePopoverMenuProps = {
   viewRef: RefObject<EditorView | null>;
-  getMenu?: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
+  filter?: boolean;
+  getMenu?: (text: string, trigger?: string) => MaybePromise<PopoverMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
 export type UsePopoverMenu = {
@@ -29,6 +30,7 @@ export const usePopoverMenu = ({
   trigger,
   triggerKey,
   placeholder,
+  filter = true,
   getMenu,
 }: UsePopoverMenuProps): UsePopoverMenu => {
   const groupsRef = useRef<PopoverMenuGroup[]>([]);
@@ -37,13 +39,23 @@ export const usePopoverMenu = ({
   const [open, setOpen] = useState(false);
   const [_, refresh] = useState({});
 
-  const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
-    async (open, trigger) => {
-      console.log(open, trigger); // TODO(burdon): Track state.
-      if (open && trigger) {
-        groupsRef.current = (await getMenu?.(trigger)) ?? [];
-      }
+  /**
+   * Get filtered options.
+   */
+  const getMenuOptions = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    async (text, trigger) => {
+      const groups = (await getMenu?.(text, trigger)) ?? [];
+      return filter
+        ? filterItems(groups, (item) =>
+            text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
+          )
+        : groups;
+    },
+    [getMenu, filter],
+  );
 
+  const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
+    async (open) => {
       setOpen(open);
       if (!open) {
         setCurrentItem(undefined);
@@ -60,7 +72,7 @@ export const usePopoverMenu = ({
         });
       });
     },
-    [getMenu],
+    [getMenuOptions],
   );
 
   const handleActivate = useCallback<NonNullable<UsePopoverMenu['onActivate']>>(
@@ -72,7 +84,7 @@ export const usePopoverMenu = ({
 
       const triggerKey = event.trigger.getAttribute('data-trigger');
       if (!open) {
-        handleOpenChange(true, triggerKey);
+        handleOpenChange(true, triggerKey || undefined);
       }
     },
     [open, handleOpenChange],
@@ -94,8 +106,8 @@ export const usePopoverMenu = ({
     }
 
     // Delete trigger.
-    const range = view.state.field(popoverStateField)?.range;
-    if (range) {
+    const { range, trigger } = view.state.field(popoverStateField) ?? {};
+    if (range && trigger) {
       view.dispatch({
         changes: { ...range, insert: '' },
       });
@@ -128,12 +140,8 @@ export const usePopoverMenu = ({
           handleSelect(currentRef.current);
         }
       },
-      onTextChange: async (trigger, text) => {
-        if (/\W/.test(text)) {
-          return requestAnimationFrame(() => handleOpenChange(false));
-        }
-
-        groupsRef.current = (await getMenu?.(trigger, text)) ?? [];
+      onTextChange: async (text, trigger) => {
+        groupsRef.current = (await getMenuOptions(text, trigger)) ?? [];
         const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
         if (firstItem) {
           setCurrentItem(firstItem.id);
@@ -143,7 +151,7 @@ export const usePopoverMenu = ({
         refresh({});
       },
     });
-  }, [handleOpenChange, getMenu, serializedTrigger, placeholder]);
+  }, [handleOpenChange, getMenuOptions, serializedTrigger, placeholder]);
 
   return {
     groupsRef,

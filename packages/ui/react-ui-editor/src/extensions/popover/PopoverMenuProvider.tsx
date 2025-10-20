@@ -23,7 +23,7 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   open?: boolean;
   defaultOpen?: boolean;
   numLines?: number;
-  onOpenChange?: (nextOpen: boolean, trigger?: string | null) => void;
+  onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
   onActivate?: (event: DxAnchorActivate) => void;
   onSelect: (item: PopoverMenuItem) => void;
   onCancel?: () => void;

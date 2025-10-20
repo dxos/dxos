@@ -13,7 +13,7 @@ import {
   keymap,
 } from '@codemirror/view';
 
-import { isTruthy } from '@dxos/util';
+import { isNonNullable, isTruthy } from '@dxos/util';
 
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
@@ -26,7 +26,7 @@ export type PopoverOptions = {
   placeholder?: Partial<PlaceholderOptions>;
 
   // Trigger update.
-  onTextChange?: (trigger: string, text: string) => void;
+  onTextChange?: (text: string, trigger?: string) => void;
   onClose?: () => void;
 
   // Menu specific.
@@ -65,23 +65,25 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     }
 
     const selection = view.state.selection.main;
-    const prefix = view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
-    const shouldRemove =
+    const text = view.state.doc.sliceString(activeRange.from, activeRange.to);
+    const shouldClose =
       // Trigger deleted.
-      (trigger && prefix !== trigger) ||
+      (trigger ? trigger !== text[0] : text.length === 0) ||
+      // Whitespace in text.
+      /\W/.test(trigger ? text.slice(1) : text) ||
       // Cursor moved before the range.
       selection.head < activeRange.from ||
       // Cursor moved after the range (+1 to handle selection changing before doc).
       selection.head > activeRange.to + 1;
 
-    const nextRange = shouldRemove ? null : docChanged ? { from: activeRange.from, to: selection.head } : activeRange;
+    const nextRange = shouldClose ? null : docChanged ? { from: activeRange.from, to: selection.head } : activeRange;
     if (nextRange !== activeRange) {
       view.dispatch({
         effects: popoverRangeEffect.of(nextRange ? { range: nextRange, trigger } : null),
       });
     }
 
-    if (shouldRemove) {
+    if (shouldClose) {
       options.onClose?.();
     }
   });
@@ -94,7 +96,7 @@ const popoverKeymap = (options: PopoverOptions) => {
   return keymap.of(
     [
       // Prefix triggers.
-      ...triggers.map((trigger) => ({
+      ...triggers.filter(isNonNullable).map((trigger) => ({
         key: trigger,
         run: (view: EditorView) => {
           // Determine if we should trigger the popover:
@@ -205,32 +207,33 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
       update({ view, transactions }: ViewUpdate) {
         const builder = new RangeSetBuilder<Decoration>();
         const { range, trigger } = view.state.field(popoverStateField) ?? {};
+        if (range) {
+          // Check if we should show the widget (only if cursor is within the active command range).
+          const selection = view.state.selection.main;
+          const showWidget = selection.head >= range.from && selection.head <= range.to;
+          if (showWidget) {
+            // Create decoration that wraps the entire line content in a dx-anchor.
+            builder.add(
+              range.from,
+              range.to,
+              Decoration.mark({
+                tagName: 'dx-anchor',
+                class: 'cm-popover-trigger',
+                attributes: {
+                  'data-visible-focus': 'false',
+                  'data-auto-trigger': 'true',
+                  'data-trigger': trigger ?? options.triggerKey ?? '',
+                },
+              }),
+            );
+          }
 
-        // Check if we should show the widget (only if cursor is within the active command range).
-        const selection = view.state.selection.main;
-        const showWidget = range && selection.head >= range.from && selection.head <= range.to;
-        if (showWidget) {
-          // Create decoration that wraps the entire line content in a dx-anchor.
-          builder.add(
-            range.from,
-            range.to,
-            Decoration.mark({
-              tagName: 'dx-anchor',
-              class: 'cm-popover-trigger',
-              attributes: {
-                'data-visible-focus': 'false',
-                'data-auto-trigger': 'true',
-                'data-trigger': trigger ?? '',
-              },
-            }),
-          );
-        }
-
-        const rangeChanged = transactions.some((tr) => tr.effects.some((effect) => effect.is(popoverRangeEffect)));
-        if (range && rangeChanged && trigger) {
-          // NOTE: Content skips the trigger character.
-          const content = view.state.sliceDoc(range.from + 1, range.to);
-          options.onTextChange?.(trigger, content);
+          const rangeChanged = transactions.some((tr) => tr.effects.some((effect) => effect.is(popoverRangeEffect)));
+          if (rangeChanged) {
+            // NOTE: Content skips the trigger character.
+            const content = view.state.sliceDoc(range.from + (trigger ? trigger.length : 0), range.to);
+            options.onTextChange?.(content, trigger);
+          }
         }
 
         this._decorations = builder.finish();
@@ -243,7 +246,14 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
 };
 
 type PopoverState = {
+  /**
+   * Trigger prefix (in document).
+   */
   trigger?: string;
+
+  /**
+   * Current document completion range.
+   */
   range: Range;
 };
 
