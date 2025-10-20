@@ -36,7 +36,8 @@
     "@dxos/schema": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
-    "@preact/signals-react": "^3.3.0"
+    "@preact/signals-react": "^3.3.0",
+    "effect": "3.18.3"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
