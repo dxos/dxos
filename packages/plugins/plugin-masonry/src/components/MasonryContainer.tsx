@@ -14,7 +14,7 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 const Item = ({ data }: { data: any }) => {
-  return <Surface role='card--intrinsic' limit={1} data={{ subject: data }} />;
+  return <Surface role='card' limit={1} data={{ subject: data }} />;
 };
 
 export const MasonryContainer = ({ view, role }: { view: DataType.View; role: string }) => {
