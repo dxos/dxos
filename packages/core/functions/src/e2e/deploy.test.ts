@@ -17,7 +17,7 @@ describe('Functions deployment', () => {
       version: 1,
       runtime: {
         services: {
-          edge: { url: 'https://edge.dxos.workers.dev' },
+          edge: { url: 'https://edge-main.dxos.workers.dev' },
         },
       },
     });
