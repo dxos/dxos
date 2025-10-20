@@ -28,59 +28,59 @@ export type QueryOptions = {
 export const query = ({ db, tags }: QueryOptions = {}): Extension => {
   const parser = QueryDSL.Parser.configure({ strict: false });
 
+  // TODO(burdon): Replace with popover.
+  const auto = autocompletion({
+    activateOnTyping: true,
+    override: [
+      async (context: CompletionContext) => {
+        const tree = parser.parse(context.state.sliceDoc());
+        const node = tree.cursorAt(context.pos, -1).node;
+
+        let range = undefined;
+        switch (node.parent?.type.id) {
+          case QueryDSL.Node.TypeFilter: {
+            if (node?.type.id === QueryDSL.Node.Identifier) {
+              range = { from: node.from, to: node.to };
+            } else if (node?.type.name === ':') {
+              range = { from: node.from + 1, to: node.to };
+            }
+
+            if (range) {
+              const schema = db?.graph.schemaRegistry.schemas ?? [];
+              return {
+                ...range,
+                filter: true,
+                options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
+              };
+            }
+
+            break;
+          }
+
+          // TODO(burdon): Trigger on #.
+          case QueryDSL.Node.TagFilter: {
+            if (tags) {
+              range = { from: node.from + 1, to: node.to };
+              return {
+                ...range,
+                filter: true,
+                options: Object.values(tags).map((tag) => ({ label: tag.label })),
+              };
+            }
+
+            break;
+          }
+        }
+
+        return null;
+      },
+    ],
+  });
+
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
-
-    // TODO(burdon): Replace with popover.
-    autocompletion({
-      activateOnTyping: true,
-      override: [
-        async (context: CompletionContext) => {
-          const tree = parser.parse(context.state.sliceDoc());
-          const node = tree.cursorAt(context.pos, -1).node;
-
-          let range = undefined;
-          switch (node.parent?.type.id) {
-            case QueryDSL.Node.TypeFilter: {
-              if (node?.type.id === QueryDSL.Node.Identifier) {
-                range = { from: node.from, to: node.to };
-              } else if (node?.type.name === ':') {
-                range = { from: node.from + 1, to: node.to };
-              }
-
-              if (range) {
-                const schema = db?.graph.schemaRegistry.schemas ?? [];
-                return {
-                  ...range,
-                  filter: true,
-                  options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
-                };
-              }
-
-              break;
-            }
-
-            // TODO(burdon): Trigger on #.
-            case QueryDSL.Node.TagFilter: {
-              if (tags) {
-                range = { from: node.from + 1, to: node.to };
-                return {
-                  ...range,
-                  filter: true,
-                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
-                };
-              }
-
-              break;
-            }
-          }
-
-          return null;
-        },
-      ],
-    }),
     typeahead({
       onComplete: ({ line }: CompoetionContext) => {
         const words = line.split(/\s+/).filter(Boolean);

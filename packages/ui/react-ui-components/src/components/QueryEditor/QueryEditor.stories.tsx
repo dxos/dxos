@@ -3,13 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { DataType } from '@dxos/schema';
 
@@ -34,16 +34,13 @@ const meta = {
       setFilter(builder.build(value));
     }, []);
 
-    const controllerRef = useRef(null);
-
     return (
-      <div className='flex flex-col gap-2'>
+      <div role='none' className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
-          classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm'
+          classNames='p-2 border border-subduedSeparator rounded-sm'
           db={space?.db}
           onChange={handleChange}
-          ref={controllerRef}
         />
 
         <Json data={filter} classNames='text-xs' />
@@ -52,13 +49,14 @@ const meta = {
   },
   decorators: [
     withTheme,
+    withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),
   ],
   parameters: {
-    layout: 'column',
+    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof QueryEditor>;

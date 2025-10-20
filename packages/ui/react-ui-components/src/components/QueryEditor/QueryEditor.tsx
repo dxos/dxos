@@ -16,6 +16,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   keymap,
+  usePopoverMenu,
 } from '@dxos/react-ui-editor';
 
 import { translationKey } from '../../translations';
@@ -35,6 +36,7 @@ export type QueryEditorProps = ThemedClassName<
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
+    const { groupsRef, extension, ...menuProps } = usePopoverMenu({});
     useEffect(() => {
       updateRef(forwardedRef, controller);
     }, [controller]);
@@ -46,6 +48,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
         createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
         query({ db, tags }),
+        extension,
         Prec.highest(
           keymap.of([
             {
@@ -58,11 +61,11 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           ]),
         ),
       ],
-      [db, readonly],
+      [db, extension, readonly],
     );
 
     return (
-      <PopoverMenuProvider view={controller?.view} groups={[]}>
+      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps}>
         <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
       </PopoverMenuProvider>
     );

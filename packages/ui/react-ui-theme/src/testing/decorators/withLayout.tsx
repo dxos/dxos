@@ -43,6 +43,24 @@ export const withLayout: Decorator = (Story, context) => {
         </div>
       );
 
+    // Centered.
+    case 'centered':
+      return (
+        <div role='none' className={mx('fixed inset-0 grid place-items-center bg-deckSurface')}>
+          <div role='none' className={mx('bg-baseSurface', className ?? 'contents')}>
+            <Story />
+          </div>
+        </div>
+      );
+
+    // Padded.
+    case 'padded':
+      return (
+        <div role='none' className={mx('p-2', className)}>
+          <Story />
+        </div>
+      );
+
     // Centered column.
     case 'column':
       return (
@@ -55,16 +73,6 @@ export const withLayout: Decorator = (Story, context) => {
               scroll ? 'overflow-y-auto' : 'overflow-hidden',
             )}
           >
-            <Story />
-          </div>
-        </div>
-      );
-
-    // Centered.
-    case 'centered':
-      return (
-        <div role='none' className={mx('fixed inset-0 grid place-items-center bg-deckSurface')}>
-          <div role='none' className={mx('bg-baseSurface', className ?? 'contents')}>
             <Story />
           </div>
         </div>
