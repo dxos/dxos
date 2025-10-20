@@ -32,12 +32,10 @@ import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
 
-const customCompletions: PopoverMenuGroup = createMenuGroup('test', undefined, [
-  'Hello world!',
-  'Hello DXOS',
-  'Hello Composer',
-  'https://dxos.org',
-]);
+const customCompletions: PopoverMenuGroup = createMenuGroup({
+  id: 'test',
+  items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
+});
 
 // const groups: PopoverMenuGroup[] = [formattingCommands, linkSlashCommands];
 

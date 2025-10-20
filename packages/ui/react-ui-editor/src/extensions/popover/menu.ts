@@ -22,7 +22,15 @@ export type PopoverMenuItem = {
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
 };
 
-export const createMenuGroup = (id: string, label: string | undefined, items: string[]): PopoverMenuGroup => ({
+export const createMenuGroup = ({
+  id,
+  label,
+  items,
+}: {
+  id: string;
+  label?: Label;
+  items: string[];
+}): PopoverMenuGroup => ({
   id,
   label,
   items: items.map((item, i) => ({
