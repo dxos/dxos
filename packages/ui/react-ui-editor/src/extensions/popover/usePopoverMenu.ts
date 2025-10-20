@@ -56,6 +56,7 @@ export const usePopoverMenu = ({
 
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open) => {
+      console.log('handleOpenChange', open);
       setOpen(open);
       if (!open) {
         setCurrentItem(undefined);

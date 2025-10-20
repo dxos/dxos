@@ -133,17 +133,19 @@ const popoverKeymap = (options: PopoverOptions) => {
           run: (view: EditorView) => {
             const selection = view.state.selection.main;
             const line = view.state.doc.lineAt(selection.head);
+
+            // Get last word.
             let str = line.text.slice(0, selection.head - line.from);
             const idx = str.lastIndexOf(' ');
             if (idx !== -1) {
               str = str.slice(idx + 1);
             }
-            if (str.length) {
+
+            if (str.trim().length) {
               const from = line.from + idx;
               view.dispatch({
                 effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
               });
-
               return true;
             }
 
