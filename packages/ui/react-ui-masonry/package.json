@@ -27,9 +27,16 @@
     "masonic": "^4.1.0"
   },
   "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "~19.2.2",

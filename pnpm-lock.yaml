@@ -14168,15 +14168,36 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0(react@19.2.0)
     devDependencies:
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../react-ui-form
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../react-ui-stack
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils

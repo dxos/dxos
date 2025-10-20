@@ -48,9 +48,11 @@ const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount'
   const remInPx = usePx(1);
   return useMemo(() => {
     return Object.fromEntries(
-      Object.entries(remProps).map(([key, value]) => {
-        return [key, value * remInPx];
-      }),
+      Object.entries(remProps)
+        .filter(([_, value]) => Number.isFinite(value))
+        .map(([key, value]) => {
+          return [key, value * remInPx];
+        }),
     );
   }, [remProps, remInPx]);
 };
@@ -59,14 +61,14 @@ const MasonryRootImpl = <Item,>(
   {
     columnCount,
     maxColumnCount,
-    columnWidth,
+    columnWidth = 18,
     maxColumnWidth,
-    columnGutter,
+    columnGutter = 1,
     rowGutter,
     items,
-    itemHeightEstimate,
+    itemHeightEstimate = 256,
     itemKey,
-    overscanBy,
+    overscanBy = 6,
     render,
     onRender,
     classNames,
