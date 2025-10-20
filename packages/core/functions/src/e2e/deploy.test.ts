@@ -13,7 +13,7 @@ import { uploadWorkerFunction } from '@dxos/functions/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-describe('Functions deployment', () => {
+describe.runIf(process.env.DX_RUN_FUNCTIONS_E2E === '1')('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = new Config({
       version: 1,
