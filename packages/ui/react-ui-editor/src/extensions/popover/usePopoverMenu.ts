@@ -20,7 +20,7 @@ export type UsePopoverMenuProps = {
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
-  getMenu: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
+  getMenu?: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
 };
 
 export type UsePopoverMenu = {
@@ -38,7 +38,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
     async (open, trigger?) => {
       if (open && trigger) {
-        groupsRef.current = await getMenu(trigger);
+        groupsRef.current = (await getMenu?.(trigger)) ?? [];
       }
 
       setOpen(open);
@@ -129,7 +129,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
           return requestAnimationFrame(() => handleOpenChange(false));
         }
 
-        groupsRef.current = await getMenu(trigger, text);
+        groupsRef.current = (await getMenu?.(trigger, text)) ?? [];
         const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
         if (firstItem) {
           setCurrentItem(firstItem.id);
