@@ -8,27 +8,30 @@ import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type MaybePromise } from '@dxos/util';
 
-import { type PlaceholderOptions } from '../autocomplete';
-
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 import { modalStateEffect } from './modal';
-import { popover, popoverRangeEffect, popoverStateField } from './popover';
+import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UsePopoverMenuProps = {
   viewRef: RefObject<EditorView | null>;
   trigger: string | string[];
-  placeholder?: Partial<PlaceholderOptions>;
   getMenu?: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
-};
+} & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
 export type UsePopoverMenu = {
   groupsRef: RefObject<PopoverMenuGroup[]>;
   extension: Extension;
 } & Pick<PopoverMenuProviderProps, 'currentItem' | 'open' | 'onOpenChange' | 'onActivate' | 'onSelect' | 'onCancel'>;
 
-export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePopoverMenuProps): UsePopoverMenu => {
+export const usePopoverMenu = ({
+  viewRef,
+  trigger,
+  triggerKey,
+  placeholder,
+  getMenu,
+}: UsePopoverMenuProps): UsePopoverMenu => {
   const groupsRef = useRef<PopoverMenuGroup[]>([]);
   const currentRef = useRef<PopoverMenuItem | null>(null);
   const [currentItem, setCurrentItem] = useState<string>();
@@ -103,6 +106,7 @@ export const usePopoverMenu = ({ viewRef, trigger, placeholder, getMenu }: UsePo
   const extension = useMemo<Extension>(() => {
     return popover({
       trigger,
+      triggerKey,
       placeholder,
       onClose: () => handleOpenChange(false),
       onArrowUp: () => {

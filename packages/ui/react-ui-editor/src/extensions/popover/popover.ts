@@ -3,7 +3,17 @@
 //
 
 import { type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  type KeyBinding,
+  ViewPlugin,
+  type ViewUpdate,
+  keymap,
+} from '@codemirror/view';
+
+import { isTruthy } from '@dxos/util';
 
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
@@ -12,6 +22,7 @@ import { modalStateField } from './modal';
 
 export type PopoverOptions = {
   trigger: string | string[];
+  triggerKey?: string;
   placeholder?: Partial<PlaceholderOptions>;
 
   // Trigger update.
@@ -81,72 +92,89 @@ const popoverTriggerListener = (options: PopoverOptions) =>
  */
 const popoverKeymap = (options: PopoverOptions) => {
   const triggers = Array.isArray(options.trigger) ? options.trigger : [options.trigger];
-  return keymap.of([
-    ...triggers.map((trigger) => ({
-      key: trigger,
-      run: (view: EditorView) => {
-        // Determine if we should trigger the popover:
-        // 1. Empty lines or at the beginning of a line
-        // 2. When there's a preceding space
-        const from = view.state.selection.main.head;
-        const line = view.state.doc.lineAt(from);
-        if (
-          line.text.trim() === '' ||
-          from === line.from ||
-          (from > line.from && line.text[from - line.from - 1] === ' ')
-        ) {
-          // Insert and select the trigger.
-          view.dispatch({
-            changes: { from, insert: trigger },
-            selection: { anchor: from + 1, head: from + 1 },
-            effects: popoverRangeEffect.of({ trigger, range: { from, to: from + 1 } }),
-          });
+  return keymap.of(
+    [
+      // Prefix triggers.
+      ...triggers.map((trigger) => ({
+        key: trigger,
+        run: (view: EditorView) => {
+          // Determine if we should trigger the popover:
+          // 1. Empty lines or at the beginning of a line
+          // 2. When there's a preceding space
+          const from = view.state.selection.main.head;
+          const line = view.state.doc.lineAt(from);
+          if (
+            line.text.trim() === '' ||
+            from === line.from ||
+            (from > line.from && line.text[from - line.from - 1] === ' ')
+          ) {
+            // Insert and select the trigger.
+            view.dispatch({
+              changes: { from, insert: trigger },
+              selection: { anchor: from + 1, head: from + 1 },
+              effects: popoverRangeEffect.of({ trigger, range: { from, to: from + 1 } }),
+            });
 
-          return true;
-        }
+            return true;
+          }
 
-        return false;
+          return false;
+        },
+      })),
+
+      // Custom trigger.
+      options.triggerKey &&
+        ({
+          key: options.triggerKey,
+          run: (view: EditorView) => {
+            const from = view.state.selection.main.head;
+            view.dispatch({
+              selection: { anchor: from, head: from },
+              effects: popoverRangeEffect.of({ range: { from, to: from } }),
+            });
+            return true;
+          },
+        } satisfies KeyBinding),
+
+      {
+        key: 'ArrowUp',
+        run: (view: EditorView) => {
+          const range = view.state.field(popoverStateField)?.range;
+          if (range) {
+            options.onArrowUp?.();
+            return true;
+          }
+
+          return false;
+        },
       },
-    })),
+      {
+        key: 'ArrowDown',
+        run: (view: EditorView) => {
+          const range = view.state.field(popoverStateField)?.range;
+          if (range) {
+            options.onArrowDown?.();
+            return true;
+          }
 
-    {
-      key: 'ArrowUp',
-      run: (view) => {
-        const range = view.state.field(popoverStateField)?.range;
-        if (range) {
-          options.onArrowUp?.();
-          return true;
-        }
-
-        return false;
+          return false;
+        },
       },
-    },
-    {
-      key: 'ArrowDown',
-      run: (view) => {
-        const range = view.state.field(popoverStateField)?.range;
-        if (range) {
-          options.onArrowDown?.();
-          return true;
-        }
+      {
+        key: 'Enter',
+        run: (view: EditorView) => {
+          const range = view.state.field(popoverStateField)?.range;
+          if (range) {
+            view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
+            options.onEnter?.();
+            return true;
+          }
 
-        return false;
+          return false;
+        },
       },
-    },
-    {
-      key: 'Enter',
-      run: (view) => {
-        const range = view.state.field(popoverStateField)?.range;
-        if (range) {
-          view.dispatch({ changes: { from: range.from, to: range.to, insert: '' } });
-          options.onEnter?.();
-          return true;
-        }
-
-        return false;
-      },
-    },
-  ]);
+    ].filter(isTruthy),
+  );
 };
 
 /**
@@ -179,7 +207,7 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
               attributes: {
                 'data-visible-focus': 'false',
                 'data-auto-trigger': 'true',
-                'data-trigger': trigger!,
+                'data-trigger': trigger ?? '',
               },
             }),
           );
@@ -202,7 +230,7 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
 };
 
 type PopoverState = {
-  trigger: string;
+  trigger?: string;
   range: Range;
 };
 

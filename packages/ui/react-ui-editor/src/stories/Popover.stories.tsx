@@ -129,6 +129,7 @@ export const Default: Story = {
   args: {
     text: str('# Slash command', '', ''),
     trigger: '/',
+    triggerKey: 'Ctrl-Space',
     placeholder: {
       content: () => placeholder(['/']),
     },
