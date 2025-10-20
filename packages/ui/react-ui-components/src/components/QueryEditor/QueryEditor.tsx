@@ -45,6 +45,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
+        query({ db, tags }),
         Prec.highest(
           keymap.of([
             {
@@ -56,7 +57,6 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
             },
           ]),
         ),
-        query({ db, tags }),
       ],
       [db, readonly],
     );
