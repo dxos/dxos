@@ -40,9 +40,9 @@ export const createGenerator = <T extends Obj.Any>(
     const view = await findViewByTypename(views, typename);
     const staticSchema = client?.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (!view && !staticSchema) {
-      await dispatch(createIntent(SpaceAction.AddSchema, { space, schema }));
+      await dispatch(createIntent(SpaceAction.AddSchema, { space, schema, show: false }));
     } else if (!view && staticSchema) {
-      await dispatch(createIntent(SpaceAction.UseStaticSchema, { space, typename }));
+      await dispatch(createIntent(SpaceAction.UseStaticSchema, { space, typename, show: false }));
     }
 
     // Create objects.
