@@ -16,7 +16,6 @@ import { getMenuItem, getNextMenuItem, getPreviousMenuItem } from './util';
 
 export type UsePopoverMenuProps = {
   viewRef: RefObject<EditorView | null>;
-  trigger: string | string[];
   getMenu?: (trigger: string, query?: string) => MaybePromise<PopoverMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
@@ -39,7 +38,8 @@ export const usePopoverMenu = ({
   const [_, refresh] = useState({});
 
   const handleOpenChange = useCallback<NonNullable<UsePopoverMenu['onOpenChange']>>(
-    async (open, trigger?) => {
+    async (open, trigger) => {
+      console.log(open, trigger); // TODO(burdon): Track state.
       if (open && trigger) {
         groupsRef.current = (await getMenu?.(trigger)) ?? [];
       }
@@ -71,7 +71,7 @@ export const usePopoverMenu = ({
       }
 
       const triggerKey = event.trigger.getAttribute('data-trigger');
-      if (!open && triggerKey) {
+      if (!open) {
         handleOpenChange(true, triggerKey);
       }
     },

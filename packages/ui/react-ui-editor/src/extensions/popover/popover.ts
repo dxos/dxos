@@ -21,7 +21,7 @@ import { type PlaceholderOptions, placeholder } from '../autocomplete';
 import { modalStateField } from './modal';
 
 export type PopoverOptions = {
-  trigger: string | string[];
+  trigger?: string | string[];
   triggerKey?: string;
   placeholder?: Partial<PlaceholderOptions>;
 
@@ -81,7 +81,6 @@ const popoverTriggerListener = (options: PopoverOptions) =>
       });
     }
 
-    // TODO(burdon): Should delete if user presses escape? How else to insert the trigger character?
     if (shouldRemove) {
       options.onClose?.();
     }
@@ -101,18 +100,18 @@ const popoverKeymap = (options: PopoverOptions) => {
           // Determine if we should trigger the popover:
           // 1. Empty lines or at the beginning of a line
           // 2. When there's a preceding space
-          const from = view.state.selection.main.head;
-          const line = view.state.doc.lineAt(from);
+          const head = view.state.selection.main.head;
+          const line = view.state.doc.lineAt(head);
           if (
             line.text.trim() === '' ||
-            from === line.from ||
-            (from > line.from && line.text[from - line.from - 1] === ' ')
+            head === line.from ||
+            (head > line.from && line.text[head - line.from - 1] === ' ')
           ) {
             // Insert and select the trigger.
             view.dispatch({
-              changes: { from, insert: trigger },
-              selection: { anchor: from + 1, head: from + 1 },
-              effects: popoverRangeEffect.of({ trigger, range: { from, to: from + 1 } }),
+              changes: { from: head, insert: trigger },
+              selection: { anchor: head + 1, head: head + 1 },
+              effects: popoverRangeEffect.of({ trigger, range: { from: head, to: head + 1 } }),
             });
 
             return true;
@@ -122,20 +121,35 @@ const popoverKeymap = (options: PopoverOptions) => {
         },
       })),
 
+      //
       // Custom trigger.
+      //
       options.triggerKey &&
         ({
           key: options.triggerKey,
           run: (view: EditorView) => {
-            const from = view.state.selection.main.head;
-            view.dispatch({
-              selection: { anchor: from, head: from },
-              effects: popoverRangeEffect.of({ range: { from, to: from } }),
-            });
-            return true;
+            const head = view.state.selection.main.head;
+            const line = view.state.doc.lineAt(head);
+            let str = line.text.slice(0, head - line.from);
+            const idx = str.lastIndexOf(' ');
+            if (idx !== -1) {
+              str = str.slice(idx + 1);
+            }
+            if (str.length) {
+              const from = line.from + idx;
+              view.dispatch({
+                effects: popoverRangeEffect.of({ range: { from: from + 1, to: head } }),
+              });
+              return true;
+            }
+
+            return false;
           },
         } satisfies KeyBinding),
 
+      //
+      // Nav keys.
+      //
       {
         key: 'ArrowUp',
         run: (view: EditorView) => {
@@ -189,13 +203,12 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
 
       // TODO(wittjosiah): The decorations are repainted on every update, this occasionally causes menu to flicker.
       update({ view, transactions }: ViewUpdate) {
+        const builder = new RangeSetBuilder<Decoration>();
         const { range, trigger } = view.state.field(popoverStateField) ?? {};
 
         // Check if we should show the widget (only if cursor is within the active command range).
         const selection = view.state.selection.main;
         const showWidget = range && selection.head >= range.from && selection.head <= range.to;
-
-        const builder = new RangeSetBuilder<Decoration>();
         if (showWidget) {
           // Create decoration that wraps the entire line content in a dx-anchor.
           builder.add(

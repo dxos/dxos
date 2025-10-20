@@ -23,7 +23,7 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   open?: boolean;
   defaultOpen?: boolean;
   numLines?: number;
-  onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
+  onOpenChange?: (nextOpen: boolean, trigger?: string | null) => void;
   onActivate?: (event: DxAnchorActivate) => void;
   onSelect: (item: PopoverMenuItem) => void;
   onCancel?: () => void;
@@ -49,7 +49,7 @@ export const PopoverMenuProvider = ({
   onCancel,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
-  const trigger = useRef<HTMLButtonElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useControllableState({
     prop: openParam,
@@ -67,10 +67,11 @@ export const PopoverMenuProvider = ({
       root,
       'dx-anchor-activate' as any,
       (event: DxAnchorActivate) => {
-        const { trigger: dxTrigger, refId } = event;
+        const { trigger, refId } = event;
+
         // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
         if (!refId) {
-          trigger.current = dxTrigger as HTMLButtonElement;
+          triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
             onActivate(event);
           } else {
@@ -89,7 +90,7 @@ export const PopoverMenuProvider = ({
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={trigger} />
+      <Popover.VirtualTrigger virtualRef={triggerRef} />
       <Popover.Portal>
         <Popover.Content
           align='start'

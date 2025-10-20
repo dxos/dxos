@@ -127,6 +127,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
+    text: str('# Autocomplete', '', ''),
+    triggerKey: 'Ctrl-Space',
+    getMenu: () => groups,
+  },
+};
+
+export const Formatting: Story = {
+  args: {
     text: str('# Slash command', '', ''),
     trigger: '/',
     triggerKey: 'Ctrl-Space',
