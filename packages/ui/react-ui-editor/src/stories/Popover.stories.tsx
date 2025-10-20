@@ -18,7 +18,8 @@ import {
   type PopoverMenuItem,
   PopoverMenuProvider,
   type UsePopoverMenuProps,
-  filterItems,
+  createMenuGroup,
+  filterMenuItems,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
@@ -30,6 +31,28 @@ import { str } from '../testing';
 import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
+
+const customCompletions: PopoverMenuGroup = createMenuGroup('test', undefined, [
+  'Hello world!',
+  'Hello DXOS',
+  'Hello Composer',
+  'https://dxos.org',
+]);
+
+// const groups: PopoverMenuGroup[] = [formattingCommands, linkSlashCommands];
+
+const placeholder = (trigger: string[]) =>
+  Domino.of('div')
+    .children(
+      Domino.of('span').text('Press'),
+      ...trigger.map((trigger) =>
+        Domino.of('span')
+          .text(trigger)
+          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
+      ),
+      Domino.of('span').text('for commands'),
+    )
+    .build();
 
 type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
@@ -49,7 +72,7 @@ const LinkStory = (args: StoryProps) => {
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
     async (text, trigger): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
-        return filterItems(groups, (item) =>
+        return filterMenuItems([linkSlashCommands], (item) =>
           text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
         );
       }
@@ -86,34 +109,6 @@ const LinkStory = (args: StoryProps) => {
   return <DefaultStory {...args} getMenu={getMenu} />;
 };
 
-const customCommands: PopoverMenuGroup = {
-  id: 'custom',
-  label: 'Custom',
-  items: [
-    {
-      id: 'custom-1',
-      label: 'Hello world!',
-      icon: 'ph--log--regular',
-      onSelect: (view, head) => insertAtLineStart(view, head, 'Hello world!'),
-    },
-  ],
-};
-
-const groups: PopoverMenuGroup[] = [formattingCommands, linkSlashCommands, customCommands];
-
-const placeholder = (trigger: string[]) =>
-  Domino.of('div')
-    .children(
-      Domino.of('span').text('Press'),
-      ...trigger.map((trigger) =>
-        Domino.of('span')
-          .text(trigger)
-          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
-      ),
-      Domino.of('span').text('for commands'),
-    )
-    .build();
-
 const meta = {
   title: 'ui/react-ui-editor/Popover',
   render: DefaultStory,
@@ -132,7 +127,7 @@ export const Default: Story = {
     text: str('# Autocomplete', '', ''),
     triggerKey: 'Ctrl-Space',
     filter: true,
-    getMenu: () => groups,
+    getMenu: () => [customCompletions],
   },
 };
 
@@ -143,7 +138,7 @@ export const Formatting: Story = {
     placeholder: {
       content: () => placeholder(['/']),
     },
-    getMenu: () => groups,
+    getMenu: () => [formattingCommands],
   },
 };
 

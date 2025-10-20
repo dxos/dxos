@@ -7,6 +7,8 @@ import { type EditorView } from '@codemirror/view';
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
+import { insertAtLineStart } from './util';
+
 export type PopoverMenuGroup = {
   id: string;
   label?: Label;
@@ -18,4 +20,40 @@ export type PopoverMenuItem = {
   label: Label;
   icon?: string;
   onSelect?: (view: EditorView, head: number) => MaybePromise<void>;
+};
+
+export const createMenuGroup = (id: string, label: string | undefined, items: string[]): PopoverMenuGroup => ({
+  id,
+  label,
+  items: items.map((item, i) => ({
+    id: `${id}-${i}`,
+    label: item,
+    onSelect: (view, head) => insertAtLineStart(view, head, item),
+  })),
+});
+
+export const getMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem | undefined => {
+  return groups.flatMap((group) => group.items).find((item) => item.id === id);
+};
+
+export const getNextMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+  const items = groups.flatMap((group) => group.items);
+  const index = items.findIndex((item) => item.id === id);
+  return index < items.length - 1 ? items[index + 1] : items[index];
+};
+
+export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): PopoverMenuItem => {
+  const items = groups.flatMap((group) => group.items);
+  const index = items.findIndex((item) => item.id === id);
+  return index > 0 ? items[index - 1] : items[index];
+};
+
+export const filterMenuItems = (
+  groups: PopoverMenuGroup[],
+  filter: (item: PopoverMenuItem) => boolean,
+): PopoverMenuGroup[] => {
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.filter(filter),
+  }));
 };

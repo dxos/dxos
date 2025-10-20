@@ -46,12 +46,13 @@ export const popover = (options: PopoverOptions): Extension => {
     popoverTriggerListener(options),
     popoverAnchorDecoration(options),
     modalStateField,
-    placeholder({
-      // TODO(burdon): Translations.
-      content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
-      ...options.placeholder,
-    }),
-  ];
+    options.trigger &&
+      placeholder({
+        // TODO(burdon): Translations.
+        content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
+        ...options.placeholder,
+      }),
+  ].filter(isTruthy);
 };
 
 /**
