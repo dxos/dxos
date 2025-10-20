@@ -84,7 +84,6 @@
     "platform": "^1.3.6"
   },
   "devDependencies": {
-    "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@types/platform": "^1.3.4",
     "@types/readable-stream": "^2.3.9",

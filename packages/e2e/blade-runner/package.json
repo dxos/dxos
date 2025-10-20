@@ -67,7 +67,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",

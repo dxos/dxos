@@ -92,9 +92,6 @@
       "path": "../../core/mesh/rpc"
     },
     {
-      "path": "../../core/mesh/signal"
-    },
-    {
       "path": "../../core/mesh/teleport-extension-replicator"
     },
     {

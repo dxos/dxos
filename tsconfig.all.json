@@ -190,9 +190,6 @@
       "path": "packages/core/mesh/rpc-tunnel/tsconfig.json"
     },
     {
-      "path": "packages/core/mesh/signal/tsconfig.json"
-    },
-    {
       "path": "packages/core/mesh/teleport/tsconfig.json"
     },
     {
