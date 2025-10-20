@@ -76,7 +76,7 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback<UsePopoverMenuProps['getMenu']>(
+  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
     (trigger: string, query?: string) => {
       switch (trigger) {
         case '@': {

@@ -59,16 +59,16 @@ export const popover = (options: PopoverOptions): Extension => {
  */
 const popoverTriggerListener = (options: PopoverOptions) =>
   EditorView.updateListener.of(({ view, docChanged }) => {
-    const { trigger, range: activeRange } = view.state.field(popoverStateField) ?? {};
-    if (!activeRange || !trigger) {
+    const { range: activeRange, trigger } = view.state.field(popoverStateField) ?? {};
+    if (!activeRange) {
       return;
     }
 
     const selection = view.state.selection.main;
-    const char = view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
+    const prefix = view.state.doc.sliceString(activeRange.from, activeRange.from + 1);
     const shouldRemove =
       // Trigger deleted.
-      char !== trigger ||
+      (trigger && prefix !== trigger) ||
       // Cursor moved before the range.
       selection.head < activeRange.from ||
       // Cursor moved after the range (+1 to handle selection changing before doc).
@@ -77,7 +77,7 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     const nextRange = shouldRemove ? null : docChanged ? { from: activeRange.from, to: selection.head } : activeRange;
     if (nextRange !== activeRange) {
       view.dispatch({
-        effects: popoverRangeEffect.of(nextRange ? { trigger, range: nextRange } : null),
+        effects: popoverRangeEffect.of(nextRange ? { range: nextRange, trigger } : null),
       });
     }
 
@@ -100,18 +100,18 @@ const popoverKeymap = (options: PopoverOptions) => {
           // Determine if we should trigger the popover:
           // 1. Empty lines or at the beginning of a line
           // 2. When there's a preceding space
-          const head = view.state.selection.main.head;
-          const line = view.state.doc.lineAt(head);
+          const selection = view.state.selection.main;
+          const line = view.state.doc.lineAt(selection.head);
           if (
             line.text.trim() === '' ||
-            head === line.from ||
-            (head > line.from && line.text[head - line.from - 1] === ' ')
+            selection.head === line.from ||
+            (selection.head > line.from && line.text[selection.head - line.from - 1] === ' ')
           ) {
             // Insert and select the trigger.
             view.dispatch({
-              changes: { from: head, insert: trigger },
-              selection: { anchor: head + 1, head: head + 1 },
-              effects: popoverRangeEffect.of({ trigger, range: { from: head, to: head + 1 } }),
+              changes: { from: selection.head, insert: trigger },
+              selection: { anchor: selection.head + 1, head: selection.head + 1 },
+              effects: popoverRangeEffect.of({ trigger, range: { from: selection.head, to: selection.head + 1 } }),
             });
 
             return true;
@@ -128,9 +128,9 @@ const popoverKeymap = (options: PopoverOptions) => {
         ({
           key: options.triggerKey,
           run: (view: EditorView) => {
-            const head = view.state.selection.main.head;
-            const line = view.state.doc.lineAt(head);
-            let str = line.text.slice(0, head - line.from);
+            const selection = view.state.selection.main;
+            const line = view.state.doc.lineAt(selection.head);
+            let str = line.text.slice(0, selection.head - line.from);
             const idx = str.lastIndexOf(' ');
             if (idx !== -1) {
               str = str.slice(idx + 1);
@@ -138,7 +138,7 @@ const popoverKeymap = (options: PopoverOptions) => {
             if (str.length) {
               const from = line.from + idx;
               view.dispatch({
-                effects: popoverRangeEffect.of({ range: { from: from + 1, to: head } }),
+                effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
               });
               return true;
             }
