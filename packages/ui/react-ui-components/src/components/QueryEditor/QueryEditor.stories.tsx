@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -34,6 +34,8 @@ const meta = {
       setFilter(builder.build(value));
     }, []);
 
+    const controllerRef = useRef(null);
+
     return (
       <div className='flex flex-col gap-2'>
         <QueryEditor
@@ -41,6 +43,7 @@ const meta = {
           classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm'
           db={space?.db}
           onChange={handleChange}
+          ref={controllerRef}
         />
 
         <Json data={filter} classNames='text-xs' />

@@ -4,9 +4,9 @@
 
 import { completionStatus } from '@codemirror/autocomplete';
 import { Prec } from '@codemirror/state';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, useForwardedRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
@@ -34,7 +34,11 @@ export type QueryEditorProps = ThemedClassName<
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, ...props }, forwardedRef) => {
-    const ref = useForwardedRef(forwardedRef);
+    const [controller, setController] = useState<EditorController | null>(null);
+    useEffect(() => {
+      updateRef(forwardedRef, controller);
+    }, [controller]);
+
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
@@ -58,8 +62,8 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     return (
-      <PopoverMenuProvider view={ref.current?.view} groups={[]}>
-        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={forwardedRef} />
+      <PopoverMenuProvider view={controller?.view} groups={[]}>
+        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
       </PopoverMenuProvider>
     );
   },
