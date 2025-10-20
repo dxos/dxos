@@ -6,23 +6,27 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Filter } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
-import { Form } from '@dxos/react-ui-form';
+import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 
 import { Masonry } from './Masonry';
 
-const StoryItem = ({ data }: { data: DataType.Organization }) => {
-  if (Obj.instanceOf(DataType.Organization, data)) {
-    const org = data as Obj.Obj<DataType.Organization>;
-    return <Form values={org} schema={DataType.Organization} autoSave />;
-  }
-  return <span>{(data as any)?.id ?? 'Unknown item'}</span>;
+const StoryItem = ({ data: { image, name, description } }: { data: DataType.Organization }) => {
+  return (
+    <Card.StaticRoot>
+      <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
+      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
+        <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
+      </div>
+      {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
+    </Card.StaticRoot>
+  );
 };
 
 const DefaultStory = () => {
@@ -33,7 +37,7 @@ const DefaultStory = () => {
     <Masonry.Root<DataType.Organization>
       items={organizations}
       render={StoryItem}
-      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto'
+      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
     />
   );
 };
