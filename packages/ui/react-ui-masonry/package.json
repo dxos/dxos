@@ -1,0 +1,60 @@
+{
+  "name": "@dxos/react-ui-masonry",
+  "version": "0.8.3",
+  "description": "A masonry component.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/react-hooks": "workspace:*",
+    "@radix-ui/react-compose-refs": "1.1.1",
+    "masonic": "^4.1.0"
+  },
+  "devDependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "vite": "7.1.9"
+  },
+  "peerDependencies": {
+    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
