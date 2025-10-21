@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import {
@@ -15,18 +14,14 @@ import {
   useIntentDispatcher,
 } from '@dxos/app-framework';
 import { fullyQualifiedId, getSchema, getSpace } from '@dxos/client/echo';
-import { Filter, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
-import { AttentionAction } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Card } from '@dxos/react-ui-stack';
-import { Table } from '@dxos/react-ui-table/types';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
-import { DataType, type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, type ProjectionModel } from '@dxos/schema';
 
 import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { TaskCard } from '../components/TaskCard';
@@ -42,63 +37,21 @@ export default () =>
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Person } => Obj.instanceOf(DataType.Person, data.subject),
       component: ({ data, role }) => {
-        const { dispatch } = useIntentDispatcher();
+        const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
-        const defaultSpace = useSpace();
         const activeSpace = useActiveSpace();
-
-        const currentSpaceOrgs = useQuery(space, Filter.type(DataType.Organization));
-        const currentSpaceViews = useQuery(space, Filter.type(DataType.View));
-        const defaultSpaceViews = useQuery(defaultSpace, Filter.type(DataType.View));
-        const currentSpaceOrgTable = currentSpaceViews.find(
-          (view) =>
-            getTypenameFromQuery(view.query.ast) === DataType.Organization.typename &&
-            Obj.instanceOf(Table.Table, view.presentation.target),
-        );
-        const defaultSpaceOrgTable = defaultSpaceViews.find(
-          (view) =>
-            getTypenameFromQuery(view.query.ast) === DataType.Organization.typename &&
-            Obj.instanceOf(Table.Table, view.presentation.target),
-        );
-
-        // TODO(wittjosiah): Generalized way of handling related objects navigation.
         const handleSelect = useCallback(
           (org: Obj.Any) =>
-            Effect.gen(function* () {
-              const view = currentSpaceOrgs.includes(org) ? currentSpaceOrgTable : defaultSpaceOrgTable;
-              yield* dispatch(
-                createIntent(LayoutAction.UpdatePopover, {
-                  part: 'popover',
-                  options: {
-                    state: false,
-                    anchorId: '',
-                  },
-                }),
-              );
-              if (view) {
-                const id = fullyQualifiedId(view);
-                yield* dispatch(
-                  createIntent(LayoutAction.Open, {
-                    part: 'main',
-                    subject: [id],
-                    options: { workspace: space?.id },
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(DeckAction.ChangeCompanion, {
-                    primary: id,
-                    companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-                  }),
-                );
-                yield* dispatch(
-                  createIntent(AttentionAction.Select, {
-                    contextId: id,
-                    selection: { mode: 'multi', ids: [org.id] },
-                  }),
-                );
-              }
-            }).pipe(Effect.runPromise),
-          [dispatch, currentSpaceOrgs, currentSpaceOrgTable, defaultSpaceOrgTable],
+            dispatch(
+              createIntent(LayoutAction.Open, {
+                part: 'main',
+                subject: [fullyQualifiedId(org)],
+                options: {
+                  workspace: space?.id,
+                },
+              }),
+            ),
+          [dispatch],
         );
 
         return (

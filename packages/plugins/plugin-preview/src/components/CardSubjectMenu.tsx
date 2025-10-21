@@ -5,27 +5,29 @@
 import { Rx } from '@effect-rx/rx-react';
 import React from 'react';
 
-import { createIntent, useIntentDispatcher } from '@dxos/app-framework';
+import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ACTION_TYPE } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
 
+import { meta } from '../meta';
+
 /**
- * Generic menu for objects that tries to infer common actions.
+ * This is a generic menu for objects that tries to infer common actions.
  */
 export const CardSubjectMenu = ({
   subject,
   activeSpace,
   ...props
 }: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
-  const { t } = useTranslation('os');
+  const { t } = useTranslation(meta.id);
   const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
 
   if (!activeSpace) {
-    return <div />;
+    return null;
   }
 
   return (
@@ -48,6 +50,17 @@ export const CardSubjectMenu = ({
 const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
+
+  result.nodes.push({
+    type: ACTION_TYPE,
+    id: `${subject.id}/open`,
+    data: () => dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(subject)] })),
+    properties: {
+      label: ['open object label', { ns: meta.id }],
+      icon: 'ph--arrow-right--regular',
+    },
+  });
+
   if (activeSpace && Obj.getDXN(subject).asQueueDXN()) {
     result.nodes.push({
       type: ACTION_TYPE,
@@ -55,11 +68,12 @@ const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
       // TODO(wittjosiah): Update reference to point to db object when adding?
       data: () => dispatch(createIntent(SpaceAction.AddObject, { object: subject, target: activeSpace, hidden: true })),
       properties: {
-        label: ['add object to space label', { ns: 'os' }],
+        label: ['add object to space label', { ns: meta.id }],
         icon: 'ph--file-plus--regular',
       },
     });
   }
+
   result.nodes.forEach(({ id: target }) => {
     result.edges.push({ source: 'root', target });
   });

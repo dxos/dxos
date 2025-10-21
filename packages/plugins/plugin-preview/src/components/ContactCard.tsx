@@ -14,7 +14,7 @@ import { type PreviewProps } from '../types';
 import { CardSubjectMenu } from './CardSubjectMenu';
 
 // TODO(burdon): Rename PersonCard.
-export const ContactCard = ({ children, subject, activeSpace, onSelect, role }: PreviewProps<DataType.Person>) => {
+export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<DataType.Person>) => {
   const { fullName, image, organization, emails } = subject;
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (

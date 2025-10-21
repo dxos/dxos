@@ -560,6 +560,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-masonry':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-masonry
       '@dxos/plugin-meeting':
         specifier: workspace:*
         version: link:../../plugins/plugin-meeting
@@ -7475,6 +7478,88 @@ importers:
         specifier: 7.1.9
         version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
 
+  packages/plugins/plugin-masonry:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
+      '@dxos/react-ui-stack':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-stack
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@preact-signals/safe-react':
+        specifier: ^0.9.0
+        version: 0.9.0(@babel/core@7.28.4)(@swc/helpers@0.5.17)(react@19.2.0)
+      '@preact/signals-core':
+        specifier: ^1.12.1
+        version: 1.12.1
+      '@preact/signals-react':
+        specifier: ^3.3.0
+        version: 3.3.0(react@19.2.0)
+    devDependencies:
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../plugin-preview
+      '@dxos/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../common/storybook-utils
+      '@types/react':
+        specifier: ~19.2.2
+        version: 19.2.2
+      '@types/react-dom':
+        specifier: ~19.2.1
+        version: 19.2.1(@types/react@19.2.2)
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
+      react:
+        specifier: ~19.2.0
+        version: 19.2.0
+      react-dom:
+        specifier: ~19.2.0
+        version: 19.2.0(react@19.2.0)
+      vite:
+        specifier: 7.1.9
+        version: 7.1.9(@types/node@22.10.2)(jiti@2.6.1)(terser@5.19.2)(yaml@2.7.1)
+
   packages/plugins/plugin-meeting:
     dependencies:
       '@dxos/ai':
@@ -9361,6 +9446,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -9376,6 +9464,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../../ui/react-ui-list
+      '@dxos/react-ui-masonry':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-masonry
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../../ui/react-ui-pickers
@@ -9434,9 +9525,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -14174,9 +14262,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-preview
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -34881,22 +34966,22 @@ snapshots:
 
   '@babel/helper-module-imports@7.25.9':
     dependencies:
-      '@babel/traverse': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/traverse': 7.28.4
+      '@babel/types': 7.28.4
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-imports@7.27.1':
     dependencies:
-      '@babel/traverse': 7.28.0
-      '@babel/types': 7.28.0
+      '@babel/traverse': 7.28.4
+      '@babel/types': 7.28.4
     transitivePeerDependencies:
       - supports-color
 
   '@babel/helper-module-imports@7.27.1(supports-color@5.5.0)':
     dependencies:
-      '@babel/traverse': 7.28.0(supports-color@5.5.0)
-      '@babel/types': 7.28.0
+      '@babel/traverse': 7.28.4(supports-color@5.5.0)
+      '@babel/types': 7.28.4
     transitivePeerDependencies:
       - supports-color
 
@@ -35556,18 +35641,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/traverse@7.28.0(supports-color@5.5.0)':
-    dependencies:
-      '@babel/code-frame': 7.27.1
-      '@babel/generator': 7.28.0
-      '@babel/helper-globals': 7.28.0
-      '@babel/parser': 7.28.0
-      '@babel/template': 7.27.2
-      '@babel/types': 7.28.0
-      debug: 4.4.1(supports-color@5.5.0)
-    transitivePeerDependencies:
-      - supports-color
-
   '@babel/traverse@7.28.4':
     dependencies:
       '@babel/code-frame': 7.27.1
@@ -35577,6 +35650,18 @@ snapshots:
       '@babel/template': 7.27.2
       '@babel/types': 7.28.4
       debug: 4.4.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@babel/traverse@7.28.4(supports-color@5.5.0)':
+    dependencies:
+      '@babel/code-frame': 7.27.1
+      '@babel/generator': 7.28.3
+      '@babel/helper-globals': 7.28.0
+      '@babel/parser': 7.28.4
+      '@babel/template': 7.27.2
+      '@babel/types': 7.28.4
+      debug: 4.4.1(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -37391,7 +37476,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
       '@jridgewell/trace-mapping': 0.3.29
 
   '@jridgewell/remapping@2.3.5':
@@ -37413,7 +37498,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.29':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
@@ -39362,7 +39447,7 @@ snapshots:
       hotscript: 1.0.13
       react: 19.2.0
       react-fast-hoc: 0.3.2(hotscript@1.0.13)(react@19.2.0)
-      use-sync-external-store: 1.2.2(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
     optionalDependencies:
       '@swc/core': 1.11.1(@swc/helpers@0.5.17)
     transitivePeerDependencies:
@@ -39379,7 +39464,7 @@ snapshots:
       hotscript: 1.0.13
       react: 19.2.0
       react-fast-hoc: 0.3.2(hotscript@1.0.13)(react@19.2.0)
-      use-sync-external-store: 1.2.2(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
     optionalDependencies:
       '@swc/core': 1.11.1(@swc/helpers@0.5.17)
     transitivePeerDependencies:
@@ -39392,7 +39477,7 @@ snapshots:
     dependencies:
       '@preact/signals-core': 1.12.1
       react: 19.2.0
-      use-sync-external-store: 1.2.2(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
   '@preact/signals@2.3.1(preact@10.26.9)':
     dependencies:
@@ -41995,7 +42080,7 @@ snapshots:
 
   '@svgr/hast-util-to-babel-ast@8.0.0':
     dependencies:
-      '@babel/types': 7.28.0
+      '@babel/types': 7.28.4
       entities: 4.5.0
 
   '@svgr/plugin-jsx@8.1.0(@svgr/core@8.1.0(typescript@5.9.3))':
@@ -42396,7 +42481,7 @@ snapshots:
 
   '@types/babel__template@7.4.1':
     dependencies:
-      '@babel/parser': 7.28.0
+      '@babel/parser': 7.28.4
       '@babel/types': 7.28.4
 
   '@types/babel__traverse@7.20.6':
@@ -43428,7 +43513,7 @@ snapshots:
 
   '@vue/compiler-core@3.5.13':
     dependencies:
-      '@babel/parser': 7.28.0
+      '@babel/parser': 7.28.4
       '@vue/shared': 3.5.13
       entities: 4.5.0
       estree-walker: 2.0.2
@@ -43441,7 +43526,7 @@ snapshots:
 
   '@vue/compiler-sfc@3.5.13':
     dependencies:
-      '@babel/parser': 7.28.0
+      '@babel/parser': 7.28.4
       '@vue/compiler-core': 3.5.13
       '@vue/compiler-dom': 3.5.13
       '@vue/compiler-ssr': 3.5.13
@@ -54306,7 +54391,7 @@ snapshots:
   styled-components@5.3.6(react-dom@19.2.0(react@19.2.0))(react-is@19.2.0)(react@19.2.0):
     dependencies:
       '@babel/helper-module-imports': 7.27.1(supports-color@5.5.0)
-      '@babel/traverse': 7.28.0(supports-color@5.5.0)
+      '@babel/traverse': 7.28.4(supports-color@5.5.0)
       '@emotion/is-prop-valid': 1.2.0
       '@emotion/stylis': 0.8.5
       '@emotion/unitless': 0.7.5
