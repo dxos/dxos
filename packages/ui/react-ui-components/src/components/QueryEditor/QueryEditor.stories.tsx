@@ -56,7 +56,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof QueryEditor>;
