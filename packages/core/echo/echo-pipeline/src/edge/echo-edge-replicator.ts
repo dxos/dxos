@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Automerge from '@automerge/automerge';
 import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
@@ -25,7 +26,7 @@ import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { bufferToArray } from '@dxos/util';
+import { bufferToArray, setDeep } from '@dxos/util';
 
 import {
   type EchoReplicator,
@@ -37,7 +38,6 @@ import {
 } from '../automerge';
 
 import { InflightRequestLimiter } from './inflight-request-limiter';
-import * as Automerge from '@automerge/automerge';
 
 /**
  * Delay before restarting the connection after receiving a forbidden error.
@@ -205,6 +205,7 @@ const MAX_INFLIGHT_REQUESTS = 5;
 const MAX_RATE_LIMIT_WAIT_TIME_MS = 3000;
 
 class EdgeReplicatorConnection extends Resource implements ReplicatorConnection {
+  private readonly _connectionId = randomUUID();
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _remotePeerId: string | null = null;
@@ -215,6 +216,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private readonly _onRemoteConnected: () => Promise<void>;
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
+  private _sequence = 0;
 
   private _requestLimiter = new InflightRequestLimiter({
     maxInflightRequests: MAX_INFLIGHT_REQUESTS,
@@ -245,7 +247,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // This way automerge-repo will have separate sync states for every connection.
     // This is important because the previous connection might have had some messages that failed to deliver
     // abd if we don't clear the sync-state, automerge will not attempt to deliver them again.
-    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}-${randomUUID()}`;
+    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}-${this._connectionId}`;
     this._targetServiceId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._onRemoteConnected = onRemoteConnected;
@@ -385,6 +387,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
     // We restart the connection with some delay to account for that.
     if (isForbiddenErrorMessage(message)) {
+      log.error('Connection error, restarting...', { message: message.message });
       this._onRestartRequested();
       return;
     }
@@ -397,6 +400,10 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
   private async _sendMessage(message: AutomergeProtocolMessage): Promise<void> {
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
+
+    // Note: This is used on EDGE to detect out-of-order messages per connection.
+    setDeep(message, ['metadata', 'dxos_sequence'], this._getSequence());
+    setDeep(message, ['metadata', 'dxos_connectionId'], this._connectionId);
 
     log.verbose('sending...', {
       ...getMessageInfo(message),
@@ -420,13 +427,16 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
       log.error('failed to send message', { err });
     }
   }
+
+  private _getSequence(): number {
+    return this._sequence++;
+  }
 }
 
 /**
  * This message is sent by EDGE AutomergeReplicator when the authorization is denied.
  */
-const isForbiddenErrorMessage = (message: AutomergeProtocolMessage) =>
-  message.type === 'error' && message.message === 'Forbidden';
+const isForbiddenErrorMessage = (message: AutomergeProtocolMessage) => message.type === 'error';
 
 const getMessageInfo = (msg: AutomergeProtocolMessage) => {
   const { have, heads, need, changes } = msg.type === 'sync' ? Automerge.decodeSyncMessage(msg.data) : {};
@@ -437,5 +447,6 @@ const getMessageInfo = (msg: AutomergeProtocolMessage) => {
     heads,
     need,
     changes: changes?.length,
+    sequence: msg.metadata?.dxos_sequence,
   };
 };

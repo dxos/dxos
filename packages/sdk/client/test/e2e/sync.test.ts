@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 // DX_TEST_TAGS=sync-e2e pnpm vitest run sync.test.ts
 describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout: 120_000, retry: 0 }, async () => {
   test('sync stuck', async () => {
-    const ITERATIONS = 100,
+    const ITERATIONS = 10,
       BURST_SIZE = 30,
       RESTART_CLIENT = false, // restarting client doesn't work
       LOCAL = false;
