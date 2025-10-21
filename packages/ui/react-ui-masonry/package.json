@@ -29,7 +29,6 @@
   "devDependencies": {
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
-    "@dxos/plugin-preview": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
