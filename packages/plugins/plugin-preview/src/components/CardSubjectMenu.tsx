@@ -13,6 +13,38 @@ import { type Space } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
 
+/**
+ * Generic menu for objects that tries to infer common actions.
+ */
+export const CardSubjectMenu = ({
+  subject,
+  activeSpace,
+  ...props
+}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
+  const { t } = useTranslation('os');
+  const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
+
+  if (!activeSpace) {
+    return <div />;
+  }
+
+  return (
+    <MenuProvider {...menuProps}>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <IconButton
+            iconOnly
+            variant='ghost'
+            icon='ph--dots-three-vertical--bold'
+            label={t('more options label')}
+            {...props}
+          />
+        </DropdownMenu.Trigger>
+      </DropdownMenu.Root>
+    </MenuProvider>
+  );
+};
+
 const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
@@ -33,36 +65,4 @@ const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
   });
 
   return useMenuActions(Rx.make(result));
-};
-
-/**
- * This is a generic menu for objects that tries to infer common actions.
- */
-export const CardSubjectMenu = ({
-  subject,
-  activeSpace,
-  ...props
-}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
-  const { t } = useTranslation('os');
-  const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
-
-  if (!activeSpace) {
-    return null;
-  }
-
-  return (
-    <MenuProvider {...menuProps}>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <IconButton
-            iconOnly
-            variant='ghost'
-            icon='ph--dots-three-vertical--bold'
-            label={t('more options label')}
-            {...props}
-          />
-        </DropdownMenu.Trigger>
-      </DropdownMenu.Root>
-    </MenuProvider>
-  );
 };

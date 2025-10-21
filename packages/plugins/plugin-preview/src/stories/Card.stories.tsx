@@ -20,7 +20,7 @@ const meta = {
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],
   parameters: {
-    layout: 'column',
+    layout: 'fullscreen',
     translations,
   },
   tags: ['cards'],

@@ -62,8 +62,8 @@ export default () =>
         );
 
         // TODO(wittjosiah): Generalized way of handling related objects navigation.
-        const handleOrgClick = useCallback(
-          (org: DataType.Organization) =>
+        const handleSelect = useCallback(
+          (org: Obj.Any) =>
             Effect.gen(function* () {
               const view = currentSpaceOrgs.includes(org) ? currentSpaceOrgTable : defaultSpaceOrgTable;
               yield* dispatch(
@@ -102,7 +102,7 @@ export default () =>
         );
 
         return (
-          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onOrgClick={handleOrgClick}>
+          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );

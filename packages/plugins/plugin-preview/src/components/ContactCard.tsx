@@ -13,32 +13,27 @@ import { type PreviewProps } from '../types';
 
 import { CardSubjectMenu } from './CardSubjectMenu';
 
-export const ContactCard = ({
-  children,
-  subject,
-  activeSpace,
-  onOrgClick,
-  role,
-}: PreviewProps<DataType.Person> & { onOrgClick?: (org: DataType.Organization) => void }) => {
+// TODO(burdon): Rename PersonCard.
+export const ContactCard = ({ children, subject, activeSpace, onSelect, role }: PreviewProps<DataType.Person>) => {
   const { fullName, image, organization, emails } = subject;
   const organizationName = organization && typeof organization === 'object' ? organization.target?.name : organization;
   return (
     <Card.SurfaceRoot role={role}>
       <Avatar.Root>
-        <Card.Text role='group' classNames='grid gap-3 grid-cols-[min-content_1fr]'>
-          <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' />
-          <div role='none' className='bs-min self-center flex items-center'>
-            <Avatar.Label asChild>
-              <h2 className={mx(cardHeading, 'grow')}>{fullName}</h2>
-            </Avatar.Label>
+        <Card.Text role='group' classNames='grid gap-3 grid-cols-[1fr_min-content]'>
+          <div role='none' className='grid grid-cols-[20px_1fr] grid-rows-2 gap-2 items-center'>
             <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
+            <Avatar.Label asChild>
+              <h2 className={mx(cardHeading, 'grow truncate')}>{fullName}</h2>
+            </Avatar.Label>
           </div>
+          <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' variant='square' />
         </Card.Text>
       </Avatar.Root>
       {organizationName && (
         <Card.Chrome>
-          {typeof organization === 'object' && onOrgClick ? (
-            <Button variant='ghost' classNames='gap-2 text-start' onClick={() => onOrgClick(organization.target!)}>
+          {typeof organization === 'object' && onSelect ? (
+            <Button variant='ghost' classNames='gap-2 text-start' onClick={() => onSelect(organization.target!)}>
               <Icon icon='ph--buildings--regular' size={5} classNames='text-subdued' />
               <span className='min-is-0 flex-1 truncate'>{organizationName}</span>
               <Icon icon='ph--arrow-right--regular' />
@@ -55,7 +50,7 @@ export const ContactCard = ({
         <dl
           className={mx(
             cardText,
-            'grid gap-2 grid-cols-[min-content_1fr] [&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0',
+            'grid grid-cols-[min-content_1fr] gap-2 [&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0',
           )}
         >
           {emails?.length &&
