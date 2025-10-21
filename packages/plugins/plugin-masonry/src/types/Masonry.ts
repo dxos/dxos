@@ -6,10 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
 import { type JsonSchemaType, ViewAnnotation, toEffectSchema } from '@dxos/echo/internal';
-import { SpaceSchema } from '@dxos/react-client/echo';
-import { type CreateViewFromSpaceProps, DataType, TypenameAnnotationId, createViewFromSpace } from '@dxos/schema';
-
-import { meta } from '../meta';
+import { type CreateViewFromSpaceProps, type DataType, createViewFromSpace } from '@dxos/schema';
 
 export const Masonry = Schema.Struct({
   arrangement: Schema.Array(
@@ -28,27 +25,6 @@ export const Masonry = Schema.Struct({
 );
 
 export type Masonry = Schema.Schema.Type<typeof Masonry>;
-
-export const CreateMasonrySchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  typename: Schema.optional(
-    Schema.String.annotations({
-      [TypenameAnnotationId]: ['used-static', 'dynamic'],
-      title: 'Select card record type (leave empty to start fresh)',
-    }),
-  ),
-});
-
-export namespace MasonryAction {
-  const MASONRY_ACTION = `${meta.id}/action`;
-
-  export class Create extends Schema.TaggedClass<Create>()(`${MASONRY_ACTION}/create`, {
-    input: Schema.extend(Schema.Struct({ space: SpaceSchema }), CreateMasonrySchema),
-    output: Schema.Struct({
-      object: DataType.View,
-    }),
-  }) {}
-}
 
 /**
  * Make a masonry object.

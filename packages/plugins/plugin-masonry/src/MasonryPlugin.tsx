@@ -10,7 +10,7 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Masonry } from './types';
+import { Masonry, MasonryAction } from './types';
 
 export const MasonryPlugin = definePlugin(meta, () => [
   defineModule({
@@ -42,9 +42,9 @@ export const MasonryPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Masonry.Masonry,
-          formSchema: Masonry.CreateMasonrySchema,
+          formSchema: MasonryAction.MasonryProps,
           hidden: true,
-          getIntent: (props, options) => createIntent(Masonry.MasonryAction.Create, { ...props, space: options.space }),
+          getIntent: (props, options) => createIntent(MasonryAction.CreateMasonry, { ...props, space: options.space }),
         }),
       ),
   }),
