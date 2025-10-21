@@ -7522,9 +7522,6 @@ importers:
       '@preact/signals-react':
         specifier: ^3.3.0
         version: 3.3.0(react@19.2.0)
-      effect:
-        specifier: 3.18.3
-        version: 3.18.3
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -7547,6 +7544,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.1
         version: 19.2.1(@types/react@19.2.2)
+      effect:
+        specifier: 3.18.3
+        version: 3.18.3
       react:
         specifier: ~19.2.0
         version: 19.2.0

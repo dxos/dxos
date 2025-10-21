@@ -36,8 +36,7 @@
     "@dxos/schema": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
-    "@preact/signals-react": "^3.3.0",
-    "effect": "3.18.3"
+    "@preact/signals-react": "^3.3.0"
   },
   "devDependencies": {
     "@dxos/plugin-preview": "workspace:*",
@@ -47,6 +46,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
+    "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "vite": "7.1.9"
@@ -54,6 +54,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "effect": "^3.13.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
