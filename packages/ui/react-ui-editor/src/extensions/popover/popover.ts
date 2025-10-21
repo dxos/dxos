@@ -141,13 +141,13 @@ const popoverKeymap = (options: PopoverOptions) => {
             const line = view.state.doc.lineAt(selection.head);
 
             // Get last word.
-            // TODO(burdon): Create anchor even if zero length.
             let str = line.text.slice(0, selection.head - line.from);
             const idx = getLastIndexOf(str, options.delimiters ?? DELIMITERS);
             if (idx !== -1) {
               str = str.slice(idx + 1);
             }
 
+            // TODO(burdon): Create anchor even if zero length.
             if (str.length) {
               const from = line.from + idx;
               view.dispatch({
