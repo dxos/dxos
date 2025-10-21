@@ -14177,9 +14177,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/plugin-preview':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-preview
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
