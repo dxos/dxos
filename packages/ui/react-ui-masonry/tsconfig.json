@@ -24,9 +24,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../plugins/plugin-preview"
-    },
-    {
       "path": "../../sdk/client"
     },
     {
