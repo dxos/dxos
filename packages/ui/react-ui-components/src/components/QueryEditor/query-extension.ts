@@ -9,62 +9,14 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
-import { type EchoDatabase } from '@dxos/client/echo';
-import { Tag, Type } from '@dxos/echo';
+import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
-import {
-  type CompoetionContext,
-  type GetMenuContext,
-  focus,
-  focusField,
-  staticCompletion,
-  typeahead,
-} from '@dxos/react-ui-editor';
+import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  db?: EchoDatabase;
   tags?: Tag.TagMap;
-};
-
-// TODO(burdon): Factor out.
-export const getOptions = ({ db, tags }: QueryOptions) => {
-  const parser = QueryDSL.Parser.configure({ strict: false });
-  return ({ state, pos }: GetMenuContext): string[] => {
-    const tree = parser.parse(state.sliceDoc());
-    const node = tree.cursorAt(pos, -1).node;
-
-    let range = undefined;
-    switch (node.parent?.type.id) {
-      case QueryDSL.Node.TypeFilter: {
-        if (node?.type.id === QueryDSL.Node.Identifier) {
-          range = { from: node.from, to: node.to };
-        } else if (node?.type.name === ':') {
-          range = { from: node.from + 1, to: node.to };
-        }
-
-        if (range) {
-          const schema = db?.graph.schemaRegistry.schemas ?? [];
-          return schema.map((schema) => Type.getTypename(schema));
-        }
-
-        break;
-      }
-
-      // TODO(burdon): Trigger on #.
-      case QueryDSL.Node.TagFilter: {
-        if (tags) {
-          range = { from: node.from + 1, to: node.to };
-          return Object.values(tags).map((tag) => tag.label);
-        }
-
-        break;
-      }
-    }
-
-    return [];
-  };
 };
 
 /**

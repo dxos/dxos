@@ -22,13 +22,14 @@ import {
 
 import { translationKey } from '../../translations';
 
-import { type QueryOptions, getOptions, query } from './query-extension';
+import { type CompletionOptions, completions } from './autocomplete';
+import { query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (QueryOptions & Omit<EditorProps, 'initialValue'>)
+  } & (CompletionOptions & Omit<EditorProps, 'initialValue'>)
 >;
 
 /**
@@ -41,10 +42,10 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       updateRef(forwardedRef, controller);
     }, [controller]);
 
-    const options = useMemo(() => getOptions({ db, tags }), [db, tags]);
+    const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
     const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-      async (context) => [createMenuGroup({ items: options(context) })],
-      [options],
+      async (context) => [createMenuGroup({ items: getOptions(context) })],
+      [getOptions],
     );
 
     const { groupsRef, extension, ...menuProps } = usePopoverMenu({
@@ -61,7 +62,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
-        query({ db, tags }),
+        query({ tags }),
         extension,
         Prec.highest(
           keymap.of([
