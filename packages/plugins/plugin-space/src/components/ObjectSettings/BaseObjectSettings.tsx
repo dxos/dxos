@@ -81,7 +81,6 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         Obj.setLabel(object, values.label);
       }
 
-      console.log('values', values, Obj.getDescription(object), values.description);
       if (values.description !== undefined && Obj.getDescription(object) !== values.description) {
         Obj.setDescription(object, values.description);
       }
