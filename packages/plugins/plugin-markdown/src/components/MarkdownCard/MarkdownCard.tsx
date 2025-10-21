@@ -9,13 +9,13 @@ import { LayoutAction, chain, createIntent, useIntentDispatcher } from '@dxos/ap
 import { Obj } from '@dxos/echo';
 import { type PreviewProps } from '@dxos/plugin-preview';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { Markdown } from '../../types';
-import { getAbstract, getFallbackName } from '../../util';
+import { getContentSnippet, getFallbackName } from '../../util';
 
 // TODO(burdon): Factor out.
 const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
@@ -29,9 +29,9 @@ const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) 
 // TODO(burdon): Factor out.
 const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {
-    return getAbstract(subject.content?.target?.content ?? fallback);
+    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
   } else if (Obj.instanceOf(DataType.Text, subject)) {
-    return getAbstract(subject.content);
+    return getContentSnippet(subject.content ?? fallback);
   }
 };
 
@@ -60,16 +60,17 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
 
   return (
     <Card.SurfaceRoot role={role}>
-      <Card.Heading>{getTitle(subject, t('fallback title'))}</Card.Heading>
-      {snippet && <Card.Text classNames='line-clamp-3 break-words col-span-2'>{snippet}</Card.Text>}
-      {role === 'card--popover' && (
-        <Card.Chrome>
-          <Button onClick={handleNavigate}>
-            <span className='grow'>{t('navigate to document label')}</span>
-            <Icon icon='ph--arrow-right--regular' />
-          </Button>
-        </Card.Chrome>
-      )}
+      <Card.Heading classNames='flex items-center'>
+        {getTitle(subject, t('fallback title'))}
+        <span className='grow' />
+        <IconButton
+          iconOnly
+          icon='ph--arrow-right--regular'
+          label={t('navigate to document label')}
+          onClick={handleNavigate}
+        />
+      </Card.Heading>
+      {snippet && <Card.Text classNames='line-clamp-3 text-sm text-description'>{snippet}</Card.Text>}
     </Card.SurfaceRoot>
   );
 };
