@@ -396,6 +396,7 @@ type PopoverContentImplElement = ElementRef<typeof PopperPrimitive.Content>;
 type FocusScopeProps = ComponentPropsWithoutRef<typeof FocusScope>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Content>>;
+
 interface PopoverContentImplProps
   extends Omit<PopperContentProps, 'onPlaced'>,
     Omit<DismissableLayerProps, 'onDismiss'> {
@@ -440,8 +441,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
     const elevation = useElevationContext();
     const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
 
-    // Make sure the whole tree has focus guards as our `Popover` may be
-    // the last element in the DOM (because of the `Portal`)
+    // Make sure the whole tree has focus guards as our `Popover` may be the last element in the DOM (because of the `Portal`)
     useFocusGuards();
 
     return (
@@ -472,7 +472,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             ref={forwardedRef}
             style={{
               ...contentProps.style,
-              // re-namespace exposed content custom properties
+              // Re-namespace exposed content custom properties.
               ...{
                 '--radix-popover-content-transform-origin': 'var(--radix-popper-transform-origin)',
                 '--radix-popover-content-available-width': 'var(--radix-popper-available-width)',

@@ -213,6 +213,20 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   }
 };
 
+export const getDescription = (obj: Any | Relation.Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return EchoSchema.getDescription(schema, obj);
+  }
+};
+
+export const setDescription = (obj: Any | Relation.Any, description: string) => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    EchoSchema.setDescription(schema, obj, description);
+  }
+};
+
 const compare = (a?: string, b?: string) => {
   if (a == null) {
     return b == null ? 0 : 1;

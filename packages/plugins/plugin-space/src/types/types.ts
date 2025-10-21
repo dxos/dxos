@@ -230,6 +230,8 @@ export namespace SpaceAction {
     input: Schema.Struct({
       space: SpaceSchema,
       typename: Schema.String,
+      // TODO(wittjosiah): This is leaky.
+      show: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({}),
   }) {}
@@ -243,6 +245,8 @@ export namespace SpaceAction {
       version: Schema.optional(Schema.String),
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
+      // TODO(wittjosiah): This is leaky.
+      show: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
       // TODO(wittjosiah): ObjectId.

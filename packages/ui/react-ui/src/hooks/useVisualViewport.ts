@@ -4,9 +4,9 @@
 
 import { useCallback, useState } from 'react';
 
-import { useResize } from '@dxos/react-hooks';
+import { useViewportResize } from '@dxos/react-hooks';
 
-export const useVisualViewport = (deps?: Parameters<typeof useResize>[1]) => {
+export const useVisualViewport = (deps?: Parameters<typeof useViewportResize>[1]) => {
   const [width, setWidth] = useState<number | null>(null);
   const [height, setHeight] = useState<number | null>(null);
 
@@ -17,7 +17,7 @@ export const useVisualViewport = (deps?: Parameters<typeof useResize>[1]) => {
     }
   }, []);
 
-  useResize(handleResize, deps);
+  useViewportResize(handleResize, deps);
 
   return { width, height };
 };

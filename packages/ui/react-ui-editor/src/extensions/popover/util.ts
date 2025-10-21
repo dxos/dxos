@@ -6,10 +6,10 @@ import { type EditorView } from '@codemirror/view';
 
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
-export const insertAtCursor = (view: EditorView, head: number, insert: string) => {
+export const insertAtCursor = (view: EditorView, from: number, insert: string) => {
   view.dispatch({
-    changes: { from: head, to: head, insert },
-    selection: { anchor: head + insert.length, head: head + insert.length },
+    changes: { from, to: from, insert },
+    selection: { anchor: from + insert.length, head: from + insert.length },
   });
 };
 
@@ -17,10 +17,10 @@ export const insertAtCursor = (view: EditorView, head: number, insert: string) =
  * If the cursor is at the start of a line, insert the text at the cursor.
  * Otherwise, insert the text on a new line.
  */
-export const insertAtLineStart = (view: EditorView, head: number, insert: string) => {
-  const line = view.state.doc.lineAt(head);
-  if (line.from === head) {
-    insertAtCursor(view, head, insert);
+export const insertAtLineStart = (view: EditorView, from: number, insert: string) => {
+  const line = view.state.doc.lineAt(from);
+  if (line.from === from) {
+    insertAtCursor(view, from, insert);
   } else {
     insert = '\n' + insert;
     view.dispatch({

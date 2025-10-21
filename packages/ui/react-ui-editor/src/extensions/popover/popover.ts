@@ -8,6 +8,8 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type Range } from '../../types';
 import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
+import { modalStateField } from './modal';
+
 export type PopoverOptions = {
   trigger: string | string[];
   placeholder?: Partial<PlaceholderOptions>;
@@ -17,7 +19,6 @@ export type PopoverOptions = {
   onClose?: () => void;
 
   // Menu specific.
-  // TODO(burdon): Handle Escape.
   onEnter?: () => void;
   onArrowUp?: () => void;
   onArrowDown?: () => void;
@@ -33,6 +34,7 @@ export const popover = (options: PopoverOptions): Extension => {
     popoverStateField,
     popoverTriggerListener(options),
     popoverAnchorDecoration(options),
+    modalStateField,
     placeholder({
       // TODO(burdon): Translations.
       content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,
@@ -63,7 +65,9 @@ const popoverTriggerListener = (options: PopoverOptions) =>
 
     const nextRange = shouldRemove ? null : docChanged ? { from: activeRange.from, to: selection.head } : activeRange;
     if (nextRange !== activeRange) {
-      view.dispatch({ effects: popoverRangeEffect.of(nextRange ? { trigger, range: nextRange } : null) });
+      view.dispatch({
+        effects: popoverRangeEffect.of(nextRange ? { trigger, range: nextRange } : null),
+      });
     }
 
     // TODO(burdon): Should delete if user presses escape? How else to insert the trigger character?
@@ -206,7 +210,7 @@ type PopoverState = {
 export const popoverRangeEffect = StateEffect.define<PopoverState | null>();
 
 // State field to track the active popover trigger range.
-const popoverStateField = StateField.define<PopoverState | null>({
+export const popoverStateField = StateField.define<PopoverState | null>({
   create: () => null,
   update: (value, tr) => {
     let newValue = value;

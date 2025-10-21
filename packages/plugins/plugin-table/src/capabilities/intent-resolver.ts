@@ -38,7 +38,7 @@ export default (context: PluginContext) =>
     }),
     createResolver({
       intent: TableAction.OnSchemaAdded,
-      resolve: ({ space, schema }) =>
+      resolve: ({ space, schema, show = true }) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object } = yield* dispatch(
@@ -46,9 +46,11 @@ export default (context: PluginContext) =>
           );
           yield* dispatch(createIntent(SpaceAction.AddObject, { target: space, object, hidden: true }));
 
-          return {
-            intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
-          };
+          if (show) {
+            return {
+              intents: [createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(object)] })],
+            };
+          }
         }),
     }),
     createResolver({

@@ -22,13 +22,19 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  onSelect: (item: PopoverMenuItem) => void;
-  onActivate?: (event: DxAnchorActivate) => void;
+  numLines?: number;
   onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
+  onActivate?: (event: DxAnchorActivate) => void;
+  onSelect: (item: PopoverMenuItem) => void;
+  onCancel?: () => void;
 }>;
 
 /**
- * NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
+ * Implements the Popover and listens for the `dx-anchor-activate` event from the
+ * `popover` extension's decoration.
+ *
+ * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
+ * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
 export const PopoverMenuProvider = ({
   children,
@@ -36,12 +42,13 @@ export const PopoverMenuProvider = ({
   currentItem,
   open: openParam,
   defaultOpen,
-  onSelect,
-  onActivate,
+  numLines = 8,
   onOpenChange,
+  onActivate,
+  onSelect,
+  onCancel,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
-  const menuGroups = groups.filter((group) => group.items.length > 0);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [open, setOpen] = useControllableState({
@@ -55,6 +62,7 @@ export const PopoverMenuProvider = ({
       return;
     }
 
+    // Listen for trigger.
     return addEventListener(
       root,
       'dx-anchor-activate' as any,
@@ -66,7 +74,7 @@ export const PopoverMenuProvider = ({
           if (onActivate) {
             onActivate(event);
           } else {
-            queueMicrotask(() => setOpen(true));
+            requestAnimationFrame(() => setOpen(true));
           }
         }
       },
@@ -77,23 +85,29 @@ export const PopoverMenuProvider = ({
     );
   }, [root, onActivate]);
 
+  const menuGroups = groups.filter((group) => group.items.length > 0);
+
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <div ref={setRoot} role='none' className='contents'>
-        {children}
-      </div>
-
       <Popover.VirtualTrigger virtualRef={trigger} />
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={tx(
-            'menu.content',
-            'menu--exotic-unfocusable',
-            { elevation: 'positioned' },
-            // TODO(burdon): Extract height to theme.
-            'max-bs-[16rem] overflow-y-auto',
-          )}
+          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+            'overflow-y-auto',
+            !menuGroups.length && 'hidden',
+          ])}
+          style={{
+            maxBlockSize: 36 * numLines + 6,
+          }}
+          /**
+           * NOTE: We keep the focus in the editor, but Radix routes escape key.
+           */
+          onEscapeKeyDown={(_event) => {
+            // NOTE: Able to cancel if not in valid state.
+            // event.preventDefault();
+            onCancel?.();
+          }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
@@ -102,6 +116,10 @@ export const PopoverMenuProvider = ({
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
+
+      <div ref={setRoot} role='none' className='contents'>
+        {children}
+      </div>
     </Popover.Root>
   );
 };
@@ -162,18 +180,18 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
 
-  const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
-
-  const ref = useRef<HTMLLIElement>(null);
+  const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    if (current && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (current && listRef.current) {
+      listRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [current]);
 
+  const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
+
   return (
     <li
-      ref={ref}
+      ref={listRef}
       className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
       onClick={handleSelect}
     >

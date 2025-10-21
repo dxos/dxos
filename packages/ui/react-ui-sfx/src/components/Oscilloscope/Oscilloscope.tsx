@@ -5,7 +5,7 @@
 import { curveCatmullRom, line, scaleLinear } from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAudioStream } from '../hooks';
+import { useAudioStream } from '../../hooks';
 
 export type Point = { x: number; y: number };
 

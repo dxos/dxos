@@ -4,7 +4,7 @@
 
 import { useLayoutEffect, useMemo } from 'react';
 
-export const useResize = (
+export const useViewportResize = (
   handler: (event?: Event) => void,
   deps: Parameters<typeof useLayoutEffect>[1] = [],
   delay: number = 800,

@@ -11,7 +11,7 @@ import { singleValueFacet } from '../util';
 
 export type EditorInputConfig = {
   type?: string;
-  noTabster?: boolean;
+  ignoreEscape?: boolean;
 };
 
 export const editorInputMode = singleValueFacet<EditorInputConfig>({});
@@ -26,7 +26,7 @@ export const InputModeExtensions: { [mode: string]: Extension } = {
   vim: [
     // https://github.com/replit/codemirror-vim
     vim(),
-    editorInputMode.of({ type: 'vim', noTabster: true }),
+    editorInputMode.of({ type: 'vim', ignoreEscape: true }),
     keymap.of([
       {
         key: 'Alt-Escape',

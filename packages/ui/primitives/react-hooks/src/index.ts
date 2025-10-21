@@ -16,7 +16,9 @@ export * from './useIsFocused';
 export * from './useMediaQuery';
 export * from './useMulticastObservable';
 export * from './useRefCallback';
-export * from './useResize';
+export * from './useViewportResize';
 export * from './useSignals';
 export * from './useTimeout';
 export * from './useTransitions';
+
+export { useSize, useScroller } from 'mini-virtual-list';

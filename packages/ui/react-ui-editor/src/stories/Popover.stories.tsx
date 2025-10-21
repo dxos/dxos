@@ -27,7 +27,7 @@ import {
 } from '../extensions';
 import { str } from '../testing';
 
-import { EditorStory, names } from './components';
+import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
 
@@ -62,7 +62,7 @@ const groups: PopoverMenuGroup[] = [
 ];
 
 const meta = {
-  title: 'ui/react-ui-editor/PopoverMenu',
+  title: 'ui/react-ui-editor/Popover',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
@@ -74,9 +74,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Slash: Story = {
+export const Default: Story = {
   args: {
-    text: str('# Slash', '', names.join(' '), ''),
+    text: str('# Slash', ''),
     trigger: '/',
     placeholder: {
       content: () =>
@@ -88,11 +88,7 @@ export const Slash: Story = {
           )
           .build(),
     },
-    getMenu: (text) => {
-      return filterItems(groups, (item) =>
-        text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
-      );
-    },
+    getMenu: () => groups,
   },
 };
 
@@ -130,7 +126,8 @@ export const Link: Story = {
               },
             }),
           );
-        return [{ id: 'echo', items }];
+
+        return [{ id: 'test', items }];
       },
       [space],
     );

@@ -323,7 +323,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.UseStaticSchema,
-      resolve: async ({ space, typename }) => {
+      resolve: async ({ space, typename, show }) => {
         const client = context.getCapability(ClientCapabilities.Client);
         const schema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
         invariant(schema, `Schema not found: ${typename}`);
@@ -338,7 +338,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
 
         return {
           data: {},
@@ -361,7 +361,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, typename, version, schema: schemaInput }) => {
+      resolve: async ({ space, name, typename, version, schema: schemaInput, show }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
@@ -375,7 +375,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
 
         return {
           data: {

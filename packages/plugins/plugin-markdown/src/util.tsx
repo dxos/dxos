@@ -36,8 +36,14 @@ export const getFallbackName = (content: string) => {
   return content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
 
-export const getAbstract = (content: string) => {
-  return content.substring(0, 128).split('\n')[0].replaceAll(nonTitleChars, '').trim();
+export const getContentSnippet = (content: string) => {
+  const abstract = content
+    .split('\n')
+    .filter((line) => !line.startsWith('#'))
+    .filter((line) => line.trim() !== '')[0]
+    .replaceAll(nonTitleChars, '')
+    .trim();
+  return abstract;
 };
 
 export const setFallbackName = debounce((doc: Markdown.Document, content: string) => {
