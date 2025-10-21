@@ -560,6 +560,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-masonry':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-masonry
       '@dxos/plugin-meeting':
         specifier: workspace:*
         version: link:../../plugins/plugin-meeting
