@@ -20,10 +20,13 @@ import { type PlaceholderOptions, placeholder } from '../autocomplete';
 
 import { modalStateField } from './modal';
 
+const DELIMITERS = [' ', ':'];
+
 export type PopoverOptions = {
   trigger?: string | string[];
   triggerKey?: string;
   placeholder?: Partial<PlaceholderOptions>;
+  delimiters?: string[];
 
   // TODO(burdon): Auto.
   // activateOnTyping?: boolean;
@@ -138,15 +141,14 @@ const popoverKeymap = (options: PopoverOptions) => {
             const line = view.state.doc.lineAt(selection.head);
 
             // Get last word.
-            let str = line.text.slice(0, selection.head - line.from);
-            // TODO(burdon): Make configurable.
             // TODO(burdon): Create anchor even if zero length.
-            const idx = Math.max(str.lastIndexOf(' '), str.lastIndexOf(':'));
+            let str = line.text.slice(0, selection.head - line.from);
+            const idx = getLastIndexOf(str, options.delimiters ?? DELIMITERS);
             if (idx !== -1) {
               str = str.slice(idx + 1);
             }
 
-            if (str.trim().length) {
+            if (str.length) {
               const from = line.from + idx;
               view.dispatch({
                 effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
@@ -283,3 +285,6 @@ export const popoverStateField = StateField.define<PopoverState | null>({
     return newValue;
   },
 });
+
+const getLastIndexOf = (str: string, delimiters: string[]) =>
+  Math.max(...delimiters.map((delim) => str.lastIndexOf(delim)));

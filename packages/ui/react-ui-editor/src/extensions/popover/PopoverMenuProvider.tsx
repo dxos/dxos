@@ -26,7 +26,7 @@ export type PopoverMenuProviderProps = PropsWithChildren<{
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  numLines?: number;
+  numItems?: number;
   onOpenChange?: (event: { view: EditorView; open: boolean; trigger?: string }) => void;
   onActivate?: (event: { view: EditorView; trigger?: string }) => void;
   onSelect?: (event: { view: EditorView; item: PopoverMenuItem }) => void;
@@ -47,7 +47,7 @@ export const PopoverMenuProvider = ({
   currentItem,
   open: openParam,
   defaultOpen,
-  numLines = 8,
+  numItems = 8,
   onOpenChange,
   onActivate,
   onSelect,
@@ -116,7 +116,7 @@ export const PopoverMenuProvider = ({
             !menuGroups.length && 'hidden',
           ])}
           style={{
-            maxBlockSize: 36 * numLines + 6,
+            maxBlockSize: 36 * numItems + 10,
           }}
           /**
            * NOTE: We keep the focus in the editor, but Radix routes escape key.
