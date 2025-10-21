@@ -36,6 +36,7 @@ export namespace TableAction {
       space: SpaceSchema,
       // TODO(wittjosiah): Schema for schema?
       schema: Schema.Any,
+      show: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Void,
   }) {}
