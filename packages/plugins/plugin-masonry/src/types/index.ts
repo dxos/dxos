@@ -3,3 +3,4 @@
 //
 
 export * as Masonry from './Masonry';
+export * as MasonryAction from './MasonryAction';
