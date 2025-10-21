@@ -15,6 +15,8 @@ import { MobileLayoutState } from '../capabilities';
 
 import { ContentError } from './ContentError';
 import { ContentLoading } from './ContentLoading';
+import { Home } from './Home';
+import { NavHeader } from './NavHeader';
 
 export const Main = () => {
   const layout = useCapability(MobileLayoutState);
@@ -37,12 +39,14 @@ export const Main = () => {
     [node, node?.data, node?.properties, layout.popoverAnchorId, variant],
   );
 
-  // TODO(wittjosiah): Render navigation for default.
   // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
     <NaturalMain.Root>
-      <Activity mode={id === 'default' ? 'visible' : 'hidden'}>todo</Activity>
+      <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
+        <Home />
+      </Activity>
       <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
+        <NavHeader node={node} />
         <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
       </Activity>
     </NaturalMain.Root>

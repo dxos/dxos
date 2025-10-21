@@ -25,12 +25,15 @@
     "@dxos/live-object": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@radix-ui/react-context": "^1.1.2"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "0.42.4",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
     "effect": "3.18.3",
@@ -41,6 +44,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
     "effect": "^3.13.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
