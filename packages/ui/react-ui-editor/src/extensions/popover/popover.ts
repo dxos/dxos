@@ -42,7 +42,7 @@ export type PopoverOptions = {
  * Creates a popover that appears when the trigger character is inserted.
  * This can be used for context menus or autocompletion.
  */
-export const popover = (options: PopoverOptions): Extension => {
+export const popover = (options: PopoverOptions = {}): Extension => {
   return [
     Prec.highest(popoverKeymap(options)),
     popoverStateField,

@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ForwardedRef, useEffect, useRef } from 'react';
+import { type ForwardedRef, type RefObject, useEffect, useRef } from 'react';
 
 /**
  * Combines a possibly undefined forwarded ref with a locally defined ref.
  */
-export const useForwardedRef = <T>(ref: ForwardedRef<T>) => {
-  const innerRef = useRef<T>(null);
+export const useForwardedRef = <T>(ref: ForwardedRef<T>): RefObject<T | null> => {
+  const innerRef = useRef<T | null>(null);
   useEffect(() => {
     updateRef(ref, innerRef.current);
   }, [ref]);
@@ -16,7 +16,7 @@ export const useForwardedRef = <T>(ref: ForwardedRef<T>) => {
   return innerRef;
 };
 
-export const updateRef = <T>(ref: ForwardedRef<T>, value: T) => {
+export const updateRef = <T>(ref: ForwardedRef<T>, value: T): void => {
   if (!ref) {
     return;
   }
