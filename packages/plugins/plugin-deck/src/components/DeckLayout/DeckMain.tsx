@@ -93,7 +93,7 @@ export const DeckMain = () => {
   }, [settings?.enableDeck, dispatch, active, layoutMode]);
 
   /**
-   * Clear scroll restoration state if the window is resized
+   * Clear scroll restoration state if the window is resized.
    */
   const handleResize = useCallback(() => {
     scrollLeftRef.current = null;
@@ -112,7 +112,7 @@ export const DeckMain = () => {
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
-   * Save scroll position as the user scrolls
+   * Save scroll position as the user scrolls.
    */
   const handleScroll = useCallback(
     (event: UIEvent) => {
