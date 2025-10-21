@@ -10,7 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { LabelAnnotation } from '../ast';
+import { DescriptionAnnotation, LabelAnnotation } from '../ast';
 
 import { type InternalObjectProps, SchemaId, SelfDXNId } from './model';
 
@@ -112,4 +112,42 @@ export const setLabel = <S extends Schema.Schema.Any>(schema: S, object: Schema.
     Option.getOrElse(() => 'name'),
   );
   object[annotation] = label;
+};
+
+/**
+ * Returns the label for a given object based on {@link LabelAnnotationId}.
+ */
+// TODO(burdon): Convert to JsonPath?
+export const getDescription = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+): string | undefined => {
+  const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
+  assertArgument(typeof accessor === 'string', 'accessor', 'Description annotation must be a string');
+  const value = getField(object, accessor as JsonPath);
+  switch (typeof value) {
+    case 'string':
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'symbol':
+      return value.toString();
+    case 'undefined':
+    case 'object':
+    case 'function':
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Sets the description for a given object based on {@link DescriptionAnnotationId}.
+ */
+export const setDescription = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
+  description: string,
+) => {
+  const accessor = DescriptionAnnotation.get(schema).pipe(Option.getOrElse(() => 'description'));
+  object[accessor] = description;
 };
