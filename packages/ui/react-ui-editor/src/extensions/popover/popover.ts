@@ -75,7 +75,7 @@ const popoverTriggerListener = (options: PopoverOptions) =>
     const selection = view.state.selection.main;
     const shouldClose =
       // Trigger deleted.
-      (trigger ? trigger !== text[0] : text.length === 0) ||
+      (trigger ? trigger !== text[0] : false) ||
       // Whitespace in text.
       /\s/.test(trigger ? text.slice(1) : text) ||
       // Cursor moved before the range.
@@ -147,16 +147,17 @@ const popoverKeymap = (options: PopoverOptions) => {
               str = str.slice(idx + 1);
             }
 
-            // TODO(burdon): Create anchor even if zero length.
-            if (str.length) {
-              const from = line.from + idx;
-              view.dispatch({
-                effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
-              });
-              return true;
-            }
-
-            return false;
+            // Create anchor even if zero length (append space).
+            const from = line.from + idx;
+            console.log('effect', from + 1, selection.head);
+            view.dispatch({
+              effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
+              changes:
+                selection.head === view.state.doc.length
+                  ? { from: from + 1, to: selection.head, insert: ' ' }
+                  : undefined,
+            });
+            return true;
           },
         } satisfies KeyBinding),
 
@@ -222,11 +223,11 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
           // Check if we should show the widget (only if cursor is within the active command range).
           const selection = view.state.selection.main;
           const showWidget = selection.head >= range.from && selection.head <= range.to;
+          console.log('update', showWidget, range.from, range.to + 1);
           if (showWidget) {
-            // Create decoration that wraps the entire line content in a dx-anchor.
             builder.add(
               range.from,
-              range.to,
+              range.to + 1,
               Decoration.mark({
                 tagName: 'dx-anchor',
                 class: 'cm-popover-trigger',
@@ -245,6 +246,8 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
             const content = view.state.sliceDoc(range.from + (trigger ? trigger.length : 0), range.to);
             options.onTextChange?.({ view, pos: selection.head, text: content, trigger });
           }
+        } else {
+          console.log('remove');
         }
 
         this._decorations = builder.finish();

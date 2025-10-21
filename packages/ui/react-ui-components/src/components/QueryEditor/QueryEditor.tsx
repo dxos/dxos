@@ -52,7 +52,6 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       // TODO(burdon): Handle trigger AND triggerKey.
       // trigger: ['#'],
       triggerKey: 'Ctrl-Space',
-      filter: false,
       getMenu,
     });
 
