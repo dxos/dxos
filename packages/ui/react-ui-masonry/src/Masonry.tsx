@@ -42,7 +42,7 @@ type MasonryRootProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> &
     | 'role'
     | 'tabIndex'
     | 'containerRef'
-  >;
+  > & { intrinsicHeight?: boolean };
 
 const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount' | 'maxColumnCount'>) => {
   const remInPx = usePx(1);
@@ -72,6 +72,7 @@ const MasonryRootImpl = <Item,>(
     render,
     onRender,
     classNames,
+    intrinsicHeight,
     ...props
   }: MasonryRootProps<Item>,
   forwardedRef: ForwardedRef<HTMLDivElement>,
@@ -97,7 +98,7 @@ const MasonryRootImpl = <Item,>(
   const positioner = usePositioner(positionerProps, [positionerProps]);
   const resizeObserver = useResizeObserver(positioner);
   const children = useMasonry({
-    height,
+    height: intrinsicHeight ? Infinity : height,
     scrollTop,
     isScrolling,
     resizeObserver,

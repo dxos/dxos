@@ -79,7 +79,7 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
         <Form autoSave schema={schema} values={record} onSave={handleSave} onQueryRefOptions={handleRefQueryLookup} />
       </div>
       <h2>{t('related objects label')}</h2>
-      <Masonry.Root<Obj.Any> items={related} render={Card} />
+      <Masonry.Root<Obj.Any> items={related} render={Card} intrinsicHeight />
     </div>
   );
 };
