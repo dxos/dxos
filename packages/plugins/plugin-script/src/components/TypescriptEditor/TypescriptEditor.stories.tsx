@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { createObject } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createDataExtensions } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
@@ -78,13 +78,7 @@ const meta = {
   title: 'plugins/plugin-script/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: {
-      type: 'column',
-      className: 'is-prose',
-    },
-  },
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
