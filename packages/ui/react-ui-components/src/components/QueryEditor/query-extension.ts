@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CompletionContext } from '@codemirror/autocomplete';
 import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
@@ -14,7 +13,14 @@ import { type EchoDatabase } from '@dxos/client/echo';
 import { Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
-import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
+import {
+  type CompoetionContext,
+  type GetMenuContext,
+  focus,
+  focusField,
+  staticCompletion,
+  typeahead,
+} from '@dxos/react-ui-editor';
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
@@ -22,10 +28,49 @@ export type QueryOptions = {
   tags?: Tag.TagMap;
 };
 
+// TODO(burdon): Factor out.
+export const getOptions = ({ db, tags }: QueryOptions) => {
+  const parser = QueryDSL.Parser.configure({ strict: false });
+  return ({ state, pos }: GetMenuContext): string[] => {
+    const tree = parser.parse(state.sliceDoc());
+    const node = tree.cursorAt(pos, -1).node;
+
+    let range = undefined;
+    switch (node.parent?.type.id) {
+      case QueryDSL.Node.TypeFilter: {
+        if (node?.type.id === QueryDSL.Node.Identifier) {
+          range = { from: node.from, to: node.to };
+        } else if (node?.type.name === ':') {
+          range = { from: node.from + 1, to: node.to };
+        }
+
+        if (range) {
+          const schema = db?.graph.schemaRegistry.schemas ?? [];
+          return schema.map((schema) => Type.getTypename(schema));
+        }
+
+        break;
+      }
+
+      // TODO(burdon): Trigger on #.
+      case QueryDSL.Node.TagFilter: {
+        if (tags) {
+          range = { from: node.from + 1, to: node.to };
+          return Object.values(tags).map((tag) => tag.label);
+        }
+
+        break;
+      }
+    }
+
+    return [];
+  };
+};
+
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ db, tags }: QueryOptions = {}): Extension => {
+export const query = ({ tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
@@ -42,54 +87,6 @@ export const query = ({ db, tags }: QueryOptions = {}): Extension => {
     focus,
     styles,
   ];
-};
-
-// TODO(burdon): Factor out.
-// TODO(burdon): Use with popover (convert to menu).
-export const getOptions = ({ db, tags }: QueryOptions) => {
-  const parser = QueryDSL.Parser.configure({ strict: false });
-  return (context: CompletionContext) => {
-    const tree = parser.parse(context.state.sliceDoc());
-    const node = tree.cursorAt(context.pos, -1).node;
-
-    let range = undefined;
-    switch (node.parent?.type.id) {
-      case QueryDSL.Node.TypeFilter: {
-        if (node?.type.id === QueryDSL.Node.Identifier) {
-          range = { from: node.from, to: node.to };
-        } else if (node?.type.name === ':') {
-          range = { from: node.from + 1, to: node.to };
-        }
-
-        if (range) {
-          const schema = db?.graph.schemaRegistry.schemas ?? [];
-          return {
-            ...range,
-            filter: true,
-            options: schema.map((schema) => ({ id: Type.getTypename(schema), label: Type.getTypename(schema) })),
-          };
-        }
-
-        break;
-      }
-
-      // TODO(burdon): Trigger on #.
-      case QueryDSL.Node.TagFilter: {
-        if (tags) {
-          range = { from: node.from + 1, to: node.to };
-          return {
-            ...range,
-            filter: true,
-            options: Object.values(tags).map((tag) => ({ id: tag.label, label: tag.label })),
-          };
-        }
-
-        break;
-      }
-    }
-
-    return null;
-  };
 };
 
 /**

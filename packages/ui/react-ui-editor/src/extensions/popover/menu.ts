@@ -7,7 +7,7 @@ import { type EditorView } from '@codemirror/view';
 import { type Label } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
-import { insertAtLineStart } from './util';
+import { insertAtCursor } from './util';
 
 export type PopoverMenuGroup = {
   id: string;
@@ -39,11 +39,11 @@ export const getPreviousMenuItem = (groups: PopoverMenuGroup[], id?: string): Po
 };
 
 export const createMenuGroup = ({
-  id,
+  id = 'menu',
   label,
   items,
 }: {
-  id: string;
+  id?: string;
   label?: Label;
   items: string[];
 }): PopoverMenuGroup => ({
@@ -52,7 +52,7 @@ export const createMenuGroup = ({
   items: items.map((item, i) => ({
     id: `${id}-${i}`,
     label: item,
-    onSelect: (view, head) => insertAtLineStart(view, head, item),
+    onSelect: (view, head) => insertAtCursor(view, head, item),
   })),
 });
 

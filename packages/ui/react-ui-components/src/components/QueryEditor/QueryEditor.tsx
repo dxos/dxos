@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { completionStatus } from '@codemirror/autocomplete';
 import { Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -15,6 +14,7 @@ import {
   PopoverMenuProvider,
   type UsePopoverMenuProps,
   createBasicExtensions,
+  createMenuGroup,
   createThemeExtensions,
   keymap,
   usePopoverMenu,
@@ -22,7 +22,7 @@ import {
 
 import { translationKey } from '../../translations';
 
-import { type QueryOptions, query } from './query-extension';
+import { type QueryOptions, getOptions, query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
@@ -37,18 +37,23 @@ export type QueryEditorProps = ThemedClassName<
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
-    const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(async (text) => {
-      console.log(text);
-      return [];
-    }, []);
-    const { groupsRef, extension, ...menuProps } = usePopoverMenu({
-      trigger: ['#'],
-      triggerKey: 'Ctrl-Space',
-      getMenu,
-    });
     useEffect(() => {
       updateRef(forwardedRef, controller);
     }, [controller]);
+
+    const options = useMemo(() => getOptions({ db, tags }), [db, tags]);
+    const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+      async (context) => [createMenuGroup({ items: options(context) })],
+      [options],
+    );
+
+    const { groupsRef, extension, ...menuProps } = usePopoverMenu({
+      // TODO(burdon): Handle trigger AND triggerKey.
+      // trigger: ['#'],
+      triggerKey: 'Ctrl-Space',
+      filter: false,
+      getMenu,
+    });
 
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
@@ -62,10 +67,9 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
           keymap.of([
             {
               key: 'Enter',
-              run: (view) => {
-                // TODO(burdon): !!!
-                // Prevent newline, but honor Enter if autocomplete is open.
-                return !completionStatus(view.state);
+              run: () => {
+                // Prevent newline.
+                return true;
               },
             },
           ]),

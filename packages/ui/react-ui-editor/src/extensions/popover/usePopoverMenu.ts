@@ -3,6 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
+import { type EditorState } from '@codemirror/state';
 import { type RefObject, useCallback, useMemo, useRef, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -14,9 +15,16 @@ import { modalStateEffect } from './modal';
 import { type PopoverOptions, popover, popoverRangeEffect, popoverStateField } from './popover';
 import { type PopoverMenuProviderProps } from './PopoverMenuProvider';
 
+export type GetMenuContext = {
+  state: EditorState;
+  pos: number;
+  text: string;
+  trigger?: string;
+};
+
 export type UsePopoverMenuProps = {
   filter?: boolean;
-  getMenu?: (text: string, trigger?: string) => MaybePromise<PopoverMenuGroup[]>;
+  getMenu?: (context: GetMenuContext) => MaybePromise<PopoverMenuGroup[]>;
 } & Pick<PopoverOptions, 'trigger' | 'triggerKey' | 'placeholder'>;
 
 export type UsePopoverMenu = {
@@ -52,8 +60,8 @@ export const usePopoverMenu = ({
    * Get filtered options.
    */
   const getMenuOptions = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-    async (text, trigger) => {
-      const groups = (await getMenu?.(text, trigger)) ?? [];
+    async ({ text, trigger, ...props }) => {
+      const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
       return filter
         ? filterMenuGroups(groups, (item) =>
             text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
@@ -139,8 +147,8 @@ export const usePopoverMenu = ({
           return next.id;
         });
       },
-      onTextChange: async (text, trigger) => {
-        groupsRef.current = (await getMenuOptions(text, trigger)) ?? [];
+      onTextChange: async ({ view, pos, text, trigger }) => {
+        groupsRef.current = (await getMenuOptions({ state: view.state, pos, text, trigger })) ?? [];
         const firstItem = groupsRef.current.filter((group) => group.items.length > 0)[0]?.items[0];
         if (firstItem) {
           setCurrentItem(firstItem.id);

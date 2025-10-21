@@ -66,7 +66,7 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
 const LinkStory = (args: StoryProps) => {
   const { space } = useClientProvider();
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-    async (text, trigger): Promise<PopoverMenuGroup[]> => {
+    async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
       if (trigger === '/') {
         return filterMenuGroups([linkSlashCommands], (item) =>
           text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,

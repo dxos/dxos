@@ -77,7 +77,7 @@ export const MarkdownEditor = ({
   const viewRef = useRef<EditorView>(null);
 
   const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
-    (text, trigger) => {
+    ({ text, trigger }) => {
       switch (trigger) {
         case '@': {
           return onLinkQuery?.(text) ?? [];

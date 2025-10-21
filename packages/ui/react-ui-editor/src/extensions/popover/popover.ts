@@ -29,7 +29,7 @@ export type PopoverOptions = {
   // activateOnTyping?: boolean;
 
   // Trigger update.
-  onTextChange?: (text: string, trigger?: string) => void;
+  onTextChange?: (event: { view: EditorView; pos: number; text: string; trigger?: string }) => void;
   onClose?: (event: { view: EditorView }) => void;
 
   // Menu specific.
@@ -74,7 +74,7 @@ const popoverTriggerListener = (options: PopoverOptions) =>
       // Trigger deleted.
       (trigger ? trigger !== text[0] : text.length === 0) ||
       // Whitespace in text.
-      /\W/.test(trigger ? text.slice(1) : text) ||
+      /\s/.test(trigger ? text.slice(1) : text) ||
       // Cursor moved before the range.
       selection.head < activeRange.from ||
       // Cursor moved after the range (+1 to handle selection changing before doc).
@@ -139,7 +139,9 @@ const popoverKeymap = (options: PopoverOptions) => {
 
             // Get last word.
             let str = line.text.slice(0, selection.head - line.from);
-            const idx = str.lastIndexOf(' ');
+            // TODO(burdon): Make configurable.
+            // TODO(burdon): Create anchor even if zero length.
+            const idx = Math.max(str.lastIndexOf(' '), str.lastIndexOf(':'));
             if (idx !== -1) {
               str = str.slice(idx + 1);
             }
@@ -239,7 +241,7 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
           if (rangeChanged) {
             // NOTE: Content skips the trigger character.
             const content = view.state.sliceDoc(range.from + (trigger ? trigger.length : 0), range.to);
-            options.onTextChange?.(content, trigger);
+            options.onTextChange?.({ view, pos: selection.head, text: content, trigger });
           }
         }
 
