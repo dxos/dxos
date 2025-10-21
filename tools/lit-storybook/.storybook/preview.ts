@@ -69,8 +69,6 @@ export const preview: Preview = {
         light: 'light',
       },
     }),
-
-    withLayout,
   ],
 
   /**

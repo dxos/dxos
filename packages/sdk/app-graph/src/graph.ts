@@ -287,7 +287,7 @@ export class Graph implements WritableGraph {
       const toJSON = (node: Node, seen: string[] = []): any => {
         const nodes = get(this.connections(node.id));
         const obj: Record<string, any> = {
-          id: node.id.length > 32 ? `${node.id.slice(0, 32)}...` : node.id,
+          id: node.id,
           type: node.type,
         };
         if (node.properties.label) {

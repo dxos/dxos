@@ -66,12 +66,12 @@ import {
 export class DxGrid extends LitElement {
   constructor() {
     super();
-    // Wheel, top-level and element-level
+    // Wheel, top-level and element-level.
     document.defaultView?.addEventListener('wheel', this.handleTopLevelWheel, { passive: false });
     this.addEventListener('wheel', this.handleWheel);
-    // Custom event(s)
+    // Custom event(s).
     this.addEventListener('dx-axis-resize-internal', this.handleAxisResizeInternal as EventListener);
-    // Standard events
+    // Standard events.
     this.addEventListener('pointerdown', this.handlePointerDown);
     this.addEventListener('pointermove', this.handlePointerMove);
     this.addEventListener('pointerup', this.handlePointerUp);
@@ -199,6 +199,7 @@ export class DxGrid extends LitElement {
   //
   // `template` is the rendered value of `grid-{axis}-template`.
   //
+
   @state()
   private templateGridColumns = '0';
 
@@ -322,7 +323,7 @@ export class DxGrid extends LitElement {
             this.dispatchSelectionChange();
           }
           if (this.mode === 'edit-select') {
-            // Prevent focus moving when editing while selection is possible
+            // Prevent focus moving when editing while selection is possible.
             event.preventDefault();
           } else if (this.focusActive && isSameCell(this.focusedCell, cellCoords)) {
             this.dispatchEditRequest();
@@ -593,7 +594,7 @@ export class DxGrid extends LitElement {
   }
 
   //
-  // Resize & reposition handlers, observer, ref
+  // Resize & reposition handlers, observer, ref.
   //
 
   @state()
@@ -693,7 +694,7 @@ export class DxGrid extends LitElement {
   };
 
   private updateVisInline(): void {
-    // todo: avoid starting from zero
+    // todo: avoid starting from zero.
     let axisCursor = 0;
     let pxCursor = this.colSize(axisCursor, 'grid');
 
@@ -751,7 +752,7 @@ export class DxGrid extends LitElement {
   }
 
   private updateVisBlock(): void {
-    // todo: avoid starting from zero
+    // todo: avoid starting from zero.
     let axisCursor = 0;
     let pxCursor = this.rowSize(axisCursor, 'grid');
 
@@ -1027,7 +1028,7 @@ export class DxGrid extends LitElement {
   }
 
   /**
-   * Updates `pos` so that a cell in focus is fully within the viewport
+   * Updates `pos` so that a cell in focus is fully within the viewport.
    */
   snapPosToFocusedCell(): void {
     const outOfVis = this.focusedCellOutOfVis();
@@ -1155,7 +1156,7 @@ export class DxGrid extends LitElement {
   }
 
   //
-  // Render and other lifecycle methods
+  // Render and other lifecycle methods.
   //
 
   // TODO(thure): This is for rendering presentational objects superimposed onto the canonical grid (e.g. DnD drop line for #8108).

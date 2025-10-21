@@ -67,7 +67,7 @@
       @apply flex items-center;
 
       .message__abstract__from {
-        @apply flex flex-1 pis-1 truncate text-base text-indigoText font-medium;
+        @apply flex flex-1 pis-1 truncate text-base font-medium;
       }
 
       .message__abstract__date {

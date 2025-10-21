@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createNotebook } from '../../testing';
 import { translations } from '../../translations';
@@ -15,12 +15,8 @@ import { NotebookStack } from './NotebookStack';
 const meta = {
   title: 'plugins/plugin-script/NotebookStack',
   component: NotebookStack,
-  decorators: [withTheme, withClientProvider()],
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'is-prose' }), withClientProvider()],
   parameters: {
-    layout: {
-      type: 'column',
-      className: 'is-prose',
-    },
     translations,
   },
 } satisfies Meta<typeof NotebookStack>;

@@ -11,7 +11,6 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import {
   type PopoverMenuGroup,
-  type PopoverMenuItem,
   PopoverMenuProvider,
   deleteItem,
   hashtag,
@@ -50,10 +49,11 @@ const DefaultStory = ({ text }: StoryProps) => {
 
   return (
     <PopoverMenuProvider
+      view={viewRef.current}
       groups={commandGroups}
-      onSelect={(item: PopoverMenuItem) => {
-        if (viewRef.current && item.onSelect) {
-          return item.onSelect(viewRef.current, viewRef.current.state.selection.main.head);
+      onSelect={({ view, item }) => {
+        if (item.onSelect) {
+          return item.onSelect(view, view.state.selection.main.head);
         }
       }}
     >

@@ -9,7 +9,7 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#query-env": "./dist/query-env/index.js"
+    "#query-lite": "./dist/query-lite/index.js"
   },
   "exports": {
     ".": {

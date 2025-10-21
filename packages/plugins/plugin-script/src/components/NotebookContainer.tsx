@@ -105,16 +105,18 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           onClick={handleCompute}
         />
       </Toolbar.Root>
-      <NotebookStack
-        classNames='container-max-width border-l border-r border-subduedSeparator'
-        space={space}
-        notebook={notebook}
-        graph={graph}
-        env={env}
-        onRearrange={handleRearrange}
-        onCellInsert={handleCellInsert}
-        onCellDelete={handleCellDelete}
-      />
+      <div role='none' className='flex bs-full overflow-hidden -mis-[1px] -mie-[1px]'>
+        <NotebookStack
+          classNames='container-max-width border-l border-r border-subduedSeparator'
+          space={space}
+          notebook={notebook}
+          graph={graph}
+          env={env}
+          onRearrange={handleRearrange}
+          onCellInsert={handleCellInsert}
+          onCellDelete={handleCellDelete}
+        />
+      </div>
     </StackItem.Content>
   );
 };

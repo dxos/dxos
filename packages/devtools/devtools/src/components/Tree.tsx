@@ -8,13 +8,13 @@ import { mx } from '@dxos/react-ui-theme';
 
 export const Tree: FC<{ data?: object }> = ({ data }) => {
   return (
-    <div className='flex overflow-auto ml-2 border-l-2 border-blue-500'>
+    <div className='flex is-full py-2 overflow-auto'>
       <Node data={data} root />
     </div>
   );
 };
 
-export const Node: FC<{ data?: any; root?: boolean }> = ({ data, root }) => {
+export const Node: FC<{ data?: any; root?: boolean }> = ({ data }) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
     return <Scalar value={data} />;
   }
@@ -23,7 +23,7 @@ export const Node: FC<{ data?: any; root?: boolean }> = ({ data, root }) => {
     return (
       <div className='flex flex-col space-y-2'>
         {data.map((value, index) => (
-          <KeyValue key={index} label={String(index)} data={value} className='bg-teal-50' />
+          <KeyValue key={index} label={String(index)} data={value} className='text-description font-thin' />
         ))}
       </div>
     );
@@ -32,7 +32,7 @@ export const Node: FC<{ data?: any; root?: boolean }> = ({ data, root }) => {
   return (
     <div className='flex flex-col space-y-2'>
       {Object.entries(data).map(([key, value]) => (
-        <KeyValue key={key} label={key} data={value} className='bg-blue-50' />
+        <KeyValue key={key} label={key} data={value} className='bg-groupSurface text-description font-thin' />
       ))}
     </div>
   );
@@ -47,7 +47,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
   return (
     <div className='flex'>
       <Box
-        className={mx('border-blue-200 text-sm select-none cursor-pointer', className)}
+        className={mx('bg-inputSurface text-sm select-none cursor-pointer', className)}
         onClick={() => setOpen((open) => !open)}
       >
         {label}
@@ -59,7 +59,7 @@ export const KeyValue: FC<{ label: string; data?: any; className?: string }> = (
 
 const Scalar: FC<{ value: any }> = ({ value }) => {
   return (
-    <Box className='bg-green-50 border-green-200 rounded-r text-sm font-thin'>
+    <Box className='bg-skySurface text-information rounded-r-sm text-sm font-thin'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||
@@ -70,7 +70,7 @@ const Scalar: FC<{ value: any }> = ({ value }) => {
 
 const Box: FC<HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => {
   return (
-    <div className={mx('flex px-2 border border-l-0 font-mono truncate', className)} {...props}>
+    <div className={mx('flex px-2 font-mono truncate', className)} {...props}>
       {children}
     </div>
   );

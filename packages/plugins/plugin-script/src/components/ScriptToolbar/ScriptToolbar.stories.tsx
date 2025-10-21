@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Ref } from '@dxos/echo';
 import { ScriptType } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
@@ -20,12 +20,13 @@ const meta = {
   title: 'plugins/plugin-script/Toolbar',
   component: ScriptToolbar,
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
+  decorators: [
+    withTheme,
+    withLayout({ classNames: 'is-prose' }),
+    withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }),
+  ],
   parameters: {
-    layout: {
-      type: 'centered',
-      className: 'is-prose',
-    },
+    layout: 'centered',
     translations,
   },
 } satisfies Meta<typeof ScriptToolbar>;

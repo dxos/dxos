@@ -29,8 +29,10 @@ export class Domino<T extends HTMLElement> {
     this._el.dataset[key] = value;
     return this;
   }
-  attr<K extends keyof T>(key: K, value: T[K]): this {
-    (this._el as any)[key] = value;
+  attributes(attr: Record<string, string | undefined>): this {
+    Object.entries(attr)
+      .filter(([_, value]) => value !== undefined)
+      .map(([key, value]) => this._el.setAttribute(key, value!));
     return this;
   }
   style(styles: Partial<CSSStyleDeclaration>): this {

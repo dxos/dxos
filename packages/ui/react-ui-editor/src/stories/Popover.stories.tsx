@@ -4,7 +4,7 @@
 
 import { type EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import { Obj, Query } from '@dxos/echo';
 import { faker } from '@dxos/random';
@@ -18,7 +18,8 @@ import {
   type PopoverMenuItem,
   PopoverMenuProvider,
   type UsePopoverMenuProps,
-  filterItems,
+  createMenuGroup,
+  filterMenuGroups,
   formattingCommands,
   insertAtCursor,
   insertAtLineStart,
@@ -31,35 +32,78 @@ import { EditorStory } from './components';
 
 const generator: ValueGenerator = faker as any;
 
+const customCompletions: PopoverMenuGroup = createMenuGroup({
+  id: 'test',
+  items: ['Hello world!', 'Hello DXOS', 'Hello Composer', 'https://dxos.org'],
+});
+
+const placeholder = (trigger: string[]) =>
+  Domino.of('div')
+    .children(
+      Domino.of('span').text('Press'),
+      ...trigger.map((trigger) =>
+        Domino.of('span')
+          .text(trigger)
+          .classNames('border border-separator rounded-sm mx-1 pis-1 pie-1 pbs-[2px] pbe-[3px]'),
+      ),
+      Domino.of('span').text('for commands'),
+    )
+    .build();
+
 type StoryProps = Omit<UsePopoverMenuProps, 'viewRef'> & { text: string };
 
 const DefaultStory = ({ text, ...props }: StoryProps) => {
-  const viewRef = useRef<EditorView>(null);
-  const { groupsRef, extension, ...menuProps } = usePopoverMenu({ viewRef, ...props });
+  const [view, setView] = useState<EditorView | null>(null);
+  const { groupsRef, extension, ...menuProps } = usePopoverMenu(props);
 
   return (
-    <PopoverMenuProvider groups={groupsRef.current} {...menuProps}>
-      <EditorStory ref={viewRef} text={text} extensions={extension} />
+    <PopoverMenuProvider view={view} groups={groupsRef.current} {...menuProps}>
+      <EditorStory ref={setView} text={text} extensions={extension} />
     </PopoverMenuProvider>
   );
 };
 
-const groups: PopoverMenuGroup[] = [
-  formattingCommands,
-  linkSlashCommands,
-  {
-    id: 'custom',
-    label: 'Custom',
-    items: [
-      {
-        id: 'custom-1',
-        label: 'Log',
-        icon: 'ph--log--regular',
-        onSelect: console.log,
-      },
-    ],
-  },
-];
+const LinkStory = (args: StoryProps) => {
+  const { space } = useClientProvider();
+  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    async ({ text, trigger }): Promise<PopoverMenuGroup[]> => {
+      if (trigger === '/') {
+        return filterMenuGroups([linkSlashCommands], (item) =>
+          text ? (item.label as string).toLowerCase().includes(text.toLowerCase()) : true,
+        );
+      }
+
+      if (!space) {
+        return [];
+      }
+
+      const name = text?.startsWith('@') ? text.slice(1).toLowerCase() : (text?.toLowerCase() ?? '');
+      const result = await space?.db.query(Query.type(Testing.Contact)).run();
+      const items = result.objects
+        .filter((object) => object.name.toLowerCase().includes(name))
+        .map(
+          (object): PopoverMenuItem => ({
+            id: object.id,
+            label: object.name,
+            icon: 'ph--user--regular',
+            onSelect: (view, head) => {
+              const link = `[${object.name}](${Obj.getDXN(object)})`;
+              if (text?.startsWith('@')) {
+                insertAtLineStart(view, head, `!${link}\n`);
+              } else {
+                insertAtCursor(view, head, `${link} `);
+              }
+            },
+          }),
+        );
+
+      return [{ id: 'test', items }];
+    },
+    [space],
+  );
+
+  return <DefaultStory {...args} getMenu={getMenu} />;
+};
 
 const meta = {
   title: 'ui/react-ui-editor/Popover',
@@ -76,64 +120,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    text: str('# Slash', ''),
+    text: str('# Autocomplete', '', ''),
+    triggerKey: 'Ctrl-Space',
+    filter: true,
+    getMenu: () => [customCompletions],
+  },
+};
+
+export const Formatting: Story = {
+  args: {
+    text: str('# Slash command', '', ''),
     trigger: '/',
     placeholder: {
-      content: () =>
-        Domino.of('div')
-          .children(
-            Domino.of('span').text('Press'),
-            Domino.of('span').text('/').classNames('border border-separator rounded-sm mx-1 px-1'),
-            Domino.of('span').text('for commands'),
-          )
-          .build(),
+      content: () => placeholder(['/']),
     },
-    getMenu: () => groups,
+    getMenu: () => [formattingCommands],
   },
 };
 
 export const Link: Story = {
-  render: (args: StoryProps) => {
-    const { space } = useClientProvider();
-    const getMenu = useCallback(
-      async (trigger: string, query?: string): Promise<PopoverMenuGroup[]> => {
-        if (trigger === '/') {
-          return filterItems(groups, (item) =>
-            query ? (item.label as string).toLowerCase().includes(query.toLowerCase()) : true,
-          );
-        }
-
-        if (!space) {
-          return [];
-        }
-
-        const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
-        const result = await space?.db.query(Query.type(Testing.Contact)).run();
-        const items = result.objects
-          .filter((object) => object.name.toLowerCase().includes(name))
-          .map(
-            (object): PopoverMenuItem => ({
-              id: object.id,
-              label: object.name,
-              icon: 'ph--user--regular',
-              onSelect: (view, head) => {
-                const link = `[${object.name}](${Obj.getDXN(object)})`;
-                if (query?.startsWith('@')) {
-                  insertAtLineStart(view, head, `!${link}\n`);
-                } else {
-                  insertAtCursor(view, head, `${link} `);
-                }
-              },
-            }),
-          );
-
-        return [{ id: 'test', items }];
-      },
-      [space],
-    );
-
-    return <DefaultStory {...args} getMenu={getMenu} />;
-  },
+  render: LinkStory,
   decorators: [
     withClientProvider({
       createSpace: true,
@@ -148,8 +154,10 @@ export const Link: Story = {
     }),
   ],
   args: {
-    text: str('# Link', ''),
+    text: str('# Links', '', ''),
     trigger: ['/', '@'],
-    getMenu: () => [],
+    placeholder: {
+      content: () => placeholder(['/', '@']),
+    },
   },
 };
