@@ -37,8 +37,8 @@ export const DeckMain = () => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
-  const breakpoint = useBreakpoints();
   const layoutMode = getMode(deck);
+  const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
@@ -151,6 +151,8 @@ export const DeckMain = () => {
       { order: {}, itemsCount: 0 },
     );
   }, [active, activeCompanions]);
+
+  console.log('mode', layoutMode);
 
   return (
     <Main.Root
