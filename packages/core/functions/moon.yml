@@ -19,3 +19,4 @@ tasks:
     inputs:
       - src/e2e/**
       - vitest.config.ts
+      
