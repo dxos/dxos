@@ -14,7 +14,7 @@ import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { activeSurface, getSize } from '@dxos/react-ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
@@ -181,18 +181,10 @@ const Invitations = () => {
     </ButtonGroup>
   );
 
-  const header = (
-    <div className='flex' data-testid='invitations.identity-header'>
-      Identity
-      <span className='grow' />
-      {controls}
-    </div>
-  );
-
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
       <div className={`${activeSurface} rounded p-2 mbe-2`}>
-        <h1>{header}</h1>
+        <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
             <IdentityListItem identity={identity} presence={networkStatus as unknown as SpaceMember.PresenceState} />
@@ -231,12 +223,9 @@ export const Default: Story = {
       </Clipboard.Provider>
     );
   },
-  decorators: [withMultiClientProvider({ numClients: 3 })],
+  decorators: [withMultiClientProvider({ numClients: 3 }), withLayout({ classNames: 'grid grid-cols-3' })],
   parameters: {
-    layout: {
-      type: 'fullscreen',
-      className: 'grid grid-cols-3',
-    },
+    layout: 'fullscreen',
     chromatic: {
       disableSnapshot: true,
     },

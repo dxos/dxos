@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
@@ -52,13 +52,7 @@ const meta = {
   title: 'ui/react-ui-components/ScrollContainer',
   component: ScrollContainer.Root,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: {
-      type: 'column',
-      className: 'w-[30rem]',
-    },
-  },
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'w-[30rem]' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
