@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CompletionContext, autocompletion } from '@codemirror/autocomplete';
 import { HighlightStyle, LRLanguage, LanguageSupport, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
@@ -10,75 +9,24 @@ import { type SyntaxNodeRef } from '@lezer/common';
 import { styleTags, tags as t } from '@lezer/highlight';
 import JSON5 from 'json5';
 
-import { type EchoDatabase } from '@dxos/client/echo';
-import { Tag, Type } from '@dxos/echo';
+import { Tag } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { Domino } from '@dxos/react-ui';
 import { type CompoetionContext, focus, focusField, staticCompletion, typeahead } from '@dxos/react-ui-editor';
 import { getHashHue, getStyles } from '@dxos/react-ui-theme';
 
 export type QueryOptions = {
-  db?: EchoDatabase;
   tags?: Tag.TagMap;
 };
 
 /**
  * Create a CodeMirror extension for the query language with syntax highlighting.
  */
-export const query = ({ db, tags }: QueryOptions = {}): Extension => {
-  const parser = QueryDSL.Parser.configure({ strict: false });
-
+export const query = ({ tags }: QueryOptions = {}): Extension => {
   return [
     new LanguageSupport(queryLanguage),
     syntaxHighlighting(queryHighlightStyle),
     decorations({ tags }),
-    autocompletion({
-      activateOnTyping: true,
-      override: [
-        async (context: CompletionContext) => {
-          const tree = parser.parse(context.state.sliceDoc());
-          const node = tree.cursorAt(context.pos, -1).node;
-
-          let range = undefined;
-          switch (node.parent?.type.id) {
-            case QueryDSL.Node.TypeFilter: {
-              if (node?.type.id === QueryDSL.Node.Identifier) {
-                range = { from: node.from, to: node.to };
-              } else if (node?.type.name === ':') {
-                range = { from: node.from + 1, to: node.to };
-              }
-
-              if (range) {
-                const schema = db?.graph.schemaRegistry.schemas ?? [];
-                return {
-                  ...range,
-                  filter: true,
-                  options: schema.map((schema) => ({ label: Type.getTypename(schema) })),
-                };
-              }
-
-              break;
-            }
-
-            // TODO(burdon): Trigger on #.
-            case QueryDSL.Node.TagFilter: {
-              if (tags) {
-                range = { from: node.from + 1, to: node.to };
-                return {
-                  ...range,
-                  filter: true,
-                  options: Object.values(tags).map((tag) => ({ label: tag.label })),
-                };
-              }
-
-              break;
-            }
-          }
-
-          return null;
-        },
-      ],
-    }),
     typeahead({
       onComplete: ({ line }: CompoetionContext) => {
         const words = line.split(/\s+/).filter(Boolean);

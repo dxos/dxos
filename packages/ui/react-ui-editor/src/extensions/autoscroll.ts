@@ -115,7 +115,7 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
               Domino.of('button')
                 .classNames('dx-button bg-accentSurface')
                 .data('density', 'fine')
-                .children(Domino.of<any>('dx-icon').attr('icon', 'ph--arrow-down--regular'))
+                .children(Domino.of<any>('dx-icon').attributes({ icon: 'ph--arrow-down--regular' }))
                 .on('click', () => {
                   scrollToBottom(view);
                 }),
