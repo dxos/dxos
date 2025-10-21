@@ -152,8 +152,6 @@ export const DeckMain = () => {
     );
   }, [active, activeCompanions]);
 
-  console.log('mode', layoutMode);
-
   return (
     <Main.Root
       navigationSidebarState={fullscreen ? 'closed' : context.sidebarState}
