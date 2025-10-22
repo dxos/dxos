@@ -114,6 +114,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             id: Type.getTypename(DataType.StoredSchema),
             metadata: {
               icon: 'ph--database--regular',
+              iconClassName: 'text-orangeSurfaceText',
             },
           }),
           contributes(Capabilities.Metadata, {
