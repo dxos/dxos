@@ -92,7 +92,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             id: Type.getTypename(DataType.Collection),
             metadata: {
               icon: 'ph--cards-three--regular',
-              iconClassName: 'text-roseSurfaceText',
+              iconClassName: 'text-neutralSurfaceText',
               // TODO(wittjosiah): Move out of metadata.
               loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
             },
