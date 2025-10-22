@@ -10,7 +10,7 @@ import React, { type CSSProperties, useCallback, useEffect, useState } from 'rea
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type XmlWidgetRegistry } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -103,10 +103,7 @@ const DefaultStory = ({ content = '', streamOptions = defaultStreamOptions, ...p
 const meta = {
   title: 'ui/react-ui-components/MarkdownStream',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

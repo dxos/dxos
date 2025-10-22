@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Json } from './Json';
 
@@ -55,10 +55,7 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/Json',
   component: Json,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof Json>;
 
 export default meta;
