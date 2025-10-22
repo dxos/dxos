@@ -90,7 +90,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                   {functionToScriptMap[func.id] && (
                     <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
                   )}
-                  <IconButton iconOnly icon='ph--trash--regular' onClick={() => handleDelete(func)} />
+                  <IconButton
+                    iconOnly
+                    icon='ph--trash--regular'
+                    label={t('delete function button label')}
+                    onClick={() => handleDelete(func)}
+                  />
                 </List.Item>
               ))}
             </div>
