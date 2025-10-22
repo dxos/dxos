@@ -5,7 +5,8 @@
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { syntaxHighlighting } from '@codemirror/language';
+import { xml } from '@codemirror/lang-xml';
+import { LanguageDescription, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
@@ -43,7 +44,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       base: markdownLanguage,
 
       // Languages for syntax highlighting fenced code blocks.
-      codeLanguages: languages,
+      codeLanguages: [...languages, xmlLanguageDesc],
 
       // Don't complete HTML tags.
       completeHTMLTags: false,
@@ -73,6 +74,13 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
     ),
   ];
 };
+
+const xmlLanguageDesc = LanguageDescription.of({
+  name: 'xml',
+  alias: ['html', 'xhtml'],
+  extensions: ['xml', 'xhtml'],
+  load: async () => xml(),
+});
 
 /**
  * Default customizations.

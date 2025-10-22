@@ -9,7 +9,7 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -60,6 +60,9 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({
+      type: 'column',
+    }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
@@ -67,7 +70,7 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
+    layout: 'column', // TODO!!!
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;
