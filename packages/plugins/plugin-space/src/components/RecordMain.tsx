@@ -77,12 +77,12 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
 
   return (
     <StackItem.Content classNames='container-max-width' scrollable>
-      <div role='none' className='flex flex-col p-2 gap-4'>
+      <div role='none' className='flex flex-col gap-4 p-2'>
         <div key={record.id} className='border border-separator rounded'>
           <Form autoSave schema={schema} values={record} onSave={handleSave} onQueryRefOptions={handleRefQueryLookup} />
         </div>
         {related.length > 0 && (
-          <div className='flex flex-col gap-1'>
+          <div className='flex flex-col gap-1 p-2'>
             <label className='text-description text-sm'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any> items={related} render={Card} intrinsicHeight />
           </div>
