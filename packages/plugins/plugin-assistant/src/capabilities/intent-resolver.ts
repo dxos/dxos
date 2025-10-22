@@ -41,7 +41,7 @@ export default (context: PluginContext) => [
       intent: AssistantAction.CreateChat,
       resolve: async ({ space, name }) => {
         const queue = space.queues.create();
-        const chat = Obj.make(Assistant.Chat, { name, queue: Ref.fromDXN(queue.dxn) });
+        const chat = Assistant.makeChat({ name, queue });
         const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.
@@ -51,7 +51,9 @@ export default (context: PluginContext) => [
         }
 
         const binder = new AiContextBinder(queue);
+        await binder.open();
         await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
+        await binder.close();
 
         return {
           data: { object: chat },

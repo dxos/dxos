@@ -12,18 +12,12 @@ import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
-import { invariant } from '@dxos/invariant';
+import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
-import {
-  type TypeAnnotation,
-  TypeAnnotationId,
-  TypeIdentifierAnnotationId,
-  getTypeAnnotation,
-  getTypeIdentifierAnnotation,
-} from '../ast';
+import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../ast';
 import { EntityKind, EntityKindSchema } from '../ast';
 import {
   ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
@@ -32,22 +26,10 @@ import {
   type JsonSchemaType,
   getNormalizedEchoAnnotations,
 } from '../json-schema';
-import { Expando } from '../object';
+import { Expando, makeTypeJsonSchemaAnnotation } from '../object';
 import { type JsonSchemaReferenceInfo, Ref, createEchoReferenceSchema } from '../ref';
 
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
-
-/**
- * Create object jsonSchema.
- */
-export const createJsonSchema = (schema: Schema.Struct<any> = Schema.Struct({})): JsonSchemaType => {
-  const jsonSchema = _toJsonSchema(schema);
-
-  // TODO(dmaretskyi): Fix those in the serializer.
-  jsonSchema.type = 'object';
-  delete jsonSchema.anyOf;
-  return jsonSchema;
-};
 
 // TODO(burdon): Are these values stored (can they be changed?)
 export enum PropType {
@@ -92,7 +74,8 @@ export type JsonSchemaOptions = {
  * @param schema
  */
 export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptions = {}): JsonSchemaType => {
-  let jsonSchema = _toJsonSchema(schema);
+  assertArgument(Schema.isSchema(schema), 'schema');
+  let jsonSchema = _toJsonSchemaAST(schema.ast);
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {
@@ -113,71 +96,13 @@ export const toJsonSchema = (schema: Schema.Schema.All, options: JsonSchemaOptio
   return jsonSchema;
 };
 
-const _toJsonSchema = (schema: Schema.Schema.All): JsonSchemaType => {
-  invariant(schema);
-  const withRefinements = withEchoRefinements(schema.ast, '#');
-  let jsonSchema = JSONSchema.fromAST(withRefinements, {
+const _toJsonSchemaAST = (ast: SchemaAST.AST): JsonSchemaType => {
+  const withRefinements = withEchoRefinements(ast, '#');
+  const jsonSchema = JSONSchema.fromAST(withRefinements, {
     definitions: {},
   }) as JsonSchemaType;
 
-  jsonSchema.$schema = JSON_SCHEMA_URL;
-
-  if (jsonSchema.properties && 'id' in jsonSchema.properties) {
-    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
-  }
-
-  const echoIdentifier = getTypeIdentifierAnnotation(schema);
-  if (echoIdentifier) {
-    jsonSchema.$id = echoIdentifier;
-  }
-
-  const objectAnnotation = getTypeAnnotation(schema);
-  if (objectAnnotation) {
-    // EchoIdentifier annotation takes precedence but the id can also be defined by the typename.
-    if (!jsonSchema.$id) {
-      // TODO(dmaretskyi): Should this include the version?
-      jsonSchema.$id = DXN.fromTypename(objectAnnotation.typename).toString();
-    }
-    jsonSchema.entityKind = objectAnnotation.kind;
-    jsonSchema.version = objectAnnotation.version;
-    jsonSchema.typename = objectAnnotation.typename;
-    if (jsonSchema.entityKind === EntityKind.Relation) {
-      jsonSchema.relationTarget = {
-        $ref: objectAnnotation.sourceSchema,
-      };
-      jsonSchema.relationSource = {
-        $ref: objectAnnotation.targetSchema,
-      };
-    }
-  }
-
-  // Fix field order.
-  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object.
-  // TODO(dmaretskyi): `orderFields` util.
-  jsonSchema = orderKeys(jsonSchema, [
-    '$schema',
-    '$id',
-
-    'entityKind',
-    'typename',
-    'version',
-    'relationTarget',
-    'relationSource',
-
-    'type',
-    'enum',
-
-    'properties',
-    'required',
-    'propertyOrder', // Custom.
-    'items',
-    'additionalProperties',
-
-    'anyOf',
-    'oneOf',
-  ]);
-
-  return jsonSchema;
+  return normalizeJsonSchema(jsonSchema);
 };
 
 const withEchoRefinements = (
@@ -201,7 +126,7 @@ const withEchoRefinements = (
         },
       });
     } else {
-      const jsonSchema = _toJsonSchema(Schema.make(suspendedAst));
+      const jsonSchema = _toJsonSchemaAST(suspendedAst);
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache), {
         [SchemaAST.JSONSchemaAnnotationId]: jsonSchema,
       });
@@ -528,7 +453,17 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   }
 
   annotations[TypeIdentifierAnnotationId] = decodeTypeIdentifierAnnotation(schema);
-  annotations[TypeAnnotationId] = decodeTypeAnnotation(schema);
+  const typeAnnotation = decodeTypeAnnotation(schema);
+  if (typeAnnotation) {
+    annotations[TypeAnnotationId] = typeAnnotation;
+    annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
+      kind: typeAnnotation.kind,
+      typename: typeAnnotation.typename,
+      version: typeAnnotation.version,
+      relationSource: typeAnnotation.sourceSchema,
+      relationTarget: typeAnnotation.targetSchema,
+    });
+  }
 
   // Custom (at end).
   for (const [key, annotationId] of Object.entries({ ...CustomAnnotations, ...DecodedAnnotations })) {
@@ -546,3 +481,39 @@ const makeAnnotatedRefinement = (ast: SchemaAST.AST, annotations: SchemaAST.Anno
 
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
   makeAnnotatedRefinement(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
+
+/**
+ * Fixes field order.
+ * Sets `$schema` prop.
+ */
+const normalizeJsonSchema = (jsonSchema: JsonSchemaType): JsonSchemaType => {
+  if (jsonSchema.properties && 'id' in jsonSchema.properties) {
+    jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
+  }
+
+  // TODO(dmaretskyi): Makes sure undefined is not left on optional fields for the resulting object.
+  jsonSchema.$schema = JSON_SCHEMA_URL;
+  jsonSchema = orderKeys(jsonSchema, [
+    '$schema',
+    '$id',
+
+    'entityKind',
+    'typename',
+    'version',
+    'relationTarget',
+    'relationSource',
+
+    'type',
+    'enum',
+
+    'properties',
+    'required',
+    'propertyOrder', // Custom.
+    'items',
+    'additionalProperties',
+
+    'anyOf',
+    'oneOf',
+  ]);
+  return jsonSchema;
+};

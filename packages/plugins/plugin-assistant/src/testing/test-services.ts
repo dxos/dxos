@@ -4,16 +4,10 @@
 
 import { Obj } from '@dxos/echo';
 
-import {
-  type ApiAuthorization,
-  type BaseServiceRegistry,
-  type ServiceQuery,
-  ServiceType,
-  categoryIcons,
-} from '../types';
+import { type ApiAuthorization, type BaseServiceRegistry, ServiceType, categoryIcons } from '../types';
 
 export class MockServiceRegistry implements BaseServiceRegistry {
-  async queryServices(query?: ServiceQuery): Promise<ServiceType[]> {
+  async queryServices(): Promise<ServiceType[]> {
     return TEST_SERVICES;
   }
 }

@@ -25,6 +25,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
+  decorateMarkdown,
 } from '../../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
 
@@ -114,6 +115,7 @@ export const EditorComponent = forwardRef<EditorView | null, StoryProps>(
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createMarkdownExtensions(),
           createThemeExtensions({ themeMode, syntaxHighlighting: true, slots }),
+          decorateMarkdown(),
           editorGutter,
           extensions || [],
         ],

@@ -9,8 +9,15 @@ import React, { useMemo, useRef } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 
-import { type CommandMenuGroup, type CommandMenuItem, CommandMenuProvider } from '../components';
-import { deleteItem, hashtag, listItemToString, outliner, treeFacet } from '../extensions';
+import {
+  type PopoverMenuGroup,
+  PopoverMenuProvider,
+  deleteItem,
+  hashtag,
+  listItemToString,
+  outliner,
+  treeFacet,
+} from '../extensions';
 import { str } from '../testing';
 
 import { EditorStory } from './components';
@@ -22,7 +29,7 @@ type StoryProps = {
 const DefaultStory = ({ text }: StoryProps) => {
   const viewRef = useRef<EditorView>(null);
 
-  const commandGroups: CommandMenuGroup[] = useMemo(
+  const commandGroups: PopoverMenuGroup[] = useMemo(
     () => [
       {
         id: 'outliner-actions',
@@ -41,11 +48,12 @@ const DefaultStory = ({ text }: StoryProps) => {
   );
 
   return (
-    <CommandMenuProvider
+    <PopoverMenuProvider
+      view={viewRef.current}
       groups={commandGroups}
-      onSelect={(item: CommandMenuItem) => {
-        if (viewRef.current && item.onSelect) {
-          return item.onSelect(viewRef.current, viewRef.current.state.selection.main.head);
+      onSelect={({ view, item }) => {
+        if (item.onSelect) {
+          return item.onSelect(view, view.state.selection.main.head);
         }
       }}
     >
@@ -53,7 +61,6 @@ const DefaultStory = ({ text }: StoryProps) => {
         ref={viewRef}
         text={text}
         extensions={[outliner(), hashtag()]}
-        placeholder=''
         debug='raw+tree'
         debugCustom={(view) => {
           const tree = view.state.facet(treeFacet);
@@ -62,7 +69,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           return <pre className='p-1 overflow-auto text-xs text-green-800 dark:text-green-200'>{lines.join('\n')}</pre>;
         }}
       />
-    </CommandMenuProvider>
+    </PopoverMenuProvider>
   );
 };
 

@@ -10,8 +10,8 @@ import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId }
 import { type Hypergraph } from '../hypergraph';
 
 import { QueueImpl } from './queue';
-import type { QueueService } from './queue-service';
-import type { Queue } from './types';
+import { type QueueService } from './queue-service';
+import { type Queue } from './types';
 
 export interface QueueAPI {
   get<T extends Obj.Any | Relation.Any = Obj.Any | Relation.Any>(dxn: DXN): Queue<T>;

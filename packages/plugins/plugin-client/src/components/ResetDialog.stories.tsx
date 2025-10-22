@@ -31,7 +31,9 @@ const meta = {
   render: Render,
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }),
+    withPluginManager({
+      plugins: [IntentPlugin(), ClientPlugin({})],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',

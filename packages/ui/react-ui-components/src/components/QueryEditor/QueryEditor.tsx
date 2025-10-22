@@ -2,59 +2,86 @@
 // Copyright 2025 DXOS.org
 //
 
-import { completionStatus } from '@codemirror/autocomplete';
 import { Prec } from '@codemirror/state';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, updateRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
   type EditorProps,
   type Extension,
+  PopoverMenuProvider,
+  type UsePopoverMenuProps,
   createBasicExtensions,
+  createMenuGroup,
   createThemeExtensions,
   keymap,
+  usePopoverMenu,
 } from '@dxos/react-ui-editor';
 
 import { translationKey } from '../../translations';
 
-import { type QueryOptions, query } from './query-extension';
+import { type CompletionOptions, completions } from './autocomplete';
+import { query } from './query-extension';
 
 export type QueryEditorProps = ThemedClassName<
   {
+    value?: string;
     readonly?: boolean;
-  } & QueryOptions &
-    EditorProps
+  } & (CompletionOptions & Omit<EditorProps, 'initialValue'>)
 >;
 
 /**
  * Query editor with decorations and autocomplete.
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
-  ({ space, tags, value, readonly, ...props }, forwardedRef) => {
+  ({ db, tags, value, readonly, ...props }, forwardedRef) => {
+    const [controller, setController] = useState<EditorController | null>(null);
+    useEffect(() => {
+      updateRef(forwardedRef, controller);
+    }, [controller]);
+
+    const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
+    const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+      async (context) => [createMenuGroup({ items: getOptions(context) })],
+      [getOptions],
+    );
+
+    const { groupsRef, extension, ...menuProps } = usePopoverMenu({
+      // TODO(burdon): Handle trigger AND triggerKey.
+      // trigger: ['#'],
+      triggerKey: 'Ctrl-Space',
+      getMenu,
+    });
+
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({ readOnly: readonly, lineWrapping: false, placeholder: t('query placeholder') }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'scrollbar-none' } } }),
+        query({ tags }),
+        extension,
         Prec.highest(
           keymap.of([
             {
               key: 'Enter',
-              run: (view) => {
-                // Prevent newline, but honor Enter if autocomplete is open.
-                return !completionStatus(view.state);
+              run: () => {
+                // Prevent newline.
+                return true;
               },
             },
           ]),
         ),
-        query({ space, tags }),
       ],
-      [space, readonly],
+      [db, extension, readonly],
     );
 
-    return <Editor {...props} moveToEnd value={value} extensions={extensions} ref={forwardedRef} />;
+    return (
+      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps} numItems={4}>
+        <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
+      </PopoverMenuProvider>
+    );
   },
 );

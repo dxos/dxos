@@ -91,7 +91,9 @@ export const make = <S extends Type.Obj.Any>(
     delete props[EchoSchema.MetaId];
   }
 
-  return live<Schema.Schema.Type<S>>(schema, props as any, { keys: [], ...meta });
+  const filterUndefined = Object.fromEntries(Object.entries(props).filter(([_, v]) => v !== undefined));
+
+  return live<Schema.Schema.Type<S>>(schema, filterUndefined as any, { keys: [], ...meta });
 };
 
 export const isObject = (obj: unknown): obj is Any => {
@@ -208,6 +210,20 @@ export const setLabel = (obj: Any | Relation.Any, label: string) => {
   const schema = getSchema(obj);
   if (schema != null) {
     EchoSchema.setLabel(schema, obj, label);
+  }
+};
+
+export const getDescription = (obj: Any | Relation.Any): string | undefined => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    return EchoSchema.getDescription(schema, obj);
+  }
+};
+
+export const setDescription = (obj: Any | Relation.Any, description: string) => {
+  const schema = getSchema(obj);
+  if (schema != null) {
+    EchoSchema.setDescription(schema, obj, description);
   }
 };
 

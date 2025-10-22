@@ -15,8 +15,8 @@ export type BlueprintContainerProps = {
 
 export const BlueprintContainer = ({ blueprint }: BlueprintContainerProps) => {
   return (
-    <StackItem.Content classNames='container-max-width'>
-      <TemplateEditor id={blueprint.id} template={blueprint.instructions} />
+    <StackItem.Content>
+      <TemplateEditor id={blueprint.id} template={blueprint.instructions} classNames='container-max-width' />
     </StackItem.Content>
   );
 };

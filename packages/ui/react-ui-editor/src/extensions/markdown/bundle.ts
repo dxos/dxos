@@ -66,6 +66,8 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
 
         // https://codemirror.net/docs/ref/#commands.defaultKeymap
         ...defaultKeymap,
+
+        // TODO(burdon): Remove?
         ...completionKeymap,
       ].filter(isTruthy),
     ),

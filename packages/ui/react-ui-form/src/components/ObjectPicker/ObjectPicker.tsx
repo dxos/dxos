@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Icon, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { PopoverCombobox } from '@dxos/react-ui-searchlist';
+import { Combobox } from '@dxos/react-ui-searchlist';
 
 import { type QueryTag } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -99,7 +99,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
     );
 
     return (
-      <PopoverCombobox.Content
+      <Combobox.Content
         {...props}
         ref={ref}
         filter={(value, search) => (value === '__create__' || labelById[value]?.includes(search.toLowerCase()) ? 1 : 0)}
@@ -118,15 +118,15 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
           </Popover.Viewport>
         ) : (
           <>
-            <PopoverCombobox.Input
+            <Combobox.Input
               placeholder={t('ref field combobox input placeholder')}
               value={searchString}
               onValueChange={setSearchString}
               autoFocus
             />
-            <PopoverCombobox.List>
+            <Combobox.List>
               {options.map((option) => (
-                <PopoverCombobox.Item
+                <Combobox.Item
                   key={option.id}
                   value={option.id}
                   onSelect={() => onSelect(option.id)}
@@ -134,19 +134,19 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
                 >
                   <span className='grow'>{option.label}</span>
                   {selectedIds?.includes(option.id) && <Icon icon='ph--check--regular' />}
-                </PopoverCombobox.Item>
+                </Combobox.Item>
               ))}
               {searchString.length > 0 && createOptionLabel && createOptionIcon && createSchema && onCreate && (
-                <PopoverCombobox.Item value='__create__' classNames='flex items-center gap-2'>
+                <Combobox.Item value='__create__' classNames='flex items-center gap-2'>
                   <Icon icon={createOptionIcon} />
                   {t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: searchString })}
-                </PopoverCombobox.Item>
+                </Combobox.Item>
               )}
-            </PopoverCombobox.List>
+            </Combobox.List>
           </>
         )}
-        <PopoverCombobox.Arrow />
-      </PopoverCombobox.Content>
+        <Combobox.Arrow />
+      </Combobox.Content>
     );
   },
 );
@@ -154,8 +154,8 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
 ObjectPickerContent.displayName = 'ObjectPickerContent';
 
 export const ObjectPicker = {
-  Root: PopoverCombobox.Root,
-  Trigger: PopoverCombobox.Trigger,
-  VirtualTrigger: PopoverCombobox.VirtualTrigger,
+  Root: Combobox.Root,
+  Trigger: Combobox.Trigger,
+  VirtualTrigger: Combobox.VirtualTrigger,
   Content: ObjectPickerContent,
 };

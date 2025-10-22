@@ -15,7 +15,7 @@ export const Toolbar = ({ chat, companionTo, onReset, classNames }: ThemedClassN
 
   return (
     <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>
-      <ToolbarMenu classNames={classNames} />
+      <ToolbarMenu classNames={classNames} textBlockWidth />
     </MenuProvider>
   );
 };

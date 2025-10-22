@@ -310,6 +310,9 @@
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-masonry/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
@@ -433,6 +436,9 @@
       "path": "packages/sdk/shell/tsconfig.json"
     },
     {
+      "path": "packages/stories/stories-assistant/tsconfig.json"
+    },
+    {
       "path": "packages/ui/brand/tsconfig.json"
     },
     {
@@ -503,6 +509,9 @@
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-masonry/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-menu/tsconfig.json"

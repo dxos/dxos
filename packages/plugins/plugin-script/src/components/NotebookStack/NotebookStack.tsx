@@ -2,28 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { createDocAccessor } from '@dxos/react-client/echo';
-import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
-import { createDataExtensions } from '@dxos/react-ui-editor';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
-import { type ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
-import { TypescriptEditor } from '../TypescriptEditor';
 import { type TypescriptEditorProps } from '../TypescriptEditor';
 
-export type NotebookStackProps = {
-  notebook?: Notebook.Notebook;
-} & Pick<NotebookSectionProps, 'graph' | 'onCellInsert' | 'onCellDelete'> &
-  Pick<TypescriptEditorProps, 'env'>;
+import { NotebookCell, type NotebookCellProps } from './NotebookCell';
+import { NotebookMenu } from './NotebookMenu';
+
+const minSectionHeight = 'min-bs-[16rem]';
+
+export type NotebookStackProps = ThemedClassName<
+  {
+    notebook?: Notebook.Notebook;
+    onRearrange?: StackProps['onRearrange'];
+  } & (Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete'> &
+    Pick<TypescriptEditorProps, 'env'>)
+>;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
+export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: NotebookStackProps) => {
   return (
-    <Stack orientation='vertical' size='contain' rail>
+    <Stack classNames={classNames} orientation='vertical' size='contain' rail onRearrange={onRearrange}>
       {notebook?.cells.map((cell, i) => (
         <NotebookSection key={i} cell={cell} {...props} />
       ))}
@@ -31,82 +35,44 @@ export const NotebookStack = ({ notebook, ...props }: NotebookStackProps) => {
   );
 };
 
-// TODO(burdon): Support calling named deployed functions (as with sheet).
-// TODO(burdon): Different section types (value, query, expression, prompt).
-// TODO(burdon): Display errors.
-// TODO(burdon): Allow moving cursor between sections (CMD Up/Down).
+type NotebookSectionProps = NotebookCellProps;
 
-type NotebookSectionProps = {
-  cell: Notebook.Cell;
-  graph?: ComputeGraph;
-  onCellInsert?: (after: string | undefined) => void;
-  onCellDelete?: (id: string) => void;
-} & Pick<TypescriptEditorProps, 'env'>;
-
-const NotebookSection = ({ cell, graph, env, onCellInsert, onCellDelete }: NotebookSectionProps) => {
+const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...props }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const extensions = useMemo(() => {
-    return cell.script.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })]
-      : [];
-  }, [cell.script.target]);
+  const resizable = cell.type === 'query' || cell.type === 'prompt';
 
-  const name = graph?.expressions.value[cell.id]?.name;
-  const value = graph?.values.value[cell.id];
-
+  // TOOD(burdon): Set size if no extrinsic size (provider).
   return (
-    <StackItem.Root role='section' item={cell}>
-      <StackItem.Heading classNames='attention-surface'>
-        <StackItem.HeadingStickyContent>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <StackItem.SigilButton>
-                <Icon icon='ph--list--regular' size={5} />
-              </StackItem.SigilButton>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content>
-                <DropdownMenu.Viewport>
-                  <DropdownMenu.Item onClick={() => onCellInsert?.(cell.id)}>
-                    {t('notebook cell insert label')}
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-                    {t('notebook cell delete label')}
-                  </DropdownMenu.Item>
-                </DropdownMenu.Viewport>
-                <DropdownMenu.Arrow />
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu.Root>
-        </StackItem.HeadingStickyContent>
+    <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
+      <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
+        <StackItem.DragHandle asChild>
+          <IconButton variant='ghost' icon='ph--dots-six-vertical--regular' iconOnly label='Drag handle' />
+        </StackItem.DragHandle>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <IconButton
+              variant='ghost'
+              icon='ph--dots-three--regular'
+              iconOnly
+              label={t('notebook cell insert label')}
+            />
+          </DropdownMenu.Trigger>
+          <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
+        </DropdownMenu.Root>
+        {resizable && <StackItem.ResizeHandle />}
       </StackItem.Heading>
 
-      <StackItem.Content>
-        <TypescriptEditor
-          id={cell.id}
-          role='section'
-          initialValue={cell.script.target?.content}
-          extensions={extensions}
-          env={env}
-          options={{
-            placeholder: t('notebook cell placeholder'),
-            highlightActiveLine: false,
-            lineNumbers: false,
-          }}
-          classNames='p-2 pbs-3'
-        />
-
-        {value != null && (
-          <div className='flex p-2 bg-groupSurface border-t border-subduedSeparator text-description font-mono'>
-            {name && (
-              <>
-                <span className='text-successText'>{name}</span>
-                <span className='text-description'>&nbsp;=&nbsp;</span>
-              </>
-            )}
-            <span>{value}</span>
-          </div>
+      {/* TODO(burdon): Move drag preview to outer stack (uniformly). */}
+      <StackItem.DragPreview>
+        {({ item: cell }) => (
+          <StackItem.Content classNames='overflow-visible bg-groupSurface border border-subduedSeparator'>
+            <NotebookCell space={space} cell={cell} env={env} dragging />
+          </StackItem.Content>
         )}
+      </StackItem.DragPreview>
+
+      <StackItem.Content classNames='overflow-visible'>
+        <NotebookCell space={space} cell={cell} env={env} {...props} />
       </StackItem.Content>
     </StackItem.Root>
   );

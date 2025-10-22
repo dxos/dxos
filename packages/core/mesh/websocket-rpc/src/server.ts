@@ -28,7 +28,7 @@ export class WebsocketRpcServer<C, S> {
 
   constructor(private readonly _params: WebsocketRpcServerParams<C, S>) {}
   handleUpgrade(request: IncomingMessage, socket: Socket, head: Buffer): void {
-    this._server?.handleUpgrade(request, socket, head, (ws) => {
+    this._server?.handleUpgrade(request, socket, head, (ws: WebSocket) => {
       this._server?.emit('connection', ws, request);
     });
   }
@@ -37,7 +37,7 @@ export class WebsocketRpcServer<C, S> {
     this._server = new WebSocket.Server({
       ...this._params,
     });
-    this._server.on('connection', async (socket, request) => {
+    this._server.on('connection', async (socket: WebSocket, request: IncomingMessage) => {
       log('connection', { url: request.url, headers: request.headers });
       const info: ConnectionInfo = {
         request,
