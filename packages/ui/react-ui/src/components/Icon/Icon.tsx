@@ -16,7 +16,7 @@ export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.s
 };
 
 export const Icon = memo(
-  forwardRef<SVGSVGElement, IconProps>(({ icon, classNames, size, ...props }, forwardedRef) => {
+  forwardRef<SVGSVGElement, IconProps>(({ icon, classNames, size = 4, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const href = useIconHref(icon);
     return (

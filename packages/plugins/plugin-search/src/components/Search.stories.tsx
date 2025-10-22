@@ -6,7 +6,7 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../hooks';
 
@@ -56,10 +56,7 @@ const meta = {
   title: 'plugins/plugin-search/Search',
   component: Searchbar,
   render: DefaultStory,
-  decorators: [withTheme, withSearchContext()],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' }), withSearchContext()],
 } satisfies Meta<typeof Searchbar>;
 
 export default meta;

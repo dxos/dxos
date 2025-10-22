@@ -246,8 +246,6 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
             const content = view.state.sliceDoc(range.from + (trigger ? trigger.length : 0), range.to);
             options.onTextChange?.({ view, pos: selection.head, text: content, trigger });
           }
-        } else {
-          console.log('remove');
         }
 
         this._decorations = builder.finish();

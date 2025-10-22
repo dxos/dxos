@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -45,10 +45,7 @@ const DefaultStory = ({ text }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-mermaid/extensions',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

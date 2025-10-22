@@ -7,7 +7,7 @@ import React, { type JSX, type PropsWithChildren, useEffect, useState } from 're
 
 import { faker } from '@dxos/random';
 import { Icon, IconButton } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ItemMap, Tree, type TreeNodeData, type TreeProps, visitNodes, visitor } from './Tree';
@@ -203,10 +203,7 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
 const meta = {
   title: 'plugins/plugin-navtree/experimental/Tree',
   component: Tree,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof Tree>;
 
 export default meta;

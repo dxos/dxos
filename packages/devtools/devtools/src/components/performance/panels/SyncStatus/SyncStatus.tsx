@@ -24,7 +24,7 @@ export const SyncStatus = ({ classNames, state }: SyncStatusProps) => {
   };
 
   return (
-    <div className={mx('flex flex-col w-full gap-2 text-xs', classNames)}>
+    <div className={mx('flex flex-col is-full gap-2 text-xs', classNames)}>
       <div className='flex items-center gap-2'>
         <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
       </div>

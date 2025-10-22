@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { HuePicker, type HuePickerProps } from './HuePicker';
 
@@ -30,10 +30,7 @@ const meta = {
   title: 'ui/react-ui-pickers/HuePicker',
   component: HuePicker,
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof HuePicker>;
 
 export default meta;

@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
 
 type Word = {
@@ -118,10 +118,7 @@ const DefaultStory = ({ keywords }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-transcription/KeyWordDetection',
   render: DefaultStory,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

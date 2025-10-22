@@ -92,6 +92,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             id: Type.getTypename(DataType.Collection),
             metadata: {
               icon: 'ph--cards-three--regular',
+              iconClassName: 'text-neutralSurfaceText',
               // TODO(wittjosiah): Move out of metadata.
               loadReferences: async (collection: DataType.Collection) => await Ref.Array.loadAll(collection.objects),
             },
@@ -114,7 +115,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
             id: Type.getTypename(DataType.StoredSchema),
             metadata: {
               icon: 'ph--database--regular',
-              iconClassName: 'text-orangeSurfaceText',
+              iconClassName: 'text-yellowSurfaceText',
             },
           }),
           contributes(Capabilities.Metadata, {

@@ -26,7 +26,7 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { Testing, seedTestData } from '@dxos/schema/testing';
@@ -196,6 +196,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [
         ClientPlugin({
@@ -233,9 +234,6 @@ const meta = {
       fireEvents: [Events.SetupAppGraph],
     }),
   ],
-  parameters: {
-    layout: 'column',
-  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

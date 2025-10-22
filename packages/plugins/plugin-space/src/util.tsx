@@ -367,7 +367,7 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
     properties: {
       label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
-      iconClassName: 'text-orangeSurfaceText',
+      iconClassName: 'text-yellowSurfaceText',
       role: 'branch',
       selectable: false,
       canDrop: () => false,

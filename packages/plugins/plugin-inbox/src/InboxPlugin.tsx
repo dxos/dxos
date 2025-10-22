@@ -51,12 +51,14 @@ export const InboxPlugin = definePlugin(meta, () => [
         id: DataType.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
+          iconClassName: 'text-skySurfaceText',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Calendar.Calendar.typename,
         metadata: {
           icon: 'ph--calendar--regular',
+          iconClassName: 'text-skySurfaceText',
         },
       }),
       contributes(Capabilities.Metadata, {
