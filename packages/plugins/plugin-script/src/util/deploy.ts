@@ -4,7 +4,7 @@
 
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, type Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
