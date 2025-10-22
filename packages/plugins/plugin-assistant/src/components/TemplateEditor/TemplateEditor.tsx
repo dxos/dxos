@@ -60,5 +60,3 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
 
   return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
 };
-
-// withLayout: column
