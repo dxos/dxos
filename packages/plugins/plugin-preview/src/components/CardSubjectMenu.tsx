@@ -14,6 +14,7 @@ import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui
 import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '../meta';
+import { type PreviewProps } from '../types';
 
 /**
  * This is a generic menu for objects that tries to infer common actions.
@@ -22,7 +23,7 @@ export const CardSubjectMenu = ({
   subject,
   activeSpace,
   ...props
-}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
+}: PreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
   const { t } = useTranslation(meta.id);
   const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
 
