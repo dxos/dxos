@@ -21,7 +21,7 @@ export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: 
   return (
     <Card.SurfaceRoot role={role}>
       <Avatar.Root>
-        <Card.Text role='group' classNames='grid gap-3 grid-cols-[1fr_min-content]'>
+        <Card.Text role='group' classNames={mx('grid gap-2 grid-cols-[1fr_min-content]')}>
           <div role='none' className={mx(gridRow, 'grid-rows-2')}>
             {activeSpace ? <CardSubjectMenu subject={subject} activeSpace={activeSpace} /> : <div />}
             <Avatar.Label asChild>
