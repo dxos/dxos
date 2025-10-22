@@ -149,7 +149,6 @@ const popoverKeymap = (options: PopoverOptions) => {
 
             // Create anchor even if zero length (append space).
             const from = line.from + idx;
-            console.log('effect', from + 1, selection.head);
             view.dispatch({
               effects: popoverRangeEffect.of({ range: { from: from + 1, to: selection.head } }),
               changes:
@@ -223,7 +222,6 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
           // Check if we should show the widget (only if cursor is within the active command range).
           const selection = view.state.selection.main;
           const showWidget = selection.head >= range.from && selection.head <= range.to;
-          console.log('update', showWidget, range.from, range.to + 1);
           if (showWidget) {
             builder.add(
               range.from,
@@ -247,7 +245,7 @@ const popoverAnchorDecoration = (options: PopoverOptions) => {
             options.onTextChange?.({ view, pos: selection.head, text: content, trigger });
           }
         } else {
-          console.log('remove');
+          // Remove anchor.
         }
 
         this._decorations = builder.finish();

@@ -5,8 +5,8 @@
 import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Capabilities, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -63,8 +63,6 @@ type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
 
-const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
-
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
@@ -73,7 +71,16 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       filter: (data): data is { subject: Space } =>
         // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
         isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
-      component: ({ data }) => <>SPACE ({data.subject.id})</>,
+      component: ({ data, role, ...rest }) => (
+        <Surface
+          data={{
+            id: data.subject.id,
+            subject: data.subject.properties[DataType.Collection.typename]?.target,
+          }}
+          role={role}
+          {...rest}
+        />
+      ),
     }),
     createSurface({
       id: `${meta.id}/record-article`,

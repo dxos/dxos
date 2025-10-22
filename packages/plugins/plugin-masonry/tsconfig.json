@@ -30,6 +30,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-query"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -40,6 +43,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-components"
     },
     {
       "path": "../../ui/react-ui-form"

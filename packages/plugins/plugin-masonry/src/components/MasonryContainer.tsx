@@ -2,33 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
 import { Filter, Type } from '@dxos/echo';
-import { EchoSchema, type TypedObject } from '@dxos/echo/internal';
+import { type TypedObject } from '@dxos/echo/internal';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useClient } from '@dxos/react-client';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { type DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
+import { type DataType, getTypenameFromQuery } from '@dxos/schema';
 
 const Item = ({ data }: { data: any }) => {
   return <Surface role='card' limit={1} data={{ subject: data }} />;
 };
 
-export const MasonryContainer = ({ view, role }: { view: DataType.View; role: string }) => {
+export const MasonryContainer = ({ view, role }: { view: DataType.View; role?: string }) => {
   const client = useClient();
   const space = getSpace(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
-  const [projection, setProjection] = useState<ProjectionModel>();
 
-  const jsonSchema = useMemo(() => {
-    if (!cardSchema) return undefined;
-    return cardSchema instanceof EchoSchema ? cardSchema.jsonSchema : Type.toJsonSchema(cardSchema);
-  }, [cardSchema]);
+  console.log('typename', typename, cardSchema);
 
   useEffect(() => {
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
@@ -50,12 +45,6 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role: st
     }
   }, [typename, space]);
 
-  useEffect(() => {
-    if (jsonSchema) {
-      setProjection(new ProjectionModel(jsonSchema, view.projection));
-    }
-  }, [view.projection, JSON.stringify(jsonSchema)]);
-
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
@@ -64,6 +53,7 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role: st
       items={filteredObjects}
       render={Item as any}
       classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
+      intrinsicHeight={role === 'section'}
     />
   );
 };
