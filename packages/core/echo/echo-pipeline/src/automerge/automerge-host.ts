@@ -505,6 +505,10 @@ export class AutomergeHost extends Resource {
       },
     );
     await this._repo.flush(loadedDocuments);
+
+    // Ensure that document verions have propagated accross the system.
+    // This is important for the case where we are doing flush and then waiting for sync to happen.
+    await this._onHeadsChangedTask?.runBlocking();
   }
 
   async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {

@@ -370,6 +370,10 @@ function importMapPlugin(options: { modules: string[] }): Plugin[] {
     {
       name: 'import-map:get-chunk-ref-ids',
       async buildStart() {
+        if (this.environment.mode === 'dev') {
+          return;
+        }
+
         for (const m of options.modules) {
           const resolved = await this.resolve(m);
           if (resolved) {

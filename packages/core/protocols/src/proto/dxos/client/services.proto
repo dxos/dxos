@@ -613,6 +613,9 @@ message EdgeStatus {
   int32 rate_bytes_up = 4;
   /** Download rate in bytes per second */
   int32 rate_bytes_down = 5;
+
+  int32 messages_sent = 6;
+  int32 messages_received = 7;
 }
 
 message QueryEdgeStatusResponse {

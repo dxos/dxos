@@ -43,6 +43,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         id: Mailbox.Mailbox.typename,
         metadata: {
           icon: 'ph--tray--regular',
+          iconClassName: 'text-roseSurfaceText',
           blueprints: [BLUEPRINT_KEY],
         },
       }),

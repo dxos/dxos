@@ -7,8 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { FunctionType, ScriptType } from '@dxos/functions';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -63,6 +64,11 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     [functionToScriptMap, dispatch],
   );
 
+  const handleDelete = useCallback(
+    (func: FunctionType) => dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [func] })),
+    [dispatch],
+  );
+
   return (
     <div role='none' className={mx(controlItemClasses)}>
       {functions.length > 0 && (
@@ -84,6 +90,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                   {functionToScriptMap[func.id] && (
                     <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
                   )}
+                  <IconButton
+                    iconOnly
+                    icon='ph--trash--regular'
+                    label={t('delete function button label')}
+                    onClick={() => handleDelete(func)}
+                  />
                 </List.Item>
               ))}
             </div>

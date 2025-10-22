@@ -16,6 +16,7 @@ export type LeaveProtocolMessage = {
   type: 'leave';
   targetId?: PeerId;
   senderId: PeerId;
+  metadata?: Record<string, unknown>;
 };
 
 export type PeerProtocolMessage = {
@@ -39,6 +40,7 @@ export type RequestProtocolMessage = {
   targetId: PeerId;
   documentId: string;
   data: Uint8Array;
+  metadata?: Record<string, unknown>;
 };
 
 /**
@@ -50,6 +52,7 @@ export type SyncProtocolMessage = {
   targetId: PeerId;
   documentId: string;
   data: Uint8Array;
+  metadata?: Record<string, unknown>;
 };
 
 /**
@@ -61,6 +64,7 @@ export type UnavailableProtocolMessage = {
   senderId: PeerId;
   targetId: PeerId;
   documentId: string;
+  metadata?: Record<string, unknown>;
 };
 
 /**
@@ -82,6 +86,7 @@ export type EphemeralProtocolMessage = {
   sessionId: string;
   documentId: string;
   data: Uint8Array;
+  metadata?: Record<string, unknown>;
 };
 
 export type ErrorProtocolMessage = {
@@ -89,6 +94,7 @@ export type ErrorProtocolMessage = {
   senderId?: PeerId;
   targetId?: PeerId;
   message: string;
+  metadata?: Record<string, unknown>;
 };
 
 export const MESSAGE_TYPE_COLLECTION_QUERY = 'collection-query';
@@ -104,6 +110,7 @@ export type CollectionQueryMessage = {
    * Remote peer will skip sending the state if it has the same tag.
    */
   stateTag?: string;
+  metadata?: Record<string, unknown>;
 };
 
 export const MESSAGE_TYPE_COLLECTION_STATE = 'collection-state';
@@ -123,6 +130,7 @@ export type CollectionStateMessage = {
    * Identifier of the current state.
    */
   stateTag?: string;
+  metadata?: Record<string, unknown>;
 };
 
 export type AutomergeProtocolMessage =

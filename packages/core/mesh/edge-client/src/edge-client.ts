@@ -100,6 +100,8 @@ export class EdgeClient extends Resource implements EdgeConnection {
       rtt: this._currentConnection?.rtt ?? 0,
       rateBytesUp: this._currentConnection?.uploadRate ?? 0,
       rateBytesDown: this._currentConnection?.downloadRate ?? 0,
+      messagesSent: this._currentConnection?.messagesSent ?? 0,
+      messagesReceived: this._currentConnection?.messagesReceived ?? 0,
     };
   }
 

@@ -55,12 +55,14 @@ export const AssistantPlugin = definePlugin(meta, () => [
         id: Type.getTypename(Assistant.Chat),
         metadata: {
           icon: 'ph--atom--regular',
+          iconClassName: 'text-skySurfaceText',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
+          iconClassName: 'text-blueSurfaceText',
         },
       }),
       contributes(Capabilities.Metadata, {
