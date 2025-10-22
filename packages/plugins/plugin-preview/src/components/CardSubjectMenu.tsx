@@ -23,7 +23,7 @@ import { meta } from '../meta';
 import { type PreviewProps } from '../types';
 
 /**
- * Generic menu for objects that tries to infer common actions.
+ * Generic menu for objects; builds menu with common actions.
  */
 // TODO(burdon): Reconcile title and menu with main Card header.
 export const CardSubjectMenu = ({
