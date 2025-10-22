@@ -146,8 +146,10 @@ const getQueryCollectionNodePartials = ({
   resolve: (typename: string) => Record<string, any>;
 }) => {
   const typename = getTypenameFromQuery(collection.query);
+  const metadata = typename ? resolve(typename) : {};
   return {
-    icon: typename && resolve(typename)?.icon,
+    icon: metadata.icon,
+    iconClassName: metadata.iconClassName,
     acceptPersistenceClass: new Set(['echo']),
     acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
@@ -186,6 +188,7 @@ const getViewGraphNodePartials = ({
   return {
     label: view.name || ['object name placeholder', { ns: typename, default: 'New view' }],
     icon: metadata.icon,
+    iconClassName: metadata.iconClassName,
     canDrop: () => false,
   };
 };
@@ -234,6 +237,7 @@ export const constructSpaceNode = ({
         space.state.get() === SpaceState.SPACE_READY && space.properties.icon
           ? `ph--${space.properties.icon}--regular`
           : undefined,
+      iconClassName: space.state.get() === SpaceState.SPACE_READY && space.properties.iconClassName,
       disabled: !navigable || space.state.get() !== SpaceState.SPACE_READY || hasPendingMigration,
       testId: 'spacePlugin.space',
       canDrop: (source: TreeData) => {
@@ -363,6 +367,7 @@ export const createStaticSchemaNode = ({ schema, space }: { schema: Type.Obj.Any
     properties: {
       label: ['typename label', { ns: Type.getTypename(schema), default: Type.getTypename(schema) }],
       icon: 'ph--database--regular',
+      iconClassName: 'text-orangeSurfaceText',
       role: 'branch',
       selectable: false,
       canDrop: () => false,
@@ -494,6 +499,7 @@ export const createObjectNode = ({
     properties: {
       label,
       icon: metadata.icon ?? 'ph--placeholder--regular',
+      iconClassName: metadata.iconClassName,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',

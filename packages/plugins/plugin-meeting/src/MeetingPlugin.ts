@@ -55,6 +55,7 @@ export const MeetingPlugin = definePlugin(meta, () => [
         metadata: {
           label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
           icon: 'ph--note--regular',
+          iconClassName: 'text-yellowSurfaceText',
         },
       }),
     ],
