@@ -148,9 +148,9 @@ const extractDominantColor = (
 
   if (totalWeight > 0) {
     // Slightly darken the color for better contrast.
-    r = Math.round((contrast * r) / totalWeight);
-    g = Math.round((contrast * g) / totalWeight);
-    b = Math.round((contrast * b) / totalWeight);
+    r = Math.round(Math.round(r / totalWeight) * contrast);
+    g = Math.round(Math.round(g / totalWeight) * contrast);
+    b = Math.round(Math.round(b / totalWeight) * contrast);
     return [r, g, b];
   }
 
