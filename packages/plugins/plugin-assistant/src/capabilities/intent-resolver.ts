@@ -12,6 +12,8 @@ import { fullyQualifiedId } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
+import { getSpace } from '@dxos/react-client/echo';
+import { type DataType } from '@dxos/schema';
 
 import { Assistant, AssistantAction } from '../types';
 
@@ -64,10 +66,17 @@ export default (context: PluginContext) => [
     createResolver({
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
-        const runtime = null;
-        const conversation = new AiConversation({ queue: null });
+        // TODO(burdon): Reuse system conversation/queue.
+        const space = getSpace(chat);
+        const queue = space?.queues.create<DataType.Message>();
+        if (!queue) {
+          return;
+        }
+
+        const conversation = new AiConversation(queue);
         await conversation.open();
-        await updateName(conversation, chat);
+        // TODO(burdon): How to get runtime?
+        // await updateName(runtime, conversation, chat);
         await conversation.close();
         console.log(chat);
       },

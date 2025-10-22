@@ -12,9 +12,9 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { StackItem } from '../../../../ui/react-ui-stack/src';
 import { meta } from '../meta';
 
 const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
