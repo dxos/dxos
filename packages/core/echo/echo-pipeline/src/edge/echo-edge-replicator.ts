@@ -386,8 +386,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
     // There's a race between the credentials being replicated that are needed for access control and the data replication.
     // AutomergeReplicator might return a Forbidden error if the credentials are not yet replicated.
     // We restart the connection with some delay to account for that.
-    if (isForbiddenErrorMessage(message)) {
-      log.error('Connection error, restarting...', { message: message.message });
+    if (isErrorMessage(message)) {
       this._onRestartRequested();
       return;
     }
@@ -436,7 +435,7 @@ class EdgeReplicatorConnection extends Resource implements ReplicatorConnection 
 /**
  * This message is sent by EDGE AutomergeReplicator when the authorization is denied.
  */
-const isForbiddenErrorMessage = (message: AutomergeProtocolMessage) => message.type === 'error';
+const isErrorMessage = (message: AutomergeProtocolMessage) => message.type === 'error';
 
 const getMessageInfo = (msg: AutomergeProtocolMessage) => {
   const { have, heads, need, changes } = msg.type === 'sync' ? Automerge.decodeSyncMessage(msg.data) : {};
