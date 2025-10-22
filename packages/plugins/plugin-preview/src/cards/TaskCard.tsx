@@ -29,6 +29,7 @@ const getActiveStatusOption = (status?: string) => {
 export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
+
   return (
     <Card.SurfaceRoot role={role}>
       <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>

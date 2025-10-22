@@ -9,7 +9,7 @@ import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
-import { CardSubjectMenu, GridRow, gridRow } from '../components';
+import { CardRow, CardSubjectMenu, gridRow } from '../components';
 import { type PreviewProps } from '../types';
 
 // TODO(burdon): Rename PersonCard.
@@ -30,13 +30,11 @@ export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: 
         </Card.Text>
       </Avatar.Root>
       {organization?.name && (
-        <Card.Chrome>
-          <GridRow
-            icon='ph--buildings--regular'
-            label={organization.name}
-            onClick={onSelect ? () => onSelect(organization) : undefined}
-          />
-        </Card.Chrome>
+        <CardRow
+          icon='ph--buildings--regular'
+          label={organization.name}
+          onClick={onSelect ? () => onSelect(organization) : undefined}
+        />
       )}
       {emails?.length && (
         <dl className={mx(cardText, gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>

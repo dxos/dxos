@@ -9,15 +9,21 @@ import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-frame
 import { ACTION_TYPE } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  DropdownMenu,
+  type MenuActions,
+  MenuProvider,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '../meta';
 import { type PreviewProps } from '../types';
 
 /**
- * This is a generic menu for objects that tries to infer common actions.
+ * Generic menu for objects that tries to infer common actions.
  */
 export const CardSubjectMenu = ({
   subject,
@@ -25,7 +31,7 @@ export const CardSubjectMenu = ({
   ...props
 }: PreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
   const { t } = useTranslation(meta.id);
-  const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
+  const menuProps = useSubjectMenuGroupItems({ subject, activeSpace });
 
   if (!activeSpace) {
     return null;
@@ -48,7 +54,7 @@ export const CardSubjectMenu = ({
   );
 };
 
-const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
+const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuActions => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
