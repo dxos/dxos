@@ -9,7 +9,7 @@ import { ObjectId } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
-import { FunctionTrigger } from './types';
+import { Trigger } from './types';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -61,7 +61,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Present for automatic invocations.
    */
-  trigger: Schema.optional(Type.Ref(FunctionTrigger)),
+  trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
 }).pipe(Type.Obj({ typename: 'dxos.org/type/InvocationTraceStart', version: '0.1.0' }));
 
 export type InvocationTraceStartEvent = Schema.Schema.Type<typeof InvocationTraceStartEvent>;
@@ -121,7 +121,7 @@ export type InvocationSpan = {
   input: object;
   invocationTraceQueue?: Ref.Ref<Queue>;
   invocationTarget?: Ref.Ref<Type.Expando>;
-  trigger?: Ref.Ref<FunctionTrigger>;
+  trigger?: Ref.Ref<Trigger.Trigger>;
   exception?: TraceEventException;
 };
 
