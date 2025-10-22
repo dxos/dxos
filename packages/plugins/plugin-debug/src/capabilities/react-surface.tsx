@@ -132,7 +132,7 @@ export default (context: PluginContext) =>
       },
     }),
     createSurface({
-      id: `${meta.id}/graph`,
+      id: `${meta.id}/app-graph`,
       role: 'article',
       filter: (data): data is { subject: GraphDebug } => isGraphDebug(data.subject),
       component: ({ data }) => <DebugGraph graph={data.subject.graph} root={data.subject.root} />,

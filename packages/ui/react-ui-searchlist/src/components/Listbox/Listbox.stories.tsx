@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -40,13 +40,9 @@ const meta = {
   title: 'ui/react-ui-searchlist/Listbox',
   component: Listbox.Root,
   render: DefaultStory,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ container: 'column', classNames: 'p-2' })],
   parameters: {
     translations,
-    layout: {
-      type: 'column',
-      className: 'p-2',
-    },
   },
 } satisfies Meta<typeof Listbox.Root>;
 

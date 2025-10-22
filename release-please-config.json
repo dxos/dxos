@@ -540,6 +540,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-masonry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-meeting/package.json",
           "jsonpath": "$.version"
         },
@@ -871,6 +876,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-masonry/package.json",
           "jsonpath": "$.version"
         },
         {

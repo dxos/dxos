@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withMultiClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Item } from '../data';
 
@@ -16,6 +16,9 @@ const meta = {
   component: Main,
   decorators: [
     withTheme,
+    withLayout({
+      classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+    }),
     withMultiClientProvider({
       numClients: 2,
       types: [Item],
@@ -23,12 +26,6 @@ const meta = {
       createSpace: true,
     }),
   ],
-  parameters: {
-    layout: {
-      type: 'fullscreen',
-      className: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
-    },
-  },
 } satisfies Meta<typeof Main>;
 
 export default meta;

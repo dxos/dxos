@@ -26,6 +26,7 @@ import { InboxPlugin } from '@dxos/plugin-inbox';
 import { KanbanPlugin } from '@dxos/plugin-kanban';
 import { MapPlugin } from '@dxos/plugin-map';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { MobileLayoutPlugin } from '@dxos/plugin-mobile-layout';
@@ -105,6 +106,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Default
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
+    MasonryPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -161,6 +163,7 @@ export const getPlugins = ({
     KanbanPlugin(),
     MapPlugin(),
     MarkdownPlugin(),
+    MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
     isMobile && MobileLayoutPlugin({}),

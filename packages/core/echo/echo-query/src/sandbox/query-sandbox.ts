@@ -7,7 +7,7 @@ import { Query, type QueryAST } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 
-import envCode from '#query-env?raw';
+import envCode from '#query-lite?raw';
 
 import { unwrapResult } from './quickjs';
 
@@ -34,7 +34,7 @@ export class QuerySandbox extends Resource {
     this.#runtime = quickJS.newRuntime({
       moduleLoader: (moduleName, _context) => {
         switch (moduleName) {
-          case 'dxos:query-env':
+          case 'dxos:query-lite':
             return envCode;
           default:
             throw new Error(`Module not found: ${moduleName}`);
@@ -54,7 +54,7 @@ export class QuerySandbox extends Resource {
   eval(queryCode: string): QueryAST.Query {
     using context = this.#runtime.newContext();
     const globals = trim`
-      import { Filter, Order, Query } from 'dxos:query-env';
+      import { Filter, Order, Query } from 'dxos:query-lite';
       globalThis.Filter = Filter;
       globalThis.Order = Order;
       globalThis.Query = Query;
