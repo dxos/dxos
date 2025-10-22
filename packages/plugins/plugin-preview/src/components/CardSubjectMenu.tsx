@@ -25,6 +25,7 @@ import { type PreviewProps } from '../types';
 /**
  * Generic menu for objects that tries to infer common actions.
  */
+// TODO(burdon): Reconcile title and menu with main Card header.
 export const CardSubjectMenu = ({
   subject,
   activeSpace,
