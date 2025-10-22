@@ -43,10 +43,11 @@ export const CardSubjectMenu = ({
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <IconButton
-            iconOnly
             variant='ghost'
             icon='ph--dots-three-vertical--bold'
+            iconOnly
             label={t('more options label')}
+            size={5}
             {...props}
           />
         </DropdownMenu.Trigger>
