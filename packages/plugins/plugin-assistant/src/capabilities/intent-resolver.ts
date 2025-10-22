@@ -6,11 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref } from '@dxos/echo';
 import { CollectionAction } from '@dxos/plugin-space/types';
+import { getSpace } from '@dxos/react-client/echo';
+import { type DataType } from '@dxos/schema';
 
 import { Assistant, AssistantAction } from '../types';
 
@@ -58,6 +61,24 @@ export default (context: PluginContext) => [
         return {
           data: { object: chat },
         };
+      },
+    }),
+    createResolver({
+      intent: AssistantAction.UpdateChatName,
+      resolve: async ({ chat }) => {
+        // TODO(burdon): Reuse system conversation/queue.
+        const space = getSpace(chat);
+        const queue = space?.queues.create<DataType.Message>();
+        if (!queue) {
+          return;
+        }
+
+        const conversation = new AiConversation(queue);
+        await conversation.open();
+        // TODO(burdon): How to get runtime?
+        // await updateName(runtime, conversation, chat);
+        await conversation.close();
+        console.log(chat);
       },
     }),
     createResolver({
