@@ -89,11 +89,11 @@ export type SubscriptionTrigger = Schema.Schema.Type<typeof SubscriptionTriggerS
  * Trigger schema (discriminated union).
  */
 export const TriggerSchema = Schema.Union(
-  TimerTriggerSchema,
-  WebhookTriggerSchema,
-  SubscriptionTriggerSchema,
   EmailTriggerSchema,
   QueueTriggerSchema,
+  SubscriptionTriggerSchema,
+  TimerTriggerSchema,
+  WebhookTriggerSchema,
 ).annotations({
   title: 'Trigger',
 });
@@ -101,10 +101,10 @@ export type TriggerType = Schema.Schema.Type<typeof TriggerSchema>;
 
 export type EventType =
   | EmailTriggerOutput
-  | WebhookTriggerOutput
   | QueueTriggerOutput
   | SubscriptionTriggerOutput
-  | TimerTriggerOutput;
+  | TimerTriggerOutput
+  | WebhookTriggerOutput;
 
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
 export const EmailTriggerOutput = Schema.mutable(

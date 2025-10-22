@@ -42,7 +42,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
     Effect.fn(
       function* ({ expect }) {
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         yield* DatabaseService.add(blueprint);
         yield* Effect.promise(() =>

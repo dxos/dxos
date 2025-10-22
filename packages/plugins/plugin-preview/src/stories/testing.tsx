@@ -9,13 +9,10 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { TaskCard } from '../components/TaskCard';
+import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
 import { type PreviewProps } from '../types';
 
-faker.seed(1234);
-
-type CardProps<T extends object> = {
+type CardProps<T extends Obj.Any> = {
   Component: FC<PreviewProps<T>>;
   subject: T;
   icon?: string;
@@ -29,14 +26,16 @@ export type DefaultstoryProps = {
 
 export const Defaultstory = ({ role, cards }: DefaultstoryProps) => {
   return (
-    <div className='grid grid-cols-4'>
-      {cards.map(({ Component, icon, image, subject }, i) => (
-        <div key={i} className='flex justify-center'>
-          <CardContainer icon={icon} role={role}>
-            <Component role={role} subject={image ? subject : omitImage(subject)} />
-          </CardContainer>
-        </div>
-      ))}
+    <div className='flex bs-full'>
+      <div className='flex shrink-0 gap-8 overflow-x-auto pbe-4'>
+        {cards.map(({ Component, icon, image, subject }, i) => (
+          <div key={i} className='flex is-[24rem] justify-center'>
+            <CardContainer icon={icon} role={role}>
+              <Component role={role} subject={image ? subject : omitImage(subject)} />
+            </CardContainer>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

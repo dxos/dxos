@@ -32,6 +32,37 @@ import { AssistantCapabilities } from './capabilities';
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphBuilder, [
     createExtension({
+      id: `${meta.id}/root`,
+      actions: (node) =>
+        Rx.make((get) =>
+          Function.pipe(
+            get(node),
+            Option.flatMap((node) => {
+              return Obj.instanceOf(Assistant.Chat, node.data) ? Option.some(node.data) : Option.none();
+            }),
+            Option.map((object) => {
+              const id = fullyQualifiedId(object);
+              return [
+                {
+                  id: `${AssistantAction.UpdateChatName._tag}/${id}`,
+                  data: async () => {
+                    const { dispatchPromise: dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+                    await dispatch(createIntent(AssistantAction.UpdateChatName, { chat: object }));
+                  },
+                  properties: {
+                    label: ['chat update name label', { ns: meta.id }],
+                    icon: 'ph--magic-wand--regular',
+                    disposition: 'list-item',
+                  },
+                },
+              ];
+            }),
+            Option.getOrElse(() => []),
+          ),
+        ),
+    }),
+
+    createExtension({
       id: `${meta.id}/assistant`,
       actions: (node) =>
         Rx.make((get) =>

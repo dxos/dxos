@@ -13,6 +13,7 @@ import { meta } from '../meta';
 
 import { Chat } from './Assistant';
 
+// TODO(burdon): Name?
 export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/on-space-created`, {
   input: Schema.Struct({
     space: SpaceSchema,
@@ -29,6 +30,13 @@ export class CreateChat extends Schema.TaggedClass<CreateChat>()(`${meta.id}/act
   output: Schema.Struct({
     object: Chat,
   }),
+}) {}
+
+export class UpdateChatName extends Schema.TaggedClass<UpdateChatName>()(`${meta.id}/action/update-name`, {
+  input: Schema.Struct({
+    chat: Chat,
+  }),
+  output: Schema.Void,
 }) {}
 
 export const BlueprintForm = Schema.Struct({

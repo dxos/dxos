@@ -5,23 +5,19 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
+import { CardHeader } from '../components';
 import { type PreviewProps } from '../types';
-
-import { CardSubjectMenu } from './CardSubjectMenu';
 
 export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Project>) => {
   const { name, image, description } = subject;
+
   return (
     <Card.SurfaceRoot role={role}>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
-      <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
-        <Card.Heading classNames={cardNoSpacing}>{name}</Card.Heading>
-        <CardSubjectMenu subject={subject} activeSpace={activeSpace} />
-      </div>
+      <CardHeader label={name} subject={subject} activeSpace={activeSpace} />
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
     </Card.SurfaceRoot>
   );

@@ -7,7 +7,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName, useForwardedRef } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import {
   type DOMRectBounds,
@@ -93,7 +93,7 @@ const ChessboardComponent = forwardRef<HTMLDivElement, ChessboardProps>(
           const bounds = grid[locationToString(piece.location)];
           return { piece, bounds };
         })
-        .filter(isTruthy);
+        .filter(isNonNullable);
     }, [grid, model?.pieces.value, promoting]);
 
     return (

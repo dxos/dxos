@@ -3,14 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { Image } from './Image';
 
-faker.seed(1);
+const seed = Math.random();
+
+faker.seed(seed);
 
 const meta = {
   title: 'ui/react-ui-stack/Image',
@@ -22,7 +24,7 @@ const meta = {
   ),
   decorators: [withTheme],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
 } satisfies Meta<typeof Image>;
 
@@ -52,5 +54,25 @@ export const SVG: Story = {
   args: {
     src: 'https://dxos.network/bg-kube.svg',
     classNames: 'w-[20rem]',
+  },
+};
+
+export const Many: Story = {
+  args: {
+    src: 'https://dxos.network/bg-kube.svg',
+  },
+  render: () => {
+    const images = useMemo(
+      () => Array.from({ length: 9 }, (_, i) => `https://picsum.photos/seed/${seed + i}/500/500`),
+      [],
+    );
+    console.log(images);
+    return (
+      <div className='is-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
+        {images.map((src, i) => (
+          <Image key={i} src={src} classNames='is-[18rem] bs-[12rem]' />
+        ))}
+      </div>
+    );
   },
 };

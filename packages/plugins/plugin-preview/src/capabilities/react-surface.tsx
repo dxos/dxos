@@ -23,8 +23,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { TaskCard } from '../components/TaskCard';
+import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
 
 export default () =>
@@ -40,8 +39,8 @@ export default () =>
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
         const activeSpace = useActiveSpace();
-        const handleOrgClick = useCallback(
-          (org: DataType.Organization) =>
+        const handleSelect = useCallback(
+          (org: Obj.Any) =>
             dispatch(
               createIntent(LayoutAction.Open, {
                 part: 'main',
@@ -55,7 +54,7 @@ export default () =>
         );
 
         return (
-          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onOrgClick={handleOrgClick}>
+          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
           </ContactCard>
         );

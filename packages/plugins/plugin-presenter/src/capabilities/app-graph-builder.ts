@@ -22,7 +22,7 @@ export default (context: PluginContext) =>
   contributes(
     Capabilities.AppGraphBuilder,
     createExtension({
-      id: meta.id,
+      id: `${meta.id}/root`,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       connector: (node) =>
         Rx.make((get) =>

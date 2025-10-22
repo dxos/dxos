@@ -9,7 +9,7 @@ import { createSystemPrompt } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
 import { translations } from '../../translations';
@@ -26,6 +26,8 @@ const TEMPLATE = trim`
   {{#each artifacts}}
   - {{this}}
   {{/each}}
+
+  Reponse in the format: <suggestion>SUGGESTION</suggestion>
 
   ---
 
@@ -60,6 +62,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
@@ -67,7 +70,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

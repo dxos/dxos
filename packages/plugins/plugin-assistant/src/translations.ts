@@ -81,6 +81,7 @@ export const translations = [
         'button run': 'Run',
         'button new thread': 'New Chat',
         'chat history label': 'Chat History',
+        'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
         'summary label': 'Summary',

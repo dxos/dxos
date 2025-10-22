@@ -4,8 +4,10 @@
 
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
+import { jsonLanguage } from '@codemirror/lang-json';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { syntaxHighlighting } from '@codemirror/language';
+import { xml } from '@codemirror/lang-xml';
+import { LanguageDescription, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
@@ -43,6 +45,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       base: markdownLanguage,
 
       // Languages for syntax highlighting fenced code blocks.
+      defaultCodeLanguage: jsonLanguage,
       codeLanguages: languages,
 
       // Don't complete HTML tags.
@@ -74,6 +77,13 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
   ];
 };
 
+const xmlLanguageDesc = LanguageDescription.of({
+  name: 'xml',
+  alias: ['html', 'xhtml'],
+  extensions: ['xml', 'xhtml'],
+  load: async () => xml(),
+});
+
 /**
  * Default customizations.
  * https://github.com/lezer-parser/markdown/blob/main/src/markdown.ts
@@ -91,5 +101,5 @@ const noSetExtHeading: MarkdownConfig = {
  * Remove HTML and XML parsing.
  */
 const noHtml: MarkdownConfig = {
-  remove: ['HTMLBlock', 'HTMLTag'],
+  // remove: ['HTMLBlock', 'HTMLTag'],
 };

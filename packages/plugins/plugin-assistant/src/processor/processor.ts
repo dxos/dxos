@@ -21,7 +21,6 @@ import {
 import {
   type AiConversation,
   type AiConversationRunParams,
-  AiSession,
   ArtifactDiffResolver,
   GenerationObserver,
   createSystemPrompt,
@@ -38,9 +37,10 @@ import {
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, DataType } from '@dxos/schema';
-import { trim } from '@dxos/util';
 
 import { type Assistant } from '../types';
+
+import { updateName } from './update-name';
 
 export type AiChatServices =
   | CredentialsService
@@ -222,32 +222,7 @@ export class AiChatProcessor {
    */
   async updateName(chat: Assistant.Chat): Promise<void> {
     const runtime = await this._services();
-    const system = trim`
-      It is extremely important that you respond only with the title and nothing else.
-      If you cannot do this effectively respond with "New Chat".
-    `;
-
-    const history = await this._conversation.getHistory();
-    const fiber = Effect.gen(this, function* () {
-      const session = new AiSession();
-      return yield* session.run({ system, prompt: 'Suggest a name for this chat', history });
-    }).pipe(
-      // TODO(burdon): Use simpler model.
-      Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-      Effect.tap((messages) => {
-        const message = messages.find((message) => message.sender.role === 'assistant');
-        const title = message?.blocks.find((b) => b._tag === 'text')?.text;
-        if (title) {
-          chat.name = title;
-        }
-      }),
-      Runtime.runFork(runtime), // Run in the background.
-    );
-
-    const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-    if (!Exit.isSuccess(response)) {
-      throwCause(response.cause);
-    }
+    await updateName(runtime, this._conversation, chat, this._options.model);
   }
 
   // TODO(burdon): Fix/factor out.
