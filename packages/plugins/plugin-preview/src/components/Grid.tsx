@@ -14,7 +14,7 @@ export const GridRow = ({ icon, label, onClick }: { icon: string; label: string;
     return (
       <p className={mx(gridRow, 'dx-button')} data-variant='ghost'>
         <Icon icon={icon} size={5} classNames='text-subdued' />
-        <span className='min-is-0 flex-1 truncate col-span-2'>{label}1</span>
+        <span className='min-is-0 flex-1 truncate col-span-2'>{label}</span>
       </p>
     );
   }
@@ -22,7 +22,7 @@ export const GridRow = ({ icon, label, onClick }: { icon: string; label: string;
   return (
     <Button variant='ghost' classNames={mx(gridRow, 'text-start')} onClick={onClick}>
       <Icon icon={icon} size={5} classNames='text-subdued' />
-      <span className='min-is-0 flex-1 truncate'>{label}2</span>
+      <span className='min-is-0 flex-1 truncate'>{label}</span>
       <Icon icon='ph--arrow-right--regular' />
     </Button>
   );

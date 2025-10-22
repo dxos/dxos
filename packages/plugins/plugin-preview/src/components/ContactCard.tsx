@@ -31,13 +31,15 @@ export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: 
           <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' variant='square' />
         </Card.Text>
       </Avatar.Root>
-
       {organization?.name && (
         <Card.Chrome>
-          <GridRow icon='ph--buildings--regular' label={organization.name} onClick={() => onSelect?.(organization)} />
+          <GridRow
+            icon='ph--buildings--regular'
+            label={organization.name}
+            onClick={onSelect ? () => onSelect(organization) : undefined}
+          />
         </Card.Chrome>
       )}
-
       {emails?.length && (
         <dl className={mx(cardText, gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>
           {emails?.length &&
