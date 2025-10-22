@@ -26,6 +26,7 @@ export const translations = [
         'function copy id': 'Copy Function ID',
         'no functions found': 'No functions found',
         'go to function source button label': 'Show function source',
+        'delete function button label': 'Delete function',
 
         'trigger editor title': 'Configure Trigger',
         'new trigger label': 'Add Trigger',

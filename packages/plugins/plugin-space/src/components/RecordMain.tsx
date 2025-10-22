@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { type JsonPath, setValue } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -35,13 +35,14 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
-    const relations = objects.filter((obj) => Relation.isRelation(obj));
-    const targetObjects = relations
-      .filter((relation) => Relation.getSource(relation) === record)
-      .map((relation) => Relation.getTarget(relation));
-    const sourceObjects = relations
-      .filter((relation) => Relation.getTarget(relation) === record)
-      .map((relation) => Relation.getSource(relation));
+    // TODO(wittjosiah): Support links via relations as well.
+    // const relations = objects.filter((obj) => Relation.isRelation(obj));
+    // const targetObjects = relations
+    //   .filter((relation) => Relation.getSource(relation) === record)
+    //   .map((relation) => Relation.getTarget(relation));
+    // const sourceObjects = relations
+    //   .filter((relation) => Relation.getTarget(relation) === record)
+    //   .map((relation) => Relation.getSource(relation));
 
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
@@ -50,7 +51,7 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
       return refs.some((ref) => ref.target === record);
     });
 
-    return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
+    return [...referencedObjects, ...referencingObjects];
   }, [record, objects]);
 
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
