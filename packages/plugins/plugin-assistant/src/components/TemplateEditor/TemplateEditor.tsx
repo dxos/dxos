@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { xml } from '@codemirror/lang-xml';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
@@ -16,7 +18,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -48,11 +50,15 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
         }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
-        decorateMarkdown(),
+        decorateMarkdown(), // TODO(burdon): Move into bundle.
+        xml(),
         handlebars(),
-      ].filter(isTruthy),
+        syntaxHighlighting(defaultHighlightStyle),
+      ].filter(isNonNullable),
     };
   }, [themeMode, template.source?.target]);
 
   return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
 };
+
+// withLayout: column

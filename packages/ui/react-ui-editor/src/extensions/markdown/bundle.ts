@@ -4,6 +4,7 @@
 
 import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
+import { jsonLanguage } from '@codemirror/lang-json';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { xml } from '@codemirror/lang-xml';
 import { LanguageDescription, syntaxHighlighting } from '@codemirror/language';
@@ -44,7 +45,8 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
       base: markdownLanguage,
 
       // Languages for syntax highlighting fenced code blocks.
-      codeLanguages: [...languages, xmlLanguageDesc],
+      defaultCodeLanguage: jsonLanguage,
+      codeLanguages: languages,
 
       // Don't complete HTML tags.
       completeHTMLTags: false,
@@ -99,5 +101,5 @@ const noSetExtHeading: MarkdownConfig = {
  * Remove HTML and XML parsing.
  */
 const noHtml: MarkdownConfig = {
-  remove: ['HTMLBlock', 'HTMLTag'],
+  // remove: ['HTMLBlock', 'HTMLTag'],
 };

@@ -27,6 +27,8 @@ const TEMPLATE = trim`
   - {{this}}
   {{/each}}
 
+  Reponse in the format: <suggestion>SUGGESTION</suggestion>
+
   ---
 
   {{input}}
@@ -60,9 +62,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withLayout({
-      type: 'column',
-    }),
+    withLayout({ container: 'column' }),
     withClientProvider({
       types: [Blueprint.Blueprint],
       createIdentity: true,
@@ -70,7 +70,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column', // TODO!!!
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;
