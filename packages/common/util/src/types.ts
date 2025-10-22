@@ -48,7 +48,6 @@ export type Falsy = false | 0 | '' | null | undefined;
  * NOTE: To filter by type:
  * items.filter((item: any): item is RangeSet<Decoration> => item instanceof RangeSet)
  */
-// TODO(burdon): Replace with Predicate.isTruthy?
 export const isTruthy = <T>(value: T): value is Exclude<T, Falsy> => !!value;
 export const isNonNullable = <T>(value: T | null | undefined): value is T => value != null;
 
