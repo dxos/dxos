@@ -13,8 +13,6 @@ import { ContactCard, OrganizationCard, ProjectCard } from '../components';
 import { TaskCard } from '../components/TaskCard';
 import { type PreviewProps } from '../types';
 
-faker.seed(1234);
-
 type CardProps<T extends object> = {
   Component: FC<PreviewProps<T>>;
   subject: T;
