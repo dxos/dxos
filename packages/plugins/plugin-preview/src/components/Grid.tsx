@@ -12,7 +12,7 @@ export const gridRow = 'is-full grid grid-cols-[1.5rem_1fr_min-content] gap-2 it
 export const GridRow = ({ icon, label, onClick }: { icon: string; label: string; onClick?: () => void }) => {
   if (!onClick) {
     return (
-      <p className={mx(gridRow, 'dx-button')} data-variant='ghost'>
+      <p data-variant='ghost' className={mx(gridRow, 'dx-button')}>
         <Icon icon={icon} size={5} classNames='text-subdued' />
         <span className='min-is-0 flex-1 truncate col-span-2'>{label}</span>
       </p>
