@@ -23,20 +23,19 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role?: s
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const [cardSchema, setCardSchema] = useState<TypedObject<any, any>>();
 
-  console.log('typename', typename, cardSchema);
-
   useEffect(() => {
     const staticSchema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
     if (staticSchema) {
       setCardSchema(() => staticSchema as TypedObject<any, any>);
-    }
-    if (!staticSchema && typename && space) {
+    } else if (typename && space) {
       const query = space.db.schemaRegistry.query({ typename });
       const unsubscribe = query.subscribe(
         () => {
           const [schema] = query.results;
           if (schema) {
             setCardSchema(schema);
+          } else {
+            setCardSchema(undefined);
           }
         },
         { fire: true },
@@ -48,6 +47,7 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role?: s
   const objects = useQuery(space, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
   const filteredObjects = useGlobalFilteredObjects(objects);
 
+  // TODO(wittjosiah): This currently explodes if items are removed from the list.
   return (
     <Masonry.Root
       items={filteredObjects}
