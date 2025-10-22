@@ -5,9 +5,9 @@
 import { lazy } from 'react';
 
 export * from './AssistantSettings';
+export * from './BlueprintSettings';
 export * from './Chat';
 export * from './ChatProgress';
-export * from './PromptSettings';
 export * from './TemplateEditor';
 export * from './Toolbar';
 export * from './Toolbox';
