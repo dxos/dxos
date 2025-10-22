@@ -32,6 +32,8 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
             uptime: 0,
             rateBytesUp: 0,
             rateBytesDown: 0,
+            messagesSent: 0,
+            messagesReceived: 0,
           },
         });
       };

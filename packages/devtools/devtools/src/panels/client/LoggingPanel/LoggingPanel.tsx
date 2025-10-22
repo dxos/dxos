@@ -86,6 +86,7 @@ export const LoggingPanel = () => {
         .toUpperCase(),
       file: `${shortFile(entry.meta?.file)}:${entry.meta?.line}`,
       message: entry.message,
+      context: entry.context,
     }));
   }, [logs]);
 
