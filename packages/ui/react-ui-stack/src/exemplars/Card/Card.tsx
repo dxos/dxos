@@ -136,7 +136,7 @@ type CardPosterProps = {
 const CardPoster = (props: CardPosterProps) => {
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
   if (props.image) {
-    return <Image classNames={[`dx-card__poster is-full __bs-auto`, aspect]} src={props.image} alt={props.alt} />;
+    return <Image classNames={[`dx-card__poster is-full`, aspect]} src={props.image} alt={props.alt} />;
   }
 
   if (props.icon) {

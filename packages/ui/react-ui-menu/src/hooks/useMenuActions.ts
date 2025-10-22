@@ -43,7 +43,9 @@ export type ActionGraphProps = {
   edges: ActionGraphEdges;
 };
 
-export const useMenuActions = (props: Rx.Rx<ActionGraphProps>) => {
+export type MenuActions = { useGroupItems: (sourceNode?: MenuItemGroup) => MenuItem[] };
+
+export const useMenuActions = (props: Rx.Rx<ActionGraphProps>): MenuActions => {
   const registry = useContext(RegistryContext);
   const menuGraphProps = useRxValue(props);
 

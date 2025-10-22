@@ -14,22 +14,10 @@ import { DXN } from '@dxos/keys';
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['timer', 'webhook', 'subscription', 'email', 'queue'] as const;
+export const Kinds = ['email', 'queue', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
-
-/**
- * Cron timer.
- */
-export const TimerSpec = Schema.Struct({
-  kind: Schema.Literal('timer').annotations(kindLiteralAnnotations),
-  cron: Schema.String.annotations({
-    title: 'Cron',
-    [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
-  }),
-}).pipe(Schema.mutable);
-export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
 
 export const EmailSpec = Schema.Struct({
   kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
@@ -43,25 +31,6 @@ export const QueueSpec = Schema.Struct({
   queue: DXN.Schema,
 }).pipe(Schema.mutable);
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
-
-/**
- * Webhook.
- */
-export const WebhookSpec = Schema.Struct({
-  kind: Schema.Literal('webhook').annotations(kindLiteralAnnotations),
-  method: Schema.optional(
-    Schema.String.annotations({
-      title: 'Method',
-      [OptionsAnnotationId]: ['GET', 'POST'],
-    }),
-  ),
-  port: Schema.optional(
-    Schema.Number.annotations({
-      title: 'Port',
-    }),
-  ),
-}).pipe(Schema.mutable);
-export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
 
 /**
  * Subscription.
@@ -84,9 +53,40 @@ export const SubscriptionSpec = Schema.Struct({
 export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
 
 /**
- * Trigger schema (discriminated union).
+ * Cron timer.
  */
-export const Spec = Schema.Union(TimerSpec, WebhookSpec, SubscriptionSpec, EmailSpec, QueueSpec).annotations({
+export const TimerSpec = Schema.Struct({
+  kind: Schema.Literal('timer').annotations(kindLiteralAnnotations),
+  cron: Schema.String.annotations({
+    title: 'Cron',
+    [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
+  }),
+}).pipe(Schema.mutable);
+export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
+
+/**
+ * Webhook.
+ */
+export const WebhookSpec = Schema.Struct({
+  kind: Schema.Literal('webhook').annotations(kindLiteralAnnotations),
+  method: Schema.optional(
+    Schema.String.annotations({
+      title: 'Method',
+      [OptionsAnnotationId]: ['GET', 'POST'],
+    }),
+  ),
+  port: Schema.optional(
+    Schema.Number.annotations({
+      title: 'Port',
+    }),
+  ),
+}).pipe(Schema.mutable);
+export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
+
+/**
+ * Trigger schema.
+ */
+export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
 export type Spec = Schema.Schema.Type<typeof Spec>;

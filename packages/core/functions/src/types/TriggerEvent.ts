@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 
-export type TriggerEvent = EmailEvent | WebhookEvent | QueueEvent | SubscriptionEvent | TimerEvent;
+export type TriggerEvent = EmailEvent | QueueEvent | SubscriptionEvent | TimerEvent | WebhookEvent;
 
 // TODO(burdon): Reuse trigger schema from @dxos/functions (TriggerType).
 export const EmailEvent = Schema.mutable(
@@ -19,16 +19,6 @@ export const EmailEvent = Schema.mutable(
   }),
 );
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
-
-export const WebhookEvent = Schema.mutable(
-  Schema.Struct({
-    url: Schema.String,
-    method: Schema.Literal('GET', 'POST'),
-    headers: Schema.Record({ key: Schema.String, value: Schema.String }),
-    bodyText: Schema.String,
-  }),
-);
-export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
 
 export const QueueEvent = Schema.mutable(
   Schema.Struct({
@@ -60,3 +50,13 @@ export type SubscriptionEvent = Schema.Schema.Type<typeof SubscriptionEvent>;
 
 export const TimerEvent = Schema.mutable(Schema.Struct({ tick: Schema.Number }));
 export type TimerEvent = Schema.Schema.Type<typeof TimerEvent>;
+
+export const WebhookEvent = Schema.mutable(
+  Schema.Struct({
+    url: Schema.String,
+    method: Schema.Literal('GET', 'POST'),
+    headers: Schema.Record({ key: Schema.String, value: Schema.String }),
+    bodyText: Schema.String,
+  }),
+);
+export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
