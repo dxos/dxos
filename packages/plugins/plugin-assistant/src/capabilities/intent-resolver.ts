@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
@@ -58,6 +59,17 @@ export default (context: PluginContext) => [
         return {
           data: { object: chat },
         };
+      },
+    }),
+    createResolver({
+      intent: AssistantAction.UpdateChatName,
+      resolve: async ({ chat }) => {
+        const runtime = null;
+        const conversation = new AiConversation({ queue: null });
+        await conversation.open();
+        await updateName(conversation, chat);
+        await conversation.close();
+        console.log(chat);
       },
     }),
     createResolver({
