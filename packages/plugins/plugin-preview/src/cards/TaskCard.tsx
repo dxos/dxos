@@ -10,9 +10,8 @@ import { Card, cardNoSpacing, cardSpacing } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
+import { CardSubjectMenu } from '../components';
 import { type PreviewProps } from '../types';
-
-import { CardSubjectMenu } from './CardSubjectMenu';
 
 // TODO(thure): Should this move upstream as a helper? Is there an easier way to get options?
 const getActiveStatusOption = (status?: string) => {
@@ -30,6 +29,7 @@ const getActiveStatusOption = (status?: string) => {
 export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Task>) => {
   const { title, status } = subject;
   const statusOption = getActiveStatusOption(status);
+
   return (
     <Card.SurfaceRoot role={role}>
       <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
