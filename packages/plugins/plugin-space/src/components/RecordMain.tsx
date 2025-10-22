@@ -14,6 +14,7 @@ import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { isNonNullable } from '@dxos/util';
 
+import { StackItem } from '../../../../ui/react-ui-stack/src';
 import { meta } from '../meta';
 
 const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
@@ -75,17 +76,19 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
   }
 
   return (
-    <div role='none' className='container-max-width flex flex-col p-2 gap-4 overflow-y-auto'>
-      <div key={record.id} className='border border-separator rounded'>
-        <Form autoSave schema={schema} values={record} onSave={handleSave} onQueryRefOptions={handleRefQueryLookup} />
-      </div>
-      {related.length > 0 && (
-        <div className='flex flex-col gap-1'>
-          <label className='text-description text-sm'>{t('related objects label')}</label>
-          <Masonry.Root<Obj.Any> items={related} render={Card} intrinsicHeight />
+    <StackItem.Content classNames='container-max-width' scrollable>
+      <div role='none' className='flex flex-col p-2 gap-4'>
+        <div key={record.id} className='border border-separator rounded'>
+          <Form autoSave schema={schema} values={record} onSave={handleSave} onQueryRefOptions={handleRefQueryLookup} />
         </div>
-      )}
-    </div>
+        {related.length > 0 && (
+          <div className='flex flex-col gap-1'>
+            <label className='text-description text-sm'>{t('related objects label')}</label>
+            <Masonry.Root<Obj.Any> items={related} render={Card} intrinsicHeight />
+          </div>
+        )}
+      </div>
+    </StackItem.Content>
   );
 };
 
