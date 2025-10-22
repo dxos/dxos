@@ -8,9 +8,8 @@ import { Obj } from '@dxos/echo';
 import { Card } from '@dxos/react-ui-stack';
 import { type DataType } from '@dxos/schema';
 
+import { GridHeader } from '../components';
 import { type PreviewProps } from '../types';
-
-import { GridHeader } from './Grid';
 
 export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<DataType.Project>) => {
   const { name, image, description } = subject;

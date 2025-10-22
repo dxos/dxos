@@ -9,10 +9,8 @@ import { Card, cardHeading, cardText } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
+import { CardSubjectMenu, GridRow, gridRow } from '../components';
 import { type PreviewProps } from '../types';
-
-import { CardSubjectMenu } from './CardSubjectMenu';
-import { GridRow, gridRow } from './Grid';
 
 // TODO(burdon): Rename PersonCard.
 export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<DataType.Person>) => {

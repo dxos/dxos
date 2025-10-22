@@ -23,8 +23,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { TaskCard } from '../components/TaskCard';
+import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
 
 export default () =>

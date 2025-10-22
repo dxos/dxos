@@ -9,11 +9,10 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard } from '../components';
-import { TaskCard } from '../components/TaskCard';
+import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
 import { type PreviewProps } from '../types';
 
-type CardProps<T extends object> = {
+type CardProps<T extends Obj.Any> = {
   Component: FC<PreviewProps<T>>;
   subject: T;
   icon?: string;
