@@ -40,7 +40,7 @@ export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Num
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 // State of an individual deck.
-export const DeckState = Schema.Struct({
+export const DeckSchema = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
@@ -52,9 +52,9 @@ export const DeckState = Schema.Struct({
   plankSizing: Schema.mutable(PlankSizing),
   companionFrameSizing: Schema.mutable(PlankSizing),
 });
-export type DeckState = Schema.Schema.Type<typeof DeckState>;
+export type DeckType = Schema.Schema.Type<typeof DeckSchema>;
 
-export const defaultDeck: DeckState = {
+export const defaultDeck: DeckType = {
   initialized: false,
   active: [],
   activeCompanions: {},
@@ -69,7 +69,7 @@ const LayoutMode = Schema.Literal('deck', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
 
-export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
+export const getMode = (deck: DeckType | DeepReadonly<DeckType>): LayoutMode => {
   if (deck.solo) {
     return deck.fullscreen ? 'solo--fullscreen' : 'solo';
   }
@@ -103,9 +103,9 @@ export const DeckPluginState = Schema.Struct({
 
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
+  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckSchema) })),
   previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
-  deck: Schema.mutable(DeckState),
+  deck: Schema.mutable(DeckSchema),
 
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),

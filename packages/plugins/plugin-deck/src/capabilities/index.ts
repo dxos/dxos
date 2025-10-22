@@ -16,4 +16,5 @@ export const Toolkit = lazy(() => import('./toolkit'));
 export const UrlHandler = lazy(() => import('./url-handler'));
 
 export * from './capabilities';
+// TODO(wittjosiah): Remove.
 export * from './state';

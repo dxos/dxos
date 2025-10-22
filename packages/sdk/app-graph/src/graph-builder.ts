@@ -108,8 +108,8 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
             Rx.make((get) => {
               try {
                 return get(connector(node));
-              } catch {
-                log.warn('Error in connector', { id: getId('connector'), node });
+              } catch (err) {
+                log.warn('Error in connector', { id: getId('connector'), node, err });
                 return [];
               }
             }).pipe(Rx.withLabel(`graph-builder:connector:${id}`)),
@@ -129,8 +129,8 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
                   data: actionGroupSymbol,
                   type: ACTION_GROUP_TYPE,
                 }));
-              } catch {
-                log.warn('Error in actionGroups', { id: getId('actionGroups'), node });
+              } catch (err) {
+                log.warn('Error in actionGroups', { id: getId('actionGroups'), node, err });
                 return [];
               }
             }).pipe(Rx.withLabel(`graph-builder:connector:actionGroups:${id}`)),
@@ -146,8 +146,8 @@ export const createExtension = (extension: CreateExtensionOptions): BuilderExten
             Rx.make((get) => {
               try {
                 return get(actions(node)).map((arg) => ({ ...arg, type: ACTION_TYPE }));
-              } catch {
-                log.warn('Error in actions', { id: getId('actions'), node });
+              } catch (err) {
+                log.warn('Error in actions', { id: getId('actions'), node, err });
                 return [];
               }
             }).pipe(Rx.withLabel(`graph-builder:connector:actions:${id}`)),

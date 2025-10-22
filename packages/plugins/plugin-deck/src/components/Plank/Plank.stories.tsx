@@ -12,7 +12,7 @@ import { GraphPlugin } from '@dxos/plugin-graph';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
 
-import { DeckStateFactory } from '../../capabilities';
+import { DeckStateImpl } from '../../capabilities';
 import { translations } from '../../translations';
 
 import { Plank } from './Plank';
@@ -31,7 +31,7 @@ const meta = {
     withTheme,
     withPluginManager({
       plugins: [AttentionPlugin(), SettingsPlugin(), IntentPlugin(), GraphPlugin()],
-      capabilities: () => DeckStateFactory(),
+      capabilities: () => DeckStateImpl(),
     }),
   ],
   parameters: {

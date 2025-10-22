@@ -9,33 +9,11 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type SidebarState } from '@dxos/react-ui';
 
 import { meta } from '../meta';
-import { type DeckPluginState, type DeckState, defaultDeck, getMode } from '../types';
+import { type DeckPluginState, type DeckType, defaultDeck, getMode } from '../types';
 
 import { DeckCapabilities } from './capabilities';
 
-const boolean = /true|false/;
-
-// TODO(thure, 18 Feb 2025): Remove after the next release.
-
-const migrateSidebarStateDefaults = {
-  [`${meta.id}/complementary-sidebar-state`]: 'expanded',
-  [`${meta.id}/sidebar-state`]: 'collapsed',
-};
-
-const migrateSidebarState = () => {
-  Object.entries(migrateSidebarStateDefaults).forEach(([key, defaultValue]) => {
-    if (boolean.test(localStorage.getItem(key) ?? 'never')) {
-      localStorage.setItem(key, defaultValue);
-    }
-  });
-};
-
-/**
- * @deprecated
- */
-export const DeckStateFactory = () => {
-  migrateSidebarState();
-
+export const DeckStateImpl = () => {
   const state = new LocalStorageStore<DeckPluginState>(meta.id, {
     sidebarState: 'expanded',
     complementarySidebarState: 'collapsed',
@@ -68,7 +46,7 @@ export const DeckStateFactory = () => {
     .prop({ key: 'sidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarState', type: LocalStorageStore.enum<SidebarState>() })
     .prop({ key: 'complementarySidebarPanel', type: LocalStorageStore.string({ allowUndefined: true }) })
-    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, DeckState>>() })
+    .prop({ key: 'decks', type: LocalStorageStore.json<Record<string, DeckType>>() })
     .prop({ key: 'activeDeck', type: LocalStorageStore.string() })
     .prop({ key: 'previousDeck', type: LocalStorageStore.string() });
 
@@ -105,4 +83,4 @@ export const DeckStateFactory = () => {
   ];
 };
 
-export default DeckStateFactory;
+export default DeckStateImpl;
