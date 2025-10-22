@@ -6,11 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, Ref } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { DataType } from '@dxos/schema';
 
 import { translations } from '../../translations';
 
@@ -38,10 +36,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     state: {},
-    script: Obj.make(ScriptType, {
+    script: Script.make({
       name: 'test',
       description: 'test',
-      source: Ref.make(DataType.makeText('test')),
+      source: 'test',
     }),
   },
 };

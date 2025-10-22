@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
-import { FunctionTrigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
@@ -47,7 +47,7 @@ export const ConductorPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [ComputeGraph, FunctionTrigger]),
+    activate: () => contributes(ClientCapabilities.Schema, [ComputeGraph, Trigger.Trigger]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, useCapability } from '@dxos/app-framework';
 import { Filter } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { ScriptCapabilities, ScriptContainer as ScriptContainerComponent, meta } from '@dxos/plugin-script';
 import { type ScriptSettings } from '@dxos/plugin-script/types';
 import { useQuery } from '@dxos/react-client/echo';
@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/react-client/echo';
 import { type ComponentProps } from './types';
 
 export const ScriptContainer = ({ space }: ComponentProps) => {
-  const [script] = useQuery(space, Filter.type(ScriptType));
+  const [script] = useQuery(space, Filter.type(Script.Script));
   const compiler = useCapability(ScriptCapabilities.Compiler);
   const settings = useCapability(Capabilities.SettingsStore).getStore<ScriptSettings>(meta.id)?.value;
   if (!script) {

@@ -9,7 +9,7 @@ import { Filter, type Space, fullyQualifiedId } from '@dxos/client/echo';
 import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { getTypename } from '@dxos/echo/internal';
-import { type FunctionInvocationService, FunctionType } from '@dxos/functions';
+import { Function, type FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -60,7 +60,7 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _remoteFunctions: FunctionType[] = [];
+  private _remoteFunctions: Function.Function[] = [];
 
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
@@ -243,7 +243,7 @@ export class ComputeGraph extends Resource {
   protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.type(FunctionType));
+      const query = this._space.db.query(Filter.type(Function.Function));
       const unsubscribe = query.subscribe(({ objects }) => {
         this._remoteFunctions = objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });

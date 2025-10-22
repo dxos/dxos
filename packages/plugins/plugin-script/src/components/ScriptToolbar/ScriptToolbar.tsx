@@ -5,7 +5,7 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { ElevationProvider, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import {
@@ -29,7 +29,7 @@ import { meta } from '../../meta';
 
 export type ScriptToolbarProps = ThemedClassName<{
   role?: string;
-  script: ScriptType;
+  script: Script.Script;
   state: ScriptToolbarState;
 }>;
 
