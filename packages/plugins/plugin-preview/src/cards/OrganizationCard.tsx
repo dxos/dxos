@@ -15,7 +15,7 @@ export const OrganizationCard = ({ children, subject, role, activeSpace }: Previ
 
   return (
     <Card.SurfaceRoot role={role}>
-      <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
+      <Card.Poster alt={name ?? ''} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       <CardHeader label={name} subject={subject} activeSpace={activeSpace} />
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}
       {website && <CardLink label={website} href={website} />}

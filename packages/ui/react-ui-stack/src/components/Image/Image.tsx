@@ -7,13 +7,13 @@ import React, { type SyntheticEvent, useRef, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-export type ImageProps = ThemedClassName<{
-  src: string;
-  alt?: string;
-  crossOrigin?: 'anonymous' | 'use-credentials' | '';
-  sampleSize?: number;
-  contrast?: number;
-}>;
+export type ImageProps = ThemedClassName<
+  {
+    src: string;
+    alt?: string;
+    crossOrigin?: 'anonymous' | 'use-credentials' | '';
+  } & ColorOptions
+>;
 
 export const Image = ({
   classNames,
@@ -28,74 +28,26 @@ export const Image = ({
   const [imageLoaded, setImageLoaded] = useState<boolean>(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // TODO(burdon): Cache?
-  const extractDominantColor = (img: HTMLImageElement): void => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx) {
-      return;
-    }
-
-    // Draw the image scaled down.
-    canvas.width = sampleSize;
-    canvas.height = sampleSize;
-    ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
-
-    try {
-      // Get image data.
-      const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
-      const pixels = imageData.data;
-
-      // Calculate average color with more weight to vibrant colors.
-      let r = 0;
-      let g = 0;
-      let b = 0;
-      let totalWeight = 0;
-      for (let i = 0; i < pixels.length; i += 4) {
-        const red = pixels[i];
-        const green = pixels[i + 1];
-        const blue = pixels[i + 2];
-        const alpha = pixels[i + 3];
-
-        // Skip transparent pixels.
-        if (alpha === 0) continue;
-
-        // Calculate saturation to weight vibrant colors more.
-        const max = Math.max(red, green, blue);
-        const min = Math.min(red, green, blue);
-        const saturation = max === 0 ? 0 : (max - min) / max;
-        const weight = 1 + saturation * 2; // Give more weight to saturated colors.
-
-        r += red * weight;
-        g += green * weight;
-        b += blue * weight;
-        totalWeight += weight;
-      }
-
-      if (totalWeight > 0) {
-        r = Math.round(r / totalWeight);
-        g = Math.round(g / totalWeight);
-        b = Math.round(b / totalWeight);
-
-        // Slightly darken the color for better contrast.
-        r = Math.round(r * contrast);
-        g = Math.round(g * contrast);
-        b = Math.round(b * contrast);
-        setDominantColor(`rgb(${r}, ${g}, ${b})`);
-      }
-    } catch {
-      setCrossOriginState(undefined);
-    }
-  };
-
   // CORS not supported by server.
   const handleImageError = (): void => {
     setCrossOriginState(undefined);
   };
 
-  const handleImageLoad = (ev: SyntheticEvent<HTMLImageElement>): void => {
-    const img = ev.target as HTMLImageElement;
-    extractDominantColor(img);
+  const handleImageLoad = ({ target }: SyntheticEvent<HTMLImageElement>): void => {
+    const img = target as HTMLImageElement;
+    if (!canvasRef.current) {
+      return;
+    }
+
+    try {
+      const color = extractDominantColor(canvasRef.current, img, { sampleSize, contrast });
+      if (color) {
+        setDominantColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+      }
+    } catch {
+      setCrossOriginState(undefined);
+    }
+
     setImageLoaded(true);
   };
 
@@ -134,4 +86,107 @@ export const Image = ({
       />
     </div>
   );
+};
+
+type ColorOptions = {
+  sampleSize?: number;
+  contrast?: number;
+};
+
+// TODO(burdon): Cache?
+const extractDominantColor = (
+  canvas: HTMLCanvasElement,
+  img: HTMLImageElement,
+  { sampleSize = 64, contrast = 0.95 }: ColorOptions,
+): [number, number, number] | null => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return null;
+  }
+
+  // Draw the image scaled down.
+  canvas.width = sampleSize;
+  canvas.height = sampleSize;
+  ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+
+  // Get image data.
+  const imageData = ctx.getImageData(0, 0, sampleSize, sampleSize);
+  const pixels = imageData.data;
+
+  // Check for transparent background.
+  if (isTransparent(pixels, sampleSize)) {
+    return null;
+  }
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let totalWeight = 0;
+
+  // Calculate average color with more weight to vibrant colors.
+  for (let i = 0; i < pixels.length; i += 4) {
+    const red = pixels[i];
+    const green = pixels[i + 1];
+    const blue = pixels[i + 2];
+    const alpha = pixels[i + 3];
+
+    // Skip transparent pixels.
+    if (alpha === 0) continue;
+
+    // Calculate saturation to weight vibrant colors more.
+    const max = Math.max(red, green, blue);
+    const min = Math.min(red, green, blue);
+    // Give more weight to saturated colors.
+    const saturation = max === 0 ? 0 : (max - min) / max;
+    const weight = 1 + saturation * 2;
+
+    r += red * weight;
+    g += green * weight;
+    b += blue * weight;
+    totalWeight += weight;
+  }
+
+  if (totalWeight > 0) {
+    // Slightly darken the color for better contrast.
+    r = Math.round((contrast * r) / totalWeight);
+    g = Math.round((contrast * g) / totalWeight);
+    b = Math.round((contrast * b) / totalWeight);
+    return [r, g, b];
+  }
+
+  return null;
+};
+
+/**
+ * Detects if an image has a transparent background by examining edge pixels.
+ * @param pixels - Image pixel data from canvas
+ * @param sampleSize - Size of the sampled image
+ * @param threshold - Percentage threshold for considering background transparent (default: 0.5)
+ * @returns True if the image has a transparent background
+ */
+const isTransparent = (pixels: Uint8ClampedArray, sampleSize: number, threshold: number = 0.5): boolean => {
+  let edgeTransparentPixels = 0;
+  const edgePixels = sampleSize * 4 - 4; // Perimeter minus corners counted twice.
+
+  for (let x = 0; x < sampleSize; x++) {
+    // Top edge.
+    const topIndex = x * 4;
+    if (pixels[topIndex + 3] === 0) edgeTransparentPixels++;
+
+    // Bottom edge.
+    const bottomIndex = ((sampleSize - 1) * sampleSize + x) * 4;
+    if (pixels[bottomIndex + 3] === 0) edgeTransparentPixels++;
+  }
+
+  for (let y = 1; y < sampleSize - 1; y++) {
+    // Left edge.
+    const leftIndex = y * sampleSize * 4;
+    if (pixels[leftIndex + 3] === 0) edgeTransparentPixels++;
+
+    // Right edge.
+    const rightIndex = (y * sampleSize + sampleSize - 1) * 4;
+    if (pixels[rightIndex + 3] === 0) edgeTransparentPixels++;
+  }
+
+  return edgeTransparentPixels / edgePixels > threshold;
 };
