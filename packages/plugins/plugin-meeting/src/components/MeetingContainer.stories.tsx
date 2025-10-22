@@ -41,6 +41,7 @@ const meta = {
   render: () => <Story />,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [
         AttentionPlugin(),
@@ -73,9 +74,6 @@ const meta = {
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
   ],
-  parameters: {
-    layout: 'column',
-  },
 } satisfies Meta<typeof MeetingContainer>;
 
 export default meta;
