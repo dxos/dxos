@@ -29,6 +29,7 @@ export const ConductorPlugin = definePlugin(meta, () => [
         id: CanvasBoardType.typename,
         metadata: {
           icon: 'ph--infinity--regular',
+          iconClassName: 'text-skySurfaceText',
         },
       }),
   }),

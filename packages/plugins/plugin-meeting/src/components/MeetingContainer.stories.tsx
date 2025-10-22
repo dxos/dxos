@@ -16,7 +16,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -41,6 +41,7 @@ const meta = {
   render: () => <Story />,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [
         AttentionPlugin(),
@@ -73,9 +74,6 @@ const meta = {
       capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
     }),
   ],
-  parameters: {
-    layout: 'column',
-  },
 } satisfies Meta<typeof MeetingContainer>;
 
 export default meta;

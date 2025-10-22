@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Input, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -51,9 +51,8 @@ const meta = {
       </>
     );
   },
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ container: 'column' })],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof ChatDialog.Root>;

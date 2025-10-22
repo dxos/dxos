@@ -12,7 +12,7 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 
 import { functions } from '../../testing';
@@ -78,6 +78,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -102,7 +103,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

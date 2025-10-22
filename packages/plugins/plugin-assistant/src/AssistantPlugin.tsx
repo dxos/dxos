@@ -69,6 +69,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
+          iconClassName: 'text-blueSurfaceText',
         },
       }),
     ],
