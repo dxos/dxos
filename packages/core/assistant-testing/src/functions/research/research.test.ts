@@ -103,7 +103,7 @@ describe('Research', () => {
     Effect.fnUntraced(
       function* (_) {
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
-        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
         const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
         yield* DatabaseService.add(org);
