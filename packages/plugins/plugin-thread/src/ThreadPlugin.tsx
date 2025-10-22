@@ -77,7 +77,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
         id: DataType.Message.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: (message: DataType.Message) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
+          loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
       }),
       contributes(Capabilities.Metadata, {
