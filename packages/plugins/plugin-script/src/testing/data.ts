@@ -51,7 +51,7 @@ export const createNotebook = (): Notebook.Notebook =>
         type: 'prompt',
         prompt: Ref.make(
           Prompt.make({
-            instructions: 'What is a common factor of {{a}} and {{b}}?',
+            instructions: 'What is your favorite of {{a}} and {{b}}?',
           }),
         ),
       },
