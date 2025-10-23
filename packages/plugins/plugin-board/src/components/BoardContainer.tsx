@@ -5,26 +5,27 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, Ref, getSpace } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
-import { ObjectPicker } from '@dxos/react-ui-form';
+import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';
 
-export type BoardContainerProps = {
-  role?: string;
-  board: BoardType.Board;
-};
-
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
 type PickerState = {
   position: Position;
+};
+
+export type BoardContainerProps = {
+  role?: string;
+  board: BoardType.Board;
 };
 
 export const BoardContainer = ({ board }: BoardContainerProps) => {
@@ -34,15 +35,23 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
 
   // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board.
-  const allObjects = useQuery(getSpace(board), Filter.everything());
+  const objects = useQuery(getSpace(board), Filter.everything());
   const options = useMemo(
     () =>
-      allObjects.map((obj) => ({
-        id: obj.id,
-        label: obj.name || obj.title || obj.id,
-        hue: 'neutral' as const,
-      })),
-    [allObjects],
+      objects
+        .filter((obj) => obj.id !== board.id)
+        .map((obj) => {
+          const label = Obj.getLabel(obj);
+          if (label) {
+            return {
+              id: obj.id,
+              label,
+              // hue: 'neutral' as const,
+            };
+          }
+        })
+        .filter(isNonNullable),
+    [objects],
   );
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
@@ -55,27 +64,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       });
     },
     [board],
-  );
-
-  const handleSelect = useCallback(
-    (id: string) => {
-      if (!pickerState) return;
-
-      // Find the selected object by id from the space.
-      const selectedObject = allObjects.find((obj) => obj.id === id);
-      if (!selectedObject) return;
-
-      // Create a reference to the selected object and add it to the board.
-      const ref = Ref.make(selectedObject);
-      board.items.push(ref);
-
-      // Set the layout position for the new item.
-      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
-
-      // Close the picker.
-      setPickerState(null);
-    },
-    [pickerState, allObjects, board],
   );
 
   // TODO(burdon): Use intents so can be undone.
@@ -99,18 +87,36 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
+  const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
+    (id) => {
+      if (!pickerState) {
+        return;
+      }
+
+      // Find the selected object by id from the space.
+      const selectedObject = objects.find((obj) => obj.id === id);
+      if (!selectedObject) {
+        return;
+      }
+
+      // Create a reference to the selected object and add it to the board.
+      board.items.push(Ref.make(selectedObject));
+
+      // Set the layout position for the new item.
+      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
+
+      // Close the picker.
+      setPickerState(null);
+    },
+    [pickerState, objects, board],
+  );
+
   return (
     <Board.Root ref={controller} layout={board.layout} onAdd={handleAdd} onDelete={handleDelete} onMove={handleMove}>
       <ObjectPicker.Root
         open={!!pickerState}
         onOpenChange={(nextOpen: boolean) => {
-          setPickerState(
-            nextOpen
-              ? {
-                  position: DEFAULT_POSITION,
-                }
-              : null,
-          );
+          setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
         <StackItem.Content toolbar>
@@ -128,6 +134,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
+        {/* TODO(burdon): Currently clipped by sidebar. */}
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
