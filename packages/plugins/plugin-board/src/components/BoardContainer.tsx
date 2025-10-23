@@ -17,12 +17,12 @@ import { isNonNullable } from '@dxos/util';
 
 import { type Board as BoardType } from '../types';
 
+const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
+
 export type BoardContainerProps = {
   role?: string;
   board: BoardType.Board;
 };
-
-const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
 type PickerState = {
   position: Position;
@@ -89,15 +89,18 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
     (id) => {
-      if (!pickerState) return;
+      if (!pickerState) {
+        return;
+      }
 
       // Find the selected object by id from the space.
       const selectedObject = objects.find((obj) => obj.id === id);
-      if (!selectedObject) return;
+      if (!selectedObject) {
+        return;
+      }
 
       // Create a reference to the selected object and add it to the board.
-      const ref = Ref.make(selectedObject);
-      board.items.push(ref);
+      board.items.push(Ref.make(selectedObject));
 
       // Set the layout position for the new item.
       board.layout.cells[selectedObject.id.toString()] = pickerState.position;
@@ -137,6 +140,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
+        {/* TODO(burdon): Currently clipped by sidebar. */}
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
