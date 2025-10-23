@@ -73,7 +73,7 @@
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
     "vite": "7.1.9"
