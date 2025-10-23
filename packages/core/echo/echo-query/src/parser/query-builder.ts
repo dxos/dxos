@@ -9,6 +9,9 @@ import { invariant } from '@dxos/invariant';
 
 import { QueryDSL } from './gen';
 
+// TODO(burdon): Return Query AST.
+export type BuildResult = { filter?: Filter.Any; name?: string };
+
 /**
  * Stateless query builder that parses DSL trees into filters.
  *
@@ -35,24 +38,24 @@ export class QueryBuilder {
   /**
    * Build a query from the input string.
    */
-  build(input: string): Filter.Any | undefined {
+  build(input: string): BuildResult {
     try {
       const tree = this._parser.parse(input);
       return this.buildQuery(tree, input);
     } catch {
-      return undefined;
+      return {};
     }
   }
 
   /**
    * Build a query from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): Filter.Any | undefined {
+  buildQuery(tree: Tree, input: string): BuildResult {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
     if (cursor.node.name !== 'Query') {
-      return undefined;
+      return {};
     }
 
     // Check if Query has multiple children (binary expression).
@@ -64,20 +67,70 @@ export class QueryBuilder {
       cursor.parent();
     }
 
+    // Check if this is an assignment.
+    const hasAssignment = children.some((child) => child.name === 'Assignment');
+    if (hasAssignment) {
+      return this._parseAssignment(cursor, input);
+    }
+
     // If we have an operator in the children, or multiple expressions (implicit AND), parse as binary expression.
     const hasOperator = children.some((child) => child.name === 'And' || child.name === 'Or');
     const hasMultipleExpressions =
       children.filter((child) => child.name === 'Filter' || child.name === 'Not' || child.name === '(').length > 1;
     if (hasOperator || hasMultipleExpressions) {
-      return this._parseBinaryExpression(cursor, input);
+      const filter = this._parseBinaryExpression(cursor, input);
+      return { filter };
     }
 
     // Otherwise, parse the single expression.
     if (!cursor.firstChild()) {
-      return Filter.nothing();
+      return { filter: Filter.nothing() };
     }
 
-    return this._parseExpression(cursor, input);
+    const filter = this._parseExpression(cursor, input);
+    return { filter };
+  }
+
+  /**
+   * Parse an assignment node.
+   */
+  private _parseAssignment(cursor: TreeCursor, input: string): BuildResult {
+    if (!cursor.firstChild()) {
+      return {};
+    }
+
+    let name: string | undefined;
+    let filter: Filter.Any | undefined;
+
+    // Find the Assignment node
+    do {
+      if (cursor.node.name === 'Assignment') {
+        // Get the full assignment text first
+        const assignmentText = this._getNodeText(cursor, input);
+
+        if (cursor.firstChild()) {
+          // First child should be the variable name (Identifier)
+          name = this._getNodeText(cursor, input);
+
+          // Find the parentheses in the assignment text and extract the content
+          const openParenIndex = assignmentText.indexOf('(');
+          const closeParenIndex = assignmentText.lastIndexOf(')');
+
+          if (openParenIndex !== -1 && closeParenIndex !== -1 && closeParenIndex > openParenIndex) {
+            const subInput = assignmentText.slice(openParenIndex + 1, closeParenIndex).trim();
+            const subTree = this._parser.parse(subInput);
+            const subResult = this.buildQuery(subTree, subInput);
+            filter = subResult.filter;
+          }
+
+          cursor.parent(); // Back to Assignment
+        }
+        break;
+      }
+    } while (cursor.nextSibling());
+
+    cursor.parent(); // Back to Query
+    return { filter, name };
   }
 
   /**
@@ -204,9 +257,9 @@ export class QueryBuilder {
             // Parse the expression inside parentheses as a subtree.
             const subInput = input.slice(exprStart, exprEnd);
             const subTree = this._parser.parse(subInput);
-            const subFilter = this.buildQuery(subTree, subInput);
-            if (subFilter) {
-              filters.push(subFilter);
+            const subResult = this.buildQuery(subTree, subInput);
+            if (subResult.filter) {
+              filters.push(subResult.filter);
             }
           } else {
             // Simple parenthesized expression.

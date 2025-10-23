@@ -43,6 +43,7 @@ export type AiSessionRunRequirements =
 
 export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
+  // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: DataType.Message[];
   objects?: Obj.Any[];

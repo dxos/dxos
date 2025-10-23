@@ -54,6 +54,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/assistant-testing"
+    },
+    {
       "path": "../../core/blueprints"
     },
     {

@@ -30,7 +30,7 @@ const ExplorerContainer = ({ role, view }: ExplorerContainerProps) => {
 
   const builder = useMemo(() => new QueryBuilder(), []);
   const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-    setFilter(builder.build(value));
+    setFilter(builder.build(value).filter);
   }, []);
 
   const showToolbar = role === 'article';

@@ -31,7 +31,7 @@ const meta = {
     const [filter, setFilter] = useState<Filter.Any>();
     const builder = useMemo(() => new QueryBuilder(tags), []);
     const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-      setFilter(builder.build(value));
+      setFilter(builder.build(value).filter);
     }, []);
 
     return (

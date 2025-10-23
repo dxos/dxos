@@ -2,15 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Prompt } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 
 import { Notebook } from '../types';
 
-// NOTE: createObject(DataType.makeText is required to make codemirror work.
-export const createNotebook = () =>
+export const createNotebook = (): Notebook.Notebook =>
   Notebook.make({
     cells: [
       {
@@ -41,7 +42,12 @@ export const createNotebook = () =>
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        script: Ref.make(createObject(DataType.makeText('#test'))),
+        script: Ref.make(createObject(DataType.makeText(`docs = ( type: ${Markdown.Document.typename} AND #new )`))),
+      },
+      {
+        id: PublicKey.random().toString(),
+        type: 'prompt',
+        prompt: Ref.make(Prompt.make({ instructions: 'What is a value smaller than {{b}}?' })),
       },
     ],
   });
