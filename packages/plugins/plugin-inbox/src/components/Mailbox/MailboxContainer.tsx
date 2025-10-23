@@ -74,7 +74,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     }, {} as Tag.TagMap);
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
-  useEffect(() => setFilter(parser.build(filterText)), [filterText, parser]);
+  useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {

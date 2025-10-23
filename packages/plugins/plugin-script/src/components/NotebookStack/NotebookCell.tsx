@@ -71,7 +71,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
 
     if (cell.type === 'query') {
       const query = cell.script.target.content;
-      const filter = builder.build(query);
+      const { filter } = builder.build(query);
       if (filter) {
         const ast = Query.select(filter).ast;
         const view = cell.view?.target;

@@ -32,7 +32,7 @@ const DefaultStory = ({ value: valueParam }: QueryEditorProps) => {
 
   useEffect(() => {
     if (query) {
-      const filter = builder.build(query);
+      const { filter } = builder.build(query);
       setFilter(filter ?? Filter.everything());
     } else {
       setFilter(Filter.everything());
