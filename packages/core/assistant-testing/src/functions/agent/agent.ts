@@ -70,24 +70,30 @@ export default defineFunction({
     );
     const toolkit = yield* createToolkit({ blueprints });
 
-    const promptText = Template.process(prompt.instructions, input);
+    const promptInstructions = yield* DatabaseService.load(prompt.instructions.source);
+    const promptText = Template.process(promptInstructions.content, input);
+
+    const systemInstructions = systemPrompt ? yield* DatabaseService.load(systemPrompt.instructions.source) : undefined;
+    const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
 
     const session = new AiSession();
     const result = yield* session
       .run({
         prompt: promptText,
-        system: systemPrompt?.instructions,
+        system: systemText,
         blueprints,
         objects: objects as Obj.Any[],
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' })),
       })
       .pipe(Effect.provide(AiService.model(data.model ?? DEFAULT_MODEL)));
-    const lastBlock = result.at(-1)?.blocks.at(-1);
-    const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
+    const lastBlock = result
+      .at(-1)
+      ?.blocks.filter((block) => block._tag === 'text')
+      .at(-1);
 
     return {
-      note,
+      note: lastBlock?.text,
     };
   }),
 });
