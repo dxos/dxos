@@ -36,7 +36,7 @@ export const GraphContainer = ({ space }: ComponentProps) => {
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
       // TODO(burdon): Get AST from filter?
-      const filter = parser.build(text);
+      const { filter } = parser.build(text);
       if (filter) {
         setFilter(filter);
         setOpen(true);
