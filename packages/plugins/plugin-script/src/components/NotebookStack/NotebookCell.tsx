@@ -44,7 +44,7 @@ export type NotebookCellProps = {
   cell: Notebook.Cell;
 } & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
-// TODO(burdon): Display errors.
+// TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 

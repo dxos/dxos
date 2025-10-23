@@ -62,7 +62,18 @@ const decorations = ({ tags }: QueryOptions): Extension => {
               node.from,
               node.to,
               Decoration.mark({
-                class: 'pis-1 pie-1',
+                class: 'pli-1',
+              }),
+            );
+            break;
+          }
+
+          case '=': {
+            deco.add(
+              node.from,
+              node.to,
+              Decoration.mark({
+                class: 'text-subdued',
               }),
             );
             break;
@@ -154,6 +165,10 @@ const decorations = ({ tags }: QueryOptions): Extension => {
             );
             break;
           }
+
+          // default: {
+          //   console.log(node.type.name);
+          // }
         }
       },
     });

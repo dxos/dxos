@@ -42,7 +42,7 @@ export const createNotebook = () =>
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        script: Ref.make(createObject(DataType.makeText(`x = ( type: ${Markdown.Document.typename} #new )`))),
+        script: Ref.make(createObject(DataType.makeText(`docs = ( type: ${Markdown.Document.typename} AND #new )`))),
       },
     ],
   });
