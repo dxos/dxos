@@ -13,7 +13,7 @@
 
   .dx-tag--anchor {
     /* NOTE: Margin offsets padding so that border is flush with text. This should only apply to anchor tags inside of Codemirror. */
-    @apply inline cursor-pointer -mis-0.5 -mie-0.5 pli-1 plb-0.5 border border-separator rounded-sm bg-groupSurface transition-colors;
+    @apply inline cursor-pointer -mli-[4px] pli-[3px] plb-0.5 border border-separator rounded-sm bg-groupSurface transition-colors;
 
     &:hover {
       @apply bg-hoverSurface;
