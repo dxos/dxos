@@ -76,7 +76,6 @@ export default (context: PluginContext) => [
           return;
         }
 
-        // TODO(burdon): Move from AutomationCapabilities? (create util?)
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
         const runtime = await runtimeResolver.getRuntime(space.id).runPromise(
           Effect.gen(function* () {
