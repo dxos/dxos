@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import { Filter, Tag } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
-import { QueryBuilder } from './query-builder';
+import { type BuildResult, QueryBuilder } from './query-builder';
 
 // TODO(burdon): Ref/Relation traversal.
 
@@ -301,7 +301,7 @@ describe('query', () => {
     });
 
     // TODO(burdon): Test "not"
-    type Test = { input: string; expected: { filter?: Filter.Any; variable?: string } };
+    type Test = { input: string; expected: BuildResult };
     const tests: Test[] = [
       // Types
       {
@@ -381,15 +381,15 @@ describe('query', () => {
       {
         input: 'x = ( type:dxos.org/type/Person )',
         expected: {
+          name: 'x',
           filter: Filter.typename('dxos.org/type/Person'),
-          variable: 'x',
         },
       },
       {
         input: 'x = ( #foo AND "bar" )',
         expected: {
+          name: 'x',
           filter: Filter.and(Filter.tag('tag_1'), Filter.text('bar')),
-          variable: 'x',
         },
       },
       // TODO(burdon): Convert Query/Filter expr to AST.

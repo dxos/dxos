@@ -9,6 +9,8 @@ import { invariant } from '@dxos/invariant';
 
 import { QueryDSL } from './gen';
 
+export type BuildResult = { filter?: Filter.Any; name?: string };
+
 /**
  * Stateless query builder that parses DSL trees into filters.
  *
@@ -35,7 +37,7 @@ export class QueryBuilder {
   /**
    * Build a query from the input string.
    */
-  build(input: string): { filter?: Filter.Any; variable?: string } {
+  build(input: string): BuildResult {
     try {
       const tree = this._parser.parse(input);
       return this.buildQuery(tree, input);
@@ -47,7 +49,7 @@ export class QueryBuilder {
   /**
    * Build a query from a parsed DSL tree.
    */
-  buildQuery(tree: Tree, input: string): { filter?: Filter.Any; variable?: string } {
+  buildQuery(tree: Tree, input: string): BuildResult {
     const cursor = tree.cursor();
 
     // Start at root (Query node).
@@ -91,12 +93,12 @@ export class QueryBuilder {
   /**
    * Parse an assignment node.
    */
-  private _parseAssignment(cursor: TreeCursor, input: string): { filter?: Filter.Any; variable?: string } {
+  private _parseAssignment(cursor: TreeCursor, input: string): BuildResult {
     if (!cursor.firstChild()) {
       return {};
     }
 
-    let variable: string | undefined;
+    let name: string | undefined;
     let filter: Filter.Any | undefined;
 
     // Find the Assignment node
@@ -104,22 +106,22 @@ export class QueryBuilder {
       if (cursor.node.name === 'Assignment') {
         // Get the full assignment text first
         const assignmentText = this._getNodeText(cursor, input);
-        
+
         if (cursor.firstChild()) {
           // First child should be the variable name (Identifier)
-          variable = this._getNodeText(cursor, input);
-          
+          name = this._getNodeText(cursor, input);
+
           // Find the parentheses in the assignment text and extract the content
           const openParenIndex = assignmentText.indexOf('(');
           const closeParenIndex = assignmentText.lastIndexOf(')');
-          
+
           if (openParenIndex !== -1 && closeParenIndex !== -1 && closeParenIndex > openParenIndex) {
             const subInput = assignmentText.slice(openParenIndex + 1, closeParenIndex).trim();
             const subTree = this._parser.parse(subInput);
             const subResult = this.buildQuery(subTree, subInput);
             filter = subResult.filter;
           }
-          
+
           cursor.parent(); // Back to Assignment
         }
         break;
@@ -127,7 +129,7 @@ export class QueryBuilder {
     } while (cursor.nextSibling());
 
     cursor.parent(); // Back to Query
-    return { filter, variable };
+    return { filter, name };
   }
 
   /**
