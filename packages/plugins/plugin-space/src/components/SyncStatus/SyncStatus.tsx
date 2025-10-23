@@ -93,12 +93,12 @@ const EdgeConnectionPopover = () => {
   return (
     <div className='min-is-[240px] p-2'>
       {/* Connection Status Header */}
-      <div className='flex items-center gap-2'>
+      <div className='flex items-center gap-2 mbe-2'>
         <Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-successText' : 'text-errorText animate-pulse')}
         />
-        <span className='font-medium text-sm text-description'>
+        <span className='font-medium text-sm'>
           {isConnected ? t('sync edge connected label') : t('sync edge disconnected label')}
         </span>
       </div>
