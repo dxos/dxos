@@ -10,7 +10,6 @@ import { DataType } from '@dxos/schema';
 
 import { Notebook } from '../types';
 
-// NOTE: createObject(DataType.makeText is required to make codemirror work.
 export const createNotebook = () =>
   Notebook.make({
     cells: [
