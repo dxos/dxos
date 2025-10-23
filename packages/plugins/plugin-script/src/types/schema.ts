@@ -4,25 +4,26 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Prompt } from '@dxos/blueprints';
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
-import { Assistant } from '@dxos/plugin-assistant/types';
 import { EditorInputMode } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 export namespace Notebook {
   export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';
 
-  export const Cell = Schema.Struct({
+  const Cell_ = Schema.Struct({
     id: Schema.String,
     type: Schema.String,
     name: Schema.optional(Schema.String),
     script: Schema.optional(Type.Ref(DataType.Text)),
+    prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
     view: Schema.optional(Type.Ref(DataType.View)),
-    chat: Schema.optional(Type.Ref(Assistant.Chat)),
   }).pipe(Schema.mutable);
-
-  export type Cell = Schema.Schema.Type<typeof Cell>;
+  export interface Cell extends Schema.Schema.Type<typeof Cell_> {}
+  export interface Cell_Encoded extends Schema.Schema.Encoded<typeof Cell_> {}
+  export const Cell: Schema.Schema<Cell, Cell_Encoded> = Cell_;
 
   export const Notebook = Schema.Struct({
     name: Schema.optional(Schema.String),

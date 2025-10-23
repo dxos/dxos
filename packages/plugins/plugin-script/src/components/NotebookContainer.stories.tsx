@@ -5,15 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { agent } from '@dxos/assistant-testing';
 import { Filter } from '@dxos/echo';
+import { FunctionType, serializeFunction } from '@dxos/functions';
+import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { useClient } from '@dxos/react-client';
+import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
@@ -39,7 +43,13 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [...DataTypes, Notebook.Notebook, Markdown.Document],
+          // TODO(wittjosiah): ComputeRuntime requires edge to be configured or it will throw.
+          config: new Config({
+            runtime: {
+              services: SERVICES_CONFIG.REMOTE,
+            },
+          }),
+          types: [...DataTypes, Notebook.Notebook, FunctionType, Markdown.Document],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
@@ -48,11 +58,13 @@ const meta = {
 
             space.db.add(createNotebook());
             space.db.add(Markdown.makeDocument({ content: '# Hello World' }));
+            space.db.add(serializeFunction(agent));
           },
         }),
         SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
+        AssistantPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),
         MarkdownPlugin(),
