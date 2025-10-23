@@ -46,7 +46,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             return {
               id: obj.id,
               label,
-              hue: 'neutral' as const,
+              // hue: 'neutral' as const,
             };
           }
         })
@@ -116,13 +116,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       <ObjectPicker.Root
         open={!!pickerState}
         onOpenChange={(nextOpen: boolean) => {
-          setPickerState(
-            nextOpen
-              ? {
-                  position: DEFAULT_POSITION,
-                }
-              : null,
-          );
+          setPickerState(nextOpen ? { position: DEFAULT_POSITION } : null);
         }}
       >
         <StackItem.Content toolbar>
