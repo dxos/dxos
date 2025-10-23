@@ -8692,6 +8692,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
+      '@dxos/assistant-testing':
+        specifier: workspace:*
+        version: link:../../core/assistant-testing
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8743,6 +8746,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
+      '@dxos/plugin-automation':
+        specifier: workspace:*
+        version: link:../plugin-automation
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -8864,9 +8870,6 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/plugin-automation':
-        specifier: workspace:*
-        version: link:../plugin-automation
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
