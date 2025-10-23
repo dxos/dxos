@@ -9,6 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { QueryDSL } from './gen';
 
+// TODO(burdon): Return Query AST.
 export type BuildResult = { filter?: Filter.Any; name?: string };
 
 /**
