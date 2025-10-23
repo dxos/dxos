@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
-import { AiContextBinder } from '@dxos/assistant';
-import { AiConversation } from '@dxos/assistant';
+import { AiContextBinder, AiConversation } from '@dxos/assistant';
+import { agent } from '@dxos/assistant-testing';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { TracingService, serializeFunction } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
@@ -42,6 +42,9 @@ export default (context: PluginContext) => [
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
           space.db.add(chat);
+
+          // Create agent function.
+          space.db.add(serializeFunction(agent));
         }),
     }),
     createResolver({
