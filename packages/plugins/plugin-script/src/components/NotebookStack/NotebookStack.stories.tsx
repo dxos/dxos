@@ -31,7 +31,7 @@ const meta = {
             await client.spaces.waitUntilReady();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
         AutomationPlugin(),

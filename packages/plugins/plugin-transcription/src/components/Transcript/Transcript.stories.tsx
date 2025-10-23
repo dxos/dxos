@@ -189,7 +189,7 @@ const meta = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
 

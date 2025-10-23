@@ -110,7 +110,7 @@ const meta = {
             space.db.add(mailbox);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
 

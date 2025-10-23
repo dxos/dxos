@@ -66,7 +66,7 @@ const meta = {
             );
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
         MarkdownPlugin(),

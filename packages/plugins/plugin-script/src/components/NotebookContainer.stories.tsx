@@ -50,7 +50,7 @@ const meta = {
             space.db.add(Markdown.makeDocument({ content: '# Hello World' }));
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         SettingsPlugin(),
         IntentPlugin(),
         AutomationPlugin(),

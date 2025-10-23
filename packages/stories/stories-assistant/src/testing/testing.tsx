@@ -126,7 +126,7 @@ export const getDecorators = ({
       GraphPlugin(),
       IntentPlugin(),
       SettingsPlugin(),
-      SpacePlugin(),
+      SpacePlugin({}),
       ClientPlugin({
         types: [
           Markdown.Document,

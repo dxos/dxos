@@ -82,7 +82,7 @@ const meta = {
             await space.db.flush({ indexes: true });
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),

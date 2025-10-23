@@ -221,7 +221,7 @@ const meta = {
             await seedTestData(client.spaces.default);
           },
         }),
-        SpacePlugin(),
+        SpacePlugin({}),
         IntentPlugin(),
         SettingsPlugin(),
 
