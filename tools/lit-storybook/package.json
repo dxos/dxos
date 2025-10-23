@@ -23,6 +23,6 @@
     "eslint-plugin-storybook": "^9.1.13",
     "lit": "^3.3.1",
     "storybook": "^9.1.13",
-    "vite": "7.1.9"
+    "vite": "7.1.11"
   }
 }
