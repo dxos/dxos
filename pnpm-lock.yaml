@@ -2967,13 +2967,13 @@ importers:
   packages/core/echo/echo-signals:
     dependencies:
       '@preact/signals':
-        specifier: ^2.3.1
+        specifier: ^2.3.2
         version: 2.3.2(preact@10.26.9)
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
     optionalDependencies:
       preact:
@@ -5450,7 +5450,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
@@ -5765,7 +5765,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       effect:
         specifier: 3.18.3
@@ -7039,7 +7039,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       date-fns:
         specifier: ^3.3.1
@@ -7529,7 +7529,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
     devDependencies:
       '@dxos/plugin-preview':
@@ -13449,7 +13449,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
@@ -13672,7 +13672,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.2.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
@@ -14338,7 +14338,7 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
       '@preact/signals-react':
-        specifier: ^3.3.0
+        specifier: ^3.3.1
         version: 3.3.1(react@19.2.0)
       '@radix-ui/react-context':
         specifier: 1.1.1
@@ -39443,7 +39443,7 @@ snapshots:
     dependencies:
       '@preact/signals-core': 1.12.1
       react: 19.2.0
-      use-sync-external-store: 1.2.2(react@19.2.0)
+      use-sync-external-store: 1.6.0(react@19.2.0)
 
   '@preact/signals@2.3.2(preact@10.26.9)':
     dependencies:
