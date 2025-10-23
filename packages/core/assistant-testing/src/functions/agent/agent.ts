@@ -4,15 +4,18 @@
 
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
-import { Prompt } from '@dxos/blueprints';
-import { Ref, Type } from '@dxos/echo';
+import { Prompt, Template } from '@dxos/blueprints';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
+
+const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 
 export default defineFunction({
   key: 'dxos.org/function/agent',
@@ -20,51 +23,66 @@ export default defineFunction({
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
     prompt: Type.Ref(Prompt.Prompt),
-
-    /**
-     * Input object or data.
-     * References get auto-resolved.
-     */
-    input: Schema.Any,
-
+    systemPrompt: Type.Ref(Prompt.Prompt).pipe(Schema.optional),
     /**
      * @default @anthropic/claude-opus-4-0
      */
     model: Schema.optional(ModelName),
+    /**
+     * Input object or data.
+     * References get auto-resolved.
+     */
+    input: Schema.Record({ key: Schema.String, value: Schema.Any }),
   }),
   outputSchema: Schema.Any,
-  handler: Effect.fnUntraced(function* ({ data: { prompt, input, model = '@anthropic/claude-opus-4-0' } }) {
-    if (Ref.isRef(input)) {
-      input = yield* DatabaseService.load(input);
+  handler: Effect.fnUntraced(function* ({ data }) {
+    log.info('processing input', { input: data.input });
+
+    const input = { ...data.input };
+    for (const key of Object.keys(data.input)) {
+      const value = data.input[key];
+      if (Ref.isRef(value)) {
+        const object = yield* DatabaseService.load(value);
+        input[key] = Obj.toJSON(object);
+      }
     }
 
     yield* DatabaseService.flush({ indexes: true });
-    const promptObj = yield* DatabaseService.load(prompt);
-    yield* TracingService.emitStatus({ message: `Running ${promptObj.name}` });
+    const prompt = yield* DatabaseService.load(data.prompt);
+    const systemPrompt = data.systemPrompt ? yield* DatabaseService.load(data.systemPrompt) : undefined;
+    yield* TracingService.emitStatus({ message: `Running ${prompt.name}` });
 
-    log.info('starting agent', { prompt: promptObj.name, input });
+    log.info('starting agent', { prompt: prompt.name, input: data.input });
 
-    const blueprints = yield* Effect.forEach(promptObj.blueprints, DatabaseService.loadOption).pipe(
+    const blueprints = yield* Function.pipe(
+      prompt.blueprints,
+      Array.appendAll(systemPrompt?.blueprints ?? []),
+      Effect.forEach(DatabaseService.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
-    const objects = yield* Effect.forEach(promptObj.context, DatabaseService.loadOption).pipe(
+    const objects = yield* Function.pipe(
+      prompt.context,
+      Array.appendAll(systemPrompt?.context ?? []),
+      Effect.forEach(DatabaseService.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
     const toolkit = yield* createToolkit({ blueprints });
 
+    const promptText = Template.process(prompt.instructions, input);
+
     const session = new AiSession();
     const result = yield* session
       .run({
-        prompt: JSON.stringify(input ?? {}),
-        system: promptObj.instructions,
+        prompt: promptText,
+        system: systemPrompt?.instructions,
         blueprints,
-        objects: objects as any,
+        objects: objects as Obj.Any[],
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' })),
       })
-      .pipe(Effect.provide(AiService.model(model)));
+      .pipe(Effect.provide(AiService.model(data.model ?? DEFAULT_MODEL)));
     const lastBlock = result.at(-1)?.blocks.at(-1);
     const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
 
