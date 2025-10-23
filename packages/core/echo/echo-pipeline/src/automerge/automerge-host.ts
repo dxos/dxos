@@ -795,10 +795,13 @@ export class AutomergeHost extends Resource {
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (!state) {
+        continue;
+      }
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (state?.documents[documentId]) {
+        if (documentId in state.documents) {
           if (!newState) {
             newState = structuredClone(state);
           }
