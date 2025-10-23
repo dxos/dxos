@@ -8,8 +8,7 @@ import { Surface } from '@dxos/app-framework';
 import { Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { useChatProcessor, useChatServices } from '@dxos/plugin-assistant';
-import { Chat } from '@dxos/plugin-assistant';
+import { TemplateEditor } from '@dxos/plugin-assistant';
 import { Graph } from '@dxos/plugin-explorer/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
@@ -42,10 +41,11 @@ export type NotebookCellProps = {
   graph?: ComputeGraph;
   dragging?: boolean;
   cell: Notebook.Cell;
+  promptResults?: Record<string, string>;
 } & (Pick<NotebookMenuProps, 'onCellInsert' | 'onCellDelete'> & Pick<TypescriptEditorProps, 'env'>);
 
 // TODO(burdon): Show evaluation errors.
-export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCellProps) => {
+export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
   //
@@ -94,13 +94,6 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
     },
     [cell],
   );
-
-  //
-  // Prompt.
-  // TODO(burdon): Add values to context or system message (via blueprint?).
-  //
-  const services = useChatServices({ space, chat: cell.chat?.target });
-  const processor = useChatProcessor({ chat: cell.chat?.target, services });
 
   switch (cell.type) {
     case 'markdown':
@@ -161,15 +154,20 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
       );
 
     case 'prompt':
-      if (!cell.chat?.target || !processor) {
+      if (!cell.prompt?.target) {
         return null;
       }
 
       return (
-        <Chat.Root chat={cell.chat.target} processor={processor}>
-          <Chat.Thread overscroll={0} />
-          <Chat.Prompt settings={false} classNames='p-2 border-t border-subduedSeparator' />
-        </Chat.Root>
+        <>
+          <TemplateEditor
+            id={cell.id}
+            template={cell.prompt.target.instructions}
+            lineNumbers={false}
+            classNames='p-2 pis-3'
+          />
+          <NotebookPromptResult cell={cell} promptResults={promptResults} />
+        </>
       );
 
     default:
@@ -197,6 +195,28 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
           <span className='text-description'>&nbsp;=&nbsp;</span>
         </>
       )}
+      <span>{value}</span>
+    </div>
+  );
+};
+
+const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
+  if (!cell.prompt) {
+    return null;
+  }
+
+  const value = promptResults?.[cell.prompt.dxn.toString()];
+  if (value == null) {
+    return null;
+  }
+
+  return (
+    <div
+      className={mx(
+        'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
+        valueStyles,
+      )}
+    >
       <span>{value}</span>
     </div>
   );
