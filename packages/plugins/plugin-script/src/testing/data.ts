@@ -17,12 +17,12 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c = a() + b', '', ''].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText(['c = a() + b'].join('\n')))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['a = () => 100', ''].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText(['a = () => 100'].join('\n')))),
       },
       {
         id: PublicKey.random().toString(),
@@ -37,7 +37,7 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c + d', '', '', ''].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText(['c + d'].join('\n')))),
       },
       {
         id: PublicKey.random().toString(),
@@ -47,7 +47,7 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'prompt',
-        prompt: Ref.make(Prompt.make({ instructions: 'What is a value smaller than {{b}}?' })),
+        prompt: Ref.make(Prompt.make({ instructions: 'What is a common factor of {{a}} and {{b}}?' })),
       },
     ],
   });
