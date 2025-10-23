@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -50,6 +51,7 @@ const meta = {
         SettingsPlugin(),
         IntentPlugin(),
         AutomationPlugin(),
+        ExplorerPlugin(),
       ],
     }),
   ],
