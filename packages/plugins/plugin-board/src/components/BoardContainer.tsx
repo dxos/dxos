@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, Ref, getSpace } from '@dxos/client/echo';
+import { getSpace } from '@dxos/client/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
@@ -34,15 +35,23 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
 
   // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board.
-  const allObjects = useQuery(getSpace(board), Filter.everything());
+  const objects = useQuery(getSpace(board), Filter.everything());
   const options = useMemo(
     () =>
-      allObjects.map((obj) => ({
-        id: obj.id,
-        label: obj.name || obj.title || obj.id,
-        hue: 'neutral' as const,
-      })),
-    [allObjects],
+      objects
+        .filter((obj) => obj.id !== board.id)
+        .map((obj) => {
+          const label = Obj.getLabel(obj);
+          if (label) {
+            return {
+              id: obj.id,
+              label,
+              hue: 'neutral' as const,
+            };
+          }
+        })
+        .filter(isNonNullable),
+    [objects],
   );
 
   const handleAdd = useCallback<NonNullable<BoardRootProps['onAdd']>>(
@@ -62,7 +71,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       if (!pickerState) return;
 
       // Find the selected object by id from the space.
-      const selectedObject = allObjects.find((obj) => obj.id === id);
+      const selectedObject = objects.find((obj) => obj.id === id);
       if (!selectedObject) return;
 
       // Create a reference to the selected object and add it to the board.
@@ -75,7 +84,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       // Close the picker.
       setPickerState(null);
     },
-    [pickerState, allObjects, board],
+    [pickerState, objects, board],
   );
 
   // TODO(burdon): Use intents so can be undone.
