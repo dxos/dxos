@@ -134,7 +134,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const handleCancel = useCallback(() => {
     filterVisible.set(false);
     setFilterText(filterParam ?? '');
-    setFilter(parser.build(filterParam ?? ''));
+    setFilter(parser.build(filterParam ?? '').filter);
   }, [filterVisible, filterParam, parser]);
 
   return (
