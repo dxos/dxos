@@ -91,7 +91,7 @@ export const WithCompanion: Story = {
             await initializeMailbox(client.spaces.default);
           },
         }),
-        SpacePlugin({}),
+        SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
 

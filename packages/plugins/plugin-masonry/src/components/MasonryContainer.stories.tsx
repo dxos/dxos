@@ -62,7 +62,7 @@ const meta = {
             await factory([{ type: DataType.Organization, count: 64 }]);
           },
         }),
-        SpacePlugin({}),
+        SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
         ThemePlugin({ tx: defaultTx }),

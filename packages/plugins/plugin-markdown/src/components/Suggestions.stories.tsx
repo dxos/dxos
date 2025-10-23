@@ -163,7 +163,7 @@ const storybook: Meta<typeof DefaultStory> = {
             await client.halo.createIdentity();
           },
         }),
-        SpacePlugin({}),
+        SpacePlugin(),
         GraphPlugin(),
         IntentPlugin(),
         SettingsPlugin(),

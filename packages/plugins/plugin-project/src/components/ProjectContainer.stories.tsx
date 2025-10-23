@@ -199,7 +199,7 @@ const meta = {
             await messageQueue.append(messages);
           },
         }),
-        SpacePlugin({}),
+        SpacePlugin(),
         IntentPlugin(),
         SettingsPlugin(),
 
