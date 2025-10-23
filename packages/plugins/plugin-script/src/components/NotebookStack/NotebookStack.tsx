@@ -47,9 +47,8 @@ const NotebookSection = ({
   ...props
 }: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const resizable = cell.type === 'query' || cell.type === 'prompt';
+  const resizable = cell.type === 'query';
 
-  // TOOD(burdon): Set size if no extrinsic size (provider).
   return (
     <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
       <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
