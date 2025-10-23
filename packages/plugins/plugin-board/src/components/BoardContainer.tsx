@@ -19,13 +19,13 @@ import { type Board as BoardType } from '../types';
 
 const DEFAULT_POSITION = { x: 0, y: 0 } satisfies Position;
 
+type PickerState = {
+  position: Position;
+};
+
 export type BoardContainerProps = {
   role?: string;
   board: BoardType.Board;
-};
-
-type PickerState = {
-  position: Position;
 };
 
 export const BoardContainer = ({ board }: BoardContainerProps) => {
