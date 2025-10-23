@@ -378,10 +378,6 @@ export class AutomergeHost extends Resource {
   // NOTE: If both peers return sharePolicy=false the replication will not happen
   // https://github.com/automerge/automerge-repo/pull/292
   private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
-    if (peerId.startsWith('client-')) {
-      return false; // Only send docs to clients if they are requested.
-    }
-
     if (!documentId) {
       return false;
     }
