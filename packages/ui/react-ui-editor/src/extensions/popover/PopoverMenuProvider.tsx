@@ -77,7 +77,6 @@ export const PopoverMenuProvider = ({
       'dx-anchor-activate' as any,
       (event: DxAnchorActivate) => {
         const { trigger, refId } = event;
-        console.log('update', trigger, refId);
 
         // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
         if (!refId) {

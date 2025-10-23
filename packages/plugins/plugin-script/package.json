@@ -113,6 +113,7 @@
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
+    "@dxos/plugin-automation": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",

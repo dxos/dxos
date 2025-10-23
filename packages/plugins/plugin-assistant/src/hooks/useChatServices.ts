@@ -26,15 +26,14 @@ export type UseChatServicesProps = {
 // TODO(dmaretskyi): Better return type.
 export const useChatServices = ({
   space,
-  chat, // TODO(burdon): Pass in queue directly.
+  chat,
 }: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
   const client = useClient();
   space ??= client.spaces.default;
 
-  const computeRuntimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
-
+  const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
   return useMemo(() => {
-    const runtime = computeRuntimeResolver.getRuntime(space.id);
+    const runtime = runtimeResolver.getRuntime(space.id);
     return () =>
       runtime.runPromise(
         Effect.gen(function* () {
