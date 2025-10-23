@@ -11,7 +11,7 @@
   "dependencies": {
     "debug": "^4.3.4",
     "domain-browser": "^4.22.0",
-    "esbuild": "0.25.10",
+    "esbuild": "0.25.11",
     "path-browserify": "^1.0.1",
     "readable-stream": "^3.6.0",
     "tty-browserify": "~0.0.1"
