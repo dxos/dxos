@@ -231,6 +231,13 @@ export const translations = [
           'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. You can unarchive it by enabling archived spaces in the app settings.',
         'archive space label': 'Archive',
         'unarchive space label': 'Unarchive',
+
+        'sync edge connected label': 'Edge connected',
+        'sync edge disconnected label': 'Edge disconnected',
+        'sync no connection label': 'No connection to edge service',
+        'sync latency label': 'Latency',
+        'sync upload label': 'Upload',
+        'sync download label': 'Download',
       },
     },
   },

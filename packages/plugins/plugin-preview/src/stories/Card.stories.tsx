@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { faker } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../translations';
 
 import { Defaultstory, createCards } from './testing';
+
+faker.seed(999);
 
 const meta = {
   title: 'plugins/plugin-preview/Card',
@@ -20,7 +23,7 @@ const meta = {
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],
   parameters: {
-    layout: 'column',
+    layout: 'fullscreen',
     translations,
   },
   tags: ['cards'],

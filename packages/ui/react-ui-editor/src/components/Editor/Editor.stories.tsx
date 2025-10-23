@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { createDocAccessor, createObject } from '@dxos/client/echo';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 
 import { automerge, createBasicExtensions, createThemeExtensions } from '../../extensions';
@@ -17,10 +17,7 @@ import { Editor } from '../Editor';
 const meta = {
   title: 'ui/react-ui-editor/Editor',
   component: Editor,
-  decorators: [withTheme],
-  parameters: {
-    layout: 'column',
-  },
+  decorators: [withTheme, withLayout({ container: 'column' })],
 } satisfies Meta<typeof Editor>;
 
 export default meta;

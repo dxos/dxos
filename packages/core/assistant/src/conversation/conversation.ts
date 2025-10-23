@@ -30,10 +30,6 @@ export interface AiConversationRunParams {
   observer?: GenerationObserver;
 }
 
-export type AiConversationOptions = {
-  queue: Queue<DataType.Message | ContextBinding>;
-};
-
 /**
  * Durable conversation state (initiated by users and agents) backed by a Queue.
  * Executes tools based on AI responses and supports cancellation of in-progress requests.
@@ -54,9 +50,9 @@ export class AiConversation extends Resource {
    */
   private _toolkit: Toolkit.WithHandler<any> | undefined;
 
-  public constructor(options: AiConversationOptions) {
+  public constructor(queue: Queue<DataType.Message | ContextBinding>) {
     super();
-    this._queue = options.queue;
+    this._queue = queue;
     this._context = new AiContextBinder(this._queue);
   }
 
