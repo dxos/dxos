@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { PeerId } from '@automerge/automerge-repo';
+import { type Heads } from '@automerge/automerge';
+import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -84,7 +85,7 @@ const STATE_1: CollectionState = {
     a: ['1'],
     b: ['2'],
     c: ['3'],
-  },
+  } as Record<DocumentId, Heads>,
 };
 
 const STATE_2: CollectionState = {
@@ -92,5 +93,5 @@ const STATE_2: CollectionState = {
     a: ['1'],
     b: ['4'],
     d: ['3'],
-  },
+  } as Record<DocumentId, Heads>,
 };
