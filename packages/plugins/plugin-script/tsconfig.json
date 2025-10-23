@@ -141,6 +141,9 @@
       "path": "../plugin-assistant"
     },
     {
+      "path": "../plugin-automation"
+    },
+    {
       "path": "../plugin-client"
     },
     {

@@ -22,7 +22,7 @@ export interface QueryFn {
 }
 
 /**
- * Common interface for Echo and Queue.
+ * Common interface for Database and Queue.
  */
 export interface Queryable {
   query: QueryFn;

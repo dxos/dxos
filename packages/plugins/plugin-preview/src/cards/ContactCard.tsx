@@ -26,7 +26,14 @@ export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: 
               <h2 className={mx(cardHeading, 'grow truncate')}>{fullName}</h2>
             </Avatar.Label>
           </div>
-          <Avatar.Content imgSrc={image} icon='ph--user--regular' size={16} hue='neutral' variant='square' />
+          <Avatar.Content
+            imgSrc={image}
+            icon='ph--user--regular'
+            size={16}
+            classNames='text-subdued'
+            hue='neutral'
+            variant='square'
+          />
         </Card.Text>
       </Avatar.Root>
       {organization?.name && (

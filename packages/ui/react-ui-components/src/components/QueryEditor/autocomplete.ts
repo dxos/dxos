@@ -16,7 +16,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
   const parser = QueryDSL.Parser.configure({ strict: false });
   return ({ state, pos }: GetMenuContext): string[] => {
     const tree = parser.parse(state.sliceDoc());
-    const node = tree.cursorAt(pos, -1).node;
+    const { node } = tree.cursorAt(pos, -1);
 
     switch (node.parent?.type.id) {
       case QueryDSL.Node.TypeFilter: {

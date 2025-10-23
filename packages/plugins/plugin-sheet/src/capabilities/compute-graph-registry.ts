@@ -14,10 +14,10 @@ export default async (context: PluginContext) => {
   // Async import removes direct dependency on hyperformula.
   const { defaultPlugins, ComputeGraphRegistry } = await import('@dxos/compute');
   const computeRuntimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
-
   const computeGraphRegistry = new ComputeGraphRegistry({
     plugins: defaultPlugins,
     computeRuntime: computeRuntimeResolver,
   });
+
   return contributes(SheetCapabilities.ComputeGraphRegistry, computeGraphRegistry);
 };

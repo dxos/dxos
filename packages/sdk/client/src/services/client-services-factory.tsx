@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UAParser } from 'ua-parser-js';
+import UAParser from 'ua-parser-js';
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';

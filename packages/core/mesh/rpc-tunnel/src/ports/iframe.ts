@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { UAParser } from 'ua-parser-js';
+import UAParser from 'ua-parser-js';
 
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';

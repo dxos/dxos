@@ -31,7 +31,12 @@ const meta = {
   render: DefaultStory,
   parameters: { translations },
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] })],
+  decorators: [
+    withTheme,
+    withPluginManager({
+      plugins: [IntentPlugin(), ClientPlugin({})],
+    }),
+  ],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

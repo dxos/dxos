@@ -23,7 +23,9 @@ const meta = {
   decorators: [
     withTheme,
     withLayout({ classNames: 'is-prose' }),
-    withPluginManager({ plugins: [IntentPlugin(), ClientPlugin({})] }),
+    withPluginManager({
+      plugins: [IntentPlugin(), ClientPlugin({})],
+    }),
   ],
   parameters: {
     layout: 'centered',
