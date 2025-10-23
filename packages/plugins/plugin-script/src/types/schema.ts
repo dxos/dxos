@@ -16,6 +16,7 @@ export namespace Notebook {
   export const Cell = Schema.Struct({
     id: Schema.String,
     type: Schema.String,
+    name: Schema.optional(Schema.String),
     script: Schema.optional(Type.Ref(DataType.Text)),
     view: Schema.optional(Type.Ref(DataType.View)),
     chat: Schema.optional(Type.Ref(Assistant.Chat)),

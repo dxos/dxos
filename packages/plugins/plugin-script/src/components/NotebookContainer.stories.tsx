@@ -11,6 +11,7 @@ import { Filter } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
+import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -38,13 +39,15 @@ const meta = {
     withPluginManager({
       plugins: [
         ClientPlugin({
-          types: [...DataTypes, Notebook.Notebook],
+          types: [...DataTypes, Notebook.Notebook, Markdown.Document],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             const space = client.spaces.default;
             await space.waitUntilReady();
+
             space.db.add(createNotebook());
+            space.db.add(Markdown.makeDocument({ content: '# Hello World' }));
           },
         }),
         SpacePlugin({}),
@@ -52,6 +55,7 @@ const meta = {
         IntentPlugin(),
         AutomationPlugin(),
         ExplorerPlugin(),
+        MarkdownPlugin(),
       ],
     }),
   ],
