@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
-import { ObjectPicker } from '@dxos/react-ui-form';
+import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
@@ -66,27 +66,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
     [board],
   );
 
-  const handleSelect = useCallback(
-    (id: string) => {
-      if (!pickerState) return;
-
-      // Find the selected object by id from the space.
-      const selectedObject = objects.find((obj) => obj.id === id);
-      if (!selectedObject) return;
-
-      // Create a reference to the selected object and add it to the board.
-      const ref = Ref.make(selectedObject);
-      board.items.push(ref);
-
-      // Set the layout position for the new item.
-      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
-
-      // Close the picker.
-      setPickerState(null);
-    },
-    [pickerState, objects, board],
-  );
-
   // TODO(burdon): Use intents so can be undone.
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
@@ -106,6 +85,27 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
       board.layout.cells[id] = { ...layout, ...position };
     },
     [board],
+  );
+
+  const handleSelect = useCallback<NonNullable<ObjectPickerContentProps['onSelect']>>(
+    (id) => {
+      if (!pickerState) return;
+
+      // Find the selected object by id from the space.
+      const selectedObject = objects.find((obj) => obj.id === id);
+      if (!selectedObject) return;
+
+      // Create a reference to the selected object and add it to the board.
+      const ref = Ref.make(selectedObject);
+      board.items.push(ref);
+
+      // Set the layout position for the new item.
+      board.layout.cells[selectedObject.id.toString()] = pickerState.position;
+
+      // Close the picker.
+      setPickerState(null);
+    },
+    [pickerState, objects, board],
   );
 
   return (
