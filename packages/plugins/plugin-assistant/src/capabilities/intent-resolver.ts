@@ -71,13 +71,12 @@ export default (context: PluginContext) => [
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
         const space = getSpace(chat);
-        // TODO(burdon): Can the ref be typed?
         const queue = chat.queue.target as Queue<DataType.Message>;
         if (!space || !queue) {
           return;
         }
 
-        // TODO(burdon): Create util? move from AutomationCapabilities?
+        // TODO(burdon): Move from AutomationCapabilities? (create util?)
         const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
         const runtime = await runtimeResolver.getRuntime(space.id).runPromise(
           Effect.gen(function* () {
