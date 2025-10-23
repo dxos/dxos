@@ -55,6 +55,8 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
       getMenu,
     });
 
+    console.log(groupsRef);
+
     const { t } = useTranslation(translationKey);
     const { themeMode } = useThemeContext();
     const extensions = useMemo<Extension[]>(

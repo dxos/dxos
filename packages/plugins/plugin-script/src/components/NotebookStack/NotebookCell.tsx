@@ -145,6 +145,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, env }: NotebookCell
         return null;
       }
 
+      // TODO(burdon): Remove app-framework deps (via render prop).
       return (
         <div className={mx('bs-full overflow-hidden grid', view && !dragging && 'grid-rows-[min-content_1fr]')}>
           <QueryEditor
