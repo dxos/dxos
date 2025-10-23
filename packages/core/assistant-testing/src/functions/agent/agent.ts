@@ -15,7 +15,7 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-const DEFAULT_MODEL = '@anthropic/claude-opus-4-0';
+const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 
 export default defineFunction({
   key: 'dxos.org/function/agent',
@@ -23,19 +23,16 @@ export default defineFunction({
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
     prompt: Type.Ref(Prompt.Prompt),
-
-    system: Type.Ref(Prompt.Prompt).pipe(Schema.optional),
-
+    systemPrompt: Type.Ref(Prompt.Prompt).pipe(Schema.optional),
+    /**
+     * @default @anthropic/claude-opus-4-0
+     */
+    model: Schema.optional(ModelName),
     /**
      * Input object or data.
      * References get auto-resolved.
      */
     input: Schema.Record({ key: Schema.String, value: Schema.Any }),
-
-    /**
-     * @default @anthropic/claude-opus-4-0
-     */
-    model: Schema.optional(ModelName),
   }),
   outputSchema: Schema.Any,
   handler: Effect.fnUntraced(function* ({ data }) {
@@ -52,21 +49,21 @@ export default defineFunction({
 
     yield* DatabaseService.flush({ indexes: true });
     const prompt = yield* DatabaseService.load(data.prompt);
-    const system = data.system ? yield* DatabaseService.load(data.system) : undefined;
+    const systemPrompt = data.systemPrompt ? yield* DatabaseService.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.name}` });
 
     log.info('starting agent', { prompt: prompt.name, input: data.input });
 
     const blueprints = yield* Function.pipe(
       prompt.blueprints,
-      Array.appendAll(system?.blueprints ?? []),
+      Array.appendAll(systemPrompt?.blueprints ?? []),
       Effect.forEach(DatabaseService.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
     );
     const objects = yield* Function.pipe(
       prompt.context,
-      Array.appendAll(system?.context ?? []),
+      Array.appendAll(systemPrompt?.context ?? []),
       Effect.forEach(DatabaseService.loadOption),
       Effect.map(Array.filter(Option.isSome)),
       Effect.map(Array.map((option) => option.value)),
@@ -79,7 +76,7 @@ export default defineFunction({
     const result = yield* session
       .run({
         prompt: promptText,
-        system: system?.instructions,
+        system: systemPrompt?.instructions,
         blueprints,
         objects: objects as Obj.Any[],
         toolkit,
