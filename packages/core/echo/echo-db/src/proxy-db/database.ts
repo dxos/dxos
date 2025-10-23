@@ -36,6 +36,7 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
+import { type Queryable } from '../query';
 import { Filter, Query, type QueryFn, type QueryOptions } from '../query';
 
 import { EchoSchemaRegistry } from './echo-schema-registry';
@@ -60,8 +61,8 @@ export type AddOptions = {
 /**
  * Database API.
  */
-// TODO(burdon): Rename (no product name in types).
-export interface EchoDatabase {
+// TODO(burdon): Reconcile with current `Echo` def.
+export interface EchoDatabase extends Queryable {
   get graph(): Hypergraph;
   get schemaRegistry(): EchoSchemaRegistry;
 

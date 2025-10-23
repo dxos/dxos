@@ -9,12 +9,16 @@ import { AiContextBinder } from '@dxos/assistant';
 import { AiConversation } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/client/echo';
+import { type Queue } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { Filter, Key, Obj, Ref } from '@dxos/echo';
+import { TracingService } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { CollectionAction } from '@dxos/plugin-space/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
+import { type AiChatServices, updateName } from '../processor';
 import { Assistant, AssistantAction } from '../types';
 
 import { BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
@@ -66,19 +70,20 @@ export default (context: PluginContext) => [
     createResolver({
       intent: AssistantAction.UpdateChatName,
       resolve: async ({ chat }) => {
-        // TODO(burdon): Reuse system conversation/queue.
         const space = getSpace(chat);
-        const queue = space?.queues.create<DataType.Message>();
-        if (!queue) {
+        const queue = chat.queue.target as Queue<DataType.Message>;
+        if (!space || !queue) {
           return;
         }
 
-        const conversation = new AiConversation(queue);
-        await conversation.open();
-        // TODO(burdon): How to get runtime?
-        // await updateName(runtime, conversation, chat);
-        await conversation.close();
-        console.log(chat);
+        const runtimeResolver = context.getCapability(AutomationCapabilities.ComputeRuntime);
+        const runtime = await runtimeResolver.getRuntime(space.id).runPromise(
+          Effect.gen(function* () {
+            return yield* Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop));
+          }),
+        );
+
+        await new AiConversation(queue).use(async (conversation) => updateName(runtime, conversation, chat));
       },
     }),
     createResolver({
