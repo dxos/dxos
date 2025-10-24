@@ -5,14 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Query, Ref } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
-import { Graph } from '@dxos/plugin-explorer/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   type BasicExtensionsOptions,
@@ -49,44 +46,15 @@ export type NotebookCellProps = {
 export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
-  //
-  // Common.
-  //
   const extensions = useMemo(() => {
     return cell.source?.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
+      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.source.target, ['content']) })].filter(
           isNonNullable,
         )
       : [];
   }, [cell.source?.target]);
 
-  //
-  // Query.
-  //
   const view = cell.view?.target;
-  const builder = useMemo(() => new QueryBuilder(), []);
-  useAsyncEffect(async () => {
-    if (!space || !cell.source?.target) {
-      return;
-    }
-
-    if (cell.type === 'query') {
-      const query = cell.source.target.content;
-      const { name, filter } = builder.build(query);
-      if (filter) {
-        const ast = Query.select(filter).ast;
-        const view = cell.view?.target;
-        if (!view) {
-          const graph = Graph.make({ query: { ast } });
-          const { view } = await Graph.makeView({ space, presentation: graph });
-          cell.view = Ref.make(view);
-          cell.name = name;
-        } else {
-          view.query.ast = ast;
-        }
-      }
-    }
-  }, [space, builder, cell, cell.source?.target?.content]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {

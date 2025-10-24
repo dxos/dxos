@@ -10,7 +10,8 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { agent } from '@dxos/assistant-testing';
 import { Blueprint, Prompt } from '@dxos/blueprints';
-import { Filter, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { QueryBuilder } from '@dxos/echo-query';
 import {
   ComputeEventLogger,
   type FunctionDefinition,
@@ -21,6 +22,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
+import { Graph } from '@dxos/plugin-explorer/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -46,10 +48,13 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
+
+  // TODO(burdon): Consolidate state (with graph).
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+  const [queryValues, setQueryValues] = useState<Record<string, any>>({});
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
 
-  const handleRun = useComputeRuntimeCallback(
+  const handleExecPrompts = useComputeRuntimeCallback(
     space,
     Effect.fnUntraced(function* () {
       invariant(graph);
@@ -63,29 +68,57 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       for (const prompt of prompts) {
         yield* runPrompt({
           prompt,
-          graph,
+          input: { ...queryValues, ...graph.valuesByName.value },
           onResult: (result) => setPromptResults((prev) => ({ ...prev, [prompt.dxn.toString()]: result })),
         });
       }
     }),
-    [notebook, graph],
+    [notebook, graph, queryValues],
   );
 
-  const handleQueries = useCallback(async () => {
-    const queries =
-      notebook?.cells
-        .filter((cell) => cell.type === 'query')
-        .map((cell) => cell.query)
-        .filter(isNonNullable) ?? [];
+  const handleExecQueries = useCallback(async () => {
+    if (!space) {
+      return;
+    }
 
-    console.log(queries);
-  }, [graph]);
+    const builder = new QueryBuilder();
+    for (const cell of notebook?.cells ?? []) {
+      if (cell.type === 'query') {
+        if (cell.source?.target) {
+          const source = cell.source.target.content;
+          const { name, filter } = builder.build(source);
+          if (filter) {
+            const ast = Query.select(filter).ast;
+            const view = cell.view?.target;
+            if (!view) {
+              const graph = Graph.make({ query: { ast } });
+              const { view } = await Graph.makeView({ space, presentation: graph });
+              cell.view = Ref.make(view);
+              cell.name = name;
+            } else {
+              view.query.ast = ast;
+            }
+          }
+        }
+
+        if (cell.name && cell.view?.target) {
+          const view = Obj.getSnapshot(cell.view?.target);
+          const query = Query.fromAst(view.query.ast);
+          const result = await space?.db.query(query).run();
+          const objectIds = result?.objects?.map((obj) => obj.id);
+          setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
+        }
+      }
+    }
+  }, [space, notebook, graph]);
 
   // TODO(burdon): Cache values in context (preserve when switched).
   const handleCompute = useCallback(async () => {
+    // TODO(burdon): Generalize executors (dependencies).
     graph?.evaluate();
-    await handleRun();
-  }, [graph, handleRun]);
+    await handleExecQueries();
+    await handleExecPrompts();
+  }, [graph, handleExecQueries, handleExecPrompts]);
 
   const handleRearrange = useCallback<NonNullable<NotebookStackProps['onRearrange']>>(
     (source, target) => {
@@ -110,7 +143,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         case 'markdown':
         case 'script':
         case 'query': {
-          cell.script = Ref.make(DataType.makeText());
+          cell.source = Ref.make(DataType.makeText());
           break;
         }
 
@@ -183,19 +216,14 @@ export default NotebookContainer;
 // TODO(wittjosiah): Factor out. Copied from PromptContainer in stories-assistant.
 const runPrompt = Effect.fn(function* ({
   prompt,
-  graph,
+  input,
   onResult,
 }: {
   prompt: Ref.Ref<Prompt.Prompt>;
-  graph: ComputeGraph;
+  input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof agent> = {
-    prompt,
-    // Ensure input is always an object to satisfy the agent schema.
-    input: graph.valuesByName.value ?? {},
-  };
-
+  const inputData: FunctionDefinition.Input<typeof agent> = { prompt, input };
   const tracer = yield* InvocationTracer;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
