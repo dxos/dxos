@@ -81,7 +81,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           const query = Query.fromAst(view.query.ast);
           const result = await space?.db.query(query).run();
           const objectIds = result?.objects?.map((obj) => obj.id);
-          setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
+          setQueryValues((prev) => ({ ...prev, [cell.name!]: JSON.stringify(objectIds) }));
         }
       }
     }
