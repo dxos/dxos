@@ -64,12 +64,12 @@ const ProjectContent = ({ project }: ProjectContentProps) => {
 ProjectContent.displayName = 'Project.Content';
 
 //
-// Menu
+// Toolbar
 //
 
-export const ProjectMenu = () => {
+export const ProjectToolbar = () => {
   const { t } = useTranslation(meta.id);
-  const { onAddColumn } = useProject(ProjectMenu.displayName);
+  const { onAddColumn } = useProject(ProjectToolbar.displayName);
 
   return (
     <Toolbar.Root>
@@ -78,7 +78,7 @@ export const ProjectMenu = () => {
   );
 };
 
-ProjectMenu.displayName = 'Project.Menu';
+ProjectToolbar.displayName = 'Project.Toolbar';
 
 //
 // Project
@@ -87,7 +87,7 @@ ProjectMenu.displayName = 'Project.Menu';
 export const Project = {
   Root: ProjectRoot,
   Content: ProjectContent,
-  Menu: ProjectMenu,
+  Toolbar: ProjectToolbar,
 };
 
 export { useProject };
