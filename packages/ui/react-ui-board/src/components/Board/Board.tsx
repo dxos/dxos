@@ -21,9 +21,15 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, type ThemedClassName, Toolbar, usePx, useTranslation } from '@dxos/react-ui';
-import { useAttention } from '@dxos/react-ui-attention';
-import { mx, toolbarInactive } from '@dxos/react-ui-theme';
+import {
+  IconButton,
+  type ThemedClassName,
+  Toolbar,
+  type ToolbarRootProps,
+  usePx,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -338,16 +344,15 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
 // Controls
 //
 
-type BoardToolbarProps = ThemedClassName<{ attendableId?: string }>;
+type BoardToolbarProps = ThemedClassName<ToolbarRootProps>;
 
-const BoardToolbar = ({ classNames, attendableId }: BoardToolbarProps) => {
+const BoardToolbar = (props: BoardToolbarProps) => {
   const { t } = useTranslation(translationKey);
-  const { hasAttention } = useAttention(attendableId);
   const { readonly, zoom, controller, onAdd } = useBoardContext(BoardToolbar.displayName);
 
   // TODO(burdon): Convert to MenuProvider.
   return (
-    <Toolbar.Root classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}>
+    <Toolbar.Root {...props}>
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly

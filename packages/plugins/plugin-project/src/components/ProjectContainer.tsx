@@ -9,23 +9,9 @@ import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { toolbarInactive } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
 import { type ItemProps, Project } from './Project';
-
-const ProjectItem = ({ item, projectionModel }: ItemProps) => {
-  return (
-    <Surface
-      role='card--intrinsic'
-      data={{
-        subject: item,
-        projection: projectionModel,
-      }}
-      limit={1}
-    />
-  );
-};
 
 export type ProjectContainerProps = { project: DataType.Project; role: string };
 
@@ -34,7 +20,7 @@ export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const attendableId = fullyQualifiedId(project);
   const { hasAttention } = useAttention(attendableId);
 
-  const handleAddColumn = useCallback(
+  const handleColumnAdd = useCallback(
     () =>
       dispatch(
         createIntent(DeckAction.ChangeCompanion, {
@@ -47,11 +33,24 @@ export const ProjectContainer = ({ project }: ProjectContainerProps) => {
 
   return (
     <StackItem.Content toolbar>
-      <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
-        <Project.Toolbar classNames={[attendableId && !hasAttention && toolbarInactive]} textBlockWidth />
+      <Project.Root Item={ProjectItem} onAddColumn={handleColumnAdd}>
+        <Project.Toolbar disabled={!hasAttention} textBlockWidth />
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>
+  );
+};
+
+const ProjectItem = ({ item, projectionModel }: ItemProps) => {
+  return (
+    <Surface
+      role='card--intrinsic'
+      data={{
+        subject: item,
+        projection: projectionModel,
+      }}
+      limit={1}
+    />
   );
 };
 
