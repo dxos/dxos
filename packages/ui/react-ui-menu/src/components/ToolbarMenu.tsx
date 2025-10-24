@@ -158,22 +158,25 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
+// TODO(burdon): Reconcile with react-ui/Toolbar
 export const ToolbarMenu = ({
   __menuScope,
   classNames,
-  textBlockWidth: wrapContents,
+  textBlockWidth: textBlockWidthParam,
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
-  const InnerRoot = wrapContents ? 'div' : Fragment;
-  const innerRootProps = wrapContents ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') } : {};
+  const InnerRoot = textBlockWidthParam ? 'div' : Fragment;
+  const innerRootProps = textBlockWidthParam
+    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') }
+    : {};
 
   return (
     <NaturalToolbar.Root
       {...props}
-      layoutManaged={wrapContents}
+      layoutManaged={textBlockWidthParam}
       classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent', classNames]}
     >
       <InnerRoot {...innerRootProps}>

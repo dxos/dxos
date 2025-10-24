@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type FC } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Toolbar, useTranslation } from '@dxos/react-ui';
+import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Stack } from '@dxos/react-ui-stack';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
@@ -67,12 +67,12 @@ ProjectContent.displayName = 'Project.Content';
 // Toolbar
 //
 
-export const ProjectToolbar = () => {
+export const ProjectToolbar = (props: ToolbarRootProps) => {
   const { t } = useTranslation(meta.id);
   const { onAddColumn } = useProject(ProjectToolbar.displayName);
 
   return (
-    <Toolbar.Root>
+    <Toolbar.Root {...props}>
       <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add column label')} onClick={onAddColumn} />
     </Toolbar.Root>
   );
