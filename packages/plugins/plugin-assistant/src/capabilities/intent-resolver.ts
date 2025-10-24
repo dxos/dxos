@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, type PluginContext, contributes, createIntent, createResolver } from '@dxos/app-framework';
-import { AiContextBinder } from '@dxos/assistant';
-import { AiConversation } from '@dxos/assistant';
+import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/client/echo';
 import { type Queue } from '@dxos/client/echo';
