@@ -27,7 +27,7 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['b = 200'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText(['b = Math.PI'].join('\n')))),
       },
       {
         id: PublicKey.random().toString(),
@@ -51,7 +51,7 @@ export const createNotebook = (): Notebook.Notebook =>
         type: 'prompt',
         prompt: Ref.make(
           Prompt.make({
-            instructions: 'What is your favorite of {{a}} and {{b}}?',
+            instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
           }),
         ),
       },
