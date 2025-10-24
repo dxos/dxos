@@ -85,7 +85,7 @@ export const DeckMain = () => {
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
   useEffect(() => {
-    if (settings?.enableDeck && layoutMode === 'deck') {
+    if (!settings?.enableDeck && layoutMode === 'deck') {
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
       );

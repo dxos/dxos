@@ -88,7 +88,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create records smart collection.
         const records = Obj.make(DataType.QueryCollection, {
-          query: Query.select(Filter.type(DataType.StoredSchema)).ast,
+          // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
+          query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
         });
         collection.objects.push(Ref.make(records));
 

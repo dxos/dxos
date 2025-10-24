@@ -10,15 +10,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { agent } from '@dxos/assistant-testing';
 import { Prompt } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import {
   ComputeEventLogger,
-  DatabaseService,
+  type FunctionDefinition,
   FunctionInvocationService,
-  FunctionType,
   InvocationTracer,
   TracingService,
-  deserializeFunction,
 } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -53,13 +51,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const handleRun = useComputeRuntimeCallback(
     space,
     Effect.fnUntraced(function* () {
-      // Resolve the function.
-      const {
-        objects: [serializedFunction],
-      } = yield* DatabaseService.runQuery(Query.select(Filter.type(FunctionType, { key: agent.key })));
-      invariant(Obj.instanceOf(FunctionType, serializedFunction));
-      const functionDef = deserializeFunction(serializedFunction);
-
       const prompts =
         notebook?.cells
           .filter((cell) => cell.type === 'prompt')
@@ -67,21 +58,22 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           .filter(isNonNullable) ?? [];
 
       for (const prompt of prompts) {
-        const inputData = {
+        const inputData: FunctionDefinition.Input<typeof agent> = {
           prompt,
-          input: graph?.valuesByName.value,
+          // Ensure input is always an object to satisfy the agent schema.
+          input: graph?.valuesByName.value ?? {},
         };
 
         const tracer = yield* InvocationTracer;
         const trace = yield* tracer.traceInvocationStart({
-          target: Obj.getDXN(serializedFunction),
+          target: undefined,
           payload: {
             data: {},
           },
         });
 
         // Invoke the function.
-        const result = yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
+        const result = yield* FunctionInvocationService.invokeFunction(agent, inputData).pipe(
           Effect.provide(
             ComputeEventLogger.layerFromTracing.pipe(
               Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),
