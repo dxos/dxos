@@ -19,34 +19,32 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c = a() + b'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('c = a() + b'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['a = () => 100'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('a = () => 100'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['b = Math.PI'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('b = Math.PI'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['d = a() * 2'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('d = a() * 2'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c + d'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('c + d'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        script: Ref.make(
-          createObject(DataType.makeText(`docs = ( type: ${Markdown.Document.typename} AND #research )`)),
-        ),
+        script: Ref.make(createObject(DataType.makeText(`docs = (type: ${Markdown.Document.typename} AND #research)`))),
       },
       {
         id: PublicKey.random().toString(),
