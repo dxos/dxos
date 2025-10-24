@@ -80,7 +80,7 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <Toolbar.Root classNames='density-coarse border-b border-subduedSeparator'>
+    <Toolbar.Root classNames='border-be border-subduedSeparator'>
       <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' db={space.db} onChange={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'

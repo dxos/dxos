@@ -57,7 +57,7 @@ const DefaultStory = (props: ToggleContainerRootProps) => {
 
   return (
     <div className='flex flex-col w-[30rem]'>
-      <Toolbar.Root classNames='p-4'>
+      <Toolbar.Root>
         <Input.Root>
           <Input.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
         </Input.Root>

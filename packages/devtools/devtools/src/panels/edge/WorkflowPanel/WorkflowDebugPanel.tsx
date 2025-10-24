@@ -147,7 +147,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     <div className={mx('flex flex-col w-full h-full overflow-hidden', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
-      <Toolbar.Root classNames='p-1'>
+      <Toolbar.Root>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
