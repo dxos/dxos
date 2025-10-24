@@ -11,6 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useSignalsMemo } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Position } from '@dxos/react-ui-board';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { StackItem } from '@dxos/react-ui-stack';
@@ -35,6 +36,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
   const attendableId = fullyQualifiedId(board);
+  const { hasAttention } = useAttention(attendableId);
 
   // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board.
   const objects = useQuery(getSpace(board), Filter.everything());
@@ -122,7 +124,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
         }}
       >
         <StackItem.Content toolbar>
-          <Board.Toolbar attendableId={attendableId} />
+          <Board.Toolbar disabled={!hasAttention} />
           <Board.Container>
             <Board.Viewport classNames='border-none'>
               <Board.Backdrop />
