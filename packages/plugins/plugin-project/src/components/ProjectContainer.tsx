@@ -7,7 +7,9 @@ import React, { useCallback } from 'react';
 import { Surface, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { ATTENDABLE_PATH_SEPARATOR, DeckAction } from '@dxos/plugin-deck/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
+import { toolbarInactive } from '@dxos/react-ui-theme';
 import { type DataType } from '@dxos/schema';
 
 import { type ItemProps, Project } from './Project';
@@ -29,23 +31,24 @@ export type ProjectContainerProps = { project: DataType.Project; role: string };
 
 export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
-  const id = fullyQualifiedId(project);
+  const attendableId = fullyQualifiedId(project);
+  const { hasAttention } = useAttention(attendableId);
 
   const handleAddColumn = useCallback(
     () =>
       dispatch(
         createIntent(DeckAction.ChangeCompanion, {
-          primary: id,
-          companion: `${id}${ATTENDABLE_PATH_SEPARATOR}settings`,
+          primary: attendableId,
+          companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
         }),
       ),
-    [dispatch, id],
+    [dispatch, attendableId],
   );
 
   return (
     <StackItem.Content toolbar>
       <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
-        <Project.Toolbar textBlockWidth />
+        <Project.Toolbar classNames={[attendableId && !hasAttention && toolbarInactive]} textBlockWidth />
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>

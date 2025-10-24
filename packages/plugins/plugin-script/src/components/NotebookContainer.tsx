@@ -28,6 +28,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
+import { toolbarInactive } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
@@ -180,7 +181,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   return (
     <StackItem.Content toolbar>
-      <Toolbar.Root classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent']} textBlockWidth>
+      <Toolbar.Root classNames={[attendableId && !hasAttention && toolbarInactive]} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />

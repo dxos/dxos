@@ -13,6 +13,9 @@ export type ToolbarStyleProps = Partial<{ layoutManaged: boolean }>;
 export const toolbarLayout =
   'is-full shrink-0 flex flex-nowrap items-center gap-1 p-1 overflow-x-auto scrollbar-none contain-layout';
 
+// TODO(burdon): Should depend on data attribute.
+export const toolbarInactive = '*:opacity-20 !bg-transparent';
+
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {
   return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, ...etc);
 };

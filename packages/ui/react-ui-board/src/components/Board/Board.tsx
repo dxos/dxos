@@ -23,7 +23,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { invariant } from '@dxos/invariant';
 import { IconButton, type ThemedClassName, Toolbar, usePx, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/react-ui-theme';
+import { mx, toolbarInactive } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -33,13 +33,9 @@ import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter 
 import { type BoardLayout, type Position, type Size } from './types';
 
 // TODO(burdon): Infinite canvas: hierarchical zoom.
-// TODO(burdon): Center when has focus; key nav.
-// TODO(burdon): Drag to select/create.
 // TODO(burdon): Drag handles to resize.
 // TODO(burdon): Synthetic scrollbars.
 // TODO(burdon): Prevent browser nav when scrolling to edge.
-// TODO(burdon): Does scrollbar thin work?
-// TODO(burdon): Drag edges to resize.
 
 interface BoardController {
   /** Center the board on the given cell or position. */
@@ -351,7 +347,7 @@ const BoardToolbar = ({ classNames, attendableId }: BoardToolbarProps) => {
 
   // TODO(burdon): Convert to MenuProvider.
   return (
-    <Toolbar.Root classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent', classNames]}>
+    <Toolbar.Root classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}>
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
