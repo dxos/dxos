@@ -57,5 +57,16 @@ export const createNotebook = (): Notebook.Notebook =>
           ),
         ),
       },
+      {
+        id: PublicKey.random().toString(),
+        type: 'prompt',
+        prompt: Ref.make(
+          createObject(
+            Prompt.make({
+              instructions: 'Summarize the docs: {{docs}}',
+            }),
+          ),
+        ),
+      },
     ],
   });
