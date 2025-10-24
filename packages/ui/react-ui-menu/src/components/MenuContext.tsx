@@ -9,7 +9,7 @@ import { type MenuContextValue, type MenuItem, type MenuItemGroup } from '../typ
 
 export type MenuScopedProps<P> = P & { __menuScope?: Scope };
 
-const MENU_NAME = 'GraphMenu';
+const MENU_NAME = 'Menu';
 
 const [createMenuContext, createMenuScope] = createContextScope(MENU_NAME, []);
 
@@ -22,12 +22,14 @@ export const menuContextDefaults: MenuContextValue = {
 
 const useMenuScope = createMenuScope();
 
+type MenuProviderProps = PropsWithChildren<Partial<MenuContextValue>>;
+
 const MenuProvider = ({
   children,
   useGroupItems = menuContextDefaults.useGroupItems,
   iconSize = menuContextDefaults.iconSize,
   attendableId,
-}: PropsWithChildren<Partial<MenuContextValue>>) => {
+}: MenuProviderProps) => {
   const { scope } = useMenuScope(undefined);
   return (
     <MenuContextProvider useGroupItems={useGroupItems} iconSize={iconSize} attendableId={attendableId} scope={scope}>
@@ -48,3 +50,5 @@ export const useMenuItems = (
 };
 
 export { useMenu, createMenuScope, MenuProvider };
+
+export type { MenuProviderProps };

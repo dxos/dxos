@@ -15,14 +15,17 @@ export default () =>
       intent: Project.Create,
       resolve: async ({ space, name, template = 'org-research' }) => {
         if (templates[template]) {
-          return {
-            data: { object: await templates[template](space) },
-          };
-        } else {
-          return {
-            data: { object: DataType.makeProject({ name }) },
-          };
+          const project = await templates[template](space);
+          if (project) {
+            return {
+              data: { object: project },
+            };
+          }
         }
+
+        return {
+          data: { object: DataType.makeProject({ name }) },
+        };
       },
     }),
   );

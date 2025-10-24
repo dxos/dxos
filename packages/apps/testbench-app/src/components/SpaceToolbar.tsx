@@ -49,7 +49,7 @@ export const SpaceToolbar = ({
   };
 
   return (
-    <Toolbar.Root classNames='p-1'>
+    <Toolbar.Root>
       <Toolbar.IconButton icon='ph--plus--regular' label='Create space.' onClick={() => onCreate()} />
       <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>

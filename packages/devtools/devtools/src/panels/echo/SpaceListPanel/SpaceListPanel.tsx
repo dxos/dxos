@@ -28,6 +28,12 @@ type SpaceData = {
   isOpen: boolean;
 };
 
+const rowActions = [
+  { id: 'toggleOpen', label: 'Toggle space open closed' },
+  { id: 'backup', label: 'Download space backup' },
+  { id: 'archive', label: 'Download space archive' },
+];
+
 export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | undefined) => void }) => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
@@ -175,11 +181,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         properties={properties}
         rows={rows}
         features={features}
-        rowActions={[
-          { id: 'toggleOpen', label: 'Toggle space open closed' },
-          { id: 'backup', label: 'Download space backup' },
-          { id: 'archive', label: 'Download space archive' },
-        ]}
+        rowActions={rowActions}
         onRowClick={handleRowClicked}
         onRowAction={handleRowAction}
       />

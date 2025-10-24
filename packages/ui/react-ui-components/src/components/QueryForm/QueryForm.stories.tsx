@@ -39,7 +39,7 @@ const meta = {
 
     return (
       <div>
-        <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <Toolbar.Root classNames='border-be border-subduedSeparator'>
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 

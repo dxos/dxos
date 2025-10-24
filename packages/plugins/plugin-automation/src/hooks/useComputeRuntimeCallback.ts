@@ -13,6 +13,7 @@ import { AutomationCapabilities } from '../capabilities';
 /**
  * Create an effectful function that has access to compute services
  */
+// TODO(burdon): Factor out (figure out cross-plugin capabilities dependencies).
 export const useComputeRuntimeCallback = <T>(
   space: Space | undefined,
   fn: () => Effect.Effect<T, any, AutomationCapabilities.ComputeServices>,
@@ -25,6 +26,7 @@ export const useComputeRuntimeCallback = <T>(
     if (!runtime) {
       throw new TypeError('Space not provided to useComputeRuntimeCallback');
     }
+
     return runtime.runPromise(fn());
   }, [runtime, ...(deps ?? [])]);
 };

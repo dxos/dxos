@@ -5,8 +5,8 @@
 import { type Space } from '@dxos/react-client/echo';
 import { type DataType } from '@dxos/schema';
 
-import { orgResearchTemplate } from './org-research';
+import { createResearchProject } from './research';
 
-export const templates: Record<string, (space: Space) => Promise<DataType.Project>> = {
-  'org-research': orgResearchTemplate,
+export const templates: Record<string, (space: Space) => Promise<DataType.Project | null>> = {
+  'org-research': createResearchProject,
 };

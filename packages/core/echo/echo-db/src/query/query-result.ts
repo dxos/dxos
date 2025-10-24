@@ -168,9 +168,8 @@ export class QueryResult<T extends BaseObject = BaseObject> {
    * Execute the query once and return the results.
    * Does not subscribe to updates.
    */
-  async run(timeout: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
-    const filteredResults = await this._queryContext.run(this._query.ast, { timeout: timeout.timeout });
-
+  async run(opts: { timeout?: number } = { timeout: 30_000 }): Promise<OneShotQueryResult<T>> {
+    const filteredResults = await this._queryContext.run(this._query.ast, { timeout: opts.timeout });
     return {
       results: filteredResults,
       objects: this._uniqueObjects(filteredResults),

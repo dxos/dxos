@@ -8,13 +8,13 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
 import { DataType, createView } from '@dxos/schema';
 
-export const orgResearchTemplate = async (space: Space, name?: string): Promise<DataType.Project> => {
-  const mailbox = await space.db.query(Filter.type(Mailbox.Mailbox)).first();
+export const createResearchProject = async (space: Space, name?: string): Promise<DataType.Project | null> => {
+  const { objects: mailboxes } = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+  if (!mailboxes.length) {
+    return null;
+  }
 
-  const contactsQuery = Query.select(Filter.type(DataType.Person));
-  const organizationsQuery = Query.select(Filter.type(DataType.Organization));
-  const notesQuery = Query.select(Filter.type(Markdown.Document));
-
+  const mailbox = mailboxes[0];
   const mailboxView = createView({
     name: 'Mailbox',
     query: Query.select(Filter.type(DataType.Message)).options({
@@ -23,18 +23,24 @@ export const orgResearchTemplate = async (space: Space, name?: string): Promise<
     jsonSchema: Type.toJsonSchema(DataType.Message),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
+
+  const contactsQuery = Query.select(Filter.type(DataType.Person));
   const contactsView = createView({
     name: 'Contacts',
     query: contactsQuery,
     jsonSchema: Type.toJsonSchema(DataType.Person),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
+
+  const organizationsQuery = Query.select(Filter.type(DataType.Organization));
   const organizationsView = createView({
     name: 'Organizations',
     query: organizationsQuery,
     jsonSchema: Type.toJsonSchema(DataType.Organization),
     presentation: Obj.make(DataType.Collection, { objects: [] }),
   });
+
+  const notesQuery = Query.select(Filter.type(Markdown.Document));
   const notesView = createView({
     name: 'Notes',
     query: notesQuery,

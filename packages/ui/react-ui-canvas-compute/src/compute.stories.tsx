@@ -142,7 +142,7 @@ const DefaultStory = ({
 
       {sidebar && (
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
-          <Toolbar.Root classNames='p-1'>
+          <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
               <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
               <Select.Portal>

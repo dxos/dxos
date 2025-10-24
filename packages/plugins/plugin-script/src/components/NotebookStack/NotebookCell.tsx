@@ -5,14 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Query, Ref } from '@dxos/echo';
-import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { TemplateEditor } from '@dxos/plugin-assistant';
-import { Graph } from '@dxos/plugin-explorer/types';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   type BasicExtensionsOptions,
@@ -49,70 +46,41 @@ export type NotebookCellProps = {
 export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
   const { t } = useTranslation(meta.id);
 
-  //
-  // Common.
-  //
   const extensions = useMemo(() => {
-    return cell.script?.target
-      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
+    return cell.source?.target
+      ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.source.target, ['content']) })].filter(
           isNonNullable,
         )
       : [];
-  }, [cell.script?.target]);
+  }, [cell.source?.target]);
 
-  //
-  // Query.
-  //
   const view = cell.view?.target;
-  const builder = useMemo(() => new QueryBuilder(), []);
-  useAsyncEffect(async () => {
-    if (!space || !cell.script?.target) {
-      return;
-    }
-
-    if (cell.type === 'query') {
-      const query = cell.script.target.content;
-      const { name, filter } = builder.build(query);
-      if (filter) {
-        const ast = Query.select(filter).ast;
-        const view = cell.view?.target;
-        if (!view) {
-          const graph = Graph.make({ query: { ast } });
-          const { view } = await Graph.makeView({ space, presentation: graph });
-          cell.view = Ref.make(view);
-          cell.name = name;
-        } else {
-          view.query.ast = ast;
-        }
-      }
-    }
-  }, [space, builder, cell, cell.script?.target?.content]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
-      invariant(cell.script?.target);
-      cell.script.target.content = value;
+      invariant(cell.source?.target);
+      cell.source.target.content = value;
     },
     [cell],
   );
 
   switch (cell.type) {
     case 'markdown':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
       return (
-        <MarkdownEditor
+        <NotebookTextEditor
           id={cell.id}
           classNames={editorStyles}
-          initialValue={cell.script.target.content}
+          initialValue={cell.source.target.content}
           extensions={extensions}
         />
       );
 
     case 'script':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
@@ -122,7 +90,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             role='section'
             classNames={editorStyles}
-            initialValue={cell.script.target.content}
+            initialValue={cell.source.target.content}
             extensions={extensions}
             env={env}
             options={{
@@ -136,7 +104,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
       );
 
     case 'query':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
@@ -147,7 +115,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             classNames={[editorStyles, 'border-b border-subduedSeparator']}
             db={space?.db}
-            value={cell.script.target.content}
+            value={cell.source.target.content}
             onChange={handleQueryChange}
           />
           {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
@@ -166,7 +134,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             template={cell.prompt.target.instructions}
             lineNumbers={false}
-            classNames='p-2 pis-3'
+            classNames={editorStyles}
           />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
@@ -179,7 +147,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
 
 const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   const name = graph?.expressions.value[cell.id]?.name;
-  const value = graph?.values.value[cell.id];
+  const value = graph?.getValue(cell.id);
   if (value == null) {
     return null;
   }
@@ -214,12 +182,12 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
 
   return (
     <div className={mx('flex is-full bg-groupSurface text-description border-t border-subduedSeparator', valueStyles)}>
-      <MarkdownEditor readOnly value={value} />
+      <NotebookTextEditor readOnly value={value} />
     </div>
   );
 };
 
-const MarkdownEditor = ({
+const NotebookTextEditor = ({
   extensions: extensionsParam,
   readOnly,
   ...props

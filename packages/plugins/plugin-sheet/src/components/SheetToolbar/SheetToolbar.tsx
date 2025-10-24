@@ -7,7 +7,6 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';
 import { type CompleteCellRange } from '@dxos/compute';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   MenuProvider,
@@ -23,12 +22,6 @@ import { useSheetContext } from '../SheetContext';
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
 import { type ToolbarState, useToolbarState } from './useToolbarState';
-
-//
-// Root
-//
-
-export type SheetToolbarProps = ThemedClassName<PropsWithChildren<{ id: string }>>;
 
 const createToolbarActions = (
   model: SheetModel,
@@ -56,7 +49,9 @@ const createToolbarActions = (
   });
 };
 
-export const SheetToolbar = ({ id, classNames }: SheetToolbarProps) => {
+export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
+
+export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const state = useToolbarState({});
   useAlignState(state);
@@ -79,7 +74,7 @@ export const SheetToolbar = ({ id, classNames }: SheetToolbarProps) => {
 
   return (
     <MenuProvider {...menu} attendableId={id}>
-      <ToolbarMenu classNames={classNames} />
+      <ToolbarMenu />
     </MenuProvider>
   );
 };

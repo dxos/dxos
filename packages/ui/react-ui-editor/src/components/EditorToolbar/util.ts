@@ -8,7 +8,6 @@ import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
 import { type Live, live } from '@dxos/live-object';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   type MenuActionProperties,
@@ -47,9 +46,8 @@ export type EditorToolbarActionGraphProps = {
   customActions?: Rx.Rx<ActionGraphProps>;
 };
 
-export type EditorToolbarProps = ThemedClassName<
-  EditorToolbarActionGraphProps & EditorToolbarFeatureFlags & { attendableId?: string; role?: string }
->;
+export type EditorToolbarProps = EditorToolbarActionGraphProps &
+  EditorToolbarFeatureFlags & { attendableId?: string; role?: string };
 
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 

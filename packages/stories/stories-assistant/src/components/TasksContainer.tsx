@@ -28,7 +28,7 @@ export const TasksContainer = ({ space }: ComponentProps) => {
 
   return (
     <>
-      <Toolbar.Root classNames='border-b border-subduedSeparator'>
+      <Toolbar.Root classNames='border-be border-subduedSeparator'>
         <h2>{Obj.getLabel(document)}</h2>
       </Toolbar.Root>
       <Editor

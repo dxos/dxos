@@ -100,14 +100,28 @@ export interface View extends Schema.Schema.Type<typeof View_> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
 export const View: Schema.Schema<View, ViewEncoded> = View_;
 
-/** @deprecated */
-// TODO(wittjosiah): Try to remove. Use full query instead.
+// TODO(wittjosiah): This needs to be cleaned up.
+//   Ideally this should be something like `Query.getTypename` or something like that.
+//   It should return the typename the query is indexing on if it is, regardless or where in the AST it is.
 export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
-  return query?.type === 'select'
-    ? query.filter.type === 'object'
-      ? (query.filter.typename?.slice(9) ?? '')
-      : ''
-    : '';
+  if (query?.type !== 'select') {
+    return '';
+  }
+
+  if (query.filter.type !== 'object') {
+    return '';
+  }
+
+  if (!query.filter.typename) {
+    return '';
+  }
+
+  const dxn = DXN.tryParse(query.filter.typename)?.asTypeDXN();
+  if (!dxn) {
+    return '';
+  }
+
+  return dxn.type;
 };
 
 export const createFieldId = () => PublicKey.random().truncate();

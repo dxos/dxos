@@ -26,7 +26,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
   useEffect(() => onViewChange?.(view), [view]);
 
   return (
-    <Toolbar.Root classNames='p-1'>
+    <Toolbar.Root>
       <Toolbar.Button onClick={() => onAdd(count)} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
       </Toolbar.Button>

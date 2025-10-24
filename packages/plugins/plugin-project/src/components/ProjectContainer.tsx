@@ -45,7 +45,7 @@ export const ProjectContainer = ({ project }: ProjectContainerProps) => {
   return (
     <StackItem.Content toolbar>
       <Project.Root Item={ProjectItem} onAddColumn={handleAddColumn}>
-        <Project.Menu />
+        <Project.Toolbar textBlockWidth />
         <Project.Content project={project} />
       </Project.Root>
     </StackItem.Content>

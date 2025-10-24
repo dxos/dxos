@@ -17,7 +17,8 @@ export namespace Notebook {
     id: Schema.String,
     type: Schema.String,
     name: Schema.optional(Schema.String),
-    script: Schema.optional(Type.Ref(DataType.Text)),
+    // TODO(burdon): Union type.
+    source: Schema.optional(Type.Ref(DataType.Text)),
     prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
     view: Schema.optional(Type.Ref(DataType.View)),
   }).pipe(Schema.mutable);
