@@ -6,7 +6,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarLayout } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import {
@@ -158,7 +158,7 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-// TODO(burdon): Reconcile with react-ui/Toolbar
+// TODO(burdon): Reconcile with react-ui/Toolbar (incl. textBlockWidth)
 export const ToolbarMenu = ({
   __menuScope,
   classNames,
@@ -176,8 +176,8 @@ export const ToolbarMenu = ({
   return (
     <NaturalToolbar.Root
       {...props}
+      classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}
       layoutManaged={textBlockWidthParam}
-      classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent', classNames]}
     >
       <InnerRoot {...innerRootProps}>
         {items?.map((item: MenuItem, i: number) => (

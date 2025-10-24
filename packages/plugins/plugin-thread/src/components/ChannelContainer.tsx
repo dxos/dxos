@@ -40,7 +40,8 @@ export type ChannelContainerProps = {
 export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
-  const roomId = _roomId ?? (channel ? fullyQualifiedId(channel) : failUndefined());
+  const attendableId = fullyQualifiedId(channel);
+  const roomId = _roomId ?? (channel ? attendableId : failUndefined());
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;
   const joinSound = useSoundEffect('JoinCall');
@@ -126,8 +127,8 @@ export const ChannelContainer = ({ channel, roomId: _roomId, role, fullscreen }:
       )}
       {!isJoined && channel && channel.defaultThread.target && space && (
         <>
-          <ChannelToolbar attendableId={fullyQualifiedId(channel)} role={role} onJoinCall={handleJoin} />
-          <ChatContainer space={space} thread={channel.defaultThread.target} />
+          <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
+          <ChatContainer space={space} thread={channel.defaultThread.target} classNames='container-max-width' />
         </>
       )}
     </StackItem.Content>
@@ -196,7 +197,7 @@ const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps)
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu />
+        <ToolbarMenu textBlockWidth />
       </MenuProvider>
     </ElevationProvider>
   );
