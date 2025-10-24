@@ -32,8 +32,8 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
   const { graph } = useAppGraph();
-  const actions = useActions(graph, fullyQualifiedId(sketch));
-  const handleThreadCreate = actions.find((action) => action.id === `${fullyQualifiedId(sketch)}/comment`)?.data;
+  const actions = useActions(graph, id);
+  const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>

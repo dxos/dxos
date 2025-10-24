@@ -180,7 +180,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   return (
     <StackItem.Content toolbar>
-      <Toolbar.Root classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent']} textBlockWidth>
+      <Toolbar.Root disabled={!hasAttention} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
