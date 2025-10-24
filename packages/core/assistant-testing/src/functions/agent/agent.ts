@@ -44,15 +44,17 @@ export default defineFunction({
       if (Ref.isRef(value)) {
         const object = yield* DatabaseService.load(value);
         input[key] = Obj.toJSON(object);
+      } else {
+        input[key] = JSON.stringify(value);
       }
     }
 
     yield* DatabaseService.flush({ indexes: true });
     const prompt = yield* DatabaseService.load(data.prompt);
     const systemPrompt = data.systemPrompt ? yield* DatabaseService.load(data.systemPrompt) : undefined;
-    yield* TracingService.emitStatus({ message: `Running ${prompt.name}` });
+    yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });
 
-    log.info('starting agent', { prompt: prompt.name, input: data.input });
+    log.info('starting agent', { prompt: prompt.id, input: data.input });
 
     const blueprints = yield* Function.pipe(
       prompt.blueprints,

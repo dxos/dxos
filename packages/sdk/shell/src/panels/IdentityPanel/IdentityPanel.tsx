@@ -82,7 +82,7 @@ const IdentityHeading = ({
   return (
     <Heading titleId={titleId} title={title} corner={<CloseButton onDone={onDone} />}>
       <Avatar.Root>
-        <Toolbar.Root classNames='flex justify-center'>
+        <Toolbar.Root classNames='justify-center'>
           <Avatar.Content
             size={16}
             variant='circle'
@@ -109,7 +109,7 @@ const IdentityHeading = ({
           />
         </Input.Root>
 
-        <Toolbar.Root classNames='flex justify-center items-center gap-1 pt-3'>
+        <Toolbar.Root classNames='justify-center pt-3'>
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <HuePicker
             value={hue}
