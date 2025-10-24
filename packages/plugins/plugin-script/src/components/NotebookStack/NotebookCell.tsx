@@ -134,7 +134,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             template={cell.prompt.target.instructions}
             lineNumbers={false}
-            classNames='p-2 pis-3'
+            classNames={editorStyles}
           />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
@@ -147,7 +147,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
 
 const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   const name = graph?.expressions.value[cell.id]?.name;
-  const value = graph?.values.value[cell.id];
+  const value = graph?.getValue(cell.id);
   if (value == null) {
     return null;
   }

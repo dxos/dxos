@@ -18,7 +18,7 @@ export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
   private _expressions = signal<Record<string, ParsedExpression>>({});
-  private _values = signal<Record<string, any>>({});
+  private _valuesByCellId = signal<Record<string, any>>({});
   private _valuesByName = signal<Record<string, any>>({});
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
@@ -34,7 +34,7 @@ export class ComputeGraph {
    * Computed values by cell ID.
    */
   get values(): Signal<Record<string, any>> {
-    return this._values;
+    return this._valuesByCellId;
   }
 
   /**
@@ -45,12 +45,19 @@ export class ComputeGraph {
   }
 
   /**
+   * Get computed value by cell ID.
+   */
+  getValue(cellId: string) {
+    return this._valuesByCellId.value[cellId];
+  }
+
+  /**
    * Compute values.
    */
   evaluate() {
     // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
-    this._values.value = {};
+    this._valuesByCellId.value = {};
     this._valuesByName.value = {};
 
     // Create a map of cell IDs to expressions for easy lookup.
@@ -115,7 +122,7 @@ export class ComputeGraph {
       }
     }
 
-    this._values.value = valuesByCellId;
+    this._valuesByCellId.value = valuesByCellId;
     this._valuesByName.value = valuesByName;
     return valuesByCellId;
   }
