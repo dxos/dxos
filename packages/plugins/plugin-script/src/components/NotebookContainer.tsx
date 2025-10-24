@@ -81,7 +81,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           const query = Query.fromAst(view.query.ast);
           const result = await space?.db.query(query).run();
           const objectIds = result?.objects?.map((obj) => obj.id);
-          setQueryValues((prev) => ({ ...prev, [cell.name!]: JSON.stringify(objectIds) }));
+          setQueryValues((prev) => ({ ...prev, [cell.name!]: objectIds }));
         }
       }
     }
@@ -148,7 +148,6 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
         case 'prompt': {
           if (space) {
             const result = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
-            console.log(result);
             const blueprints = result.objects
               .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
               .map((blueprint) => Ref.make(blueprint));
