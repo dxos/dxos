@@ -74,12 +74,12 @@ export const defaultTheme: ThemeStyles = {
    */
   '.cm-gutters': {
     borderRight: 'none',
-    // background: 'transparent',
   },
   '.cm-gutter': {},
   '.cm-gutter.cm-lineNumbers': {
     paddingRight: '4px',
     borderRight: '1px solid var(--dx-subduedSeparator)',
+    color: 'var(--dx-subduedText)',
   },
   '.cm-gutter.cm-lineNumbers .cm-gutterElement': {
     minWidth: '40px',
