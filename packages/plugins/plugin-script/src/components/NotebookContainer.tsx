@@ -9,8 +9,8 @@ import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { agent } from '@dxos/assistant-testing';
-import { Prompt } from '@dxos/blueprints';
-import { Ref } from '@dxos/echo';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Filter, Query, Ref } from '@dxos/echo';
 import {
   ComputeEventLogger,
   type FunctionDefinition,
@@ -33,6 +33,8 @@ import { type Notebook } from '../types';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps } from './NotebookStack';
 import { type TypescriptEditorProps } from './TypescriptEditor';
+
+const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/markdown'];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
@@ -126,7 +128,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   );
 
   const handleCellInsert = useCallback<NonNullable<NotebookStackProps['onCellInsert']>>(
-    (type, after) => {
+    async (type, after) => {
       invariant(notebook);
       const cell: Notebook.Cell = { id: crypto.randomUUID(), type };
       switch (type) {
@@ -139,7 +141,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
         case 'prompt': {
           if (space) {
-            cell.prompt = Ref.make(Prompt.make({ instructions: '' }));
+            const result = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+            console.log(result);
+            const blueprints = result.objects
+              .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
+              .map((blueprint) => Ref.make(blueprint));
+            cell.prompt = Ref.make(Prompt.make({ instructions: '', blueprints }));
           }
           break;
         }
