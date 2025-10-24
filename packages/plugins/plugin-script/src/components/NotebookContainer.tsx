@@ -23,8 +23,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -48,6 +50,8 @@ export type NotebookContainerProps = {
 export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
+  const attendableId = fullyQualifiedId(notebook);
+  const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
@@ -176,7 +180,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
 
   return (
     <StackItem.Content toolbar>
-      <Toolbar.Root textBlockWidth>
+      <Toolbar.Root classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent']} textBlockWidth>
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
