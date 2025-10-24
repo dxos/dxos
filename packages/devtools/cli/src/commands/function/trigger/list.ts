@@ -7,7 +7,7 @@ import chalk from 'chalk';
 
 import { type TableOptions, table } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
-import { FunctionTrigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 
 import { BaseCommand } from '../../../base';
 
@@ -25,7 +25,7 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithSpace(
       async ({ space }) => {
-        const { objects: triggers } = await space.db.query(Filter.type(FunctionTrigger)).run();
+        const { objects: triggers } = await space.db.query(Filter.type(Trigger.Trigger)).run();
         const filtered = this.flags.id ? triggers.filter((filter) => filter.id.startsWith(this.flags.id!)) : triggers;
         if (this.flags.enable !== undefined || this.flags.disable !== undefined) {
           for (const trigger of filtered) {
@@ -42,16 +42,16 @@ export default class List extends BaseCommand<typeof List> {
         }
         return filtered;
       },
-      { verbose: this.flags.verbose, types: [FunctionTrigger] },
+      { verbose: this.flags.verbose, types: [Trigger.Trigger] },
     );
   }
 }
 
 // TODO(burdon): List stats.
-export const printTriggers = (functions: FunctionTrigger[], options: TableOptions) => {
+export const printTriggers = (triggers: Trigger.Trigger[], options: TableOptions) => {
   ux.stdout(
     table(
-      functions,
+      triggers,
       {
         id: { primary: true, truncate: true },
         enabled: { get: (row) => (row.enabled ? `${chalk.green('✔')}` : '') },

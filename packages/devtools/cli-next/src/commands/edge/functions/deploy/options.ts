@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { type Space } from '@dxos/client/echo';
-import { type FunctionType } from '@dxos/functions';
+import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService } from '../../../../services';
@@ -38,7 +38,7 @@ export const parseOptions = Effect.fn(function* (options: {
 
   const existingObject = yield* Option.all([space, options.functionId]).pipe(
     Option.match({
-      onNone: () => Effect.succeed(Option.none<FunctionType>()),
+      onNone: () => Effect.succeed(Option.none<Function.Function>()),
       onSome: ([space, functionId]) => loadFunctionObject(space, functionId).pipe(Effect.map(Option.some)),
     }),
   );

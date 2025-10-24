@@ -4,36 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { JsonSchemaType, LabelAnnotation, Ref } from '@dxos/echo/internal';
-import { DataType } from '@dxos/schema';
 
-// TODO(burdon): Create namespace and remove Type suffix.
-
-/**
- * Source script.
- */
-export const ScriptType = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
-  // TODO(burdon): Change to hash of deployed content.
-  // Whether source has changed since last deploy.
-  changed: Schema.optional(Schema.Boolean),
-  source: Ref(DataType.Text),
-}).pipe(
-  Type.Obj({
-    typename: 'dxos.org/type/Script',
-    version: '0.1.0',
-  }),
-  LabelAnnotation.set(['name']),
-);
-
-export interface ScriptType extends Schema.Schema.Type<typeof ScriptType> {}
+import { Script } from './Script';
 
 /**
  * Function deployment.
  */
-export const FunctionType = Schema.Struct({
+export const Function = Schema.Struct({
   /**
    * Global registry ID.
    * NOTE: The `key` property refers to the original registry entry.
@@ -53,7 +32,7 @@ export const FunctionType = Schema.Struct({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema.optional(Ref(ScriptType)),
+  source: Schema.optional(Ref(Script)),
 
   inputSchema: Schema.optional(JsonSchemaType),
   outputSchema: Schema.optional(JsonSchemaType),
@@ -67,5 +46,6 @@ export const FunctionType = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
 );
+export interface Function extends Schema.Schema.Type<typeof Function> {}
 
-export interface FunctionType extends Schema.Schema.Type<typeof FunctionType> {}
+export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function, props);

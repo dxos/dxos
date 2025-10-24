@@ -3,7 +3,7 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { FUNCTIONS_PRESET_META_KEY, type ScriptType } from '@dxos/functions';
+import { FUNCTIONS_PRESET_META_KEY, type Script } from '@dxos/functions';
 import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 
 import { meta } from '../meta';
@@ -19,7 +19,7 @@ const createTemplateSelectGroup = () => {
   });
 };
 
-const createTemplateSelectActions = (script: ScriptType) => {
+const createTemplateSelectActions = (script: Script.Script) => {
   return templates.map((template) => {
     return createMenuAction<TemplateActionProperties>(
       `template--${template.id}`,
@@ -44,7 +44,7 @@ const createTemplateSelectActions = (script: ScriptType) => {
   });
 };
 
-export const createTemplateSelect = (script: ScriptType) => {
+export const createTemplateSelect = (script: Script.Script) => {
   const templateSelectGroup = createTemplateSelectGroup();
   const templateSelectActions = createTemplateSelectActions(script);
   return {

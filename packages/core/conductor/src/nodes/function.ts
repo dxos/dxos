@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Obj, type Ref } from '@dxos/echo';
-import { type FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Function, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { RemoteFunctionExecutionService } from '@dxos/functions';
 
 import { type ComputeRequirements } from '../types';
 
 // TODO(wittjosiah): Reconcile with getInvocationUrl.
-export const resolveFunctionPath = async (fnRef?: Ref.Ref<FunctionType>): Promise<{ path: string }> => {
+export const resolveFunctionPath = async (fnRef?: Ref.Ref<Function.Function>): Promise<{ path: string }> => {
   const fn = await fnRef?.load();
   if (!fn) {
     throw new Error(`Function loading failed: ${fnRef?.dxn.toString()}`);

@@ -22,7 +22,6 @@ import { log } from '@dxos/log';
 import { KEY_QUEUE_POSITION } from '@dxos/protocols';
 
 import { deserializeFunction } from '../handler';
-import { FunctionType } from '../schema';
 import {
   ComputeEventLogger,
   DatabaseService,
@@ -30,15 +29,7 @@ import {
   QueueService,
   TracingService,
 } from '../services';
-import {
-  type EventType,
-  FunctionTrigger,
-  type QueueTriggerOutput,
-  type SubscriptionTriggerOutput,
-  type TimerTrigger,
-  type TimerTriggerOutput,
-  type TriggerKind,
-} from '../types';
+import { Function, Trigger, type TriggerEvent } from '../types';
 
 import { createInvocationPayload } from './input-builder';
 import { InvocationTracer } from './invocation-tracer';
@@ -68,8 +59,8 @@ export interface TriggerDispatcherOptions {
 }
 
 export interface InvokeTriggerOptions {
-  trigger: FunctionTrigger;
-  event: EventType;
+  trigger: Trigger.Trigger;
+  event: TriggerEvent.TriggerEvent;
 }
 export interface TriggerExecutionResult {
   triggerId: string;
@@ -80,7 +71,7 @@ export interface TriggerExecutionResult {
  * Cront trigger runtime state.
  */
 interface ScheduledTrigger {
-  trigger: FunctionTrigger;
+  trigger: Trigger.Trigger;
   cron: Cron.Cron;
   nextExecution: Date;
 }
@@ -128,7 +119,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      * Invoke all scheduled triggers who are due.
      */
     invokeScheduledTriggers(opts?: {
-      kinds?: TriggerKind[];
+      kinds?: Trigger.Kind[];
     }): Effect.Effect<TriggerExecutionResult[], never, TriggerDispatcherServices>;
 
     /**
@@ -249,7 +240,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         // Resolve the function
         const serialiedFunction = yield* DatabaseService.load(trigger.function!).pipe(Effect.orDie);
-        invariant(Obj.instanceOf(FunctionType, serialiedFunction));
+        invariant(Obj.instanceOf(Function.Function, serialiedFunction));
         const functionDef = deserializeFunction(serialiedFunction);
 
         // Prepare input data
@@ -299,7 +290,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             {
               yield* this.refreshTriggers();
               const now = this.getCurrentTime();
-              const triggersToInvoke: FunctionTrigger[] = [];
+              const triggersToInvoke: Trigger.Trigger[] = [];
 
               for (const [triggerId, scheduledTrigger] of this._scheduledTriggers.entries()) {
                 if (scheduledTrigger.nextExecution <= now) {
@@ -317,7 +308,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                   (trigger) =>
                     this.invokeTrigger({
                       trigger,
-                      event: { tick: now.getTime() } satisfies TimerTriggerOutput,
+                      event: { tick: now.getTime() } satisfies TriggerEvent.TimerEvent,
                     }),
                   { concurrency: 1 },
                 )),
@@ -350,7 +341,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       queue: spec.queue,
                       item: object,
                       cursor: objectPos,
-                    } satisfies QueueTriggerOutput,
+                    } satisfies TriggerEvent.QueueEvent,
                   }),
                 );
 
@@ -414,7 +405,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       subject: db.ref(Obj.getDXN(object)),
 
                       changedObjectId: object.id,
-                    } satisfies SubscriptionTriggerOutput,
+                    } satisfies TriggerEvent.SubscriptionEvent,
                   }),
                 );
                 (state.state.processedVersions as any)[object.id] = Obj.encodeVersion(currentVersion);
@@ -473,7 +464,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Add or update triggers
       for (const trigger of triggers) {
         if (trigger.spec?.kind === 'timer' && trigger.enabled) {
-          const timerSpec = trigger.spec as TimerTrigger;
+          const timerSpec = trigger.spec as Trigger.TimerSpec;
 
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
@@ -510,7 +501,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
   private _fetchTriggers = () =>
     Effect.gen(this, function* () {
-      const { objects } = yield* DatabaseService.runQuery(Filter.type(FunctionTrigger));
+      const { objects } = yield* DatabaseService.runQuery(Filter.type(Trigger.Trigger));
       return objects;
     }).pipe(Effect.withSpan('TriggerDispatcher.fetchTriggers'));
 
@@ -519,13 +510,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       yield* this.invokeScheduledTriggers();
     }).pipe(Effect.repeat(Schedule.fixed(this.livePollInterval)), Effect.asVoid);
 
-  private _prepareInputData = (trigger: FunctionTrigger, event: EventType): any => {
+  private _prepareInputData = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
     return createInvocationPayload(trigger, event);
   };
 }
-
-// Re-exports
-export { FunctionTrigger, type TimerTrigger } from '../types';
 
 /**
  * Key for the current queue cursor for queue triggers.

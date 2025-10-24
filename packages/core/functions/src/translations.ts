@@ -4,12 +4,12 @@
 
 import { type Resource } from 'i18next';
 
-import { ScriptType } from './schema';
+import { Script } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [ScriptType.typename]: {
+      [Script.Script.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',

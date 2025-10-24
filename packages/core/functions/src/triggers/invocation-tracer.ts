@@ -17,14 +17,14 @@ import {
   InvocationTraceEventType,
   InvocationTraceStartEvent,
 } from '../trace';
-import type { TriggerKind } from '../types';
+import type { Trigger } from '../types';
 
 export type FunctionInvocationPayload = {
   data?: any;
   inputNodeId?: string;
   trigger?: {
     id: string;
-    kind: TriggerKind;
+    kind: Trigger.Kind;
   };
 };
 

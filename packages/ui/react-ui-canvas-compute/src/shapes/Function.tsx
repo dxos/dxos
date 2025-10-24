@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { Function, Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {
@@ -58,13 +58,13 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
 
       const space = client.spaces.get(spaceId);
       const object = space?.db.getObjectById(objectId);
-      if (!space || !isInstanceOf(ScriptType, object)) {
+      if (!space || !isInstanceOf(Script.Script, object)) {
         return;
       }
 
       const {
         objects: [fn],
-      } = await space.db.query(Filter.type(FunctionType, { source: Ref.make(object) })).run();
+      } = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
       if (!fn) {
         return;
       }

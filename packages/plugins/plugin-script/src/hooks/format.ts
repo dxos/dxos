@@ -6,7 +6,7 @@ import { format } from 'prettier';
 import prettierPluginEstree from 'prettier/plugins/estree';
 import prettierPluginTypescript from 'prettier/plugins/typescript';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { createMenuAction } from '@dxos/react-ui-menu';
 
@@ -14,7 +14,7 @@ import { meta } from '../meta';
 
 export type FormatActionProperties = { type: 'format' };
 
-export const createFormat = (script: ScriptType) => {
+export const createFormat = (script: Script.Script) => {
   const formatAction = createMenuAction(
     'format',
     async () => {

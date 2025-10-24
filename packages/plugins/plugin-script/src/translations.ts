@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
@@ -11,7 +11,7 @@ import { Notebook } from './types';
 export const translations = [
   {
     'en-US': {
-      [ScriptType.typename]: {
+      [Script.Script.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',

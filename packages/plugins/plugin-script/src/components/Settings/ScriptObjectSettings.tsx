@@ -8,7 +8,7 @@ import React, { type ChangeEvent, useCallback, useState } from 'react';
 import { ToolId } from '@dxos/ai';
 import { SettingsAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, type Script, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Filter, Ref, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -19,7 +19,7 @@ import { kebabize } from '@dxos/util';
 import { meta } from '../../meta';
 
 export type ScriptObjectSettingsProps = {
-  object: ScriptType;
+  object: Script.Script;
 };
 
 export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
@@ -51,7 +51,7 @@ export const ScriptProperties = ({ object }: ScriptObjectSettingsProps) => {
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
-  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
+  const [fn] = useQuery(space, Filter.type(Function.Function, { source: Ref.make(object) }));
   const blueprints = useQuery(space, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
@@ -136,7 +136,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const space = getSpace(object);
-  const [fn] = useQuery(space, Filter.type(FunctionType, { source: Ref.make(object) }));
+  const [fn] = useQuery(space, Filter.type(Function.Function, { source: Ref.make(object) }));
 
   const functionId = fn && getUserFunctionIdInMetadata(getMeta(fn));
   const functionUrl =

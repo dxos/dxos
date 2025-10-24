@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
+import { Function } from '@dxos/functions';
 import { BaseGraphEdge, BaseGraphNode, Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
@@ -31,7 +31,7 @@ export const ComputeNode = Schema.extend(
     subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),
 
     /** For composition of function nodes. */
-    function: Schema.optional(Type.Ref(FunctionType) as Type.Ref<FunctionType>),
+    function: Schema.optional(Type.Ref(Function.Function) as Type.Ref<Function.Function>),
 
     /**
      * For template nodes determines the type of the value.

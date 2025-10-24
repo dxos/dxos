@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { FunctionType, type ScriptType, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { Query, Ref, type Space, getMeta, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -26,8 +26,8 @@ export type DeployState = {
 
 export type CreateDeployOptions = {
   state: Partial<DeployState>;
-  script: ScriptType;
-  fn: FunctionType;
+  script: Script.Script;
+  fn: Function.Function;
   space?: Space;
   existingFunctionId?: string;
   client: Client;
@@ -96,7 +96,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
   };
 };
 
-export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: ScriptType }) => {
+export const useDeployState = ({ state, script }: { state: Partial<DeployState>; script: Script.Script }) => {
   const { space, client, fn, existingFunctionId } = useDeployDeps({ script });
   useEffect(() => {
     if (!existingFunctionId) {
@@ -115,10 +115,10 @@ export const useDeployState = ({ state, script }: { state: Partial<DeployState>;
   }, [script.changed, existingFunctionId, fn, script]);
 };
 
-export const useDeployDeps = ({ script }: { script: ScriptType }) => {
+export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space, Query.type(FunctionType, { source: Ref.make(script) }));
+  const [fn] = useQuery(space, Query.type(Function.Function, { source: Ref.make(script) }));
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };

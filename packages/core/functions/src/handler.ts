@@ -14,8 +14,8 @@ import { assertArgument } from '@dxos/invariant';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type QueryResult } from '@dxos/protocols';
 
-import { FunctionType } from './schema';
 import { type Services } from './services';
+import { Function } from './types';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from './url';
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
@@ -107,7 +107,7 @@ export type FunctionDefinition<T = any, O = any> = {
      * deployedFunctionId:
      * - Backend deployment ID assigned by the EDGE function service (typically a UUID).
      * - Used for remote invocation via `FunctionInvocationService` → `RemoteFunctionExecutionService`.
-     * - Persisted on the corresponding ECHO `FunctionType` object's metadata under the
+     * - Persisted on the corresponding ECHO `Function.Function` object's metadata under the
      *   `FUNCTIONS_META_KEY` and retrieved with `getUserFunctionIdInMetadata`.
      */
     deployedFunctionId?: string;
@@ -177,12 +177,12 @@ export const FunctionDefinition = {
   isFunction: (value: unknown): value is FunctionDefinition.Any => {
     return typeof value === 'object' && value !== null && Symbol.for('@dxos/functions/FunctionDefinition') in value;
   },
-  serialize: (functionDef: FunctionDefinition.Any): FunctionType => {
+  serialize: (functionDef: FunctionDefinition.Any): Function.Function => {
     assertArgument(FunctionDefinition.isFunction(functionDef), 'functionDef');
     return serializeFunction(functionDef);
   },
-  deserialize: (functionObj: FunctionType): FunctionDefinition.Any => {
-    assertArgument(Obj.instanceOf(FunctionType, functionObj), 'functionObj');
+  deserialize: (functionObj: Function.Function): FunctionDefinition.Any => {
+    assertArgument(Obj.instanceOf(Function.Function, functionObj), 'functionObj');
     return deserializeFunction(functionObj);
   },
 };
@@ -192,8 +192,8 @@ export declare namespace FunctionDefinition {
   export type Output<T extends FunctionDefinition> = T extends FunctionDefinition<any, infer O> ? O : never;
 }
 
-export const serializeFunction = (functionDef: FunctionDefinition<any, any>): FunctionType => {
-  const fn = Obj.make(FunctionType, {
+export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Function.Function => {
+  const fn = Function.make({
     key: functionDef.key,
     name: functionDef.name,
     version: '0.1.0',
@@ -207,7 +207,7 @@ export const serializeFunction = (functionDef: FunctionDefinition<any, any>): Fu
   return fn;
 };
 
-export const deserializeFunction = (functionObj: FunctionType): FunctionDefinition<unknown, unknown> => {
+export const deserializeFunction = (functionObj: Function.Function): FunctionDefinition<unknown, unknown> => {
   return {
     [typeId]: true,
     // TODO(dmaretskyi): Fix key.

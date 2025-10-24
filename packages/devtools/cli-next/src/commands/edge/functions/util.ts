@@ -7,7 +7,7 @@ import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { FUNCTIONS_META_KEY, FunctionType, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { FUNCTIONS_META_KEY, Function, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { safeParseJson } from '@dxos/util';
 
@@ -21,14 +21,14 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
   return edgeClient;
 };
 
-export const getDeployedFunctions = async (client: Client): Promise<FunctionType[]> => {
+export const getDeployedFunctions = async (client: Client): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
   const result = await edgeClient.listFunctions();
   return result.uploadedFunctions.map((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
     const versionMeta = safeParseJson<any>(latest.versionMetaJSON);
-    const fn = Obj.make(FunctionType, {
+    const fn = Function.make({
       key: versionMeta.key,
       name: versionMeta.name ?? versionMeta.key ?? record.id,
       version: latest?.version ?? '0.0.0',
@@ -44,7 +44,7 @@ export const getDeployedFunctions = async (client: Client): Promise<FunctionType
 
 export const invokeFunction = async (
   edgeClient: EdgeHttpClient,
-  fn: FunctionType,
+  fn: Function.Function,
   input: unknown,
   {
     spaceId,

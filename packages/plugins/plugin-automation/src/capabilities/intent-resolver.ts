@@ -10,8 +10,8 @@ import {
   createIntent,
   createResolver,
 } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
+import { Ref } from '@dxos/echo';
+import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
@@ -24,17 +24,17 @@ export default (context: PluginContext) =>
     createResolver({
       intent: AutomationAction.CreateTriggerFromTemplate,
       resolve: async ({ space, template, enabled = false, scriptName, input }) => {
-        const trigger = Obj.make(FunctionTrigger, { enabled, input });
+        const trigger = Trigger.make({ enabled, input });
 
         // TODO(wittjosiah): Factor out function lookup by script name?
         if (scriptName) {
           const {
             objects: [script],
-          } = await space.db.query(Filter.type(ScriptType, { name: scriptName })).run();
+          } = await space.db.query(Filter.type(Script.Script, { name: scriptName })).run();
           if (script) {
             const {
               objects: [fn],
-            } = await space.db.query(Filter.type(FunctionType, { source: Ref.make(script) })).run();
+            } = await space.db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run();
             if (fn) {
               trigger.function = Ref.make(fn);
             }

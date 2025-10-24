@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FunctionType, type ScriptType, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Function, type Script, getInvocationUrl, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -15,7 +15,7 @@ export const getFunctionUrl = ({
   fn,
   edgeUrl,
 }: {
-  script: ScriptType;
+  script: Script.Script;
   fn: any;
   edgeUrl: string;
 }): string | undefined => {
@@ -32,8 +32,8 @@ export const getFunctionUrl = ({
 };
 
 export const updateFunctionMetadata = (
-  script: ScriptType,
-  storedFunction: FunctionType,
+  script: Script.Script,
+  storedFunction: Function.Function,
   meta: any,
   functionId: string,
 ) => {

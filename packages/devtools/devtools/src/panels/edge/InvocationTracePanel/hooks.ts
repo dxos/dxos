@@ -6,10 +6,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import {
-  FunctionType,
+  Function,
   InvocationOutcome,
   type InvocationTraceEvent,
-  ScriptType,
+  Script,
   createInvocationSpans,
   getUserFunctionIdInMetadata,
 } from '@dxos/functions';
@@ -22,7 +22,7 @@ import { getUuidFromDxn } from './utils';
  * Maps invocation target identifiers to readable script names.
  */
 export const useFunctionNameResolver = ({ space }: { space?: Space }) => {
-  const functions = useQuery(space, Filter.type(FunctionType));
+  const functions = useQuery(space, Filter.type(Function.Function));
 
   return useCallback(
     (invocationTargetId: DXN | undefined) => {
@@ -39,11 +39,11 @@ export const useFunctionNameResolver = ({ space }: { space?: Space }) => {
 };
 
 export const useInvocationTargetsForScript = (target: Obj.Any | undefined) => {
-  const space = Obj.instanceOf(ScriptType, target) ? getSpace(target) : undefined;
-  const functions = useQuery(space, Filter.type(FunctionType));
+  const space = Obj.instanceOf(Script.Script, target) ? getSpace(target) : undefined;
+  const functions = useQuery(space, Filter.type(Function.Function));
 
   return useMemo(() => {
-    if (!Obj.instanceOf(ScriptType, target)) {
+    if (!Obj.instanceOf(Script.Script, target)) {
       return undefined;
     }
 

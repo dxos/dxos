@@ -6,12 +6,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Ref, Type } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
-import { type FunctionType } from '@dxos/functions';
+import { type Function } from '@dxos/functions';
 import { useOnTransition } from '@dxos/react-ui';
 import { Form, type FormInputStateProps, type QueryRefOptions, useFormValues } from '@dxos/react-ui-form';
 
 export type FunctionInputEditorProps = {
-  functions: FunctionType[];
+  functions: Function.Function[];
   onQueryRefOptions: QueryRefOptions;
 } & FormInputStateProps;
 

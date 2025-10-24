@@ -158,7 +158,14 @@ export class ComputeGraphController extends Resource {
   /**
    * Inputs and outputs for all nodes.
    */
-  get state() {
+  get state(): Record<
+    string,
+    {
+      node: ComputeNode;
+      input: Record<string, RuntimeValue>;
+      output: Record<string, RuntimeValue>;
+    }
+  > {
     const ids = [...new Set([...Object.keys(this._runtimeStateInputs), ...Object.keys(this._runtimeStateOutputs)])];
     return Object.fromEntries(
       ids.map((id) => [

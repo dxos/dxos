@@ -9,7 +9,7 @@ import { AbstractBaseCommand } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { ATTR_META, ATTR_TYPE, type ObjectMeta, getTypeAnnotation } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
-import { FUNCTION_TYPES } from '@dxos/functions';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -40,7 +40,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
       this.log('Adding schema...');
     }
 
-    const schemata = [...FUNCTION_TYPES]
+    const schemata = [Function.Function, Trigger.Trigger]
       .map((schema) => {
         if (Schema.isSchema(schema)) {
           const { typename } = getTypeAnnotation(schema as any) ?? {};

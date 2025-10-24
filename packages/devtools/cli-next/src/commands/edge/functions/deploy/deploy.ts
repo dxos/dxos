@@ -9,7 +9,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type FunctionType } from '@dxos/functions';
+import { type Function } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 import { ClientService, CommandConfig } from '../../../../services';
@@ -76,7 +76,7 @@ export const deploy = Command.make(
           name,
         }).pipe(Effect.map(Option.some)),
       ),
-      Option.getOrElse(() => Effect.succeed(Option.none<FunctionType>())),
+      Option.getOrElse(() => Effect.succeed(Option.none<Function.Function>())),
     );
 
     if (options.script) {

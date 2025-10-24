@@ -5,21 +5,21 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter } from '@dxos/echo';
-import { FunctionTrigger, TriggerDispatcher } from '@dxos/functions';
+import { Trigger, TriggerDispatcher } from '@dxos/functions';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useAsyncState } from '@dxos/react-ui';
 
 import { useComputeRuntimeCallback } from './useComputeRuntimeCallback';
 
 interface TriggerRuntimeControls {
-  triggers: FunctionTrigger[];
+  triggers: Trigger.Trigger[];
   isRunning: boolean;
   start: () => void;
   stop: () => void;
 }
 
 export const useTriggerRuntimeControls = (space: Space | undefined): TriggerRuntimeControls => {
-  const triggers = useQuery(space, Filter.type(FunctionTrigger));
+  const triggers = useQuery(space, Filter.type(Trigger.Trigger));
 
   const [isRunningState, setIsRunningState] = useAsyncState(
     useComputeRuntimeCallback(space, () => TriggerDispatcher.pipe(Effect.map((t) => t.running))),

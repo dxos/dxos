@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, defineModule, definePlugin } from '@dxos/app-framework';
-import { FunctionTrigger, FunctionType } from '@dxos/functions';
+import { Function, Trigger } from '@dxos/functions';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, ComputeRuntime, IntentResolver, ReactSurface } from './capabilities';
@@ -20,7 +20,7 @@ export const AutomationPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [FunctionType, FunctionTrigger]),
+    activate: () => contributes(ClientCapabilities.Schema, [Function.Function, Trigger.Trigger]),
   }),
   defineModule({
     id: `${meta.id}/module/app-graph-builder`,

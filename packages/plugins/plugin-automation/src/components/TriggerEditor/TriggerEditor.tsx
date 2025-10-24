@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { type Query, Type } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, ScriptType } from '@dxos/functions';
+import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, type Space, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -17,15 +17,15 @@ import { SpecSelector } from './SpecSelector';
 
 export type TriggerEditorProps = {
   space: Space;
-  trigger: FunctionTrigger;
+  trigger: Trigger.Trigger;
   // TODO(wittjosiah): This needs to apply to whole spec but currently only applies to spec.kind & spec.query.
   readonlySpec?: boolean;
-  onSave?: (trigger: Omit<FunctionTrigger, 'id'>) => void;
+  onSave?: (trigger: Omit<Trigger.Trigger, 'id'>) => void;
   onCancel?: () => void;
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSave, onCancel }: TriggerEditorProps) => {
-  const handleSave = ({ id: _, ...values }: FunctionTrigger) => {
+  const handleSave = ({ id: _, ...values }: Trigger.Trigger) => {
     onSave?.(values);
   };
 
@@ -36,7 +36,7 @@ export const TriggerEditor = ({ space, trigger, readonlySpec, types, tags, onSav
     <Form
       outerSpacing={false}
       Custom={Custom}
-      schema={FunctionTrigger}
+      schema={Trigger.Trigger}
       values={trigger}
       onSave={handleSave}
       onCancel={onCancel}
@@ -52,14 +52,14 @@ type UseCustomInputsProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 const useCustomInputs = ({ space, readonlySpec, types, tags, onQueryRefOptions }: UseCustomInputsProps) => {
-  const functions = useQuery(space, Filter.type(FunctionType));
+  const functions = useQuery(space, Filter.type(Function.Function));
   const workflows = useQuery(space, Filter.type(ComputeGraph));
-  const scripts = useQuery(space, Filter.type(ScriptType));
+  const scripts = useQuery(space, Filter.type(Script.Script));
 
   return useMemo(
     (): CustomInputMap => ({
       // Function selector.
-      ['function' satisfies keyof FunctionTrigger]: (props) => {
+      ['function' satisfies keyof Trigger.Trigger]: (props) => {
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {
@@ -121,7 +121,7 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
   return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
 };
 
-const getFunctionOptions = (scripts: ScriptType[], functions: FunctionType[]) => {
-  const getLabel = (fn: FunctionType) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
+  const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };

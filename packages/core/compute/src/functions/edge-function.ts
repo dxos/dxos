@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
 import { toEffectSchema } from '@dxos/echo/internal';
-import { ComputeEventLogger, FunctionInvocationService, FunctionType, TracingService } from '@dxos/functions';
+import { ComputeEventLogger, Function, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { FunctionDefinition } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
@@ -38,7 +38,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
 
         const {
           objects: [fn],
-        } = await space.db.query(Filter.type(FunctionType, { binding })).run();
+        } = await space.db.query(Filter.type(Function.Function, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');

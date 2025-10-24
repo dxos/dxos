@@ -7,7 +7,7 @@ import { describe, it } from '@effect/vitest';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Function from 'effect/Function';
+import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
@@ -17,7 +17,6 @@ import { DataType } from '@dxos/schema';
 
 import { default as reply } from '../examples/reply';
 import { serializeFunction } from '../handler';
-import { FunctionType } from '../schema';
 import {
   ComputeEventLogger,
   CredentialsService,
@@ -27,13 +26,13 @@ import {
   TracingService,
 } from '../services';
 import { TestDatabaseLayer } from '../testing';
-import { FunctionTrigger } from '../types';
+import { Function, Trigger } from '../types';
 
 import { InvocationTracer } from './invocation-tracer';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
-const TestLayer = Function.pipe(
+const TestLayer = Fn.pipe(
   Layer.mergeAll(ComputeEventLogger.layerFromTracing, InvocationTracer.layerTest, TriggerStateStore.layerMemory),
   Layer.provideMerge(
     Layer.mergeAll(
@@ -45,7 +44,7 @@ const TestLayer = Function.pipe(
       ),
       FetchHttpClient.layer,
       TestDatabaseLayer({
-        types: [FunctionType, FunctionTrigger, DataType.Person, DataType.Task],
+        types: [Function.Function, Trigger.Trigger, DataType.Person, DataType.Task],
       }),
     ),
   ),
@@ -82,7 +81,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -108,7 +107,7 @@ describe('TriggerDispatcher', () => {
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -138,7 +137,7 @@ describe('TriggerDispatcher', () => {
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
 
-        const enabledTrigger = Obj.make(FunctionTrigger, {
+        const enabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -147,7 +146,7 @@ describe('TriggerDispatcher', () => {
           },
         });
 
-        const disabledTrigger = Obj.make(FunctionTrigger, {
+        const disabledTrigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: false,
           spec: {
@@ -180,7 +179,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // cron every 5 minutes
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -229,7 +228,7 @@ describe('TriggerDispatcher', () => {
         // Add a trigger dynamically
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -265,7 +264,7 @@ describe('TriggerDispatcher', () => {
 
         // Test that valid patterns can be invoked
         for (const cron of validPatterns) {
-          const trigger = Obj.make(FunctionTrigger, {
+          const trigger = Trigger.make({
             function: Ref.make(functionObj),
             enabled: true,
             spec: {
@@ -288,7 +287,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // Test with an invalid pattern
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -329,7 +328,7 @@ describe('TriggerDispatcher', () => {
         const queue = yield* QueueService.createQueue();
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -358,7 +357,7 @@ describe('TriggerDispatcher', () => {
         const queue = yield* QueueService.createQueue();
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -405,7 +404,7 @@ describe('TriggerDispatcher', () => {
         const queue = yield* QueueService.createQueue();
         const functionObj = serializeFunction(reply);
         yield* DatabaseService.add(functionObj);
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -450,7 +449,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger that watches for DataType.Person objects
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -494,7 +493,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(person);
 
         // Create a subscription trigger
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -532,7 +531,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger first
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -582,7 +581,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger that only watches for DataType.Task objects
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {
@@ -631,7 +630,7 @@ describe('TriggerDispatcher', () => {
         yield* DatabaseService.add(person);
 
         // Create a subscription trigger with input pattern
-        const trigger = Obj.make(FunctionTrigger, {
+        const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           spec: {

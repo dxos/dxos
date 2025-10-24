@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 
 import { chain, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { useClient } from '@dxos/react-client';
@@ -45,7 +45,7 @@ export const useCreateAndDeployScriptTemplates = (space: Space | undefined, scri
             chain(SpaceAction.AddObject, { target: space }),
           ),
         );
-        invariant(Obj.instanceOf(ScriptType, result.data?.object));
+        invariant(Obj.instanceOf(Script.Script, result.data?.object));
 
         return deployScript({ space, client, script: result.data.object });
       }),

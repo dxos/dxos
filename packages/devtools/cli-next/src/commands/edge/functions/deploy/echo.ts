@@ -8,29 +8,35 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Schema from 'effect/Schema';
 
 import { Filter, type Space, getMeta } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionType, ScriptType, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { DataType } from '@dxos/schema';
 
 import { CommandConfig } from '../../../../services';
 
-export const DATA_TYPES = [FunctionType, ScriptType, DataType.Collection, DataType.Text];
+export const DATA_TYPES: Schema.Schema.AnyNoContext[] = [
+  Function.Function,
+  Script.Script,
+  DataType.Collection,
+  DataType.Text,
+];
 
-export const getNextVersion = (fnObject: Option.Option<FunctionType>) => {
+export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
   return Option.match(fnObject, {
     onNone: () => '0.0.1',
     onSome: (fnObject) => incrementSemverPatch(fnObject.version),
   });
 };
 
-export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<FunctionType, Error, never> =
+export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<Function.Function, Error, never> =
   Effect.fn(function* (space: Space, functionId: string) {
     // TODO(wittjosiah): Derive DatabaseService from ClientService.
-    const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(FunctionType)).run());
+    const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Function.Function)).run());
     const functionObject = functions.objects.find((fn) => getUserFunctionIdInMetadata(getMeta(fn)) === functionId);
     if (!functionObject) {
       return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
@@ -47,7 +53,7 @@ export const upsertFunctionObject = Effect.fn(function* ({
   name,
 }: {
   space: Space;
-  existingObject: FunctionType | undefined;
+  existingObject: Function.Function | undefined;
   uploadResult: UploadFunctionResponseBody;
   filePath: string;
   name?: string;
@@ -55,7 +61,7 @@ export const upsertFunctionObject = Effect.fn(function* ({
   const { verbose } = yield* CommandConfig;
   let functionObject = existingObject;
   if (!functionObject) {
-    functionObject = Obj.make(FunctionType, {
+    functionObject = Function.make({
       name: path.basename(filePath, path.extname(filePath)),
       version: uploadResult.version,
     });
@@ -91,7 +97,7 @@ export const upsertComposerScript = Effect.fn(function* ({
   name,
 }: {
   space: Space;
-  functionObject: FunctionType;
+  functionObject: Function.Function;
   filePath: string;
   name?: string;
 }) {
@@ -108,8 +114,7 @@ export const upsertComposerScript = Effect.fn(function* ({
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
-    const sourceObj = space.db.add(DataType.makeText(scriptFileContent));
-    const obj = space.db.add(Obj.make(ScriptType, { name: scriptFileName, source: Ref.make(sourceObj) }));
+    const obj = space.db.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
     functionObject.source = Ref.make(obj);
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {
