@@ -28,6 +28,11 @@ export const createNotebook = (): Notebook.Notebook =>
       },
       {
         id: PublicKey.random().toString(),
+        type: 'query',
+        script: Ref.make(createObject(DataType.makeText(`docs = (type: ${Markdown.Document.typename} AND #research)`))),
+      },
+      {
+        id: PublicKey.random().toString(),
         type: 'script',
         script: Ref.make(createObject(DataType.makeText('b = Math.PI'))),
       },
@@ -40,11 +45,6 @@ export const createNotebook = (): Notebook.Notebook =>
         id: PublicKey.random().toString(),
         type: 'script',
         script: Ref.make(createObject(DataType.makeText('c + d'))),
-      },
-      {
-        id: PublicKey.random().toString(),
-        type: 'query',
-        script: Ref.make(createObject(DataType.makeText(`docs = (type: ${Markdown.Document.typename} AND #research)`))),
       },
       {
         id: PublicKey.random().toString(),
