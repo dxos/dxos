@@ -49,37 +49,12 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const { t } = useTranslation(meta.id);
   const space = getSpace(notebook);
 
-  // TODO(burdon): Consolidate state (with graph).
+  // TODO(burdon): Consolidate execution and state (with graph).
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
+
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
-  const [promptResults, setPromptResults] = useState<Record<string, string>>({});
-
-  const handleExecPrompts = useComputeRuntimeCallback(
-    space,
-    Effect.fnUntraced(function* () {
-      invariant(graph);
-
-      const prompts =
-        notebook?.cells
-          .filter((cell) => cell.type === 'prompt')
-          .map((cell) => cell.prompt)
-          .filter(isNonNullable) ?? [];
-
-      for (const prompt of prompts) {
-        yield* runPrompt({
-          prompt,
-          input: { ...queryValues, ...graph.valuesByName.value },
-          onResult: (result) => setPromptResults((prev) => ({ ...prev, [prompt.dxn.toString()]: result })),
-        });
-      }
-    }),
-    [notebook, graph, queryValues],
-  );
-
   const handleExecQueries = useCallback(async () => {
-    if (!space) {
-      return;
-    }
+    invariant(space);
 
     const builder = new QueryBuilder();
     for (const cell of notebook?.cells ?? []) {
@@ -111,6 +86,29 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
       }
     }
   }, [space, notebook, graph]);
+
+  const [promptResults, setPromptResults] = useState<Record<string, string>>({});
+  const handleExecPrompts = useComputeRuntimeCallback(
+    space,
+    Effect.fnUntraced(function* () {
+      invariant(graph);
+
+      const prompts =
+        notebook?.cells
+          .filter((cell) => cell.type === 'prompt')
+          .map((cell) => cell.prompt)
+          .filter(isNonNullable) ?? [];
+
+      for (const prompt of prompts) {
+        yield* runPrompt({
+          prompt,
+          input: { ...queryValues, ...graph.valuesByName.value },
+          onResult: (result) => setPromptResults((prev) => ({ ...prev, [prompt.dxn.toString()]: result })),
+        });
+      }
+    }),
+    [notebook, graph, queryValues],
+  );
 
   // TODO(burdon): Cache values in context (preserve when switched).
   const handleCompute = useCallback(async () => {
