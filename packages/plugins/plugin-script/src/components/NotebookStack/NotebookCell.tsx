@@ -53,12 +53,12 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
   // Common.
   //
   const extensions = useMemo(() => {
-    return cell.script?.target
+    return cell.source?.target
       ? [createDataExtensions({ id: cell.id, text: createDocAccessor(cell.script.target, ['content']) })].filter(
           isNonNullable,
         )
       : [];
-  }, [cell.script?.target]);
+  }, [cell.source?.target]);
 
   //
   // Query.
@@ -66,12 +66,12 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
   const view = cell.view?.target;
   const builder = useMemo(() => new QueryBuilder(), []);
   useAsyncEffect(async () => {
-    if (!space || !cell.script?.target) {
+    if (!space || !cell.source?.target) {
       return;
     }
 
     if (cell.type === 'query') {
-      const query = cell.script.target.content;
+      const query = cell.source.target.content;
       const { name, filter } = builder.build(query);
       if (filter) {
         const ast = Query.select(filter).ast;
@@ -86,33 +86,33 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
         }
       }
     }
-  }, [space, builder, cell, cell.script?.target?.content]);
+  }, [space, builder, cell, cell.source?.target?.content]);
 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
-      invariant(cell.script?.target);
-      cell.script.target.content = value;
+      invariant(cell.source?.target);
+      cell.source.target.content = value;
     },
     [cell],
   );
 
   switch (cell.type) {
     case 'markdown':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
       return (
-        <MarkdownEditor
+        <NotebookTextEditor
           id={cell.id}
           classNames={editorStyles}
-          initialValue={cell.script.target.content}
+          initialValue={cell.source.target.content}
           extensions={extensions}
         />
       );
 
     case 'script':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
@@ -122,7 +122,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             role='section'
             classNames={editorStyles}
-            initialValue={cell.script.target.content}
+            initialValue={cell.source.target.content}
             extensions={extensions}
             env={env}
             options={{
@@ -136,7 +136,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
       );
 
     case 'query':
-      if (!cell.script?.target) {
+      if (!cell.source?.target) {
         return null;
       }
 
@@ -147,7 +147,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
             id={cell.id}
             classNames={[editorStyles, 'border-b border-subduedSeparator']}
             db={space?.db}
-            value={cell.script.target.content}
+            value={cell.source.target.content}
             onChange={handleQueryChange}
           />
           {view && !dragging && <Surface role='section' limit={1} data={{ subject: view }} />}
@@ -214,12 +214,12 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
 
   return (
     <div className={mx('flex is-full bg-groupSurface text-description border-t border-subduedSeparator', valueStyles)}>
-      <MarkdownEditor readOnly value={value} />
+      <NotebookTextEditor readOnly value={value} />
     </div>
   );
 };
 
-const MarkdownEditor = ({
+const NotebookTextEditor = ({
   extensions: extensionsParam,
   readOnly,
   ...props
