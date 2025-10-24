@@ -8,7 +8,6 @@ import { useMemo } from 'react';
 
 import { type Action } from '@dxos/app-graph';
 import { type Live, live } from '@dxos/live-object';
-import { type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   type MenuActionProperties,
