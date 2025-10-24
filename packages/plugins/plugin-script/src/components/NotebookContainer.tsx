@@ -71,6 +71,16 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
     [notebook, graph],
   );
 
+  const handleQueries = useCallback(async () => {
+    const queries =
+      notebook?.cells
+        .filter((cell) => cell.type === 'query')
+        .map((cell) => cell.query)
+        .filter(isNonNullable) ?? [];
+
+    console.log(queries);
+  }, [graph]);
+
   // TODO(burdon): Cache values in context (preserve when switched).
   const handleCompute = useCallback(async () => {
     graph?.evaluate();
