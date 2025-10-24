@@ -297,6 +297,7 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
+    await this._echoHost.flush();
 
     log('constructing space...', { spaceKey });
 
