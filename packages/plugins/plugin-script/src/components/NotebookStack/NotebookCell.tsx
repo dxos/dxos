@@ -15,6 +15,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
+  type BasicExtensionsOptions,
   Editor,
   type EditorProps,
   createBasicExtensions,
@@ -153,6 +154,7 @@ export const NotebookCell = ({ space, graph, dragging, cell, promptResults, env 
         </div>
       );
 
+    // TODO(burdon): Use streaming response from Chat.
     case 'prompt':
       if (!cell.prompt?.target) {
         return null;
@@ -211,23 +213,22 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div
-      className={mx(
-        'flex is-full bg-groupSurface border-t border-subduedSeparator text-description font-mono',
-        valueStyles,
-      )}
-    >
-      <span>{value}</span>
+    <div className={mx('flex is-full bg-groupSurface text-description border-t border-subduedSeparator', valueStyles)}>
+      <MarkdownEditor readOnly value={value} />
     </div>
   );
 };
 
-const MarkdownEditor = ({ extensions: extensionsParam, ...props }: EditorProps) => {
+const MarkdownEditor = ({
+  extensions: extensionsParam,
+  readOnly,
+  ...props
+}: EditorProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(() => {
     return [
-      createBasicExtensions({ placeholder: t('notebook markdown placeholder') }),
+      createBasicExtensions({ placeholder: t('notebook markdown placeholder'), readOnly }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),
       createMarkdownExtensions(),
       decorateMarkdown(),
