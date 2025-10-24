@@ -11,48 +11,50 @@ import { DataType } from '@dxos/schema';
 
 import { Notebook } from '../types';
 
+// TODO(burdon): NOTE: createObject is required for tests.
+
 export const createNotebook = (): Notebook.Notebook =>
   Notebook.make({
     cells: [
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c = a() + b'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('c = a() + b'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['a = () => 100'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('a = () => 100'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['b = 200'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('b = 200'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['d = a() * 2'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('d = a() * 2'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'script',
-        script: Ref.make(createObject(DataType.makeText(['c + d'].join('\n')))),
+        script: Ref.make(createObject(DataType.makeText('c + d'))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        script: Ref.make(
-          createObject(DataType.makeText(`docs = ( type: ${Markdown.Document.typename} AND #research )`)),
-        ),
+        script: Ref.make(createObject(DataType.makeText(`docs = (type: ${Markdown.Document.typename} AND #research)`))),
       },
       {
         id: PublicKey.random().toString(),
         type: 'prompt',
         prompt: Ref.make(
-          Prompt.make({
-            instructions: 'What is your favorite of {{a}} and {{b}}?',
-          }),
+          createObject(
+            Prompt.make({
+              instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
+            }),
+          ),
         ),
       },
     ],

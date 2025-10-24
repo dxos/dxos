@@ -59,11 +59,12 @@ const Prompt_ = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
 export interface Prompt extends Schema.Schema.Type<typeof Prompt_> {}
 export interface Prompt_Encoded extends Schema.Schema.Encoded<typeof Prompt_> {}
 export const Prompt: Schema.Schema<Prompt, Prompt_Encoded> = Prompt_;
 
-export const make = (opts: {
+export const make = (params: {
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
@@ -73,11 +74,11 @@ export const make = (opts: {
   context?: any[];
 }): Prompt =>
   Obj.make(Prompt, {
-    name: opts.name,
-    description: opts.description,
-    input: toJsonSchema(opts.input ?? Schema.Any),
-    output: toJsonSchema(opts.output ?? Schema.Any),
-    instructions: Template.make({ source: opts.instructions }),
-    blueprints: opts.blueprints ?? [],
-    context: opts.context ?? [],
+    name: params.name,
+    description: params.description,
+    input: toJsonSchema(params.input ?? Schema.Void),
+    output: toJsonSchema(params.output ?? Schema.Void),
+    instructions: Template.make({ source: params.instructions }),
+    blueprints: params.blueprints ?? [],
+    context: params.context ?? [],
   });
