@@ -11,6 +11,8 @@ import { DataType } from '@dxos/schema';
 
 import { Notebook } from '../types';
 
+// TODO(burdon): NOTE: createObject is required for tests.
+
 export const createNotebook = (): Notebook.Notebook =>
   Notebook.make({
     cells: [
@@ -50,9 +52,11 @@ export const createNotebook = (): Notebook.Notebook =>
         id: PublicKey.random().toString(),
         type: 'prompt',
         prompt: Ref.make(
-          Prompt.make({
-            instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
-          }),
+          createObject(
+            Prompt.make({
+              instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
+            }),
+          ),
         ),
       },
     ],
