@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect, signal } from '@preact/signals-core';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
@@ -242,14 +243,25 @@ export class ComputeGraph extends Resource {
 
   protected override async _open(): Promise<void> {
     if (this._space) {
+      // TODO(wittjosiah): Use effect-atom instead of signal.
+      const allFunctions = signal<FunctionType[]>([]);
+
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.type(FunctionType));
       const unsubscribe = query.subscribe(({ objects }) => {
-        this._remoteFunctions = objects.filter(({ binding }) => binding);
+        allFunctions.value = objects;
         this.update.emit({ type: 'functionsUpdated' });
       });
 
-      this._ctx.onDispose(unsubscribe);
+      // Subscribe to binding changes.
+      const dispose = effect(() => {
+        this._remoteFunctions = allFunctions.value.filter(({ binding }) => binding);
+      });
+
+      this._ctx.onDispose(() => {
+        unsubscribe();
+        dispose();
+      });
     }
   }
 
