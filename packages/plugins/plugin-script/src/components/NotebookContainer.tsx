@@ -57,6 +57,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
           .map((cell) => cell.prompt)
           .filter(isNonNullable) ?? [];
 
+      // TODO(burdon): Factor out invocation.
       for (const prompt of prompts) {
         const inputData: FunctionDefinition.Input<typeof agent> = {
           prompt,
