@@ -21,7 +21,7 @@ export { Project } from './project';
 export { Task } from './task';
 export { Text } from './text';
 export { View } from '../view';
-export { Employer, HasConnection, HasRelationship } from './relations';
+export { AnchoredTo, Employer, HasConnection, HasRelationship, HasSubject } from './relations';
 
 import { Project as ProjectSchema } from './project';
 import { Text as TextSchema } from './text';
