@@ -4,12 +4,7 @@
 
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
-import {
-  FunctionType,
-  type ScriptType,
-  getUserFunctionIdInMetadata,
-  setUserFunctionIdInMetadata,
-} from '@dxos/functions';
+import { Function, type Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
@@ -17,16 +12,16 @@ import { type Space } from '@dxos/react-client/echo';
 
 import { updateFunctionMetadata } from './functions';
 
-export const isScriptDeployed = ({ script, fn }: { script: ScriptType; fn: any }): boolean => {
+export const isScriptDeployed = ({ script, fn }: { script: Script.Script; fn: any }): boolean => {
   const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   return Boolean(existingFunctionId) && !script.changed;
 };
 
 type DeployScriptProps = {
-  script: ScriptType;
+  script: Script.Script;
   client: Client;
   space: Space;
-  fn?: FunctionType;
+  fn?: Function.Function;
   existingFunctionId?: string;
 };
 
@@ -83,7 +78,7 @@ export const deployScript = async ({
 /**
  * Validate inputs for script deployment.
  */
-const validateDeployInputs = (script: ScriptType, space: Space): Error | null => {
+const validateDeployInputs = (script: Script.Script, space: Space): Error | null => {
   if (!script.source || !space) {
     return new Error('Script source or space not available');
   }
@@ -92,17 +87,17 @@ const validateDeployInputs = (script: ScriptType, space: Space): Error | null =>
 
 const createOrUpdateFunctionInSpace = (
   space: Space,
-  fn: FunctionType | undefined,
-  script: ScriptType,
+  fn: Function.Function | undefined,
+  script: Script.Script,
   functionId: string,
   version: string,
-): FunctionType => {
+): Function.Function => {
   if (fn) {
     fn.name = script.name ?? 'New Function';
     fn.version = version;
     return fn;
   } else {
-    const fn = Obj.make(FunctionType, { name: script.name ?? 'New Function', version, source: Ref.make(script) });
+    const fn = Function.make({ name: script.name ?? 'New Function', version, source: Ref.make(script) });
     space.db.add(fn);
     setUserFunctionIdInMetadata(Obj.getMeta(fn), functionId);
     return fn;

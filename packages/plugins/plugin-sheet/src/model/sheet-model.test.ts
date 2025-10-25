@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'v
 import { Trigger } from '@dxos/async';
 import { type CellScalarValue, addressFromA1Notation, isFormula } from '@dxos/compute';
 import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
-import { FunctionType } from '@dxos/functions';
+import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
@@ -18,7 +18,7 @@ import { createTestGrid } from './testing';
 describe('SheetModel', () => {
   let testBuilder: TestBuilder;
   beforeEach(async () => {
-    testBuilder = new TestBuilder({ types: [FunctionType], plugins: testFunctionPlugins });
+    testBuilder = new TestBuilder({ types: [Function.Function], plugins: testFunctionPlugins });
     await testBuilder.open();
   });
   afterEach(async () => {

@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { todo } from '@dxos/debug';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId, type RefResolver, setRefResolver } from '@dxos/echo/internal';
-import { FunctionType, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Function, ServiceContainer, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { type RemoteFunctionExecutionService, createEventLogger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { LogLevel } from '@dxos/log';
@@ -141,7 +141,7 @@ describe('workflow', () => {
     const createFunction = () => {
       const functionDxn = DXN.fromLocalObjectId(ObjectId.random());
       const functionRef = Ref.fromDXN(functionDxn);
-      const fnObject = Obj.make(FunctionType, { name: 'foo', version: '0.0.1' });
+      const fnObject = Function.make({ name: 'foo', version: '0.0.1' });
       let resolveCounter = 0;
       const refResolver: RefResolver = {
         resolve: async (dxn) => refResolver.resolveSync(dxn, true),

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionTrigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { AutomationAction } from '@dxos/plugin-automation/types';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
@@ -19,7 +19,7 @@ export const MailboxObjectSettings = ({ object }: { object: Mailbox.Mailbox }) =
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = useMemo(() => getSpace(object), [object]);
-  const triggers = useQuery(space, Filter.type(FunctionTrigger));
+  const triggers = useQuery(space, Filter.type(Trigger.Trigger));
 
   const handleConfigureSync = useCallback(() => {
     invariant(space);

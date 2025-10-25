@@ -7,7 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
-import { FunctionDefinition, FunctionType } from '@dxos/functions';
+import { Function, FunctionDefinition } from '@dxos/functions';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
@@ -24,7 +24,7 @@ describe('ComputeGraphRegistry', () => {
 
   test('invokes user function through compute graph', async () => {
     const computeRuntime = createMockedComputeRuntimeProvider({ functions: [add] });
-    const testBuilder = new TestBuilder({ types: [FunctionType], computeRuntime });
+    const testBuilder = new TestBuilder({ types: [Function.Function], computeRuntime });
     await testBuilder.open();
     onTestFinished(async () => {
       await testBuilder.close();
@@ -74,7 +74,7 @@ describe('ComputeGraphRegistry', () => {
 
   test('adding a function binding updates autocomplete and enables execution', async () => {
     const computeRuntime = createMockedComputeRuntimeProvider({ functions: [add] });
-    const testBuilder = new TestBuilder({ types: [FunctionType], computeRuntime });
+    const testBuilder = new TestBuilder({ types: [Function.Function], computeRuntime });
     await testBuilder.open();
     onTestFinished(async () => {
       await testBuilder.close();
