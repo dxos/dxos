@@ -43,7 +43,7 @@
     "@preact/signals-core": "^1.12.1",
     "@radix-ui/react-context": "1.1.1",
     "@xyflow/react": "^12.8.1",
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {

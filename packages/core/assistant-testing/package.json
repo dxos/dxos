@@ -44,15 +44,15 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
-    "@effect/ai-anthropic": "0.19.2",
+    "@effect/ai": "0.31.1",
+    "@effect/ai-anthropic": "0.21.1",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
     "dfx": "^0.126.0",
     "exa-js": "^1.5.12"
   },
   "devDependencies": {
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "react": "~19.2.0",
     "react-dom": "~19.2.0"
   },

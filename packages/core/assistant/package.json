@@ -61,7 +61,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "0.29.1",
+    "@effect/ai": "0.31.1",
     "@effect/experimental": "0.56.0",
     "@effect/platform": "^0.92.1",
     "@preact/signals-core": "^1.12.1",
@@ -70,7 +70,7 @@
   },
   "devDependencies": {
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "effect": "3.18.3"
+    "effect": "3.18.4"
   },
   "peerDependencies": {
     "effect": "^3.13.3"

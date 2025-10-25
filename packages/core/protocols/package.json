@@ -72,7 +72,7 @@
     "@bufbuild/buf": "1.43.0",
     "@bufbuild/protoc-gen-es": "2.9.0",
     "@dxos/protobuf-compiler": "workspace:*",
-    "effect": "3.18.3"
+    "effect": "3.18.4"
   },
   "peerDependencies": {
     "effect": "^3.13.3"
