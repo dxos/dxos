@@ -11,13 +11,13 @@ import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
 import {
+  HasSubject,
   LINEAR_BLUEPRINT,
   RESEARCH_BLUEPRINT,
   ResearchDataTypes,
   ResearchGraph,
-  HasSubject,
   agent,
-} from '@dxos/assistant-testing';
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';

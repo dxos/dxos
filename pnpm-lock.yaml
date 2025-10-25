@@ -2207,7 +2207,7 @@ importers:
         specifier: 3.18.3
         version: 3.18.3
 
-  packages/core/assistant-testing:
+  packages/core/assistant-tools:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -5159,9 +5159,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5985,9 +5985,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6802,9 +6802,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8309,9 +8309,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8576,9 +8576,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11764,9 +11764,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/assistant
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12764,9 +12764,9 @@ importers:
         specifier: ^1.0.0
         version: 1.2.0
     devDependencies:
-      '@dxos/assistant-testing':
+      '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-testing
+        version: link:../../core/assistant-tools
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute
@@ -42351,7 +42351,7 @@ snapshots:
 
   '@types/body-parser@1.19.2':
     dependencies:
-      '@types/connect': 3.4.36
+      '@types/connect': 3.4.38
       '@types/node': 22.10.2
     optional: true
 

@@ -9,7 +9,6 @@ import * as Schema from 'effect/Schema';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { ContextQueueService, DatabaseService, QueueService } from '@dxos/functions';
-import { Markdown } from '@dxos/plugin-markdown/types';
 
 /**
  * Container for a set of ephemeral research results.
@@ -43,18 +42,5 @@ export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
     const researchGraph = (yield* queryResearchGraph()) ?? (yield* createResearchGraph());
     const researchQueue = yield* DatabaseService.load(researchGraph.queue);
     return ContextQueueService.layer(researchQueue);
-  }),
-);
-
-// TODO(burdon): Move to DataType; generalize to Subject relation?
-export const HasSubject = Schema.Struct({
-  id: Type.ObjectId,
-  completedAt: Type.Format.DateTime,
-}).pipe(
-  Type.Relation({
-    typename: 'dxos.org/relation/HasSubject',
-    version: '0.1.0',
-    source: Markdown.Document,
-    target: Type.Expando, // TODO(burdon): Type.Obj.Any.
   }),
 );
