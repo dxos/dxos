@@ -6,8 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { fullyQualifiedId } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
+import { Function } from '@dxos/functions';
 import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
@@ -16,7 +15,7 @@ import { TestBuilder } from './testing';
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;
   beforeEach(async () => {
-    testBuilder = new TestBuilder({ types: [FunctionType] });
+    testBuilder = new TestBuilder({ types: [Function.Function] });
     await testBuilder.open();
   });
   afterEach(async () => {
@@ -31,7 +30,7 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(Obj.make(FunctionType, { name: 'test', version: '0.0.1', binding: 'TEST' }));
+    const functionObject = space.db.add(Function.make({ name: 'test', version: '0.0.1', binding: 'TEST' }));
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);
