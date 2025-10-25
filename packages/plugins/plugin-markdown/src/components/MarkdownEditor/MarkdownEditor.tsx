@@ -16,9 +16,15 @@ import { PopoverMenuProvider, type PreviewLinkRef, type PreviewOptions } from '@
 // Context
 //
 
+// TODO(burdon): Factor out type.
+type PreviewBlock = {
+  el: HTMLElement;
+  link: PreviewLinkRef;
+};
+
 type MarkdownEditorContextValue = {
   extensions: Extension[];
-  previewBlocks: { link: PreviewLinkRef; el: HTMLElement }[]; // TODO(burdon): Type.
+  previewBlocks: PreviewBlock[];
 };
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
@@ -32,7 +38,7 @@ type MarkdownEditorRootProps = PropsWithChildren<{}>;
 
 const MarkdownEditorRoot = ({ children }: MarkdownEditorRootProps) => {
   // Preview blocks.
-  const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+  const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
       addBlockContainer: (link, el) => {
@@ -105,7 +111,7 @@ MarkdownEditorPreview.displayName = 'MarkdownEditor.Preview';
 /**
  * Embedded object.
  */
-const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
+const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = DXN.parse(link.ref);
   const subject = client.graph.ref(dxn).target;
