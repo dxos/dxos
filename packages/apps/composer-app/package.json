@@ -87,7 +87,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "^5.0.20",
-    "effect": "3.18.3",
+    "effect": "3.18.4",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.1",
     "micromark-extension-directive": "^3.0.0",
