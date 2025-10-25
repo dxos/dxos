@@ -20,7 +20,6 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  SequenceContainer,
 } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
@@ -48,12 +47,6 @@ export default () =>
         Obj.isObject(data.companionTo) &&
         (Obj.instanceOf(Assistant.Chat, data.subject) || data.subject === 'assistant-chat'),
       component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
-    }),
-    createSurface({
-      id: `${meta.id}/sequence`,
-      role: 'article',
-      filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
-      component: ({ data }) => <SequenceContainer sequence={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/companion-logs`,
