@@ -94,7 +94,7 @@
     "@effect-rx/rx-react": "0.42.4",
     "@effect/platform": "0.92.1",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",
