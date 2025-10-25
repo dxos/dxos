@@ -125,7 +125,7 @@ const StoryThread: FC<{
       createBasicExtensions({ placeholder: 'Enter comment' }),
       createThemeExtensions({ themeMode }),
       listener({
-        onChange: (text) => (messageRef.current = text),
+        onChange: ({ text }) => (messageRef.current = text),
       }),
     ],
     [themeMode, state],

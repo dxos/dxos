@@ -33,7 +33,7 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
       script.source.target
         ? [
             listener({
-              onChange: (text) => {
+              onChange: ({ text }) => {
                 if (script.source.target?.content !== text) {
                   script.changed = true;
                 }

@@ -66,10 +66,11 @@ export const MarkdownContainer = ({
     }),
     [],
   );
+
   const extensions = useExtensions({
+    id,
     document: doc,
     text,
-    id,
     settings,
     selectionManager,
     viewMode,

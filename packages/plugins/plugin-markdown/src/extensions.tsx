@@ -48,8 +48,8 @@ import { type Markdown } from './types';
 import { setFallbackName } from './util';
 
 type ExtensionsOptions = {
-  document?: Markdown.Document;
   id?: string;
+  document?: Markdown.Document;
   text?: DataType.Text;
   dispatch?: PromiseIntentDispatcher;
   settings: Markdown.Settings;
@@ -61,8 +61,8 @@ type ExtensionsOptions = {
 
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
-  document,
   id,
+  document,
   text,
   settings,
   selectionManager,
@@ -153,7 +153,7 @@ export const useExtensions = ({
         selectionState(editorStateStore),
         document &&
           listener({
-            onChange: (text) => setFallbackName(document, text),
+            onChange: ({ text }) => setFallbackName(document, text),
           }),
         baseExtensions,
         pluginExtensions,
