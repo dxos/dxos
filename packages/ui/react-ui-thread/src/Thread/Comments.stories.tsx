@@ -114,19 +114,21 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const { themeMode } = useThemeContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(0);
-  const rerenderEditor = () => _setCount((count) => count + 1);
+  const [state, setState] = useState({});
   const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: 'Enter comment' }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({
+        onChange: (text) => (messageRef.current = text),
+      }),
     ],
-    [themeMode, _count],
+    [themeMode, state],
   );
 
   const [autoFocus, setAutoFocus] = useState(false);
@@ -151,7 +153,7 @@ const StoryThread: FC<{
 
       messageRef.current = '';
       setAutoFocus(true);
-      rerenderEditor();
+      setState({});
     }
   };
 
