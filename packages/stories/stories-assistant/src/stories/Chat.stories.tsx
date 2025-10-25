@@ -10,14 +10,7 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  HasSubject,
-  LINEAR_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
-  ResearchDataTypes,
-  ResearchGraph,
-  agent,
-} from '@dxos/assistant-toolkit';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
 import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
@@ -702,13 +695,13 @@ export const WithProject: Story = {
       Tag.Tag,
       DataType.Employer,
       DataType.HasConnection,
+      DataType.HasSubject,
       DataType.Message,
       DataType.Organization,
       DataType.Person,
       DataType.Project,
       DataType.View,
       Mailbox.Mailbox,
-      HasSubject,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -735,8 +728,8 @@ export const WithProject: Story = {
       );
       const blueyardResearch = space.db.add(
         Markdown.makeDocument({
-          name: 'Blue Yard Research',
-          content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
+          name: 'BlueYard Research',
+          content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {

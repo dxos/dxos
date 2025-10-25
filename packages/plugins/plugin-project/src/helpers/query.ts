@@ -20,7 +20,6 @@ import {
 import { Markdown } from '@dxos/plugin-markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { HasSubject } from '@dxos/schema';
 import { DataType } from '@dxos/schema';
 
 // TODO(wittjosiah): Factor out and add tests.
@@ -30,11 +29,10 @@ import { DataType } from '@dxos/schema';
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function('Query', 'Filter', 'DataType', 'HasSubject', 'Markdown', `return ${queryString}`)(
+    return new Function('Query', 'Filter', 'DataType', 'Markdown', `return ${queryString}`)(
       Query,
       Filter,
       DataType,
-      HasSubject,
       Markdown,
     );
   } catch {

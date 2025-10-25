@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { HasSubject } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 
 import {
   AiService,
@@ -111,7 +111,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         ServiceType,
         Assistant.CompanionTo,
         ResearchGraph,
-        HasSubject,
+        DataType.HasSubject,
         Prompt.Prompt,
       ]),
   }),
