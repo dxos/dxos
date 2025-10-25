@@ -7222,6 +7222,9 @@ importers:
       '@codemirror/search':
         specifier: ^6.5.11
         version: 6.5.11
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
       '@codemirror/view':
         specifier: ^6.38.4
         version: 6.38.5
@@ -7327,6 +7330,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
+      '@radix-ui/react-context':
+        specifier: ^1.0.5
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       react-dropzone:
         specifier: ^14.2.3
         version: 14.2.3(react@19.2.0)
