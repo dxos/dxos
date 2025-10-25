@@ -46,7 +46,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         id: ScriptType.typename,
         metadata: {
           icon: 'ph--code--regular',
-          iconClassName: 'text-skySurfaceText',
+          iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: ScriptType) => await Ref.Array.loadAll([script.source]),
         },
@@ -55,7 +55,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
-          iconClassName: 'text-skySurfaceText',
+          iconHue: 'sky',
         },
       }),
     ],

@@ -7,6 +7,7 @@ import React, { type MouseEvent, useCallback } from 'react';
 import { type Plugin } from '@dxos/app-framework';
 import { Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { getStyles } from '@dxos/react-ui-theme';
 
 import { meta } from '../meta';
 
@@ -29,7 +30,7 @@ export const PluginItem = ({
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
-  const { id, name, description, tags, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -46,6 +47,7 @@ export const PluginItem = ({
 
   const hasSettings = _hasSettings?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
+  const styles = getStyles(iconHue);
 
   return (
     <ListItem.Root
@@ -53,13 +55,10 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      // TODO(burdon): Use Rail vars.
-      classNames='is-full bs-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
+      classNames='is-full bs-full grid grid-cols-[5rem_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
     >
       {/* Header. */}
-      <div className='flex flex-col grow justify-center items-center'>
-        <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
-      </div>
+      <div />
       <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
         <span className='truncate'>{name ?? id}</span>
       </div>
@@ -70,7 +69,9 @@ export const PluginItem = ({
       </div>
 
       {/* Body. */}
-      <div />
+      <div className={mx('mli-2.5 flex justify-center items-center aspect-square rounded-md', styles.bg)}>
+        <Icon icon={icon} size={12} onClick={handleClick} classNames={mx('text-black cursor-pointer', styles.icon)} />
+      </div>
       {(description || tags) && (
         <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
           <div className='grow'>
@@ -79,7 +80,7 @@ export const PluginItem = ({
           {tags && tags.length > 0 && (
             <div>
               {tags.map((tag) => (
-                <Tag key={tag} palette={'indigo'} classNames='text-xs capitalize'>
+                <Tag key={tag} palette='rose' classNames='text-xs capitalize'>
                   {tag}
                 </Tag>
               ))}

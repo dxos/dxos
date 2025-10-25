@@ -14,7 +14,7 @@ export type TreeItemDataProps = {
   className?: string;
   headingClassName?: string;
   icon?: string;
-  iconClassName?: string;
+  iconHue?: string;
   disabled?: boolean;
   testId?: string;
 };

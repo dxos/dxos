@@ -31,7 +31,7 @@ export const MasonryPlugin = definePlugin(meta, () => [
         id: Masonry.Masonry.typename,
         metadata: {
           icon: 'ph--wall--regular',
-          iconClassName: 'text-greenSurfaceText',
+          iconHue: 'green',
         },
       }),
   }),

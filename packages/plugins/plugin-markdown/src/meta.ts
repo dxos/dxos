@@ -14,6 +14,7 @@ export const meta: PluginMeta = {
     You can use documents to extend the memory of your personal agents and add context for automated workflows.
   `,
   icon: 'ph--text-aa--regular',
+  iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-markdown',
   screenshots: ['https://dxos.network/plugin-details-markdown-dark.png'],
 };

@@ -43,7 +43,7 @@ export const SheetPlugin = definePlugin(meta, () => [
         metadata: {
           label: (object: SheetType) => object.name,
           icon: 'ph--grid-nine--regular',
-          iconClassName: 'text-skySurfaceText',
+          iconHue: 'sky',
           serializer,
           comments: 'anchored',
         },

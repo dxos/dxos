@@ -28,7 +28,7 @@ export const KanbanPlugin = definePlugin(meta, () => [
         id: Kanban.Kanban.typename,
         metadata: {
           icon: 'ph--kanban--regular',
-          iconClassName: 'text-greenSurfaceText',
+          iconHue: 'green',
         },
       }),
   }),

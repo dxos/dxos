@@ -35,7 +35,7 @@ type SharedProperties = {
   className?: string;
   headingClassName?: string;
   icon?: string;
-  iconClassName?: string;
+  iconHue?: string;
 };
 
 export type NodeProperties = SharedProperties & {
