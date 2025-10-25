@@ -780,7 +780,7 @@ export const WithProject: Story = {
           output: Schema.Any,
 
           instructions:
-            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).\n\n{{org}}',
           blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
         }),
       );
@@ -796,7 +796,9 @@ export const WithProject: Story = {
         },
         input: {
           prompt: Ref.make(researchPrompt),
-          input: '{{event.subject}}',
+          input: {
+            org: '{{event.subject}}',
+          },
         },
       });
       space.db.add(researchTrigger);
@@ -867,10 +869,7 @@ export const WithScript: Story = {
         }),
       );
 
-      await space.db.flush();
-    },
-    onChatCreated: async ({ space, binder }) => {
-      const bp = space.db.add(
+      space.db.add(
         Blueprint.make({
           key: 'dxos.org/blueprint/forex',
           name: 'Forex',
@@ -883,10 +882,45 @@ export const WithScript: Story = {
         }),
       );
 
-      await binder.bind({ blueprints: [Ref.make(bp)] });
+      await space.db.flush();
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
     },
   }),
   args: {
     deckComponents: [[ChatContainer], [ScriptContainer]],
+  },
+};
+
+export const WithPrompt: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
+    config: config.remote,
+    types: [DataType.Text],
+    onInit: async ({ client, space }) => {
+      space.db.add(serializeFunction(agent));
+
+      space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions:
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      await space.db.flush();
+    },
+  }),
+  args: {
+    deckComponents: [[PromptContainer], [InvocationsContainer]],
   },
 };

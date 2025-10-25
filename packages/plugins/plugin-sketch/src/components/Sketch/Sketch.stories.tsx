@@ -45,7 +45,7 @@ const DefaultStory = () => {
 
   return (
     <div className='flex flex-col grow overflow-hidden'>
-      <Toolbar.Root classNames='p-1'>
+      <Toolbar.Root>
         <Button variant='primary' onClick={handleClear}>
           Clear
         </Button>

@@ -27,9 +27,10 @@ import { handlebars } from './handlebars-extension';
 export type TemplateEditorProps = ThemedClassName<{
   id: string;
   template: Template.Template;
+  lineNumbers?: boolean;
 }>;
 
-export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps) => {
+export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }: TemplateEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
@@ -44,7 +45,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
         createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
         createBasicExtensions({
           bracketMatching: false,
-          lineNumbers: true,
+          lineNumbers,
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
@@ -56,7 +57,7 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
         syntaxHighlighting(defaultHighlightStyle),
       ].filter(isNonNullable),
     };
-  }, [themeMode, template.source?.target]);
+  }, [themeMode, template.source?.target, lineNumbers]);
 
   return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
 };

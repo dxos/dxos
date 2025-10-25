@@ -28,6 +28,7 @@ export const BoardPlugin = definePlugin(meta, () => [
         id: Board.Board.typename,
         metadata: {
           icon: 'ph--squares-four--regular',
+          iconClassName: 'text-skySurfaceText',
         },
       }),
   }),

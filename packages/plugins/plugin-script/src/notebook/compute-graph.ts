@@ -14,11 +14,13 @@ import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 /**
  * Compute graph that evaluates the notebook cells.
  */
+// TODO(burdon): Reconcile with @dxos/conductor.
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
   private _expressions = signal<Record<string, ParsedExpression>>({});
-  private _values = signal<Record<string, any>>({});
+  private _valuesByCellId = signal<Record<string, any>>({});
+  private _valuesByName = signal<Record<string, any>>({});
 
   constructor(private readonly _notebook: Notebook.Notebook) {}
 
@@ -33,16 +35,31 @@ export class ComputeGraph {
    * Computed values by cell ID.
    */
   get values(): Signal<Record<string, any>> {
-    return this._values;
+    return this._valuesByCellId;
+  }
+
+  /**
+   * Computed values by name.
+   */
+  get valuesByName(): Signal<Record<string, any>> {
+    return this._valuesByName;
+  }
+
+  /**
+   * Get computed value by cell ID.
+   */
+  getValue(cellId: string) {
+    return this._valuesByCellId.value[cellId];
   }
 
   /**
    * Compute values.
    */
-  evaluate() {
+  async evaluate() {
     // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
-    this._values.value = {};
+    this._valuesByCellId.value = {};
+    this._valuesByName.value = {};
 
     // Create a map of cell IDs to expressions for easy lookup.
     const cellExpressions = new Map<string, ParsedExpression>();
@@ -65,7 +82,7 @@ export class ComputeGraph {
         continue;
       }
 
-      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.script?.target?.content;
+      const cellSource = this._notebook.cells.find((cell) => cell.id === cellId)?.source?.target?.content;
       if (!cellSource) {
         log.error('no source for cell', { cellId });
         continue;
@@ -90,7 +107,7 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = evalScript(rhs, valuesByName);
+            const result = await this.eval(rhs, valuesByName);
             valuesByName[expr.name] = result;
             if (typeof result !== 'function') {
               valuesByCellId[cellId] = result;
@@ -98,16 +115,22 @@ export class ComputeGraph {
           }
         } else {
           // For expressions without assignment, just evaluate.
-          const result = evalScript(cellSource, valuesByName);
+          const result = await this.eval(cellSource, valuesByName);
           valuesByCellId[cellId] = result;
         }
       } catch (error) {
+        // TODO(burdon): Set error state.
         log.error('error evaluating cell', { cellId, error });
       }
     }
 
-    this._values.value = valuesByCellId;
+    this._valuesByCellId.value = valuesByCellId;
+    this._valuesByName.value = valuesByName;
     return valuesByCellId;
+  }
+
+  private async eval(source: string, values: Record<string, any>) {
+    return evalScript(source, values);
   }
 
   /**
@@ -117,7 +140,7 @@ export class ComputeGraph {
     const expressions = this._notebook.cells
       .filter((cell) => cell.type === 'script')
       .reduce<Record<string, ParsedExpression>>((acc, cell) => {
-        const text = cell.script?.target?.content.trim();
+        const text = cell.source?.target?.content.trim();
         if (text) {
           const parsed = this._parser.parseExpression(text);
           acc[cell.id] = parsed;

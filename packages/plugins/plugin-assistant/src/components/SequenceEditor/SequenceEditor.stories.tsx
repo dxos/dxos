@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { RESEARCH_SEQUENCE_DEFINITION } from '../../testing';
 import { translations } from '../../translations';
@@ -17,9 +17,8 @@ const meta = {
   component: SequenceEditor,
   // TODO(wittjosiah): Fix story.
   render: () => <>TODO</>,
-  decorators: [withTheme],
+  decorators: [withTheme, withLayout({ container: 'column' })],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof SequenceEditor>;

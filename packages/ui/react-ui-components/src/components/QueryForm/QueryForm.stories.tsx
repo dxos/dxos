@@ -9,7 +9,7 @@ import { Filter, Query } from '@dxos/echo';
 import { Tag, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { DataType } from '@dxos/schema';
 
@@ -39,7 +39,7 @@ const meta = {
 
     return (
       <div>
-        <Toolbar.Root classNames='border-b border-subduedSeparator'>
+        <Toolbar.Root classNames='border-be border-subduedSeparator'>
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 
@@ -49,13 +49,13 @@ const meta = {
   },
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof QueryForm>;

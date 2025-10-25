@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { effect } from '@preact/signals-core';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
@@ -244,12 +245,16 @@ export class ComputeGraph extends Resource {
     if (this._space) {
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.type(Function.Function));
-      const unsubscribe = query.subscribe(({ objects }) => {
-        this._remoteFunctions = objects.filter(({ binding }) => binding);
+      const unsubscribe = query.subscribe();
+      const dispose = effect(() => {
+        this._remoteFunctions = query.objects.filter(({ binding }) => binding);
         this.update.emit({ type: 'functionsUpdated' });
       });
 
-      this._ctx.onDispose(unsubscribe);
+      this._ctx.onDispose(() => {
+        unsubscribe();
+        dispose();
+      });
     }
   }
 

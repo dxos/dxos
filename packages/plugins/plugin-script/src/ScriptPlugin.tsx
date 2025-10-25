@@ -8,7 +8,6 @@ import { Script } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { isNonNullable } from '@dxos/util';
 
 import {
   AppGraphBuilder,
@@ -47,6 +46,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
+          iconClassName: 'text-skySurfaceText',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
         },
@@ -55,11 +55,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (notebook: Notebook.Notebook) =>
-            await Ref.Array.loadAll(
-              notebook.cells.flatMap((cell) => [cell.script, cell.view, cell.chat].filter(isNonNullable)) as any,
-            ),
+          iconClassName: 'text-skySurfaceText',
         },
       }),
     ],

@@ -7,14 +7,16 @@ import { type ComponentFunction, type Theme } from '@dxos/react-ui-types';
 import { mx } from '../../util';
 import { textBlockWidth } from '../fragments';
 
-export type ToolbarStyleProps = Partial<{ layoutManaged: boolean }>;
+export type ToolbarStyleProps = Partial<{ layoutManaged: boolean; disabled: boolean }>;
 
-// TODO(burdon): Fix overflow issue for CM editor popovers.
 export const toolbarLayout =
-  'is-full shrink-0 flex flex-nowrap items-center gap-1 p-1.5 __overflow-x-auto scrollbar-none contain-layout';
+  'is-full shrink-0 flex flex-nowrap items-center gap-1 p-1 overflow-x-auto scrollbar-none contain-layout';
 
-export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {
-  return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, ...etc);
+// TODO(burdon): Detect: &:not([data-is-attention-source]_&)]:
+export const toolbarInactive = '!bg-transparent *:opacity-20';
+
+export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged, disabled }, ...etc) => {
+  return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, disabled && toolbarInactive, ...etc);
 };
 
 export const toolbarInner: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged }, ...etc) => {

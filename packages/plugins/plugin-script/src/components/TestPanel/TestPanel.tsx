@@ -163,7 +163,7 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
       {/* TODO(burdon): Replace with Thread. */}
       <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
       {/* TODO(burdon): Replace with Form based on the function's input schema. */}
-      <Toolbar.Root classNames='p-2'>
+      <Toolbar.Root>
         <Input.Root>
           <Input.TextInput
             ref={inputRef}
