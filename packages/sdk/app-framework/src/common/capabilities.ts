@@ -198,7 +198,7 @@ export namespace Capabilities {
     'dxos.org/app-framework/capability/functions',
   );
 
-  export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;
+  export type FileUploader = (space: Space, file: File) => Promise<FileInfo | undefined>;
 
   /**
    * @category Capability

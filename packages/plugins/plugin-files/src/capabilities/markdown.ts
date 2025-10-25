@@ -14,7 +14,7 @@ import { FileCapabilities } from './capabilities';
 export default (context: PluginContext) => {
   const extensionProvider = () =>
     listener({
-      onChange: (text, id) => {
+      onChange: ({ text, id }) => {
         const settings = context.getCapability(Capabilities.SettingsStore).getStore<FilesSettingsProps>(meta.id)!.value;
         const state = context.getCapability(FileCapabilities.State);
         if (settings.openLocalFiles && state.current && state.current.id === id && state.current.text !== text) {

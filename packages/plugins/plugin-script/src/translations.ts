@@ -66,7 +66,6 @@ export const translations = [
         'settings editor input mode default label': 'Default',
         'settings editor input mode vim label': 'Vim',
         'settings editor input mode vscode label': 'VS Code',
-        'template select group label': 'Select template',
         'function panel label': 'Debug Function',
         'script test label': 'Test',
         'script logs label': 'Logs',

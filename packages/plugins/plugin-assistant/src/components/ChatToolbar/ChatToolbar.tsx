@@ -10,7 +10,9 @@ import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 
 import { type ChatToolbarActionsProps, useChatToolbarActions } from './useChatToolbarActions';
 
-export const Toolbar = ({ chat, companionTo, onReset, classNames }: ThemedClassName<ChatToolbarActionsProps>) => {
+export type ChatToolbarProps = ThemedClassName<ChatToolbarActionsProps>;
+
+export const ChatToolbar = ({ chat, companionTo, onReset, classNames }: ChatToolbarProps) => {
   const menu = useChatToolbarActions({ chat, companionTo, onReset });
 
   return (

@@ -46,9 +46,6 @@ export type EditorToolbarActionGraphProps = {
   customActions?: Rx.Rx<ActionGraphProps>;
 };
 
-export type EditorToolbarProps = EditorToolbarActionGraphProps &
-  EditorToolbarFeatureFlags & { attendableId?: string; role?: string };
-
 export type EditorToolbarItem = EditorAction | MenuItemGroup | MenuSeparator;
 
 export const createEditorAction = (id: string, props: Partial<MenuActionProperties>, invoke: () => void) => {

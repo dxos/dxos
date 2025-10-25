@@ -66,12 +66,15 @@ export const TypescriptEditor = ({
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
-          monospace: true,
           scrollPastEnd: role !== 'section',
           search: true,
           ...options,
         }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        createThemeExtensions({
+          monospace: true,
+          themeMode,
+          syntaxHighlighting: true,
+        }),
         InputModeExtensions[inputMode],
 
         javascript({ typescript: true }),

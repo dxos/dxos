@@ -22,7 +22,7 @@ import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
 export type PopoverMenuProviderProps = PropsWithChildren<{
   view?: EditorView | null;
-  groups: PopoverMenuGroup[];
+  groups?: PopoverMenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
@@ -103,7 +103,7 @@ export const PopoverMenuProvider = ({
     [viewRef, onSelect],
   );
 
-  const menuGroups = groups.filter((group) => group.items.length > 0);
+  const menuGroups = groups?.filter((group) => group.items.length > 0) ?? [];
 
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>

@@ -15,7 +15,7 @@ import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditorMain';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 

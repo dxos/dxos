@@ -87,7 +87,6 @@ export type BasicExtensionsOptions = {
   lineNumbers?: boolean;
   /** If false then do not set a max-width or side margin on the editor. */
   lineWrapping?: boolean;
-  monospace?: boolean;
   placeholder?: string;
   /** If true user cannot edit the text, but they can still select and copy it. */
   readOnly?: boolean;
@@ -136,7 +135,6 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
     props.history && history(),
     props.lineNumbers && [lineNumbers(), editorGutter],
     props.lineWrapping && EditorView.lineWrapping,
-    props.monospace && editorMonospace,
     props.placeholder && placeholder(props.placeholder),
     props.readOnly !== undefined && EditorState.readOnly.of(props.readOnly),
     props.scrollPastEnd && scrollPastEnd(),
@@ -173,6 +171,7 @@ export const createBasicExtensions = (_props?: BasicExtensionsOptions): Extensio
 
 export type ThemeExtensionsOptions = {
   themeMode?: ThemeMode;
+  monospace?: boolean;
   styles?: ThemeStyles;
   syntaxHighlighting?: boolean;
   slots?: {
@@ -212,6 +211,7 @@ export const defaultStyles = {
  */
 export const createThemeExtensions = ({
   themeMode,
+  monospace,
   styles,
   syntaxHighlighting: syntaxHighlightingProp,
   slots: slotsParam,
@@ -220,6 +220,7 @@ export const createThemeExtensions = ({
   return [
     EditorView.darkTheme.of(themeMode === 'dark'),
     EditorView.baseTheme(styles ? merge({}, defaultTheme, styles) : defaultTheme),
+    monospace && editorMonospace,
     syntaxHighlightingProp &&
       syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),

@@ -37,6 +37,7 @@
   "dependencies": {
     "@automerge/automerge": "3.1.2",
     "@codemirror/search": "^6.5.11",
+    "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.4",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
@@ -64,6 +65,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -71,6 +73,7 @@
     "@effect/experimental": "0.56.0",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
+    "@radix-ui/react-context": "^1.0.5",
     "react-dropzone": "^14.2.3"
   },
   "devDependencies": {

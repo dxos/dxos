@@ -21,7 +21,7 @@ import { createHeadings } from './headings';
 import { createImageUpload } from './image';
 import { createLists } from './lists';
 import { createSearch } from './search';
-import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags, type EditorToolbarProps } from './util';
+import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags } from './util';
 import { createViewMode } from './view-mode';
 
 const createToolbarActions = ({
@@ -122,6 +122,10 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
   return useMenuActions(menuCreator);
 };
 
+export type EditorToolbarProps = EditorToolbarActionGraphProps &
+  EditorToolbarFeatureFlags & { attendableId?: string; role?: string };
+
+// TODO(burdon): Remove role.
 export const EditorToolbar = memo(({ attendableId, role, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 

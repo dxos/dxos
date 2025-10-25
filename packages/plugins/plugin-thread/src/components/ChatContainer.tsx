@@ -76,7 +76,7 @@ export const ChatContainer = ({
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
     ],
     [themeMode, _count],

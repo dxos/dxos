@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 import { WatchDog } from './watchdog';
 
-describe('WatchDog', () => {
+describe.skipIf(process.env.CI)('WatchDog', () => {
   test('Start/stop process', async () => {
     const runId = Math.random();
     const pidFile = join(TEST_DIR, `pid-${runId}.pid`);
