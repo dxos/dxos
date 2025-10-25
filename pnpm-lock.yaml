@@ -2025,109 +2025,6 @@ importers:
         specifier: ^4.3.9
         version: 4.3.9
 
-  packages/core/agent:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../../sdk/client-protocol
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../common/codec-protobuf
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/credentials':
-        specifier: workspace:*
-        version: link:../halo/credentials
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../echo/echo
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo/echo-db
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/network-manager':
-        specifier: workspace:*
-        version: link:../mesh/network-manager
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/phoenix':
-        specifier: workspace:*
-        version: link:../../common/phoenix
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../protocols
-      '@dxos/rpc':
-        specifier: workspace:*
-        version: link:../mesh/rpc
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@dxos/websocket-rpc':
-        specifier: workspace:*
-        version: link:../mesh/websocket-rpc
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.6.0
-      express:
-        specifier: ^4.19.2
-        version: 4.19.2
-      isomorphic-ws:
-        specifier: ^5.0.0
-        version: 5.0.0(ws@8.18.2)
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      pkg-up:
-        specifier: ^3.1.0
-        version: 3.1.0
-      ws:
-        specifier: ^8.14.2
-        version: 8.18.2
-      yaml:
-        specifier: ^2.7.0
-        version: 2.7.1
-    devDependencies:
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../echo/echo-generator
-      '@types/express':
-        specifier: ^4.17.17
-        version: 4.17.21
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.9
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      nodemon:
-        specifier: ^2.0.22
-        version: 2.0.22
-
   packages/core/ai:
     dependencies:
       '@dxos/async':
@@ -3181,10 +3078,6 @@ importers:
       iso-did:
         specifier: ^1.6.0
         version: 1.6.0
-    devDependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../agent
 
   packages/core/halo/credentials:
     dependencies:
@@ -3760,9 +3653,6 @@ importers:
 
   packages/devtools/cli:
     dependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -3956,9 +3846,6 @@ importers:
 
   packages/devtools/cli-base:
     dependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -4125,9 +4012,6 @@ importers:
 
   packages/devtools/cli-composer:
     dependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -23557,9 +23441,6 @@ packages:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
     hasBin: true
 
-  abbrev@1.1.1:
-    resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
-
   abbrev@2.0.0:
     resolution: {integrity: sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -25269,14 +25150,6 @@ packages:
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-
-  debug@3.2.7:
-    resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
     peerDependencies:
       supports-color: '*'
     peerDependenciesMeta:
@@ -27330,9 +27203,6 @@ packages:
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
-
-  ignore-by-default@1.0.1:
-    resolution: {integrity: sha512-Ius2VYcGNk7T90CppJqcIkS5ooHUZyIQK+ClZfMfMNFEF9VSE73Fq+906u/CWu92x4gzZMWOwfFYckPObzdEbA==}
 
   ignore@5.2.4:
     resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
@@ -29493,20 +29363,11 @@ packages:
     resolution: {integrity: sha512-f6bmAiB6wte7YTVWn5rWpz7Fh9OFHMmj8FwNkI3XnwIHRbg7H3nVncr1Kz8DnGS3idUFpRQ8D6lsecUAvjlqKA==}
     engines: {'0': node >= 0.4.0}
 
-  nodemon@2.0.22:
-    resolution: {integrity: sha512-B8YqaKMmyuCO7BowF1Z1/mkPqLk6cs/l63Ojtd6otKjMx47Dq1utxfRxcavH1I7VSaL8n5BUaoutadnsX3AAVQ==}
-    engines: {node: '>=8.10.0'}
-    hasBin: true
-
   noise-protocol@3.0.1:
     resolution: {integrity: sha512-4rQGZvismeb4tMf91O31oDYLGntkEs4p4wa69+14juHTV4A3COtWyDck9PwBqFjg7S8TPZLCUXUdOnOZQJ5UBA==}
 
   non-layered-tidy-tree-layout@2.0.2:
     resolution: {integrity: sha512-gkXMxRzUH+PB0ax9dUN0yYF0S25BqeAYqhgMaLUFmpXLEk7Fcu8f4emJuOAY0V8kjDICxROIKsTAKsV/v355xw==}
-
-  nopt@1.0.10:
-    resolution: {integrity: sha512-NWmpvLSqUrgrAC9HCuxEvb+PSloHpqVu+FqcO4eeF2h5qYRhA7ev6KvelyQAKtegUbC6RypJnlEOhd8vloNKYg==}
-    hasBin: true
 
   nopt@7.2.1:
     resolution: {integrity: sha512-taM24ViiimT/XntxbPyJQzCG+p4EKOpgD3mxFwW38mGjVUrfERQOeY4EDHjdnptttfHuHQXFx+lTP08Q+mLa/w==}
@@ -30504,9 +30365,6 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
-  pstree.remy@1.1.8:
-    resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
-
   pump@3.0.0:
     resolution: {integrity: sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==}
 
@@ -31467,10 +31325,6 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.0.0:
-    resolution: {integrity: sha512-+GB6zVA9LWh6zovYQLALHwv5rb2PHGlJi3lfiqIHxR0uuwCgefcOJc59v9fv1w8GbStwxuuqqAjI9NMAOOgq1A==}
-    hasBin: true
-
   semver@7.3.7:
     resolution: {integrity: sha512-QlYTucUYOews+WeEujDoEGziz4K6c47V/Bd+LjSSYcA94p+DmINdf7ncaUinThfvZyu13lN9OY1XDxt8C0Tw0g==}
     engines: {node: '>=10'}
@@ -31672,10 +31526,6 @@ packages:
 
   simple-swizzle@0.2.2:
     resolution: {integrity: sha512-JA//kQgZtbuY83m+xT+tXJkmJncGMTFT+C+g2h2R9uxkYIrE2yy9sgmcLhCnw57/WSD+Eh3J97FPEDFnbXnDUg==}
-
-  simple-update-notifier@1.1.0:
-    resolution: {integrity: sha512-VpsrsJSUcJEseSbMHkrsrAVSdvVS5I96Qo1QAQ4FxQ9wXFcB+pjj7FB7/us9+GcgfW4ziHtYMc1J0PLczb55mg==}
-    engines: {node: '>=8.10.0'}
 
   simple-wcswidth@1.0.1:
     resolution: {integrity: sha512-xMO/8eNREtaROt7tJvWJqHBDTMFN4eiQ5I4JRMuilwfnFcV5W9u7RUkueNkdw0jPqGMX36iCywelS5yilTuOxg==}
@@ -32452,10 +32302,6 @@ packages:
     resolution: {integrity: sha512-eM+pCBxXO/njtF7vdFsHuqb+ElbxqtI4r5EAvk6grfAFyJ6IvWlSkfZ5T9ozC6xWw3Fj1fGoSmrl0gUs46JVIw==}
     engines: {node: '>=6'}
 
-  touch@3.1.0:
-    resolution: {integrity: sha512-WBx8Uy5TLtOSRtIq+M03/sKDrXCLHxwDcquSP2c43Le03/9serjQBIztjRz6FkJez9D/hleyAXTBGLwwZUw9lA==}
-    hasBin: true
-
   tough-cookie@6.0.0:
     resolution: {integrity: sha512-kXuRi1mtaKMrsLUxz3sQYvVl37B0Ns6MzfrtV5DvJceE9bPyspOqk9xxv7XbZWcfLWbFmm997vl83qUWVJA64w==}
     engines: {node: '>=16'}
@@ -32774,9 +32620,6 @@ packages:
 
   uncrypto@0.1.3:
     resolution: {integrity: sha512-Ql87qFHB3s/De2ClA9e0gsnS6zXG27SkTiSJwjCc9MebbfapQfuPzumMIUMi38ezPZVNFcHI9sUIepeQfw8J8Q==}
-
-  undefsafe@2.0.5:
-    resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}
 
   underscore@1.12.1:
     resolution: {integrity: sha512-hEQt0+ZLDVUMhebKxL4x1BTtDY7bavVofhZ9KZ4aI26X9SRaE+Y3m83XUL1UP2jn8ynjndwCCpEHdUG+9pP1Tw==}
@@ -42510,6 +42353,7 @@ snapshots:
     dependencies:
       '@types/connect': 3.4.36
       '@types/node': 22.10.2
+    optional: true
 
   '@types/bunyan@1.8.11':
     dependencies:
@@ -42721,6 +42565,7 @@ snapshots:
       '@types/node': 22.10.2
       '@types/qs': 6.9.7
       '@types/range-parser': 1.2.4
+    optional: true
 
   '@types/express@4.17.21':
     dependencies:
@@ -42728,6 +42573,7 @@ snapshots:
       '@types/express-serve-static-core': 4.17.33
       '@types/qs': 6.9.7
       '@types/serve-static': 1.15.7
+    optional: true
 
   '@types/filesystem@0.0.32':
     dependencies:
@@ -42764,7 +42610,8 @@ snapshots:
 
   '@types/http-cache-semantics@4.0.1': {}
 
-  '@types/http-errors@2.0.4': {}
+  '@types/http-errors@2.0.4':
+    optional: true
 
   '@types/istanbul-lib-coverage@2.0.4': {}
 
@@ -42872,7 +42719,8 @@ snapshots:
     dependencies:
       '@types/node': 22.10.2
 
-  '@types/mime@1.3.5': {}
+  '@types/mime@1.3.5':
+    optional: true
 
   '@types/minimatch@3.0.5': {}
 
@@ -42955,7 +42803,8 @@ snapshots:
     dependencies:
       postcss: 8.5.3
 
-  '@types/qs@6.9.7': {}
+  '@types/qs@6.9.7':
+    optional: true
 
   '@types/raf@3.4.0': {}
 
@@ -42963,7 +42812,8 @@ snapshots:
     dependencies:
       '@types/node': 22.10.2
 
-  '@types/range-parser@1.2.4': {}
+  '@types/range-parser@1.2.4':
+    optional: true
 
   '@types/react-dom@19.2.1(@types/react@19.2.2)':
     dependencies:
@@ -43024,12 +42874,14 @@ snapshots:
     dependencies:
       '@types/mime': 1.3.5
       '@types/node': 22.10.2
+    optional: true
 
   '@types/serve-static@1.15.7':
     dependencies:
       '@types/http-errors': 2.0.4
       '@types/node': 22.10.2
       '@types/send': 0.17.4
+    optional: true
 
   '@types/sharedworker@0.0.111': {}
 
@@ -43699,8 +43551,6 @@ snapshots:
     dependencies:
       jsonparse: 1.3.1
       through: 2.3.8
-
-  abbrev@1.1.1: {}
 
   abbrev@2.0.0: {}
 
@@ -45678,12 +45528,6 @@ snapshots:
   debug@2.6.9:
     dependencies:
       ms: 2.0.0
-
-  debug@3.2.7(supports-color@5.5.0):
-    dependencies:
-      ms: 2.1.3
-    optionalDependencies:
-      supports-color: 5.5.0
 
   debug@4.3.4:
     dependencies:
@@ -48379,8 +48223,6 @@ snapshots:
 
   ieee754@1.2.1: {}
 
-  ignore-by-default@1.0.1: {}
-
   ignore@5.2.4: {}
 
   ignore@7.0.4: {}
@@ -51052,19 +50894,6 @@ snapshots:
     dependencies:
       node.extend: 1.0.8
 
-  nodemon@2.0.22:
-    dependencies:
-      chokidar: 3.6.0
-      debug: 3.2.7(supports-color@5.5.0)
-      ignore-by-default: 1.0.1
-      minimatch: 3.1.2
-      pstree.remy: 1.1.8
-      semver: 5.7.2
-      simple-update-notifier: 1.1.0
-      supports-color: 5.5.0
-      touch: 3.1.0
-      undefsafe: 2.0.5
-
   noise-protocol@3.0.1:
     dependencies:
       clone: 2.1.2
@@ -51073,10 +50902,6 @@ snapshots:
       sodium-universal: 3.1.0
 
   non-layered-tidy-tree-layout@2.0.2: {}
-
-  nopt@1.0.10:
-    dependencies:
-      abbrev: 1.1.1
 
   nopt@7.2.1:
     dependencies:
@@ -52206,8 +52031,6 @@ snapshots:
       - supports-color
 
   proxy-from-env@1.1.0: {}
-
-  pstree.remy@1.1.8: {}
 
   pump@3.0.0:
     dependencies:
@@ -53433,8 +53256,6 @@ snapshots:
 
   semver@6.3.1: {}
 
-  semver@7.0.0: {}
-
   semver@7.3.7:
     dependencies:
       lru-cache: 6.0.0
@@ -53781,10 +53602,6 @@ snapshots:
   simple-swizzle@0.2.2:
     dependencies:
       is-arrayish: 0.3.2
-
-  simple-update-notifier@1.1.0:
-    dependencies:
-      semver: 7.0.0
 
   simple-wcswidth@1.0.1: {}
 
@@ -54770,10 +54587,6 @@ snapshots:
 
   totalist@3.0.0: {}
 
-  touch@3.1.0:
-    dependencies:
-      nopt: 1.0.10
-
   tough-cookie@6.0.0:
     dependencies:
       tldts: 7.0.17
@@ -55070,8 +54883,6 @@ snapshots:
   unc-path-regex@0.1.2: {}
 
   uncrypto@0.1.3: {}
-
-  undefsafe@2.0.5: {}
 
   underscore@1.12.1: {}
 
