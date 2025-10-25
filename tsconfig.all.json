@@ -124,7 +124,7 @@
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
-      "path": "packages/core/assistant-tools/tsconfig.json"
+      "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {
       "path": "packages/core/blueprints/tsconfig.json"

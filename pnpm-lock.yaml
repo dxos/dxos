@@ -2207,7 +2207,7 @@ importers:
         specifier: 3.18.3
         version: 3.18.3
 
-  packages/core/assistant-tools:
+  packages/core/assistant-toolkit:
     dependencies:
       '@dxos/ai':
         specifier: workspace:*
@@ -5161,7 +5161,7 @@ importers:
         version: link:../../core/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -5627,6 +5627,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-board':
         specifier: workspace:*
         version: link:../../ui/react-ui-board
@@ -5987,7 +5990,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -6804,7 +6807,7 @@ importers:
         version: link:../../core/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8311,7 +8314,7 @@ importers:
         version: link:../../sdk/app-framework
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -8351,6 +8354,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-components':
         specifier: workspace:*
         version: link:../../ui/react-ui-components
@@ -8578,7 +8584,7 @@ importers:
         version: link:../../core/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11766,7 +11772,7 @@ importers:
         version: link:../../core/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -12766,7 +12772,7 @@ importers:
     devDependencies:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
-        version: link:../../core/assistant-tools
+        version: link:../../core/assistant-toolkit
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute

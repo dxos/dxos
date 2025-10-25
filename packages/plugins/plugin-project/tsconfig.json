@@ -36,9 +36,6 @@
       "path": "../../core/assistant-toolkit"
     },
     {
-      "path": "../../core/assistant-tools"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {
@@ -61,6 +58,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
     },
     {
       "path": "../../ui/react-ui-components"

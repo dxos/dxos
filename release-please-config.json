@@ -225,7 +225,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/assistant-tools/package.json",
+          "path": "packages/core/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },
         {
