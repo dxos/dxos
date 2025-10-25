@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { createNotebook } from '../testing';
 
-import { ComputeGraph } from './notebook';
+import { ComputeGraph } from './compute-graph';
 
 describe('notebook', () => {
   test('parse dependency graph', () => {
@@ -33,7 +33,7 @@ describe('notebook', () => {
     });
   });
 
-  test('evalScript blocks access to window and document', () => {
+  test('evalScript blocks access to window and document', async () => {
     const notebook = createNotebook();
     // Replace one of the cells with code that tries to access window/document.
     if (notebook.cells[2].source?.target) {
@@ -42,7 +42,7 @@ describe('notebook', () => {
 
     const computer = new ComputeGraph(notebook);
     computer.parse();
-    const values = computer.evaluate();
+    const values = await computer.evaluate();
 
     // Should evaluate to 'undefined' since window is blocked.
     expect(values[notebook.cells[2].id]).toBe('undefined');
@@ -52,7 +52,7 @@ describe('notebook', () => {
       notebook.cells[2].source.target.content = 'b = typeof document';
     }
     computer.parse();
-    const values2 = computer.evaluate();
+    const values2 = await computer.evaluate();
 
     // Should evaluate to 'undefined' since document is blocked.
     expect(values2[notebook.cells[2].id]).toBe('undefined');
@@ -62,7 +62,7 @@ describe('notebook', () => {
       notebook.cells[2].source.target.content = 'b = Math.max(100, 200)';
     }
     computer.parse();
-    const values3 = computer.evaluate();
+    const values3 = await computer.evaluate();
 
     // Should evaluate correctly.
     expect(values3[notebook.cells[2].id]).toBe(200);
