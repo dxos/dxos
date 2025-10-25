@@ -15,7 +15,7 @@ import {
   RESEARCH_BLUEPRINT,
   ResearchDataTypes,
   ResearchGraph,
-  ResearchOn,
+  HasSubject,
   agent,
 } from '@dxos/assistant-testing';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
@@ -708,7 +708,7 @@ export const WithProject: Story = {
       DataType.Project,
       DataType.View,
       Mailbox.Mailbox,
-      ResearchOn,
+      HasSubject,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -752,14 +752,14 @@ export const WithProject: Story = {
       });
       // TODO(wittjosiah): Support relations.
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: dxosResearch,
       //     [Relation.Target]: dxos,
       //     completedAt: new Date().toISOString(),
       //   }),
       // );
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: blueyardResearch,
       //     [Relation.Target]: blueyard,
       //     completedAt: new Date().toISOString(),

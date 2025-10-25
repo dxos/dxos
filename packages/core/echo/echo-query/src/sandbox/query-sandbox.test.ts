@@ -38,14 +38,14 @@ describe('QuerySandbox', () => {
     const ast = sandbox.eval(`
       Query.select(Filter.type('example.com/type/Person', { jobTitle: 'investor' }))
         .reference('organization')
-        .targetOf('example.com/relation/ResearchOn')
+        .targetOf('example.com/relation/HasSubject')
         .source()
     `);
 
     expect(ast).toEqual(
       Query.select(Filter.type('example.com/type/Person', { jobTitle: 'investor' }))
         .reference('organization')
-        .targetOf('example.com/relation/ResearchOn')
+        .targetOf('example.com/relation/HasSubject')
         .source().ast,
     );
   });

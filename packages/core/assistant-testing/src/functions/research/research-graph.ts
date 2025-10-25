@@ -47,12 +47,12 @@ export const contextQueueLayerFromResearchGraph = Layer.unwrapEffect(
 );
 
 // TODO(burdon): Move to DataType; generalize to Subject relation?
-export const ResearchOn = Schema.Struct({
+export const HasSubject = Schema.Struct({
   id: Type.ObjectId,
   completedAt: Type.Format.DateTime,
 }).pipe(
   Type.Relation({
-    typename: 'dxos.org/relation/ResearchOn',
+    typename: 'dxos.org/relation/HasSubject',
     version: '0.1.0',
     source: Markdown.Document,
     target: Type.Expando, // TODO(burdon): Type.Obj.Any.

@@ -76,7 +76,7 @@ export const generator = () => ({
           );
           Obj.getMeta(doc).tags = [tagDxn];
           // space.db.add(
-          //   Relation.make(ResearchOn, {
+          //   Relation.make(HasSubject, {
           //     [Relation.Source]: doc,
           //     [Relation.Target]: org,
           //     completedAt: new Date().toISOString(),
