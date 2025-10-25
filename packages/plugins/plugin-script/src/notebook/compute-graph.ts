@@ -14,6 +14,7 @@ import { type ParsedExpression, VirtualTypeScriptParser } from './vfs-parser';
 /**
  * Compute graph that evaluates the notebook cells.
  */
+// TODO(burdon): Reconcile with @dxos/conductor.
 export class ComputeGraph {
   private readonly _parser = new VirtualTypeScriptParser();
 
@@ -54,7 +55,7 @@ export class ComputeGraph {
   /**
    * Compute values.
    */
-  evaluate() {
+  async evaluate() {
     // Parse expressions.
     const { expressions, dependencyGraph } = this.parse();
     this._valuesByCellId.value = {};
@@ -106,7 +107,7 @@ export class ComputeGraph {
               rhs = rhs.slice(0, -1).trim();
             }
 
-            const result = evalScript(rhs, valuesByName);
+            const result = await this.eval(rhs, valuesByName);
             valuesByName[expr.name] = result;
             if (typeof result !== 'function') {
               valuesByCellId[cellId] = result;
@@ -114,10 +115,11 @@ export class ComputeGraph {
           }
         } else {
           // For expressions without assignment, just evaluate.
-          const result = evalScript(cellSource, valuesByName);
+          const result = await this.eval(cellSource, valuesByName);
           valuesByCellId[cellId] = result;
         }
       } catch (error) {
+        // TODO(burdon): Set error state.
         log.error('error evaluating cell', { cellId, error });
       }
     }
@@ -125,6 +127,10 @@ export class ComputeGraph {
     this._valuesByCellId.value = valuesByCellId;
     this._valuesByName.value = valuesByName;
     return valuesByCellId;
+  }
+
+  private async eval(source: string, values: Record<string, any>) {
+    return evalScript(source, values);
   }
 
   /**

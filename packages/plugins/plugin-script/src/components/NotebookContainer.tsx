@@ -54,6 +54,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
+  //  Generalize ComputeGraph evaluation function (using effects).
   const graph = useMemo(() => notebook && new ComputeGraph(notebook), [notebook]);
 
   const [queryValues, setQueryValues] = useState<Record<string, any>>({});
@@ -117,7 +118,7 @@ export const NotebookContainer = ({ notebook, env }: NotebookContainerProps) => 
   // TODO(burdon): Cache values in context (preserve when switched).
   const handleCompute = useCallback(async () => {
     // TODO(burdon): Generalize executors (dependencies).
-    graph?.evaluate();
+    await graph?.evaluate();
     await handleExecQueries();
     await handleExecPrompts();
   }, [graph, handleExecQueries, handleExecPrompts]);
