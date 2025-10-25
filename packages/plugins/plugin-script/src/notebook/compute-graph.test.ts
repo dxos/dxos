@@ -9,10 +9,10 @@ import { createNotebook } from '../testing';
 import { ComputeGraph } from './compute-graph';
 
 describe('notebook', () => {
-  test('parse dependency graph', () => {
+  test('parse dependency graph', async () => {
     const notebook = createNotebook();
-    const computer = new ComputeGraph(notebook);
-    const result = computer.parse();
+    const graph = new ComputeGraph(notebook);
+    const result = graph.parse();
 
     const getId = (i: number) => notebook.cells[i].id;
 
@@ -24,7 +24,7 @@ describe('notebook', () => {
     });
 
     // Compute values.
-    const values = computer.evaluate();
+    const values = await graph.evaluate();
     expect(values).toEqual({
       [getId(0)]: 300,
       [getId(2)]: 200,
@@ -40,9 +40,9 @@ describe('notebook', () => {
       notebook.cells[2].source.target.content = 'b = typeof window';
     }
 
-    const computer = new ComputeGraph(notebook);
-    computer.parse();
-    const values = await computer.evaluate();
+    const graph = new ComputeGraph(notebook);
+    graph.parse();
+    const values = await graph.evaluate();
 
     // Should evaluate to 'undefined' since window is blocked.
     expect(values[notebook.cells[2].id]).toBe('undefined');
@@ -51,8 +51,8 @@ describe('notebook', () => {
     if (notebook.cells[2].source?.target) {
       notebook.cells[2].source.target.content = 'b = typeof document';
     }
-    computer.parse();
-    const values2 = await computer.evaluate();
+    graph.parse();
+    const values2 = await graph.evaluate();
 
     // Should evaluate to 'undefined' since document is blocked.
     expect(values2[notebook.cells[2].id]).toBe('undefined');
@@ -61,8 +61,8 @@ describe('notebook', () => {
     if (notebook.cells[2].source?.target) {
       notebook.cells[2].source.target.content = 'b = Math.max(100, 200)';
     }
-    computer.parse();
-    const values3 = await computer.evaluate();
+    graph.parse();
+    const values3 = await graph.evaluate();
 
     // Should evaluate correctly.
     expect(values3[notebook.cells[2].id]).toBe(200);
