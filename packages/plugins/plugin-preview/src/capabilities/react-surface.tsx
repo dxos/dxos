@@ -130,4 +130,20 @@ export default () =>
         );
       },
     }),
+
+    createSurface({
+      id: `${meta.id}/section`,
+      role: ['section'],
+      position: 'fallback',
+      filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
+      component: ({ data }) => {
+        return (
+          <div className='flex justify-center'>
+            <div className='w-96'>
+              <Surface role='card' data={data} limit={1} />
+            </div>
+          </div>
+        );
+      },
+    }),
   ]);
