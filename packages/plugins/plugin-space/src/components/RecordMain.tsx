@@ -56,6 +56,7 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
     <StackItem.Content classNames='container-max-width' scrollable>
       <div role='none' className='flex flex-col gap-4 p-2'>
         <Surface role='section' data={data} limit={1} />
+        {/* TODO(wittjosiah): This should maybe be in a separate stack item. */}
         {related.length > 0 && (
           <div className='flex flex-col gap-1 p-2'>
             <label className='text-description text-sm'>{t('related objects label')}</label>
