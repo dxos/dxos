@@ -21,6 +21,8 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { iconValues } from '@dxos/react-ui-pickers';
+import { hues } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {
@@ -69,8 +71,10 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Create,
-      resolve: async ({ name, hue, icon, edgeReplication }) => {
+      resolve: async ({ name, hue: hue_, icon: icon_, edgeReplication }) => {
         const client = context.getCapability(ClientCapabilities.Client);
+        const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
+        const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
         const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
