@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/assistant-testing",
+  "name": "@dxos/assistant-toolkit",
   "version": "0.8.3",
-  "description": "Assistant testing utilities.",
+  "description": "Assistant toolkit, definitions, and utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

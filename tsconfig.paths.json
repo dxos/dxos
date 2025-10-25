@@ -4,7 +4,7 @@
   "compilerOptions": {
     "paths": {
       "@dxos/storybook-utils": ["packages/common/storybook-utils/src/index.ts"],
-      "@dxos/assistant-testing": ["packages/core/assistant-testing/src/index.ts"],
+      "@dxos/assistant-toolkit": ["packages/core/assistant-testing/src/index.ts"],
       "@dxos/assistant": ["packages/core/assistant/src/index.ts"],
       "@dxos/compute": ["packages/core/compute/src/index.ts"],
       "@dxos/compute/testing": ["packages/core/compute/src/testing/index.ts"],

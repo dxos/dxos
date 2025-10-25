@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 
-import { agent } from '@dxos/assistant-testing';
+import { agent } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query } from '@dxos/echo';
 import {

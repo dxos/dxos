@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { ResearchGraph } from '@dxos/assistant-testing';
+import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 

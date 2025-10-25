@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ResearchGraph } from '@dxos/assistant-testing';
+import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant';

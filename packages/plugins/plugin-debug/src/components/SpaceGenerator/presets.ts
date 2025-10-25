@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
@@ -76,7 +76,7 @@ export const generator = () => ({
           );
           Obj.getMeta(doc).tags = [tagDxn];
           // space.db.add(
-          //   Relation.make(ResearchOn, {
+          //   Relation.make(HasSubject, {
           //     [Relation.Source]: doc,
           //     [Relation.Target]: org,
           //     completedAt: new Date().toISOString(),

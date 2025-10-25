@@ -35,7 +35,7 @@ import {
   research,
   updateDocument,
   updateTasks,
-} from '@dxos/assistant-testing';
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';

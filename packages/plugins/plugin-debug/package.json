@@ -28,7 +28,7 @@
     "@antv/layout": "^1.2.13",
     "@automerge/automerge": "3.1.2",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/assistant-testing": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client-services": "workspace:*",

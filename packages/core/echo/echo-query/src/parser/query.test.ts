@@ -396,14 +396,14 @@ describe('query', () => {
       // TODO(burdon): Person -> Organization (many-to-many relation).
       // Get Research Note objects for Organization objects for Person objects with jobTitle.
       //
-      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:ResearchOn]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
-      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:ResearchOn]- type:ResearchNote
+      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:HasSubject]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
+      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:HasSubject]- type:ResearchNote
       //
       // {
       //   input: '',
       //   expected: Query.select(Filter.typename('dxos.org/type/Person', { jobTitle: 'investor' }))
       //     .reference('organization')
-      //     .targetOf(Relation.of('dxos.org/relation/ResearchOn')) // TODO(burdon): Invert?
+      //     .targetOf(Relation.of('dxos.org/relation/HasSubject')) // TODO(burdon): Invert?
       //     .source(),
       // },
     ];
