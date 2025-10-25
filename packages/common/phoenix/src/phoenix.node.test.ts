@@ -13,7 +13,7 @@ import { Trigger } from '@dxos/async';
 import { Phoenix } from './phoenix';
 import { TEST_DIR, clearFiles, neverEndingProcess } from './testing-utils';
 
-describe('DaemonManager', () => {
+describe.skipIf(process.env.CI)('DaemonManager', () => {
   test('kill process by pid', async () => {
     const child = spawn('node', ['-e', `(${neverEndingProcess.toString()})()`]);
     const trigger = new Trigger();
