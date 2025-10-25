@@ -71,6 +71,8 @@ const PersonSchema = Schema.Struct({
       value: PostalAddress,
     }),
   ).pipe(Schema.mutable, Schema.optional),
+  // TODO(wittjosiah): Reconcile with addresses.
+  location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),

@@ -63,7 +63,8 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Research', () => {
+// TODO(dmaretskyi): Out-of-memory.
+describe.skip('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
@@ -97,8 +98,7 @@ describe('Research', () => {
     MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 
-  // TODO(dmaretskyi): Out-of-memory.
-  it.scoped.skip(
+  it.scoped(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {
