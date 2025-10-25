@@ -10,7 +10,6 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { ResearchOn } from '@dxos/assistant-testing';
 import { DXN, Filter, Query, type QueryAST } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
@@ -30,11 +29,10 @@ import { DataType } from '@dxos/schema';
 export const evalQuery = (queryString: string): Query.Any => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-implied-eval
-    return new Function('Query', 'Filter', 'DataType', 'ResearchOn', 'Markdown', `return ${queryString}`)(
+    return new Function('Query', 'Filter', 'DataType', 'Markdown', `return ${queryString}`)(
       Query,
       Filter,
       DataType,
-      ResearchOn,
       Markdown,
     );
   } catch {

@@ -15,7 +15,7 @@ import {
   fetchDiscordMessages,
   research,
   syncLinearIssues,
-} from '@dxos/assistant-testing';
+} from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 

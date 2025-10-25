@@ -11,7 +11,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/assistant-testing": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -87,7 +87,7 @@
     "effect": "3.18.3"
   },
   "devDependencies": {
-    "@dxos/assistant-testing": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
