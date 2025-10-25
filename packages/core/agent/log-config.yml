@@ -1,9 +1,0 @@
-formatter:
-  column: 80
-
-depth: 1
-
-filter:
-  - warn
-  - agent:debug
-  - pipeline:debug

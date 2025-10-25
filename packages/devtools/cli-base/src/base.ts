@@ -3,7 +3,6 @@
 //
 
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
-import os from 'node:os';
 import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 
@@ -14,16 +13,13 @@ import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import pkgUp from 'pkg-up';
 
-import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemDaemon, SystemctlRunner } from '@dxos/agent';
 import { Client, Config, fromAgent } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import {
   DX_CONFIG,
   DX_DATA,
-  DX_RUNTIME,
   ENV_DX_CONFIG,
-  ENV_DX_NO_AGENT,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
   getProfilePath,
@@ -132,13 +128,6 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
 
     target: Flags.string({
       description: 'Target websocket server.',
-    }),
-
-    agent: Flags.boolean({
-      description: 'Run command with agent.',
-      default: true,
-      allowNo: true,
-      env: ENV_DX_NO_AGENT,
     }),
 
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
@@ -431,18 +420,6 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
     stopFailsafe.unref();
   }
 
-  async maybeStartDaemon(): Promise<void> {
-    if (this.flags.agent) {
-      await this.execWithDaemon(async (daemon) => {
-        const running = await daemon.isRunning(this.flags.profile);
-        if (!running) {
-          this.log(`Starting agent (${this.flags.profile})`);
-          await daemon.start(this.flags.profile, { config: this.flags.config });
-        }
-      }, false);
-    }
-  }
-
   /**
    * Lazily create the client.
    */
@@ -452,7 +429,6 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       try {
         if (this.flags.agent) {
           // Connect to a locally-running agent, possibly starting one if necessary.
-          await this.maybeStartDaemon();
           this._client = new Client({
             config: this._clientConfig,
             services: fromAgent({ profile: this.flags.profile }),
@@ -638,31 +614,6 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Hook for client initialization.
    */
   protected async onClientInit(client: Client): Promise<void> {}
-
-  /**
-   * Convenience function to wrap starting the agent.
-   */
-  async execWithDaemon<T>(
-    callback: (daemon: Daemon) => Promise<T | undefined>,
-    system: boolean,
-  ): Promise<T | undefined> {
-    const platform = os.platform();
-    const daemon = system
-      ? new SystemDaemon(
-          DX_RUNTIME,
-          platform === 'darwin'
-            ? new LaunchctlRunner()
-            : platform === 'linux'
-              ? new SystemctlRunner()
-              : raise(new Error(`System daemon not implemented for ${os.platform()}.`)),
-        )
-      : new PhoenixDaemon(DX_RUNTIME);
-
-    await daemon.connect();
-    const value = await callback(daemon);
-    await daemon.disconnect();
-    return value;
-  }
 
   parseJson<T>(filename: string): T {
     try {

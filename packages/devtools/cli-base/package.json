@@ -26,7 +26,6 @@
     "*": {}
   },
   "dependencies": {
-    "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
