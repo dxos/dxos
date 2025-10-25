@@ -29,6 +29,6 @@
     "@dxos/test-utils": "workspace:*",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
-    "vite": "7.1.9"
+    "vite": "7.1.11"
   }
 }
