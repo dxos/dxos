@@ -52,7 +52,7 @@ export const MarkdownContainer = ({
 }: MarkdownContainerProps) => {
   const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
-  const doc = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
+  const document = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
   const previewOptions = useMemo(
@@ -69,7 +69,7 @@ export const MarkdownContainer = ({
 
   const extensions = useExtensions({
     id,
-    document: doc,
+    document,
     text,
     settings,
     selectionManager,
@@ -140,11 +140,11 @@ export const MarkdownContainer = ({
   );
 
   // TODO(burdon): Reconcile variants.
-  const editor = doc ? (
+  const editor = document ? (
     <DocumentEditor
       id={fullyQualifiedId(object)}
       role={role}
-      document={doc}
+      document={document}
       extensions={extensions}
       viewMode={viewMode}
       settings={settings}

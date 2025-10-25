@@ -166,8 +166,8 @@ export const useExtensions = ({
  * Create extension instances for editor.
  */
 const createBaseExtensions = ({
-  document,
   id,
+  document,
   dispatch,
   settings,
   selectionManager,
