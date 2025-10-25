@@ -28,7 +28,7 @@ export const BoardPlugin = definePlugin(meta, () => [
         id: Board.Board.typename,
         metadata: {
           icon: 'ph--squares-four--regular',
-          iconHue: 'sky',
+          iconHue: 'green',
         },
       }),
   }),

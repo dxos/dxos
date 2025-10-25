@@ -26,7 +26,7 @@ export const ChessPlugin = definePlugin(meta, () => [
         id: Chess.Game.typename,
         metadata: {
           icon: 'ph--shield-chevron--regular',
-          iconHue: 'sky',
+          iconHue: 'amber',
           blueprints: [BLUEPRINT_KEY],
         },
       }),

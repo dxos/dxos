@@ -32,7 +32,7 @@ export const ExcalidrawPlugin = definePlugin(meta, () => [
         id: DiagramType.typename,
         metadata: {
           icon: 'ph--compass-tool--regular',
-          iconHue: 'sky',
+          iconHue: 'indigo',
         },
       }),
   }),

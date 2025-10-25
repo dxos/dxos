@@ -63,7 +63,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
         id: ChannelType.typename,
         metadata: {
           icon: 'ph--hash--regular',
-          iconHue: 'green',
+          iconHue: 'rose',
         },
       }),
       contributes(Capabilities.Metadata, {

@@ -8,7 +8,7 @@ export const meta: PluginMeta = {
 	id: "dxos.org/plugin/conductor",
 	name: "Conductor",
 	description:
-		"Conductor allows you to build a node based compute graph that can handle complex workflows inside of Composer. Leverage your collaborative data along with custom scripts to orchestrate agentic workflows that operate in the background.",
+		"Build node-based compute graphs to orchestrate complex agentic workflows.",
 	icon: "ph--infinity--regular",
 	iconHue: "sky",
 	source:

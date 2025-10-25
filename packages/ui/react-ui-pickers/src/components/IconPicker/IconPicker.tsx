@@ -44,7 +44,7 @@ const IconPreview = ({ value, iconSize = 5 }: { value: string; iconSize?: IconPr
 const icons = [
   'ph--house-line--regular',
   'ph--planet--regular',
-  'ph--piggy-bank--regular',
+  'ph--castle-turret--regular',
   'ph--snowflake--regular',
   'ph--virus--regular',
   'ph--graph--regular',
