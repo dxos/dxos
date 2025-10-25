@@ -8,11 +8,11 @@ import { Capabilities, useCapabilities, usePluginManager } from '@dxos/app-frame
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-import { getSpace } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type PopoverMenuGroup, type PopoverMenuItem, insertAtCursor, insertAtLineStart } from '@dxos/react-ui-editor';
 
-export const useLinkQuery = (object: Obj.Any) => {
+export const useLinkQuery = (space: Space | undefined) => {
   const { t } = useTranslation();
 
   const manager = usePluginManager();
@@ -22,7 +22,6 @@ export const useLinkQuery = (object: Obj.Any) => {
     [manager],
   );
 
-  const space = getSpace(object);
   const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
   const schemaWhiteList = useCapabilities(ClientCapabilities.SchemaWhiteList);
   const filter = useMemo(

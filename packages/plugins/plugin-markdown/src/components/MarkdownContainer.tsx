@@ -3,25 +3,25 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Capabilities, Surface, useAppGraph, useCapabilities } from '@dxos/app-framework';
 import { DXN, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { type PreviewLinkRef, type PreviewOptions } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
-import { useExtensions, useLinkQuery } from '../hooks';
+import { type DocumentType, useExtensions, useLinkQuery } from '../hooks';
 import { Markdown } from '../types';
-import { getFallbackName } from '../util';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
 export type MarkdownContainerProps = {
-  object: Markdown.Document | DataType.Text | any;
+  object: DocumentType;
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
 } & Pick<
@@ -37,11 +37,23 @@ export const MarkdownContainer = ({
   selectionManager,
   viewMode,
   editorStateStore,
-  onViewModeChange,
+  ...props
 }: MarkdownContainerProps) => {
-  const scrollPastEnd = role === 'article';
-  const document = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
-  const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
+  const space = getSpace(object);
+  const isDocument = Obj.instanceOf(Markdown.Document, object);
+  const isText = Obj.instanceOf(DataType.Text, object);
+
+  // TODO(burdon): See useExtensions.
+  // Migrate gradually to `fallbackName`.
+  // useEffect(() => {
+  //   if (!isDocument || typeof object.fallbackName === 'string') {
+  //     return;
+  //   }
+  //   const fallbackName = object.content?.target?.content ? getFallbackName(object.content.target.content) : undefined;
+  //   if (fallbackName) {
+  //     object.fallbackName = fallbackName;
+  //   }
+  // }, [object, isDocument && object.content, isDocument]);
 
   // Preview blocks.
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
@@ -57,93 +69,16 @@ export const MarkdownContainer = ({
     [],
   );
 
-  // TODO(burdon): Clean-up extensions.
+  // Create extensions.
   const extensions = useExtensions({
     id,
-    document,
-    text,
+    object,
     settings,
     selectionManager,
     viewMode,
     editorStateStore,
     previewOptions,
   });
-
-  const handleLinkQuery = useLinkQuery(object);
-
-  // TODO(burdon): Reconcile variants.
-  const editor = document ? (
-    <DocumentEditor
-      id={fullyQualifiedId(document)}
-      role={role}
-      document={document}
-      extensions={extensions}
-      viewMode={viewMode}
-      settings={settings}
-      scrollPastEnd={scrollPastEnd}
-      onViewModeChange={onViewModeChange}
-      onLinkQuery={handleLinkQuery}
-    />
-  ) : text ? (
-    <MarkdownEditor
-      id={id}
-      role={role}
-      initialValue={text.content}
-      extensions={extensions}
-      viewMode={viewMode}
-      toolbar={settings.toolbar}
-      inputMode={settings.editorInputMode}
-      scrollPastEnd={scrollPastEnd}
-      onViewModeChange={onViewModeChange}
-      onLinkQuery={handleLinkQuery}
-    />
-  ) : (
-    <MarkdownEditor
-      id={id}
-      role={role}
-      initialValue={object.text}
-      extensions={extensions}
-      viewMode={viewMode}
-      toolbar={settings.toolbar}
-      inputMode={settings.editorInputMode}
-      scrollPastEnd={scrollPastEnd}
-      onViewModeChange={onViewModeChange}
-      onLinkQuery={handleLinkQuery}
-    />
-  );
-
-  return (
-    <>
-      {editor}
-      {previewBlocks.map(({ link, el }) => (
-        <PreviewBlock key={link.ref} link={link} el={el} />
-      ))}
-    </>
-  );
-};
-
-type DocumentEditorProps = {
-  document: Markdown.Document;
-} & Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
-  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'>;
-
-// TODO(burdon): Consolidate with above.
-export const DocumentEditor = ({ id, document, settings, viewMode, ...props }: DocumentEditorProps) => {
-  const space = getSpace(document);
-
-  // Migrate gradually to `fallbackName`.
-  useEffect(() => {
-    if (typeof document.fallbackName === 'string') {
-      return;
-    }
-
-    const fallbackName = document.content?.target?.content
-      ? getFallbackName(document.content.target.content)
-      : undefined;
-    if (fallbackName) {
-      document.fallbackName = fallbackName;
-    }
-  }, [document, document.content]);
 
   // File dragging.
   const [upload] = useCapabilities(Capabilities.FileUploader);
@@ -166,17 +101,30 @@ export const DocumentEditor = ({ id, document, settings, viewMode, ...props }: D
     });
   }, [graph]);
 
+  // Query for @ refs.
+  const handleLinkQuery = useLinkQuery(space);
+
   return (
-    <MarkdownEditor
-      id={id}
-      initialValue={document.content?.target?.content}
-      viewMode={viewMode}
-      toolbar={settings.toolbar}
-      customActions={customActions}
-      inputMode={settings.editorInputMode}
-      onFileUpload={handleFileUpload}
-      {...props}
-    />
+    <>
+      <MarkdownEditor
+        id={isDocument ? fullyQualifiedId(object) : id}
+        role={role}
+        initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
+        extensions={extensions}
+        viewMode={viewMode}
+        toolbar={settings.toolbar}
+        inputMode={settings.editorInputMode}
+        scrollPastEnd={role === 'article'}
+        customActions={customActions}
+        onLinkQuery={handleLinkQuery}
+        onFileUpload={handleFileUpload}
+        {...props}
+      />
+
+      {previewBlocks.map(({ link, el }) => (
+        <PreviewBlock key={link.ref} link={link} el={el} />
+      ))}
+    </>
   );
 };
 
