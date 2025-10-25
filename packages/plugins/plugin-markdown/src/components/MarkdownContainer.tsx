@@ -3,42 +3,31 @@
 //
 
 import { Rx } from '@effect-rx/rx-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Capabilities, Surface, useAppGraph, useCapabilities, usePluginManager } from '@dxos/app-framework';
-import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { Capabilities, Surface, useAppGraph, useCapabilities } from '@dxos/app-framework';
+import { DXN, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
 import { fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
-import {
-  type PopoverMenuGroup,
-  type PopoverMenuItem,
-  type PreviewLinkRef,
-  type PreviewOptions,
-  insertAtCursor,
-  insertAtLineStart,
-} from '@dxos/react-ui-editor';
+import { type PreviewLinkRef, type PreviewOptions } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
-import { useExtensions } from '../extensions';
+import { useExtensions, useLinkQuery } from '../hooks';
 import { Markdown } from '../types';
 import { getFallbackName } from '../util';
 
 import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
 
-export type MarkdownContainerProps = Pick<
-  MarkdownEditorProps,
-  'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
-> & {
-  id: string;
+export type MarkdownContainerProps = {
   object: Markdown.Document | DataType.Text | any;
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
-};
+} & Pick<
+  MarkdownEditorProps,
+  'id' | 'role' | 'extensionProviders' | 'viewMode' | 'editorStateStore' | 'onViewModeChange'
+>;
 
 export const MarkdownContainer = ({
   id,
@@ -50,10 +39,11 @@ export const MarkdownContainer = ({
   editorStateStore,
   onViewModeChange,
 }: MarkdownContainerProps) => {
-  const { t } = useTranslation();
   const scrollPastEnd = role === 'article';
   const document = Obj.instanceOf(Markdown.Document, object) ? object : undefined;
   const text = Obj.instanceOf(DataType.Text, object) ? object : undefined;
+
+  // Preview blocks.
   const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
   const previewOptions = useMemo(
     (): PreviewOptions => ({
@@ -67,6 +57,7 @@ export const MarkdownContainer = ({
     [],
   );
 
+  // TODO(burdon): Clean-up extensions.
   const extensions = useExtensions({
     id,
     document,
@@ -78,71 +69,12 @@ export const MarkdownContainer = ({
     previewOptions,
   });
 
-  // TODO(wittjosiah): Factor out.
-  const manager = usePluginManager();
-  const resolve = useCallback(
-    (typename: string) =>
-      manager.context.getCapabilities(Capabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {},
-    [manager],
-  );
-  const space = getSpace(object);
-  const objectForms = useCapabilities(SpaceCapabilities.ObjectForm);
-  const schemaWhiteList = useCapabilities(ClientCapabilities.SchemaWhiteList);
-  const filter = useMemo(
-    () =>
-      Filter.or(
-        ...objectForms.map((form) => Filter.type(form.objectSchema)),
-        ...schemaWhiteList.flat().map((schema) => Filter.typename(Type.getTypename(schema))),
-      ),
-    [objectForms, schemaWhiteList],
-  );
-
-  const handleLinkQuery = useCallback(
-    async (query?: string): Promise<PopoverMenuGroup[]> => {
-      const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
-      const results = await space?.db.query(Query.select(filter)).run();
-      // TODO(wittjosiah): Use `Obj.Any` type.
-      const getLabel = (object: any) => {
-        const label = Obj.getLabel(object);
-        if (label) {
-          return label;
-        }
-
-        // TODO(wittjosiah): Remove metadata labels.
-        const type = Obj.getTypename(object)!;
-        const metadata = resolve(type);
-        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
-      };
-      const items =
-        results?.objects
-          .filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
-          // TODO(wittjosiah): Remove `any` type.
-          .map((object: any): PopoverMenuItem => {
-            const metadata = resolve(Obj.getTypename(object)!);
-            const label = toLocalizedString(getLabel(object), t);
-            return {
-              id: object.id,
-              label,
-              icon: metadata.icon,
-              onSelect: (view, head) => {
-                const link = `[${label}](${Obj.getDXN(object)})`;
-                if (query?.startsWith('@')) {
-                  insertAtLineStart(view, head, `!${link}\n`);
-                } else {
-                  insertAtCursor(view, head, `${link} `);
-                }
-              },
-            };
-          }) ?? [];
-      return [{ id: 'echo', items }];
-    },
-    [filter, resolve, space],
-  );
+  const handleLinkQuery = useLinkQuery(object);
 
   // TODO(burdon): Reconcile variants.
   const editor = document ? (
     <DocumentEditor
-      id={fullyQualifiedId(object)}
+      id={fullyQualifiedId(document)}
       role={role}
       document={document}
       extensions={extensions}
@@ -150,7 +82,7 @@ export const MarkdownContainer = ({
       settings={settings}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? handleLinkQuery : undefined}
+      onLinkQuery={handleLinkQuery}
     />
   ) : text ? (
     <MarkdownEditor
@@ -163,7 +95,7 @@ export const MarkdownContainer = ({
       inputMode={settings.editorInputMode}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? handleLinkQuery : undefined}
+      onLinkQuery={handleLinkQuery}
     />
   ) : (
     <MarkdownEditor
@@ -176,7 +108,7 @@ export const MarkdownContainer = ({
       inputMode={settings.editorInputMode}
       scrollPastEnd={scrollPastEnd}
       onViewModeChange={onViewModeChange}
-      onLinkQuery={space ? handleLinkQuery : undefined}
+      onLinkQuery={handleLinkQuery}
     />
   );
 
@@ -190,61 +122,54 @@ export const MarkdownContainer = ({
   );
 };
 
-// TODO(wittjosiah): This shouldn't be "card" but "block".
-//   It's not a preview card but an interactive embedded object.
-const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
-  const client = useClient();
-  const dxn = DXN.parse(link.ref);
-  const subject = client.graph.ref(dxn).target;
-  const data = useMemo(() => ({ subject }), [subject]);
+type DocumentEditorProps = {
+  document: Markdown.Document;
+} & Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
+  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'>;
 
-  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
-};
-
-type DocumentEditorProps = Omit<MarkdownContainerProps, 'object' | 'extensionProviders' | 'editorStateStore'> &
-  Pick<MarkdownEditorProps, 'id' | 'scrollPastEnd' | 'extensions' | 'onLinkQuery'> & {
-    document: Markdown.Document;
-  };
-
-export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props }: DocumentEditorProps) => {
-  const space = getSpace(doc);
+// TODO(burdon): Consolidate with above.
+export const DocumentEditor = ({ id, document, settings, viewMode, ...props }: DocumentEditorProps) => {
+  const space = getSpace(document);
 
   // Migrate gradually to `fallbackName`.
   useEffect(() => {
-    if (typeof doc.fallbackName === 'string') {
+    if (typeof document.fallbackName === 'string') {
       return;
     }
 
-    const fallbackName = doc.content?.target?.content ? getFallbackName(doc.content.target.content) : undefined;
+    const fallbackName = document.content?.target?.content
+      ? getFallbackName(document.content.target.content)
+      : undefined;
     if (fallbackName) {
-      doc.fallbackName = fallbackName;
+      document.fallbackName = fallbackName;
     }
-  }, [doc, doc.content]);
+  }, [document, document.content]);
 
   // File dragging.
   const [upload] = useCapabilities(Capabilities.FileUploader);
   const handleFileUpload = useMemo(() => {
-    if (space === undefined || upload === undefined) {
+    if (!space || !upload) {
       return undefined;
     }
 
-    // TODO(burdon): Re-order props: space, file.
-    return async (file: File) => upload!(file, space);
+    return async (file: File) => upload(space, file);
   }, [space, upload]);
 
+  // Toolbar actions.
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
       const actions = get(graph.actions(id));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return { nodes, edges: nodes.map((node) => ({ source: 'root', target: node.id })) };
+      const edges = nodes.map((node) => ({ source: 'root', target: node.id }));
+      return { nodes, edges };
     });
   }, [graph]);
 
   return (
     <MarkdownEditor
       id={id}
-      initialValue={doc.content?.target?.content}
+      initialValue={document.content?.target?.content}
       viewMode={viewMode}
       toolbar={settings.toolbar}
       customActions={customActions}
@@ -253,6 +178,18 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
       {...props}
     />
   );
+};
+
+/**
+ * Embedded object.
+ */
+const PreviewBlock = ({ link, el }: { link: PreviewLinkRef; el: HTMLElement }) => {
+  const client = useClient();
+  const dxn = DXN.parse(link.ref);
+  const subject = client.graph.ref(dxn).target;
+  const data = useMemo(() => ({ subject }), [subject]);
+
+  return createPortal(<Surface role='card--transclusion' data={data} limit={1} />, el);
 };
 
 export default MarkdownContainer;
