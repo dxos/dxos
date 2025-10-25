@@ -48,6 +48,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
       "path": "../../core/assistant-tools"
     },
     {

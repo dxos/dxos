@@ -45,6 +45,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
       "path": "../../core/assistant-tools"
     },
     {
