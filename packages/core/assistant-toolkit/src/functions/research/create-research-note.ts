@@ -11,8 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
-
-import { ResearchOn } from './research-graph';
+import { DataType } from '@dxos/schema';
 
 export default defineFunction({
   key: 'dxos.org/function/create-research-note',
@@ -50,7 +49,7 @@ export default defineFunction({
       }),
     );
     yield* DatabaseService.add(
-      Relation.make(ResearchOn, {
+      Relation.make(DataType.HasSubject, {
         [Relation.Source]: doc,
         [Relation.Target]: targetObj as any,
         completedAt: new Date().toISOString(),

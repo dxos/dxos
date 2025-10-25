@@ -8,7 +8,7 @@ import React from 'react';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { agent } from '@dxos/assistant-testing';
+import { agent } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { Function, serializeFunction } from '@dxos/functions';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
