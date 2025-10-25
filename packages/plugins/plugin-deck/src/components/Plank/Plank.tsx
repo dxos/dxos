@@ -275,7 +275,6 @@ const PlankComponent = memo(
         ) : (
           <PlankError id={id} part={part} />
         )}
-
         {canResize && <StackItem.ResizeHandle />}
       </Root>
     );
