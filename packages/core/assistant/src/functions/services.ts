@@ -13,7 +13,7 @@ import * as Schema from 'effect/Schema';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Query } from '@dxos/echo';
-import { DatabaseService, FunctionDefinition, FunctionInvocationService, FunctionType } from '@dxos/functions';
+import { DatabaseService, Function, FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
 /**
@@ -45,7 +45,7 @@ export const makeToolResolverFromFunctions = (
 
             const {
               objects: [dbFunction],
-            } = yield* DatabaseService.runQuery(Query.type(FunctionType, { key: id }));
+            } = yield* DatabaseService.runQuery(Query.type(Function.Function, { key: id }));
 
             const functionDef = dbFunction
               ? FunctionDefinition.deserialize(dbFunction)

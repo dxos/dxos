@@ -8,7 +8,7 @@ import { Args, Flags } from '@oclif/core';
 
 import { Trigger, debounce } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { Function, Script } from '@dxos/functions';
 import { Bundler } from '@dxos/functions/bundler';
 import { DataType } from '@dxos/schema';
 
@@ -33,7 +33,7 @@ export default class Watch extends BaseCommand<typeof Watch> {
 
   async run(): Promise<any> {
     return this.execWithSpace(async ({ client, space }) => {
-      client.addTypes([DataType.Text, ScriptType, FunctionType]);
+      client.addTypes([DataType.Text, Function.Function, Script.Script]);
 
       const { scriptContent } = await this._loadFunctionObject(space);
 
