@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
-import { WebSearchToolkit } from '@dxos/assistant-testing';
+import { WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Ref, SchemaNotFoundError, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';

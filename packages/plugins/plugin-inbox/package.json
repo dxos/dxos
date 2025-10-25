@@ -42,7 +42,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/assistant-testing": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/blueprints": "workspace:*",
     "@dxos/client": "workspace:*",
