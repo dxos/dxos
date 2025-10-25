@@ -118,9 +118,6 @@
       "path": "packages/common/util/tsconfig.json"
     },
     {
-      "path": "packages/core/agent/tsconfig.json"
-    },
-    {
       "path": "packages/core/ai/tsconfig.json"
     },
     {

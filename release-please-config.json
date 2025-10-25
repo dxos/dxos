@@ -215,11 +215,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/agent/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/ai/package.json",
           "jsonpath": "$.version"
         },

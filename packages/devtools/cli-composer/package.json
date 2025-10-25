@@ -18,7 +18,6 @@
     "node": "./dist/src/index.js"
   },
   "dependencies": {
-    "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-base": "workspace:*",
     "@dxos/client": "workspace:*",

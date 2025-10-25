@@ -4,7 +4,6 @@
 
 import { type Event } from '@dxos/async';
 import { schema } from '@dxos/protocols/proto';
-import type { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import type {
   ContactsService,
   DevicesService,
@@ -41,8 +40,6 @@ export type ClientServices = {
   DataService: DataService;
   ContactsService: ContactsService;
   EdgeAgentService: EdgeAgentService;
-
-  FunctionRegistryService: FunctionRegistryService;
 
   // TODO(burdon): Deprecated.
   DevtoolsHost: DevtoolsHost;
@@ -84,12 +81,8 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   ContactsService: schema.getService('dxos.client.services.ContactsService'),
   EdgeAgentService: schema.getService('dxos.client.services.EdgeAgentService'),
 
-  // Agent-only.
-  FunctionRegistryService: schema.getService('dxos.agent.functions.FunctionRegistryService'),
-
   // TODO(burdon): Deprecated.
   DevtoolsHost: schema.getService('dxos.devtools.host.DevtoolsHost'),
-
   TracingService: schema.getService('dxos.tracing.TracingService'),
 });
 
