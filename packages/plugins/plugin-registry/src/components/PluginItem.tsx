@@ -80,7 +80,7 @@ export const PluginItem = ({
           {tags && tags.length > 0 && (
             <div>
               {tags.map((tag) => (
-                <Tag key={tag} palette='rose' classNames='text-xs capitalize'>
+                <Tag key={tag} palette={'green'} classNames='text-xs uppercase font-thin'>
                   {tag}
                 </Tag>
               ))}

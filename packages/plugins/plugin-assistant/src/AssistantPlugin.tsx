@@ -62,14 +62,14 @@ export const AssistantPlugin = definePlugin(meta, () => [
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
-          iconHue: 'blue',
+          iconHue: 'sky',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
-          iconHue: 'blue',
+          iconHue: 'sky',
         },
       }),
     ],
