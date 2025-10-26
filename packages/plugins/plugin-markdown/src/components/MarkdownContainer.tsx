@@ -34,10 +34,7 @@ export type MarkdownContainerProps = {
 // TODO(burdon): Test comment threads.
 // TODO(burdon): Test Preview blocks (currently not working).
 // TODO(burdon): Test file upload.
-// TODO(burdon): Overactive measure loop during navigation.
-//  Measure loop restarted more than 5 times
 
-// TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
   id,
   role,
