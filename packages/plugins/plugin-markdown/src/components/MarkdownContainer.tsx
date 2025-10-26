@@ -36,10 +36,11 @@ export type MarkdownContainerProps = {
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
 // TODO(burdon): Test comments.
-// TODO(burdon): Test toolbar state.
-// TODO(burdon): Test input mode.
+// TODO(burdon): Test toolbar state (currently not working).
+// TODO(burdon): Test input mode (currently not working).
 // TODO(burdon): Test update document name.
 // TODO(burdon): Test file upload.
+// TODO(burdon): Test Preview blocks.
 
 // TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
@@ -103,7 +104,13 @@ export const MarkdownContainer = ({
 
   return (
     <StackItem.Content toolbar={settings.toolbar}>
-      <MarkdownEditor.Root id={attendableId ?? id} extensions={extensions} onLinkQuery={handleLinkQuery} {...props}>
+      <MarkdownEditor.Root
+        id={attendableId ?? id}
+        object={object}
+        extensions={extensions}
+        onLinkQuery={handleLinkQuery}
+        {...props}
+      >
         {settings.toolbar && (
           <MarkdownEditor.Toolbar
             role={role}

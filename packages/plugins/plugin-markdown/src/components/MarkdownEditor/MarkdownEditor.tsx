@@ -11,7 +11,13 @@ import { createPortal } from 'react-dom';
 import { Surface } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
-import { PopoverMenuProvider, type PreviewLinkRef, type PreviewOptions, usePopoverMenu } from '@dxos/react-ui-editor';
+import {
+  PopoverMenuProvider,
+  type PreviewLinkRef,
+  type PreviewOptions,
+  type UsePopoverMenu,
+  usePopoverMenu,
+} from '@dxos/react-ui-editor';
 
 import {
   type DocumentType,
@@ -46,6 +52,7 @@ type MarkdownEditorContextValue = {
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
+  popoverMenu: Omit<UsePopoverMenu, 'extension'>;
 };
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
@@ -94,7 +101,7 @@ const MarkdownEditorRoot = ({
 
   // Menu.
   const menuOptions = usePopoverMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
-  const { groupsRef, extension: menuExtension, ...menuProps } = usePopoverMenu(menuOptions);
+  const { extension: menuExtension, ...menuProps } = usePopoverMenu(menuOptions);
 
   // Extensions.
   const coreExtensions = useExtensions({
@@ -119,10 +126,9 @@ const MarkdownEditorRoot = ({
       setEditorView={setEditorView}
       extensions={extensions}
       previewBlocks={previewBlocks}
+      popoverMenu={menuProps}
     >
-      <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-        {children}
-      </PopoverMenuProvider>
+      {children}
     </MarkdownEditorContextProvider>
   );
 };
@@ -136,9 +142,16 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions'>;
 
 const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
-  const { id, extensions, setEditorView } = useMarkdownEditorContext(MarkdownEditorMain.displayName);
+  const { id, extensions, editorView, setEditorView, popoverMenu } = useMarkdownEditorContext(
+    MarkdownEditorMain.displayName,
+  );
+  const { groupsRef, ...menuProps } = popoverMenu;
 
-  return <NaturalMarkdownEditorMain {...props} id={id} extensions={extensions} ref={setEditorView} />;
+  return (
+    <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
+      <NaturalMarkdownEditorMain {...props} id={id} extensions={extensions} ref={setEditorView} />
+    </PopoverMenuProvider>
+  );
 };
 
 MarkdownEditorMain.displayName = 'MarkdownEditor.Main';

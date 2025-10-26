@@ -6,7 +6,7 @@ import { Rx } from '@effect-rx/rx-react';
 import React, { memo, useMemo } from 'react';
 
 import { rxFromSignal } from '@dxos/app-graph';
-import { ElevationProvider } from '@dxos/react-ui';
+import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   MenuProvider,
@@ -24,21 +24,23 @@ import { createSearch } from './search';
 import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags } from './util';
 import { createViewMode } from './view-mode';
 
-export type EditorToolbarProps = {
-  // TODO(burdon): Remove.
-  role?: string;
-  attendableId?: string;
-} & EditorToolbarActionGraphProps &
-  EditorToolbarFeatureFlags;
+export type EditorToolbarProps = ThemedClassName<
+  {
+    // TODO(burdon): Remove.
+    role?: string;
+    attendableId?: string;
+  } & EditorToolbarActionGraphProps &
+    EditorToolbarFeatureFlags
+>;
 
 // TODO(burdon): Remove role.
-export const EditorToolbar = memo(({ role, attendableId, ...props }: EditorToolbarProps) => {
+export const EditorToolbar = memo(({ classNames, role, attendableId, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu textBlockWidth />
+        <ToolbarMenu classNames={classNames} textBlockWidth />
       </MenuProvider>
     </ElevationProvider>
   );

@@ -8,6 +8,7 @@ import { useDropzone } from 'react-dropzone';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorToolbar,
   type EditorToolbarProps,
@@ -16,17 +17,20 @@ import {
   useEditorToolbarState,
 } from '@dxos/react-ui-editor';
 
-export type MarkdownEditorToolbarProps = {
-  id: string;
-  editorView?: EditorView;
-  // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
-  viewMode?: EditorViewMode;
-  // TOOD(burdon): Factor out file management.
-  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-  onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-} & Pick<EditorToolbarProps, 'role' | 'customActions'>;
+export type MarkdownEditorToolbarProps = ThemedClassName<
+  {
+    id: string;
+    editorView?: EditorView;
+    // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
+    viewMode?: EditorViewMode;
+    // TOOD(burdon): Factor out file management.
+    onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+    onViewModeChange?: (id: string, mode: EditorViewMode) => void;
+  } & Pick<EditorToolbarProps, 'role' | 'customActions'>
+>;
 
 export const MarkdownEditorToolbar = ({
+  classNames,
   id,
   role,
   editorView,
@@ -87,8 +91,8 @@ export const MarkdownEditorToolbar = ({
 
   return (
     <>
-      <input {...getInputProps()} />
       <EditorToolbar
+        classNames={classNames}
         attendableId={id}
         role={role}
         getView={getView}
@@ -97,6 +101,7 @@ export const MarkdownEditorToolbar = ({
         image={handleImageUpload}
         onViewModeChange={handleViewModeChange}
       />
+      <input {...getInputProps()} />
     </>
   );
 };

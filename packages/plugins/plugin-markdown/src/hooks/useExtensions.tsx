@@ -117,11 +117,13 @@ export const useExtensions = ({
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
           listener({
-            onChange: ({ text }) => setFallbackName(object as Markdown.Document, text),
+            onChange: ({ text }) => {
+              setFallbackName(object as Markdown.Document, text);
+            },
           }),
 
-        selectionState(editorStateStore),
         baseExtensions,
+        selectionState(editorStateStore),
       ].filter(isTruthy),
     [identity, space, id, object, target, baseExtensions],
   );
