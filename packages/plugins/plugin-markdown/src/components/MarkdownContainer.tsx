@@ -39,8 +39,8 @@ export const MarkdownContainer = ({
   role,
   object,
   settings,
-  onViewModeChange,
   extensionProviders,
+  onViewModeChange,
   ...props
 }: MarkdownContainerProps) => {
   const space = getSpace(object);
@@ -48,7 +48,24 @@ export const MarkdownContainer = ({
   const isText = Obj.instanceOf(DataType.Text, object);
   const attendableId = isDocument ? fullyQualifiedId(object) : undefined;
 
-  // File dragging.
+  // Extensions from other plugins.
+  const extensions = useMemo<Extension[]>(() => {
+    if (!Obj.instanceOf(Markdown.Document, object)) {
+      return [];
+    }
+
+    return (extensionProviders ?? []).flat().reduce((acc: Extension[], provider) => {
+      const extension = typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
+      console.log(extension);
+      if (extension) {
+        acc.push(extension);
+      }
+
+      return acc;
+    }, []);
+  }, [extensionProviders, object]);
+
+  // File upload.
   const [upload] = useCapabilities(Capabilities.FileUploader);
   const handleFileUpload = useMemo(() => {
     if (!space || !upload) {
@@ -72,30 +89,12 @@ export const MarkdownContainer = ({
   // Query for @ refs.
   const handleLinkQuery = useLinkQuery(space);
 
-  // Extensions from other plugins.
-  const extensions = useMemo<Extension[]>(() => {
-    if (!Obj.instanceOf(Markdown.Document, object)) {
-      return [];
-    }
-
-    return (extensionProviders ?? []).flat().reduce((acc: Extension[], provider) => {
-      const extension = typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
-      if (extension) {
-        acc.push(extension);
-      }
-
-      return acc;
-    }, []);
-  }, [extensionProviders, object]);
-
   return (
     <StackItem.Content toolbar={settings.toolbar}>
-      <MarkdownEditor.Root id={id} extensions={extensions} onLinkQuery={handleLinkQuery} {...props}>
+      <MarkdownEditor.Root id={attendableId ?? id} extensions={extensions} onLinkQuery={handleLinkQuery} {...props}>
         {settings.toolbar && (
           <MarkdownEditor.Toolbar
             role={role}
-            // attendableId={attendableId}
-            // editorView={editorView}
             customActions={customActions}
             onFileUpload={handleFileUpload}
             onViewModeChange={onViewModeChange}
