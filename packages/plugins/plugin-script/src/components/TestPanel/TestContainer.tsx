@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { useDeployState, useToolbarState } from '../../hooks';
@@ -13,7 +13,7 @@ import { TestPanel } from './TestPanel';
 
 export type TestContainerProps = {
   role: string;
-  script: ScriptType;
+  script: Script.Script;
 };
 
 export const TestContainer = ({ script }: TestContainerProps) => {

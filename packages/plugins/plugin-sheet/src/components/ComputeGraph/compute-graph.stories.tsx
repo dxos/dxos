@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { Filter, Obj } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
+import { Filter } from '@dxos/echo';
+import { Function } from '@dxos/functions';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
@@ -44,14 +44,14 @@ const DefaultStory = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(Obj.make(FunctionType, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(Function.make({ name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
     }
   }, [space, graph]);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
   const handleTest = async () => {
     if (space && graph) {
-      const { objects } = await space.db.query(Filter.type(FunctionType)).run();
+      const { objects } = await space.db.query(Filter.type(Function.Function)).run();
       const mapped = graph.mapFunctionBindingToId(text);
       const unmapped = graph.mapFunctionBindingFromId(mapped);
       const internal = graph.mapFormulaToNative(text);
@@ -88,7 +88,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withClientProvider({ types: [FunctionType, SheetType], createIdentity: true, createSpace: true }),
+    withClientProvider({ types: [Function.Function, SheetType], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
   ],
 } satisfies Meta<typeof DefaultStory>;

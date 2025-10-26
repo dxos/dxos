@@ -22,7 +22,6 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
     });
 
     process.kill(child.pid!, 'SIGKILL');
-
     await trigger.wait({ timeout: 1_000 });
   });
 
@@ -57,7 +56,6 @@ describe.skipIf(process.env.CI)('DaemonManager', () => {
       expect(info.profile).to.equal(runId);
 
       await Phoenix.stop(pidFile);
-
       await expect.poll(() => readFileSync(logFile, { encoding: 'utf-8' })).toContain('Stopped with exit code');
     }
   });

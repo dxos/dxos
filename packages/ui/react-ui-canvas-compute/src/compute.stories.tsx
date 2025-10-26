@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { capabilities } from '@dxos/assistant-testing';
+import { capabilities } from '@dxos/assistant-toolkit';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
 import { ServiceContainer } from '@dxos/functions';
 import { withClientProvider } from '@dxos/react-client/testing';

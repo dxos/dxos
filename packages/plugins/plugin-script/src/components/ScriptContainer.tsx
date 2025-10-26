@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
@@ -18,7 +18,7 @@ import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor
 
 export type ScriptEditorProps = {
   role: string;
-  script: ScriptType;
+  script: Script.Script;
   settings?: ScriptSettings;
 } & Pick<TypescriptEditorProps, 'env'>;
 

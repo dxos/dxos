@@ -8,9 +8,9 @@ import React from 'react';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { agent } from '@dxos/assistant-testing';
+import { agent } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
-import { FunctionType, serializeFunction } from '@dxos/functions';
+import { Function, serializeFunction } from '@dxos/functions';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -49,7 +49,7 @@ const meta = {
               services: SERVICES_CONFIG.REMOTE,
             },
           }),
-          types: [...DataTypes, Notebook.Notebook, FunctionType, Markdown.Document],
+          types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();

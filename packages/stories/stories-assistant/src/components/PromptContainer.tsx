@@ -8,14 +8,14 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 
-import { agent } from '@dxos/assistant-testing';
+import { agent } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query } from '@dxos/echo';
 import {
   ComputeEventLogger,
   DatabaseService,
+  Function,
   FunctionInvocationService,
-  FunctionType,
   InvocationTracer,
   TracingService,
   deserializeFunction,
@@ -46,8 +46,8 @@ export const PromptContainer = ({ space }: { space: Space }) => {
       // Resolve the function
       const {
         objects: [serializedFunction],
-      } = yield* DatabaseService.runQuery(Query.select(Filter.type(FunctionType, { key: agent.key })));
-      invariant(Obj.instanceOf(FunctionType, serializedFunction));
+      } = yield* DatabaseService.runQuery(Query.select(Filter.type(Function.Function, { key: agent.key })));
+      invariant(Obj.instanceOf(Function.Function, serializedFunction));
       const functionDef = deserializeFunction(serializedFunction);
 
       const tracer = yield* InvocationTracer;
