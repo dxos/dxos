@@ -113,6 +113,7 @@ export const MarkdownContainer = ({
           />
         )}
         <MarkdownEditor.Main
+          toolbar={settings.toolbar}
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
           scrollPastEnd={role === 'article'}
         />

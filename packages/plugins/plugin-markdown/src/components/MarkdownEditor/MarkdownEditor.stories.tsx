@@ -36,7 +36,7 @@ const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
       <StackItem.Content toolbar>
         <MarkdownEditor.Root id={doc.id} extensions={extensions} {...props}>
           <MarkdownEditor.Toolbar />
-          <MarkdownEditor.Main />
+          <MarkdownEditor.Main toolbar />
         </MarkdownEditor.Root>
       </StackItem.Content>
     </div>

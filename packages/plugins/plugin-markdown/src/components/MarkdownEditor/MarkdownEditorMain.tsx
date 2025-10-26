@@ -34,6 +34,7 @@ import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 export type MarkdownEditorMainProps = {
   id: string;
   role?: string;
+  toolbar?: boolean;
   scrollPastEnd?: boolean;
   slashCommandGroups?: PopoverMenuGroup[];
   customActions?: EditorToolbarActionGraphProps['customActions'];
@@ -43,7 +44,10 @@ export type MarkdownEditorMainProps = {
   Pick<MarkdownEditorToolbarProps, 'viewMode' | 'onFileUpload'>);
 
 export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMainProps>(
-  ({ id, role, initialValue, editorStateStore, extensions, scrollPastEnd, viewMode, onFileUpload }, forwardedRef) => {
+  (
+    { id, role, toolbar, initialValue, editorStateStore, extensions, scrollPastEnd, viewMode, onFileUpload },
+    forwardedRef,
+  ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
 
