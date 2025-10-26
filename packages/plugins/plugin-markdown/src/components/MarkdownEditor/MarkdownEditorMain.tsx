@@ -5,10 +5,12 @@
 import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 
+import { type Live } from '@dxos/live-object';
 import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorSelectionState,
   type EditorStateStore,
+  type EditorToolbarState,
   type EditorViewMode,
   type PopoverMenuGroup,
   type UseTextEditorProps,
@@ -38,7 +40,7 @@ export type MarkdownEditorMainProps = {
   scrollPastEnd?: boolean;
   slashCommandGroups?: PopoverMenuGroup[];
   editorStateStore?: EditorStateStore;
-  toolbarState?: MarkdownEditorToolbarProps['state'];
+  toolbarState?: Live<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
 } & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
 
@@ -60,6 +62,8 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
   ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
+
+    // TODO(burdon): Toolbar state is not reactive.
     const toolbarStateRef = useDynamicRef(toolbarState);
 
     // Restore last selection and scroll point.
@@ -93,6 +97,7 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),
+          formattingListener(() => toolbarStateRef.current),
           editorGutter,
           role !== 'section' &&
             onFileUpload &&
@@ -106,7 +111,6 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
                 }
               },
             }),
-          formattingListener(() => toolbarStateRef.current),
           extensions,
         ].filter(isTruthy),
       }),

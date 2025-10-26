@@ -58,7 +58,7 @@ const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
 
 //
-// Root
+// MarkdownEditor.Root
 //
 
 type MarkdownEditorRootProps = PropsWithChildren<
@@ -141,7 +141,7 @@ const MarkdownEditorRoot = ({
 MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 
 //
-// Main
+// MarkdownEditor.Main
 //
 
 type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions' | 'toolbarState'>;
@@ -172,7 +172,7 @@ const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
 MarkdownEditorMain.displayName = 'MarkdownEditor.Main';
 
 //
-// Toolbar
+// MarkdownEditor.Toolbar
 //
 
 type MarkdownEditorToolbarProps = Omit<
@@ -189,7 +189,7 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';
 
 //
-// Blocks
+// MarkdownEditor.Blocks (embedded objects)
 //
 
 type MarkdownEditorBlocksProps = {};
@@ -208,9 +208,6 @@ const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
 
 MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
 
-/**
- * Embedded object.
- */
 const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const client = useClient();
   const dxn = DXN.parse(link.ref);

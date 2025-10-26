@@ -64,9 +64,10 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
   const menuCreator = useMemo(
     () =>
       createToolbarActions({
-        getView: props.getView,
         state: props.state,
+        getView: props.getView,
         customActions: props.customActions,
+
         headings: props.headings,
         formatting: props.formatting,
         lists: props.lists,
@@ -76,9 +77,10 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
         onViewModeChange: props.onViewModeChange,
       }),
     [
-      props.getView,
       props.state,
+      props.getView,
       props.customActions,
+
       props.headings,
       props.formatting,
       props.lists,
@@ -93,8 +95,8 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
 };
 
 const createToolbarActions = ({
-  getView,
   state,
+  getView,
   customActions,
   ...features
 }: EditorToolbarFeatureFlags &
@@ -105,50 +107,37 @@ const createToolbarActions = ({
       edges: [],
     };
 
+    const addSubGraph = (graph: ActionGraphProps, subGraph: ActionGraphProps) => {
+      graph.nodes.push(...subGraph.nodes);
+      graph.edges.push(...subGraph.edges);
+    };
+
     if (features.headings ?? true) {
-      const headings = get(rxFromSignal(() => createHeadings(state, getView)));
-      graph.nodes.push(...headings.nodes);
-      graph.edges.push(...headings.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createHeadings(state, getView))));
     }
     if (features.formatting ?? true) {
-      const formatting = get(rxFromSignal(() => createFormatting(state, getView)));
-      graph.nodes.push(...formatting.nodes);
-      graph.edges.push(...formatting.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createFormatting(state, getView))));
     }
     if (features.lists ?? true) {
-      const lists = get(rxFromSignal(() => createLists(state, getView)));
-      graph.nodes.push(...lists.nodes);
-      graph.edges.push(...lists.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createLists(state, getView))));
     }
     if (features.blocks ?? true) {
-      const blocks = get(rxFromSignal(() => createBlocks(state, getView)));
-      graph.nodes.push(...blocks.nodes);
-      graph.edges.push(...blocks.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createBlocks(state, getView))));
     }
     if (features.onImageUpload) {
-      const image = get(rxFromSignal(() => createImageUpload(features.onImageUpload!)));
-      graph.nodes.push(...image.nodes);
-      graph.edges.push(...image.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createImageUpload(features.onImageUpload!))));
     }
-    {
-      const gap = createGapSeparator();
-      graph.nodes.push(...gap.nodes);
-      graph.edges.push(...gap.edges);
-    }
+
+    addSubGraph(graph, createGapSeparator());
+
     if (customActions) {
-      const custom = get(customActions);
-      graph.nodes.push(...custom.nodes);
-      graph.edges.push(...custom.edges);
+      addSubGraph(graph, get(customActions));
     }
     if (features.search ?? true) {
-      const search = get(rxFromSignal(() => createSearch(getView)));
-      graph.nodes.push(...search.nodes);
-      graph.edges.push(...search.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createSearch(getView))));
     }
     if (features.onViewModeChange) {
-      const viewMode = get(rxFromSignal(() => createViewMode(state, features.onViewModeChange!)));
-      graph.nodes.push(...viewMode.nodes);
-      graph.edges.push(...viewMode.edges);
+      addSubGraph(graph, get(rxFromSignal(() => createViewMode(state, features.onViewModeChange!))));
     }
 
     return graph;

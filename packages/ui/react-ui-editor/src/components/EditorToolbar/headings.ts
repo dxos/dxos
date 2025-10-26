@@ -47,8 +47,8 @@ const createHeadingActions = (getView: () => EditorView) =>
 
 const computeHeadingValue = (state: EditorToolbarState) => {
   const blockType = state ? state.blockType : 'paragraph';
-  const header = blockType && /heading(\d)/.exec(blockType);
-  return header ? header[1] : blockType === 'paragraph' || !blockType ? '0' : '';
+  const heading = blockType && /heading(\d)/.exec(blockType);
+  return heading ? heading[1] : blockType === 'paragraph' || !blockType ? '0' : '';
 };
 
 export const createHeadings = (state: EditorToolbarState, getView: () => EditorView) => {

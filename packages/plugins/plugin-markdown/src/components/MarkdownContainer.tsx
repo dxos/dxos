@@ -28,13 +28,14 @@ export type MarkdownContainerProps = {
   Pick<MarkdownEditorMainProps, 'editorStateStore'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
-// TODO(burdon): Attention.
-// TODO(burdon): Toolbar state (currently not working: doesn't update -- e.g., heading, list, table).
-// TODO(burdon): View mode (currently not working: not reactive).
-// TODO(burdon): Update document name.
-// TODO(burdon): Comment threads.
-// TODO(burdon): Preview blocks.
-// TODO(burdon): File upload.
+// TODO(burdon): Attention doesn't update in storybook.
+// TODO(burdon): Toolbar state (currently not working in labs: e.g., heading, list, table).
+//  Heading state is correct (see react-ui-editor headings.ts, but the toolbar isn't updated).
+// TODO(burdon): View mode (currently not working in labs).
+// TODO(burdon): Test update document name.
+// TODO(burdon): Test comment threads.
+// TODO(burdon): Test preview blocks.
+// TODO(burdon): Test file upload.
 
 export const MarkdownContainer = ({
   id,
