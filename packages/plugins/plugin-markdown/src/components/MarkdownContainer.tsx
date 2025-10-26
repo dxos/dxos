@@ -228,7 +228,7 @@ export const DocumentEditor = ({ id, document: doc, settings, viewMode, ...props
     }
 
     // TODO(burdon): Re-order props: space, file.
-    return async (file: File) => upload!(file, space);
+    return async (file: File) => upload!(space, file);
   }, [space, upload]);
 
   const { graph } = useAppGraph();

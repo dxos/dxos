@@ -8,4 +8,5 @@ export const meta: PluginMeta = {
   id: 'dxos.org/plugin/space',
   name: 'Spaces',
   icon: 'ph--planet--regular',
+  iconHue: 'neutral',
 };

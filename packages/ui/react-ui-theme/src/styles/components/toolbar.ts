@@ -13,7 +13,7 @@ export const toolbarLayout =
   'is-full shrink-0 flex flex-nowrap items-center gap-1 p-1 overflow-x-auto scrollbar-none contain-layout';
 
 // TODO(burdon): Detect: &:not([data-is-attention-source]_&)]:
-export const toolbarInactive = '!bg-transparent *:opacity-20';
+export const toolbarInactive = '*:opacity-20';
 
 export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ layoutManaged, disabled }, ...etc) => {
   return mx('bg-toolbarSurface dx-toolbar', !layoutManaged && toolbarLayout, disabled && toolbarInactive, ...etc);
