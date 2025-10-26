@@ -8,7 +8,7 @@ import { Filter } from '@dxos/echo';
 import {
   Assistant,
   Chat,
-  Toolbar,
+  ChatToolbar,
   useBlueprintRegistry,
   useChatProcessor,
   useChatServices,
@@ -42,7 +42,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   return !chat || !processor ? null : (
     <StackItem.Content toolbar>
       <div role='none' className='flex items-center gap-2 pie-2'>
-        <Toolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
+        <ChatToolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
         <Popover.Root>
           <Popover.Trigger asChild>
             <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />

@@ -27,7 +27,7 @@ export const ProjectPlugin = definePlugin(meta, () => [
         id: DataType.Project.typename,
         metadata: {
           icon: 'ph--check-square-offset--regular',
-          iconClassName: 'text-purpleSurfaceText',
+          iconHue: 'purple',
         },
       }),
   }),

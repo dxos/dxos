@@ -7,8 +7,9 @@ import { type PluginMeta } from '@dxos/app-framework';
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/assistant',
   name: 'Assistant',
-  description: 'The Assistant plugin allows you to chat with your spaces inside of Composer.',
+  description: 'Chat with your spaces using AI assistance.',
   icon: 'ph--atom--regular',
+  iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
   tags: ['labs'],
 };

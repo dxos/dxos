@@ -28,7 +28,7 @@ export const TranscriptionPlugin = definePlugin(meta, () => [
         id: Transcript.Transcript.typename,
         metadata: {
           icon: 'ph--subtitles--regular',
-          iconClassName: 'text-skySurfaceText',
+          iconHue: 'sky',
           // TODO(wittjosiah): Factor out. Artifact? Separate capability?
           getTextContent: async (transcript: Transcript.Transcript) => {
             const space = getSpace(transcript);

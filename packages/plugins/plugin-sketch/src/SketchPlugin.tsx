@@ -33,7 +33,7 @@ export const SketchPlugin = definePlugin(meta, () => [
         id: DiagramType.typename,
         metadata: {
           icon: 'ph--compass-tool--regular',
-          iconClassName: 'text-skySurfaceText',
+          iconHue: 'indigo',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
           serializer,
