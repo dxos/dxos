@@ -30,12 +30,12 @@ export const SequenceEditor = forwardRef<EditorView | null, SequenceEditorProps>
         createBasicExtensions({
           lineNumbers: true,
           lineWrapping: false,
-          monospace: true,
           scrollPastEnd: true,
         }),
         createThemeExtensions({
-          themeMode,
+          monospace: true,
           syntaxHighlighting: true,
+          themeMode,
         }),
         createJsonExtensions({
           schema: Type.toJsonSchema(SequenceDefinition, { strict: true }),
