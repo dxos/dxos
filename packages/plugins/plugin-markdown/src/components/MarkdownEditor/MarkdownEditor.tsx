@@ -189,13 +189,13 @@ const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
 MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';
 
 //
-// Preview
+// Blocks
 //
 
-type MarkdownEditorPreviewProps = {};
+type MarkdownEditorBlocksProps = {};
 
-const MarkdownEditorPreview = (_props: MarkdownEditorPreviewProps) => {
-  const { previewBlocks } = useMarkdownEditorContext(MarkdownEditorPreview.displayName);
+const MarkdownEditorBlocks = (_props: MarkdownEditorBlocksProps) => {
+  const { previewBlocks } = useMarkdownEditorContext(MarkdownEditorBlocks.displayName);
 
   return (
     <>
@@ -206,7 +206,7 @@ const MarkdownEditorPreview = (_props: MarkdownEditorPreviewProps) => {
   );
 };
 
-MarkdownEditorPreview.displayName = 'MarkdownEditor.Preview';
+MarkdownEditorBlocks.displayName = 'MarkdownEditor.Blocks';
 
 /**
  * Embedded object.
@@ -228,12 +228,7 @@ export const MarkdownEditor = {
   Root: MarkdownEditorRoot,
   Main: MarkdownEditorMain,
   Toolbar: MarkdownEditorToolbar,
-  Preview: MarkdownEditorPreview,
+  Blocks: MarkdownEditorBlocks,
 };
 
-export type {
-  MarkdownEditorRootProps,
-  MarkdownEditorMainProps,
-  MarkdownEditorToolbarProps,
-  MarkdownEditorPreviewProps,
-};
+export type { MarkdownEditorRootProps, MarkdownEditorMainProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };

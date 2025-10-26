@@ -3,13 +3,14 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useCallback, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
+import React, { useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { EditorToolbar, type EditorToolbarProps, type EditorViewMode, addLink } from '@dxos/react-ui-editor';
+import { EditorToolbar, type EditorToolbarProps, type EditorViewMode } from '@dxos/react-ui-editor';
+
+import { FileUpload, type FileUploadAction } from './FileUpload';
 
 export type MarkdownEditorToolbarProps = ThemedClassName<
   {
@@ -29,7 +30,7 @@ export const MarkdownEditorToolbar = ({
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorToolbarProps) => {
-  const { open, getInputProps } = useImageUpload({ editorView, onFileUpload });
+  const [upload, setUpload] = useState<FileUploadAction | null>(null);
 
   const handleViewModeChange = useCallback((mode: EditorViewMode) => onViewModeChange?.(mode), [onViewModeChange]);
 
@@ -51,50 +52,11 @@ export const MarkdownEditorToolbar = ({
         state={state}
         getView={getView}
         customActions={customActions}
-        onImageUpload={open}
+        onImageUpload={upload || undefined}
         onViewModeChange={handleViewModeChange}
       />
 
-      {/* TODO(burdon): Portal? */}
-      <input {...getInputProps()} />
+      {onFileUpload && <FileUpload ref={setUpload} editorView={editorView} onFileUpload={onFileUpload} />}
     </>
   );
-};
-
-// TODO(burdon): Move to root? (support drag into document via dropzone).
-const useImageUpload = ({
-  editorView,
-  onFileUpload,
-}: Pick<MarkdownEditorToolbarProps, 'editorView' | 'onFileUpload'>) => {
-  // https://react-dropzone.js.org/#src
-  const { acceptedFiles, getInputProps, open } = useDropzone({
-    multiple: false,
-    noDrag: true,
-    accept: {
-      'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
-    },
-  });
-
-  useEffect(() => {
-    if (editorView && acceptedFiles.length && onFileUpload) {
-      requestAnimationFrame(async () => {
-        // NOTE: Clone file since react-dropzone patches in a non-standard `path` property, which confuses IPFS.
-        const f = acceptedFiles[0];
-        const file = new File([f], f.name, {
-          type: f.type,
-          lastModified: f.lastModified,
-        });
-
-        const info = await onFileUpload(file);
-        if (info) {
-          addLink({ url: info.url, image: true })(editorView);
-        }
-      });
-    }
-  }, [editorView, acceptedFiles, onFileUpload]);
-
-  return {
-    getInputProps,
-    open,
-  };
 };

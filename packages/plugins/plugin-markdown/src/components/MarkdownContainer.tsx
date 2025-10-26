@@ -110,7 +110,7 @@ export const MarkdownContainer = ({
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
           scrollPastEnd={role === 'article'}
         />
-        <MarkdownEditor.Preview />
+        <MarkdownEditor.Blocks />
       </MarkdownEditor.Root>
     </StackItem.Content>
   );
