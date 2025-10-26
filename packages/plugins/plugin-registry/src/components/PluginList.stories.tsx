@@ -44,7 +44,7 @@ const DefaultStory = () => {
           },
           () => [],
         )(),
-      { count: 16 },
+      { count: 32 },
     ),
   );
   const [enabled, setEnabled] = useState<string[]>([]);
@@ -60,7 +60,6 @@ const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', scroll: true })],
   parameters: {
     translations,
   },
@@ -70,4 +69,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withTheme, withLayout({ container: 'column', scroll: true })],
+};
+
+export const FullScreen: Story = {
+  decorators: [withTheme, withLayout({ scroll: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
