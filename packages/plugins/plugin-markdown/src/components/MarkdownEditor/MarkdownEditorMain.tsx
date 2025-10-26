@@ -110,6 +110,7 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
+        // TODO(burdon): Is this required here or can it be moved to the root?
         data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={stackItemContentEditorClassNames(role)}
         data-popover-collision-boundary={true}

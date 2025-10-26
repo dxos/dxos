@@ -17,30 +17,23 @@ import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
 import { Markdown, type MarkdownPluginState } from '../types';
 
-import {
-  MarkdownEditor,
-  type MarkdownEditorMainProps,
-  type MarkdownEditorRootProps,
-  type MarkdownEditorToolbarProps,
-} from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorMainProps, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 export type MarkdownContainerProps = {
   role?: string;
   object: DocumentType;
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
-} & (Pick<MarkdownEditorRootProps, 'id' | 'viewMode'> &
-  Pick<MarkdownPluginState, 'extensionProviders'> &
+} & (Pick<MarkdownEditorRootProps, 'id' | 'viewMode' | 'onViewModeChange'> &
   Pick<MarkdownEditorMainProps, 'editorStateStore'> &
-  Pick<MarkdownEditorToolbarProps, 'onViewModeChange'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
-// TODO(burdon): Test comments.
-// TODO(burdon): Test toolbar state (currently not working).
-// TODO(burdon): Test input mode (currently not working).
+// TODO(burdon): Test toolbar state (currently not working: doesn't update).
+// TODO(burdon): Test view mode (currently not working: not reactive).
 // TODO(burdon): Test update document name.
-// TODO(burdon): Test file upload.
+// TODO(burdon): Test comment threads.
 // TODO(burdon): Test Preview blocks.
+// TODO(burdon): Test file upload.
 
 // TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
@@ -49,7 +42,6 @@ export const MarkdownContainer = ({
   object,
   settings,
   extensionProviders,
-  onViewModeChange,
   ...props
 }: MarkdownContainerProps) => {
   const space = getSpace(object);
@@ -108,17 +100,11 @@ export const MarkdownContainer = ({
         id={attendableId ?? id}
         object={object}
         extensions={extensions}
+        onFileUpload={handleFileUpload}
         onLinkQuery={handleLinkQuery}
         {...props}
       >
-        {settings.toolbar && (
-          <MarkdownEditor.Toolbar
-            role={role}
-            customActions={customActions}
-            onFileUpload={handleFileUpload}
-            onViewModeChange={onViewModeChange}
-          />
-        )}
+        {settings.toolbar && <MarkdownEditor.Toolbar role={role} customActions={customActions} />}
         <MarkdownEditor.Main
           toolbar={settings.toolbar}
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}

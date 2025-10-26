@@ -10,10 +10,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { useClient } from '@dxos/react-client';
-import { createDocAccessor } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
+import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
@@ -23,7 +22,7 @@ import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 
-type StoryProps = Omit<MarkdownEditorRootProps, 'id'> & {
+type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'> & {
   content?: string;
 };
 
@@ -32,14 +31,13 @@ const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
   const space = client.spaces.default;
   // const doc = useMemo(() => createObject({ content, space }), [content]);
   const doc = useMemo(() => space?.db.add(Markdown.makeDocument({ content })), [space]);
-  const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
   const attentionAttrs = useAttentionAttributes(doc.id);
 
   // TODO(burdon): Toolbar attention isn't working in this story.
   return (
     <div className='contents' {...attentionAttrs}>
       <StackItem.Content toolbar>
-        <MarkdownEditor.Root id={doc.id} object={doc} extensions={extensions} {...props}>
+        <MarkdownEditor.Root id={doc.id} object={doc} {...props}>
           <MarkdownEditor.Toolbar />
           <MarkdownEditor.Main toolbar />
         </MarkdownEditor.Root>

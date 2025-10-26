@@ -13,11 +13,12 @@ import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import {
   PopoverMenuProvider,
-  type PreviewLinkRef,
+  type PreviewBlock,
   type PreviewOptions,
   type UsePopoverMenu,
   usePopoverMenu,
 } from '@dxos/react-ui-editor';
+import { isNonNullable } from '@dxos/util';
 
 import {
   type DocumentType,
@@ -40,20 +41,13 @@ import {
 // Context
 //
 
-// TODO(burdon): Factor out type.
-type PreviewBlock = {
-  el: HTMLElement;
-  link: PreviewLinkRef;
-};
-
 type MarkdownEditorContextValue = {
   id: string;
-  editorView?: EditorView;
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
   popoverMenu: Omit<UsePopoverMenu, 'extension'>;
-};
+} & Pick<NaturalMarkdownToolbarProps, 'editorView' | 'viewMode' | 'onFileUpload' | 'onViewModeChange'>;
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
   createContext<MarkdownEditorContextValue>('MarkdownEditor.Context');
@@ -65,8 +59,8 @@ const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
 type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
-  } & Pick<MarkdownEditorContextValue, 'id'> &
-    Partial<Pick<MarkdownEditorContextValue, 'extensions'>> &
+  } & Pick<NaturalMarkdownEditorMainProps, 'id' | 'extensions'> &
+    Pick<NaturalMarkdownToolbarProps, 'viewMode' | 'onFileUpload' | 'onViewModeChange'> &
     Pick<UsePopoverMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'viewMode'>
 >;
@@ -82,6 +76,7 @@ const MarkdownEditorRoot = ({
   extensions: extensionsParam,
   slashCommandGroups,
   onLinkQuery,
+  ...props
 }: MarkdownEditorRootProps) => {
   const [editorView, setEditorView] = useState<EditorView>();
 
@@ -89,10 +84,10 @@ const MarkdownEditorRoot = ({
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
-      addBlockContainer: (link, el) => {
-        setPreviewBlocks((prev) => [...prev, { link, el }]);
+      addBlockContainer: (block) => {
+        setPreviewBlocks((prev) => [...prev, block]);
       },
-      removeBlockContainer: (link) => {
+      removeBlockContainer: ({ link }) => {
         setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
       },
     }),
@@ -107,15 +102,15 @@ const MarkdownEditorRoot = ({
   const coreExtensions = useExtensions({
     id,
     object,
-    previewOptions,
     editorStateStore,
+    previewOptions,
     selectionManager,
     settings,
     viewMode,
   });
 
   const extensions = useMemo(
-    () => [...coreExtensions, menuExtension, ...(extensionsParam ?? [])],
+    () => [coreExtensions, menuExtension, extensionsParam].filter(isNonNullable),
     [coreExtensions, menuExtension, extensionsParam],
   );
 
@@ -127,6 +122,8 @@ const MarkdownEditorRoot = ({
       extensions={extensions}
       previewBlocks={previewBlocks}
       popoverMenu={menuProps}
+      viewMode={viewMode}
+      {...props}
     >
       {children}
     </MarkdownEditorContextProvider>
@@ -142,10 +139,13 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions'>;
 
 const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
-  const { id, extensions, editorView, setEditorView, popoverMenu } = useMarkdownEditorContext(
-    MarkdownEditorMain.displayName,
-  );
-  const { groupsRef, ...menuProps } = popoverMenu;
+  const {
+    id,
+    extensions,
+    editorView,
+    setEditorView,
+    popoverMenu: { groupsRef, ...menuProps },
+  } = useMarkdownEditorContext(MarkdownEditorMain.displayName);
 
   return (
     <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
@@ -160,12 +160,15 @@ MarkdownEditorMain.displayName = 'MarkdownEditor.Main';
 // Toolbar
 //
 
-type MarkdownEditorToolbarProps = Omit<NaturalMarkdownToolbarProps, 'id' | 'editorView'>;
+type MarkdownEditorToolbarProps = Omit<
+  NaturalMarkdownToolbarProps,
+  'id' | 'editorView' | 'viewMode' | 'onFileUpload' | 'onViewModeChange'
+>;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { id, editorView } = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
+  const rootProps = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
 
-  return <NaturalMarkdownToolbar {...props} id={id} editorView={editorView} />;
+  return <NaturalMarkdownToolbar {...props} {...rootProps} />;
 };
 
 MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';

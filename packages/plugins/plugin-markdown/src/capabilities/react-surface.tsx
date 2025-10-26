@@ -40,8 +40,8 @@ export default () =>
             settings={settings}
             selectionManager={selectionManager}
             extensionProviders={state.extensionProviders}
-            viewMode={viewMode}
             editorStateStore={editorState}
+            viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
         );

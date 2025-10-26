@@ -13,6 +13,7 @@ export namespace MarkdownCapabilities {
     state: MarkdownPluginState;
     editorState: EditorStateStore;
     getViewMode: (id: string) => EditorViewMode;
+    // TODO(burdon): Event object.
     setViewMode: (id: string, viewMode: EditorViewMode) => void;
   }>(`${meta.id}/capability/state`);
 
