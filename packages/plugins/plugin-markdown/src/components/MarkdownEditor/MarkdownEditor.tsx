@@ -10,12 +10,15 @@ import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework';
 import { DXN } from '@dxos/keys';
+import { type Live } from '@dxos/live-object';
 import { useClient } from '@dxos/react-client';
 import {
+  type EditorToolbarState,
   PopoverMenuProvider,
   type PreviewBlock,
   type PreviewOptions,
   type UsePopoverMenu,
+  useEditorToolbarState,
   usePopoverMenu,
 } from '@dxos/react-ui-editor';
 import { isNonNullable } from '@dxos/util';
@@ -46,6 +49,7 @@ type MarkdownEditorContextValue = {
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
+  toolbarState: Live<EditorToolbarState>;
   popoverMenu: Omit<UsePopoverMenu, 'extension'>;
 } & Pick<NaturalMarkdownToolbarProps, 'editorView' | 'viewMode' | 'onFileUpload' | 'onViewModeChange'>;
 
@@ -94,7 +98,10 @@ const MarkdownEditorRoot = ({
     [],
   );
 
-  // Menu.
+  // Toolbar state.
+  const toolbarState = useEditorToolbarState({ viewMode });
+
+  // Context menu.
   const menuOptions = usePopoverMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = usePopoverMenu(menuOptions);
 
@@ -121,6 +128,7 @@ const MarkdownEditorRoot = ({
       setEditorView={setEditorView}
       extensions={extensions}
       previewBlocks={previewBlocks}
+      toolbarState={toolbarState}
       popoverMenu={menuProps}
       viewMode={viewMode}
       {...props}
@@ -136,7 +144,7 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 // Main
 //
 
-type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions'>;
+type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
   const {
@@ -144,12 +152,19 @@ const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
     extensions,
     editorView,
     setEditorView,
+    toolbarState,
     popoverMenu: { groupsRef, ...menuProps },
   } = useMarkdownEditorContext(MarkdownEditorMain.displayName);
 
   return (
     <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-      <NaturalMarkdownEditorMain {...props} id={id} extensions={extensions} ref={setEditorView} />
+      <NaturalMarkdownEditorMain
+        {...props}
+        id={id}
+        extensions={extensions}
+        toolbarState={toolbarState}
+        ref={setEditorView}
+      />
     </PopoverMenuProvider>
   );
 };
@@ -162,13 +177,13 @@ MarkdownEditorMain.displayName = 'MarkdownEditor.Main';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'id' | 'editorView' | 'viewMode' | 'onFileUpload' | 'onViewModeChange'
+  'id' | 'state' | 'editorView' | 'viewMode' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const rootProps = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
+  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MarkdownEditorToolbar.displayName);
 
-  return <NaturalMarkdownToolbar {...props} {...rootProps} />;
+  return <NaturalMarkdownToolbar {...props} {...rootProps} state={toolbarState} />;
 };
 
 MarkdownEditorToolbar.displayName = 'MarkdownEditor.Toolbar';

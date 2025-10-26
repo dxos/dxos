@@ -22,22 +22,11 @@ import type { EditorAction, Formatting } from '../../extensions';
 import { translationKey } from '../../translations';
 import { type EditorViewMode } from '../../types';
 
-export type EditorToolbarState = Formatting & Partial<{ viewMode: EditorViewMode }>;
+export type EditorToolbarState = { viewMode?: EditorViewMode } & Formatting;
 
-export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}) => {
+export const useEditorToolbarState = (initialState: Partial<EditorToolbarState> = {}): Live<EditorToolbarState> => {
   return useMemo(() => live<EditorToolbarState>(initialState), []);
 };
-
-export type EditorToolbarFeatureFlags = Partial<{
-  headings: boolean;
-  formatting: boolean;
-  lists: boolean;
-  blocks: boolean;
-  search: boolean;
-  // TODO(wittjosiah): Factor out. Depend on plugin-level capabilities.
-  image: () => void;
-  onViewModeChange: (mode: EditorViewMode) => void;
-}>;
 
 export type EditorToolbarActionGraphProps = {
   state: Live<EditorToolbarState>;

@@ -5,11 +5,12 @@
 import { type EditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorSelectionState,
   type EditorStateStore,
   type EditorToolbarActionGraphProps,
+  type EditorViewMode,
   type PopoverMenuGroup,
   type UseTextEditorProps,
   createBasicExtensions,
@@ -18,10 +19,9 @@ import {
   dropFile,
   editorGutter,
   editorSlots,
+  formattingListener,
   processEditorPayload,
   stackItemContentEditorClassNames,
-  useEditorToolbarState,
-  useFormattingState,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { isTruthy } from '@dxos/util';
@@ -35,24 +35,34 @@ export type MarkdownEditorMainProps = {
   id: string;
   role?: string;
   toolbar?: boolean;
+  viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
   slashCommandGroups?: PopoverMenuGroup[];
   customActions?: EditorToolbarActionGraphProps['customActions'];
   editorStateStore?: EditorStateStore;
+  toolbarState?: MarkdownEditorToolbarProps['state'];
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
-} & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
-  Pick<MarkdownEditorToolbarProps, 'viewMode' | 'onFileUpload'>);
+} & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
 
 export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMainProps>(
   (
-    { id, role, toolbar, initialValue, editorStateStore, extensions, scrollPastEnd, viewMode, onFileUpload },
+    {
+      id,
+      role,
+      toolbar,
+      initialValue,
+      editorStateStore,
+      toolbarState,
+      extensions,
+      scrollPastEnd,
+      viewMode,
+      onFileUpload,
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
     const { themeMode } = useThemeContext();
-
-    const toolbarState = useEditorToolbarState({ viewMode });
-    const formattingObserver = useFormattingState(toolbarState);
+    const toolbarStateRef = useDynamicRef(toolbarState);
 
     // Restore last selection and scroll point.
     const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
@@ -65,7 +75,6 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
       () => ({
         initialValue,
         extensions: [
-          formattingObserver,
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
             placeholder: t('editor placeholder'),
@@ -87,6 +96,8 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
                 }
               },
             }),
+          // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
+          formattingListener(() => toolbarStateRef.current),
           extensions,
         ].filter(isTruthy),
         ...(role !== 'section' && {
@@ -98,7 +109,7 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
           moveToEndOfLine: true,
         }),
       }),
-      [id, formattingObserver, viewMode, themeMode, extensions],
+      [id, viewMode, themeMode, extensions],
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);

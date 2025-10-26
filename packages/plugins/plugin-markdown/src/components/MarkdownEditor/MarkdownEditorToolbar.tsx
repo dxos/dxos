@@ -9,44 +9,66 @@ import { useDropzone } from 'react-dropzone';
 import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import {
-  EditorToolbar,
-  type EditorToolbarProps,
-  type EditorViewMode,
-  addLink,
-  useEditorToolbarState,
-} from '@dxos/react-ui-editor';
+import { EditorToolbar, type EditorToolbarProps, type EditorViewMode, addLink } from '@dxos/react-ui-editor';
 
 export type MarkdownEditorToolbarProps = ThemedClassName<
   {
     id: string;
     editorView?: EditorView;
-    // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
-    viewMode?: EditorViewMode;
     // TOOD(burdon): Factor out file management.
     onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-    onViewModeChange?: (id: string, mode: EditorViewMode) => void;
-  } & Pick<EditorToolbarProps, 'role' | 'customActions'>
+  } & Pick<EditorToolbarProps, 'role' | 'state' | 'customActions' | 'onViewModeChange'>
 >;
 
+// TODO(burdon): Overactive measure loop during navigation.
+//  Measure loop restarted more than 5 times
 export const MarkdownEditorToolbar = ({
   classNames,
   id,
   role,
+  state,
   editorView,
-  viewMode,
   customActions,
   onFileUpload,
   onViewModeChange,
 }: MarkdownEditorToolbarProps) => {
-  const toolbarState = useEditorToolbarState({ viewMode });
+  const { open, getInputProps } = useImageUpload({ editorView, onFileUpload });
+
+  const handleViewModeChange = useCallback((mode: EditorViewMode) => onViewModeChange?.(mode), [onViewModeChange]);
 
   const getView = useCallback(() => {
     invariant(editorView);
     return editorView;
   }, [editorView]);
 
-  // TODO(burdon): Move to root (support drag into document).
+  if (!editorView) {
+    return <div />;
+  }
+
+  return (
+    <>
+      <EditorToolbar
+        classNames={classNames}
+        attendableId={id}
+        role={role}
+        state={state}
+        getView={getView}
+        customActions={customActions}
+        onImageUpload={open}
+        onViewModeChange={handleViewModeChange}
+      />
+
+      {/* TODO(burdon): Portal? */}
+      <input {...getInputProps()} />
+    </>
+  );
+};
+
+// TODO(burdon): Move to root? (support drag into document via dropzone).
+const useImageUpload = ({
+  editorView,
+  onFileUpload,
+}: Pick<MarkdownEditorToolbarProps, 'editorView' | 'onFileUpload'>) => {
   // https://react-dropzone.js.org/#src
   const { acceptedFiles, getInputProps, open } = useDropzone({
     multiple: false,
@@ -74,34 +96,8 @@ export const MarkdownEditorToolbar = ({
     }
   }, [editorView, acceptedFiles, onFileUpload]);
 
-  const handleImageUpload = useCallback(() => {
-    if (onFileUpload) {
-      open();
-    }
-  }, [onFileUpload]);
-
-  const handleViewModeChange = useCallback(
-    (mode: EditorViewMode) => onViewModeChange?.(id, mode),
-    [id, onViewModeChange],
-  );
-
-  if (!editorView) {
-    return <div />;
-  }
-
-  return (
-    <>
-      <EditorToolbar
-        classNames={classNames}
-        attendableId={id}
-        role={role}
-        getView={getView}
-        state={toolbarState}
-        customActions={customActions}
-        image={handleImageUpload}
-        onViewModeChange={handleViewModeChange}
-      />
-      <input {...getInputProps()} />
-    </>
-  );
+  return {
+    getInputProps,
+    open,
+  };
 };

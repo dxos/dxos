@@ -15,25 +15,36 @@ import {
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
+import { type EditorViewMode } from '../../types';
+
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
 import { createImageUpload } from './image';
 import { createLists } from './lists';
 import { createSearch } from './search';
-import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags } from './util';
+import { type EditorToolbarActionGraphProps } from './util';
 import { createViewMode } from './view-mode';
+
+export type EditorToolbarFeatureFlags = Partial<{
+  headings: boolean;
+  formatting: boolean;
+  lists: boolean;
+  blocks: boolean;
+  search: boolean;
+  // TODO(wittjosiah): Factor out. Depend on plugin-level capabilities.
+  onImageUpload: () => void;
+  onViewModeChange: (mode: EditorViewMode) => void;
+}>;
 
 export type EditorToolbarProps = ThemedClassName<
   {
-    // TODO(burdon): Remove.
     role?: string;
     attendableId?: string;
-  } & EditorToolbarActionGraphProps &
-    EditorToolbarFeatureFlags
+  } & (EditorToolbarFeatureFlags & EditorToolbarActionGraphProps)
 >;
 
-// TODO(burdon): Remove role.
+// TODO(burdon): Remove role dependency.
 export const EditorToolbar = memo(({ classNames, role, attendableId, ...props }: EditorToolbarProps) => {
   const menuProps = useEditorToolbarActionGraph(props);
 
@@ -60,8 +71,8 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
         formatting: props.formatting,
         lists: props.lists,
         blocks: props.blocks,
-        image: props.image,
         search: props.search,
+        onImageUpload: props.onImageUpload,
         onViewModeChange: props.onViewModeChange,
       }),
     [
@@ -72,8 +83,8 @@ const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
       props.formatting,
       props.lists,
       props.blocks,
-      props.image,
       props.search,
+      props.onImageUpload,
       props.onViewModeChange,
     ],
   );
@@ -114,8 +125,8 @@ const createToolbarActions = ({
       graph.nodes.push(...blocks.nodes);
       graph.edges.push(...blocks.edges);
     }
-    if (features.image) {
-      const image = get(rxFromSignal(() => createImageUpload(features.image!)));
+    if (features.onImageUpload) {
+      const image = get(rxFromSignal(() => createImageUpload(features.onImageUpload!)));
       graph.nodes.push(...image.nodes);
       graph.edges.push(...image.edges);
     }

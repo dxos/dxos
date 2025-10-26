@@ -59,7 +59,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withPluginManager({
+    withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({
           types: [Markdown.Document, DataType.Text, DataType.Person, DataType.Organization],
@@ -73,8 +73,13 @@ const meta = {
             const acme = Obj.make(DataType.Organization, { name: 'ACME' });
             await queue.append([alice, acme]);
             const doc = Markdown.makeDocument({
-              name: 'Test',
-              content: `# Test\n\n![Alice](${Obj.getDXN(alice)})\n\n![ACME](${Obj.getDXN(acme)})`,
+              name: context.args.title ?? 'Testing',
+              content: [
+                `# ${context.args.title ?? 'Testing'}`,
+                `![Alice](${Obj.getDXN(alice)})`,
+                `![ACME](${Obj.getDXN(acme)})`,
+                context.args.content ?? '',
+              ].join('\n\n'),
             });
             space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
@@ -93,7 +98,7 @@ const meta = {
         PreviewPlugin(),
         StorybookLayoutPlugin({}),
       ],
-    }),
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -106,4 +111,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    title: 'Testing',
+    content: 'This is a line with **some** formatting.',
+  },
+};
