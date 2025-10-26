@@ -41,7 +41,8 @@ export type EditorToolbarProps = ThemedClassName<
   {
     role?: string;
     attendableId?: string;
-  } & (EditorToolbarFeatureFlags & EditorToolbarActionGraphProps)
+    features?: EditorToolbarFeatureFlags;
+  } & EditorToolbarActionGraphProps
 >;
 
 // TODO(burdon): Remove role dependency.
@@ -60,34 +61,27 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, ...props }:
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
+const useEditorToolbarActionGraph = ({ state, getView, customActions, features }: EditorToolbarProps) => {
   const menuCreator = useMemo(
     () =>
       createToolbarActions({
-        state: props.state,
-        getView: props.getView,
-        customActions: props.customActions,
-
-        headings: props.headings,
-        formatting: props.formatting,
-        lists: props.lists,
-        blocks: props.blocks,
-        search: props.search,
-        onImageUpload: props.onImageUpload,
-        onViewModeChange: props.onViewModeChange,
+        state,
+        getView,
+        customActions,
+        features,
       }),
     [
-      props.state,
-      props.getView,
-      props.customActions,
+      state,
+      getView,
+      customActions,
 
-      props.headings,
-      props.formatting,
-      props.lists,
-      props.blocks,
-      props.search,
-      props.onImageUpload,
-      props.onViewModeChange,
+      features?.headings,
+      features?.formatting,
+      features?.lists,
+      features?.blocks,
+      features?.search,
+      features?.onImageUpload,
+      features?.onViewModeChange,
     ],
   );
 
@@ -98,33 +92,35 @@ const createToolbarActions = ({
   state,
   getView,
   customActions,
-  ...features
-}: EditorToolbarFeatureFlags &
-  Pick<EditorToolbarActionGraphProps, 'getView' | 'state' | 'customActions'>): Rx.Rx<ActionGraphProps> => {
+  features,
+}: Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> & {
+  features?: EditorToolbarFeatureFlags;
+}): Rx.Rx<ActionGraphProps> => {
   return Rx.make((get) => {
     const graph: ActionGraphProps = {
       nodes: [],
       edges: [],
     };
 
+    // TODO(burdon): Builder pattern?
     const addSubGraph = (graph: ActionGraphProps, subGraph: ActionGraphProps) => {
       graph.nodes.push(...subGraph.nodes);
       graph.edges.push(...subGraph.edges);
     };
 
-    if (features.headings ?? true) {
+    if (features?.headings ?? true) {
       addSubGraph(graph, get(rxFromSignal(() => createHeadings(state, getView))));
     }
-    if (features.formatting ?? true) {
+    if (features?.formatting ?? true) {
       addSubGraph(graph, get(rxFromSignal(() => createFormatting(state, getView))));
     }
-    if (features.lists ?? true) {
+    if (features?.lists ?? true) {
       addSubGraph(graph, get(rxFromSignal(() => createLists(state, getView))));
     }
-    if (features.blocks ?? true) {
+    if (features?.blocks ?? true) {
       addSubGraph(graph, get(rxFromSignal(() => createBlocks(state, getView))));
     }
-    if (features.onImageUpload) {
+    if (features?.onImageUpload) {
       addSubGraph(graph, get(rxFromSignal(() => createImageUpload(features.onImageUpload!))));
     }
 
@@ -133,10 +129,10 @@ const createToolbarActions = ({
     if (customActions) {
       addSubGraph(graph, get(customActions));
     }
-    if (features.search ?? true) {
+    if (features?.search ?? true) {
       addSubGraph(graph, get(rxFromSignal(() => createSearch(getView))));
     }
-    if (features.onViewModeChange) {
+    if (features?.onViewModeChange) {
       addSubGraph(graph, get(rxFromSignal(() => createViewMode(state, features.onViewModeChange!))));
     }
 
