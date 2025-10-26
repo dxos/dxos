@@ -17,7 +17,7 @@ export type FileUploadProps = {
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 };
 
-// TODO(burdon): Remove Dependency on editor.
+// TODO(burdon): Factor out.
 // TODO(burdon): Move to root? (support drag into document via dropzone).
 export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
   ({ editorView, onFileUpload }, forwardedRef) => {
