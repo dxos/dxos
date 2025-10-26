@@ -28,12 +28,13 @@ export type MarkdownContainerProps = {
   Pick<MarkdownEditorMainProps, 'editorStateStore'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
-// TODO(burdon): Test toolbar state (currently not working: doesn't update).
-// TODO(burdon): Test view mode (currently not working: not reactive).
-// TODO(burdon): Test update document name.
-// TODO(burdon): Test comment threads.
-// TODO(burdon): Test Preview blocks (currently not working).
-// TODO(burdon): Test file upload.
+// TODO(burdon): Attention.
+// TODO(burdon): Toolbar state (currently not working: doesn't update -- e.g., heading, list, table).
+// TODO(burdon): View mode (currently not working: not reactive).
+// TODO(burdon): Update document name.
+// TODO(burdon): Comment threads.
+// TODO(burdon): Preview blocks.
+// TODO(burdon): File upload.
 
 export const MarkdownContainer = ({
   id,
@@ -109,6 +110,7 @@ export const MarkdownContainer = ({
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
           scrollPastEnd={role === 'article'}
         />
+        <MarkdownEditor.Preview />
       </MarkdownEditor.Root>
     </StackItem.Content>
   );

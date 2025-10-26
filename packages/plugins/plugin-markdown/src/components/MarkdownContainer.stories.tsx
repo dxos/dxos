@@ -88,6 +88,9 @@ const meta = {
                   '## Here are some objects',
                   `![Alice](${Obj.getDXN(kai)})`,
                   `![DXOS](${Obj.getDXN(dxos)})`,
+                  '',
+                  'END',
+                  '',
                 ].join('\n\n'),
               }),
             );

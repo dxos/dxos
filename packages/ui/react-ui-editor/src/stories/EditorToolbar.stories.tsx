@@ -31,7 +31,6 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const toolbarState = useEditorToolbarState({ viewMode: 'source' });
   const viewMode = toolbarState.viewMode;
-  const trackFormatting = formattingListener(toolbarState);
   // TODO(wittjosiah): Provide way to change the input mode.
   const [editorInputMode, _setEditorInputMode] = useState<EditorInputMode>('default');
   const { parentRef, view } = useTextEditor(
@@ -46,7 +45,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),
         formattingKeymap(),
-        trackFormatting,
+        formattingListener(() => toolbarState),
       ],
     }),
     [editorInputMode, viewMode, themeMode, placeholder],
