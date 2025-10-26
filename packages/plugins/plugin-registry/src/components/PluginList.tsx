@@ -15,11 +15,9 @@ export type PluginListProps = Omit<PluginItemProps, 'plugin'> & {
 
 export const PluginList = ({ plugins = [], ...props }: PluginListProps) => {
   return (
-    <List classNames='grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] auto-rows-[12rem] gap-3 p-3'>
+    <List classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] gap-4 p-4'>
       {plugins.map((plugin) => (
-        <div key={plugin.meta.id} className='flex'>
-          <PluginItem plugin={plugin} {...props} />
-        </div>
+        <PluginItem key={plugin.meta.id} plugin={plugin} {...props} />
       ))}
     </List>
   );
