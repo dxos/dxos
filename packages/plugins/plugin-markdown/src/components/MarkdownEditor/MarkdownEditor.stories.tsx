@@ -7,32 +7,34 @@ import React, { useMemo } from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditorMain';
+import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 
-type StoryProps = MarkdownEditorProps & {
+type StoryProps = MarkdownEditorRootProps & {
   content?: string;
-  toolbar?: boolean;
 };
 
-const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
-  const doc = useMemo(() => createObject({ content }), [content]); // TODO(burdon): Remove dependency on createObject.
+const DefaultStory = ({ id = 'test', content = '# Test', ...props }: StoryProps) => {
+  const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
+
   return (
-    <Stack orientation='horizontal' rail={false}>
-      <StackItem.Root item={{ id: 'story' }}>
-        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-      </StackItem.Root>
-    </Stack>
+    <StackItem.Content toolbar>
+      <MarkdownEditor.Root id={id} extensions={extensions} {...props}>
+        <MarkdownEditor.Toolbar />
+        <MarkdownEditor.Main />
+      </MarkdownEditor.Root>
+    </StackItem.Content>
   );
 };
 
@@ -40,9 +42,13 @@ const meta = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
   component: MarkdownEditor as any,
   render: DefaultStory,
-  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin()] }), withAttention],
+  decorators: [
+    withTheme,
+    withLayout({ container: 'column' }),
+    withPluginManager({ plugins: [ClientPlugin({}), IntentPlugin()] }),
+    withAttention,
+  ],
   parameters: {
-    layout: 'fullscreen',
     translations: [...translations, ...editorTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
@@ -53,13 +59,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    content,
-  },
-};
-
-export const WithToolbar: Story = {
-  args: {
-    toolbar: true,
     content,
   },
 };

@@ -36,7 +36,7 @@ export type EditorToolbarFeatureFlags = Partial<{
   search: boolean;
   // TODO(wittjosiah): Factor out. Depend on plugin-level capabilities.
   image: () => void;
-  viewMode: (mode: EditorViewMode) => void;
+  onViewModeChange: (mode: EditorViewMode) => void;
 }>;
 
 export type EditorToolbarActionGraphProps = {

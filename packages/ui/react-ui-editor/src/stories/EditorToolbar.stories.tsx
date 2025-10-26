@@ -65,7 +65,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} viewMode={handleViewModeChange} />}
+      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} onViewModeChange={handleViewModeChange} />}
       <div role='none' className={mx('grow overflow-hidden', attentionSurface)}>
         <div className={mx(editorWidth)} ref={parentRef} />
       </div>

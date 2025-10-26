@@ -6,20 +6,27 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 
+import { type FileInfo } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
-import { EditorToolbar, type EditorViewMode, addLink, useEditorToolbarState } from '@dxos/react-ui-editor';
+import {
+  EditorToolbar,
+  type EditorToolbarProps,
+  type EditorViewMode,
+  addLink,
+  useEditorToolbarState,
+} from '@dxos/react-ui-editor';
 
-import { type MarkdownEditorProps } from '../MarkdownEditor';
+export type MarkdownEditorToolbarProps = {
+  id: string;
+  editorView?: EditorView;
+  // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
+  viewMode?: EditorViewMode;
+  // TOOD(burdon): Factor out file management.
+  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
+  onViewModeChange?: (id: string, mode: EditorViewMode) => void;
+} & Pick<EditorToolbarProps, 'role' | 'customActions'>;
 
-export type MarkdownToolbarProps = Pick<
-  MarkdownEditorProps,
-  'id' | 'role' | 'viewMode' | 'customActions' | 'onFileUpload' | 'onViewModeChange'
-> & {
-  editorView: EditorView;
-};
-
-// TODO(burdon): Remove deps on MarkdownToolbarProps.
-export const MarkdownToolbar = ({
+export const MarkdownEditorToolbar = ({
   id,
   role,
   editorView,
@@ -27,15 +34,15 @@ export const MarkdownToolbar = ({
   customActions,
   onFileUpload,
   onViewModeChange,
-}: MarkdownToolbarProps) => {
+}: MarkdownEditorToolbarProps) => {
   const toolbarState = useEditorToolbarState({ viewMode });
 
-  // TODO(burdon): Pass in ref.
   const getView = useCallback(() => {
     invariant(editorView);
     return editorView;
   }, [editorView]);
 
+  // TODO(burdon): Move to root (support drag into document).
   // https://react-dropzone.js.org/#src
   const { acceptedFiles, getInputProps, open } = useDropzone({
     multiple: false,
@@ -74,6 +81,10 @@ export const MarkdownToolbar = ({
     [id, onViewModeChange],
   );
 
+  if (!editorView) {
+    return <div />;
+  }
+
   return (
     <>
       <input {...getInputProps()} />
@@ -81,10 +92,10 @@ export const MarkdownToolbar = ({
         attendableId={id}
         role={role}
         state={toolbarState}
-        customActions={customActions}
         getView={getView}
-        viewMode={handleViewModeChange}
+        customActions={customActions}
         image={handleImageUpload}
+        onViewModeChange={handleViewModeChange}
       />
     </>
   );

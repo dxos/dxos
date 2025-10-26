@@ -24,6 +24,61 @@ import { createSearch } from './search';
 import { type EditorToolbarActionGraphProps, type EditorToolbarFeatureFlags } from './util';
 import { createViewMode } from './view-mode';
 
+export type EditorToolbarProps = {
+  // TODO(burdon): Remove.
+  role?: string;
+  attendableId?: string;
+} & EditorToolbarActionGraphProps &
+  EditorToolbarFeatureFlags;
+
+// TODO(burdon): Remove role.
+export const EditorToolbar = memo(({ role, attendableId, ...props }: EditorToolbarProps) => {
+  const menuProps = useEditorToolbarActionGraph(props);
+
+  return (
+    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+      <MenuProvider {...menuProps} attendableId={attendableId}>
+        <ToolbarMenu textBlockWidth />
+      </MenuProvider>
+    </ElevationProvider>
+  );
+});
+
+// TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
+//   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
+//   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
+  const menuCreator = useMemo(
+    () =>
+      createToolbarActions({
+        getView: props.getView,
+        state: props.state,
+        customActions: props.customActions,
+        headings: props.headings,
+        formatting: props.formatting,
+        lists: props.lists,
+        blocks: props.blocks,
+        image: props.image,
+        search: props.search,
+        onViewModeChange: props.onViewModeChange,
+      }),
+    [
+      props.getView,
+      props.state,
+      props.customActions,
+      props.headings,
+      props.formatting,
+      props.lists,
+      props.blocks,
+      props.image,
+      props.search,
+      props.onViewModeChange,
+    ],
+  );
+
+  return useMenuActions(menuCreator);
+};
+
 const createToolbarActions = ({
   getView,
   state,
@@ -77,8 +132,8 @@ const createToolbarActions = ({
       graph.nodes.push(...search.nodes);
       graph.edges.push(...search.edges);
     }
-    if (features.viewMode) {
-      const viewMode = get(rxFromSignal(() => createViewMode(state, features.viewMode!)));
+    if (features.onViewModeChange) {
+      const viewMode = get(rxFromSignal(() => createViewMode(state, features.onViewModeChange!)));
       graph.nodes.push(...viewMode.nodes);
       graph.edges.push(...viewMode.edges);
     }
@@ -86,54 +141,3 @@ const createToolbarActions = ({
     return graph;
   });
 };
-
-// TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
-//   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
-//   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-const useEditorToolbarActionGraph = (props: EditorToolbarProps) => {
-  const menuCreator = useMemo(
-    () =>
-      createToolbarActions({
-        getView: props.getView,
-        state: props.state,
-        customActions: props.customActions,
-        headings: props.headings,
-        formatting: props.formatting,
-        lists: props.lists,
-        blocks: props.blocks,
-        image: props.image,
-        search: props.search,
-        viewMode: props.viewMode,
-      }),
-    [
-      props.getView,
-      props.state,
-      props.customActions,
-      props.headings,
-      props.formatting,
-      props.lists,
-      props.blocks,
-      props.image,
-      props.search,
-      props.viewMode,
-    ],
-  );
-
-  return useMenuActions(menuCreator);
-};
-
-export type EditorToolbarProps = EditorToolbarActionGraphProps &
-  EditorToolbarFeatureFlags & { attendableId?: string; role?: string };
-
-// TODO(burdon): Remove role.
-export const EditorToolbar = memo(({ attendableId, role, ...props }: EditorToolbarProps) => {
-  const menuProps = useEditorToolbarActionGraph(props);
-
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <MenuProvider {...menuProps} attendableId={attendableId}>
-        <ToolbarMenu textBlockWidth />
-      </MenuProvider>
-    </ElevationProvider>
-  );
-});

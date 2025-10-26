@@ -6,13 +6,7 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import {
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  createIntent,
-  useCapabilities,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -45,7 +39,6 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { MarkdownCapabilities } from '../capabilities';
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
 
@@ -53,9 +46,9 @@ export type DocumentType = Markdown.Document | DataType.Text | { id: string; tex
 
 export type ExtensionsOptions = {
   id: string;
-  object: DocumentType;
+  object?: DocumentType;
   dispatch?: PromiseIntentDispatcher;
-  settings: Markdown.Settings;
+  settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
@@ -106,30 +99,14 @@ export const useExtensions = ({
       dispatch,
       previewOptions,
       settings,
-      settings.debug,
-      settings.editorInputMode,
-      settings.folding,
-      settings.numberedHeadings,
-      settings.typewriter,
+      settings?.debug,
+      settings?.editorInputMode,
+      settings?.folding,
+      settings?.numberedHeadings,
+      settings?.typewriter,
       selectionManager,
     ],
   );
-
-  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
-  const pluginExtensions = useMemo<Extension[]>(() => {
-    if (!Obj.instanceOf(Markdown.Document, object)) {
-      return [];
-    }
-
-    return extensionProviders.flat().reduce((acc: Extension[], provider) => {
-      const extension = typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
-      if (extension) {
-        acc.push(extension);
-      }
-
-      return acc;
-    }, []);
-  }, [extensionProviders, object]);
 
   return useMemo<Extension[]>(
     () =>
@@ -145,9 +122,8 @@ export const useExtensions = ({
 
         selectionState(editorStateStore),
         baseExtensions,
-        pluginExtensions,
       ].filter(isTruthy),
-    [identity, space, id, object, target, baseExtensions, pluginExtensions],
+    [identity, space, id, object, target, baseExtensions],
   );
 };
 
@@ -165,8 +141,8 @@ const createBaseExtensions = ({
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
-    settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings.folding && folding(),
+    settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
+    settings?.folding && folding(),
   ].filter(isTruthy);
 
   //
@@ -178,7 +154,7 @@ const createBaseExtensions = ({
         formattingKeymap(),
         decorateMarkdown({
           selectionChangeDelay: 100,
-          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
+          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
           // TODO(burdon): Create dx-tag.
           renderLinkButton:
@@ -202,7 +178,7 @@ const createBaseExtensions = ({
     );
   }
 
-  if (settings.debug) {
+  if (settings?.debug) {
     const items = settings.typewriter?.split(/[,\n]/) ?? '';
     if (items) {
       extensions.push(typewriter({ items }));
