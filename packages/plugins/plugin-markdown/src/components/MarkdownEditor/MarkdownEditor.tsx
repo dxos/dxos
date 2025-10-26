@@ -195,7 +195,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
 
 export const MarkdownEditor = {
   Root: MarkdownEditorRoot,
-  Main: MarkdownEditorMain, // TODO(burdon): Rename Content.
+  Main: MarkdownEditorMain,
   Toolbar: MarkdownEditorToolbar,
   Preview: MarkdownEditorPreview,
 };
