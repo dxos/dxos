@@ -4,20 +4,11 @@
 
 import { Obj } from '@dxos/echo';
 import { FUNCTIONS_PRESET_META_KEY, type Script } from '@dxos/functions';
-import { createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
+import { createMenuAction } from '@dxos/react-ui-menu';
 
-import { meta } from '../meta';
 import { templates } from '../templates';
 
 export type TemplateActionProperties = { type: 'template'; value: string };
-
-const createTemplateSelectGroup = () => {
-  // TODO(burdon): This should not be in the toolbar (move to create Object dialog).
-  return createMenuItemGroup('template-select', {
-    label: ['template select group label', { ns: meta.id }],
-    variant: 'dropdownMenu',
-  });
-};
 
 const createTemplateSelectActions = (script: Script.Script) => {
   return templates.map((template) => {
@@ -45,10 +36,9 @@ const createTemplateSelectActions = (script: Script.Script) => {
 };
 
 export const createTemplateSelect = (script: Script.Script) => {
-  const templateSelectGroup = createTemplateSelectGroup();
   const templateSelectActions = createTemplateSelectActions(script);
   return {
-    nodes: [templateSelectGroup, ...templateSelectActions],
+    nodes: [...templateSelectActions],
     edges: [
       { source: 'root', target: 'template-select' },
       ...templateSelectActions.map((action) => ({ source: 'template-select', target: action.id })),

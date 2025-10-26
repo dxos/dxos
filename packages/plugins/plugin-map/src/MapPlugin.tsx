@@ -34,7 +34,7 @@ export const MapPlugin = definePlugin(meta, () => [
         id: Map.Map.typename,
         metadata: {
           icon: 'ph--compass--regular',
-          iconClassName: 'text-greenSurfaceText',
+          iconHue: 'green',
         },
       }),
   }),
