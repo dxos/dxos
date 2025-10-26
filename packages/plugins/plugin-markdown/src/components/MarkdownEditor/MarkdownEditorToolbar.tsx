@@ -91,8 +91,8 @@ export const MarkdownEditorToolbar = ({
       <EditorToolbar
         attendableId={id}
         role={role}
-        state={toolbarState}
         getView={getView}
+        state={toolbarState}
         customActions={customActions}
         image={handleImageUpload}
         onViewModeChange={handleViewModeChange}
