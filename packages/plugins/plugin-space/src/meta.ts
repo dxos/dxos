@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type PluginMeta } from "@dxos/app-framework";
+import { type PluginMeta } from '@dxos/app-framework';
 
 export const meta: PluginMeta = {
-	id: "dxos.org/plugin/space",
-	name: "Spaces",
-	icon: "ph--planet--regular",
-	iconHue: "neutral",
+  id: 'dxos.org/plugin/space',
+  name: 'Spaces',
+  icon: 'ph--planet--regular',
+  iconHue: 'neutral',
 };
