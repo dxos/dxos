@@ -76,7 +76,7 @@ export const PluginItem = ({
 
         <div className='flex -mis-0.5 overflow-x-auto scrollbar-none'>
           {tags?.map((tag) => (
-            <Tag key={tag} palette={tagColor(tag as any)} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
               {tag}
             </Tag>
           ))}
@@ -118,5 +118,3 @@ const tagColors: Record<RegistryTagType, ChromaticPalette> = {
   featured: 'pink',
   experimental: 'amber',
 };
-
-const tagColor = (tag: RegistryTagType): ChromaticPalette | undefined => tagColors[tag];
