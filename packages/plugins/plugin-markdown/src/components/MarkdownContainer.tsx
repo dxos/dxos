@@ -13,6 +13,7 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
+import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
 import { Markdown, type MarkdownPluginState } from '../types';
 
@@ -29,11 +30,12 @@ export type MarkdownContainerProps = {
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
 } & (Pick<MarkdownEditorRootProps, 'id' | 'viewMode'> &
+  Pick<MarkdownPluginState, 'extensionProviders'> &
   Pick<MarkdownEditorMainProps, 'editorStateStore'> &
   Pick<MarkdownEditorToolbarProps, 'onViewModeChange'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
-// TODO(burdon): Move other space deps here (e.g., Popover).
+// TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
   id,
   role,
@@ -49,21 +51,25 @@ export const MarkdownContainer = ({
   const attendableId = isDocument ? fullyQualifiedId(object) : undefined;
 
   // Extensions from other plugins.
+  // TODO(burdon): Document MarkdownPluginState.extensionProviders
+  const otherExtensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
   const extensions = useMemo<Extension[]>(() => {
     if (!Obj.instanceOf(Markdown.Document, object)) {
       return [];
     }
 
-    return (extensionProviders ?? []).flat().reduce((acc: Extension[], provider) => {
-      const extension = typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
-      console.log(extension);
-      if (extension) {
-        acc.push(extension);
-      }
+    return [...(otherExtensionProviders ?? []), ...(extensionProviders ?? [])]
+      .flat()
+      .reduce((acc: Extension[], provider) => {
+        const extension =
+          typeof provider === 'function' ? provider({ document: object as Markdown.Document }) : provider;
+        if (extension) {
+          acc.push(extension);
+        }
 
-      return acc;
-    }, []);
-  }, [extensionProviders, object]);
+        return acc;
+      }, []);
+  }, [extensionProviders, otherExtensionProviders, object]);
 
   // File upload.
   const [upload] = useCapabilities(Capabilities.FileUploader);

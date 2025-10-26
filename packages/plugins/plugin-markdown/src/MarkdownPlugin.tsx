@@ -70,6 +70,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
           getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
             if (doc.content) {
               const [start, end] = anchor.split(':');
+              console.log('::::::::::', start, end, doc.content.target);
               return getTextInRange(createDocAccessor(doc.content.target!, ['content']), start, end);
             }
           },

@@ -26,6 +26,7 @@ type StoryProps = Omit<MarkdownEditorRootProps, 'id'> & {
 };
 
 // TODO(burdon): Test comments.
+// TODO(burdon): Test toolbar state.
 // TODO(burdon): Test update document name.
 
 const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
