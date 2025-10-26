@@ -52,7 +52,7 @@ export const WnfsPlugin = definePlugin(meta, () => [
           label: (object: any) => (object instanceof FileType ? object.name : undefined),
           // TODO(wittjosiah): Would be nice if icon could change based on the type of the file.
           icon: 'ph--file--regular',
-          iconClassName: 'text-tealSurfaceText',
+          iconHue: 'teal',
         },
       }),
   }),
