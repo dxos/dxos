@@ -5,11 +5,12 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
+import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { getStyles } from '@dxos/react-ui-theme';
 
 import { meta } from '../meta';
+import { type RegistryTagType } from '../types';
 
 export type PluginItemProps = {
   plugin: Plugin;
@@ -26,7 +27,7 @@ export const PluginItem = ({
   enabled = [],
   onClick,
   onChange,
-  hasSettings: _hasSettings,
+  hasSettings: hasSettingsParam,
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
@@ -45,9 +46,11 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = _hasSettings?.(id) ?? false;
+  const hasSettings = hasSettingsParam?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
   const styles = getStyles(iconHue);
+  const gridCols = 'grid grid-cols-[5rem_1fr]';
+  const gridRows = 'grid grid-rows-[40px_1fr_min-content_40px]';
 
   return (
     <ListItem.Root
@@ -55,35 +58,25 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames='is-full bs-full grid grid-cols-[5rem_1fr] gap-3 pie-2 border border-separator rounded-md overflow-hidden'
+      classNames={mx(gridCols, 'bs-[12rem] is-full gap-3 pie-2 border border-separator rounded-md overflow-hidden')}
     >
-      <div className={mx('flex justify-center rounded-l-md', styles.bg)}>
-        <Icon
-          classNames={mx('mbs-10 text-black cursor-pointer', styles.icon)}
-          icon={icon}
-          size={14}
-          onClick={handleClick}
-        />
+      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
+        <div />
+        <Icon classNames={mx('text-black cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
       </div>
 
-      <div className='grid grid-rows-[40px_1fr_min-content_40px] gap-2 overflow-hidden'>
+      <div className={mx(gridRows)}>
         <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
-          <span className='truncate'>{name ?? id}</span>
+          <span className='text-lg truncate'>{name ?? id}</span>
         </div>
 
-        <div className='flex overflow-hidden'>
-          {(description || tags) && (
-            <div id={descriptionId} className='flex flex-col w-full justify-between gap-2 pb-2'>
-              <div className='grow'>
-                <p className={mx(descriptionText, 'line-clamp-3 min-is-0 pie-2')}>{description}</p>
-              </div>
-            </div>
-          )}
+        <div>
+          <p className={mx(descriptionText, 'line-clamp-4 min-is-0')}>{description}</p>
         </div>
 
-        <div className='flex overflow-x-auto'>
+        <div className='flex -mis-0.5 overflow-x-auto scrollbar-none'>
           {tags?.map((tag) => (
-            <Tag key={tag} palette={'green'} classNames='text-xs uppercase font-thin'>
+            <Tag key={tag} palette={tagColor(tag as any)} classNames='text-xs uppercase font-thin'>
               {tag}
             </Tag>
           ))}
@@ -105,7 +98,7 @@ export const PluginItem = ({
             {t('details label')}
           </Link>
 
-          <div className='flex-1' />
+          <div className='grow' />
           <div className='pie-1'>
             <Input.Root id={inputId}>
               <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
@@ -116,3 +109,14 @@ export const PluginItem = ({
     </ListItem.Root>
   );
 };
+
+const tagColors: Record<RegistryTagType, ChromaticPalette> = {
+  new: 'rose',
+  beta: 'teal',
+  labs: 'blue',
+  popular: 'green',
+  featured: 'pink',
+  experimental: 'amber',
+};
+
+const tagColor = (tag: RegistryTagType): ChromaticPalette | undefined => tagColors[tag];
