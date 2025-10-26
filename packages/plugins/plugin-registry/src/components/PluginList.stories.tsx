@@ -11,6 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/react-ui-theme';
 
 import { translations } from '../translations';
+import { RegistryTagType } from '../types';
 
 import { PluginList } from './PluginList';
 
@@ -34,9 +35,7 @@ const DefaultStory = () => {
             id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
             name: `${faker.commerce.productName()}`,
             description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
-            tags: faker.datatype.boolean({ probability: 0.6 })
-              ? [faker.helpers.arrayElement(['labs', 'beta', 'alpha', 'stable', 'new', '新発売'])]
-              : undefined,
+            tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
             icon: faker.helpers.arrayElement(icons),
             iconHue: getHashHue(faker.string.uuid()),
             homePage: faker.datatype.boolean({ probability: 0.5 }) ? faker.internet.url() : undefined,
@@ -44,7 +43,7 @@ const DefaultStory = () => {
           },
           () => [],
         )(),
-      { count: 16 },
+      { count: 32 },
     ),
   );
   const [enabled, setEnabled] = useState<string[]>([]);
@@ -60,7 +59,6 @@ const meta = {
   title: 'plugins/plugin-registry/PluginList',
   component: PluginList,
   render: DefaultStory,
-  decorators: [withTheme, withLayout({ container: 'column', scroll: true })],
   parameters: {
     translations,
   },
@@ -70,4 +68,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withTheme, withLayout({ container: 'column', scroll: true })],
+};
+
+export const FullScreen: Story = {
+  decorators: [withTheme, withLayout({ scroll: true })],
+  parameters: {
+    layout: 'fullscreen',
+  },
+};
