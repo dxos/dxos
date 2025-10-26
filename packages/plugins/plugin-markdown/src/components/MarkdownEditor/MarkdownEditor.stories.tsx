@@ -25,10 +25,6 @@ type StoryProps = Omit<MarkdownEditorRootProps, 'id'> & {
   content?: string;
 };
 
-// TODO(burdon): Test comments.
-// TODO(burdon): Test toolbar state.
-// TODO(burdon): Test update document name.
-
 const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
   const doc = useMemo(() => createObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);

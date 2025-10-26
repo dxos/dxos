@@ -35,6 +35,12 @@ export type MarkdownContainerProps = {
   Pick<MarkdownEditorToolbarProps, 'onViewModeChange'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
+// TODO(burdon): Test comments.
+// TODO(burdon): Test toolbar state.
+// TODO(burdon): Test input mode.
+// TODO(burdon): Test update document name.
+// TODO(burdon): Test file upload.
+
 // TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
   id,
