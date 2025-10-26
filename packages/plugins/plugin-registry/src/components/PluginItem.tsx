@@ -55,44 +55,44 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames='is-full bs-full grid grid-cols-[5rem_1fr] gap-3 pie-2.5 border border-separator rounded-md overflow-hidden'
+      classNames='is-full bs-full grid grid-cols-[5rem_1fr] gap-3 pie-2 border border-separator rounded-md overflow-hidden'
     >
       <div className={mx('flex justify-center rounded-l-md', styles.bg)}>
         <Icon
+          classNames={mx('mbs-10 text-black cursor-pointer', styles.icon)}
           icon={icon}
           size={14}
           onClick={handleClick}
-          classNames={mx('mbs-10 text-black cursor-pointer', styles.icon)}
         />
       </div>
-      <div className='grid grid-rows-[40px_1fr_40px] gap-2 overflow-hidden'>
+
+      <div className='grid grid-rows-[40px_1fr_min-content_40px] gap-2 overflow-hidden'>
         <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='truncate'>{name ?? id}</span>
         </div>
-        <div className='overflow-hidden'>
+
+        <div className='flex overflow-hidden'>
           {(description || tags) && (
-            <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
+            <div id={descriptionId} className='flex flex-col w-full justify-between gap-2 pb-2'>
               <div className='grow'>
-                <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-2')}>{description}</p>
+                <p className={mx(descriptionText, 'line-clamp-3 min-is-0 pie-2')}>{description}</p>
               </div>
-              {tags && tags.length > 0 && (
-                <div>
-                  {tags.map((tag) => (
-                    <Tag key={tag} palette={'green'} classNames='text-xs uppercase font-thin'>
-                      {tag}
-                    </Tag>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>
 
-        {/* Footer. */}
-        <div className='flex gap-2 items-center'>
+        <div className='flex overflow-x-auto'>
+          {tags?.map((tag) => (
+            <Tag key={tag} palette={'green'} classNames='text-xs uppercase font-thin'>
+              {tag}
+            </Tag>
+          ))}
+        </div>
+
+        <div className='flex gap-2 items-center text-sm'>
           <IconButton
             aria-describedby={descriptionId}
-            classNames='text-sm text-description cursor-pointer'
+            classNames='cursor-pointer'
             icon='ph--gear--regular'
             label={t('settings label')}
             iconOnly
@@ -101,16 +101,12 @@ export const PluginItem = ({
             disabled={!hasSettings}
           />
 
-          <Link
-            aria-describedby={descriptionId}
-            classNames='text-sm text-description cursor-pointer'
-            onClick={handleClick}
-          >
+          <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
             {t('details label')}
           </Link>
 
           <div className='flex-1' />
-          <div>
+          <div className='pie-1'>
             <Input.Root id={inputId}>
               <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
             </Input.Root>
