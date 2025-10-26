@@ -50,8 +50,8 @@ export const MarkdownEditorToolbar = ({
         attendableId={id}
         role={role}
         state={state}
-        getView={getView}
         customActions={customActions}
+        getView={getView}
         onImageUpload={upload || undefined}
         onViewModeChange={handleViewModeChange}
       />
