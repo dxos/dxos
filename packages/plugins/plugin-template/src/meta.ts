@@ -8,7 +8,12 @@ export const meta: PluginMeta = {
 	id: "dxos.org/plugin/template",
 	name: "Template",
 	icon: "ph--asterisk--regular",
+<<<<<<< HEAD
 	iconHue: "sky",
-	source:
-		"https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-template",
+||||||| 35c939cd42
+=======
+	iconHue: 'sky',
+>>>>>>> origin/main
+  source:
+	"https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-template",
 };
