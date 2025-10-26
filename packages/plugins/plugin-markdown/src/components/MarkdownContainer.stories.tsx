@@ -26,7 +26,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -59,6 +59,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       plugins: [
         ClientPlugin({
@@ -67,23 +68,30 @@ const meta = {
             await client.halo.createIdentity();
             await client.spaces.waitUntilReady();
             await client.spaces.default.waitUntilReady();
+
             const space = client.spaces.default;
-            const queue = space.queues.create();
-            const alice = Obj.make(DataType.Person, { fullName: 'Alice' });
-            const acme = Obj.make(DataType.Organization, { name: 'ACME' });
-            await queue.append([alice, acme]);
-            const doc = Markdown.makeDocument({
-              name: context.args.title ?? 'Testing',
-              content: [
-                `# ${context.args.title ?? 'Testing'}`,
-                `![Alice](${Obj.getDXN(alice)})`,
-                `![ACME](${Obj.getDXN(acme)})`,
-                context.args.content ?? '',
-              ].join('\n\n'),
-            });
-            space.db.add(doc);
             const createObjects = createObjectFactory(space.db, generator);
             await createObjects([{ type: DataType.Organization, count: 10 }]);
+
+            const queue = space.queues.create();
+            const kai = Obj.make(DataType.Person, { fullName: 'Kai' });
+            const dxos = Obj.make(DataType.Organization, { name: 'DXOS' });
+            await queue.append([kai, dxos]);
+
+            space.db.add(
+              Markdown.makeDocument({
+                name: context.args.title ?? 'Testing',
+                content: [
+                  `# ${context.args.title ?? 'Testing'}`,
+                  context.args.content ?? '',
+                  // TODO(burdon): Popovers not currently working.
+                  '## Here are some objects',
+                  `![Alice](${Obj.getDXN(kai)})`,
+                  `![DXOS](${Obj.getDXN(dxos)})`,
+                ].join('\n\n'),
+              }),
+            );
+
             await space.db.flush({ indexes: true });
           },
         }),
@@ -114,6 +122,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     title: 'Testing',
-    content: 'This is a line with **some** formatting.',
+    content: ['This is a line with **some** formatting.'].join('\n\n'),
   },
 };

@@ -32,8 +32,10 @@ export type MarkdownContainerProps = {
 // TODO(burdon): Test view mode (currently not working: not reactive).
 // TODO(burdon): Test update document name.
 // TODO(burdon): Test comment threads.
-// TODO(burdon): Test Preview blocks.
+// TODO(burdon): Test Preview blocks (currently not working).
 // TODO(burdon): Test file upload.
+// TODO(burdon): Overactive measure loop during navigation.
+//  Measure loop restarted more than 5 times
 
 // TODO(burdon): Move other space-dependent extensions here (e.g., Popover).
 export const MarkdownContainer = ({
@@ -70,17 +72,7 @@ export const MarkdownContainer = ({
       }, []);
   }, [extensionProviders, otherExtensionProviders, object]);
 
-  // File upload.
-  const [upload] = useCapabilities(Capabilities.FileUploader);
-  const handleFileUpload = useMemo(() => {
-    if (!space || !upload) {
-      return undefined;
-    }
-
-    return async (file: File) => upload(space, file);
-  }, [space, upload]);
-
-  // Toolbar actions.
+  // Toolbar actions from app graph.
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Rx.make((get) => {
@@ -90,6 +82,16 @@ export const MarkdownContainer = ({
       return { nodes, edges };
     });
   }, [graph]);
+
+  // File upload.
+  const [upload] = useCapabilities(Capabilities.FileUploader);
+  const handleFileUpload = useMemo(() => {
+    if (!space || !upload) {
+      return undefined;
+    }
+
+    return async (file: File) => upload(space, file);
+  }, [space, upload]);
 
   // Query for @ refs.
   const handleLinkQuery = useLinkQuery(space);

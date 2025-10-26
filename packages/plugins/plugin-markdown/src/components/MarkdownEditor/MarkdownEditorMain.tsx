@@ -9,7 +9,6 @@ import { useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorSelectionState,
   type EditorStateStore,
-  type EditorToolbarActionGraphProps,
   type EditorViewMode,
   type PopoverMenuGroup,
   type UseTextEditorProps,
@@ -38,7 +37,6 @@ export type MarkdownEditorMainProps = {
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
   slashCommandGroups?: PopoverMenuGroup[];
-  customActions?: EditorToolbarActionGraphProps['customActions'];
   editorStateStore?: EditorStateStore;
   toolbarState?: MarkdownEditorToolbarProps['state'];
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
@@ -54,8 +52,8 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
       editorStateStore,
       toolbarState,
       extensions,
-      scrollPastEnd,
       viewMode,
+      scrollPastEnd,
       onFileUpload,
     },
     forwardedRef,
@@ -73,16 +71,28 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
       focusAttributes,
     } = useTextEditor(
       () => ({
+        ...(role !== 'section' && {
+          id,
+          scrollTo,
+          selection,
+          // TODO(wittjosiah): Autofocus based on layout is racy.
+          // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
+          moveToEndOfLine: true,
+        }),
         initialValue,
         extensions: [
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
             placeholder: t('editor placeholder'),
-            scrollPastEnd: role === 'section' ? false : scrollPastEnd,
+            scrollPastEnd: scrollPastEnd && role !== 'section',
             search: true,
           }),
+          createThemeExtensions({
+            themeMode,
+            slots: editorSlots,
+            syntaxHighlighting: true,
+          }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: editorSlots }),
           editorGutter,
           role !== 'section' &&
             onFileUpload &&
@@ -96,18 +106,9 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
                 }
               },
             }),
-          // TODO(wittjosiah): Generalize custom toolbar actions (e.g. comment, upload, etc.)
           formattingListener(() => toolbarStateRef.current),
           extensions,
         ].filter(isTruthy),
-        ...(role !== 'section' && {
-          id,
-          scrollTo,
-          selection,
-          // TODO(wittjosiah): Autofocus based on layout is racy.
-          // autoFocus: layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true,
-          moveToEndOfLine: true,
-        }),
       }),
       [id, viewMode, themeMode, extensions],
     );

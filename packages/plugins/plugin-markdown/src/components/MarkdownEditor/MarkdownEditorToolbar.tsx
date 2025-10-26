@@ -15,13 +15,10 @@ export type MarkdownEditorToolbarProps = ThemedClassName<
   {
     id: string;
     editorView?: EditorView;
-    // TOOD(burdon): Factor out file management.
     onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
   } & Pick<EditorToolbarProps, 'role' | 'state' | 'customActions' | 'onViewModeChange'>
 >;
 
-// TODO(burdon): Overactive measure loop during navigation.
-//  Measure loop restarted more than 5 times
 export const MarkdownEditorToolbar = ({
   classNames,
   id,
