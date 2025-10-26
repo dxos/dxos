@@ -46,20 +46,22 @@ const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
   );
 };
 
-const meta = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
-  component: MarkdownEditor as any,
+  component: DefaultStory,
   render: DefaultStory,
   decorators: [
     withTheme,
     withLayout({ container: 'column' }),
     // TODO(burdon): Create story without client.
-    withPluginManager({ plugins: [ClientPlugin({}), IntentPlugin(), AttentionPlugin()] }),
+    withPluginManager({
+      plugins: [ClientPlugin({}), IntentPlugin(), AttentionPlugin()],
+    }),
   ],
   parameters: {
     translations: [...translations, ...editorTranslations],
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 
