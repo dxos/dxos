@@ -9,6 +9,7 @@ import { LabelAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
 import { LLM_PROVIDERS } from './defs';
+import { ThreadId } from '@dxos/schema';
 
 /**
  * AI chat.
@@ -16,6 +17,13 @@ import { LLM_PROVIDERS } from './defs';
 export const Chat = Schema.Struct({
   id: Type.ObjectId,
   name: Schema.optional(Schema.String),
+
+  /**
+   * Active branches.
+   * Default branch is `main`.
+   */
+  branches: Schema.optional(Schema.Record({ key: Schema.String, value: ThreadId })),
+
   queue: Type.Ref(Queue),
   // TODO(dmaretskyi): Eventually this and the message queue will be the same.
   traceQueue: Schema.optional(Type.Ref(Queue)),

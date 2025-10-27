@@ -321,6 +321,23 @@ export namespace ContentBlock {
   }).pipe(Schema.mutable);
   export interface Toolkit extends Schema.Schema.Type<typeof Toolkit> {}
 
+  export const ConversationFork = Schema.TaggedStruct('threadFork', {
+    ...Base.fields,
+
+    // TODO(dmaretskyi): What should be in here?
+  }).pipe(Schema.mutable);
+  export interface ConversationFork extends Schema.Schema.Type<typeof ConversationFork> {}
+
+  /**
+   * Merges multiple threads into this thread.
+   */
+  export const ConversationMerge = Schema.TaggedStruct('threadMerge', {
+    ...Base.fields,
+
+    mergedMessages: Schema.Array(ObjectId),
+  }).pipe(Schema.mutable);
+  export interface ConversationMerge extends Schema.Schema.Type<typeof ConversationMerge> {}
+
   /**
    * JSON
    * @deprecated Use {@link Text} with mime type of `application/json`.
@@ -350,9 +367,14 @@ export namespace ContentBlock {
     ToolCall,
     ToolResult,
     Transcript,
+    ConversationFork,
+    ConversationMerge,
   );
   export type Any = Schema.Schema.Type<typeof Any>;
 }
+
+export const ThreadId = ObjectId.pipe(Schema.brand('ThreadId'));
+export type ThreadId = Schema.Schema.Type<typeof ThreadId>;
 
 /**
  * Message.
@@ -363,8 +385,18 @@ export namespace ContentBlock {
 const MessageSchema = Schema.Struct({
   id: ObjectId,
 
+  /**
+   * ID of the preceding message in the conversation.
+   * For merges
+   *
+   * Also see: https://linear.app/dxos/issue/DX-354/forking-retry-rehydration
+   */
   parentMessage: Schema.optional(ObjectId),
-  // TODO(dmaretskyi): Consider adding a channelId too.
+
+  /**
+   * Current thread
+   */
+  thread: Schema.optional(ThreadId),
 
   created: Schema.String.pipe(
     Schema.annotations({ description: 'ISO date string when the message was sent.' }),
