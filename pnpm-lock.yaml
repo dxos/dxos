@@ -7222,6 +7222,9 @@ importers:
       '@codemirror/search':
         specifier: ^6.5.11
         version: 6.5.11
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.5.2
       '@codemirror/view':
         specifier: ^6.38.4
         version: 6.38.5
@@ -7303,6 +7306,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -7324,6 +7330,9 @@ importers:
       '@preact/signals-core':
         specifier: ^1.12.1
         version: 1.12.1
+      '@radix-ui/react-context':
+        specifier: ^1.0.5
+        version: 1.1.1(@types/react@19.2.2)(react@19.2.0)
       react-dropzone:
         specifier: ^14.2.3
         version: 14.2.3(react@19.2.0)
@@ -8528,9 +8537,6 @@ importers:
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -12403,6 +12409,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -37344,7 +37353,7 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.0
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
@@ -53464,7 +53473,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.1.0
-      semver: 7.7.2
+      semver: 7.7.3
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.1
       '@img/sharp-darwin-x64': 0.34.1

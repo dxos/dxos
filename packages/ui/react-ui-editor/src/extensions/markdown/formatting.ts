@@ -15,10 +15,8 @@ import {
 } from '@codemirror/state';
 import { EditorView, type ViewUpdate, keymap } from '@codemirror/view';
 import { type SyntaxNode, type SyntaxNodeRef } from '@lezer/common';
-import { useCallback, useMemo } from 'react';
 
 import { debounceAndThrottle } from '@dxos/async';
-import { type Live } from '@dxos/live-object';
 
 import { type EditorToolbarState } from '../../components';
 
@@ -1251,17 +1249,19 @@ export const getFormatting = (state: EditorState): Formatting => {
 /**
  * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (state: Live<EditorToolbarState>): Extension => {
-  const handleUpdate = useCallback(
+export const formattingListener = (stateProvider: () => EditorToolbarState | undefined, delay = 100): Extension => {
+  return EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.docChanged || update.selectionSet) {
+        const state = stateProvider();
+        if (!state) {
+          return;
+        }
+
         Object.entries(getFormatting(update.state)).forEach(([key, active]) => {
           state[key as keyof Formatting] = active as any;
         });
       }
-    }, 100),
-    [state],
+    }, delay),
   );
-
-  return useMemo(() => EditorView.updateListener.of(handleUpdate), [handleUpdate]);
 };

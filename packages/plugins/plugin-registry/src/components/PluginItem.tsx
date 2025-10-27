@@ -62,7 +62,7 @@ export const PluginItem = ({
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
         <div />
-        <Icon classNames={mx('text-black cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
+        <Icon classNames={mx('cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
       </div>
 
       <div className={mx(gridRows)}>
