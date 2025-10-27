@@ -9,6 +9,7 @@ import { Bundler } from '@dxos/functions/bundler';
 import { incrementSemverPatch, uploadWorkerFunction } from '@dxos/functions/edge';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
+import { isNode } from '@dxos/util';
 
 import { updateFunctionMetadata } from './functions';
 
@@ -43,7 +44,7 @@ export const deployScript = async ({
   }
 
   try {
-    const bundler = new Bundler({ platform: 'browser', sandboxedModules: [], remoteModules: {} });
+    const bundler = new Bundler({ platform: isNode() ? 'node' : 'browser', sandboxedModules: [], remoteModules: {} });
     const buildResult = await bundler.bundle({ source: script.source!.target!.content });
     if ('error' in buildResult) {
       throw buildResult.error || new Error('Bundle creation failed');
