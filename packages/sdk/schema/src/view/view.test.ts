@@ -52,6 +52,7 @@ describe('Projection', () => {
       'jobTitle',
       'department',
       'notes',
+      'location',
       'birthday',
     ]);
 
