@@ -3070,8 +3070,8 @@ importers:
         specifier: 3.18.3
         version: 3.18.3
       esbuild-wasm:
-        specifier: ^0.16.14
-        version: 0.16.17
+        specifier: ^0.25.11
+        version: 0.25.11
       i18next:
         specifier: ^24.2.1
         version: 24.2.3(typescript@5.9.3)
@@ -8745,8 +8745,8 @@ importers:
         specifier: ^3.3.1
         version: 3.6.0
       esbuild-wasm:
-        specifier: ^0.16.14
-        version: 0.16.17
+        specifier: ^0.25.11
+        version: 0.25.11
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
@@ -25793,9 +25793,9 @@ packages:
   esbuild-style-plugin@1.6.1:
     resolution: {integrity: sha512-t5ZtQyGKNiM8DLedz+iwFH0LPWLnMmaEQ2RnnP1ppFHq35najxqJHAhUVVSbTFm5cR2ZumGdBMqnmuKBRBMvDw==}
 
-  esbuild-wasm@0.16.17:
-    resolution: {integrity: sha512-Tn7NuMqRcM+T/qCOxbQRq0qrwWl1sUWp6ARfJRakE8Bepew6zata4qrKgH2YqovNC5e/2fcTa7o+VL/FAOZC1Q==}
-    engines: {node: '>=12'}
+  esbuild-wasm@0.25.11:
+    resolution: {integrity: sha512-60gllbYFIRGzB6KALBB5Va9Wy3VeCi2U0NgmM7r+TFnRgzeEyoCn2D7fhacW2zWbd7MUeTKLDE7RlfYGBQ00bw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   esbuild@0.17.19:
@@ -31552,6 +31552,7 @@ packages:
   sitemap@8.0.0:
     resolution: {integrity: sha512-+AbdxhM9kJsHtruUF39bwS/B0Fytw6Fr1o4ZAIAEqA6cke2xcoO2GleBw9Zw7nRzILVEgz7zBM5GiTJjie1G9A==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
+    deprecated: 'SECURITY: Multiple vulnerabilities fixed in 8.0.1 (XML injection, path traversal, command injection, protocol injection). Upgrade immediately: npm install sitemap@8.0.1'
     hasBin: true
 
   slash@3.0.0:
@@ -46261,7 +46262,7 @@ snapshots:
       postcss: 8.5.3
       postcss-modules: 4.3.1(postcss@8.5.3)
 
-  esbuild-wasm@0.16.17: {}
+  esbuild-wasm@0.25.11: {}
 
   esbuild@0.17.19:
     optionalDependencies:
