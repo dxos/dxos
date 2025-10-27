@@ -118,16 +118,13 @@
       "path": "packages/common/util/tsconfig.json"
     },
     {
-      "path": "packages/core/agent/tsconfig.json"
-    },
-    {
       "path": "packages/core/ai/tsconfig.json"
     },
     {
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
-      "path": "packages/core/assistant-testing/tsconfig.json"
+      "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {
       "path": "packages/core/blueprints/tsconfig.json"
@@ -308,6 +305,9 @@
     },
     {
       "path": "packages/plugins/plugin-markdown/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-masonry/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
@@ -506,6 +506,9 @@
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"
+    },
+    {
+      "path": "packages/ui/react-ui-masonry/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-menu/tsconfig.json"

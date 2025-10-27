@@ -168,6 +168,13 @@ export const LabelAnnotationId = Symbol.for('@dxos/schema/annotation/Label');
 export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationId);
 
 /**
+ * Identifies description property or JSON path expression.
+ * A string representing field accessor.
+ */
+export const DescriptionAnnotationId = Symbol.for('@dxos/schema/annotation/Description');
+export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionAnnotationId);
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');

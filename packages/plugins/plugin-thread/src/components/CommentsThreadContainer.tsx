@@ -42,6 +42,7 @@ export const CommentsThreadContainer = ({
   onThreadDelete,
   onAcceptProposal,
 }: CommentsThreadContainerProps) => {
+  const { themeMode } = useThemeContext();
   const { t } = useTranslation(meta.id);
   const identity = useIdentity()!;
   const space = getSpace(anchor);
@@ -50,21 +51,20 @@ export const CommentsThreadContainer = ({
   const thread = Relation.getSource(anchor) as ThreadType;
   const activity = useStatus(space, fullyQualifiedId(thread));
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
-  const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(fullyQualifiedId(thread), identity);
+
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
-  const [_count, _setCount] = useState(0);
-  const rerenderEditor = () => _setCount((count) => count + 1);
+  const [state, setState] = useState({});
   const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
     ],
-    [_count],
+    [state],
   );
 
   // TODO(thure): Factor out.
@@ -85,7 +85,7 @@ export const CommentsThreadContainer = ({
     onComment?.(anchor, messageRef.current);
     messageRef.current = '';
     scrollToEnd('instant');
-    rerenderEditor();
+    setState({});
 
     return true;
   }, [anchor, identity]);

@@ -18,7 +18,7 @@ import {
   contextQueueLayerFromResearchGraph,
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
-} from '@dxos/assistant-testing';
+} from '@dxos/assistant-toolkit';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';

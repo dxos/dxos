@@ -2,15 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type EditorView } from '@codemirror/view';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { Fragment, type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
 import {
   type DxAnchorActivate,
   Icon,
   Popover,
   toLocalizedString,
+  useDynamicRef,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
@@ -18,36 +21,49 @@ import {
 import { type PopoverMenuGroup, type PopoverMenuItem } from './menu';
 
 export type PopoverMenuProviderProps = PropsWithChildren<{
+  view?: EditorView | null;
   groups: PopoverMenuGroup[];
   currentItem?: string;
   open?: boolean;
   defaultOpen?: boolean;
-  onSelect: (item: PopoverMenuItem) => void;
-  onActivate?: (event: DxAnchorActivate) => void;
-  onOpenChange?: (nextOpen: boolean, trigger?: string) => void;
+  numItems?: number;
+  onOpenChange?: (event: { view: EditorView; open: boolean; trigger?: string }) => void;
+  onActivate?: (event: { view: EditorView; trigger?: string }) => void;
+  onSelect?: (event: { view: EditorView; item: PopoverMenuItem }) => void;
+  onCancel?: (event: { view: EditorView }) => void;
 }>;
 
 /**
- * NOTE: Not using DropdownMenu because the command menu needs to manage focus explicitly.
+ * Implements the Popover and listens for the `dx-anchor-activate` event from the
+ * `popover` extension's decoration.
+ *
+ * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
+ * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */
 export const PopoverMenuProvider = ({
   children,
+  view,
   groups,
   currentItem,
   open: openParam,
   defaultOpen,
-  onSelect,
-  onActivate,
+  numItems = 8,
   onOpenChange,
+  onActivate,
+  onSelect,
+  onCancel,
 }: PopoverMenuProviderProps) => {
   const { tx } = useThemeContext();
-  const menuGroups = groups.filter((group) => group.items.length > 0);
-  const trigger = useRef<HTMLButtonElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const viewRef = useDynamicRef(view);
   const [open, setOpen] = useControllableState({
     prop: openParam,
     defaultProp: defaultOpen,
-    onChange: onOpenChange,
+    onChange: (open) => {
+      invariant(viewRef.current);
+      onOpenChange?.({ view: viewRef.current, open });
+    },
   });
 
   useEffect(() => {
@@ -55,18 +71,20 @@ export const PopoverMenuProvider = ({
       return;
     }
 
+    // Listen for trigger.
     return addEventListener(
       root,
       'dx-anchor-activate' as any,
       (event: DxAnchorActivate) => {
-        const { trigger: dxTrigger, refId } = event;
+        const { trigger, refId } = event;
+
         // If this has a `refId`, then it’s probably a URL or DXN and out of scope for this component.
         if (!refId) {
-          trigger.current = dxTrigger as HTMLButtonElement;
+          triggerRef.current = trigger as HTMLButtonElement;
           if (onActivate) {
-            onActivate(event);
+            onActivate({ view: viewRef.current!, trigger: trigger.getAttribute('data-trigger') ?? undefined });
           } else {
-            queueMicrotask(() => setOpen(true));
+            requestAnimationFrame(() => setOpen(true));
           }
         }
       },
@@ -77,31 +95,49 @@ export const PopoverMenuProvider = ({
     );
   }, [root, onActivate]);
 
+  const handleSelect = useCallback<NonNullable<MenuProps['onSelect']>>(
+    (item) => {
+      invariant(viewRef.current);
+      onSelect?.({ view: viewRef.current, item });
+    },
+    [viewRef, onSelect],
+  );
+
+  const menuGroups = groups.filter((group) => group.items.length > 0);
+
   return (
     <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <div ref={setRoot} role='none' className='contents'>
-        {children}
-      </div>
-
-      <Popover.VirtualTrigger virtualRef={trigger} />
+      <Popover.VirtualTrigger virtualRef={triggerRef} />
       <Popover.Portal>
         <Popover.Content
           align='start'
-          classNames={tx(
-            'menu.content',
-            'menu--exotic-unfocusable',
-            { elevation: 'positioned' },
-            // TODO(burdon): Extract height to theme.
-            'max-bs-[16rem] overflow-y-auto',
-          )}
+          classNames={tx('menu.content', 'menu--exotic-unfocusable', { elevation: 'positioned' }, [
+            'overflow-y-auto',
+            !menuGroups.length && 'hidden',
+          ])}
+          style={{
+            maxBlockSize: 36 * numItems + 10,
+          }}
+          /**
+           * NOTE: We keep the focus in the editor, but Radix routes escape key.
+           */
+          onEscapeKeyDown={() => {
+            // NOTE: Able to cancel if not in valid state.
+            // event.preventDefault();
+            onCancel?.({ view: view! });
+          }}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
           <Popover.Viewport classNames={tx('menu.viewport', 'menu__viewport--exotic-unfocusable', {})}>
-            <Menu groups={menuGroups} currentItem={currentItem} onSelect={onSelect} />
+            <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
           </Popover.Viewport>
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
+
+      <div ref={setRoot} role='none' className='contents'>
+        {children}
+      </div>
     </Popover.Root>
   );
 };
@@ -112,7 +148,7 @@ export const PopoverMenuProvider = ({
 
 type MenuProps = {
   groups: PopoverMenuGroup[];
-} & Pick<PopoverMenuProviderProps, 'currentItem' | 'onSelect'>;
+} & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
   const { tx } = useThemeContext();
@@ -131,7 +167,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
 type MenuGroupProps = {
   group: PopoverMenuGroup;
   currentItem?: string;
-} & Pick<PopoverMenuProviderProps, 'onSelect'>;
+} & Pick<MenuItemProps, 'onSelect'>;
 
 const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   const { tx } = useThemeContext();
@@ -155,25 +191,25 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
 type MenuItemProps = {
   item: PopoverMenuItem;
   current: boolean;
-  onSelect: (item: PopoverMenuItem) => void;
+  onSelect?: (item: PopoverMenuItem) => void;
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   const { tx } = useThemeContext();
   const { t } = useTranslation();
 
-  const handleSelect = useCallback(() => onSelect(item), [item, onSelect]);
-
-  const ref = useRef<HTMLLIElement>(null);
+  const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
-    if (current && ref.current) {
-      ref.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (current && listRef.current) {
+      listRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [current]);
 
+  const handleSelect = useCallback(() => onSelect?.(item), [item, onSelect]);
+
   return (
     <li
-      ref={ref}
+      ref={listRef}
       className={tx('menu.item', 'menu__item--exotic-unfocusable', {}, [current && 'bg-hoverSurface'])}
       onClick={handleSelect}
     >

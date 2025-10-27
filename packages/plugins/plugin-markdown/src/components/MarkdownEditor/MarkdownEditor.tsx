@@ -28,7 +28,7 @@ import {
   dropFile,
   editorGutter,
   editorSlots,
-  filterItems,
+  filterMenuGroups,
   formattingCommands,
   linkSlashCommands,
   processEditorPayload,
@@ -59,8 +59,8 @@ export type MarkdownEditorProps = {
   onViewModeChange?: (id: string, mode: EditorViewMode) => void;
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
   onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
-} & Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
-  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>;
+} & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
+  Partial<Pick<MarkdownPluginState, 'extensionProviders'>>);
 
 /**
  * Base markdown editor component.
@@ -76,16 +76,17 @@ export const MarkdownEditor = ({
   const { t } = useTranslation();
   const viewRef = useRef<EditorView>(null);
 
-  const getMenu = useCallback<UsePopoverMenuProps['getMenu']>(
-    (trigger: string, query?: string) => {
+  const getMenu = useCallback<NonNullable<UsePopoverMenuProps['getMenu']>>(
+    ({ text, trigger }) => {
       switch (trigger) {
         case '@': {
-          return onLinkQuery?.(query) ?? [];
+          return onLinkQuery?.(text) ?? [];
         }
+
         case '/':
         default: {
-          return filterItems([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
-            query ? toLocalizedString(item.label, t).toLowerCase().includes(query.toLowerCase()) : true,
+          return filterMenuGroups([formattingCommands, linkSlashCommands, ...(slashCommandGroups ?? [])], (item) =>
+            text ? toLocalizedString(item.label, t).toLowerCase().includes(text.toLowerCase()) : true,
           );
         }
       }
@@ -106,7 +107,7 @@ export const MarkdownEditor = ({
               Domino.of('span').text('Press'),
               ...trigger.map((text) =>
                 Domino.of('span')
-                  .classNames('border border-separator rounded-sm mx-1 px-1.5 pt-[1px] pb-[2px]')
+                  .classNames('mx-1 px-1.5 pt-[1px] pb-[2px] border border-separator rounded-sm')
                   .text(text),
               ),
               Domino.of('span').text('for commands.'),
@@ -117,11 +118,11 @@ export const MarkdownEditor = ({
     };
   }, [onLinkQuery, getMenu]);
 
-  const { groupsRef, extension: commandMenu, ...commandMenuProps } = usePopoverMenu(options);
-  const extensions = useMemo(() => [extensionsParam, commandMenu].filter(isTruthy), [extensionsParam, commandMenu]);
+  const { groupsRef, extension, ...commandMenuProps } = usePopoverMenu(options);
+  const extensions = useMemo(() => [extensionsParam, extension].filter(isTruthy), [extensionsParam, extension]);
 
   return (
-    <PopoverMenuProvider groups={groupsRef.current} {...commandMenuProps}>
+    <PopoverMenuProvider view={viewRef.current} groups={groupsRef.current} {...commandMenuProps}>
       <MarkdownEditorImpl ref={viewRef} {...props} extensions={extensions} />
     </PopoverMenuProvider>
   );

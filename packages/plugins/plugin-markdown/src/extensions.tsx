@@ -153,7 +153,7 @@ export const useExtensions = ({
         selectionState(editorStateStore),
         document &&
           listener({
-            onChange: (text) => setFallbackName(document, text),
+            onChange: ({ text }) => setFallbackName(document, text),
           }),
         baseExtensions,
         pluginExtensions,

@@ -37,8 +37,8 @@ export const DeckMain = () => {
   const context = useCapability(DeckCapabilities.MutableDeckState);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel, deck } = context;
   const { active, activeCompanions, fullscreen, solo, plankSizing } = deck;
-  const breakpoint = useBreakpoints();
   const layoutMode = getMode(deck);
+  const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
   const pluginManager = usePluginManager();
@@ -85,7 +85,7 @@ export const DeckMain = () => {
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the intent only when the setting changes.
   useEffect(() => {
-    if (settings?.enableDeck && layoutMode === 'deck') {
+    if (!settings?.enableDeck && layoutMode === 'deck') {
       void dispatch(
         createIntent(LayoutAction.SetLayoutMode, { part: 'mode', subject: active[0], options: { mode: 'solo' } }),
       );
@@ -93,7 +93,7 @@ export const DeckMain = () => {
   }, [settings?.enableDeck, dispatch, active, layoutMode]);
 
   /**
-   * Clear scroll restoration state if the window is resized
+   * Clear scroll restoration state if the window is resized.
    */
   const handleResize = useCallback(() => {
     scrollLeftRef.current = null;
@@ -112,7 +112,7 @@ export const DeckMain = () => {
   useOnTransition(layoutMode, (mode) => mode !== 'deck', 'deck', restoreScroll);
 
   /**
-   * Save scroll position as the user scrolls
+   * Save scroll position as the user scrolls.
    */
   const handleScroll = useCallback(
     (event: UIEvent) => {

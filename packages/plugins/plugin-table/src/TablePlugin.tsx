@@ -30,6 +30,7 @@ export const TablePlugin = definePlugin(meta, () => [
         id: Table.Table.typename,
         metadata: {
           icon: 'ph--table--regular',
+          iconHue: 'green',
           comments: 'unanchored',
         },
       }),

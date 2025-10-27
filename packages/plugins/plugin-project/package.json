@@ -34,7 +34,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/assistant-testing": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -48,6 +48,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
+import { next as A, type Heads } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
+import * as Array from 'effect/Array';
+import * as Record from 'effect/Record';
 
 import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -223,7 +225,7 @@ export type CollectionState = {
   /**
    * DocumentId -> Heads.
    */
-  documents: Record<string, string[]>;
+  documents: Record<DocumentId, Heads>;
 };
 
 export type CollectionStateDiff = {
@@ -233,18 +235,20 @@ export type CollectionStateDiff = {
 };
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
-  const allDocuments = new Set<DocumentId>([...Object.keys(local.documents), ...Object.keys(remote.documents)] as any);
+  const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
+  const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
+  const allDocuments = Array.union(Record.keys(localDocuments), Record.keys(remoteDocuments)) as DocumentId[];
 
   const missingOnRemote: DocumentId[] = [];
   const missingOnLocal: DocumentId[] = [];
   const different: DocumentId[] = [];
   for (const documentId of allDocuments) {
-    if (!local.documents[documentId] || local.documents[documentId].length === 0) {
-      missingOnLocal.push(documentId as DocumentId);
-    } else if (!remote.documents[documentId] || remote.documents[documentId].length === 0) {
-      missingOnRemote.push(documentId as DocumentId);
+    if (!localDocuments[documentId]) {
+      missingOnLocal.push(documentId);
+    } else if (!remoteDocuments[documentId]) {
+      missingOnRemote.push(documentId);
     } else if (!A.equals(local.documents[documentId], remote.documents[documentId])) {
-      different.push(documentId as DocumentId);
+      different.push(documentId);
     }
   }
 

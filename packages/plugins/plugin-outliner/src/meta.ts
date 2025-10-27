@@ -9,6 +9,7 @@ export const meta: PluginMeta = {
   name: 'Outliner',
   description: 'Hierarchical note editor.',
   icon: 'ph--tree-structure--regular',
+  iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-outliner',
   tags: ['labs'],
 };

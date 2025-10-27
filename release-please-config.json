@@ -215,11 +215,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/agent/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -230,7 +225,7 @@
         },
         {
           "type": "json",
-          "path": "packages/core/assistant-testing/package.json",
+          "path": "packages/core/assistant-toolkit/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -536,6 +531,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-markdown/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-masonry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -866,6 +866,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-list/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-masonry/package.json",
           "jsonpath": "$.version"
         },
         {

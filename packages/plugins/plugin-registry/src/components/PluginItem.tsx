@@ -5,10 +5,12 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
+import { type ChromaticPalette, Icon, IconButton, Input, Link, ListItem, Tag, useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
+import { getStyles } from '@dxos/react-ui-theme';
 
 import { meta } from '../meta';
+import { type RegistryTagType } from '../types';
 
 export type PluginItemProps = {
   plugin: Plugin;
@@ -25,11 +27,11 @@ export const PluginItem = ({
   enabled = [],
   onClick,
   onChange,
-  hasSettings: _hasSettings,
+  hasSettings: hasSettingsParam,
   onSettings,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
-  const { id, name, description, tags, icon = 'ph--circle--regular' } = plugin.meta;
+  const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
   const isEnabled = enabled.includes(id);
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
@@ -44,8 +46,11 @@ export const PluginItem = ({
     [id, isEnabled, onChange],
   );
 
-  const hasSettings = _hasSettings?.(id) ?? false;
+  const hasSettings = hasSettingsParam?.(id) ?? false;
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
+  const styles = getStyles(iconHue);
+  const gridCols = 'grid grid-cols-[5rem_1fr]';
+  const gridRows = 'grid grid-rows-[40px_1fr_min-content_40px]';
 
   return (
     <ListItem.Root
@@ -53,67 +58,63 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      // TODO(burdon): Use Rail vars.
-      classNames='is-full bs-full grid grid-cols-[48px_1fr_48px] grid-rows-[40px_1fr_32px] p-1 border border-separator rounded-md'
+      classNames={mx(gridCols, 'bs-[12rem] is-full gap-3 pie-2 border border-separator rounded-md overflow-hidden')}
     >
-      {/* Header. */}
-      <div className='flex flex-col grow justify-center items-center'>
-        <Icon icon={icon} size={6} onClick={handleClick} classNames='text-subdued cursor-pointer' />
-      </div>
-      <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
-        <span className='truncate'>{name ?? id}</span>
-      </div>
-      <div className='flex justify-center items-center'>
-        <Input.Root id={inputId}>
-          <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
-        </Input.Root>
+      <div className={mx(gridRows, 'justify-center rounded-l-md', styles.bg)}>
+        <div />
+        <Icon classNames={mx('text-black cursor-pointer', styles.icon)} icon={icon} size={14} onClick={handleClick} />
       </div>
 
-      {/* Body. */}
-      <div />
-      {(description || tags) && (
-        <div id={descriptionId} className='col-span-2 flex flex-col w-full justify-between gap-2 pb-2'>
-          <div className='grow'>
-            <p className={mx(descriptionText, 'line-clamp-3 min-w-0 pie-2')}>{description}</p>
-          </div>
-          {tags && tags.length > 0 && (
-            <div>
-              {tags.map((tag) => (
-                <Tag key={tag} palette={'indigo'} classNames='text-xs capitalize'>
-                  {tag}
-                </Tag>
-              ))}
-            </div>
-          )}
+      <div className={mx(gridRows)}>
+        <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
+          <span className='text-lg truncate'>{name ?? id}</span>
         </div>
-      )}
 
-      {/* Footer. */}
-      <div />
-      <div className='flex gap-2 items-center pie-1'>
-        <Link
-          aria-describedby={descriptionId}
-          classNames='text-sm text-description cursor-pointer'
-          onClick={handleClick}
-        >
-          {t('details label')}
-        </Link>
+        <div>
+          <p className={mx(descriptionText, 'line-clamp-4 min-is-0')}>{description}</p>
+        </div>
 
-        <div className='flex-1' />
-      </div>
-      <div className='flex justify-center items-center'>
-        {hasSettings && (
+        <div className='flex -mis-0.5 overflow-x-auto scrollbar-none'>
+          {tags?.map((tag) => (
+            <Tag key={tag} palette={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase font-thin'>
+              {tag}
+            </Tag>
+          ))}
+        </div>
+
+        <div className='flex gap-2 items-center text-sm'>
           <IconButton
             aria-describedby={descriptionId}
-            classNames='text-sm text-description cursor-pointer'
+            classNames='cursor-pointer'
             icon='ph--gear--regular'
             label={t('settings label')}
             iconOnly
             size={4}
             onClick={handleSettings}
+            disabled={!hasSettings}
           />
-        )}
+
+          <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
+            {t('details label')}
+          </Link>
+
+          <div className='grow' />
+          <div className='pie-1'>
+            <Input.Root id={inputId}>
+              <Input.Switch classNames='self-center' checked={isEnabled} onClick={handleChange} />
+            </Input.Root>
+          </div>
+        </div>
       </div>
     </ListItem.Root>
   );
+};
+
+const tagColors: Record<RegistryTagType, ChromaticPalette> = {
+  new: 'rose',
+  beta: 'teal',
+  labs: 'blue',
+  popular: 'green',
+  featured: 'pink',
+  experimental: 'amber',
 };

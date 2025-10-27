@@ -43,6 +43,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         id: Mailbox.Mailbox.typename,
         metadata: {
           icon: 'ph--tray--regular',
+          iconHue: 'rose',
           blueprints: [BLUEPRINT_KEY],
         },
       }),
@@ -50,12 +51,14 @@ export const InboxPlugin = definePlugin(meta, () => [
         id: DataType.Message.typename,
         metadata: {
           icon: 'ph--note--regular',
+          iconHue: 'rose',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Calendar.Calendar.typename,
         metadata: {
           icon: 'ph--calendar--regular',
+          iconHue: 'rose',
         },
       }),
       contributes(Capabilities.Metadata, {

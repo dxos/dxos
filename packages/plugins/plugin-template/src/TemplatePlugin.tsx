@@ -26,6 +26,7 @@ export const TemplatePlugin = definePlugin(meta, () => [
         id: Template.Data.typename,
         metadata: {
           icon: 'ph--asterisk--regular',
+          iconHue: 'sky',
         },
       }),
   }),

@@ -26,6 +26,7 @@ export const ExplorerPlugin = definePlugin(meta, () => [
         id: Graph.Graph.typename,
         metadata: {
           icon: 'ph--graph--regular',
+          iconHue: 'green',
         },
       }),
   }),

@@ -7,7 +7,7 @@ import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import { DatabaseService, FunctionType } from '@dxos/functions';
+import { DatabaseService, Function } from '@dxos/functions';
 
 import { ClientService } from '../../../services';
 import { withDatabase } from '../../../util';
@@ -26,7 +26,7 @@ export const importCommand = Command.make(
       const client = yield* ClientService;
 
       // TODO(dmaretskyi): Extract.
-      client.addTypes([FunctionType]);
+      client.addTypes([Function.Function]);
 
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(client));

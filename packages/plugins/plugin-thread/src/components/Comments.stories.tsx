@@ -13,7 +13,7 @@ import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AnchoredTo, DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
@@ -63,8 +63,10 @@ const meta = {
   title: 'plugins/plugin-thread/Comments',
   render: render(DefaultStory),
   decorators: [
-    withTheme, // TODO(wittjosiah): This shouldn't depend on app framework. Should use withClientProvider instead.
-    //   Currently this is required due to useOnEditAnalytics.
+    withTheme,
+    withLayout({ container: 'column', scroll: true }),
+    // TODO(wittjosiah): This shouldn't depend on app framework (use withClientProvider instead).
+    //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
         IntentPlugin(),
@@ -78,10 +80,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: {
-      type: 'column',
-      className: 'overflow-y-scroll',
-    },
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

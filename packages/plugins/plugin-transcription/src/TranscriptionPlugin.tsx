@@ -23,11 +23,12 @@ export const TranscriptionPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/metadata`,
     activatesOn: Events.SetupMetadata,
-    activate: (context) =>
+    activate: () =>
       contributes(Capabilities.Metadata, {
         id: Transcript.Transcript.typename,
         metadata: {
           icon: 'ph--subtitles--regular',
+          iconHue: 'sky',
           // TODO(wittjosiah): Factor out. Artifact? Separate capability?
           getTextContent: async (transcript: Transcript.Transcript) => {
             const space = getSpace(transcript);

@@ -4,11 +4,10 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { Ref } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
-import { isNonNullable } from '@dxos/util';
 
 import {
   AppGraphBuilder,
@@ -44,22 +43,19 @@ export const ScriptPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () => [
       contributes(Capabilities.Metadata, {
-        id: ScriptType.typename,
+        id: Script.Script.typename,
         metadata: {
           icon: 'ph--code--regular',
+          iconHue: 'sky',
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (script: ScriptType) => await Ref.Array.loadAll([script.source]),
+          loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Notebook.Notebook.typename,
         metadata: {
           icon: 'ph--notebook--regular',
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (notebook: Notebook.Notebook) =>
-            await Ref.Array.loadAll(
-              notebook.cells.flatMap((cell) => [cell.script, cell.view, cell.chat].filter(isNonNullable)) as any,
-            ),
+          iconHue: 'sky',
         },
       }),
     ],
@@ -76,7 +72,7 @@ export const ScriptPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: ScriptType,
+          objectSchema: Script.Script,
           formSchema: ScriptAction.ScriptProps,
           getIntent: (props, options) => createIntent(ScriptAction.CreateScript, { ...props, space: options.space }),
         }),

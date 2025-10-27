@@ -46,9 +46,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/agent"
-    },
-    {
       "path": "../../core/compute"
     },
     {
