@@ -34,7 +34,7 @@ export default () =>
 
         return (
           <MarkdownContainer
-            id={fullyQualifiedId(data.subject)}
+            id={data.subject.id}
             object={data.subject}
             role={role}
             settings={settings}
@@ -42,7 +42,7 @@ export default () =>
             extensionProviders={state.extensionProviders}
             editorStateStore={editorState}
             viewMode={viewMode}
-            onViewModeChange={setViewMode}
+            onViewModeChange={(mode) => setViewMode(data.subject.id, mode)}
           />
         );
       },
@@ -68,7 +68,7 @@ export default () =>
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(data.id)}
             editorStateStore={editorState}
-            onViewModeChange={setViewMode}
+            onViewModeChange={(mode) => setViewMode(data.id, mode)}
           />
         );
       },
@@ -93,7 +93,7 @@ export default () =>
             extensionProviders={state.extensionProviders}
             viewMode={getViewMode(data.subject.id)}
             editorStateStore={editorState}
-            onViewModeChange={setViewMode}
+            onViewModeChange={(mode) => setViewMode(data.subject.id, mode)}
           />
         );
       },
