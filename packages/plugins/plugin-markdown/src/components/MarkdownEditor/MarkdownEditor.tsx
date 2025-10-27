@@ -184,7 +184,7 @@ MarkdownEditorMain.displayName = 'MarkdownEditor.Main';
 
 type MarkdownEditorToolbarProps = Omit<
   NaturalMarkdownToolbarProps,
-  'id' | 'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
+  'state' | 'editorView' | 'onFileUpload' | 'onViewModeChange'
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
