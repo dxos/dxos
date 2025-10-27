@@ -25,7 +25,7 @@ import { isNonNullable } from '@dxos/util';
 import { GridSheet, SheetProvider, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { SheetType } from '../types';
+import { Sheet } from '../types';
 
 import { compute, computeGraphFacet } from './compute';
 
@@ -103,7 +103,7 @@ const meta = {
   title: 'plugins/plugin-sheet/extensions',
   decorators: [
     withTheme,
-    withClientProvider({ types: [SheetType], createIdentity: true, createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet], createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
     withComputeGraphDecorator(),

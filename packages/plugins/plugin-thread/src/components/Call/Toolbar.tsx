@@ -20,10 +20,10 @@ import { groupHoverControlItemWithTransition, mx } from '@dxos/react-ui-theme';
 
 import { ThreadCapabilities } from '../../capabilities';
 import { meta } from '../../meta';
-import { type ChannelType } from '../../types';
+import { type Channel } from '../../types';
 
 export type ToolbarProps = ThemedClassName<{
-  channel?: ChannelType;
+  channel?: Channel.Channel;
   participants?: number;
   autoHideControls?: boolean;
   isInRoom?: boolean;

@@ -13,7 +13,7 @@ import { createDocAccessor, fullyQualifiedId, getSource, getSpace, getTextInRang
 import { comments, createExternalCommentSync } from '@dxos/react-ui-editor';
 import { AnchoredTo } from '@dxos/schema';
 
-import { ThreadAction, type ThreadState, ThreadType } from '../types';
+import { Thread, ThreadAction, type ThreadState } from '../types';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {
@@ -41,7 +41,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
     query.objects
       .filter((anchor) => {
         const thread = Relation.getSource(anchor);
-        return Obj.instanceOf(ThreadType, thread) && thread.status !== 'resolved';
+        return Obj.instanceOf(Thread.Thread, thread) && thread.status !== 'resolved';
       })
       .concat(state.drafts[fullyQualifiedId(doc)] ?? []),
   );
@@ -60,7 +60,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
             const name = getName(doc, anchor.anchor);
-            const thread = Relation.getSource(anchor) as ThreadType;
+            const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
               thread.name = name;
             }
@@ -101,7 +101,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
       onUpdate: ({ id, cursor }) => {
         const draft = state.drafts[fullyQualifiedId(doc)]?.find((thread) => fullyQualifiedId(thread) === id);
         if (draft) {
-          const thread = Relation.getSource(draft) as ThreadType;
+          const thread = Relation.getSource(draft) as Thread.Thread;
           thread.name = getName(doc, cursor);
           draft.anchor = cursor;
         }
@@ -109,7 +109,7 @@ export const threads = (state: ThreadState, doc?: Markdown.Document, dispatch?: 
         const relation = query.objects.find((object) => getSource(object).id === id);
         if (relation) {
           const thread = getSource(relation);
-          if (Obj.instanceOf(ThreadType, thread)) {
+          if (Obj.instanceOf(Thread.Thread, thread)) {
             thread.name = getName(doc, cursor);
             relation.anchor = cursor;
           }

@@ -16,7 +16,7 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { useSheetModel } from '../../model';
 import { withComputeGraphDecorator } from '../../testing';
-import { SheetType, createSheet } from '../../types';
+import { Sheet } from '../../types';
 
 import { useComputeGraph } from './ComputeGraphContextProvider';
 
@@ -25,13 +25,13 @@ const FUNCTION_NAME = 'TEST';
 const DefaultStory = () => {
   const space = useSpace();
   const graph = useComputeGraph(space);
-  const [sheet, setSheet] = useState<SheetType>();
+  const [sheet, setSheet] = useState<Sheet.Sheet>();
   const [text, setText] = useState(`${FUNCTION_NAME}(100)`);
   const [result, setResult] = useState<any>();
   const model = useSheetModel(graph, sheet);
   useEffect(() => {
     if (space) {
-      const sheet = space.db.add(createSheet());
+      const sheet = space.db.add(Sheet.make());
       setSheet(sheet);
     }
   }, [space]);
@@ -88,7 +88,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
-    withClientProvider({ types: [Function.Function, SheetType], createIdentity: true, createSpace: true }),
+    withClientProvider({ types: [Function.Function, Sheet.Sheet], createIdentity: true, createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
   ],
 } satisfies Meta<typeof DefaultStory>;

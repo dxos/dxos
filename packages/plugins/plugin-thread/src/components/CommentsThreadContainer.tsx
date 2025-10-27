@@ -10,13 +10,18 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { IconButton, Tag, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
-import { MessageTextbox, type MessageTextboxProps, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
+import {
+  MessageTextbox,
+  type MessageTextboxProps,
+  Thread as ThreadComponent,
+  type ThreadRootProps,
+} from '@dxos/react-ui-thread';
 import { type AnchoredTo } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
-import { type ThreadType } from '../types';
+import { type Thread } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
@@ -48,7 +53,7 @@ export const CommentsThreadContainer = ({
   const space = getSpace(anchor);
   const members = useMembers(space?.key);
   const detached = !anchor.anchor;
-  const thread = Relation.getSource(anchor) as ThreadType;
+  const thread = Relation.getSource(anchor) as Thread.Thread;
   const activity = useStatus(space, fullyQualifiedId(thread));
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -91,7 +96,7 @@ export const CommentsThreadContainer = ({
   }, [anchor, identity]);
 
   return (
-    <Thread.Root
+    <ThreadComponent.Root
       id={fullyQualifiedId(thread)}
       classNames='pbs-2 border-be border-subduedSeparator last:border-none'
       current={current}
@@ -108,10 +113,10 @@ export const CommentsThreadContainer = ({
       >
         {detached ? (
           <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
-            <Thread.Header detached>{thread.name}</Thread.Header>
+            <ThreadComponent.Header detached>{thread.name}</ThreadComponent.Header>
           </Tooltip.Trigger>
         ) : (
-          <Thread.Header>{thread.name}</Thread.Header>
+          <ThreadComponent.Header>{thread.name}</ThreadComponent.Header>
         )}
         <div role='none' className={buttonGroupClassNames}>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
@@ -160,10 +165,10 @@ export const CommentsThreadContainer = ({
       */}
       <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
 
-      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
+      <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
 
       {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
       <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
-    </Thread.Root>
+    </ThreadComponent.Root>
   );
 };

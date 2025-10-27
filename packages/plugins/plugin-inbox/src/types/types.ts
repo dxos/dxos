@@ -9,8 +9,8 @@ import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-import { Calendar } from './calendar';
-import { Mailbox } from './mailbox';
+import * as Calendar from './Calendar';
+import * as Mailbox from './Mailbox';
 
 export namespace InboxAction {
   const INBOX_ACTION = `${meta.id}/action`;
@@ -21,7 +21,7 @@ export namespace InboxAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Mailbox,
+      object: Mailbox.Mailbox,
     }),
   }) {}
 
@@ -30,7 +30,7 @@ export namespace InboxAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Calendar,
+      object: Calendar.Calendar,
     }),
   }) {}
 
@@ -53,7 +53,7 @@ export namespace InboxAction {
   export class RunAssistant extends Schema.TaggedClass<RunAssistant>()(`${INBOX_ACTION}/run-assistant`, {
     input: Schema.Struct({
       // TODO(dmaretskyi): Consider making this a ref so it is serializable.
-      mailbox: Mailbox,
+      mailbox: Mailbox.Mailbox,
     }),
     output: Schema.Void,
   }) {}

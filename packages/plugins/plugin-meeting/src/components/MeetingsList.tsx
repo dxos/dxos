@@ -7,9 +7,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, chain, createIntent, useCapabilities, useIntentDispatcher } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type ChannelType } from '@dxos/plugin-thread/types';
+import { type Channel } from '@dxos/plugin-thread/types';
 import { Query, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
@@ -51,7 +52,7 @@ const MeetingItem = ({
   );
 };
 
-export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
+export const MeetingsList = ({ channel }: { channel: Channel.Channel }) => {
   const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const space = getSpace(channel);
@@ -67,7 +68,7 @@ export const MeetingsList = ({ channel }: { channel: ChannelType }) => {
       metadata
         .filter(
           (capability): capability is { id: string; metadata: { label: (object: any) => string; icon: string } } =>
-            capability.id === Meeting.Meeting.typename,
+            capability.id === Type.getTypename(Meeting.Meeting),
         )
         .map((c) => c.metadata),
     [metadata],

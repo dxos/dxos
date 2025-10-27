@@ -7,7 +7,7 @@ import React from 'react';
 import { Capabilities, contributes, createSurface } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
-import { ChannelType } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/plugin-thread/types';
 
 import { MeetingContainer, MeetingSettings, MeetingsList } from '../components';
 import { meta } from '../meta';
@@ -31,9 +31,9 @@ export default () =>
     createSurface({
       id: `${meta.id}/meeting-companion`,
       role: 'article',
-      filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: ChannelType } =>
+      filter: (data): data is { subject: Meeting.Meeting | 'meeting'; companionTo: Channel.Channel } =>
         (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
-        Obj.instanceOf(ChannelType, data.companionTo),
+        Obj.instanceOf(Channel.Channel, data.companionTo),
       component: ({ data }) => {
         return data.subject === 'meeting' ? (
           <MeetingsList channel={data.companionTo} />

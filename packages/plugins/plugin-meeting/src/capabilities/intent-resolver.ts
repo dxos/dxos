@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: meetingCollection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Meeting.Meeting.typename }),
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Meeting.Meeting) }),
           );
           rootCollection.objects.push(Ref.make(meetingCollection));
         }),

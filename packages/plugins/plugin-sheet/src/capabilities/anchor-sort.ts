@@ -6,13 +6,13 @@ import { Capabilities, contributes } from '@dxos/app-framework';
 import { Type } from '@dxos/echo';
 import { getTarget } from '@dxos/react-client/echo';
 
-import { SheetType, compareIndexPositions } from '../types';
+import { Sheet, compareIndexPositions } from '../types';
 
 export default () =>
   contributes(Capabilities.AnchorSort, {
-    key: Type.getTypename(SheetType)!,
+    key: Type.getTypename(Sheet.Sheet)!,
     sort: (anchorA, anchorB) => {
-      const sheet = getTarget(anchorA) as SheetType;
+      const sheet = getTarget(anchorA) as Sheet.Sheet;
       if (sheet !== getTarget(anchorB)) {
         return 0;
       }

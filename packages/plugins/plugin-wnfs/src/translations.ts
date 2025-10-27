@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { FileType } from './types';
+import { WnfsFile } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [FileType.typename]: {
+      [WnfsFile.File.typename]: {
         'typename label': 'File',
         'object name placeholder': 'New file',
         'rename object label': 'Rename file',

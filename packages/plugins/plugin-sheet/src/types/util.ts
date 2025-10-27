@@ -11,10 +11,9 @@ import {
   isFormula,
 } from '@dxos/compute';
 import { randomBytes } from '@dxos/crypto';
-import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { type CreateSheetOptions, type SheetSize, SheetType } from '../types';
+import { type Sheet } from '../types';
 
 export const MAX_ROWS = 500;
 export const MAX_COLS = 676; // 26^2;
@@ -56,8 +55,8 @@ export const insertIndices = (indices: string[], i: number, n: number, max: numb
 };
 
 export const initialize = (
-  sheet: SheetType,
-  { rows = DEFAULT_ROWS, columns = DEFAULT_COLS }: Partial<SheetSize> = {},
+  sheet: Sheet.Sheet,
+  { rows = DEFAULT_ROWS, columns = DEFAULT_COLS }: Partial<Sheet.SheetSize> = {},
 ) => {
   if (!sheet.rows.length) {
     insertIndices(sheet.rows, 0, rows, MAX_ROWS);
@@ -67,44 +66,17 @@ export const initialize = (
   }
 };
 
-export const createSheet = ({ name, cells, ...size }: CreateSheetOptions = {}): SheetType => {
-  const sheet = Obj.make(SheetType, {
-    name,
-    cells: {},
-    rows: [],
-    columns: [],
-    rowMeta: {},
-    columnMeta: {},
-    ranges: [],
-  });
-
-  initialize(sheet, size);
-
-  if (cells) {
-    Object.entries(cells).forEach(([key, { value }]) => {
-      const idx = addressToIndex(sheet, addressFromA1Notation(key));
-      if (isFormula(value)) {
-        value = mapFormulaRefsToIndices(sheet, value);
-      }
-
-      sheet.cells[idx] = { value };
-    });
-  }
-
-  return sheet;
-};
-
 /**
  * E.g., "A1" => "CA2@CB3".
  */
-export const addressToIndex = (sheet: SheetType, cell: CellAddress): string => {
+export const addressToIndex = (sheet: Sheet.Sheet, cell: CellAddress): string => {
   return `${sheet.columns[cell.col]}@${sheet.rows[cell.row]}`;
 };
 
 /**
  * E.g., "CA2@CB3" => "A1".
  */
-export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => {
+export const addressFromIndex = (sheet: Sheet.Sheet, idx: string): CellAddress => {
   const [column, row] = idx.split('@');
   return {
     col: sheet.columns.indexOf(column),
@@ -115,14 +87,14 @@ export const addressFromIndex = (sheet: SheetType, idx: string): CellAddress => 
 /**
  * E.g., "A1:B2" => "CA2@CB3:CC4@CD5".
  */
-export const rangeToIndex = (sheet: SheetType, range: CellRange): string => {
+export const rangeToIndex = (sheet: Sheet.Sheet, range: CellRange): string => {
   return [range.from, range.to ?? range.from].map((cell) => addressToIndex(sheet, cell)).join(':');
 };
 
 /**
  * E.g., "CA2@CB3:CC4@CD5" => "A1:B2".
  */
-export const rangeFromIndex = (sheet: SheetType, idx: string): CompleteCellRange => {
+export const rangeFromIndex = (sheet: Sheet.Sheet, idx: string): CompleteCellRange => {
   const [from, to] = idx.split(':').map((index) => addressFromIndex(sheet, index));
   return { from, to };
 };
@@ -131,7 +103,7 @@ export const rangeFromIndex = (sheet: SheetType, idx: string): CompleteCellRange
  * Compares the positions of two cell indexes in a sheet.
  * Sorts primarily by row, then by column if rows are equal.
  */
-export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: string): number => {
+export const compareIndexPositions = (sheet: Sheet.Sheet, indexA: string, indexB: string): number => {
   const { row: rowA, col: columnA } = addressFromIndex(sheet, indexA);
   const { row: rowB, col: columnB } = addressFromIndex(sheet, indexB);
 
@@ -148,7 +120,7 @@ export const compareIndexPositions = (sheet: SheetType, indexA: string, indexB: 
 /**
  * Map from A1 notation to indices.
  */
-export const mapFormulaRefsToIndices = (sheet: SheetType, formula: string): string => {
+export const mapFormulaRefsToIndices = (sheet: Sheet.Sheet, formula: string): string => {
   invariant(isFormula(formula));
   return formula.replace(/([a-zA-Z]+)([0-9]+)/g, (match) => {
     return addressToIndex(sheet, addressFromA1Notation(match));
@@ -158,7 +130,7 @@ export const mapFormulaRefsToIndices = (sheet: SheetType, formula: string): stri
 /**
  * Map from indices to A1 notation.
  */
-export const mapFormulaIndicesToRefs = (sheet: SheetType, formula: string): string => {
+export const mapFormulaIndicesToRefs = (sheet: Sheet.Sheet, formula: string): string => {
   invariant(isFormula(formula));
   return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
     return addressToA1Notation(addressFromIndex(sheet, idx));

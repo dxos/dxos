@@ -39,7 +39,7 @@ import {
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
 } from '../types';
-import { type CellValue, type SheetAction, type SheetType } from '../types';
+import { type Sheet, type SheetAction } from '../types';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.
@@ -92,7 +92,7 @@ export class SheetModel extends Resource {
 
   constructor(
     private readonly _graph: ComputeGraph,
-    private readonly _sheet: SheetType,
+    private readonly _sheet: Sheet.Sheet,
     private readonly _options: SheetModelOptions = {},
   ) {
     super();
@@ -414,7 +414,7 @@ export class SheetModel extends Resource {
   /**
    * Sets values from a simple map.
    */
-  setValues(values: Record<string, CellValue>): void {
+  setValues(values: Record<string, Sheet.CellValue>): void {
     Object.entries(values).forEach(([key, { value }]) => {
       this.setValue(addressFromA1Notation(key), value);
     });

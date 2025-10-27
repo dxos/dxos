@@ -10,7 +10,7 @@ import { Callout, Icon, Trans, useTranslation } from '@dxos/react-ui';
 import { type AnchoredTo } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { type ThreadType } from '../types';
+import { type Thread } from '../types';
 
 import { CommentsThreadContainer, type CommentsThreadContainerProps } from './CommentsThreadContainer';
 
@@ -63,7 +63,7 @@ export const CommentsContainer = ({ anchors, currentId, showResolvedThreads, ...
   return (
     <div>
       {filteredAnchors.map((anchor) => {
-        const thread = Relation.getSource(anchor) as ThreadType;
+        const thread = Relation.getSource(anchor) as Thread.Thread;
         const threadId = fullyQualifiedId(thread);
         return <CommentsThreadContainer key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
       })}

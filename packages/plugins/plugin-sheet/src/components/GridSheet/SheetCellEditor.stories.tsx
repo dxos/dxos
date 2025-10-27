@@ -15,7 +15,7 @@ import { automerge } from '@dxos/react-ui-editor';
 import { CellEditor, type CellEditorProps } from '@dxos/react-ui-grid';
 
 import { sheetExtension } from '../../extensions';
-import { SheetType, createSheet } from '../../types';
+import { Sheet } from '../../types';
 
 const DefaultStory = ({ value, ...props }: CellEditorProps) => {
   const extensions = useMemo(() => {
@@ -29,14 +29,14 @@ const DefaultStory = ({ value, ...props }: CellEditorProps) => {
 
 const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
   const cell = 'A1';
-  const [object, setObject] = useState<SheetType>();
+  const [object, setObject] = useState<Sheet.Sheet>();
   useAsyncEffect(async () => {
-    const client = new Client({ types: [SheetType] });
+    const client = new Client({ types: [Sheet.Sheet] });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();
 
-    const sheet = createSheet();
+    const sheet = Sheet.make();
     sheet.name = 'Test';
     sheet.cells[cell] = { value };
     space.db.add(sheet);

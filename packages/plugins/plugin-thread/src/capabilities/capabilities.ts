@@ -7,7 +7,7 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { type CallManager, type CallState, type MediaState } from '../calls';
 import { meta } from '../meta';
-import { type ChannelType, type ThreadState, type ViewState } from '../types';
+import { type Channel, type ThreadState, type ViewState } from '../types';
 
 export namespace ThreadCapabilities {
   export const CallManager = defineCapability<CallManager>(`${meta.id}/capability/call-manager`);
@@ -16,7 +16,7 @@ export namespace ThreadCapabilities {
   // TODO(burdon): This brings in deps from ../calls; how should we manage/minimize explicit type exposure to other plugins?
   // TODO(wittjosiah): These callbacks could be intents once we support broadcast.
   export type CallProperties = {
-    onJoin: (state: { channel?: ChannelType; roomId?: string }) => Promise<void>;
+    onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
     onLeave: (roomId?: string) => Promise<void>;
     onCallStateUpdated: (callState: CallState) => Promise<void>;
     onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
