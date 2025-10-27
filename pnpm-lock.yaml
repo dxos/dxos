@@ -8537,9 +8537,6 @@ importers:
       '@effect/platform':
         specifier: 0.92.1
         version: 0.92.1(effect@3.18.3)
-      '@phosphor-icons/react':
-        specifier: ^2.1.10
-        version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
@@ -12412,6 +12409,9 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../react-ui-theme
+      '@phosphor-icons/react':
+        specifier: ^2.1.10
+        version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.2
