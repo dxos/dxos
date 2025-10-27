@@ -90,6 +90,6 @@ export const Default: Story = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',
-    initialValue: '# Demo\n\nThis is a document.\n\n',
+    initialValue: '# Demo\n\nThis is a **document**.\n\n',
   },
 };
