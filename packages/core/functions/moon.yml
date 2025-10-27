@@ -12,7 +12,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/testing/index.ts'
   e2e:
-    command: DX_RUN_FUNCTIONS_E2E=1 vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
+    command: DX_TEST_TAGS=functions-e2e vitest run -c vitest.config.ts --reporter=verbose src/e2e/*.test.ts
     deps:
       - ^:build
       - ^:compile
