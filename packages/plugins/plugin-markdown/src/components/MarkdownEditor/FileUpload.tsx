@@ -10,6 +10,8 @@ import { useDropzone } from 'react-dropzone';
 import { type FileInfo } from '@dxos/app-framework';
 import { addLink } from '@dxos/react-ui-editor';
 
+export const IMAGE_FILES = ['.jpg', '.jpeg', '.png', '.gif'];
+
 export type FileUploadAction = () => void;
 
 export type FileUploadProps = {
@@ -27,7 +29,7 @@ export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
       multiple: false,
       noDrag: true,
       accept: {
-        'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
+        'image/*': IMAGE_FILES,
       },
     });
 
