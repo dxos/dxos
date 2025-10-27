@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { ChannelType } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/plugin-thread/types';
 import { DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
@@ -23,7 +23,7 @@ export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.i
 export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
-    channel: ChannelType,
+    channel: Channel.Channel,
   }),
   output: Schema.Struct({
     object: Meeting,

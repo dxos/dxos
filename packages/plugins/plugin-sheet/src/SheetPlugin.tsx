@@ -21,7 +21,7 @@ import { AnchorSort, ComputeGraphRegistry, IntentResolver, Markdown, ReactSurfac
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { SheetAction, SheetType } from './types';
+import { Sheet, SheetAction } from './types';
 
 export const SheetPlugin = definePlugin(meta, () => [
   defineModule({
@@ -39,9 +39,9 @@ export const SheetPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: SheetType.typename,
+        id: Sheet.Sheet.typename,
         metadata: {
-          label: (object: SheetType) => object.name,
+          label: (object: Sheet.Sheet) => object.name,
           icon: 'ph--grid-nine--regular',
           iconHue: 'indigo',
           serializer,
@@ -56,7 +56,7 @@ export const SheetPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: SheetType,
+          objectSchema: Sheet.Sheet,
           getIntent: (props, options) => createIntent(SheetAction.Create, { ...props, space: options.space }),
         }),
       ),

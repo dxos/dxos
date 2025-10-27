@@ -14,7 +14,7 @@ import { mx } from '@dxos/react-ui-theme';
 import {
   MessageTextbox,
   type MessageTextboxProps,
-  Thread,
+  Thread as ThreadComponent,
   type ThreadRootProps,
   threadLayout,
 } from '@dxos/react-ui-thread';
@@ -23,7 +23,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { useStatus } from '../hooks';
 import { meta } from '../meta';
-import { type ThreadType } from '../types';
+import { type Thread } from '../types';
 import { getMessageMetadata } from '../util';
 
 import { command } from './command-extension';
@@ -44,7 +44,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
 export type ChatContainerProps = ThemedClassName<
   {
     space: Space;
-    thread: ThreadType;
+    thread: Thread.Thread;
     context?: Obj.Any;
     autoFocusTextbox?: boolean;
   } & Pick<ThreadRootProps, 'current'>
@@ -118,7 +118,7 @@ export const ChatContainer = ({
   };
 
   return (
-    <Thread.Root
+    <ThreadComponent.Root
       current={current}
       id={id}
       classNames={[
@@ -146,8 +146,8 @@ export const ChatContainer = ({
       </ScrollArea.Root>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-      <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
-    </Thread.Root>
+      <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
+    </ThreadComponent.Root>
   );
 };
 

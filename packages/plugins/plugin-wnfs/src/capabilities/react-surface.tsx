@@ -12,14 +12,14 @@ import { type InputProps } from '@dxos/react-ui-form';
 
 import { FileContainer, FileInput } from '../components';
 import { meta } from '../meta';
-import { FileType, WnfsAction } from '../types';
+import { WnfsAction, WnfsFile } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/article`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: FileType } => Obj.instanceOf(FileType, data.subject),
+      filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
       component: ({ data, role }) => <FileContainer role={role} file={data.subject} />,
     }),
     createSurface({

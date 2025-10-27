@@ -3,4 +3,5 @@
 //
 
 export * from './actions';
-export * from './schema';
+export * as Notebook from './Notebook';
+export * from './types';

@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
-import { type ChannelType } from '@dxos/plugin-thread/types';
+import { type Channel } from '@dxos/plugin-thread/types';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
@@ -35,7 +35,7 @@ export default (context: PluginContext) => {
   const _settings = context.getCapability(Capabilities.SettingsStore).getStore<Meeting.Settings>(meta.id)!.value;
 
   return contributes(ThreadCapabilities.CallExtension, {
-    onJoin: async ({ channel }: { channel?: ChannelType }) => {
+    onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
       const identity = client.halo.identity.get();
       invariant(identity);
       const space = getSpace(channel);

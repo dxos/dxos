@@ -15,7 +15,7 @@ import { Ref, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
-import { ChannelType, ThreadAction, ThreadType } from '../types';
+import { Channel, Thread, ThreadAction } from '../types';
 
 import { ThreadCapabilities } from './capabilities';
 
@@ -27,7 +27,7 @@ export default (context: PluginContext) =>
         Effect.gen(function* () {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           const { object: collection } = yield* dispatch(
-            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(ChannelType) }),
+            createIntent(CollectionAction.CreateQueryCollection, { typename: Type.getTypename(Channel.Channel) }),
           );
           rootCollection.objects.push(Ref.make(collection));
 
@@ -41,18 +41,14 @@ export default (context: PluginContext) =>
       intent: ThreadAction.CreateChannel,
       resolve: ({ name }) => ({
         data: {
-          object: Obj.make(ChannelType, {
-            name,
-            defaultThread: Ref.make(Obj.make(ThreadType, { messages: [], status: 'active' })),
-            threads: [],
-          }),
+          object: Channel.make({ name }),
         },
       }),
     }),
     createResolver({
       intent: ThreadAction.CreateChannelThread,
       resolve: ({ channel }) => {
-        const thread = Obj.make(ThreadType, { messages: [], status: 'active' });
+        const thread = Thread.make({ status: 'active' });
         channel.threads.push(Ref.make(thread));
         return {
           data: {
@@ -70,7 +66,7 @@ export default (context: PluginContext) =>
 
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
-        const thread = Obj.make(ThreadType, { name, messages: [], status: 'staged' });
+        const thread = Thread.make({ name });
         const anchor = Relation.make(AnchoredTo, {
           [Relation.Source]: thread,
           [Relation.Target]: subject,
@@ -107,7 +103,7 @@ export default (context: PluginContext) =>
           sender,
           blocks: [{ _tag: 'proposal', text }],
         });
-        const thread = Obj.make(ThreadType, { name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
+        const thread = Thread.make({ name: 'Proposal', messages: [Ref.make(proposal)], status: 'active' });
 
         return {
           intents: [
@@ -164,7 +160,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.Delete,
       resolve: async ({ subject, anchor, thread: _thread }, undo) => {
-        const thread = _thread ?? (Relation.getSource(anchor) as ThreadType);
+        const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const draft = state.drafts[subjectId];
@@ -226,7 +222,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.AddMessage,
       resolve: ({ anchor, subject, sender, text }) => {
-        const thread = Relation.getSource(anchor) as ThreadType;
+        const thread = Relation.getSource(anchor) as Thread.Thread;
         const { state } = context.getCapability(ThreadCapabilities.MutableState);
         const subjectId = fullyQualifiedId(subject);
         const space = getSpace(subject);
@@ -288,7 +284,7 @@ export default (context: PluginContext) =>
     createResolver({
       intent: ThreadAction.DeleteMessage,
       resolve: ({ subject, anchor, messageId, message, messageIndex }, undo) => {
-        const thread = Relation.getSource(anchor) as ThreadType;
+        const thread = Relation.getSource(anchor) as Thread.Thread;
         const space = getSpace(subject);
         invariant(space, 'Space not found');
 

@@ -13,7 +13,7 @@ import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
+import { Channel, Thread } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -61,7 +61,7 @@ const meta = {
                 transcript: Ref.make(Transcript.makeTranscript(space.queues.create().dxn)),
                 notes: Ref.make(DataType.makeText('Notes')),
                 summary: Ref.make(DataType.makeText()),
-                thread: Ref.make(Obj.make(ThreadType, { messages: [] })),
+                thread: Ref.make(Thread.make()),
               }),
             );
           },
@@ -71,7 +71,7 @@ const meta = {
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
+      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message])],
     }),
   ],
 } satisfies Meta<typeof MeetingContainer>;

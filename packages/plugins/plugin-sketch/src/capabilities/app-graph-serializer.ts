@@ -11,19 +11,19 @@ import { isSpace } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
 import { translations } from '../translations';
-import { DiagramType, SketchAction } from '../types';
+import { Diagram, SketchAction } from '../types';
 
 export default (context: PluginContext) =>
   contributes(Capabilities.AppGraphSerializer, [
     {
-      inputType: DiagramType.typename,
+      inputType: Diagram.Diagram.typename,
       outputType: 'application/tldraw',
       // Reconcile with metadata serializers.
       serialize: async (node) => {
         const diagram = node.data;
         const canvas = await diagram.canvas.load();
         return {
-          name: diagram.name || translations[0]['en-US'][DiagramType.typename]['object name placeholder'],
+          name: diagram.name || translations[0]['en-US'][Diagram.Diagram.typename]['object name placeholder'],
           data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
           type: 'application/tldraw',
         };

@@ -5,19 +5,19 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { DataType } from '@dxos/schema';
 
 /**
  * Source script.
  */
 export const Script = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  description: Schema.optional(Schema.String),
+  name: Schema.String.pipe(Schema.optional),
+  description: Schema.String.pipe(Schema.optional),
   // TODO(burdon): Change to hash of deployed content.
   // Whether source has changed since last deploy.
-  changed: Schema.optional(Schema.Boolean),
-  source: Type.Ref(DataType.Text),
+  changed: Schema.Boolean.pipe(FormAnnotation.set(false), Schema.optional),
+  source: Type.Ref(DataType.Text).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Script',

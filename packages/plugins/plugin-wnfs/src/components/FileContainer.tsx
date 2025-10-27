@@ -12,13 +12,13 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { WnfsCapabilities } from '../capabilities';
 import { filePath, getBlobUrl, loadWnfs, wnfsUrl } from '../helpers';
-import { type FileType } from '../types';
+import { type WnfsFile } from '../types';
 
 import { FilePreview } from './FilePreview';
 
 export type FileContainerProps = {
   role: string;
-  file: FileType;
+  file: WnfsFile.File;
 };
 
 export const FileContainer = ({ file }: FileContainerProps) => {

@@ -20,7 +20,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { ThreadCapabilities } from '../capabilities';
 import { meta } from '../meta';
-import { type ChannelType } from '../types';
+import { type Channel } from '../types';
 
 import { Call } from './Call';
 import ChatContainer from './ChatContainer';
@@ -28,7 +28,7 @@ import ChatContainer from './ChatContainer';
 // TODO(burdon): Create Radix style layout.
 
 export type ChannelContainerProps = {
-  channel?: ChannelType;
+  channel?: Channel.Channel;
   roomId?: string;
   role?: string;
   fullscreen?: boolean;

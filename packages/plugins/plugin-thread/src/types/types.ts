@@ -10,7 +10,8 @@ import { AnchoredTo, DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-import { ChannelType, ThreadType } from './schema';
+import * as Channel from './Channel';
+import * as Thread from './Thread';
 
 export namespace ThreadAction {
   export class onCreateSpace extends Schema.TaggedClass<onCreateSpace>()(`${meta.id}/action/on-space-created`, {
@@ -27,7 +28,7 @@ export namespace ThreadAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: ChannelType,
+      object: Channel.Channel,
     }),
   }) {}
 
@@ -35,10 +36,10 @@ export namespace ThreadAction {
     `${meta.id}/action/create-channel-thread`,
     {
       input: Schema.Struct({
-        channel: ChannelType,
+        channel: Channel.Channel,
       }),
       output: Schema.Struct({
-        object: ThreadType,
+        object: Thread.Thread,
       }),
     },
   ) {}
@@ -56,7 +57,7 @@ export namespace ThreadAction {
     input: Schema.Struct({
       anchor: AnchoredTo,
       subject: EchoObjectSchema,
-      thread: Schema.optional(ThreadType),
+      thread: Schema.optional(Thread.Thread),
     }),
     output: Schema.Void,
   }) {}
@@ -70,7 +71,7 @@ export namespace ThreadAction {
 
   export class ToggleResolved extends Schema.TaggedClass<ToggleResolved>()(`${meta.id}/action/toggle-resolved`, {
     input: Schema.Struct({
-      thread: ThreadType,
+      thread: Thread.Thread,
     }),
     output: Schema.Void,
   }) {}
@@ -111,7 +112,7 @@ export const ThreadSettingsSchema = Schema.mutable(Schema.Struct({}));
 export type ThreadSettingsProps = Schema.Schema.Type<typeof ThreadSettingsSchema>;
 
 export interface ThreadModel {
-  root: ThreadType;
+  root: Thread.Thread;
 }
 
 type SubjectId = string;

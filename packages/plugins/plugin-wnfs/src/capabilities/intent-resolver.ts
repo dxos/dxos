@@ -3,10 +3,9 @@
 //
 
 import { Capabilities, type PluginContext, contributes, createResolver } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
 
 import { upload } from '../helpers';
-import { FileType, WnfsAction } from '../types';
+import { WnfsAction, WnfsFile } from '../types';
 
 import { WnfsCapabilities } from './capabilities';
 
@@ -18,7 +17,7 @@ export default (context: PluginContext) =>
       intent: WnfsAction.Create,
       resolve: ({ name, type, cid }) => ({
         data: {
-          object: Obj.make(FileType, { name, type, cid }),
+          object: WnfsFile.make({ name, type, cid }),
         },
       }),
     }),

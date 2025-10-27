@@ -5,12 +5,11 @@
 import { type PromiseIntentDispatcher, createIntent } from '@dxos/app-framework';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Filter, Key, type Obj, Type } from '@dxos/echo';
 import { type TypedObject } from '@dxos/echo/internal';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { createSheet } from '@dxos/plugin-sheet/types';
-import { type CellValue, SheetType } from '@dxos/plugin-sheet/types';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { Sheet } from '@dxos/plugin-sheet/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
@@ -69,16 +68,11 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    DiagramType.typename,
+    Diagram.Diagram.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         // TODO(burdon): Generate diagram.
-        const obj = space.db.add(
-          Obj.make(DiagramType, {
-            name: faker.commerce.productName(),
-            canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
-          }),
-        );
+        const obj = space.db.add(Diagram.make({ name: faker.commerce.productName() }));
 
         return obj;
       });
@@ -89,10 +83,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
   // TODO(burdon): Create unit tests.
   [
-    SheetType.typename,
+    Sheet.Sheet.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const cells: Record<string, CellValue> = {};
+        const cells: Record<string, Sheet.CellValue> = {};
         const year = new Date().getFullYear();
         const cols = 4;
         const rows = 16;
@@ -114,7 +108,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
         // TODO(burdon): Set width.
         // TODO(burdon): Set formatting for columns.
         return space.db.add(
-          createSheet({
+          Sheet.make({
             name: faker.commerce.productName(),
             cells,
           }),

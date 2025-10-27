@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
 import { SettingsStore } from '@dxos/local-storage';
-import { type DiagramType, isDiagramType } from '@dxos/plugin-sketch/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchContainer, SketchSettings } from '../components';
@@ -18,7 +18,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/sketch`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, EXCALIDRAW_SCHEMA),
+      filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, EXCALIDRAW_SCHEMA),
       component: ({ data, role }) => {
         const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
 

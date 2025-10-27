@@ -6,36 +6,30 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { ItemAnnotation } from '@dxos/schema';
 
 export const Game = Schema.Struct({
   name: Schema.optional(Schema.String),
-  players: Schema.optional(
-    Schema.Struct({
-      white: Schema.optional(
-        Schema.String.annotations({
-          description: 'DID of white player',
-        }),
-      ),
-      black: Schema.optional(
-        Schema.String.annotations({
-          description: 'DID of black player',
-        }),
-      ),
-    }).pipe(Schema.mutable),
-  ),
-  pgn: Schema.optional(
-    Schema.String.annotations({
-      description: 'Portable Game Notation.',
-    }),
-  ),
-  fen: Schema.optional(
-    Schema.String.annotations({
-      description: 'Forsyth-Edwards Notation.',
-    }),
-  ),
+  players: Schema.Struct({
+    white: Schema.optional(
+      Schema.String.annotations({
+        description: 'DID of white player',
+      }),
+    ),
+    black: Schema.optional(
+      Schema.String.annotations({
+        description: 'DID of black player',
+      }),
+    ),
+  }).pipe(Schema.mutable, FormAnnotation.set(false), Schema.optional),
+  pgn: Schema.String.annotations({
+    description: 'Portable Game Notation.',
+  }).pipe(FormAnnotation.set(false), Schema.optional),
+  fen: Schema.String.annotations({
+    description: 'Forsyth-Edwards Notation.',
+  }).pipe(FormAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Chess',
