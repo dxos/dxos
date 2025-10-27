@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator, type StoryContext } from '@storybook/react';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
@@ -57,13 +57,18 @@ export type WithPluginManagerOptions = UseAppOptions & {
   fireEvents?: (ActivationEvent | string)[];
 };
 
+export type WithPluginManagerInitializer<Args = void> =
+  | WithPluginManagerOptions
+  | ((context: StoryContext<Args>) => WithPluginManagerOptions);
+
 /**
  * Wraps a story with a plugin manager.
  * NOTE: This builds up and tears down the plugin manager on every render.
  */
-export const withPluginManager = (options: WithPluginManagerOptions = {}): Decorator => {
+export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
-    const pluginManager = useMemo(() => setupPluginManager(options), [options]);
+    const options = typeof init === 'function' ? init(context as any) : init;
+    const pluginManager = useMemo(() => setupPluginManager(options), [init]);
 
     // Set-up root capability.
     useEffect(() => {

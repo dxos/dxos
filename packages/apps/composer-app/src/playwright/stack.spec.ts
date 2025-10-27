@@ -43,7 +43,7 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
     await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT);
-    await Stack.createSection(host.page, 'Document');
+    await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
@@ -80,8 +80,8 @@ test.describe('Stack tests', () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection', nth: 0 });
     await host.toggleCollectionCollapsed(2);
-    await Stack.createSection(host.page, 'Document');
-    await Stack.createSection(host.page, 'Document');
+    await Stack.addSection(host.page, 'Document');
+    await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     await expect(host.getObjectLinks()).toHaveCount(4);
     await expect(stack.sections()).toHaveCount(2);
