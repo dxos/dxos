@@ -6,7 +6,7 @@ import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/excalidraw/types';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type DiagramType } from '@dxos/plugin-sketch/types';
+import { type Diagram } from '@dxos/plugin-sketch/types';
 import { useThemeContext } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
@@ -14,7 +14,7 @@ import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
 
 export type SketchContainerProps = {
-  sketch: DiagramType;
+  sketch: Diagram.Diagram;
   role: string;
   settings: SketchSettingsProps;
 };

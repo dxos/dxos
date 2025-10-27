@@ -10,13 +10,13 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type DiagramType, type SketchSettingsProps } from '../types';
+import { type Diagram, type SketchSettingsProps } from '../types';
 
 import { Sketch } from './Sketch';
 
 export type SketchContainerProps = {
   role: string;
-  sketch: DiagramType;
+  sketch: Diagram.Diagram;
   settings: SketchSettingsProps;
 };
 

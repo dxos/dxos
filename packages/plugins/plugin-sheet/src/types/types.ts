@@ -7,17 +7,7 @@ import * as Schema from 'effect/Schema';
 import { meta } from '../meta';
 import { SheetModel } from '../model';
 
-import { type CellValue, RowColumnMeta, SheetType } from './schema';
-
-export type SheetSize = {
-  rows: number;
-  columns: number;
-};
-
-export type CreateSheetOptions = {
-  name?: string;
-  cells?: Record<string, CellValue>;
-} & Partial<SheetSize>;
+import * as Sheet from './Sheet';
 
 export namespace SheetAction {
   const SHEET_ACTION = `${meta.id}/action`;
@@ -27,7 +17,7 @@ export namespace SheetAction {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: SheetType,
+      object: Sheet.Sheet,
     }),
   }) {}
 
@@ -49,7 +39,7 @@ export namespace SheetAction {
     axis: Axis,
     axisIndex: Schema.String,
     index: Schema.Number,
-    axisMeta: RowColumnMeta,
+    axisMeta: Sheet.RowColumnMeta,
     values: Schema.Array(Schema.Any),
   });
 

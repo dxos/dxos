@@ -15,14 +15,14 @@ import { render } from '@dxos/storybook-utils';
 
 import { createThreadPlugins } from '../testing';
 import { translations } from '../translations';
-import { ChannelType, ThreadType } from '../types';
+import { Channel, Thread } from '../types';
 
 import { ChannelContainer, type ChannelContainerProps } from './ChannelContainer';
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelContainerProps) => {
   const space = useSpace();
-  const [channel] = useQuery(space, Query.type(ChannelType));
+  const [channel] = useQuery(space, Query.type(Channel.Channel));
   if (!channel) {
     return null;
   }
@@ -39,7 +39,7 @@ const meta = {
     withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [...(await createThreadPlugins())],
-      capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
+      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message])],
     }),
   ],
   parameters: {

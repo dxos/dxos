@@ -12,18 +12,18 @@ import { ghostHover } from '@dxos/react-ui-theme';
 
 import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';
-import { Range, type SheetType } from '../../types';
+import { Sheet } from '../../types';
 
 export type RangeListProps = {
-  sheet: SheetType;
+  sheet: Sheet.Sheet;
 };
 
 export const RangeList = ({ sheet }: RangeListProps) => {
   const { t } = useTranslation(meta.id);
   // TODO(thure): Implement similar to comments, #8121
-  const handleSelectRange = (range: Range) => {};
+  const handleSelectRange = (range: Sheet.Range) => {};
   const handleDeleteRange = useCallback(
-    (range: Range) => {
+    (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
       sheet.ranges.splice(index, 1);
     },
@@ -37,7 +37,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
           <Callout.Title>{t('no ranges message')}</Callout.Title>
         </Callout.Root>
       ) : (
-        <List.Root<Range> items={sheet.ranges} isItem={Schema.is(Range)}>
+        <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) =>
             ranges.map((range, i) => (
               <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>

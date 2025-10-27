@@ -10,7 +10,7 @@ import { Script } from '@dxos/functions';
 import { meta } from '../meta';
 import { templates } from '../templates';
 
-import { Notebook } from './schema';
+import * as Notebook from './Notebook';
 
 export namespace ScriptAction {
   export const ScriptProps = Schema.Struct({

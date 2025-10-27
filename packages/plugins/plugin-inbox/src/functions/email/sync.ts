@@ -20,7 +20,7 @@ import { DatabaseService, QueueService, defineFunction } from '@dxos/functions';
 import { type DataType } from '@dxos/schema';
 
 // TODO(burdon): Importing from types/index.ts pulls in @dxos/client dependencies.
-import { Mailbox } from '../../types/mailbox';
+import * as Mailbox from '../../types/Mailbox';
 
 import { getMessage, listMessages, messageToObject } from './api';
 
@@ -44,7 +44,7 @@ export default defineFunction({
     Effect.gen(function* () {
       yield* Console.log('syncing gmail', { mailboxId, userId, after, pageSize });
 
-      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox);
+      const mailbox = yield* DatabaseService.resolve(DXN.parse(mailboxId), Mailbox.Mailbox);
 
       // TODO(wittjosiah): Consider syncing labels to space.
       // Sync labels.

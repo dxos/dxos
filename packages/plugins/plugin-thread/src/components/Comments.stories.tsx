@@ -18,7 +18,7 @@ import { AnchoredTo, DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
-import { ThreadType } from '../types';
+import { Thread } from '../types';
 
 import { CommentsContainer } from './CommentsContainer';
 import { createCommentThread, createProposalThread } from './testing';
@@ -71,7 +71,7 @@ const meta = {
       plugins: [
         IntentPlugin(),
         ClientPlugin({
-          types: [DataType.Message, ThreadType, AnchoredTo],
+          types: [DataType.Message, Thread.Thread, AnchoredTo],
           onClientInitialized: async ({ client }) => {
             await client.halo.createIdentity();
           },

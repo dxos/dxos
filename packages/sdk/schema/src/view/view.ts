@@ -12,6 +12,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import {
+  FormAnnotation,
   FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
@@ -77,22 +78,22 @@ const View_ = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable, FormAnnotation.set(false)),
 
   /**
    * @deprecated Prefer ordering in query.
    */
-  sort: Schema.optional(Schema.Array(FieldSortType)),
+  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormAnnotation.set(false))),
 
   /**
    * Projection of the data returned from the query.
    */
-  projection: Projection,
+  projection: Projection.pipe(FormAnnotation.set(false)),
 
   /**
    * Reference to the custom view object which is used to store data specific to rendering.
    */
-  presentation: Type.Ref(Type.Expando),
+  presentation: Type.Ref(Type.Expando).pipe(FormAnnotation.set(false)),
 })
   .pipe(LabelAnnotation.set(['name']))
   .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));

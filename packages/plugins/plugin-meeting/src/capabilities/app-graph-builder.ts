@@ -15,7 +15,7 @@ import { createExtension, rxFromObservable, rxFromSignal } from '@dxos/plugin-gr
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceAction } from '@dxos/plugin-space/types';
 import { ThreadCapabilities } from '@dxos/plugin-thread';
-import { ChannelType } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/plugin-thread/types';
 import { SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
@@ -32,7 +32,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.flatMap((channel) => {
               const space = getSpace(channel);
               const state = space && get(rxFromObservable(space.state));
@@ -73,7 +75,7 @@ export default (context: PluginContext) =>
           Function.pipe(
             get(node),
             Option.map((node) => node.data),
-            Option.filter(Obj.instanceOf(ChannelType)),
+            Option.filter(Obj.instanceOf(Channel.Channel)),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));
@@ -114,7 +116,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.flatMap((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const isCallActive = get(
@@ -151,7 +155,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.map((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const enabled = get(rxFromSignal(() => state.transcriptionManager?.enabled ?? false));
@@ -212,7 +218,9 @@ export default (context: PluginContext) =>
         Rx.make((get) =>
           Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.flatMap((channel) => {
               const state = context.getCapability(MeetingCapabilities.State);
               const meeting = get(rxFromSignal(() => state.activeMeeting));

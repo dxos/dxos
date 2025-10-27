@@ -4,7 +4,7 @@
 
 import { type ClassNameValue } from '@dxos/react-ui';
 
-import { type SheetType } from '../types';
+import { type Sheet } from '../types';
 
 export const alignKey = 'alignment';
 export type AlignKey = typeof alignKey;
@@ -19,7 +19,7 @@ export type StyleKey = typeof styleKey;
 export type StyleValue = 'highlight' | 'softwrap';
 
 // TODO(burdon): Reconcile with plugin-table.
-export const cellClassNameForRange = ({ key, value }: SheetType['ranges'][number]): ClassNameValue => {
+export const cellClassNameForRange = ({ key, value }: Sheet.Sheet['ranges'][number]): ClassNameValue => {
   switch (key) {
     case alignKey:
       switch (value) {

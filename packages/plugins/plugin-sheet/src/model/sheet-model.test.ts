@@ -10,7 +10,7 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute/testing';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { createSheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
+import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '../types';
 
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
@@ -31,7 +31,7 @@ describe('SheetModel', () => {
     await graph.open();
 
     // TODO(burdon): Create via factory.
-    const sheet = createSheet({ rows: 5, columns: 5 });
+    const sheet = Sheet.make({ rows: 5, columns: 5 });
     const model = new SheetModel(graph, sheet);
     await model.open();
     testBuilder.ctx.onDispose(() => model.close());
