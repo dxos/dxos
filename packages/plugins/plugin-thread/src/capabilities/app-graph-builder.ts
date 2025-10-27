@@ -14,7 +14,7 @@ import { ROOT_ID, createExtension, rxFromSignal } from '@dxos/plugin-graph';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
-import { ChannelType, ThreadAction } from '../types';
+import { Channel, ThreadAction } from '../types';
 import { getAnchor } from '../util';
 
 import { ThreadCapabilities } from './capabilities';
@@ -67,7 +67,9 @@ export default (context: PluginContext) => {
         return Rx.make((get) => {
           return Function.pipe(
             get(node),
-            Option.flatMap((node) => (Obj.instanceOf(ChannelType, node.data) ? Option.some(node.data) : Option.none())),
+            Option.flatMap((node) =>
+              Obj.instanceOf(Channel.Channel, node.data) ? Option.some(node.data) : Option.none(),
+            ),
             Option.map((channel) => {
               const callManager = context.getCapability(ThreadCapabilities.CallManager);
               const joined = get(
@@ -103,7 +105,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(Channel.Channel, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(Obj.getTypename(node.data)!);
@@ -133,7 +135,7 @@ export default (context: PluginContext) => {
           Function.pipe(
             get(node),
             Option.flatMap((node) => {
-              if (!Obj.isObject(node.data) || Obj.instanceOf(ChannelType, node.data)) {
+              if (!Obj.isObject(node.data) || Obj.instanceOf(Channel.Channel, node.data)) {
                 return Option.none();
               }
               const metadata = resolve(Obj.getTypename(node.data)!);

@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { SheetType } from './types';
+import { Sheet } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [SheetType.typename]: {
+      [Sheet.Sheet.typename]: {
         'typename label': 'Sheet',
         'typename label_zero': 'Sheets',
         'typename label_one': 'Sheet',

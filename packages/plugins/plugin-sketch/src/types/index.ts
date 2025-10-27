@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './diagram';
+export * as Diagram from './Diagram';
 export * from './types';

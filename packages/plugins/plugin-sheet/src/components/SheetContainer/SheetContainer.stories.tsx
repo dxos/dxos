@@ -16,7 +16,7 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { SheetAction, SheetType } from '../../types';
+import { Sheet, SheetAction } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { RangeList } from '../RangeList';
 
@@ -27,7 +27,7 @@ const meta = {
   component: SheetContainer,
   decorators: [
     withTheme,
-    withClientProvider({ types: [SheetType], createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
     withAttention,
     // TODO(wittjosiah): Consider whether we should refactor component so story doesn't need to depend on intents.

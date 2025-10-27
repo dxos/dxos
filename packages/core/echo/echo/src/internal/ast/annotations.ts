@@ -175,6 +175,13 @@ export const DescriptionAnnotationId = Symbol.for('@dxos/schema/annotation/Descr
 export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionAnnotationId);
 
 /**
+ * Identifies if a property should be included in a form or not.
+ * By default, all properties are included in forms, so this is opt-out.
+ */
+export const FormAnnotationId = Symbol.for('@dxos/schema/annotation/Form');
+export const FormAnnotation = createAnnotationHelper<boolean>(FormAnnotationId);
+
+/**
  * Default field to be used on referenced schema to lookup the value.
  */
 export const FieldLookupAnnotationId = Symbol.for('@dxos/schema/annotation/FieldLookup');

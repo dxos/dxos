@@ -5,13 +5,13 @@
 import { Capabilities, contributes, createResolver } from '@dxos/app-framework';
 
 import { meta } from '../meta';
-import { SheetAction, createSheet } from '../types';
+import { Sheet, SheetAction } from '../types';
 
 export default () =>
   contributes(Capabilities.IntentResolver, [
     createResolver({
       intent: SheetAction.Create,
-      resolve: ({ name }) => ({ data: { object: createSheet({ name }) } }),
+      resolve: ({ name }) => ({ data: { object: Sheet.make({ name }) } }),
     }),
     createResolver({
       intent: SheetAction.InsertAxis,

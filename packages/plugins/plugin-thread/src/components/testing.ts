@@ -8,10 +8,10 @@ import { faker } from '@dxos/random';
 import { type Identity } from '@dxos/react-client/halo';
 import { DataType } from '@dxos/schema';
 
-import { ThreadType } from '../types';
+import { Thread } from '../types';
 
-export const createCommentThread = (identity: Identity): ThreadType => {
-  return Obj.make(ThreadType, {
+export const createCommentThread = (identity: Identity): Thread.Thread => {
+  return Thread.make({
     name: 'Comment',
     messages: faker.helpers.multiple(
       () =>
@@ -30,8 +30,8 @@ export const createCommentThread = (identity: Identity): ThreadType => {
   });
 };
 
-export const createProposalThread = (identity: Identity): ThreadType => {
-  return Obj.make(ThreadType, {
+export const createProposalThread = (identity: Identity): Thread.Thread => {
+  return Thread.make({
     name: 'Proposal',
     messages: faker.helpers.multiple(
       () =>

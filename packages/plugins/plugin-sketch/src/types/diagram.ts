@@ -4,33 +4,44 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
+import { FormAnnotation } from '@dxos/echo/internal';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
-export const CanvasType = Schema.Struct({
-  id: Schema.String,
+export const Canvas = Schema.Struct({
   /** Fully qualified external schema reference. */
-  schema: Schema.optional(Schema.String),
-  content: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  // TODO(wittjosiah): Remove once the schema is fully internalized.
+  schema: Schema.String.pipe(Schema.optional),
+  content: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.mutable),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Canvas',
     version: '0.1.0',
   }),
 );
-export interface CanvasType extends Schema.Schema.Type<typeof CanvasType> {}
+export interface Canvas extends Schema.Schema.Type<typeof Canvas> {}
 
-export const DiagramType = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  canvas: Type.Ref(CanvasType),
+export const Diagram = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  canvas: Type.Ref(Canvas).pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Diagram',
     version: '0.1.0',
   }),
 );
-export interface DiagramType extends Schema.Schema.Type<typeof DiagramType> {}
+export interface Diagram extends Schema.Schema.Type<typeof Diagram> {}
 
-export const isDiagramType = (object: any, schema: string): object is DiagramType =>
-  Schema.is(DiagramType)(object) && object.canvas.target?.schema === schema;
+export type DiagramProps = Omit<Obj.MakeProps<typeof Diagram>, 'canvas'> & {
+  canvas?: Partial<Obj.MakeProps<typeof Canvas>>;
+};
+
+export const make = ({ canvas: canvasProps, ...props }: DiagramProps = {}) => {
+  const { schema = TLDRAW_SCHEMA, content = {} } = canvasProps ?? {};
+  const canvas = Obj.make(Canvas, { schema, content });
+  return Obj.make(Diagram, { ...props, canvas: Ref.make(canvas) });
+};
+
+export const isDiagram = (object: any, schema: string): object is Diagram =>
+  Schema.is(Diagram)(object) && object.canvas.target?.schema === schema;

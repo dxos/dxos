@@ -9,14 +9,14 @@ import { SettingsStore } from '@dxos/local-storage';
 
 import { SketchContainer, SketchSettings } from '../components';
 import { meta } from '../meta';
-import { type DiagramType, type SketchSettingsProps, TLDRAW_SCHEMA, isDiagramType } from '../types';
+import { Diagram, type SketchSettingsProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     createSurface({
       id: `${meta.id}/sketch`,
       role: ['article', 'section', 'slide'],
-      filter: (data): data is { subject: DiagramType } => isDiagramType(data.subject, TLDRAW_SCHEMA),
+      filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, Diagram.TLDRAW_SCHEMA),
       component: ({ data, role }) => {
         const settings = useCapability(Capabilities.SettingsStore).getStore<SketchSettingsProps>(meta.id)!.value;
         return <SketchContainer sketch={data.subject} role={role} settings={settings} />;

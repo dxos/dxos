@@ -9,20 +9,20 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
-import { FileType } from './file';
+import * as File from './File';
 
 export namespace WnfsAction {
   export class Create extends Schema.TaggedClass<Create>()(`${meta.id}/action/create`, {
     input: FileInfoSchema.pick('name', 'type', 'cid').pipe(Schema.required),
     output: Schema.Struct({
-      object: FileType,
+      object: File.File,
     }),
   }) {}
 
   export const UploadAnnotationId = Symbol.for(`${meta.id}/annotation/upload`);
 
   export const UploadFileSchema = Schema.Struct({
-    file: Schema.instanceOf(File).annotations({
+    file: Schema.instanceOf(File.File).annotations({
       [UploadAnnotationId]: {
         // Accept file types.
         'image/*': ['.jpg', '.jpeg', '.png', '.gif'],

@@ -5,20 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { withTheme } from '@dxos/react-ui/testing';
+
+import { EXCALIDRAW_SCHEMA } from '../../types';
 
 import { SketchContainer } from './SketchContainer';
 
-const createSketch = () => {
-  return Obj.make(DiagramType, {
-    canvas: Ref.make(Obj.make(CanvasType, { content: {} })),
-  });
-};
-
 const DefaultStory = () => {
-  const [sketch] = useState<DiagramType>(createSketch());
+  const [sketch] = useState(Diagram.make({ canvas: { schema: EXCALIDRAW_SCHEMA } }));
 
   return (
     <div className='flex flex-col grow overflow-hidden'>

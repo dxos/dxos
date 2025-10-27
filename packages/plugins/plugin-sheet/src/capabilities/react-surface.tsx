@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/react-client/echo';
 
 import { ComputeGraphContextProvider, RangeList, SheetContainer } from '../components';
 import { meta } from '../meta';
-import { SheetType } from '../types';
+import { Sheet } from '../types';
 
 import { SheetCapabilities } from './capabilities';
 
@@ -19,8 +19,8 @@ export default () =>
     createSurface({
       id: `${meta.id}/sheet`,
       role: ['article', 'section'],
-      filter: (data): data is { subject: SheetType } =>
-        Obj.instanceOf(SheetType, data.subject) && !!getSpace(data.subject),
+      filter: (data): data is { subject: Sheet.Sheet } =>
+        Obj.instanceOf(Sheet.Sheet, data.subject) && !!getSpace(data.subject),
       component: ({ data, role }) => {
         const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
@@ -34,7 +34,7 @@ export default () =>
     createSurface({
       id: `${meta.id}/object-settings`,
       role: 'object-settings',
-      filter: (data): data is { subject: SheetType } => Obj.instanceOf(SheetType, data.subject),
+      filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
       component: ({ data }) => <RangeList sheet={data.subject} />,
     }),
   ]);

@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type DiagramType, type SketchGridType, type SketchSettingsProps } from '../../types';
+import { type Diagram, type SketchGridType, type SketchSettingsProps } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
@@ -31,7 +31,7 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
 };
 
 export type SketchProps = ThemedClassName<{
-  sketch: DiagramType;
+  sketch: Diagram.Diagram;
   readonly?: boolean;
   autoZoom?: boolean;
   maxZoom?: number;

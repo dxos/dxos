@@ -7,7 +7,7 @@ import React from 'react';
 import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type SheetType } from '../../types';
+import { type Sheet } from '../../types';
 import { useComputeGraph } from '../ComputeGraph';
 import { FunctionEditor } from '../FunctionEditor';
 import { GridSheet } from '../GridSheet';
@@ -16,7 +16,7 @@ import { SheetToolbar } from '../SheetToolbar';
 
 export type SheetContainerProps = {
   space: Space;
-  sheet: SheetType;
+  sheet: Sheet.Sheet;
   role?: string;
   ignoreAttention?: boolean;
 };

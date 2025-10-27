@@ -26,7 +26,7 @@ import { AnchoredTo } from '@dxos/schema';
 import { ThreadCapabilities } from '../capabilities';
 import { CommentsContainer, type CommentsContainerProps } from '../components';
 import { meta } from '../meta';
-import { ThreadAction, ThreadType } from '../types';
+import { Thread, ThreadAction } from '../types';
 
 export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const { t } = useTranslation(meta.id);
@@ -56,14 +56,14 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
   const objectsAnchoredTo = useQuery(space, Query.select(Filter.ids(subject.id)).targetOf(AnchoredTo));
   const anchors = objectsAnchoredTo
     .toSorted((a, b) => sort?.(a, b) ?? 0)
-    .filter((anchor) => Obj.instanceOf(ThreadType, Relation.getSource(anchor)))
+    .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
   const attended = useAttended();
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo) => {
-      const thread = Relation.getSource(anchor) as ThreadType;
+      const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = fullyQualifiedId(thread);
 
       if (state.current !== threadId) {
@@ -93,7 +93,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
         createIntent(ThreadAction.AddMessage, { anchor, subject, sender: { identityDid: identity?.did }, text }),
       );
 
-      const thread = Relation.getSource(anchor) as ThreadType;
+      const thread = Relation.getSource(anchor) as Thread.Thread;
       state.current = fullyQualifiedId(thread);
     },
     [dispatch, identity, subject],
@@ -101,7 +101,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleResolve = useCallback(
     (anchor: AnchoredTo) =>
-      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: Relation.getSource(anchor) as ThreadType })),
+      dispatch(createIntent(ThreadAction.ToggleResolved, { thread: Relation.getSource(anchor) as Thread.Thread })),
     [dispatch],
   );
 
@@ -118,7 +118,7 @@ export const ThreadComplementary = ({ subject }: { subject: any }) => {
 
   const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
     async (anchor, messageId) => {
-      const thread = Relation.getSource(anchor) as ThreadType;
+      const thread = Relation.getSource(anchor) as Thread.Thread;
       const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
       const message = thread.messages[messageIndex]?.target;
       const proposal = message?.blocks.find((block) => block._tag === 'proposal');

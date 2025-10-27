@@ -8,8 +8,8 @@ import { useIntentDispatcher } from '@dxos/app-framework';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, type Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { SheetType } from '@dxos/plugin-sheet/types';
-import { DiagramType } from '@dxos/plugin-sketch/types';
+import { Sheet } from '@dxos/plugin-sheet/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { useClient } from '@dxos/react-client';
 import { type Space, getTypename } from '@dxos/react-client/echo';
 import { IconButton, Input, Toolbar, useAsyncEffect } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ export type SpaceGeneratorProps = {
 export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const client = useClient();
-  const staticTypes = [Markdown.Document, DiagramType, SheetType, ComputeGraph]; // TODO(burdon): Make extensible.
+  const staticTypes = [Markdown.Document, Diagram.Diagram, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
   const recordTypes = [DataType.Organization, DataType.Person, DataType.Task];
   const [count, setCount] = useState(1);
   const [info, setInfo] = useState<any>({});
