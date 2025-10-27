@@ -88,6 +88,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   return (
     <>
       <Form
+        classNames={classNames}
         outerSpacing={false}
         autoSave
         schema={formSchema}

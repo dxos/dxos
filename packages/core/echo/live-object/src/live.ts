@@ -4,8 +4,11 @@
 
 import { isProxy } from './proxy/proxy';
 
-// This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
-// Without this, typescript would simplify the type to just `T` instead.
+/**
+ * Marker interface.
+ * This odd construct only serves one purpose: when you hover over `const x: Live<T>` you'd see `Live<T>` type.
+ * Without this, typescript would simplify the type to just `T` instead.
+ */
 interface LiveMarker {}
 
 /**

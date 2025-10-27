@@ -19,7 +19,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
-  useFormattingState,
+  formattingListener,
 } from '../extensions';
 import { type UseTextEditorProps, useTextEditor } from '../hooks';
 import { translations } from '../translations';
@@ -31,7 +31,6 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   const { themeMode } = useThemeContext();
   const toolbarState = useEditorToolbarState({ viewMode: 'source' });
   const viewMode = toolbarState.viewMode;
-  const trackFormatting = useFormattingState(toolbarState);
   // TODO(wittjosiah): Provide way to change the input mode.
   const [editorInputMode, _setEditorInputMode] = useState<EditorInputMode>('default');
   const { parentRef, view } = useTextEditor(
@@ -46,7 +45,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
         createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),
         formattingKeymap(),
-        trackFormatting,
+        formattingListener(() => toolbarState),
       ],
     }),
     [editorInputMode, viewMode, themeMode, placeholder],
@@ -65,7 +64,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
   //  Also not sure if view is even guaranteed to exist at this point.
   return (
     <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} viewMode={handleViewModeChange} />}
+      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} onViewModeChange={handleViewModeChange} />}
       <div role='none' className={mx('grow overflow-hidden', attentionSurface)}>
         <div className={mx(editorWidth)} ref={parentRef} />
       </div>
@@ -91,6 +90,6 @@ export const Default: Story = {
   args: {
     autoFocus: true,
     placeholder: 'Text...',
-    initialValue: '# Demo\n\nThis is a document.\n\n',
+    initialValue: '# Demo\n\nThis is a **document**.\n\n',
   },
 };

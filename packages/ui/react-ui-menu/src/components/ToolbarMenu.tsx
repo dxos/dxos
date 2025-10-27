@@ -55,12 +55,14 @@ export type ToolbarMenuActionProps = {
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize } = useMenu('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const handleClick = useCallback(() => action.data?.(), [action]);
+
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
     : { children: <ActionLabel action={action} /> };
+
+  const handleClick = useCallback(() => action.data?.(), [action]);
 
   return hidden ? null : (
     <Root

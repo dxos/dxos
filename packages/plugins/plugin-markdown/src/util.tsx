@@ -43,7 +43,8 @@ export const getContentSnippet = (content: string) => {
     .filter((line) => line.trim() !== '')[0]
     .replaceAll(nonTitleChars, '')
     .trim();
-  return abstract;
+
+  return abstract + '...';
 };
 
 export const setFallbackName = debounce((doc: Markdown.Document, content: string) => {

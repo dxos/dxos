@@ -30,7 +30,7 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <BaseObjectSettings object={object} />;
+  return <BaseObjectSettings object={object} classNames='is-[20rem]' />;
 };
 
 const meta = {
@@ -51,7 +51,7 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

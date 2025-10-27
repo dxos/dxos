@@ -55,7 +55,12 @@ export const createGapSeparator = (id: string = 'gap', source: string = 'root') 
       data: undefined as never,
     } satisfies MenuSeparator,
   ],
-  edges: [{ source, target: id }],
+  edges: [
+    {
+      source,
+      target: id,
+    },
+  ],
 });
 
 export const createLineSeparator = (id: string = 'line', source: string = 'root') => ({

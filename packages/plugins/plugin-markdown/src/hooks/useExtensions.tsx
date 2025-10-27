@@ -6,16 +6,12 @@ import { type ViewUpdate } from '@codemirror/view';
 import React, { type AnchorHTMLAttributes, type ReactNode, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import {
-  LayoutAction,
-  type PromiseIntentDispatcher,
-  createIntent,
-  useCapabilities,
-  useIntentDispatcher,
-} from '@dxos/app-framework';
+import { LayoutAction, type PromiseIntentDispatcher, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { debounceAndThrottle } from '@dxos/async';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Icon, ThemeProvider } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
@@ -40,19 +36,19 @@ import {
   typewriter,
 } from '@dxos/react-ui-editor';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { type DataType } from '@dxos/schema';
+import { DataType } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { MarkdownCapabilities } from './capabilities';
-import { type Markdown } from './types';
-import { setFallbackName } from './util';
+import { Markdown } from '../types';
+import { setFallbackName } from '../util';
 
-type ExtensionsOptions = {
-  document?: Markdown.Document;
-  id?: string;
-  text?: DataType.Text;
+export type DocumentType = Markdown.Document | DataType.Text | { id: string; text: string };
+
+export type ExtensionsOptions = {
+  id: string;
+  object?: DocumentType;
   dispatch?: PromiseIntentDispatcher;
-  settings: Markdown.Settings;
+  settings?: Markdown.Settings;
   selectionManager?: SelectionManager;
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
@@ -61,9 +57,8 @@ type ExtensionsOptions = {
 
 // TODO(burdon): Merge with createBaseExtensions below.
 export const useExtensions = ({
-  document,
   id,
-  text,
+  object,
   settings,
   selectionManager,
   viewMode,
@@ -72,93 +67,66 @@ export const useExtensions = ({
 }: ExtensionsOptions): Extension[] => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const identity = useIdentity();
-  const space = getSpace(document) ?? getSpace(text);
+  const space = getSpace(object);
+
+  let target: Obj.Any | undefined;
+  if (Obj.instanceOf(Markdown.Document, object)) {
+    target = (object as Markdown.Document).content.target;
+  } else if (Obj.instanceOf(DataType.Text, object)) {
+    target = object;
+  }
 
   // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
   // TODO(burdon): Unsubscribe.
   // const query = space?.db.query(Filter.type(DocumentType));
   // query?.subscribe();
+
   const baseExtensions = useMemo(
     () =>
       createBaseExtensions({
-        document,
         id,
-        text,
+        object,
         settings,
         selectionManager,
         viewMode,
         previewOptions,
         dispatch,
-        // query,
       }),
     [
-      document,
       id,
-      text,
+      object,
       viewMode,
       dispatch,
       previewOptions,
       settings,
-      settings.editorInputMode,
-      settings.folding,
-      settings.numberedHeadings,
-      settings.debug,
-      settings.typewriter,
+      settings?.debug,
+      settings?.editorInputMode,
+      settings?.folding,
+      settings?.numberedHeadings,
+      settings?.typewriter,
       selectionManager,
     ],
   );
 
-  const extensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
-
-  //
-  // External extensions from other plugins.
-  //
-  const pluginExtensions = useMemo<Extension[]>(() => {
-    if (!document) {
-      return [];
-    }
-
-    return extensionProviders.flat().reduce((acc: Extension[], provider) => {
-      const extension = typeof provider === 'function' ? provider({ document }) : provider;
-      if (extension) {
-        acc.push(extension);
-      }
-
-      return acc;
-    }, []);
-  }, [extensionProviders, document]);
-
-  //
-  // Basic plugins.
-  //
   return useMemo<Extension[]>(
     () =>
       [
+        // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
-        document &&
-          createDataExtensions({
-            id: document.id,
-            text: document.content.target && createDocAccessor(document.content.target, ['content']),
-            space,
-            identity,
-          }),
-        text &&
-          id &&
-          createDataExtensions({
-            id,
-            text: createDocAccessor(text, ['content']),
-            space,
-            identity,
-          }),
-        selectionState(editorStateStore),
-        document &&
+        target && createDataExtensions({ id, text: createDocAccessor(target, ['content']), space, identity }),
+
+        // TODO(burdon): Reconcile with effect in parent.
+        Obj.instanceOf(Markdown.Document, object) &&
           listener({
-            onChange: ({ text }) => setFallbackName(document, text),
+            onChange: ({ text }) => {
+              setFallbackName(object as Markdown.Document, text);
+            },
           }),
+
         baseExtensions,
-        pluginExtensions,
+        selectionState(editorStateStore),
       ].filter(isTruthy),
-    [baseExtensions, pluginExtensions, document, document?.content?.target, text, id, space, identity],
+    [identity, space, id, object, target, baseExtensions],
   );
 };
 
@@ -166,8 +134,8 @@ export const useExtensions = ({
  * Create extension instances for editor.
  */
 const createBaseExtensions = ({
-  document,
   id,
+  object,
   dispatch,
   settings,
   selectionManager,
@@ -176,8 +144,8 @@ const createBaseExtensions = ({
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
-    settings.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings.folding && folding(),
+    settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
+    settings?.folding && folding(),
   ].filter(isTruthy);
 
   //
@@ -189,17 +157,18 @@ const createBaseExtensions = ({
         formattingKeymap(),
         decorateMarkdown({
           selectionChangeDelay: 100,
-          numberedHeadings: settings.numberedHeadings ? { from: 2 } : undefined,
+          numberedHeadings: settings?.numberedHeadings ? { from: 2 } : undefined,
           // TODO(wittjosiah): For internal links, consider ignoring the link text and rendering the label of the object being linked to.
+          // TODO(burdon): Create dx-tag.
           renderLinkButton:
-            dispatch && (document || id)
+            dispatch && (object || id)
               ? createLinkRenderer((id: string) => {
                   void dispatch(
                     createIntent(LayoutAction.Open, {
                       part: 'main',
                       subject: [id],
                       options: {
-                        pivotId: document ? fullyQualifiedId(document) : id,
+                        pivotId: object ? fullyQualifiedId(object) : id,
                       },
                     }),
                   );
@@ -212,7 +181,7 @@ const createBaseExtensions = ({
     );
   }
 
-  if (settings.debug) {
+  if (settings?.debug) {
     const items = settings.typewriter?.split(/[,\n]/) ?? '';
     if (items) {
       extensions.push(typewriter({ items }));
@@ -222,7 +191,7 @@ const createBaseExtensions = ({
   return extensions;
 };
 
-export const selectionChange = (selectionManager: SelectionManager) => {
+const selectionChange = (selectionManager: SelectionManager) => {
   return EditorView.updateListener.of(
     debounceAndThrottle((update: ViewUpdate) => {
       if (update.selectionSet) {
@@ -235,6 +204,7 @@ export const selectionChange = (selectionManager: SelectionManager) => {
             to: cursorConverter.toCursor(range.to),
           }))
           .filter(({ from, to }) => to > from);
+
         selectionManager.updateMultiRange(id, ranges);
       }
     }, 100),
@@ -293,8 +263,8 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   );
 };
 
-// TODO(burdon): Remove react rendering; use DOM directly.
-export const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
+// TODO(burdon): REMOVE.
+const renderRoot = <T extends Element>(root: T, node: ReactNode): T => {
   createRoot(root).render(<ThemeProvider tx={defaultTx}>{node}</ThemeProvider>);
   return root;
 };

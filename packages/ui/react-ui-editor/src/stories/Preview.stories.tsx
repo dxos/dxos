@@ -16,7 +16,14 @@ import { Card } from '@dxos/react-ui-stack';
 import { hoverableControlItem, hoverableControlItemTransition, hoverableControls } from '@dxos/react-ui-theme';
 import { trim } from '@dxos/util';
 
-import { type PreviewLinkRef, type PreviewLinkTarget, getLinkRef, image, preview } from '../extensions';
+import {
+  type PreviewBlock,
+  type PreviewLinkRef,
+  type PreviewLinkTarget,
+  getLinkRef,
+  image,
+  preview,
+} from '../extensions';
 import { PreviewPopoverProvider, usePreviewPopover } from '../testing';
 
 import { EditorStory } from './components';
@@ -70,7 +77,7 @@ type PreviewAction =
       link: PreviewLinkRef;
     };
 
-const PreviewBlock = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElement; view?: EditorView }) => {
+const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: HTMLElement; view?: EditorView }) => {
   const target = useRefTarget(link);
 
   const handleAction = useCallback(
@@ -180,16 +187,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => {
     const [view, setView] = useState<EditorView>();
-    const [previewBlocks, setPreviewBlocks] = useState<{ link: PreviewLinkRef; el: HTMLElement }[]>([]);
+    const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
     const extensions = useMemo(() => {
       return [
         image(),
         preview({
-          addBlockContainer: (link, el) => {
-            setPreviewBlocks((prev) => [...prev, { link, el }]);
+          addBlockContainer: (block) => {
+            setPreviewBlocks((prev) => [...prev, block]);
           },
-          removeBlockContainer: (link) => {
-            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== link.ref));
+          removeBlockContainer: (block) => {
+            setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.ref !== block.link.ref));
           },
         }),
       ];
@@ -221,7 +228,7 @@ export const Default: Story = {
         />
         <PreviewCard />
         {previewBlocks.map(({ link, el }) => (
-          <PreviewBlock key={link.ref} link={link} el={el} view={view} />
+          <PreviewBlockComponent key={link.ref} link={link} el={el} view={view} />
         ))}
       </PreviewPopoverProvider>
     );
