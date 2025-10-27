@@ -242,6 +242,11 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
             Array.splitAt(root.minItems ?? root.items.length),
           );
           result = Schema.Tuple(...required, ...optional.map(Schema.optionalElement));
+        } else if (Array.isArray((root as any).prefixItems)) {
+          // TODO(wittjosiah): Remove case. Here to support Anthropic GeoPoint workaround.
+          result = Schema.Tuple(
+            ...(root as any).prefixItems.map((v: any) => toEffectSchema(v as JsonSchemaType, defs)),
+          ) as Schema.Tuple<Schema.Schema.AnyNoContext[]>;
         } else {
           invariant(root.items);
           const items = root.items;
