@@ -10,6 +10,7 @@ import * as String from 'effect/String';
 
 import {
   type BaseObject,
+  FormAnnotationId,
   FormatEnum,
   type JsonSchemaType,
   OptionsAnnotationId,
@@ -116,6 +117,7 @@ const processProperty = <T extends BaseObject>(
   prop: { type: SchemaAST.AST; isReadonly: boolean; isOptional: boolean },
 ): SchemaProperty<T> | undefined => {
   // Annotations.
+  const form = findAnnotation<boolean>(prop.type, FormAnnotationId);
   const title = findAnnotation<string>(prop.type, SchemaAST.TitleAnnotationId);
   const description = findAnnotation<string>(prop.type, SchemaAST.DescriptionAnnotationId);
   const examples = findAnnotation<string[]>(prop.type, SchemaAST.ExamplesAnnotationId);
@@ -124,6 +126,10 @@ const processProperty = <T extends BaseObject>(
     prop.type,
     OptionsAnnotationId,
   );
+
+  if (form === false) {
+    return undefined;
+  }
 
   // Get type.
   const property: Omit<SchemaProperty<T>, 'type' | 'array' | 'format'> = {

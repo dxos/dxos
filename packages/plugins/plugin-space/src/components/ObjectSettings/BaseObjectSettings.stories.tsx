@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Obj, Tag } from '@dxos/echo';
-import { Expando } from '@dxos/react-client/echo';
+import { type Obj, Tag } from '@dxos/echo';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
+import { DataType } from '@dxos/schema';
 import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../../translations';
@@ -21,7 +21,7 @@ const DefaultStory = () => {
 
   useEffect(() => {
     if (space && !object) {
-      const object = space.db.add(Obj.make(Expando, {}));
+      const object = space.db.add(DataType.makeProject());
       setObject(object as Obj.Any);
     }
   }, [space, object]);
@@ -42,7 +42,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag],
+      types: [DataType.Project, Tag.Tag],
       onCreateSpace: async ({ space }) => {
         space.db.add(Tag.make({ label: 'Tag 1' }));
         space.db.add(Tag.make({ label: 'Tag 2' }));
