@@ -38,12 +38,13 @@ export default () =>
         return <Container data={{ id: data.id, subject: data.subject }} role={role} />;
       },
     }),
+    // TODO(burdon): Remove this variant and conform to DataType.Text.
     createSurface({
       id: `${meta.id}/surface/editor`,
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
       component: ({ data, role }) => {
-        return <Container data={{ id: fullyQualifiedId(data.subject), subject: data.subject }} role={role} />;
+        return <Container data={{ id: data.subject.id, subject: data.subject }} role={role} />;
       },
     }),
     createSurface({
