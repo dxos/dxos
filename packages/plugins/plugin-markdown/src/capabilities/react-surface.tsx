@@ -11,7 +11,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { DataType } from '@dxos/schema';
 
-import { MarkdownCard, MarkdownContainer, MarkdownSettings } from '../components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../components';
 import { meta } from '../meta';
 import { Markdown } from '../types';
 import { isEditorModel } from '../util';
@@ -30,6 +30,10 @@ export default () =>
         const settingsStore = useCapability(Capabilities.SettingsStore);
         const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
         const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
+        const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
+          (mode) => setViewMode(data.subject.id, mode),
+          [data.subject.id, setViewMode],
+        );
         const viewMode = getViewMode(fullyQualifiedId(data.subject));
 
         return (
