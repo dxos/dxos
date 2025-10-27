@@ -31,7 +31,7 @@ export const FileUpload = forwardRef<FileUploadAction, FileUploadProps>(
       },
     });
 
-    useImperativeHandle(forwardedRef, () => open, [open]);
+    useImperativeHandle(forwardedRef, () => open, []);
 
     useEffect(() => {
       if (editorView && acceptedFiles.length && onFileUpload) {

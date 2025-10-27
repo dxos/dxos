@@ -31,6 +31,7 @@ export const MarkdownEditorToolbar = ({
   onViewModeChange,
 }: MarkdownEditorToolbarProps) => {
   const [upload, setUpload] = useState<FileUploadAction | null>(null);
+  const handleRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
 
   const handleViewModeChange = useCallback((mode: EditorViewMode) => onViewModeChange?.(mode), [onViewModeChange]);
 
@@ -52,11 +53,11 @@ export const MarkdownEditorToolbar = ({
         state={state}
         customActions={customActions}
         getView={getView}
-        onImageUpload={upload || undefined}
+        onImageUpload={upload ?? undefined}
         onViewModeChange={handleViewModeChange}
       />
 
-      {onFileUpload && <FileUpload ref={setUpload} editorView={editorView} onFileUpload={onFileUpload} />}
+      {onFileUpload && <FileUpload ref={handleRef} editorView={editorView} onFileUpload={onFileUpload} />}
     </>
   );
 };

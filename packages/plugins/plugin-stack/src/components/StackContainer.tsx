@@ -136,7 +136,13 @@ const StackContainer = ({ id, collection }: StackContainerProps) => {
       classNames='container-max-width overflow-hidden border-l border-r border-subduedSeparator'
     >
       <Toolbar.Root>
-        <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add section' onClick={handleAddSection} />
+        <Toolbar.IconButton
+          icon='ph--plus--regular'
+          iconOnly
+          label='Add section'
+          data-testid='stack.addSection'
+          onClick={handleAddSection}
+        />
       </Toolbar.Root>
       <AttentionProvider id={id}>
         <StackContext.Provider
