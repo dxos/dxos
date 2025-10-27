@@ -24,9 +24,10 @@ import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookLayoutPlugin } from '@dxos/plugin-storybook-layout';
 import { ThemePlugin } from '@dxos/plugin-theme';
 import { faker } from '@dxos/random';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -44,6 +45,8 @@ const DefaultStory = () => {
   const space = useSpace();
   const [doc] = useQuery(space, Query.type(Markdown.Document));
   const data = useMemo(() => ({ subject: doc }), [doc]);
+  const id = doc && fullyQualifiedId(doc);
+  const attentionAttrs = useAttentionAttributes(id);
 
   useAsyncEffect(async () => {
     if (space) {
@@ -51,7 +54,11 @@ const DefaultStory = () => {
     }
   }, [space, dispatch]);
 
-  return <Surface role='article' data={data} limit={1} />;
+  return (
+    <div className='contents' {...attentionAttrs}>
+      <Surface role='article' data={data} limit={1} />
+    </div>
+  );
 };
 
 const meta = {

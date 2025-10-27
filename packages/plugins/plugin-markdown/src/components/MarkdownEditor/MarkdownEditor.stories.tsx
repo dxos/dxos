@@ -3,13 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Filter } from '@dxos/echo';
 import { AttentionPlugin } from '@dxos/plugin-attention';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { useClient } from '@dxos/react-client';
+import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -22,23 +23,24 @@ import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 
-type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'> & {
-  content?: string;
-};
+type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 
-const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
-  const client = useClient();
-  const space = client.spaces.default;
-  // const doc = useMemo(() => createObject({ content, space }), [content]);
-  const doc = useMemo(() => space?.db.add(Markdown.makeDocument({ content })), [space]);
-  const attentionAttrs = useAttentionAttributes(doc.id);
+const DefaultStory = (props: StoryProps) => {
+  const space = useSpace();
+  const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
+  const id = doc && fullyQualifiedId(doc);
+  const attentionAttrs = useAttentionAttributes(id);
+
+  if (!id) {
+    return null;
+  }
 
   // TODO(burdon): Toolbar attention isn't working in this story.
   return (
     <div className='contents' {...attentionAttrs}>
       <StackItem.Content toolbar>
-        <MarkdownEditor.Root id={doc.id} object={doc} {...props}>
-          <MarkdownEditor.Toolbar />
+        <MarkdownEditor.Root id={id} object={doc} {...props}>
+          <MarkdownEditor.Toolbar id={id} />
           <MarkdownEditor.Main toolbar />
         </MarkdownEditor.Root>
       </StackItem.Content>
@@ -49,13 +51,26 @@ const DefaultStory = ({ content = '# Test', ...props }: StoryProps) => {
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
   component: DefaultStory,
-  render: DefaultStory,
+  render: DefaultStory as any,
   decorators: [
     withTheme,
     withLayout({ container: 'column' }),
     // TODO(burdon): Create story without client.
     withPluginManager({
-      plugins: [ClientPlugin({}), IntentPlugin(), AttentionPlugin()],
+      plugins: [
+        ClientPlugin({
+          types: [Markdown.Document],
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            const space = client.spaces.default;
+            await space.waitUntilReady();
+            space.db.add(Markdown.makeDocument({ content }));
+          },
+        }),
+        IntentPlugin(),
+        AttentionPlugin(),
+      ],
     }),
   ],
   parameters: {
@@ -67,8 +82,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    content,
-  },
-};
+export const Default: Story = {};

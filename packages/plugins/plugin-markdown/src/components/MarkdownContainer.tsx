@@ -105,7 +105,9 @@ export const MarkdownContainer = ({
         onLinkQuery={handleLinkQuery}
         {...props}
       >
-        {settings.toolbar && <MarkdownEditor.Toolbar role={role} customActions={customActions} />}
+        {settings.toolbar && (
+          <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+        )}
         <MarkdownEditor.Main
           toolbar={settings.toolbar}
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
