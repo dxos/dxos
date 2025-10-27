@@ -32,9 +32,9 @@ import {
 } from '../../hooks';
 
 import {
-  MarkdownEditorMain as NaturalMarkdownEditorMain,
-  type MarkdownEditorMainProps as NaturalMarkdownEditorMainProps,
-} from './MarkdownEditorMain';
+  MarkdownEditorContent as NaturalMarkdownEditorContent,
+  type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
+} from './MarkdownEditorContent';
 import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
@@ -149,9 +149,9 @@ MarkdownEditorRoot.displayName = 'MarkdownEditor.Root';
 // MarkdownEditor.Main
 //
 
-type MarkdownEditorMainProps = Omit<NaturalMarkdownEditorMainProps, 'id' | 'extensions' | 'toolbarState'>;
+type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
+const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
     extensions,
@@ -160,11 +160,11 @@ const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
     toolbarState,
     viewMode,
     popoverMenu: { groupsRef, ...menuProps },
-  } = useMarkdownEditorContext(MarkdownEditorMain.displayName);
+  } = useMarkdownEditorContext(MarkdownEditorContent.displayName);
 
   return (
     <PopoverMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-      <NaturalMarkdownEditorMain
+      <NaturalMarkdownEditorContent
         {...props}
         id={id}
         extensions={extensions}
@@ -176,7 +176,7 @@ const MarkdownEditorMain = (props: MarkdownEditorMainProps) => {
   );
 };
 
-MarkdownEditorMain.displayName = 'MarkdownEditor.Main';
+MarkdownEditorContent.displayName = 'MarkdownEditor.Content';
 
 //
 // MarkdownEditor.Toolbar
@@ -230,9 +230,14 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
 
 export const MarkdownEditor = {
   Root: MarkdownEditorRoot,
-  Main: MarkdownEditorMain,
+  Content: MarkdownEditorContent,
   Toolbar: MarkdownEditorToolbar,
   Blocks: MarkdownEditorBlocks,
 };
 
-export type { MarkdownEditorRootProps, MarkdownEditorMainProps, MarkdownEditorToolbarProps, MarkdownEditorBlocksProps };
+export type {
+  MarkdownEditorRootProps,
+  MarkdownEditorContentProps,
+  MarkdownEditorToolbarProps,
+  MarkdownEditorBlocksProps,
+};

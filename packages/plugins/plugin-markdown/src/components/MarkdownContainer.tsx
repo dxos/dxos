@@ -17,7 +17,7 @@ import { MarkdownCapabilities } from '../capabilities';
 import { type DocumentType, useLinkQuery } from '../hooks';
 import { Markdown, type MarkdownPluginState } from '../types';
 
-import { MarkdownEditor, type MarkdownEditorMainProps, type MarkdownEditorRootProps } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 export type MarkdownContainerProps = {
   role?: string;
@@ -25,7 +25,7 @@ export type MarkdownContainerProps = {
   settings: Markdown.Settings;
   selectionManager?: SelectionManager;
 } & (Pick<MarkdownEditorRootProps, 'id' | 'viewMode' | 'onViewModeChange'> &
-  Pick<MarkdownEditorMainProps, 'editorStateStore'> &
+  Pick<MarkdownEditorContentProps, 'editorStateStore'> &
   Pick<MarkdownPluginState, 'extensionProviders'>);
 
 // TODO(burdon): Attention doesn't update in storybook.
@@ -108,8 +108,7 @@ export const MarkdownContainer = ({
         {settings.toolbar && (
           <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
         )}
-        <MarkdownEditor.Main
-          toolbar={settings.toolbar}
+        <MarkdownEditor.Content
           initialValue={isDocument ? object.content?.target?.content : isText ? object.content : object.text}
           scrollPastEnd={role === 'article'}
         />

@@ -32,10 +32,9 @@ import { meta } from '../../meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
-export type MarkdownEditorMainProps = {
+export type MarkdownEditorContentProps = {
   id: string;
   role?: string;
-  toolbar?: boolean;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
   slashCommandGroups?: PopoverMenuGroup[];
@@ -44,20 +43,9 @@ export type MarkdownEditorMainProps = {
   onLinkQuery?: (query?: string) => Promise<PopoverMenuGroup[]>;
 } & (Pick<UseTextEditorProps, 'initialValue' | 'extensions'> & Pick<MarkdownEditorToolbarProps, 'onFileUpload'>);
 
-export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMainProps>(
+export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEditorContentProps>(
   (
-    {
-      id,
-      role,
-      toolbar,
-      initialValue,
-      editorStateStore,
-      toolbarState,
-      extensions,
-      viewMode,
-      scrollPastEnd,
-      onFileUpload,
-    },
+    { id, role, initialValue, editorStateStore, toolbarState, extensions, viewMode, scrollPastEnd, onFileUpload },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.id);
@@ -126,8 +114,6 @@ export const MarkdownEditorMain = forwardRef<EditorView | null, MarkdownEditorMa
         role='none'
         ref={parentRef}
         data-testid='composer.markdownRoot'
-        // TODO(burdon): Is this required here or can it be moved to the root?
-        data-toolbar={toolbar ? 'enabled' : 'disabled'}
         className={stackItemContentEditorClassNames(role)}
         data-popover-collision-boundary={true}
         {...focusAttributes}

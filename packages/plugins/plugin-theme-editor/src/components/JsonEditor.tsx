@@ -50,7 +50,5 @@ export const JsonEditor = (_: JsonEditorProps) => {
     [themeMode],
   );
 
-  return (
-    <div ref={parentRef} data-toolbar='enabled' className='min-bs-0 border-bs border-separator' {...focusAttributes} />
-  );
+  return <div ref={parentRef} className='min-bs-0 border-bs border-separator' {...focusAttributes} />;
 };
