@@ -61,7 +61,7 @@ const MasonryRootImpl = <Item,>(
   {
     columnCount,
     maxColumnCount,
-    columnWidth = 18,
+    columnWidth = 18, // cardMaxWidth
     maxColumnWidth,
     columnGutter = 1,
     rowGutter,
@@ -110,6 +110,7 @@ const MasonryRootImpl = <Item,>(
     render,
     onRender,
   });
+
   return (
     <div className={mx(classNames)} {...props} ref={ref}>
       {children}

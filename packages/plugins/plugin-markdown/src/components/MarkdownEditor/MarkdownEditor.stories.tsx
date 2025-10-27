@@ -3,63 +3,83 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { IntentPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
-import { withAttention } from '@dxos/react-ui-attention/testing';
-import { automerge, translations as editorTranslations } from '@dxos/react-ui-editor';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { Filter } from '@dxos/echo';
+import { AttentionPlugin } from '@dxos/plugin-attention';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { fullyQualifiedId, useQuery, useSpace } from '@dxos/react-client/echo';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { translations as editorTranslations } from '@dxos/react-ui-editor';
+import { StackItem } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
+import { Markdown } from '../../types';
 
-import { MarkdownEditor, type MarkdownEditorProps } from './MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
 const content = Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n');
 
-type StoryProps = MarkdownEditorProps & {
-  content?: string;
-  toolbar?: boolean;
-};
+type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 
-const DefaultStory = ({ content = '# Test', toolbar }: StoryProps) => {
-  const doc = useMemo(() => createObject({ content }), [content]); // TODO(burdon): Remove dependency on createObject.
-  const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
+const DefaultStory = (props: StoryProps) => {
+  const space = useSpace();
+  const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
+  const id = doc && fullyQualifiedId(doc);
+  const attentionAttrs = useAttentionAttributes(id);
+
+  if (!id) {
+    return null;
+  }
+
+  // TODO(burdon): Toolbar attention isn't working in this story.
   return (
-    <Stack orientation='horizontal' rail={false}>
-      <StackItem.Root item={{ id: 'story' }}>
-        <MarkdownEditor id='test' initialValue={doc.content} extensions={extensions} toolbar={toolbar} />
-      </StackItem.Root>
-    </Stack>
+    <div className='contents' {...attentionAttrs}>
+      <StackItem.Content toolbar>
+        <MarkdownEditor.Root id={id} object={doc} {...props}>
+          <MarkdownEditor.Toolbar id={id} />
+          <MarkdownEditor.Content />
+        </MarkdownEditor.Root>
+      </StackItem.Content>
+    </div>
   );
 };
 
-const meta = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/MarkdownEditor',
-  component: MarkdownEditor as any,
-  render: DefaultStory,
-  decorators: [withTheme, withPluginManager({ plugins: [IntentPlugin()] }), withAttention],
+  component: DefaultStory,
+  render: DefaultStory as any,
+  decorators: [
+    withTheme,
+    withLayout({ container: 'column' }),
+    // TODO(burdon): Create story without client.
+    withPluginManager({
+      plugins: [
+        ClientPlugin({
+          types: [Markdown.Document],
+          onClientInitialized: async ({ client }) => {
+            await client.halo.createIdentity();
+            await client.spaces.waitUntilReady();
+            const space = client.spaces.default;
+            await space.waitUntilReady();
+            space.db.add(Markdown.makeDocument({ content }));
+          },
+        }),
+        IntentPlugin(),
+        AttentionPlugin(),
+      ],
+    }),
+  ],
   parameters: {
-    layout: 'fullscreen',
     translations: [...translations, ...editorTranslations],
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    content,
-  },
-};
-
-export const WithToolbar: Story = {
-  args: {
-    toolbar: true,
-    content,
-  },
-};
+export const Default: Story = {};

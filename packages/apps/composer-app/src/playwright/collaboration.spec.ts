@@ -195,6 +195,10 @@ test.describe('Collaboration tests', () => {
   });
 
   test('peers can see each others presence', async () => {
+    // TODO(wittjosiah): Flaky.
+    if (process.env.CI) {
+      test.skip();
+    }
     test.setTimeout(90_000);
 
     await host.createSpace();

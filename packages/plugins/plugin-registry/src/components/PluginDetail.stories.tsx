@@ -32,6 +32,7 @@ export const Default: Story = {
         name: 'Test Plugin',
         description: faker.lorem.paragraphs(2),
         icon: 'ph--bug--regular',
+        iconHue: 'sky',
         homePage: 'https://example.com',
         source: 'https://github.com/example/test-plugin',
         screenshots: [

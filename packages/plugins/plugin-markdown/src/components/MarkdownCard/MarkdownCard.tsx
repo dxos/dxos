@@ -17,30 +17,13 @@ import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getContentSnippet, getFallbackName } from '../../util';
 
-// TODO(burdon): Factor out.
-const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(Markdown.Document, subject)) {
-    return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
-    return getFallbackName(subject.content);
-  }
-};
-
-// TODO(burdon): Factor out.
-const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
-  if (Obj.instanceOf(Markdown.Document, subject)) {
-    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
-  } else if (Obj.instanceOf(DataType.Text, subject)) {
-    return getContentSnippet(subject.content ?? fallback);
-  }
-};
-
 export type MarkdownCardProps = PreviewProps<Markdown.Document | DataType.Text>;
 
 export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const { t } = useTranslation(meta.id);
   const snippet = getSnippet(subject, t('fallback abstract'));
+  const info = getInfo(subject);
 
   // TODO(wittjosiah): Factor out so this component isn't dependent on the app framework.
   const handleNavigate = useCallback(
@@ -71,6 +54,32 @@ export const MarkdownCard = ({ subject, role }: MarkdownCardProps) => {
         />
       </Card.Heading>
       {snippet && <Card.Text classNames='line-clamp-3 text-sm text-description'>{snippet}</Card.Text>}
+      <Card.Text classNames='text-xs text-description'>
+        {info.words} {t('words label', { count: info.words })}
+      </Card.Text>
     </Card.SurfaceRoot>
   );
+};
+
+const getInfo = (subject: Markdown.Document | DataType.Text) => {
+  const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
+  return { words: text.split(' ').length };
+};
+
+// TODO(burdon): Factor out.
+const getTitle = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
+    return subject.name ?? subject.fallbackName ?? getFallbackName(subject.content?.target?.content ?? fallback);
+  } else if (Obj.instanceOf(DataType.Text, subject)) {
+    return getFallbackName(subject.content);
+  }
+};
+
+// TODO(burdon): Factor out.
+const getSnippet = (subject: Markdown.Document | DataType.Text, fallback: string) => {
+  if (Obj.instanceOf(Markdown.Document, subject)) {
+    return Obj.getDescription(subject) || getContentSnippet(subject.content?.target?.content ?? fallback);
+  } else if (Obj.instanceOf(DataType.Text, subject)) {
+    return getContentSnippet(subject.content ?? fallback);
+  }
 };
