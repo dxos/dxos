@@ -26,7 +26,7 @@ export default () =>
       filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
         Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
       component: ({ data, role }) => {
-        return <Container data={{ id: fullyQualifiedId(data.subject), subject: data.subject }} role={role} />;
+        return <Container id={fullyQualifiedId(data.subject)} subject={data.subject} role={role} />;
       },
     }),
     createSurface({
@@ -35,7 +35,7 @@ export default () =>
       filter: (data): data is { id: string; subject: DataType.Text } =>
         typeof data.id === 'string' && Obj.instanceOf(DataType.Text, data.subject),
       component: ({ data, role }) => {
-        return <Container data={{ id: data.id, subject: data.subject }} role={role} />;
+        return <Container id={data.id} subject={data.subject} role={role} />;
       },
     }),
     // TODO(burdon): Remove this variant and conform to DataType.Text.
@@ -44,7 +44,7 @@ export default () =>
       role: ['article', 'section'],
       filter: (data): data is { subject: { id: string; text: string } } => isEditorModel(data.subject),
       component: ({ data, role }) => {
-        return <Container data={{ id: data.subject.id, subject: data.subject }} role={role} />;
+        return <Container id={data.subject.id} subject={data.subject} role={role} />;
       },
     }),
     createSurface({
@@ -66,27 +66,21 @@ export default () =>
 /**
  * Common wrapper.
  */
-const Container = ({
-  data,
-  role,
-}: {
-  data: { id: string; subject: MarkdownContainerProps['object'] };
-  role: string;
-}) => {
+const Container = ({ id, subject, role }: { id: string; subject: MarkdownContainerProps['object']; role: string }) => {
   const selectionManager = useCapability(AttentionCapabilities.Selection);
   const settingsStore = useCapability(Capabilities.SettingsStore);
   const settings = settingsStore.getStore<Markdown.Settings>(meta.id)!.value;
   const { state, editorState, getViewMode, setViewMode } = useCapability(MarkdownCapabilities.State);
-  const viewMode = getViewMode(data.id);
+  const viewMode = getViewMode(id);
   const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
-    (mode) => setViewMode(data.id, mode),
-    [data.id, setViewMode],
+    (mode) => setViewMode(id, mode),
+    [id, setViewMode],
   );
 
   return (
     <MarkdownContainer
-      id={data.id}
-      object={data.subject}
+      id={id}
+      object={subject}
       role={role}
       settings={settings}
       selectionManager={selectionManager}
