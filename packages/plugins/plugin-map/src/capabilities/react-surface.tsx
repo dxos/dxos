@@ -6,9 +6,10 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, contributes, createSurface, useCapability } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { FormatEnum } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
+import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isSpace } from '@dxos/react-client/echo';
 import { type InputProps, SelectInput, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
@@ -103,32 +104,32 @@ export default () =>
         return !!annotation;
       },
       component: ({ data: { target }, ...inputProps }) => {
+        const client = useClient();
         const props = inputProps as any as InputProps;
         const space = isSpace(target) ? target : getSpace(target);
-        if (!space) {
-          return null;
-        }
         const { typename } = useFormValues();
-        const [selectedSchema] = space?.db.schemaRegistry.query({ typename }).runSync();
+
+        const staticSchema = client.graph.schemaRegistry.schemas.find(
+          (schema) => Type.getTypename(schema) === typename,
+        );
+        const [dynamicSchema] = space?.db.schemaRegistry.query({ typename }).runSync() ?? [];
+        const jsonSchema = staticSchema ? Type.toJsonSchema(staticSchema) : dynamicSchema?.jsonSchema;
 
         const coordinateProperties = useMemo(() => {
-          if (!selectedSchema?.jsonSchema?.properties) {
+          if (!jsonSchema?.properties) {
             return [];
           }
 
           // Look for properties that use the LatLng format enum
-          const properties = Object.entries(selectedSchema.jsonSchema.properties).reduce<string[]>(
-            (acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
-                acc.push(key);
-              }
-              return acc;
-            },
-            [],
-          );
+          const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
+            if (typeof value === 'object' && value?.format === FormatEnum.GeoPoint) {
+              acc.push(key);
+            }
+            return acc;
+          }, []);
 
           return properties;
-        }, [selectedSchema?.jsonSchema]);
+        }, [jsonSchema]);
 
         if (!typename) {
           return null;

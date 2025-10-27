@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import {
+  Format,
   FormatAnnotation,
   FormatEnum,
   GeneratorAnnotation,
@@ -74,6 +75,7 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
+  location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
 }).pipe(
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
