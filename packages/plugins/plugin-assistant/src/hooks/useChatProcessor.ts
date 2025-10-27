@@ -42,7 +42,7 @@ export const useChatProcessor = ({
       return;
     }
 
-    const conversation = new AiConversation({ queue: chat.queue.target as Queue<any> });
+    const conversation = new AiConversation(chat.queue.target as Queue<any>);
     await conversation.open();
     setConversation(conversation);
 

@@ -31,10 +31,9 @@ export const useChatServices = ({
   const client = useClient();
   space ??= client.spaces.default;
 
-  const computeRuntimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
-
+  const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
   return useMemo(() => {
-    const runtime = computeRuntimeResolver.getRuntime(space.id);
+    const runtime = runtimeResolver.getRuntime(space.id);
     return () =>
       runtime.runPromise(
         Effect.gen(function* () {

@@ -9,7 +9,7 @@ import { type Filter, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { DataType } from '@dxos/schema';
 
@@ -31,14 +31,14 @@ const meta = {
     const [filter, setFilter] = useState<Filter.Any>();
     const builder = useMemo(() => new QueryBuilder(tags), []);
     const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
-      setFilter(builder.build(value));
+      setFilter(builder.build(value).filter);
     }, []);
 
     return (
-      <div className='flex flex-col gap-2'>
+      <div role='none' className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
-          classNames='is-[40rem] p-2 border border-subduedSeparator rounded-sm'
+          classNames='p-2 border border-subduedSeparator rounded-sm'
           db={space?.db}
           onChange={handleChange}
         />
@@ -49,13 +49,13 @@ const meta = {
   },
   decorators: [
     withTheme,
+    withLayout({ container: 'column', classNames: 'p-2', scroll: true }),
     withClientProvider({
       types: [DataType.Organization, DataType.Person, DataType.Project, DataType.Employer],
       createIdentity: true,
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof QueryEditor>;

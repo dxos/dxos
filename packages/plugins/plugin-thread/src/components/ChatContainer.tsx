@@ -7,7 +7,7 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { type Space, fullyQualifiedId, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -41,14 +41,23 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   );
 };
 
-export type ChatContainerProps = {
-  space: Space;
-  thread: ThreadType;
-  context?: Obj.Any;
-  autoFocusTextbox?: boolean;
-} & Pick<ThreadRootProps, 'current'>;
+export type ChatContainerProps = ThemedClassName<
+  {
+    space: Space;
+    thread: ThreadType;
+    context?: Obj.Any;
+    autoFocusTextbox?: boolean;
+  } & Pick<ThreadRootProps, 'current'>
+>;
 
-export const ChatContainer = ({ space, thread, context, current, autoFocusTextbox }: ChatContainerProps) => {
+export const ChatContainer = ({
+  classNames,
+  space,
+  thread,
+  context,
+  current,
+  autoFocusTextbox,
+}: ChatContainerProps) => {
   const { t } = useTranslation(meta.id);
   const id = fullyQualifiedId(thread);
   const identity = useIdentity()!;
@@ -67,7 +76,7 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      listener({ onChange: (text) => (messageRef.current = text) }),
+      listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
     ],
     [themeMode, _count],
@@ -113,8 +122,9 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
       current={current}
       id={id}
       classNames={[
-        'bs-full is-full max-is-prose mli-auto grid-rows-[1fr_min-content_min-content] overflow-hidden',
+        'bs-full grid-rows-[1fr_min-content_min-content] overflow-hidden',
         'transition-[padding-block-end] [[data-sidebar-inline-start-state=open]_&]:lg:pbe-0',
+        classNames,
       ]}
     >
       <ScrollArea.Root classNames='col-span-2'>
@@ -136,7 +146,6 @@ export const ChatContainer = ({ space, thread, context, current, autoFocusTextbo
       </ScrollArea.Root>
 
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-
       <Thread.Status activity={activity}>{t('activity message')}</Thread.Status>
     </Thread.Root>
   );

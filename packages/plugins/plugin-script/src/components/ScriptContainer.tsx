@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, listener, stackItemContentEditorClassNames } from '@dxos/react-ui-editor';
@@ -18,7 +18,7 @@ import { TypescriptEditor, type TypescriptEditorProps } from './TypescriptEditor
 
 export type ScriptEditorProps = {
   role: string;
-  script: ScriptType;
+  script: Script.Script;
   settings?: ScriptSettings;
 } & Pick<TypescriptEditorProps, 'env'>;
 
@@ -33,7 +33,7 @@ export const ScriptContainer = ({ role, script, settings = { editorInputMode: 'v
       script.source.target
         ? [
             listener({
-              onChange: (text) => {
+              onChange: ({ text }) => {
                 if (script.source.target?.content !== text) {
                   script.changed = true;
                 }

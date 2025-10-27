@@ -22,7 +22,12 @@ export namespace SpaceCapabilities {
   export type onCreateSpace = (params: { space: Space; rootCollection: DataType.Collection }) => AnyIntentChain;
   export const onCreateSpace = defineCapability<onCreateSpace>(`${meta.id}/capability/on-space-created`);
 
-  export type OnSchemaAdded = (params: { space: Space; schema: Schema.Schema.AnyNoContext }) => AnyIntentChain;
+  export type OnSchemaAdded = (params: {
+    space: Space;
+    schema: Schema.Schema.AnyNoContext;
+    // TODO(wittjosiah): This is leaky.
+    show?: boolean;
+  }) => AnyIntentChain;
   export const OnSchemaAdded = defineCapability<OnSchemaAdded>(`${meta.id}/capability/on-schema-added`);
 
   // TODO(burdon): Should this be view? Forms are UI concepts? (associated with a View/schema).

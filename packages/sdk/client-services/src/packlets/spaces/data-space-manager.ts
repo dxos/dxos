@@ -279,7 +279,18 @@ export class DataSpaceManager extends Resource {
       await Promise.all(
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
-          const newDoc = await this._echoHost.createDoc(data, { preserveHistory: true });
+          // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
+          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
+            preserveHistory: true,
+          });
+
+          // The archived documents might have the spaceKey from the space they were expored from, we need to update it to the new spaceKey.
+          if (newDoc.doc().access !== undefined && newDoc.doc().access!.spaceKey !== spaceKey.toHex()) {
+            newDoc.change((doc) => {
+              doc.access!.spaceKey = spaceKey.toHex();
+            });
+          }
+
           documentIdMapping[documentId as DocumentId] = newDoc.documentId;
         }),
       );
@@ -297,6 +308,7 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
+    await this._echoHost.flush();
 
     log('constructing space...', { spaceKey });
 

@@ -54,6 +54,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/assistant-toolkit"
+    },
+    {
       "path": "../../core/blueprints"
     },
     {
@@ -139,6 +142,9 @@
     },
     {
       "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-automation"
     },
     {
       "path": "../plugin-client"

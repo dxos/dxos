@@ -378,10 +378,6 @@ export class AutomergeHost extends Resource {
   // NOTE: If both peers return sharePolicy=false the replication will not happen
   // https://github.com/automerge/automerge-repo/pull/292
   private async _sharePolicy(peerId: PeerId, documentId?: DocumentId): Promise<boolean> {
-    if (peerId.startsWith('client-')) {
-      return false; // Only send docs to clients if they are requested.
-    }
-
     if (!documentId) {
       return false;
     }
@@ -505,6 +501,10 @@ export class AutomergeHost extends Resource {
       },
     );
     await this._repo.flush(loadedDocuments);
+
+    // Ensure that document verions have propagated accross the system.
+    // This is important for the case where we are doing flush and then waiting for sync to happen.
+    await this._onHeadsChangedTask?.runBlocking();
   }
 
   async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
@@ -795,10 +795,13 @@ export class AutomergeHost extends Resource {
 
     for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
       const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (!state) {
+        continue;
+      }
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (state?.documents[documentId]) {
+        if (documentId in state.documents) {
           if (!newState) {
             newState = structuredClone(state);
           }

@@ -21,6 +21,8 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { SpaceState, fullyQualifiedId, getSpace, isSpace } from '@dxos/react-client/echo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { iconValues } from '@dxos/react-ui-pickers';
+import { hues } from '@dxos/react-ui-theme';
 import { DataType, ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
 
 import {
@@ -69,8 +71,10 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.Create,
-      resolve: async ({ name, hue, icon, edgeReplication }) => {
+      resolve: async ({ name, hue: hue_, icon: icon_, edgeReplication }) => {
         const client = context.getCapability(ClientCapabilities.Client);
+        const hue = hue_ ?? hues[Math.floor(Math.random() * hues.length)];
+        const icon = icon_ ?? iconValues[Math.floor(Math.random() * iconValues.length)];
         const space = await client.spaces.create({ name, hue, icon });
         if (edgeReplication) {
           await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
@@ -88,7 +92,8 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         // Create records smart collection.
         const records = Obj.make(DataType.QueryCollection, {
-          query: Query.select(Filter.type(DataType.StoredSchema)).ast,
+          // NOTE: This is specifically Filter.typename due to current limitations in query collection parsing.
+          query: Query.select(Filter.typename(DataType.StoredSchema.typename)).ast,
         });
         collection.objects.push(Ref.make(records));
 
@@ -323,7 +328,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.UseStaticSchema,
-      resolve: async ({ space, typename }) => {
+      resolve: async ({ space, typename, show }) => {
         const client = context.getCapability(ClientCapabilities.Client);
         const schema = client.graph.schemaRegistry.schemas.find((schema) => Type.getTypename(schema) === typename);
         invariant(schema, `Schema not found: ${typename}`);
@@ -338,7 +343,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
 
         return {
           data: {},
@@ -361,7 +366,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
     }),
     createResolver({
       intent: SpaceAction.AddSchema,
-      resolve: async ({ space, name, typename, version, schema: schemaInput }) => {
+      resolve: async ({ space, name, typename, version, schema: schemaInput, show }) => {
         const [schema] = await space.db.schemaRegistry.register([schemaInput]);
         if (name) {
           schema.storedSchema.name = name;
@@ -375,7 +380,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
 
         await context.activatePromise(SpaceEvents.SchemaAdded);
         const onSchemaAdded = context.getCapabilities(SpaceCapabilities.OnSchemaAdded);
-        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema }));
+        const schemaAddedIntents = onSchemaAdded.map((onSchemaAdded) => onSchemaAdded({ space, schema, show }));
 
         return {
           data: {

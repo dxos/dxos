@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { render } from '@dxos/storybook-utils';
 
@@ -66,11 +66,9 @@ export const Default: Story = {
 };
 
 export const Multiple: Story = {
-  decorators: [withMultiClientProvider({ ...clientProps, numClients: 3 })],
-  parameters: {
-    layout: {
-      type: 'fullscreen',
-      className: 'grid grid-cols-3',
-    },
-  },
+  decorators: [
+    withTheme,
+    withLayout({ classNames: 'grid grid-cols-3' }),
+    withMultiClientProvider({ ...clientProps, numClients: 3 }),
+  ],
 };

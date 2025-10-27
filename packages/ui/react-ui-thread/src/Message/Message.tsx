@@ -149,7 +149,7 @@ export const MessageTextbox = ({
       extensions: [
         keymap.of(keyBindings({ onSend, onClear })),
         listener({
-          onFocus: (focusing) => {
+          onFocus: ({ focusing }) => {
             if (focusing) {
               onEditorFocus?.();
             }

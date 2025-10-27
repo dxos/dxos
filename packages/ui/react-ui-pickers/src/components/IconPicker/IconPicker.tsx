@@ -41,10 +41,10 @@ const IconPreview = ({ value, iconSize = 5 }: { value: string; iconSize?: IconPr
  * https://phosphoricons.com
  * NOTE: Select icons that we are unlikely to use for the UI.
  */
-const icons = [
+export const icons = [
   'ph--house-line--regular',
   'ph--planet--regular',
-  'ph--piggy-bank--regular',
+  'ph--castle-turret--regular',
   'ph--snowflake--regular',
   'ph--virus--regular',
   'ph--graph--regular',
@@ -98,4 +98,4 @@ const icons = [
   'ph--yin-yang--regular',
 ];
 
-const iconValues = icons.map((icon) => icon.match(/ph--(.+)--regular/)?.[1] ?? icon);
+export const iconValues = icons.map((icon) => icon.match(/ph--(.+)--regular/)?.[1] ?? icon);

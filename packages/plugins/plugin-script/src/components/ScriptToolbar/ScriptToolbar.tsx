@@ -5,9 +5,9 @@
 import { Rx } from '@effect-rx/rx-react';
 import React, { useMemo } from 'react';
 
-import { type ScriptType } from '@dxos/functions';
+import { type Script } from '@dxos/functions';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { ElevationProvider, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   MenuProvider,
@@ -27,13 +27,13 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-export type ScriptToolbarProps = ThemedClassName<{
+export type ScriptToolbarProps = {
   role?: string;
-  script: ScriptType;
+  script: Script.Script;
   state: ScriptToolbarState;
-}>;
+};
 
-export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbarProps) => {
+export const ScriptToolbar = ({ script, role, state }: ScriptToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
   const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
@@ -42,7 +42,7 @@ export const ScriptToolbar = ({ script, role, state, classNames }: ScriptToolbar
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <MenuProvider {...actions} attendableId={fullyQualifiedId(script)}>
-        <ToolbarMenu classNames={classNames} />
+        <ToolbarMenu />
       </MenuProvider>
     </ElevationProvider>
   );

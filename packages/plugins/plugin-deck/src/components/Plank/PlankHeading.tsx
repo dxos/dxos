@@ -162,7 +162,8 @@ export const PlankHeading = memo(
             ? [
                 hoverableControls,
                 hoverableFocusedWithinControls,
-                '*:transition-opacity *:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color] hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-subduedSeparator focus-within:border-subduedSeparator',
+                '*:transition-opacity *:opacity-[--controls-opacity] bg-transparent border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-headerSurface focus-within:bg-headerSurface hover-hover:hover:border-subduedSeparator focus-within:border-subduedSeparator',
               ]
             : []),
         ]}

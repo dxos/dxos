@@ -29,13 +29,13 @@ import { type MailboxActionHandler, Mailbox as MailboxComponent } from './Mailbo
 import { MailboxEmpty } from './MailboxEmpty';
 
 export type MailboxContainerProps = {
+  mailbox: Mailbox.Mailbox;
   attendableId?: string;
   role?: string;
-  mailbox: Mailbox.Mailbox;
   filter?: string;
 };
 
-export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterParam }: MailboxContainerProps) => {
+export const MailboxContainer = ({ mailbox, attendableId, role, filter: filterParam }: MailboxContainerProps) => {
   const { t } = useTranslation(meta.id);
   const id = attendableId ?? fullyQualifiedId(mailbox);
   const state = useCapability(InboxCapabilities.MailboxState);
@@ -74,7 +74,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
     }, {} as Tag.TagMap);
   }, [tags]);
   const parser = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
-  useEffect(() => setFilter(parser.build(filterText)), [filterText, parser]);
+  useEffect(() => setFilter(parser.build(filterText).filter), [filterText, parser]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -134,7 +134,7 @@ export const MailboxContainer = ({ attendableId, role, mailbox, filter: filterPa
   const handleCancel = useCallback(() => {
     filterVisible.set(false);
     setFilterText(filterParam ?? '');
-    setFilter(parser.build(filterParam ?? ''));
+    setFilter(parser.build(filterParam ?? '').filter);
   }, [filterVisible, filterParam, parser]);
 
   return (

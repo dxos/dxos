@@ -20,7 +20,7 @@ export type NotebookStackProps = ThemedClassName<
   {
     notebook?: Notebook.Notebook;
     onRearrange?: StackProps['onRearrange'];
-  } & (Pick<NotebookSectionProps, 'space' | 'graph' | 'onCellInsert' | 'onCellDelete'> &
+  } & (Pick<NotebookSectionProps, 'space' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete'> &
     Pick<TypescriptEditorProps, 'env'>)
 >;
 
@@ -37,11 +37,18 @@ export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: N
 
 type NotebookSectionProps = NotebookCellProps;
 
-const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...props }: NotebookSectionProps) => {
+const NotebookSection = ({
+  cell,
+  space,
+  env,
+  promptResults,
+  onCellInsert,
+  onCellDelete,
+  ...props
+}: NotebookSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const resizable = cell.type === 'query' || cell.type === 'prompt';
+  const resizable = cell.type === 'query';
 
-  // TOOD(burdon): Set size if no extrinsic size (provider).
   return (
     <StackItem.Root role='section' item={cell} draggable classNames={resizable && minSectionHeight}>
       <StackItem.Heading classNames='bs-full p-1 justify-between attention-surface'>
@@ -72,7 +79,7 @@ const NotebookSection = ({ cell, space, env, onCellInsert, onCellDelete, ...prop
       </StackItem.DragPreview>
 
       <StackItem.Content classNames='overflow-visible'>
-        <NotebookCell space={space} cell={cell} env={env} {...props} />
+        <NotebookCell space={space} cell={cell} env={env} promptResults={promptResults} {...props} />
       </StackItem.Content>
     </StackItem.Root>
   );

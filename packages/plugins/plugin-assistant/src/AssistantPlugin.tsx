@@ -3,13 +3,14 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { ResearchGraph, ResearchOn } from '@dxos/assistant-testing';
+import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
+import { DataType } from '@dxos/schema';
 
 import {
   AiService,
@@ -55,18 +56,21 @@ export const AssistantPlugin = definePlugin(meta, () => [
         id: Type.getTypename(Assistant.Chat),
         metadata: {
           icon: 'ph--atom--regular',
+          iconHue: 'sky',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
           icon: 'ph--blueprint--regular',
+          iconHue: 'sky',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: Type.getTypename(Sequence),
         metadata: {
           icon: 'ph--circuitry--regular',
+          iconHue: 'sky',
         },
       }),
     ],
@@ -107,7 +111,7 @@ export const AssistantPlugin = definePlugin(meta, () => [
         ServiceType,
         Assistant.CompanionTo,
         ResearchGraph,
-        ResearchOn,
+        DataType.HasSubject,
         Prompt.Prompt,
       ]),
   }),

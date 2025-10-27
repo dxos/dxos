@@ -86,10 +86,7 @@ const RawTreeItem = <T extends HasId = any>({
 
   const { useItems, getProps, isOpen, isCurrent } = useTree();
   const items = useItems(item);
-  const { id, parentOf, label, className, headingClassName, icon, iconClassName, disabled, testId } = getProps(
-    item,
-    _path,
-  );
+  const { id, parentOf, label, className, headingClassName, icon, iconHue, disabled, testId } = getProps(item, _path);
   const path = useMemo(() => [..._path, id], [_path, id]);
   const open = isOpen(path, item);
   const current = isCurrent(path, item);
@@ -264,7 +261,7 @@ const RawTreeItem = <T extends HasId = any>({
               label={label}
               className={headingClassName}
               icon={icon}
-              iconClassName={iconClassName}
+              iconHue={iconHue}
               onSelect={handleSelect}
               ref={buttonRef}
             />

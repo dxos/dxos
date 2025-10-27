@@ -113,10 +113,10 @@ export const Listener: Story = {
       text={str('# Listener', '', content.footer)}
       extensions={[
         listener({
-          onFocus: (focusing) => {
+          onFocus: ({ focusing }) => {
             log.info('listener', { focusing });
           },
-          onChange: (text) => {
+          onChange: ({ text }) => {
             log.info('listener', { text });
           },
         }),

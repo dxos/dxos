@@ -6,7 +6,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Ref } from '@dxos/echo';
-import { FunctionType } from '@dxos/functions';
+import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType }[];
-  functions?: FunctionType[];
+  functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
@@ -125,7 +125,7 @@ export const ToolboxContainer = ({ classNames, space, processor }: ToolboxContai
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(space, Filter.type(FunctionType));
+  const functions = useQuery(space, Filter.type(Function.Function));
 
   return (
     <Toolbox

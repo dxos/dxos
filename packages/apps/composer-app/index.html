@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" style="overscroll-behavior: none">
   <head>
     <meta charset="UTF-8" />
@@ -54,6 +54,15 @@
         }
       }
     </style>
+
+    <script strategy="beforeInteractive">
+      // Suppress lit dev mode warning.
+      // https://github.com/lit/lit/issues/4877
+      globalThis.litIssuedWarnings ??= new Set();
+      globalThis.litIssuedWarnings.add(
+        'Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.',
+      );
+    </script>
 
     <!-- https://realfavicongenerator.net -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />

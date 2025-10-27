@@ -33,7 +33,6 @@
     "readme": "oclif readme --multi"
   },
   "dependencies": {
-    "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-base": "workspace:*",
     "@dxos/cli-composer": "workspace:*",
@@ -111,8 +110,9 @@
   },
   "oclif": {
     "bin": "dx",
-    "dirname": "dx",
     "commands": "./dist/src/commands",
+    "dirname": "dx",
+    "helpClass": "./dist/src/help",
     "hooks": {
       "command_not_found": "./dist/src/hooks/command-not-found"
     },
@@ -123,7 +123,6 @@
       "@oclif/plugin-plugins",
       "@oclif/plugin-update"
     ],
-    "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
       "agent": {

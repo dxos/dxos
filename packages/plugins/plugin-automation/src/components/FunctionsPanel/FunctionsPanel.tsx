@@ -6,9 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { FunctionType, ScriptType } from '@dxos/functions';
+import { Function, Script } from '@dxos/functions';
+import { SpaceAction } from '@dxos/plugin-space/types';
 import { Filter, type Space, fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
-import { Button, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { controlItemClasses } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
@@ -23,8 +24,8 @@ export type FunctionsPanelProps = {
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const functions = useQuery(space, Filter.type(FunctionType));
-  const scripts = useQuery(space, Filter.type(ScriptType));
+  const functions = useQuery(space, Filter.type(Function.Function));
+  const scripts = useQuery(space, Filter.type(Script.Script));
   const { dispatchPromise: dispatch } = useIntentDispatcher();
 
   const functionToScriptMap = useMemo(
@@ -40,13 +41,13 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
           }
           return map;
         },
-        {} as Record<string, ScriptType>,
+        {} as Record<string, Script.Script>,
       ),
     [functions, scripts],
   );
 
   const getScriptName = useCallback(
-    (func: FunctionType) => {
+    (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       return script?.name;
     },
@@ -54,7 +55,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   const handleGoToScript = useCallback(
-    (func: FunctionType) => {
+    (func: Function.Function) => {
       const script = functionToScriptMap[func.id];
       if (script) {
         void dispatch(createIntent(LayoutAction.Open, { part: 'main', subject: [fullyQualifiedId(script)] }));
@@ -63,14 +64,19 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
     [functionToScriptMap, dispatch],
   );
 
+  const handleDelete = useCallback(
+    (func: Function.Function) => dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [func] })),
+    [dispatch],
+  );
+
   return (
     <div role='none' className={mx(controlItemClasses)}>
       {functions.length > 0 && (
-        <List.Root<FunctionType> items={functions} isItem={Schema.is(FunctionType)} getId={(func) => func.id}>
+        <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
           {({ items }) => (
             <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
-                <List.Item<FunctionType>
+                <List.Item<Function.Function>
                   key={func.id}
                   item={func}
                   classNames={mx(grid, ghostHover, 'items-center', 'pli-2', 'min-bs-[3rem]')}
@@ -84,6 +90,12 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                   {functionToScriptMap[func.id] && (
                     <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
                   )}
+                  <IconButton
+                    iconOnly
+                    icon='ph--trash--regular'
+                    label={t('delete function button label')}
+                    onClick={() => handleDelete(func)}
+                  />
                 </List.Item>
               ))}
             </div>

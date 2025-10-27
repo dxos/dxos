@@ -6,6 +6,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, memo, useCallba
 
 import { Button, Icon, type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { getStyles } from '@dxos/react-ui-theme';
 
 // TODO(wittjosiah): Consider whether there should be a separate disabled prop which was visually distinct
 //   rather than just making the item unselectable.
@@ -13,7 +14,7 @@ export type TreeItemHeadingProps = {
   label: Label;
   className?: string;
   icon?: string;
-  iconClassName?: string;
+  iconHue?: string;
   disabled?: boolean;
   current?: boolean;
   onSelect?: (option: boolean) => void;
@@ -21,8 +22,9 @@ export type TreeItemHeadingProps = {
 
 export const TreeItemHeading = memo(
   forwardRef<HTMLButtonElement, TreeItemHeadingProps>(
-    ({ label, className, icon, iconClassName, disabled, current, onSelect }, forwardedRef) => {
+    ({ label, className, icon, iconHue, disabled, current, onSelect }, forwardedRef) => {
       const { t } = useTranslation();
+      const styles = iconHue ? getStyles(iconHue) : undefined;
 
       const handleSelect = useCallback(
         (event: MouseEvent) => {
@@ -65,7 +67,7 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames={['mlb-1', iconClassName]} />}
+            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames={['mlb-1', styles?.icon]} />}
             <span className='flex-1 is-0 truncate text-start text-sm font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

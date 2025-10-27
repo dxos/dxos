@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
-import { DatabaseService, FunctionTrigger, FunctionType, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { DatabaseService, Function, Trigger, getUserFunctionIdInMetadata } from '@dxos/functions';
 
 import { withDatabase } from '../../../../util';
 import { Common } from '../../../options';
@@ -30,7 +30,7 @@ export const update = Command.make(
   ({ spaceId, id, enabled, functionId, cron, input }) =>
     Effect.gen(function* () {
       const dxn = DXN.fromLocalObjectId(id);
-      const trigger = yield* DatabaseService.resolve(dxn, FunctionTrigger);
+      const trigger = yield* DatabaseService.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'timer') {
         throw new Error('Trigger is not a timer');
       }
@@ -43,7 +43,7 @@ export const update = Command.make(
         trigger.input = input.value;
       }
       if (Option.isSome(functionId)) {
-        const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(FunctionType));
+        const { objects: functions } = yield* DatabaseService.runQuery(Filter.type(Function.Function));
         const fn = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId.value);
         if (!fn) {
           throw new Error(`Function not found: ${functionId.value}`);
