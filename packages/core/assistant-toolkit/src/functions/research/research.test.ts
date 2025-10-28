@@ -35,7 +35,7 @@ import { DataType } from '@dxos/schema';
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
-import createResearchNote from './create-research-note';
+import createDocument from './create-document';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
@@ -45,11 +45,11 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
+  makeToolResolverFromFunctions([research, createDocument], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createResearchNote] })),
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument] })),
   Layer.provideMerge(
     Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
