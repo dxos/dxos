@@ -210,7 +210,7 @@ jobs:
         run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        # if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :e2e --concurrency=2 -- --browser=all
 
       - uses: 'moonrepo/run-report-action@v1'
