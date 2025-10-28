@@ -11,7 +11,7 @@ import { DataType } from '@dxos/schema';
 
 import {
   AppGraphBuilder,
-  BLUEPRINT_KEY,
+  ASSISTANT_BLUEPRINT_KEY,
   BlueprintDefinition,
   InboxState,
   IntentResolver,
@@ -44,7 +44,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [BLUEPRINT_KEY],
+          blueprints: [ASSISTANT_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {

@@ -5,6 +5,8 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { type PluginContext } from '@dxos/app-framework';
@@ -13,7 +15,7 @@ import { Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-const toolDefs = [
+const Toolkit$ = Toolkit.make(
   Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
@@ -27,14 +29,17 @@ const toolDefs = [
     failure: Schema.Never,
     dependencies: [AiContextService, DatabaseService],
   }),
-] satisfies Tool.Any[];
+);
 
-export const assistantTools = toolDefs.map((tool) => tool.name);
+export namespace AssistantToolkit {
+  export const Toolkit = Toolkit$;
 
-// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-export class AssistantToolkit extends Toolkit.make(...toolDefs) {
-  static layer = (_context: PluginContext) =>
-    AssistantToolkit.toLayer({
+  export const tools = Record.keys(Toolkit$.tools);
+
+  export const createLayer = (
+    _context: PluginContext,
+  ): Layer.Layer<Tool.Handler<any>, never, AiContextService | DatabaseService> =>
+    Toolkit$.toLayer({
       'add-to-context': Effect.fnUntraced(function* ({ id }) {
         const { binder } = yield* AiContextService;
         const { db } = yield* DatabaseService;

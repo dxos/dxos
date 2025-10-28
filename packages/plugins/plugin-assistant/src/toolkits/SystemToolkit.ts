@@ -5,6 +5,8 @@
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import type * as Layer from 'effect/Layer';
+import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
 import { Capabilities, type PluginContext, createIntent } from '@dxos/app-framework';
@@ -21,7 +23,7 @@ import { trim } from '@dxos/util';
 // TODO(burdon): Factor out (is there a way to remove plugin deps?)
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 
-const toolDefs = [
+const Toolkit$ = Toolkit.make(
   //
   // Schema
   //
@@ -146,20 +148,22 @@ const toolDefs = [
     success: Schema.Any,
     failure: Schema.Never,
   }),
-] satisfies Tool.Any[];
+);
 
-export const systemTools = toolDefs.map((tool) => tool.name);
+export namespace SystemToolkit {
+  export const Toolkit = Toolkit$;
 
-export class SystemToolkit extends Toolkit.make(...toolDefs) {
-  static layer = (context: PluginContext) =>
-    SystemToolkit.toLayer({
+  export const tools = Record.keys(Toolkit$.tools);
+
+  export const createLayer = (context: PluginContext): Layer.Layer<Tool.Handler<any>, never, never> =>
+    Toolkit$.toLayer({
       'schema-list': () => {
         const space = getActiveSpace(context);
         invariant(space, 'No active space');
 
         return Effect.gen(function* () {
           const registered = context
-            // TODO(burdon): Can we remove plugin dependency?
+            // TODO(burdon): Can we remove plugin dependency? Get from layer?
             .getCapabilities(ClientCapabilities.Schema)
             .flat()
             .map((schema) => {
@@ -171,7 +175,7 @@ export class SystemToolkit extends Toolkit.make(...toolDefs) {
               };
             });
 
-          // TODO(burdon): Can we remove plugin dependency?
+          // TODO(burdon): Can we remove plugin dependency? Get from layer?
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
             typename: Type.getTypename(form.objectSchema),
             jsonSchema: Type.toJsonSchema(form.objectSchema),

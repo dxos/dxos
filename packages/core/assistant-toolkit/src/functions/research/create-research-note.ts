@@ -15,8 +15,8 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/create-research-note',
-  name: 'Create research note',
+  key: 'dxos.org/function/research/create-document',
+  name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
     name: Schema.String.annotations({
@@ -40,10 +40,10 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({}), // TODO(burdon): Schema.Void?
   handler: Effect.fnUntraced(function* ({ data: { target, name, content } }) {
-    log.info('Creating research note', { target, name, content });
+    log.info('Creating research document', { target, name, content });
 
     yield* DatabaseService.flush({ indexes: true });
-    yield* TracingService.emitStatus({ message: 'Creating research note...' });
+    yield* TracingService.emitStatus({ message: 'Creating research document...' });
     invariant(ObjectId.isValid(target));
 
     const targetObj = yield* DatabaseService.resolve(DXN.fromLocalObjectId(target));
@@ -63,7 +63,7 @@ export default defineFunction({
     );
     yield* DatabaseService.flush({ indexes: true });
 
-    log.info('Created research note', { target, name, content });
+    log.info('Created research document', { target, name, content });
     return {};
   }),
 });

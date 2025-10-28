@@ -9,5 +9,6 @@ export * from './graph';
 export * from './research-graph';
 export * from './types';
 
-// TODO(burdon): How to organize/package blueprints, tools, and functions?
-export const researchTools = [research, createResearchNote] as const;
+export namespace Research {
+  export const tools = [research, createResearchNote] as const;
+}

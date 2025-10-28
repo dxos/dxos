@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import {
   AnchorSort,
   AppGraphSerializer,
-  BLUEPRINT_KEY,
+  ASSISTANT_BLUEPRINT_KEY,
   BlueprintDefinition,
   IntentResolver,
   MarkdownSettings,
@@ -57,7 +57,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
           label: (object: Markdown.Document) => object.name || object.fallbackName,
           icon: 'ph--text-aa--regular',
           iconHue: 'indigo',
-          blueprints: [BLUEPRINT_KEY],
+          blueprints: [ASSISTANT_BLUEPRINT_KEY],
           graphProps: {
             managesAutofocus: true,
           },

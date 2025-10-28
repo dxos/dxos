@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { agent } from '@dxos/assistant-toolkit';
+import { AgentFunction } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -225,7 +225,7 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof agent> = { prompt, input };
+  const inputData: FunctionDefinition.Input<typeof AgentFunction> = { prompt, input };
   const tracer = yield* InvocationTracer;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
@@ -235,7 +235,7 @@ const runPrompt = Effect.fn(function* ({
   });
 
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(agent, inputData).pipe(
+  const result = yield* FunctionInvocationService.invokeFunction(AgentFunction, inputData).pipe(
     Effect.provide(
       ComputeEventLogger.layerFromTracing.pipe(
         Layer.provideMerge(TracingService.layerQueue(trace.invocationTraceQueue)),

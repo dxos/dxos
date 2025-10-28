@@ -8,7 +8,7 @@ import React from 'react';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { IntentPlugin, SettingsPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { agent } from '@dxos/assistant-toolkit';
+import { AgentFunction } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { Function, serializeFunction } from '@dxos/functions';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
@@ -58,7 +58,7 @@ const meta = {
 
             space.db.add(createNotebook());
             space.db.add(Markdown.makeDocument({ content: '# Hello World' }));
-            space.db.add(serializeFunction(agent));
+            space.db.add(serializeFunction(AgentFunction));
           },
         }),
         SpacePlugin({}),

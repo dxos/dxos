@@ -32,7 +32,7 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
-import { RESEARCH_BLUEPRINT } from '../../blueprints';
+import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
 import createResearchNote from './create-research-note';
@@ -109,7 +109,7 @@ describe.skipIf(process.env.CI)('Research', () => {
         yield* DatabaseService.add(org);
         yield* DatabaseService.flush({ indexes: true });
 
-        const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
+        const blueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
