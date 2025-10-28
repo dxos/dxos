@@ -325,8 +325,9 @@ const TestLayer = Layer.mergeAll(testingLayer, toolkitLayer, AiService.model('@a
   Layer.provide(AiServiceTestingPreset('direct')),
 );
 
+// TODO(wittjosiah): GeoPoint breaks Anthropic validation.
 describe('Toolkit', () => {
-  it.effect(
+  it.effect.skip(
     'can handle a geopoint tool parameter',
     Effect.fnUntraced(
       function* (_) {
