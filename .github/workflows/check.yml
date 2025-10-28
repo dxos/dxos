@@ -6,9 +6,8 @@ on:
 
   push:
     branches:
-      - mykola/fix-e2e-tests
-      # - main
-      # - ci/*
+      - main
+      - ci/*
 
   schedule:
     - cron: '0 4 * * 1-5'
@@ -163,7 +162,7 @@ jobs:
           result: ${{ job.status }}
 
   e2e:
-    # if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
+    if: ${{ startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/rc-') || startsWith(github.ref, 'refs/heads/hotfix-') || startsWith(github.ref, 'refs/heads/release-please-') || inputs.e2e }}
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.4.1
@@ -211,7 +210,7 @@ jobs:
         run: moon run :e2e --affected --remote --concurrency=2 -- --browser=all
 
       - name: Test All
-        # if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :e2e --concurrency=2 -- --browser=all
 
       - uses: 'moonrepo/run-report-action@v1'
