@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec } from './edge';
+import { EdgeErrorCodec, type EdgeErrorData, type EdgeFailure } from './edge';
 
 // TODO(burdon): Reconcile with @dxos/errors.
 /**
@@ -15,12 +15,15 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec } from './edge
  */
 export class EdgeCallFailedError extends Error {
   public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
-    return new EdgeCallFailedError({
+    const error = new EdgeCallFailedError({
       reason: body.reason,
       errorData: body.errorData,
       isRetryable: body.errorData == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
+      cause: body.cause ? EdgeErrorCodec.deserialize(body.cause) : undefined,
     });
+
+    return error;
   }
 
   public static async fromHttpFailure(response: Response): Promise<EdgeCallFailedError> {
@@ -105,5 +108,5 @@ const parseErrorBody = async (response: Response): Promise<Error | undefined> =>
     return undefined;
   }
 
-  return EdgeHttpErrorCodec.deserialize(body.error);
+  return EdgeErrorCodec.deserialize(body.error);
 };

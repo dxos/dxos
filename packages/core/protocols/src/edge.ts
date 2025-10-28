@@ -38,6 +38,10 @@ export type EdgeFailure = {
    */
   reason: string;
   /**
+   * Cause Error captured on the EDGE service to aid debugging on the client.
+   */
+  cause?: SerializedError;
+  /**
    * Information that can be used to retry the request such that it will succeed, for example:
    * 1. { type: 'auth_required', challenge: string }
    *    Requires retrying the request with challenge signature included.
@@ -291,11 +295,19 @@ export const DocumentCodec = Object.freeze({
  */
 export const EdgeResponse = Object.freeze({
   success: <T>(data: T): Response => new Response(JSON.stringify({ success: true, data }), { status: 200 }),
-  failure: (reason: string, errorData?: EdgeErrorData, shouldRetryAfter?: number): Response =>
-    new Response(JSON.stringify({ success: false, reason, errorData }), {
-      status: 200,
-      headers: shouldRetryAfter ? { 'Retry-After': String(shouldRetryAfter) } : undefined,
-    }),
+  failure: (reason: string | Error, errorData?: EdgeErrorData, shouldRetryAfter?: number): Response =>
+    new Response(
+      JSON.stringify({
+        success: false,
+        reason: typeof reason === 'string' ? reason : reason.message,
+        errorData,
+        stack: typeof reason === 'string' ? undefined : reason.stack,
+      }),
+      {
+        status: 200,
+        headers: shouldRetryAfter ? { 'Retry-After': String(shouldRetryAfter) } : undefined,
+      },
+    ),
 });
 
 export type SerializedError = {
@@ -306,23 +318,27 @@ export type SerializedError = {
   cause?: SerializedError;
 };
 
+const MAX_ERROR_DEPTH = 3;
 /**
  * Codec for serializing and deserializing EDGE unhandled errors.
  * EDGE will return an error object in the response body when an unhandled error occurs with the HTTP status code 500.
  */
-export const EdgeHttpErrorCodec = Object.freeze({
+export const EdgeErrorCodec = Object.freeze({
   encode: (err: Error): SerializedError => ({
     code: 'code' in err ? (err as any).code : undefined,
     message: err.message,
     stack: err.stack,
-    cause: err.cause instanceof Error ? EdgeHttpErrorCodec.encode(err.cause) : undefined,
+    cause: err.cause instanceof Error ? EdgeErrorCodec.encode(err.cause) : undefined,
   }),
-  deserialize: (serializedError: SerializedError): Error => {
+  deserialize: (serializedError: SerializedError, depth: number = 0): Error => {
     let err: Error;
     if (typeof serializedError.code === 'string') {
       err = new BaseError(serializedError.code, {
         message: serializedError.message ?? 'Unknown error',
-        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
+        cause:
+          serializedError.cause && depth < MAX_ERROR_DEPTH
+            ? EdgeErrorCodec.deserialize(serializedError.cause, depth + 1)
+            : undefined,
         context: serializedError.context,
       });
 
@@ -333,7 +349,10 @@ export const EdgeHttpErrorCodec = Object.freeze({
       }
     } else {
       err = new Error(serializedError.message ?? 'Unknown error', {
-        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
+        cause:
+          serializedError.cause && depth < MAX_ERROR_DEPTH
+            ? EdgeErrorCodec.deserialize(serializedError.cause, depth + 1)
+            : undefined,
       });
 
       if (serializedError.stack) {
