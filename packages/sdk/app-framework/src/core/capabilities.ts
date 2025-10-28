@@ -73,12 +73,16 @@ class CapabilityImpl<T> {
 /**
  * Helper to define the implementation of a capability.
  */
-export const contributes = <I extends InterfaceDef<any>>(
+export const contributes = <I extends InterfaceDef<any>, T = InterfaceDef.Implementation<I>>(
   interfaceDef: I,
-  implementation: Readonly<Capability<InterfaceDef.Implementation<I>>['implementation']>,
+  implementation: T,
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
 ): Capability<I> => {
-  return { interface: interfaceDef, implementation, deactivate } satisfies Capability<I>;
+  return {
+    interface: interfaceDef,
+    implementation: implementation as any, // NOTE: Added to allow providing readonly implementation.
+    deactivate,
+  } satisfies Capability<I>;
 };
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
