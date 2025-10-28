@@ -17,8 +17,8 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
-  type EdgeBodyResponse,
   EdgeCallFailedError,
+  type EdgeResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -398,7 +398,7 @@ export class EdgeHttpClient {
         const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
         if (response.ok) {
-          const body = (await response.json()) as EdgeBodyResponse<T>;
+          const body = (await response.json()) as EdgeResponse<T>;
 
           if (args.rawResponse) {
             return body as any;
@@ -415,7 +415,8 @@ export class EdgeHttpClient {
           log.warn('unsuccessful edge response', { url, body });
           if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
             processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else if (body.errorData) {
+          } else if (body.success === false) {
+            // Edge service returned a EdgeFailure with status code is 200.
             processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
@@ -423,7 +424,16 @@ export class EdgeHttpClient {
           handledAuth = true;
           continue;
         } else {
-          processingError = await EdgeCallFailedError.fromHttpFailure(response);
+          if (response.headers.get('Content-Type') === 'application/json') {
+            const copy = response.clone();
+            const body = await copy.json();
+            if ('success' in body && body.success === false) {
+              // Edge service returned a EdgeSuccess with status code not 200.
+              processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
+            } else {
+              processingError = await EdgeCallFailedError.fromHttpFailure(response);
+            }
+          }
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);

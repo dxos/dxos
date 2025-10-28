@@ -8,7 +8,7 @@ import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } 
 /**
  * Error thrown when a call to the Edge service fails.
  * There 3 possible sources of failure:
- * 1. EdgeFailure -> Processing the request failed and was gracefully handled by EDGE service.
+ * 1. EdgeFailure (JSON body with { success: false }) -> Processing the request failed and was gracefully handled by EDGE service.
  * 2. Http failure (non-ok code) -> The HTTP request failed (e.g. timeout, network error).
  *                               -> Unhandled exception on EDGE side, EDGE would provide serialized error in the response body.
  * 3. Processing failure -> Unhandled exception on client side while processing the response.
@@ -20,7 +20,7 @@ export class EdgeCallFailedError extends Error {
       errorData: body.errorData,
       isRetryable: body.errorData == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
-      cause: body.cause ? ErrorCodec.deserialize(body.cause) : undefined,
+      cause: body.cause ? ErrorCodec.decode(body.cause) : undefined,
     });
 
     return error;

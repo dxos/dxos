@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Rename EdgerRouterEndpoint.
@@ -20,6 +21,14 @@ export enum EdgeService {
 export type EdgeSuccess<T> = {
   success: true;
   data: T;
+};
+
+export type SerializedError = {
+  code?: string;
+  message?: string;
+  context?: Record<string, unknown>;
+  stack?: string;
+  cause?: SerializedError;
 };
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
@@ -54,7 +63,88 @@ export type EdgeFailure = {
   errorData?: EdgeErrorData;
 };
 
-export type EdgeBodyResponse<T> = EdgeSuccess<T> | EdgeFailure;
+/**
+ * Represents a body response from the Edge service.
+ */
+export type EdgeResponse<T> = EdgeSuccess<T> | EdgeFailure;
+
+/**
+ * Use this to create a response from the Edge service.
+ * It returns a Response object with the 200 status code
+ */
+export const EdgeResponse = Object.freeze({
+  success: <T>(data: T, status: number = 200): Response => {
+    invariant(status >= 200 && status < 300, 'Status code must be in the 2xx range');
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data,
+      }),
+      {
+        status,
+        headers,
+      },
+    );
+  },
+  failure: ({
+    reason,
+    cause,
+    errorData,
+    shouldRetryAfter,
+    status = 500,
+  }: {
+    /**
+     * An explanation of why the call failed. Used mostly for logging and monitoring.
+     */
+    reason: string;
+    /**
+     * Error that caused the failure.
+     * Useful for debugging.
+     */
+    cause?: Error;
+    /**
+     * Information that can be used to retry the request such that it will succeed, for example:
+     * 1. { type: 'auth_required', challenge: string }
+     *    Requires retrying the request with challenge signature included.
+     * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
+     *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
+     *    if the user confirms.
+     * When errorData is returned simply retrying the request won't have any effect.
+     * EdgeHttpClient should parse well-known errorData into Error types and throw.
+     */
+    errorData?: EdgeErrorData;
+    /**
+     * If provided, this request will be marked as retryable and the client will wait for the specified number of milliseconds before retrying.
+     * If not provided, the client will not retry the request.
+     */
+    shouldRetryAfter?: number;
+
+    /**
+     * Status code of the response.
+     * @default 500
+     */
+    status?: number;
+  }): Response => {
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    if (shouldRetryAfter) {
+      headers.set('Retry-After', String(shouldRetryAfter));
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        reason,
+        errorData,
+        cause: cause ? ErrorCodec.encode(cause) : undefined,
+      }),
+      {
+        status,
+        headers,
+      },
+    );
+  },
+});
 
 export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
@@ -289,86 +379,26 @@ export const DocumentCodec = Object.freeze({
   decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
 });
 
-/**
- * Use this to create a response from the Edge service.
- * It returns a Response object with the 200 status code
- */
-export const EdgeResponse = Object.freeze({
-  success: <T>(data: T): Response => new Response(JSON.stringify({ success: true, data }), { status: 200 }),
-  failure: ({
-    reason,
-    cause,
-    errorData,
-    shouldRetryAfter,
-  }: {
-    /**
-     * An explanation of why the call failed. Used mostly for logging and monitoring.
-     */
-    reason: string;
-    /**
-     * Error that caused the failure.
-     * Will be serialized and included in the response body.
-     */
-    cause?: Error;
-    /**
-     * Information that can be used to retry the request such that it will succeed, for example:
-     * 1. { type: 'auth_required', challenge: string }
-     *    Requires retrying the request with challenge signature included.
-     * 2. { type: 'user_confirmation_required', dialog: { title: string, message: string, confirmation_payload: string } }
-     *    Requires showing a confirmation dialog to a user and retrying the request with confirmation_payload included
-     *    if the user confirms.
-     * When errorData is returned simply retrying the request won't have any effect.
-     * EdgeHttpClient should parse well-known errorData into Error types and throw.
-     */
-    errorData?: EdgeErrorData;
-    /**
-     * If provided, this request will be marked as retryable and the client will wait for the specified number of milliseconds before retrying.
-     * If not provided, the client will not retry the request.
-     */
-    shouldRetryAfter?: number;
-  }): Response =>
-    new Response(
-      JSON.stringify({
-        success: false,
-        reason,
-        errorData,
-        cause: cause ? ErrorCodec.encode(cause) : undefined,
-      }),
-      {
-        status: 200,
-        headers: shouldRetryAfter ? { 'Retry-After': String(shouldRetryAfter) } : undefined,
-      },
-    ),
-});
-
-export type SerializedError = {
-  code?: string;
-  message?: string;
-  context?: Record<string, unknown>;
-  stack?: string;
-  cause?: SerializedError;
-};
-
 const MAX_ERROR_DEPTH = 3;
 
 /**
  * Codec for serializing and deserializing Edge Errors.
  */
 export const ErrorCodec = Object.freeze({
-  encode: (err: Error): SerializedError => ({
+  encode: (err: Error, depth: number = 0): SerializedError => ({
     code: 'code' in err ? (err as any).code : undefined,
     message: err.message,
     stack: err.stack,
-    cause: err.cause instanceof Error ? ErrorCodec.encode(err.cause) : undefined,
+    cause: err.cause instanceof Error && depth < MAX_ERROR_DEPTH ? ErrorCodec.encode(err.cause, depth + 1) : undefined,
   }),
-  deserialize: (serializedError: SerializedError, depth: number = 0): Error => {
+  decode: (serializedError: SerializedError, depth: number = 0): Error => {
     let err: Error;
     if (typeof serializedError.code === 'string') {
       err = new BaseError(serializedError.code, {
         message: serializedError.message ?? 'Unknown error',
         cause:
           serializedError.cause && depth < MAX_ERROR_DEPTH
-            ? ErrorCodec.deserialize(serializedError.cause, depth + 1)
+            ? ErrorCodec.decode(serializedError.cause, depth + 1)
             : undefined,
         context: serializedError.context,
       });
@@ -382,7 +412,7 @@ export const ErrorCodec = Object.freeze({
       err = new Error(serializedError.message ?? 'Unknown error', {
         cause:
           serializedError.cause && depth < MAX_ERROR_DEPTH
-            ? ErrorCodec.deserialize(serializedError.cause, depth + 1)
+            ? ErrorCodec.decode(serializedError.cause, depth + 1)
             : undefined,
       });
 
@@ -420,6 +450,6 @@ export const EdgeHttpErrorCodec = Object.freeze({
       return undefined;
     }
 
-    return ErrorCodec.deserialize(body.error);
+    return ErrorCodec.decode(body.error);
   },
 });
