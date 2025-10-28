@@ -11,11 +11,10 @@ import { ArtifactId } from '@dxos/assistant';
 import { Obj } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 
-// TODO(burdon): Common error handling.
-// TODO(burdon): Factor out to space plugin.
+// TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
-  key: 'dxos.org/function/assistant/load',
-  name: 'Assistant load',
+  key: 'dxos.org/function/assistant/object-load',
+  name: 'Load object',
   description: 'Loads the object.',
   inputSchema: Schema.Struct({
     id: ArtifactId.annotations({

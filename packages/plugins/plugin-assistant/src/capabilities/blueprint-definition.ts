@@ -21,8 +21,12 @@ import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
 
+// TODO(burdon): Function naming pattern (noun-verb).
+// TODO(burdon): Unit tests for developing functions. Error handling.
+
 const functions: FunctionDefinition[] = [analysis, list, load];
 const tools = [
+  // TODO(burdon): Reconcile names with `toolkit.ts`.
   'add-to-context',
   // TODO(wittjosiah): Factor out to an ECHO blueprint.
   'get-schemas',
