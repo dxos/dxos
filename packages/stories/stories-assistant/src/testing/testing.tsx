@@ -26,13 +26,12 @@ import {
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import {
-  DESIGN_BLUEPRINT,
-  PLANNING_BLUEPRINT,
-  agent,
-  createResearchNote,
+  AgentFunction,
+  DesignBlueprint,
+  PlanningBlueprint,
+  Research,
   readDocument,
   readTasks,
-  research,
   updateDocument,
   updateTasks,
 } from '@dxos/assistant-toolkit';
@@ -216,12 +215,12 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       activatesOn: Events.SetupArtifactDefinition,
       activate: () => [
         // TODO(burdon): Move into assistnat?
-        contributes(Capabilities.BlueprintDefinition, DESIGN_BLUEPRINT),
-        contributes(Capabilities.BlueprintDefinition, PLANNING_BLUEPRINT),
-        contributes(Capabilities.Functions, [agent]),
+        contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
+        contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
+        contributes(Capabilities.Functions, [AgentFunction]),
         contributes(Capabilities.Functions, [readDocument, updateDocument]),
         contributes(Capabilities.Functions, [readTasks, updateTasks]),
-        contributes(Capabilities.Functions, [research, createResearchNote]),
+        contributes(Capabilities.Functions, Research.tools),
         contributes(Capabilities.Functions, [exampleFunctions.reply]),
       ],
     }),

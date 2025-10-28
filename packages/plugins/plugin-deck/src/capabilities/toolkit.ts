@@ -7,14 +7,21 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type Capability,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+} from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-class DeckToolkit extends Toolkit.make(
+export class DeckToolkit extends Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -51,7 +58,7 @@ class DeckToolkit extends Toolkit.make(
     });
 }
 
-export default (context: PluginContext) => [
+export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, DeckToolkit),
   contributes(Capabilities.ToolkitHandler, DeckToolkit.layer(context)),
 ];

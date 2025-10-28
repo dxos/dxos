@@ -5,44 +5,38 @@
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import {
-  DISCORD_BLUEPRINT,
-  LINEAR_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
-  WEB_SEARCH_BLUEPRINT,
-  agent,
-  createResearchNote,
+  AgentFunction,
+  DiscordBlueprint,
+  LinearBlueprint,
+  Research,
+  ResearchBlueprint,
+  WebSearchBlueprint,
   entityExtraction,
   fetchDiscordMessages,
-  research,
   syncLinearIssues,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
+import { AssistantToolkit, SystemToolkit } from '../toolkits';
+
+// TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
+// TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
+// TODO(burdon): Test framework for developing functions. Error handling.
+// TODO(burdon): Convert tools to functions? (Deps).
+
+// TODO(wittjosiah): Factor out to a generic app-framework blueprint.
+const deckTools = ['open-item'];
 
 const functions: FunctionDefinition[] = [analysis, list, load];
-const tools = [
-  'add-to-context',
-  // TODO(wittjosiah): Factor out to an ECHO blueprint.
-  'get-schemas',
-  'add-schema',
-  'create-record',
-  'create-relation',
-  'add-tag',
-  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
-  'open-item',
-  // TODO(burdon): Anthropic only.
-  //  https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool#example-str-replace-command
-  //  AI_TOOL_NOT_FOUND: str_replace_based_edit_tool
-  // 'str_replace_based_edit_tool',
-];
+const tools = [...AssistantToolkit.tools, ...SystemToolkit.tools, ...deckTools];
 
-export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
+export const ASSISTANT_BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
 export const createBlueprint = (): Blueprint.Blueprint =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: ASSISTANT_BLUEPRINT_KEY,
     name: 'Assistant',
     tools: Blueprint.toolDefinitions({ functions, tools }),
     instructions: templates.system,
@@ -50,17 +44,23 @@ export const createBlueprint = (): Blueprint.Blueprint =>
 
 const blueprint = createBlueprint();
 
-// TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.Functions, [agent]),
-  contributes(Capabilities.Functions, [research, createResearchNote, entityExtraction]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
-  contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
-  // TODO(burdon): Move out of assistant.
-  contributes(Capabilities.Functions, [syncLinearIssues]),
+
+  // TODO(burdon): Factor out.
+  contributes(Capabilities.Functions, Research.tools),
+  contributes(Capabilities.BlueprintDefinition, ResearchBlueprint),
+
+  // TODO(burdon): Factor out.
+  contributes(Capabilities.Functions, [AgentFunction, entityExtraction]),
+  contributes(Capabilities.BlueprintDefinition, WebSearchBlueprint),
+
+  // TODO(burdon): Factor out.
   contributes(Capabilities.Functions, [fetchDiscordMessages]),
-  contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
-  contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
-  contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, DiscordBlueprint),
+
+  // TODO(burdon): Factor out.
+  contributes(Capabilities.Functions, [syncLinearIssues]),
+  contributes(Capabilities.BlueprintDefinition, LinearBlueprint),
 ];

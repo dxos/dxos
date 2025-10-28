@@ -32,10 +32,10 @@ import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
-import { RESEARCH_BLUEPRINT } from '../../blueprints';
+import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
-import createResearchNote from './create-research-note';
+import createDocument from './create-document';
 import { createExtractionSchema, getSanitizedSchemaName } from './graph';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
@@ -45,11 +45,11 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createResearchNote], testToolkit),
+  makeToolResolverFromFunctions([research, createDocument], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createResearchNote] })),
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument] })),
   Layer.provideMerge(
     Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
@@ -64,7 +64,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 // TODO(dmaretskyi): Out-of-memory.
-describe.skip('Research', () => {
+describe.skipIf(process.env.CI)('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
@@ -109,7 +109,7 @@ describe.skip('Research', () => {
         yield* DatabaseService.add(org);
         yield* DatabaseService.flush({ indexes: true });
 
-        const blueprint = yield* DatabaseService.add(Obj.clone(RESEARCH_BLUEPRINT));
+        const blueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
         yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
 
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());

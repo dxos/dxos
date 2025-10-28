@@ -34,16 +34,16 @@ export const PluginDetail = ({ plugin, enabled, onEnable }: PluginDetailProps) =
   return (
     <StackItem.Content scrollable>
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-4 container-max-width p-4'>
-        <div role='none' className='flex row-span-2'>
-          <Icon classNames={mx(styles.icon)} icon={icon} size={12} />
+        <div role='none'>
+          <Icon classNames={mx('p-1 rounded', styles.bg, styles.icon)} icon={icon} size={14} />
         </div>
         <div role='none' className='flex flex-col gap-6'>
-          <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 is-full'>
+          <div role='none' className='grid grid-cols-[1fr_min-content] gap-x-3 is-full pbs-1'>
             <h2 className='text-xl'>{name}</h2>
             <Input.Root>
               <Input.Switch classNames='self-center' checked={enabled} onClick={onEnable} />
             </Input.Root>
-            <p className='text-sm text-description text-successText'>{id}</p>
+            <p className='pbs-0.5 text-sm text-description'>{id}</p>
           </div>
 
           <div role='none'>

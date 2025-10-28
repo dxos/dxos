@@ -23,10 +23,10 @@ import { vscodeDarkStyle, vscodeLightStyle } from '@uiw/codemirror-theme-vscode'
 import defaultsDeep from 'lodash.defaultsdeep';
 import merge from 'lodash.merge';
 
+import { type DocAccessor, type Space } from '@dxos/client/echo';
+import { type Identity } from '@dxos/client/halo';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
-import { type DocAccessor, type Space } from '@dxos/react-client/echo';
-import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette } from '@dxos/react-ui-theme';
 import { hexToHue, isTruthy } from '@dxos/util';

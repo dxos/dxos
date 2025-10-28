@@ -2,8 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as research } from './research';
+import { default as createDocument } from './create-document';
+import { default as research } from './research';
+
 export * from './graph';
 export * from './research-graph';
 export * from './types';
-export { default as createResearchNote } from './create-research-note';
+
+export namespace Research {
+  export const tools = [research, createDocument] as const;
+}
