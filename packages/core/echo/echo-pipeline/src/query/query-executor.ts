@@ -637,17 +637,7 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execOrderStep(step: QueryPlan.OrderStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
-    const compareItems = (a: QueryItem, b: QueryItem): number =>
-      step.order.reduce((comparison, order) => {
-        // If we already have a definitive result, return it
-        if (comparison !== 0) {
-          return comparison;
-        }
-
-        return this._compareByOrder(a, b, order);
-      }, 0);
-
-    const sortedWorkingSet = [...workingSet].sort(compareItems);
+    const sortedWorkingSet = [...workingSet].sort((a, b) => this._compareMultiOrder(a, b, step.order));
 
     return {
       workingSet: sortedWorkingSet,
@@ -660,34 +650,72 @@ export class QueryExecutor extends Resource {
     };
   }
 
+  private _compareMultiOrder(a: QueryItem, b: QueryItem, orders: readonly QueryAST.Order[]): number {
+    // Short circuit for common cases.
+    if (orders.length === 0) {
+      return 0;
+    } else if (orders.length === 1) {
+      return this._compareByOrder(a, b, orders[0]);
+    }
+
+    for (const order of orders) {
+      const comparison = this._compareByOrder(a, b, order);
+      if (comparison !== 0) {
+        return comparison;
+      }
+    }
+    return 0;
+  }
+
   private _compareByOrder(a: QueryItem, b: QueryItem, order: QueryAST.Order): number {
-    return Match.type<QueryAST.Order>().pipe(
-      Match.withReturnType<number>(),
-      Match.when({ kind: 'natural' }, () => a.objectId.localeCompare(b.objectId)),
-      Match.when({ kind: 'property' }, ({ property, direction }) => {
-        const comparison = this._compareByProperty(a, b, property);
-        return direction === 'desc' ? -comparison : comparison;
-      }),
-      Match.exhaustive,
-    )(order);
+    switch (order.kind) {
+      case 'natural':
+        return a.objectId.localeCompare(b.objectId);
+      case 'property':
+        const comparison = this._compareByProperty(a, b, order.property);
+        return order.direction === 'desc' ? -comparison : comparison;
+      default:
+        // Should never reach here with proper TypeScript types
+        return 0;
+    }
   }
 
   private _compareByProperty(a: QueryItem, b: QueryItem, property: string): number {
     const aValue = a.doc.data[property];
     const bValue = b.doc.data[property];
 
-    return Match.type<{ a: unknown; b: unknown }>().pipe(
-      Match.withReturnType<number>(),
-      Match.when({ a: isNullable, b: isNullable }, () => 0),
-      Match.when({ a: isNullable }, () => 1),
-      Match.when({ b: isNullable }, () => -1),
-      Match.when({ a: Match.string, b: Match.string }, ({ a, b }) => a.localeCompare(b)),
-      Match.when({ a: Match.number, b: Match.number }, ({ a, b }) => a - b),
-      Match.when({ a: Match.boolean, b: Match.boolean }, ({ a, b }) => (a === b ? 0 : a ? 1 : -1)),
-      Match.when({ a: Match.defined, b: Match.defined }, ({ a, b }) => String(a).localeCompare(String(b))),
-      // TODO(wittjosiah): Why does Match.exhaustive fail here?
-      Match.orElse(() => 0),
-    )({ a: aValue, b: bValue });
+    // Both null or undefined
+    if (aValue == null && bValue == null) {
+      return 0;
+    }
+
+    // Only a is null/undefined
+    if (aValue == null) {
+      return 1;
+    }
+
+    // Only b is null/undefined
+    if (bValue == null) {
+      return -1;
+    }
+
+    // Both strings
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return aValue.localeCompare(bValue);
+    }
+
+    // Both numbers
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return aValue - bValue;
+    }
+
+    // Both booleans
+    if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+      return aValue === bValue ? 0 : aValue ? 1 : -1;
+    }
+
+    // Fallback: convert to strings and compare
+    return String(aValue).localeCompare(String(bValue));
   }
 
   private async _loadDocumentsAfterIndexQuery(indexHits: FindResult[]): Promise<(QueryItem | null)[]> {

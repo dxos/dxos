@@ -237,7 +237,8 @@ export type CollectionStateDiff = {
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
   const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
-  const allDocuments = Array.union(Record.keys(localDocuments), Record.keys(remoteDocuments)) as DocumentId[];
+  // NOTE: Using `Array.union` is slow.
+  const allDocuments = [...new Set([...Record.keys(localDocuments), ...Record.keys(remoteDocuments)])] as DocumentId[];
 
   const missingOnRemote: DocumentId[] = [];
   const missingOnLocal: DocumentId[] = [];
