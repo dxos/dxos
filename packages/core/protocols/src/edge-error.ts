@@ -73,18 +73,6 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
 }
 
 const getRetryAfterMillis = (response: Response) => {
-  // Note: It is inconsistent with HTTP spec to use Retry-After for responses with status code 200.
-  //       However, Edge service does it, and it is hard to change because fixing it will break compatibility between Edge service and clients.
-  // Example:
-  //       Response({
-  //         status: 200, // This is not compliant with HTTP spec.
-  //         headers: { 'Retry-After': '3600' },
-  //         body: {
-  //           "success": false,
-  //           "reason": "Auth challenge.",
-  //         },
-  //       })
-  // TODO(mykola): We should store retry delay in the response body instead of the header for Responses with status code 200.
   const retryAfter = Number(response.headers.get('Retry-After'));
   return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
 };
