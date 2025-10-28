@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EdgeErrorCodec, type EdgeErrorData, type EdgeFailure } from './edge';
+import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec, ErrorCodec } from './edge';
 
 // TODO(burdon): Reconcile with @dxos/errors.
 /**
@@ -20,7 +20,7 @@ export class EdgeCallFailedError extends Error {
       errorData: body.errorData,
       isRetryable: body.errorData == null && response.headers.has('Retry-After'),
       retryAfterMs: getRetryAfterMillis(response),
-      cause: body.cause ? EdgeErrorCodec.deserialize(body.cause) : undefined,
+      cause: body.cause ? ErrorCodec.deserialize(body.cause) : undefined,
     });
 
     return error;
@@ -31,7 +31,7 @@ export class EdgeCallFailedError extends Error {
       reason: `HTTP code ${response.status}: ${response.statusText}.`,
       isRetryable: isRetryableCode(response.status),
       retryAfterMs: getRetryAfterMillis(response),
-      cause: await parseErrorBody(response),
+      cause: await EdgeHttpErrorCodec.decode(response),
     });
   }
 
@@ -95,18 +95,4 @@ const isRetryableCode = (status: number) => {
     return false;
   }
   return !(status >= 400 && status < 500);
-};
-
-const parseErrorBody = async (response: Response): Promise<Error | undefined> => {
-  if (response.headers.get('Content-Type') !== 'application/json') {
-    const body = await response.text();
-    return new Error(body.slice(0, 256));
-  }
-
-  const body = await response.json();
-  if (!('error' in body)) {
-    return undefined;
-  }
-
-  return EdgeErrorCodec.deserialize(body.error);
 };
