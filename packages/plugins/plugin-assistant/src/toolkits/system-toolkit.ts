@@ -19,6 +19,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out (is there a way to remove plugin deps?)
+// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 
 const toolDefs = [
   //
@@ -149,7 +150,6 @@ const toolDefs = [
 
 export const systemTools = toolDefs.map((tool) => tool.name);
 
-// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 export class SystemToolkit extends Toolkit.make(...toolDefs) {
   static layer = (context: PluginContext) =>
     SystemToolkit.toLayer({
@@ -159,6 +159,7 @@ export class SystemToolkit extends Toolkit.make(...toolDefs) {
 
         return Effect.gen(function* () {
           const registered = context
+            // TODO(burdon): Can we remove plugin dependency?
             .getCapabilities(ClientCapabilities.Schema)
             .flat()
             .map((schema) => {
@@ -170,7 +171,7 @@ export class SystemToolkit extends Toolkit.make(...toolDefs) {
               };
             });
 
-          // TODO(burdon): Why ObjectForm (bad name for data capability; UI term)?
+          // TODO(burdon): Can we remove plugin dependency?
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
             typename: Type.getTypename(form.objectSchema),
             jsonSchema: Type.toJsonSchema(form.objectSchema),
