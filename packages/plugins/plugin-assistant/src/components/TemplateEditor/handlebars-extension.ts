@@ -52,6 +52,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
       this.decorations = this.buildDecorations(view);
     }
 
+    // NOTE: Decorations may clash with other extensions (e.g., markdown).
     buildDecorations(view: EditorView) {
       const widgets: any[] = [];
 
@@ -59,14 +60,14 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
         const text = view.state.doc.sliceString(from, to);
 
         // Match comments: {{! comment }}
-        {
-          let match;
-          while ((match = regex.comment.exec(text)) !== null) {
-            const start = from + match.index;
-            const end = start + match[0].length;
-            widgets.push(Decoration.mark({ class: 'text-subdued' }).range(start, end));
-          }
-        }
+        // {
+        //   let match;
+        //   while ((match = regex.comment.exec(text)) !== null) {
+        //     const start = from + match.index;
+        //     const end = start + match[0].length;
+        //     widgets.push(Decoration.mark({ class: '!text-roseText' }).range(start, end));
+        //   }
+        // }
 
         // Match brackets: {{ and }}
         {

@@ -20,7 +20,7 @@ import { type DataType } from '@dxos/schema';
 import { type AiChatServices, updateName } from '../processor';
 import { Assistant, AssistantAction } from '../types';
 
-import { BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
+import { ASSISTANT_BLUEPRINT_KEY, createBlueprint } from './blueprint-definition';
 import { AssistantCapabilities } from './capabilities';
 
 export default (context: PluginContext) => [
@@ -51,7 +51,7 @@ export default (context: PluginContext) => [
         const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.
-        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === BLUEPRINT_KEY);
+        let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === ASSISTANT_BLUEPRINT_KEY);
         if (!defaultBlueprint) {
           defaultBlueprint = space.db.add(createBlueprint());
         }

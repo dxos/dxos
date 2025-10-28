@@ -36,8 +36,11 @@ import { ResearchDataTypes } from './types';
 export default defineFunction({
   key: 'dxos.org/function/research',
   name: 'Research',
-  description:
-    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
+  description: trim`
+    Research the web for information. 
+    Inserts structured data into the research graph. 
+    Will return research summary and the objects created.
+  `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: trim`
@@ -47,8 +50,10 @@ export default defineFunction({
     }),
 
     researchInstructions: Schema.optional(Schema.String).annotations({
-      description:
-        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
+      description: trim`
+        The instructions for the research agent. 
+        E.g., preference on fast responses or in-depth analysis, number of web searcher or the objects created.
+      `,
     }),
 
     // TOOD(burdon): Move to context.
@@ -75,8 +80,13 @@ export default defineFunction({
             phoneNumbers: [{ value: '123-456-7890' }],
           }),
         );
+
         return {
-          note: `The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}`,
+          note: trim`
+            The research run in test-mode and was mocked. 
+            Proceed as usual.
+            We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}
+          `,
           objects: [Obj.toJSON(mockPerson)],
         };
       }

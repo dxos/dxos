@@ -7,7 +7,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
-import { BLUEPRINT_KEY, BlueprintDefinition, IntentResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, CHESS_BLUEPRINT_KEY, IntentResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Chess, ChessAction } from './types';
@@ -27,7 +27,7 @@ export const ChessPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--shield-chevron--regular',
           iconHue: 'amber',
-          blueprints: [BLUEPRINT_KEY],
+          blueprints: [CHESS_BLUEPRINT_KEY],
         },
       }),
   }),

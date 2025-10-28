@@ -10,8 +10,8 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
 import {
+  ASSISTANT_BLUEPRINT_KEY,
   AppGraphBuilder,
-  BLUEPRINT_KEY,
   BlueprintDefinition,
   InboxState,
   IntentResolver,
@@ -44,7 +44,7 @@ export const InboxPlugin = definePlugin(meta, () => [
         metadata: {
           icon: 'ph--tray--regular',
           iconHue: 'rose',
-          blueprints: [BLUEPRINT_KEY],
+          blueprints: [ASSISTANT_BLUEPRINT_KEY],
         },
       }),
       contributes(Capabilities.Metadata, {
