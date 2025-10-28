@@ -62,7 +62,7 @@ const MasonryRootImpl = <Item,>(
     columnCount,
     maxColumnCount,
     columnWidth = 18, // cardMaxWidth
-    maxColumnWidth,
+    maxColumnWidth = 22,
     columnGutter = 1,
     rowGutter,
     items,
@@ -86,7 +86,7 @@ const MasonryRootImpl = <Item,>(
     [columnWidth, maxColumnWidth, columnGutter, rowGutter],
   );
   const pxProps = usePxProps(remProps);
-  const positionerProps = useMemo(
+  const positionerProps = useMemo<UsePositionerOptions>(
     () => ({
       width,
       columnCount,

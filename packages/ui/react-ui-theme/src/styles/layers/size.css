@@ -6,6 +6,9 @@
   @apply is-full max-is-containerMaxWidth mli-auto;
 }
 
+.card-min-width {
+  @apply is-full min-is-cardMinWidth mli-auto;
+}
 .card-max-width {
   @apply is-full max-is-cardMaxWidth mli-auto;
 }
