@@ -17,9 +17,8 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { type DXN, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
-import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -44,7 +43,10 @@ export default defineFunction({
   `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
-      description: 'The query to search for.',
+      description: trim`
+        The query to search for.
+        If doing research on an object, load it first and pass it as a JSON string.
+      `,
     }),
 
     researchInstructions: Schema.optional(Schema.String).annotations({
@@ -123,8 +125,10 @@ export default defineFunction({
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-      const lastBlock = result.at(-1)?.blocks.at(-1);
-      const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
+      const note = result
+        .at(-1)
+        ?.blocks.filter((block) => block._tag === 'text')
+        .at(-1)?.text;
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
