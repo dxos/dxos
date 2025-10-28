@@ -15,8 +15,6 @@ import { meta } from '../meta';
 
 import { navHeaderButton, navHeaderHeading, navHeaderRoot } from './NavHeader';
 
-const subheading = 'container-max-width pli-cardSpacingInline mlb-cardSpacingBlock text-lg';
-
 export const Home = () => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
