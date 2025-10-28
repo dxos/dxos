@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Ref, SchemaNotFoundError, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Ref, Relation, SchemaNotFoundError, Tag, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -75,7 +75,76 @@ const toolDefs = [
     success: Schema.Any,
     failure: Schema.Never,
   }),
-];
+
+  Tool.make('create-relation', {
+    description: trim`
+      Creates a new relation and adds it to the current space.
+      Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
+      Note that only relation schemas are supported.
+    `,
+    parameters: {
+      typename: Schema.String,
+      source: ArtifactId.annotations({
+        description: 'The ID of the source object.',
+      }),
+      target: ArtifactId.annotations({
+        description: 'The ID of the target object.',
+      }),
+      data: Schema.Any.annotations({
+        description: 'The data to be stored in the relation.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+
+  Tool.make('remove-from-db', {
+    description: trim`
+      Removes an object or relation from the database.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+
+  Tool.make('add-tag', {
+    description: trim`
+      Adds a tag to an object.
+      Tags are objects of type ${Tag.Tag.typename}.
+    `,
+    parameters: {
+      tagId: ArtifactId.annotations({
+        description: 'The ID of the tag.',
+      }),
+      objectId: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+
+  Tool.make('remove-tag', {
+    description: trim`
+      Removes a tag from an object.
+      Tags are objects of type ${Tag.Tag.typename}.
+    `,
+    parameters: {
+      tagId: ArtifactId.annotations({
+        description: 'The ID of the tag.',
+      }),
+      objectId: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+] satisfies Tool.Any[];
 
 export const toolNames = toolDefs.map((tool) => tool.name);
 
@@ -100,14 +169,17 @@ class AssistantToolkit extends Toolkit.make(...toolDefs) {
         invariant(space, 'No active space');
 
         return Effect.gen(function* () {
-          const whitelist = context
-            .getCapabilities(ClientCapabilities.SchemaWhiteList)
+          const registered = context
+            .getCapabilities(ClientCapabilities.Schema)
             .flat()
-            .map((schema) => ({
-              typename: Type.getTypename(schema),
-              jsonSchema: Type.toJsonSchema(schema),
-              kind: 'record',
-            }));
+            .map((schema) => {
+              const meta = Type.getMeta(schema);
+              return {
+                typename: Type.getTypename(schema),
+                jsonSchema: Type.toJsonSchema(schema),
+                kind: meta?.sourceSchema ? 'relation' : 'record',
+              };
+            });
 
           // TODO(burdon): Why ObjectForm (bad name for data capability; UI term)?
           const forms = context.getCapabilities(SpaceCapabilities.ObjectForm).map((form) => ({
@@ -116,7 +188,7 @@ class AssistantToolkit extends Toolkit.make(...toolDefs) {
             kind: 'item',
           }));
 
-          const schemas = [...whitelist, ...forms];
+          const schemas = [...registered, ...forms];
           if (space) {
             const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
             schemas.push(
@@ -149,7 +221,7 @@ class AssistantToolkit extends Toolkit.make(...toolDefs) {
         invariant(space, 'No active space');
 
         return Effect.gen(function* () {
-          const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
+          const schemas = context.getCapabilities(ClientCapabilities.Schema).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
           const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
@@ -159,6 +231,66 @@ class AssistantToolkit extends Toolkit.make(...toolDefs) {
 
           const object = Obj.make(schema, data);
           yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
+          return object;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'create-relation': ({ typename, source, target, data }) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const schemas = context.getCapabilities(ClientCapabilities.Schema).flat();
+          const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
+          if (!schema) {
+            throw new SchemaNotFoundError(typename);
+          }
+
+          const sourceObj = yield* DatabaseService.resolve(DXN.parse(source));
+          const targetObj = yield* DatabaseService.resolve(DXN.parse(target));
+          const relation = Relation.make(schema, {
+            [Relation.Source]: sourceObj,
+            [Relation.Target]: targetObj,
+            ...data,
+          });
+          yield* dispatch(createIntent(SpaceAction.AddObject, { object: relation, target: space, hidden: true }));
+          return relation;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'remove-from-db': ({ id }) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(id));
+          yield* dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object] }));
+          return object;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'add-tag': ({ tagId, objectId }) => {
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+          const meta = Obj.getMeta(object);
+          meta.tags = [DXN.parse(tagId).toString()];
+          return object;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'remove-tag': ({ tagId, objectId }) => {
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+          const meta = Obj.getMeta(object);
+          meta.tags = meta.tags?.filter((tag) => tag !== DXN.parse(tagId).toString());
           return object;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },

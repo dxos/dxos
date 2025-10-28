@@ -17,7 +17,7 @@ import {
 import { Ref, Tag, Type } from '@dxos/echo';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { DataType, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
+import { DataType, DataTypes, createDefaultSchema, getTypenameFromQuery } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
 import {
@@ -191,16 +191,7 @@ export const SpacePlugin = definePlugin<SpacePluginOptions>(
       defineModule({
         id: `${meta.id}/module/schema`,
         activatesOn: ClientEvents.SetupSchema,
-        activate: () =>
-          contributes(ClientCapabilities.Schema, [
-            Tag.Tag,
-            DataType.View,
-            DataType.Event,
-            DataType.Organization,
-            DataType.Person,
-            DataType.Project,
-            DataType.Task,
-          ]),
+        activate: () => contributes(ClientCapabilities.Schema, [Tag.Tag, ...DataTypes]),
       }),
       defineModule({
         id: `${meta.id}/module/whitelist-schema`,

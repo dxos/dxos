@@ -27,16 +27,11 @@ import { toolNames } from './toolkit';
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Unit tests for developing functions. Error handling.
 
+// TODO(wittjosiah): Factor out to a generic app-framework blueprint.
+const deckTools = ['open-item'];
+
 const functions: FunctionDefinition[] = [analysis, list, load];
-const tools = [
-  ...toolNames,
-  // TODO(burdon): Anthropic only.
-  //  https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool#example-str-replace-command
-  //  AI_TOOL_NOT_FOUND: str_replace_based_edit_tool
-  // 'str_replace_based_edit_tool',
-  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
-  'open-item',
-];
+const tools = [...toolNames, ...deckTools];
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
