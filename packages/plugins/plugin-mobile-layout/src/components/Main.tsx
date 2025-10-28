@@ -42,13 +42,17 @@ export const Main = () => {
   // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
-        <Home />
-      </Activity>
-      <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-        <NavHeader node={node} />
-        <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
-      </Activity>
+      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush'>
+        <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
+          <Home />
+        </Activity>
+        <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
+          <NavHeader node={node} />
+          <section className='container-max-width pli-cardSpacingInline plb-cardSpacingBlock'>
+            <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
+          </section>
+        </Activity>
+      </NaturalMain.Content>
     </NaturalMain.Root>
   );
 };

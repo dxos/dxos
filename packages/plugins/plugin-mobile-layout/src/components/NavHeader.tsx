@@ -11,6 +11,14 @@ import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MobileLayoutState } from '../capabilities';
 import { meta } from '../meta';
 
+export const navHeaderRoot =
+  'fixed block-start-0 inset-inline-0 bs-[--dx-mobile-topbar-content-height] bg-groupSurface pbs-[--dx-mobile-topbar-padding-top] flex items-center gap-cardSpacingInline';
+
+export const navHeaderButton =
+  'bs-[--dx-mobile-topbar-content-height] aspect-square absolute block-start-0 inline-start-0 dx-focus-ring-inset';
+
+export const navHeaderHeading = 'grow text-center truncate pli-[--dx-mobile-topbar-content-height]';
+
 export const NavHeader = ({ node }: { node?: Node }) => {
   const { t } = useTranslation(meta.id);
   const layout = useCapability(MobileLayoutState);
@@ -28,9 +36,16 @@ export const NavHeader = ({ node }: { node?: Node }) => {
   }, [dispatch]);
 
   return (
-    <div>
-      <IconButton iconOnly icon='ph--arrow--left' label={t('back label')} onClick={handleClick} />
-      <h1>{label}</h1>
-    </div>
+    <nav className={navHeaderRoot}>
+      <IconButton
+        iconOnly
+        variant='ghost'
+        icon='ph--caret-left--regular'
+        label={t('back label')}
+        onClick={handleClick}
+        classNames={navHeaderButton}
+      />
+      <h1 className={navHeaderHeading}>{label}</h1>
+    </nav>
   );
 };

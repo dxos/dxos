@@ -7,29 +7,35 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
 import { type Node, ROOT_ID, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Main, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, IconButton, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { Card } from '@dxos/react-ui-stack';
 
 import { meta } from '../meta';
 
-const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
+import { navHeaderButton, navHeaderHeading, navHeaderRoot } from './NavHeader';
+
+const subheading = 'container-max-width pli-cardSpacingInline mlb-cardSpacingBlock text-lg';
 
 export const Home = () => {
+  const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const workspaces = useWorkspaces();
 
   useLoadDescendents(graph.root);
 
   return (
-    <Main.Content bounce>
+    <>
       <Header />
-      <section className='container-max-width pli-cardSpacingInline plb-cardSpacingChrome'>
+      <Card.Heading classNames='container-max-width'>{t('workspaces heading')}</Card.Heading>
+      <section className='container-max-width pli-cardSpacingInline mbe-8'>
         {workspaces.map((node) => (
           <Workspace key={node.id} node={node} />
         ))}
       </section>
-    </Main.Content>
+      <Card.Heading classNames='container-max-width'>{t('settings heading')}</Card.Heading>
+      <p className='pli-cardSpacingInline'>To do.</p>
+    </>
   );
 };
 
@@ -41,20 +47,24 @@ const Header = () => {
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
 
   return (
-    <div>
+    <nav className={navHeaderRoot}>
       <MenuProvider>
         <DropdownMenu.Root group={graph.root} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <DropdownMenu.Trigger
-              data-testid='spacePlugin.addSpace'
-              className='grid place-items-center dx-focus-ring-group'
-            >
-              <Icon icon='ph--list--regular' size={5} />
+            <DropdownMenu.Trigger data-testid='spacePlugin.addSpace' asChild>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--list--regular'
+                label={t('main menu label')}
+                classNames={navHeaderButton}
+              />
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
-    </div>
+      <h1 className={navHeaderHeading}>{t('current app name', { ns: 'appkit' })}</h1>
+    </nav>
   );
 };
 
