@@ -86,6 +86,7 @@ export const maxSizesFacet = {
     sememes: {
       prose: { root: ['size', 50] },
       containerMaxWidth: { root: ['size', 50] },
+      cardMinWidth: { root: ['size', 18] },
       cardMaxWidth: { root: ['size', 22] },
       // This should align with cardDefaultInlineSize
       popoverMaxWidth: { root: ['size', 18] },
