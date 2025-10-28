@@ -43,37 +43,19 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       return refs.some((ref) => ref.target === record);
     });
 
-    return [
-      ...referencedObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-      ...referencingObjects,
-    ];
+    return [...referencedObjects, ...referencingObjects];
   }, [record, objects]);
 
   return (
-    <StackItem.Content classNames='@container flex flex-col items-center'>
-      <div
-        role='none'
-        className={mx('grid @xl:grid-cols-[max-content_1fr] gap-8 pli-6 is-full overflow-y-auto @xl:overflow-hidden')}
-      >
-        <div className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
-          <label className='text-description text-sm mbs-2'>&nbsp;</label>
+    <StackItem.Content classNames='flex flex-col items-center'>
+      <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>
+        <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
           <Surface role='section' data={data} limit={1} />
         </div>
 
         {/* TODO(wittjosiah): This should maybe be in a separate stack item. */}
         {related.length > 0 && (
-          <div
-            className={mx(
-              'flex flex-col gap-1 card-max-width @xl:overflow-hidden',
-              related.length > 1 && '@xl:max-is-full',
-            )}
-          >
+          <div role='none' className={mx('flex flex-col gap-1', related.length === 1 ? 'card-max-width' : 'is-full')}>
             <label className='text-description text-sm mbs-2'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any>
               items={related}

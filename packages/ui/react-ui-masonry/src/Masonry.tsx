@@ -57,6 +57,7 @@ const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount'
   }, [remProps, remInPx]);
 };
 
+// TODO(burdon): Currently not responsive to width.
 const MasonryRootImpl = <Item,>(
   {
     columnCount,
