@@ -34,7 +34,7 @@ import { trim } from '@dxos/util';
 import { readTasks, updateTasks } from '../../functions';
 import { type TestStep, runSteps, testToolkit } from '../testing';
 
-import blueprint from './planning';
+import blueprint from './planning-blueprint';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   it.scoped(

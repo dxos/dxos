@@ -8,8 +8,8 @@ import { next as A } from '@automerge/automerge';
 import { type StateField } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 
+import { type IDocHandle } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { type IDocHandle } from '@dxos/react-client/echo';
 
 import { type State, getLastHeads, getPath, isReconcile, reconcileAnnotation, updateHeads } from './defs';
 import { updateAutomerge } from './update-automerge';

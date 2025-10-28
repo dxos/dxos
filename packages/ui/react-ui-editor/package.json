@@ -57,6 +57,7 @@
     "@codemirror/view": "^6.38.4",
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/display-name": "workspace:*",

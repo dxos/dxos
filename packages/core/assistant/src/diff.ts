@@ -11,6 +11,11 @@ import { isNonNullable } from '@dxos/util';
 // Relevant info:
 // https://github.com/Minahil-official/GPT-4.1-Promting-Guide?tab=readme-ov-file#-apply-patch-tool-format-v4a-diff
 
+// TODO(burdon): Anthropic only.
+//  https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool#example-str-replace-command
+//  AI_TOOL_NOT_FOUND: str_replace_based_edit_tool
+// 'str_replace_based_edit_tool',
+
 // TOOD(burdon): Support append to end (no "-").
 
 export type Diff = {

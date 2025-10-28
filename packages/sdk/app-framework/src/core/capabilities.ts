@@ -41,12 +41,12 @@ export type Capability<T> = {
   /**
    * The interface definition of the capability.
    */
-  interface: InterfaceDef<T>;
+  readonly interface: InterfaceDef<T>;
 
   /**
    * The implementation of the capability.
    */
-  implementation: T;
+  readonly implementation: T;
 
   /**
    * Called when the capability is deactivated.
@@ -73,12 +73,16 @@ class CapabilityImpl<T> {
 /**
  * Helper to define the implementation of a capability.
  */
-export const contributes = <I extends InterfaceDef<any>>(
+export const contributes = <I extends InterfaceDef<any>, T = InterfaceDef.Implementation<I>>(
   interfaceDef: I,
-  implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
+  implementation: T,
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
 ): Capability<I> => {
-  return { interface: interfaceDef, implementation, deactivate } satisfies Capability<I>;
+  return {
+    interface: interfaceDef,
+    implementation: implementation as any, // NOTE: Added to allow providing readonly implementation.
+    deactivate,
+  } satisfies Capability<I>;
 };
 
 type LoadCapability<T, U> = () => Promise<{ default: (props: T) => MaybePromise<Capability<U>> }>;
