@@ -52,8 +52,8 @@ describe('Projection', () => {
       'jobTitle',
       'department',
       'notes',
-      'location',
       'birthday',
+      'location',
     ]);
 
     const projection = new ProjectionModel(jsonSchema, view.projection);
@@ -73,6 +73,7 @@ describe('Projection', () => {
       expect(props).to.deep.eq({
         property: 'organization',
         title: 'Organization',
+        description: 'The organization the person is currently employed by.',
         type: TypeEnum.Ref,
         format: FormatEnum.Ref,
         referencePath: 'name',

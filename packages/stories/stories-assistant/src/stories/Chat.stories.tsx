@@ -120,6 +120,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       })
       .filter(isNonNullable);
     await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
+    await binder.close();
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
@@ -498,16 +499,24 @@ export const WithBoard: Story = {
   },
 };
 
+// Test with prompt: Create a research note for the organization.
 export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      space.db.add(Obj.make(DataType.Organization, { name: 'BlueYard Capital' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(DataType.Organization)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
-    blueprints: [ResearchBlueprint.key],
+    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer, 'surfaces']],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, ResearchBlueprint.key],
   },
 };
 
