@@ -29,6 +29,7 @@ const tools = [
   'add-schema',
   'create-record',
   'create-relation',
+  'add-tag',
   // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
   'open-item',
   // TODO(burdon): Anthropic only.

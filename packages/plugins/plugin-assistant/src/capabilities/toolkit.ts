@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DXN, Filter, Obj, Ref, Relation, SchemaNotFoundError, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Ref, Relation, SchemaNotFoundError, Tag, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -98,6 +98,23 @@ class AssistantToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
+
+  Tool.make('add-tag', {
+    description: trim`
+      Adds a tag to an object.
+      Tags are objects of type ${Tag.Tag.typename}.
+    `,
+    parameters: {
+      tagId: ArtifactId.annotations({
+        description: 'The ID of the tag.',
+      }),
+      objectId: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
 ) {
   static layer = (context: PluginContext) =>
     AssistantToolkit.toLayer({
@@ -170,7 +187,7 @@ class AssistantToolkit extends Toolkit.make(
         invariant(space, 'No active space');
 
         return Effect.gen(function* () {
-          const schemas = context.getCapabilities(ClientCapabilities.SchemaWhiteList).flat();
+          const schemas = context.getCapabilities(ClientCapabilities.Schema).flat();
           const { objects } = yield* DatabaseService.runQuery(Filter.type(DataType.StoredSchema));
           schemas.push(...objects.map((object) => Type.toEffectSchema(object.jsonSchema)));
           const schema = schemas.find((schema) => Type.getTypename(schema) === typename);
@@ -205,6 +222,18 @@ class AssistantToolkit extends Toolkit.make(
           });
           yield* dispatch(createIntent(SpaceAction.AddObject, { object: relation, target: space, hidden: true }));
           return relation;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'add-tag': ({ tagId, objectId }) => {
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+          const meta = Obj.getMeta(object);
+          meta.tags = [DXN.parse(tagId).toString()];
+          return object;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },
     });
