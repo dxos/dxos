@@ -19,8 +19,7 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
-class AssistantToolkit extends Toolkit.make(
+const toolDefs = [
   Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
@@ -76,7 +75,12 @@ class AssistantToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
+];
+
+export const toolNames = toolDefs.map((tool) => tool.name);
+
+// TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
+class AssistantToolkit extends Toolkit.make(...toolDefs) {
   static layer = (context: PluginContext) =>
     AssistantToolkit.toLayer({
       'add-to-context': Effect.fnUntraced(function* ({ id }) {

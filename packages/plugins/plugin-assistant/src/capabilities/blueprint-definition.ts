@@ -21,23 +21,22 @@ import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
 
-// TODO(burdon): Function naming pattern (noun-verb).
+import { toolNames } from './toolkit';
+
+// TODO(burdon): Convert tools to functions (see toolkit.ts).
+// TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
+// TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Unit tests for developing functions. Error handling.
 
 const functions: FunctionDefinition[] = [analysis, list, load];
 const tools = [
-  // TODO(burdon): Reconcile names with `toolkit.ts`.
-  'add-to-context',
-  // TODO(wittjosiah): Factor out to an ECHO blueprint.
-  'get-schemas',
-  'add-schema',
-  'create-record',
-  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
-  'open-item',
+  ...toolNames,
   // TODO(burdon): Anthropic only.
   //  https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/text-editor-tool#example-str-replace-command
   //  AI_TOOL_NOT_FOUND: str_replace_based_edit_tool
   // 'str_replace_based_edit_tool',
+  // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
+  'open-item',
 ];
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
@@ -59,6 +58,7 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.Functions, [research, createResearchNote, entityExtraction]),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+
   // TODO(burdon): Move out of assistant.
   contributes(Capabilities.Functions, [syncLinearIssues]),
   contributes(Capabilities.Functions, [fetchDiscordMessages]),
