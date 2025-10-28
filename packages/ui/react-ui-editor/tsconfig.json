@@ -60,6 +60,9 @@
       "path": "../../sdk/app-graph"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
