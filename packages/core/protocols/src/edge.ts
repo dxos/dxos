@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Rename EdgerRouterEndpoint.
@@ -295,4 +296,53 @@ export const EdgeResponse = Object.freeze({
       status: 200,
       headers: shouldRetryAfter ? { 'Retry-After': String(shouldRetryAfter) } : undefined,
     }),
+});
+
+export type SerializedError = {
+  code?: string;
+  message?: string;
+  context?: Record<string, unknown>;
+  stack?: string;
+  cause?: SerializedError;
+};
+
+/**
+ * Codec for serializing and deserializing EDGE unhandled errors.
+ * EDGE will return an error object in the response body when an unhandled error occurs with the HTTP status code 500.
+ */
+export const EdgeHttpErrorCodec = Object.freeze({
+  encode: (err: Error): SerializedError => ({
+    code: 'code' in err ? (err as any).code : undefined,
+    message: err.message,
+    stack: err.stack,
+    cause: err.cause instanceof Error ? EdgeHttpErrorCodec.encode(err.cause) : undefined,
+  }),
+  deserialize: (serializedError: SerializedError): Error => {
+    let err: Error;
+    if (typeof serializedError.code === 'string') {
+      err = new BaseError(serializedError.code, {
+        message: serializedError.message ?? 'Unknown error',
+        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
+        context: serializedError.context,
+      });
+
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    } else {
+      err = new Error(serializedError.message ?? 'Unknown error', {
+        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
+      });
+
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    }
+
+    return err;
+  },
 });

@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { BaseError } from '@dxos/errors';
-
-import { type EdgeErrorData, type EdgeFailure } from './edge';
+import { type EdgeErrorData, type EdgeFailure, EdgeHttpErrorCodec } from './edge';
 
 // TODO(burdon): Reconcile with @dxos/errors.
 /**
@@ -72,6 +70,18 @@ export class EdgeAuthChallengeError extends EdgeCallFailedError {
 }
 
 const getRetryAfterMillis = (response: Response) => {
+  // Note: It is inconsistent with HTTP spec to use Retry-After for responses with status code 200.
+  //       However, Edge service does it, and it is hard to change because fixing it will break compatibility between Edge service and clients.
+  // Example:
+  //       Response({
+  //         status: 200, // This is not compliant with HTTP spec.
+  //         headers: { 'Retry-After': '3600' },
+  //         body: {
+  //           "success": false,
+  //           "reason": "Auth challenge.",
+  //         },
+  //       })
+  // TODO(mykola): We should store retry delay in the response body instead of the header for Responses with status code 200.
   const retryAfter = Number(response.headers.get('Retry-After'));
   return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
 };
@@ -97,52 +107,3 @@ const parseErrorBody = async (response: Response): Promise<Error | undefined> =>
 
   return EdgeHttpErrorCodec.deserialize(body.error);
 };
-
-type SerializedError = {
-  code?: string;
-  message?: string;
-  context?: Record<string, unknown>;
-  stack?: string;
-  cause?: SerializedError;
-};
-
-/**
- * Codec for serializing and deserializing EDGE unhandled errors.
- * EDGE will return an error object in the response body when an unhandled error occurs with the HTTP status code 500.
- */
-export const EdgeHttpErrorCodec = Object.freeze({
-  encode: (err: Error): SerializedError => ({
-    code: 'code' in err ? (err as any).code : undefined,
-    message: err.message,
-    stack: err.stack,
-    cause: err.cause instanceof Error ? EdgeHttpErrorCodec.encode(err.cause) : undefined,
-  }),
-  deserialize: (serializedError: SerializedError): Error => {
-    let err: Error;
-    if (typeof serializedError.code === 'string') {
-      err = new BaseError(serializedError.code, {
-        message: serializedError.message ?? 'Unknown error',
-        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
-        context: serializedError.context,
-      });
-
-      if (serializedError.stack) {
-        Object.defineProperty(err, 'stack', {
-          value: serializedError.stack,
-        });
-      }
-    } else {
-      err = new Error(serializedError.message ?? 'Unknown error', {
-        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
-      });
-
-      if (serializedError.stack) {
-        Object.defineProperty(err, 'stack', {
-          value: serializedError.stack,
-        });
-      }
-    }
-
-    return err;
-  },
-});
