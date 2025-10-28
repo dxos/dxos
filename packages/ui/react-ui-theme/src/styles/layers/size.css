@@ -6,22 +6,22 @@
   @apply is-full max-is-containerMaxWidth mli-auto;
 }
 
+.card-min-width {
+  @apply min-is-cardMinWidth;
+}
 .card-max-width {
-  @apply is-full max-is-cardMaxWidth mli-auto;
+  @apply is-full max-is-cardMaxWidth;
 }
 
 .popover-max-width {
   @apply is-max max-is-popoverMaxWidth;
 }
-
 .popover-card-width {
   inline-size: min(var(--radix-popper-available-width), calc(var(--dx-popoverMaxWidth) - 2 * var(--dx-hairLine)));
 }
-
 .popover-card-height {
   block-size: min(var(--radix-popper-available-height), 100dvh);
 }
-
 .popover-square {
   inline-size: min(
     min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth)),
@@ -32,7 +32,6 @@
     min(var(--radix-popper-available-height), 100dvh)
   );
 }
-
 .popover-card-max-width {
   max-inline-size: min(var(--radix-popper-available-width), var(--dx-popoverMaxWidth));
 }
