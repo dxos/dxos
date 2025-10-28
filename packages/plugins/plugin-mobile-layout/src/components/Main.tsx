@@ -41,7 +41,7 @@ export const Main = () => {
 
   // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
-    <NaturalMain.Root>
+    <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
       <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
         <Home />
       </Activity>

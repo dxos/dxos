@@ -36,6 +36,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-stack"
+    },
+    {
       "path": "../../ui/react-ui-theme"
     },
     {
