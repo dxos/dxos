@@ -4,15 +4,24 @@
 
 import { BaseError } from '@dxos/errors';
 
-import { type EdgeErrorData, type EdgeHttpFailure } from './edge';
+import { type EdgeErrorData, type EdgeFailure } from './edge';
 
 // TODO(burdon): Reconcile with @dxos/errors.
+/**
+ * Error thrown when a call to the Edge service fails.
+ * There 3 possible sources of failure:
+ * 1. EdgeFailure -> Processing the request failed and was gracefully handled by EDGE service.
+ * 2. Http failure (non-ok code) -> The HTTP request failed (e.g. timeout, network error).
+ *                               -> Unhandled exception on EDGE side, EDGE would provide serialized error in the response body.
+ * 3. Processing failure -> Unhandled exception on client side while processing the response.
+ */
 export class EdgeCallFailedError extends Error {
-  public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
+  public static fromUnsuccessfulResponse(response: Response, body: EdgeFailure): EdgeCallFailedError {
     return new EdgeCallFailedError({
-      reason: 'Error processing request.',
-      isRetryable: true,
-      cause,
+      reason: body.reason,
+      errorData: body.errorData,
+      isRetryable: body.errorData == null && response.headers.has('Retry-After'),
+      retryAfterMs: getRetryAfterMillis(response),
     });
   }
 
@@ -25,12 +34,11 @@ export class EdgeCallFailedError extends Error {
     });
   }
 
-  public static fromUnsuccessfulResponse(response: Response, body: EdgeHttpFailure): EdgeCallFailedError {
+  public static fromProcessingFailureCause(cause: Error): EdgeCallFailedError {
     return new EdgeCallFailedError({
-      reason: body.reason,
-      errorData: body.errorData,
-      isRetryable: body.errorData == null && response.headers.has('Retry-After'),
-      retryAfterMs: getRetryAfterMillis(response),
+      reason: 'Error processing request.',
+      isRetryable: true,
+      cause,
     });
   }
 
@@ -68,12 +76,6 @@ const getRetryAfterMillis = (response: Response) => {
   return Number.isNaN(retryAfter) || retryAfter === 0 ? undefined : retryAfter * 1000;
 };
 
-export const createRetryableHttpFailure = (args: { reason: any; retryAfterSeconds: number }) => {
-  return new Response(JSON.stringify({ success: false, reason: args.reason }), {
-    headers: { 'Retry-After': String(args.retryAfterSeconds) },
-  });
-};
-
 const isRetryableCode = (status: number) => {
   if (status === 501) {
     // Not Implemented
@@ -93,7 +95,7 @@ const parseErrorBody = async (response: Response): Promise<Error | undefined> =>
     return undefined;
   }
 
-  return parseSerializedError(body.error);
+  return EdgeHttpErrorCodec.deserialize(body.error);
 };
 
 type SerializedError = {
@@ -104,31 +106,43 @@ type SerializedError = {
   cause?: SerializedError;
 };
 
-const parseSerializedError = (serializedError: SerializedError): Error => {
-  let err: Error;
-  if (typeof serializedError.code === 'string') {
-    err = new BaseError(serializedError.code, {
-      message: serializedError.message ?? 'Unknown error',
-      cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
-      context: serializedError.context,
-    });
-
-    if (serializedError.stack) {
-      Object.defineProperty(err, 'stack', {
-        value: serializedError.stack,
+/**
+ * Codec for serializing and deserializing EDGE unhandled errors.
+ * EDGE will return an error object in the response body when an unhandled error occurs with the HTTP status code 500.
+ */
+export const EdgeHttpErrorCodec = Object.freeze({
+  encode: (err: Error): SerializedError => ({
+    code: 'code' in err ? (err as any).code : undefined,
+    message: err.message,
+    stack: err.stack,
+    cause: err.cause instanceof Error ? EdgeHttpErrorCodec.encode(err.cause) : undefined,
+  }),
+  deserialize: (serializedError: SerializedError): Error => {
+    let err: Error;
+    if (typeof serializedError.code === 'string') {
+      err = new BaseError(serializedError.code, {
+        message: serializedError.message ?? 'Unknown error',
+        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
+        context: serializedError.context,
       });
-    }
-  } else {
-    err = new Error(serializedError.message ?? 'Unknown error', {
-      cause: serializedError.cause ? parseSerializedError(serializedError.cause) : undefined,
-    });
 
-    if (serializedError.stack) {
-      Object.defineProperty(err, 'stack', {
-        value: serializedError.stack,
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    } else {
+      err = new Error(serializedError.message ?? 'Unknown error', {
+        cause: serializedError.cause ? EdgeHttpErrorCodec.deserialize(serializedError.cause) : undefined,
       });
-    }
-  }
 
-  return err;
-};
+      if (serializedError.stack) {
+        Object.defineProperty(err, 'stack', {
+          value: serializedError.stack,
+        });
+      }
+    }
+
+    return err;
+  },
+});

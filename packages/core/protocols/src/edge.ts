@@ -16,15 +16,21 @@ export enum EdgeService {
   STATUS = 'status',
 }
 
-export type EdgeHttpSuccess<T> = {
+export type EdgeSuccess<T> = {
   success: true;
   data: T;
 };
 
 export type EdgeErrorData = { type: string } & Record<string, any>;
 
-export type EdgeHttpFailure = {
-  // TODO(burdon): Why is this required?
+/**
+ * This is the shape of the error response from the Edge service,
+ * when the error is gracefully handled, the Response will be an object with this shape and have status code 200.
+ */
+export type EdgeFailure = {
+  /**
+   * Branded Type
+   */
   success: false;
   /**
    * An explanation of why the call failed. Used mostly for logging and monitoring.
@@ -43,7 +49,7 @@ export type EdgeHttpFailure = {
   errorData?: EdgeErrorData;
 };
 
-export type EdgeHttpResponse<T> = EdgeHttpSuccess<T> | EdgeHttpFailure;
+export type EdgeBodyResponse<T> = EdgeSuccess<T> | EdgeFailure;
 
 export type GetNotarizationResponseBody = {
   awaitingNotarization: { credentials: string[] };
@@ -273,7 +279,20 @@ export type ExportBundleResponse = {
   }[];
 };
 
-export const DocumentCodec = {
+export const DocumentCodec = Object.freeze({
   encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
   decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
-};
+});
+
+/**
+ * Use this to create a response from the Edge service.
+ * It returns a Response object with the 200 status code
+ */
+export const EdgeResponse = Object.freeze({
+  success: <T>(data: T): Response => new Response(JSON.stringify({ success: true, data }), { status: 200 }),
+  failure: (reason: string, errorData?: EdgeErrorData, shouldRetryAfter?: number): Response =>
+    new Response(JSON.stringify({ success: false, reason, errorData }), {
+      status: 200,
+      headers: shouldRetryAfter ? { 'Retry-After': String(shouldRetryAfter) } : undefined,
+    }),
+});

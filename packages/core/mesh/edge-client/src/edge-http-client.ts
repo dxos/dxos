@@ -17,8 +17,8 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
+  type EdgeBodyResponse,
   EdgeCallFailedError,
-  type EdgeHttpResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -400,7 +400,7 @@ export class EdgeHttpClient {
         const response = await fetch(url, request);
         retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
         if (response.ok) {
-          const body = (await response.json()) as EdgeHttpResponse<T>;
+          const body = (await response.json()) as EdgeBodyResponse<T>;
 
           if (args.rawResponse) {
             return body as any;
