@@ -50,13 +50,16 @@ export const createBlueprint = (): Blueprint.Blueprint =>
 
 const blueprint = createBlueprint();
 
-// TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
-  contributes(Capabilities.Functions, [agent, entityExtraction]),
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.Functions, researchTools),
   contributes(Capabilities.BlueprintDefinition, blueprint),
+
+  // TODO(burdon): Factor out.
+  contributes(Capabilities.Functions, researchTools),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+
+  // TODO(burdon): Factor out.
+  contributes(Capabilities.Functions, [agent, entityExtraction]),
   contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
 
   // TODO(burdon): Move out of assistant.
