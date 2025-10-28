@@ -388,7 +388,7 @@ export class EdgeHttpClient {
   // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
   private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    const requestContext = args.context ?? new Context();
+    const requestContext = args.context ?? Context.default();
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
