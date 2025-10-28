@@ -22,12 +22,12 @@ import { trim } from '@dxos/util';
 
 const toolDefs = [
   //
-  // Schemas
+  // Schema
   //
 
   Tool.make('schema-list', {
     description: trim`
-      Retrieves schemas definitions.
+      Lists schemas definitions.
     `,
     parameters: {
       // TODO(wittjosiah): Remove this once parameter-less tools are fixed.
@@ -59,9 +59,8 @@ const toolDefs = [
 
   Tool.make('object-create', {
     description: trim`
-      Creates a new record and adds it to the current space.
-      Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
-      Note that only record schemas are supported.
+      Creates a new object and adds it to the current space.
+      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
     `,
     parameters: {
       typename: Schema.String,
@@ -91,8 +90,7 @@ const toolDefs = [
   Tool.make('relation-create', {
     description: trim`
       Creates a new relation and adds it to the current space.
-      Get the schema from the get-schemas tool and ensure that the data matches the corresponding schema.
-      Note that only relation schemas are supported.
+      Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
     `,
     parameters: {
       typename: Schema.String,
