@@ -99,9 +99,39 @@ class AssistantToolkit extends Toolkit.make(
     failure: Schema.Never,
   }),
 
+  Tool.make('remove-from-db', {
+    description: trim`
+      Removes an object or relation from the database.
+    `,
+    parameters: {
+      id: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+
   Tool.make('add-tag', {
     description: trim`
       Adds a tag to an object.
+      Tags are objects of type ${Tag.Tag.typename}.
+    `,
+    parameters: {
+      tagId: ArtifactId.annotations({
+        description: 'The ID of the tag.',
+      }),
+      objectId: ArtifactId.annotations({
+        description: 'The ID of the object.',
+      }),
+    },
+    success: Schema.Any,
+    failure: Schema.Never,
+  }),
+
+  Tool.make('remove-tag', {
+    description: trim`
+      Removes a tag from an object.
       Tags are objects of type ${Tag.Tag.typename}.
     `,
     parameters: {
@@ -225,6 +255,18 @@ class AssistantToolkit extends Toolkit.make(
         }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },
 
+      'remove-from-db': ({ id }) => {
+        const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(id));
+          yield* dispatch(createIntent(SpaceAction.RemoveObjects, { objects: [object] }));
+          return object;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
       'add-tag': ({ tagId, objectId }) => {
         const space = getActiveSpace(context);
         invariant(space, 'No active space');
@@ -233,6 +275,18 @@ class AssistantToolkit extends Toolkit.make(
           const object = yield* DatabaseService.resolve(DXN.parse(objectId));
           const meta = Obj.getMeta(object);
           meta.tags = [DXN.parse(tagId).toString()];
+          return object;
+        }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
+      },
+
+      'remove-tag': ({ tagId, objectId }) => {
+        const space = getActiveSpace(context);
+        invariant(space, 'No active space');
+
+        return Effect.gen(function* () {
+          const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+          const meta = Obj.getMeta(object);
+          meta.tags = meta.tags?.filter((tag) => tag !== DXN.parse(tagId).toString());
           return object;
         }).pipe(Effect.provide(DatabaseService.layer(space.db)), Effect.orDie);
       },
