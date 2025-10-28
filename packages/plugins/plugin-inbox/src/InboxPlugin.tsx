@@ -10,8 +10,8 @@ import { defineObjectForm } from '@dxos/plugin-space/types';
 import { DataType } from '@dxos/schema';
 
 import {
-  AppGraphBuilder,
   ASSISTANT_BLUEPRINT_KEY,
+  AppGraphBuilder,
   BlueprintDefinition,
   InboxState,
   IntentResolver,

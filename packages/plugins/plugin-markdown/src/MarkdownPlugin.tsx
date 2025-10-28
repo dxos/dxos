@@ -12,9 +12,9 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import {
+  ASSISTANT_BLUEPRINT_KEY,
   AnchorSort,
   AppGraphSerializer,
-  ASSISTANT_BLUEPRINT_KEY,
   BlueprintDefinition,
   IntentResolver,
   MarkdownSettings,
