@@ -42,7 +42,7 @@ export default defineFunction({
 
       if (contact && !contact.organization) {
         const created: DXN[] = [];
-        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: [DataType.Organization] }).pipe();
+        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: [DataType.LegacyOrganization] }).pipe();
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
           onAppend: (dxns) => created.push(...dxns),
         });

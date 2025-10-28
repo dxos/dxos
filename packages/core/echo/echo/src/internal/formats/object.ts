@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { clamp } from '@dxos/util';
 
-import { FormatAnnotation, FormatEnum, TypeEnum } from './types';
+import { FormatAnnotation, FormatEnum } from './types';
 
 /**
  * GeoJSON Format
@@ -31,15 +31,6 @@ export const GeoPoint = Schema.Tuple(
   Schema.annotations({
     title: 'GeoPoint',
     description: 'GeoJSON Position',
-    // TODO(wittjosiah): This is a workaround for Anthropic's issue with the default jsonSchema format.
-    jsonSchema: {
-      type: 'array',
-      prefixItems: [
-        { title: 'Longitude', type: TypeEnum.Number },
-        { title: 'Latitude', type: TypeEnum.Number },
-      ],
-      items: false,
-    },
   }),
 );
 
