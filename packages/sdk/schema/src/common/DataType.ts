@@ -14,7 +14,7 @@ export { Collection, QueryCollection } from './collection';
 export { Message, ContentBlock as MessageBlock } from './message';
 /** @deprecated */
 export { MessageV1, MessageV1ToV2 } from './message';
-export { Organization, OrganizationStatusOptions } from './organization';
+export { LegacyOrganization, Organization, OrganizationStatusOptions } from './organization';
 export { PostalAddress } from './postal-address';
 export { Person } from './person';
 export { Project } from './project';
