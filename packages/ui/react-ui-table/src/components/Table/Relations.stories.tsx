@@ -151,9 +151,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  // TODO(wittjosiah): This test is flaky, especially in CI.
-  //   Most typical failure is `targetCell` returns `null`.
-  _play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }: any) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -167,11 +165,8 @@ export const Default: Story = {
     // Scroll to the relations column (column 4) - this mimics the scrollToColumn call
     (secondGrid.closest('dx-grid') as DxGrid).scrollToColumn(4);
 
-    // Wait for scroll to complete
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     // Find and click the target cell (first row, relations column)
-    const targetCell = secondGrid.querySelector('[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="4"]');
+    const targetCell = await within(secondGrid).findByTestId('grid.4.0', undefined, { timeout: 10_000 });
     await expect(targetCell).toBeVisible();
 
     // Click to focus the cell
@@ -187,11 +182,9 @@ export const Default: Story = {
     await userEvent.click(searchField);
 
     // Get the first organization name from the first table to search for
-    const orgCell = firstGrid.querySelector(
-      '[data-dx-grid-plane="grid"] [aria-rowindex="0"][aria-colindex="0"] .dx-grid__cell__content',
-    ) as HTMLElement;
+    const orgCell = await within(firstGrid).findByTestId('grid.0.0', undefined, { timeout: 10_000 });
 
-    const orgName = orgCell.textContent;
+    const orgName = (orgCell.querySelector('.dx-grid__cell__content') as HTMLElement).textContent;
     // Type the first 4 characters to search
     await userEvent.type(searchField, orgName.substring(0, 4));
 
@@ -211,9 +204,7 @@ export const Default: Story = {
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
-    const newTargetCell = secondGrid.querySelector(
-      '[data-dx-grid-plane="grid"] [aria-rowindex="1"][aria-colindex="4"]',
-    );
+    const newTargetCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 10_000 });
     await expect(newTargetCell).toBeTruthy();
 
     // Click to focus the cell
