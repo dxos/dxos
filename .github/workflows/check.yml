@@ -6,8 +6,9 @@ on:
 
   push:
     branches:
-      - main
-      - ci/*
+      - mykola/fix-e2e-tests
+      # - main
+      # - ci/*
 
   schedule:
     - cron: '0 4 * * 1-5'
