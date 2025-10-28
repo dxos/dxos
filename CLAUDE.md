@@ -1,6 +1,7 @@
 - project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name).
 - check the `moon.yml` for any package to see available tasks.
 - lint task takes `--fix` argument to fix issues.
+- in order to pass additional arguments to commands moon needs an argument terminator (e.g. moon run :lint -- --fix)
 - use `moon :build --quiet --no-bail` to build all packages.
 - when reaching a natural stopping point, run the linter for impacted packages.
 - create a new branch before starting work.
