@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Events, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
+import { Capabilities, Events, contributes, defineModule, definePlugin, oneOf } from '@dxos/app-framework';
 
 import { IntentResolver, type MobileLayoutState, ReactRoot, State } from './capabilities';
 import { meta } from './meta';
+import { translations } from './translations';
 
 export type MobileLayoutPluginOptions = {
   initialState?: Partial<MobileLayoutState>;
@@ -17,6 +18,11 @@ export const MobileLayoutPlugin = definePlugin<MobileLayoutPluginOptions>(meta, 
     activatesOn: oneOf(Events.SetupSettings, Events.SetupAppGraph),
     activatesAfter: [Events.LayoutReady],
     activate: () => State({ initialState }),
+  }),
+  defineModule({
+    id: `${meta.id}/module/translations`,
+    activatesOn: Events.SetupTranslations,
+    activate: () => contributes(Capabilities.Translations, translations),
   }),
   defineModule({
     id: `${meta.id}/module/react-root`,

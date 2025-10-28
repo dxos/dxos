@@ -6,17 +6,17 @@ import { Rx, useRxValue } from '@effect-rx/rx-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useAppGraph, useIntentDispatcher } from '@dxos/app-framework';
-import { type Node, ROOT_ID, isGraphNode, useConnections } from '@dxos/plugin-graph';
-import { Icon, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { List } from '@dxos/react-ui-list';
+import { type Node, ROOT_ID, useConnections } from '@dxos/plugin-graph';
+import { Avatar, Icon, IconButton, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/react-ui-theme';
+import { Card } from '@dxos/react-ui-stack';
 
 import { meta } from '../meta';
 
-const grid = 'grid grid-cols-[1fr_auto] min-bs-[2.5rem]';
+import { navHeaderButton, navHeaderHeading, navHeaderRoot } from './NavHeader';
 
 export const Home = () => {
+  const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const workspaces = useWorkspaces();
 
@@ -25,15 +25,14 @@ export const Home = () => {
   return (
     <>
       <Header />
-      <List.Root<Node> items={workspaces} isItem={isGraphNode} getId={(node) => node.id}>
-        {({ items }) => (
-          <div role='list' className='flex flex-col w-full'>
-            {items?.map((node) => (
-              <Workspace key={node.id} node={node} />
-            ))}
-          </div>
-        )}
-      </List.Root>
+      <Card.Heading classNames='container-max-width'>{t('workspaces heading')}</Card.Heading>
+      <section className='container-max-width pli-cardSpacingInline mbe-8'>
+        {workspaces.map((node) => (
+          <Workspace key={node.id} node={node} />
+        ))}
+      </section>
+      <Card.Heading classNames='container-max-width'>{t('settings heading')}</Card.Heading>
+      <p className='pli-cardSpacingInline'>To do.</p>
     </>
   );
 };
@@ -46,20 +45,24 @@ const Header = () => {
   const menuActions = connections.filter((node) => node.properties.disposition === 'menu');
 
   return (
-    <div>
+    <nav className={navHeaderRoot}>
       <MenuProvider>
         <DropdownMenu.Root group={graph.root} items={menuActions}>
           <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <DropdownMenu.Trigger
-              data-testid='spacePlugin.addSpace'
-              className='grid place-items-center dx-focus-ring-group'
-            >
-              <Icon icon='ph--list--regular' size={5} />
+            <DropdownMenu.Trigger data-testid='spacePlugin.addSpace' asChild>
+              <IconButton
+                iconOnly
+                variant='ghost'
+                icon='ph--list--regular'
+                label={t('main menu label')}
+                classNames={navHeaderButton}
+              />
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
         </DropdownMenu.Root>
       </MenuProvider>
-    </div>
+      <h1 className={navHeaderHeading}>{t('current app name', { ns: 'appkit' })}</h1>
+    </nav>
   );
 };
 
@@ -74,12 +77,25 @@ const Workspace = ({ node }: { node: Node }) => {
 
   useLoadDescendents(node);
 
+  const name = toLocalizedString(node.properties.label, t);
+
   return (
-    <List.Item<Node> item={node} classNames={mx(grid, 'items-center', 'pli-2', 'min-bs-[3rem]')} onClick={handleClick}>
-      <div className='flex flex-col truncate'>
-        <List.ItemTitle classNames='truncate'>{toLocalizedString(node.properties.label, t)}</List.ItemTitle>
-      </div>
-    </List.Item>
+    <Card.StaticRoot role='button' tabIndex={0} classNames='dx-focus-ring' onClick={handleClick}>
+      <Card.Chrome classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-cardSpacingInline pie-cardSpacingInline'>
+        <Avatar.Root>
+          <Avatar.Content
+            hue={node.properties.hue}
+            icon={node.properties.icon}
+            hueVariant='surface'
+            variant='square'
+            size={12}
+            fallback={name}
+          />
+          <Avatar.Label>{name}</Avatar.Label>
+          <Icon icon='ph--caret-right--regular' />
+        </Avatar.Root>
+      </Card.Chrome>
+    </Card.StaticRoot>
   );
 };
 
