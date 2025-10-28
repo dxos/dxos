@@ -10,14 +10,15 @@ import { DataType } from '@dxos/schema';
 export const ResearchDataTypes = [
   // Objects
   DataType.Event,
-  DataType.Organization,
-  DataType.Person,
+  DataType.LegacyOrganization,
+  DataType.LegacyPerson,
   DataType.Project,
   DataType.Task,
   DataType.Text,
 
   // Relations
-  DataType.Employer,
+  // TODO(wittjosiah): Until views (e.g. table) support relations this needs to be expressed via organization ref.
+  // DataType.Employer,
   DataType.HasRelationship,
   DataType.HasConnection,
 ];

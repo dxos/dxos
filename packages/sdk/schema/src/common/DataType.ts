@@ -16,7 +16,7 @@ export { Message, ContentBlock as MessageBlock } from './message';
 export { MessageV1, MessageV1ToV2 } from './message';
 export { LegacyOrganization, Organization, OrganizationStatusOptions } from './organization';
 export { PostalAddress } from './postal-address';
-export { Person } from './person';
+export { LegacyPerson, Person } from './person';
 export { Project } from './project';
 export { Task } from './task';
 export { Text } from './text';

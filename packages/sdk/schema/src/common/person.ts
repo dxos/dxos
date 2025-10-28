@@ -36,7 +36,10 @@ const PersonSchema = Schema.Struct({
   // TODO(burdon): Use reference links.
   organization: Type.Ref(Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
-    Schema.annotations({ title: 'Organization' }),
+    Schema.annotations({
+      title: 'Organization',
+      description: 'The organization the person is currently employed by.',
+    }),
     Schema.optional,
   ),
   jobTitle: Schema.String.pipe(Schema.annotations({ title: 'Job Title' }), Schema.optional),
@@ -71,8 +74,6 @@ const PersonSchema = Schema.Struct({
       value: PostalAddress,
     }),
   ).pipe(Schema.mutable, Schema.optional),
-  // TODO(wittjosiah): Reconcile with addresses.
-  location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
   urls: Schema.Array(
     Schema.Struct({
       label: Schema.optional(Schema.String),
@@ -96,11 +97,26 @@ const PersonSchema = Schema.Struct({
 });
 
 export const Person = PersonSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      // TODO(wittjosiah): Reconcile with addresses.
+      location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
+    }),
+  ),
   Type.Obj({
     typename: 'dxos.org/type/Person',
     version: '0.1.0',
   }),
-).pipe(
+  Schema.annotations({ title: 'Person' }),
+  LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  ItemAnnotation.set(true),
+);
+
+export const LegacyPerson = PersonSchema.pipe(
+  Type.Obj({
+    typename: 'dxos.org/type/Person',
+    version: '0.1.0',
+  }),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   ItemAnnotation.set(true),
