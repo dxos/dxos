@@ -698,6 +698,11 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  /**
+   * Space key hex -> SpaceId.
+   */
+  private readonly _spaceIdCache = new Map<string, SpaceId>();
+
   private async _loadFromIndexHit(hit: FindResult): Promise<QueryItem | null> {
     const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(hit.id);
 
@@ -712,6 +717,12 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
+    let spaceId = this._spaceIdCache.get(spaceKey);
+    if (!spaceId) {
+      spaceId = await createIdFromSpaceKey(PublicKey.from(spaceKey));
+      this._spaceIdCache.set(spaceKey, spaceId);
+    }
+
     const object = DatabaseDirectory.getInlineObject(doc, objectId);
     if (!object) {
       return null;
@@ -720,7 +731,7 @@ export class QueryExecutor extends Resource {
     return {
       objectId,
       documentId: documentId as DocumentId,
-      spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
+      spaceId,
       doc: object,
     };
   }
