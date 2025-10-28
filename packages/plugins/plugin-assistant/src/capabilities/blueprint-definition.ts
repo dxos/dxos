@@ -19,19 +19,18 @@ import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
+import { assistantTools, systemTools } from '../toolkits';
 
-import { toolNames } from './toolkit';
-
-// TODO(burdon): Convert tools to functions (see toolkit.ts).
 // TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Unit tests for developing functions. Error handling.
+// TODO(burdon): Convert tools to functions (see toolkit.ts)?
 
 // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
 const deckTools = ['open-item'];
 
 const functions: FunctionDefinition[] = [analysis, list, load];
-const tools = [...toolNames, ...deckTools];
+const tools = [...assistantTools, ...systemTools, ...deckTools];
 
 export const BLUEPRINT_KEY = 'dxos.org/blueprint/assistant';
 
@@ -59,7 +58,9 @@ export default (): Capability<any>[] => [
 
   // TODO(burdon): Move out of assistant.
   contributes(Capabilities.Functions, [syncLinearIssues]),
-  contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
+
+  // TODO(burdon): Move out of assistant.
+  contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
 ];
