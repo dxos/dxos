@@ -15,7 +15,7 @@ import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { DataType } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
@@ -131,6 +131,8 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    // TODO(thure): Shouldn’t `layout: 'fullscreen'` below make this unnecessary?
+    withLayout({ classNames: 'fixed inset-0' }),
     withClientProvider({
       types: [DataType.View, DataType.Organization, DataType.Person, Table.Table],
       createIdentity: true,
