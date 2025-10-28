@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 
 import { QueryAST, Type } from '@dxos/echo';
+import { FormAnnotation } from '@dxos/echo/internal';
 
 export const Collection = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  objects: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
+  name: Schema.String.pipe(Schema.optional),
+  objects: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Collection',
@@ -20,8 +21,8 @@ export type Collection = Schema.Schema.Type<typeof Collection>;
 
 // TODO(wittjosiah): Remove. Use View instead.
 const QueryCollection_ = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  query: QueryAST.Query,
+  name: Schema.String.pipe(Schema.optional),
+  query: QueryAST.Query.pipe(FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/QueryCollection',

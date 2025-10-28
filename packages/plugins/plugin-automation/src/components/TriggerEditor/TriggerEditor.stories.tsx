@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { FunctionTrigger, FunctionType } from '@dxos/functions';
+import { Function, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { ContactType, useClientProvider, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { DataType } from '@dxos/schema';
 
 import { functions } from '../../testing';
@@ -30,7 +30,7 @@ const types = [
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {
   const { space } = useClientProvider();
-  const [trigger, setTrigger] = useState<FunctionTrigger>();
+  const [trigger, setTrigger] = useState<Trigger.Trigger>();
   const tags = useQuery(space, Filter.type(Tag.Tag));
 
   useAsyncEffect(async () => {
@@ -38,11 +38,11 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
       return;
     }
 
-    const result = await space.db.query(Filter.type(FunctionType)).run();
+    const result = await space.db.query(Filter.type(Function.Function)).run();
     const fn = result.objects.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
-      Obj.make(FunctionTrigger, {
+      Trigger.make({
         function: Ref.make(fn),
         spec: { kind: 'webhook' },
         input: {
@@ -78,17 +78,18 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, FunctionType, FunctionTrigger, ContactType],
+      types: [Tag.Tag, Function.Function, Trigger.Trigger, ContactType],
       onCreateSpace: ({ space }) => {
         space.db.add(Tag.make({ label: 'Important' }));
         space.db.add(Tag.make({ label: 'Investor' }));
         space.db.add(Tag.make({ label: 'New' }));
 
         for (const fn of functions) {
-          space.db.add(Obj.make(FunctionType, fn));
+          space.db.add(Function.make(fn));
         }
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
@@ -102,7 +103,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'column',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

@@ -30,6 +30,8 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
+// TODO(burdon): Radix style layout.
+
 export type TableToolbarProps = ThemedClassName<
   TableToolbarState & {
     onAdd: () => void;
@@ -73,6 +75,7 @@ const createTableToolbarActions = ({
       nodes.push(...custom.nodes);
       edges.push(...custom.edges);
     }
+
     return {
       nodes,
       edges,

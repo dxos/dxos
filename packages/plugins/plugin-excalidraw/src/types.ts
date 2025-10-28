@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DiagramType } from '@dxos/plugin-sketch/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 
 import { meta } from './meta';
 
@@ -20,7 +20,7 @@ export namespace SketchAction {
       content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
     output: Schema.Struct({
-      object: DiagramType,
+      object: Diagram.Diagram,
     }),
   }) {}
 }

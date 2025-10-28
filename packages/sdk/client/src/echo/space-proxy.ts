@@ -568,6 +568,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _export(): Promise<SpaceArchive> {
+    await this._db.flush();
     const { archive } = await this._clientServices.services.SpacesService!.exportSpace({ spaceId: this.id });
     return archive;
   }

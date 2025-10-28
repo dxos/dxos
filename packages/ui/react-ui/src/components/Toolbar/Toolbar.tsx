@@ -24,16 +24,17 @@ import { Separator, type SeparatorProps } from '../Separator';
 
 type ToolbarRootProps = ThemedClassName<
   ToolbarPrimitive.ToolbarProps & {
-    layoutManaged?: boolean;
     textBlockWidth?: boolean;
+    layoutManaged?: boolean;
+    disabled?: boolean;
   }
 >;
 
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  ({ classNames, children, layoutManaged, textBlockWidth: wrapContents, ...props }, forwardedRef) => {
+  ({ classNames, children, layoutManaged, textBlockWidth: textBlockWidthParam, disabled, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const InnerRoot = wrapContents ? 'div' : Fragment;
-    const innerRootProps = wrapContents
+    const InnerRoot = textBlockWidthParam ? 'div' : Fragment;
+    const innerRootProps = textBlockWidthParam
       ? { role: 'none', className: tx('toolbar.inner', 'toolbar', { layoutManaged }, classNames) }
       : {};
 
@@ -41,7 +42,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
       <ToolbarPrimitive.Root
         {...props}
         data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', 'toolbar', { layoutManaged }, classNames)}
+        className={tx('toolbar.root', 'toolbar', { layoutManaged, disabled }, classNames)}
         ref={forwardedRef}
       >
         <InnerRoot {...innerRootProps}>{children}</InnerRoot>

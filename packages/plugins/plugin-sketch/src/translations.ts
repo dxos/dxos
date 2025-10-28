@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { DiagramType } from './types';
+import { Diagram } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [DiagramType.typename]: {
+      [Diagram.Diagram.typename]: {
         'typename label': 'Sketch',
         'typename label_zero': 'Sketches',
         'typename label_one': 'Sketch',

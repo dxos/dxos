@@ -16,7 +16,7 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { type SheetModel, useSheetModel } from '../../model';
-import { type SheetType } from '../../types';
+import { type Sheet } from '../../types';
 
 export type SheetContextValue = {
   id: string;
@@ -114,7 +114,7 @@ const SheetProviderImpl = ({
 
 export type SheetProviderProps = {
   graph: ComputeGraph;
-  sheet: SheetType;
+  sheet: Sheet.Sheet;
   readonly?: boolean;
   ignoreAttention?: boolean;
 } & Pick<SheetContextValue, 'onInfo'>;

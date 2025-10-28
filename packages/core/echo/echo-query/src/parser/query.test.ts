@@ -8,7 +8,7 @@ import { describe, it } from 'vitest';
 import { Filter, Tag } from '@dxos/echo';
 
 import { QueryDSL } from './gen';
-import { QueryBuilder } from './query-builder';
+import { type BuildResult, QueryBuilder } from './query-builder';
 
 // TODO(burdon): Ref/Relation traversal.
 
@@ -258,6 +258,22 @@ describe('query', () => {
           '}',
         ],
       },
+      {
+        input: 'x = ( type: dxos.org/type/Person )',
+        expected: [
+          'Query',
+          'Assignment',
+          'Identifier',
+          '=',
+          '(',
+          'Filter',
+          'TypeFilter',
+          'TypeKeyword',
+          ':',
+          'Identifier',
+          ')',
+        ],
+      },
     ];
 
     for (const { input, expected } of tests) {
@@ -285,72 +301,109 @@ describe('query', () => {
     });
 
     // TODO(burdon): Test "not"
-    type Test = { input: string; expected: Filter.Any };
+    type Test = { input: string; expected: BuildResult };
     const tests: Test[] = [
       // Types
       {
         input: 'type:dxos.org/type/Person',
-        expected: Filter.typename('dxos.org/type/Person'),
+        expected: {
+          filter: Filter.typename('dxos.org/type/Person'),
+        },
       },
       // Tags
       {
         input: '#foo',
-        expected: Filter.tag('tag_1'),
+        expected: {
+          filter: Filter.tag('tag_1'),
+        },
       },
       {
         input: '#foo AND #bar',
-        expected: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
+        expected: {
+          filter: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
+        },
       },
       {
         input: '#foo #bar',
-        expected: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
+        expected: {
+          filter: Filter.and(Filter.tag('tag_1'), Filter.tag('tag_2')),
+        },
       },
       // Text
       {
         input: '"test"',
-        expected: Filter.text('test'),
+        expected: {
+          filter: Filter.text('test'),
+        },
       },
       // Mixed
       {
         input: '#foo "test"',
-        expected: Filter.and(Filter.tag('tag_1'), Filter.text('test')),
+        expected: {
+          filter: Filter.and(Filter.tag('tag_1'), Filter.text('test')),
+        },
       },
       // Props
       {
         input: '{ name: "DXOS" }',
-        expected: Filter.props({ name: 'DXOS' }),
+        expected: {
+          filter: Filter.props({ name: 'DXOS' }),
+        },
       },
       {
         input: '{ value: 100 }',
-        expected: Filter.props({ value: 100 }),
+        expected: {
+          filter: Filter.props({ value: 100 }),
+        },
       },
       {
         input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
-        expected: Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+        expected: {
+          filter: Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+        },
       },
       {
         input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
-        expected: Filter.and(
-          Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
-          Filter.props({ name: 'DXOS' }),
-        ),
+        expected: {
+          filter: Filter.and(
+            Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+            Filter.props({ name: 'DXOS' }),
+          ),
+        },
       },
       {
         input: 'type:dxos.org/type/Person and { name: "DXOS" }',
-        expected: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+        expected: {
+          filter: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+        },
+      },
+      // Assignment
+      {
+        input: 'x = ( type:dxos.org/type/Person )',
+        expected: {
+          name: 'x',
+          filter: Filter.typename('dxos.org/type/Person'),
+        },
+      },
+      {
+        input: 'x = ( #foo AND "bar" )',
+        expected: {
+          name: 'x',
+          filter: Filter.and(Filter.tag('tag_1'), Filter.text('bar')),
+        },
       },
       // TODO(burdon): Convert Query/Filter expr to AST.
       // TODO(burdon): Person -> Organization (many-to-many relation).
       // Get Research Note objects for Organization objects for Person objects with jobTitle.
       //
-      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:ResearchOn]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
-      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:ResearchOn]- type:ResearchNote
+      // Cypher: MATCH (p:Person)-[:WorksAt]->(o:Organization)<-[:HasSubject]-(r:ResearchNote) WHERE p.jotTitle IS NOT NULL
+      // ((type:Person AND { jobTitle: "investor" }) -[:WorksAt]-> type:Organization) <-[:HasSubject]- type:ResearchNote
       //
       // {
       //   input: '',
       //   expected: Query.select(Filter.typename('dxos.org/type/Person', { jobTitle: 'investor' }))
       //     .reference('organization')
-      //     .targetOf(Relation.of('dxos.org/relation/ResearchOn')) // TODO(burdon): Invert?
+      //     .targetOf(Relation.of('dxos.org/relation/HasSubject')) // TODO(burdon): Invert?
       //     .source(),
       // },
     ];

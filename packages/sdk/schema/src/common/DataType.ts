@@ -14,14 +14,14 @@ export { Collection, QueryCollection } from './collection';
 export { Message, ContentBlock as MessageBlock } from './message';
 /** @deprecated */
 export { MessageV1, MessageV1ToV2 } from './message';
-export { Organization, OrganizationStatusOptions } from './organization';
+export { LegacyOrganization, Organization, OrganizationStatusOptions } from './organization';
 export { PostalAddress } from './postal-address';
 export { Person } from './person';
 export { Project } from './project';
 export { Task } from './task';
 export { Text } from './text';
 export { View } from '../view';
-export { Employer, HasConnection, HasRelationship } from './relations';
+export { AnchoredTo, Employer, HasConnection, HasRelationship, HasSubject } from './relations';
 
 import { Project as ProjectSchema } from './project';
 import { Text as TextSchema } from './text';

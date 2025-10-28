@@ -11,7 +11,7 @@ import { RefArray } from '@dxos/react-client/echo';
 import { AppGraphSerializer, IntentResolver, ReactSurface, SketchSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CanvasType, DiagramType, SketchAction } from './types';
+import { Diagram, SketchAction } from './types';
 import { serializer } from './util';
 
 export const SketchPlugin = definePlugin(meta, () => [
@@ -30,11 +30,12 @@ export const SketchPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: DiagramType.typename,
+        id: Diagram.Diagram.typename,
         metadata: {
           icon: 'ph--compass-tool--regular',
+          iconHue: 'indigo',
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (diagram: DiagramType) => await RefArray.loadAll([diagram.canvas]),
+          loadReferences: async (diagram: Diagram.Diagram) => await RefArray.loadAll([diagram.canvas]),
           serializer,
           comments: 'unanchored',
         },
@@ -47,7 +48,7 @@ export const SketchPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: DiagramType,
+          objectSchema: Diagram.Diagram,
           getIntent: () => createIntent(SketchAction.Create),
         }),
       ),
@@ -55,7 +56,7 @@ export const SketchPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [CanvasType]),
+    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

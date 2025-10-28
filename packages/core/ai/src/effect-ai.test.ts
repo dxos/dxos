@@ -13,7 +13,7 @@ import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as OpenAiClient from '@effect/ai-openai/OpenAiClient';
 import * as OpenAiLanguageModel from '@effect/ai-openai/OpenAiLanguageModel';
 import * as NodeHttpClient from '@effect/platform-node/NodeHttpClient';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Config from 'effect/Config';
 import * as Console from 'effect/Console';
@@ -25,11 +25,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
+import { Format } from '@dxos/echo/internal';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { hasToolCall } from './testing';
+import * as AiService from './AiService';
+import { MemoizedAiService } from './memoization';
+import { AiServiceTestingPreset, hasToolCall, testingLayer } from './testing';
 
 // https://effect.website/docs/ai/tool-use/#5-bring-it-all-together
 // https://github.com/Effect-TS/effect/blob/main/packages/ai/ai/CHANGELOG.md
@@ -76,6 +79,13 @@ class TestToolkit extends Toolkit.make(
     }),
     failure: Schema.Never,
   }),
+  Tool.make('Date', {
+    description: 'Get the current date',
+    parameters: {
+      location: Format.GeoPoint,
+    },
+    success: Schema.DateFromString,
+  }),
 ) {}
 
 // Tool handlers.
@@ -94,6 +104,10 @@ const toolkitLayer = TestToolkit.toLayer({
       // TODO(burdon): How to return an error.
       yield* Console.log(`Executing calculation: ${input} = ${result}`);
       return { result };
+    }),
+  Date: ({ location }) =>
+    Effect.gen(function* () {
+      return new Date('2025-10-01');
     }),
 });
 
@@ -304,4 +318,37 @@ describe('LanguageModel', () => {
     ),
     { timeout: 120_000 },
   ); //
+});
+
+const TestLayer = Layer.mergeAll(testingLayer, toolkitLayer, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+  Layer.provideMerge(MemoizedAiService.layerTest()),
+  Layer.provide(AiServiceTestingPreset('direct')),
+);
+
+// TODO(wittjosiah): GeoPoint breaks Anthropic validation.
+describe('Toolkit', () => {
+  it.effect.skip(
+    'can handle a geopoint tool parameter',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* Chat.fromPrompt('What is the current date?');
+
+        while (true) {
+          const response = yield* chat.generateText({
+            prompt: Prompt.empty,
+            toolkit: yield* TestToolkit,
+          });
+          if (response.finishReason === 'tool-calls') {
+            continue;
+          } else {
+            expect(response.finishReason).toBe('stop');
+            console.log(response.text);
+            break;
+          }
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
 });

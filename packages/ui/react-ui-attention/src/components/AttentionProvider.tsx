@@ -16,7 +16,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { ATTENDABLE_PATH_SEPARATOR, type Attention, AttentionManager, getAttendables } from '../attention';
 
 const ATTENTION_NAME = 'Attention';
-const ATTENABLE_ATTRIBUTE = 'data-attendable-id';
+const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
 const ATTENTION_SOURCE_ATTRIBUTE = 'data-is-attention-source';
 
 type AttentionContextValue = {
@@ -29,7 +29,7 @@ const [AttentionContextProvider, useAttentionContext] = createContext<AttentionC
   path: [],
 });
 
-const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false };
+const UNKNOWN_ATTENDABLE: Attention = { hasAttention: false, isAncestor: false, isRelated: false };
 
 const useAttention = (attendableId?: string): Attention => {
   const { attention, path } = useAttentionContext(ATTENTION_NAME);
@@ -53,7 +53,7 @@ const useAttended = () => {
 const useAttentionAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
   return useMemo(() => {
-    const attributes: Record<string, string | undefined> = { [ATTENABLE_ATTRIBUTE]: attendableId };
+    const attributes: Record<string, string | undefined> = { [ATTENDABLE_ATTRIBUTE]: attendableId };
     if (hasAttention) {
       attributes[ATTENTION_SOURCE_ATTRIBUTE] = 'true';
     }
@@ -196,6 +196,6 @@ export {
   useAttentionAttributes,
   useAttentionPath,
   ATTENTION_NAME,
-  ATTENABLE_ATTRIBUTE,
+  ATTENDABLE_ATTRIBUTE,
   ATTENTION_SOURCE_ATTRIBUTE,
 };

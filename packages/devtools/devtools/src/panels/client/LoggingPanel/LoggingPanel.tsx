@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { FormatEnum } from '@dxos/echo/internal';
 import { levels, parseFilter } from '@dxos/log';
 import { type LogEntry, LogLevel, type QueryLogsRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
-import { Toolbar } from '@dxos/react-ui';
+import { Toolbar, useFileDownload } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer, Searchbar, Select } from '../../../components';
@@ -86,6 +86,7 @@ export const LoggingPanel = () => {
         .toUpperCase(),
       file: `${shortFile(entry.meta?.file)}:${entry.meta?.line}`,
       message: entry.message,
+      context: entry.context,
     }));
   }, [logs]);
 
@@ -104,6 +105,18 @@ export const LoggingPanel = () => {
     [],
   );
 
+  const fileDownload = useFileDownload();
+  const handleDownload = useCallback(async () => {
+    const payload = {
+      filters: text,
+      logs: logs.map((entry) => entry),
+    };
+    fileDownload(
+      new Blob([JSON.stringify(payload, undefined, 2)], { type: 'text/plain' }),
+      `${new Date().toISOString().replace(/\W/g, '-')}-logs.json`,
+    );
+  }, [logs, text, fileDownload]);
+
   return (
     <PanelContainer
       toolbar={
@@ -111,6 +124,7 @@ export const LoggingPanel = () => {
           {/* TODO(wittjosiah): Reset selection value when typing manually in the searchbar. */}
           <Select items={presets} onValueChange={onSearchChange} />
           <Searchbar placeholder='Filter (e.g., "info", "client:debug")' value={text} onChange={onSearchChange} />
+          <Toolbar.IconButton icon='ph--download--regular' onClick={handleDownload} label='Download logs' />
           <Toolbar.IconButton icon='ph--trash--regular' onClick={() => setLogs([])} label='Clear logs' />
         </Toolbar.Root>
       }

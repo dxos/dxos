@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { xml } from '@codemirror/lang-xml';
+import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import React from 'react';
 
 import { type Template } from '@dxos/blueprints';
@@ -16,7 +18,7 @@ import {
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
-import { isTruthy } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -25,9 +27,10 @@ import { handlebars } from './handlebars-extension';
 export type TemplateEditorProps = ThemedClassName<{
   id: string;
   template: Template.Template;
+  lineNumbers?: boolean;
 }>;
 
-export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps) => {
+export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }: TemplateEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
@@ -42,17 +45,19 @@ export const TemplateEditor = ({ id, classNames, template }: TemplateEditorProps
         createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
         createBasicExtensions({
           bracketMatching: false,
-          lineNumbers: true,
+          lineNumbers,
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
-        decorateMarkdown(),
+        decorateMarkdown(), // TODO(burdon): Move into bundle.
+        xml(),
         handlebars(),
-      ].filter(isTruthy),
+        syntaxHighlighting(defaultHighlightStyle),
+      ].filter(isNonNullable),
     };
-  }, [themeMode, template.source?.target]);
+  }, [themeMode, template.source?.target, lineNumbers]);
 
   return <div ref={parentRef} className={mx('bs-full overflow-hidden', classNames)} />;
 };

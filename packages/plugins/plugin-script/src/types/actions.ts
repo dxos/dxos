@@ -5,12 +5,12 @@
 import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client/echo';
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 
 import { meta } from '../meta';
 import { templates } from '../templates';
 
-import { Notebook } from './schema';
+import * as Notebook from './Notebook';
 
 export namespace ScriptAction {
   export const ScriptProps = Schema.Struct({
@@ -31,7 +31,7 @@ export namespace ScriptAction {
       }),
     ),
     output: Schema.Struct({
-      object: ScriptType,
+      object: Script.Script,
     }),
   }) {}
 

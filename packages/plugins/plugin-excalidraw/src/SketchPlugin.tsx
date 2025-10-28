@@ -4,7 +4,7 @@
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { CanvasType, DiagramType } from '@dxos/plugin-sketch/types';
+import { Diagram } from '@dxos/plugin-sketch/types';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { defineObjectForm } from '@dxos/plugin-space/types';
 
@@ -29,9 +29,10 @@ export const ExcalidrawPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () =>
       contributes(Capabilities.Metadata, {
-        id: DiagramType.typename,
+        id: Diagram.Diagram.typename,
         metadata: {
           icon: 'ph--compass-tool--regular',
+          iconHue: 'indigo',
         },
       }),
   }),
@@ -42,7 +43,7 @@ export const ExcalidrawPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: DiagramType,
+          objectSchema: Diagram.Diagram,
           getIntent: () => createIntent(SketchAction.Create),
         }),
       ),
@@ -50,7 +51,7 @@ export const ExcalidrawPlugin = definePlugin(meta, () => [
   defineModule({
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
-    activate: () => contributes(ClientCapabilities.Schema, [CanvasType]),
+    activate: () => contributes(ClientCapabilities.Schema, [Diagram.Canvas]),
   }),
   defineModule({
     id: `${meta.id}/module/react-surface`,

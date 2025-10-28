@@ -12,6 +12,7 @@ import {
   definePlugin,
   oneOf,
 } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
@@ -51,10 +52,11 @@ export const MeetingPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () => [
       contributes(Capabilities.Metadata, {
-        id: Meeting.Meeting.typename,
+        id: Type.getTypename(Meeting.Meeting),
         metadata: {
           label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
           icon: 'ph--note--regular',
+          iconHue: 'rose',
         },
       }),
     ],

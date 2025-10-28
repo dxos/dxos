@@ -4,12 +4,13 @@
 
 import { type ChromaticPalette } from '@dxos/react-ui-types';
 
-type Hue = ChromaticPalette | 'neutral';
+export type Hue = ChromaticPalette | 'neutral';
 
 // TODO(burdon): Rename?
 export type ColorStyles = {
   hue: Hue;
   text: string;
+  icon: string;
   bg: string;
   surface: string;
   border: string;
@@ -18,6 +19,7 @@ export type ColorStyles = {
 const neutralColor: ColorStyles = {
   hue: 'neutral',
   text: 'text-neutralFill',
+  icon: 'text-neutralSurfaceText',
   bg: 'bg-neutralFill',
   surface: 'bg-neutralSurface',
   border: 'border-neutralFill',
@@ -30,6 +32,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'orange',
     text: 'text-orangeFill',
+    icon: 'text-orangeSurfaceText',
     bg: 'bg-orangeFill',
     surface: 'bg-orangeSurface',
     border: 'border-orangeFill',
@@ -37,6 +40,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'amber',
     text: 'text-amberFill',
+    icon: 'text-amberSurfaceText',
     bg: 'bg-amberFill',
     surface: 'bg-amberSurface',
     border: 'border-amberFill',
@@ -44,6 +48,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'yellow',
     text: 'text-yellowFill',
+    icon: 'text-yellowSurfaceText',
     bg: 'bg-yellowFill',
     surface: 'bg-yellowSurface',
     border: 'border-yellowFill',
@@ -51,6 +56,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'lime',
     text: 'text-limeFill',
+    icon: 'text-limeSurfaceText',
     bg: 'bg-limeFill',
     surface: 'bg-limeSurface',
     border: 'border-limeFill',
@@ -58,6 +64,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'green',
     text: 'text-greenFill',
+    icon: 'text-greenSurfaceText',
     bg: 'bg-greenFill',
     surface: 'bg-greenSurface',
     border: 'border-greenFill',
@@ -65,6 +72,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'emerald',
     text: 'text-emeraldFill',
+    icon: 'text-emeraldSurfaceText',
     bg: 'bg-emeraldFill',
     surface: 'bg-emeraldSurface',
     border: 'border-emeraldFill',
@@ -72,6 +80,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'teal',
     text: 'text-tealFill',
+    icon: 'text-tealSurfaceText',
     bg: 'bg-tealFill',
     surface: 'bg-tealSurface',
     border: 'border-tealFill',
@@ -79,6 +88,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'cyan',
     text: 'text-cyanFill',
+    icon: 'text-cyanSurfaceText',
     bg: 'bg-cyanFill',
     surface: 'bg-cyanSurface',
     border: 'border-cyanFill',
@@ -86,6 +96,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'sky',
     text: 'text-skyFill',
+    icon: 'text-skySurfaceText',
     bg: 'bg-skyFill',
     surface: 'bg-skySurface',
     border: 'border-skyFill',
@@ -93,6 +104,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'indigo',
     text: 'text-indigoFill',
+    icon: 'text-indigoSurfaceText',
     bg: 'bg-indigoFill',
     surface: 'bg-indigoSurface',
     border: 'border-indigoFill',
@@ -100,6 +112,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'violet',
     text: 'text-violetFill',
+    icon: 'text-violetSurfaceText',
     bg: 'bg-violetFill',
     surface: 'bg-violetSurface',
     border: 'border-violetFill',
@@ -107,6 +120,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'purple',
     text: 'text-purpleFill',
+    icon: 'text-purpleSurfaceText',
     bg: 'bg-purpleFill',
     surface: 'bg-purpleSurface',
     border: 'border-purpleFill',
@@ -114,6 +128,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'fuchsia',
     text: 'text-fuchsiaFill',
+    icon: 'text-fuchsiaSurfaceText',
     bg: 'bg-fuchsiaFill',
     surface: 'bg-fuchsiaSurface',
     border: 'border-fuchsiaFill',
@@ -121,6 +136,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'rose',
     text: 'text-roseFill',
+    icon: 'text-roseSurfaceText',
     bg: 'bg-roseFill',
     surface: 'bg-roseSurface',
     border: 'border-roseFill',
@@ -128,6 +144,7 @@ export const styles: ColorStyles[] = [
   {
     hue: 'pink',
     text: 'text-pinkFill',
+    icon: 'text-pinkSurfaceText',
     bg: 'bg-pinkFill',
     surface: 'bg-pinkSurface',
     border: 'border-pinkFill',

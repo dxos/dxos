@@ -10,13 +10,13 @@ import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { type DiagramType, type SketchSettingsProps } from '../types';
+import { type Diagram, type SketchSettingsProps } from '../types';
 
 import { Sketch } from './Sketch';
 
 export type SketchContainerProps = {
   role: string;
-  sketch: DiagramType;
+  sketch: Diagram.Diagram;
   settings: SketchSettingsProps;
 };
 
@@ -32,8 +32,8 @@ export const SketchContainer = ({ role, sketch, settings }: SketchContainerProps
 
   // TODO(wittjosiah): Genericize tldraw toolbar actions w/ graph.
   const { graph } = useAppGraph();
-  const actions = useActions(graph, fullyQualifiedId(sketch));
-  const handleThreadCreate = actions.find((action) => action.id === `${fullyQualifiedId(sketch)}/comment`)?.data;
+  const actions = useActions(graph, id);
+  const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
   return (
     <StackItem.Content size={role === 'section' ? 'square' : 'intrinsic'}>

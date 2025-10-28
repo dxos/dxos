@@ -13,10 +13,10 @@ import { ClientCapabilities, ClientPlugin } from '@dxos/plugin-client';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { ThemePlugin } from '@dxos/plugin-theme';
-import { ChannelType, ThreadType } from '@dxos/plugin-thread/types';
+import { Channel, Thread } from '@dxos/plugin-thread/types';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 
@@ -41,6 +41,7 @@ const meta = {
   render: () => <Story />,
   decorators: [
     withTheme,
+    withLayout({ container: 'column' }),
     withPluginManager({
       plugins: [
         AttentionPlugin(),
@@ -60,7 +61,7 @@ const meta = {
                 transcript: Ref.make(Transcript.makeTranscript(space.queues.create().dxn)),
                 notes: Ref.make(DataType.makeText('Notes')),
                 summary: Ref.make(DataType.makeText()),
-                thread: Ref.make(Obj.make(ThreadType, { messages: [] })),
+                thread: Ref.make(Thread.make()),
               }),
             );
           },
@@ -70,12 +71,9 @@ const meta = {
         SettingsPlugin(),
         MarkdownPlugin(),
       ],
-      capabilities: [contributes(ClientCapabilities.Schema, [ChannelType, ThreadType, DataType.Message])],
+      capabilities: [contributes(ClientCapabilities.Schema, [Channel.Channel, Thread.Thread, DataType.Message])],
     }),
   ],
-  parameters: {
-    layout: 'column',
-  },
 } satisfies Meta<typeof MeetingContainer>;
 
 export default meta;

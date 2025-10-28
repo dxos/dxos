@@ -6,10 +6,9 @@ import { Octokit } from '@octokit/core';
 import * as Predicate from 'effect/Predicate';
 
 import { Capabilities, LayoutAction, contributes, createIntent, createResolver } from '@dxos/app-framework';
-import { Obj, Ref } from '@dxos/echo';
-import { ScriptType } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { Script } from '@dxos/functions';
 import { TokenManagerAction } from '@dxos/plugin-token-manager/types';
-import { DataType } from '@dxos/schema';
 
 import { DEPLOYMENT_DIALOG } from '../components';
 import { defaultScriptsForIntegration } from '../meta';
@@ -21,7 +20,7 @@ export default () =>
     createResolver({
       intent: ScriptAction.CreateScript,
       resolve: async ({ name, gistUrl, initialTemplateId }) => {
-        let content = templates[0].source;
+        let source = templates[0].source;
 
         const gistId = gistUrl?.split('/').at(-1);
         if (gistId) {
@@ -33,21 +32,21 @@ export default () =>
           });
           const gistContent = Object.values(response.data.files ?? {})[0]?.content;
           if (gistContent) {
-            content = gistContent;
+            source = gistContent;
           }
         }
 
         if (initialTemplateId) {
           const template = templates.find((template) => template.id === initialTemplateId);
           if (template) {
-            content = template.source;
+            source = template.source;
             name = name || template.name;
           }
         }
 
         return {
           data: {
-            object: Obj.make(ScriptType, { name, source: Ref.make(DataType.makeText(content)) }),
+            object: Script.make({ name, source }),
           },
         };
       },

@@ -66,12 +66,15 @@ export const TypescriptEditor = ({
           indentWithTab: true,
           lineNumbers: true,
           lineWrapping: false,
-          monospace: true,
           scrollPastEnd: role !== 'section',
           search: true,
           ...options,
         }),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+        createThemeExtensions({
+          monospace: true,
+          themeMode,
+          syntaxHighlighting: true,
+        }),
         InputModeExtensions[inputMode],
 
         javascript({ typescript: true }),
@@ -95,14 +98,7 @@ export const TypescriptEditor = ({
   );
 
   // TODO(brudon): Use react-ui-editor's Editor component.
-  return (
-    <div
-      ref={parentRef}
-      data-toolbar={toolbar ? 'enabled' : 'disabled'}
-      className={mx(classNames)}
-      {...focusAttributes}
-    />
-  );
+  return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
 };
 
 // TODO(burdon): Factor out (react-ui-editor).

@@ -2,46 +2,39 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { type JsonPath, setValue } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
+import { Filter, type Obj, Ref } from '@dxos/echo';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { StackItem } from '@dxos/react-ui-stack';
+import { mx } from '@dxos/react-ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
-  return Object.getOwnPropertyNames(obj)
-    .map((name) => obj[name as keyof Obj.Any])
-    .filter((value) => Ref.isRef(value)) as Ref.Any[];
+export type RecordMainProps = {
+  record: Obj.Any;
 };
 
-const Card = ({ data: subject }: { data: Obj.Any }) => {
-  const data = useMemo(() => ({ subject }), [subject]);
-  return <Surface role='card' data={data} limit={1} />;
-};
-
-export const RecordMain = ({ record }: { record: Obj.Any }) => {
+export const RecordMain = ({ record }: RecordMainProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(record);
-  const schema = Obj.getSchema(record);
+  const data = useMemo(() => ({ subject: record }), [record]);
 
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
-    const relations = objects.filter((obj) => Relation.isRelation(obj));
-    const targetObjects = relations
-      .filter((relation) => Relation.getSource(relation) === record)
-      .map((relation) => Relation.getTarget(relation));
-    const sourceObjects = relations
-      .filter((relation) => Relation.getTarget(relation) === record)
-      .map((relation) => Relation.getSource(relation));
+    // TODO(wittjosiah): Support links via relations as well.
+    // const relations = objects.filter((obj) => Relation.isRelation(obj));
+    // const targetObjects = relations
+    //   .filter((relation) => Relation.getSource(relation) === record)
+    //   .map((relation) => Relation.getTarget(relation));
+    // const sourceObjects = relations
+    //   .filter((relation) => Relation.getTarget(relation) === record)
+    //   .map((relation) => Relation.getSource(relation));
 
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
@@ -50,38 +43,42 @@ export const RecordMain = ({ record }: { record: Obj.Any }) => {
       return refs.some((ref) => ref.target === record);
     });
 
-    return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
+    return [...referencedObjects, ...referencingObjects];
   }, [record, objects]);
 
-  const handleRefQueryLookup = useRefQueryLookupHandler({ space });
-
-  const handleSave = useCallback(
-    (values: any, { changed }: { changed: Record<JsonPath, boolean> }) => {
-      const id = values.id;
-      invariant(typeof id === 'string');
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      for (const path of changedPaths) {
-        const value = values[path];
-        setValue(record, path, value);
-      }
-    },
-    [record],
-  );
-
-  if (!schema) {
-    return null;
-  }
-
   return (
-    <div role='none' className='container-max-width flex flex-col p-2 gap-1 overflow-y-auto'>
-      <div key={record.id} className='border border-separator rounded'>
-        <Form autoSave schema={schema} values={record} onSave={handleSave} onQueryRefOptions={handleRefQueryLookup} />
+    <StackItem.Content classNames='flex flex-col items-center'>
+      <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>
+        <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
+          <Surface role='section' data={data} limit={1} />
+        </div>
+
+        {/* TODO(wittjosiah): This should maybe be in a separate stack item. */}
+        {related.length > 0 && (
+          <div role='none' className={mx('flex flex-col gap-1', related.length === 1 ? 'card-max-width' : 'is-full')}>
+            <label className='text-description text-sm mbs-2'>{t('related objects label')}</label>
+            <Masonry.Root<Obj.Any>
+              items={related}
+              render={Card}
+              intrinsicHeight
+              columnCount={related.length === 1 ? 1 : undefined}
+            />
+          </div>
+        )}
       </div>
-      <h2>{t('related objects label')}</h2>
-      <Masonry.Root<Obj.Any> items={related} render={Card} intrinsicHeight />
-    </div>
+    </StackItem.Content>
   );
+};
+
+const Card = ({ data: subject }: { data: Obj.Any }) => {
+  const data = useMemo(() => ({ subject }), [subject]);
+  return <Surface role='card' data={data} limit={1} />;
+};
+
+const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
+  return Object.getOwnPropertyNames(obj)
+    .map((name) => obj[name as keyof Obj.Any])
+    .filter((value) => Ref.isRef(value)) as Ref.Any[];
 };
 
 export default RecordMain;

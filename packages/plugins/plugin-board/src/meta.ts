@@ -7,9 +7,9 @@ import { type PluginMeta } from '@dxos/app-framework';
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/board',
   name: 'Board',
-  description:
-    'A spatial, infinite canvas app combining notes, media, and whiteboarding in a tactile, visual interface.',
+  description: 'Infinite canvas combining notes, media, and whiteboarding.',
   icon: 'ph--squares-four--regular',
+  iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-board',
   screenshots: [],
 };

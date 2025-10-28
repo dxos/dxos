@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ScriptType } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
@@ -11,7 +11,7 @@ import { Notebook } from './types';
 export const translations = [
   {
     'en-US': {
-      [ScriptType.typename]: {
+      [Script.Script.typename]: {
         'typename label': 'Script',
         'typename label_zero': 'Scripts',
         'typename label_one': 'Script',
@@ -66,7 +66,6 @@ export const translations = [
         'settings editor input mode default label': 'Default',
         'settings editor input mode vim label': 'Vim',
         'settings editor input mode vscode label': 'VS Code',
-        'template select group label': 'Select template',
         'function panel label': 'Debug Function',
         'script test label': 'Test',
         'script logs label': 'Logs',

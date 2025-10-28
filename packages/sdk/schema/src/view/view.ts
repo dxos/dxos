@@ -12,6 +12,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import {
+  FormAnnotation,
   FormatAnnotation,
   FormatEnum,
   JsonSchemaType,
@@ -77,22 +78,22 @@ const View_ = Schema.Struct({
   query: Schema.Struct({
     raw: Schema.optional(Schema.String),
     ast: QueryAST.Query,
-  }).pipe(Schema.mutable),
+  }).pipe(Schema.mutable, FormAnnotation.set(false)),
 
   /**
    * @deprecated Prefer ordering in query.
    */
-  sort: Schema.optional(Schema.Array(FieldSortType)),
+  sort: Schema.optional(Schema.Array(FieldSortType).pipe(FormAnnotation.set(false))),
 
   /**
    * Projection of the data returned from the query.
    */
-  projection: Projection,
+  projection: Projection.pipe(FormAnnotation.set(false)),
 
   /**
    * Reference to the custom view object which is used to store data specific to rendering.
    */
-  presentation: Type.Ref(Type.Expando),
+  presentation: Type.Ref(Type.Expando).pipe(FormAnnotation.set(false)),
 })
   .pipe(LabelAnnotation.set(['name']))
   .pipe(Type.Obj({ typename: 'dxos.org/type/View', version: '0.4.0' }));
@@ -100,14 +101,28 @@ export interface View extends Schema.Schema.Type<typeof View_> {}
 export interface ViewEncoded extends Schema.Schema.Encoded<typeof View_> {}
 export const View: Schema.Schema<View, ViewEncoded> = View_;
 
-/** @deprecated */
-// TODO(wittjosiah): Try to remove. Use full query instead.
+// TODO(wittjosiah): This needs to be cleaned up.
+//   Ideally this should be something like `Query.getTypename` or something like that.
+//   It should return the typename the query is indexing on if it is, regardless or where in the AST it is.
 export const getTypenameFromQuery = (query: QueryAST.Query | undefined) => {
-  return query?.type === 'select'
-    ? query.filter.type === 'object'
-      ? (query.filter.typename?.slice(9) ?? '')
-      : ''
-    : '';
+  if (query?.type !== 'select') {
+    return '';
+  }
+
+  if (query.filter.type !== 'object') {
+    return '';
+  }
+
+  if (!query.filter.typename) {
+    return '';
+  }
+
+  const dxn = DXN.tryParse(query.filter.typename)?.asTypeDXN();
+  if (!dxn) {
+    return '';
+  }
+
+  return dxn.type;
 };
 
 export const createFieldId = () => PublicKey.random().truncate();

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/internal';
+import { FormAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
 import { meta } from '../meta';
@@ -14,9 +14,9 @@ import { meta } from '../meta';
  * Board and layout.
  */
 export const Board = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  items: Schema.mutable(Schema.Array(Type.Ref(Type.Expando))),
-  layout: Schema.mutable(BoardLayout),
+  name: Schema.String.pipe(Schema.optional),
+  items: Type.Ref(Type.Expando).pipe(Schema.Array, Schema.mutable, FormAnnotation.set(false)),
+  layout: BoardLayout.pipe(Schema.mutable, FormAnnotation.set(false)),
 }).pipe(
   Type.Obj({
     typename: 'dxos.org/type/Board',

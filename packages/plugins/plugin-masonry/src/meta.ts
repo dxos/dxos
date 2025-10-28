@@ -9,6 +9,7 @@ export const meta: PluginMeta = {
   name: 'Masonry',
   description: 'Masonry displays items from a View query in a responsive grid.',
   icon: 'ph--wall--regular',
+  iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-masonry',
   screenshots: [],
 };

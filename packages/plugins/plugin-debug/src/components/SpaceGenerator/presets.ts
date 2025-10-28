@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-testing';
+import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { FunctionTrigger, type TriggerKind, type TriggerType, serializeFunction } from '@dxos/functions';
+import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { sync } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
@@ -56,7 +56,7 @@ export enum PresetName {
 }
 
 export const generator = () => ({
-  schemas: [CanvasBoardType, FunctionTrigger],
+  schemas: [CanvasBoardType, Trigger.Trigger],
   types: Object.values(PresetName).map((name) => ({ typename: name })),
   items: [
     [
@@ -76,7 +76,7 @@ export const generator = () => ({
           );
           Obj.getMeta(doc).tags = [tagDxn];
           // space.db.add(
-          //   Relation.make(ResearchOn, {
+          //   Relation.make(HasSubject, {
           //     [Relation.Source]: doc,
           //     [Relation.Target]: org,
           //     completedAt: new Date().toISOString(),
@@ -109,7 +109,7 @@ export const generator = () => ({
           const organizationsQuery = Query.select(Filter.type(DataType.Organization)).select(Filter.tag(tagDxn));
           const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
 
-          const emailSyncTrigger = Obj.make(FunctionTrigger, {
+          const emailSyncTrigger = Trigger.make({
             enabled: true,
             spec: {
               kind: 'timer',
@@ -122,7 +122,7 @@ export const generator = () => ({
           });
           space.db.add(emailSyncTrigger);
 
-          const contactExtractionTrigger = Obj.make(FunctionTrigger, {
+          const contactExtractionTrigger = Trigger.make({
             enabled: true,
             // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
             spec: {
@@ -153,7 +153,7 @@ export const generator = () => ({
             }),
           );
 
-          const researchTrigger = Obj.make(FunctionTrigger, {
+          const researchTrigger = Trigger.make({
             enabled: true,
             spec: {
               kind: 'subscription',
@@ -215,7 +215,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          let functionTrigger: FunctionTrigger | undefined;
+          let functionTrigger: Trigger.Trigger | undefined;
           canvasModel.builder.call((builder) => {
             const gpt = canvasModel.createNode(createGpt(position({ x: 0, y: -14 })));
             const triggerShape = createTrigger({
@@ -515,7 +515,7 @@ export const generator = () => ({
         const objects = range(n, () => {
           const canvasModel = CanvasGraphModel.create<ComputeShape>();
 
-          let functionTrigger: FunctionTrigger | undefined;
+          let functionTrigger: Trigger.Trigger | undefined;
           canvasModel.builder.call((builder) => {
             const triggerShape = createTrigger({
               spaceId: space.id,
@@ -609,10 +609,10 @@ export const generator = () => ({
   ] as [PresetName, ObjectGenerator<any>][],
 });
 
-const createQueueSinkPreset = <SpecType extends TriggerKind>(
+const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   space: Space,
   triggerKind: SpecType,
-  initSpec: (spec: Extract<TriggerType, { kind: SpecType }>) => void,
+  initSpec: (spec: Extract<Trigger.Spec, { kind: SpecType }>) => void,
   triggerOutputName: string,
 ) => {
   const canvasModel = CanvasGraphModel.create<ComputeShape>();
@@ -624,7 +624,7 @@ const createQueueSinkPreset = <SpecType extends TriggerKind>(
     }),
   );
 
-  let functionTrigger: FunctionTrigger | undefined;
+  let functionTrigger: Trigger.Trigger | undefined;
   canvasModel.builder.call((builder) => {
     const triggerShape = createTrigger({
       spaceId: space.id,
@@ -699,7 +699,7 @@ const setupQueue = (
   return { queue, queueId };
 };
 
-const attachTrigger = (functionTrigger: FunctionTrigger | undefined, computeModel: ComputeGraphModel) => {
+const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   functionTrigger.function = Ref.make(computeModel.root);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;

@@ -6,7 +6,7 @@ import React, { Fragment, useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarLayout } from '@dxos/react-ui-theme';
+import { mx, textBlockWidth, toolbarInactive, toolbarLayout } from '@dxos/react-ui-theme';
 
 import { translationKey } from '../translations';
 import {
@@ -55,12 +55,14 @@ export type ToolbarMenuActionProps = {
 const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize } = useMenu('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const handleClick = useCallback(() => action.data?.(), [action]);
+
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
     : { children: <ActionLabel action={action} /> };
+
+  const handleClick = useCallback(() => action.data?.(), [action]);
 
   return hidden ? null : (
     <Root
@@ -158,23 +160,26 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
+// TODO(burdon): Reconcile with react-ui/Toolbar (incl. textBlockWidth)
 export const ToolbarMenu = ({
   __menuScope,
   classNames,
-  textBlockWidth: wrapContents,
+  textBlockWidth: textBlockWidthParam,
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId } = useMenu('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
-  const InnerRoot = wrapContents ? 'div' : Fragment;
-  const innerRootProps = wrapContents ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') } : {};
+  const InnerRoot = textBlockWidthParam ? 'div' : Fragment;
+  const innerRootProps = textBlockWidthParam
+    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'bs-full') }
+    : {};
 
   return (
     <NaturalToolbar.Root
       {...props}
-      layoutManaged={wrapContents}
-      classNames={[attendableId && !hasAttention && '*:opacity-20 !bg-transparent', classNames]}
+      classNames={[attendableId && !hasAttention && toolbarInactive, classNames]}
+      layoutManaged={textBlockWidthParam}
     >
       <InnerRoot {...innerRootProps}>
         {items?.map((item: MenuItem, i: number) => (

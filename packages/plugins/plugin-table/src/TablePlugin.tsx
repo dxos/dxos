@@ -30,6 +30,7 @@ export const TablePlugin = definePlugin(meta, () => [
         id: Table.Table.typename,
         metadata: {
           icon: 'ph--table--regular',
+          iconHue: 'green',
           comments: 'unanchored',
         },
       }),
@@ -58,8 +59,8 @@ export const TablePlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/on-schema-added`,
     activatesOn: SpaceEvents.SchemaAdded,
     activate: () =>
-      contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema }) =>
-        createIntent(TableAction.OnSchemaAdded, { space, schema }),
+      contributes(SpaceCapabilities.OnSchemaAdded, ({ space, schema, show }) =>
+        createIntent(TableAction.OnSchemaAdded, { space, schema, show }),
       ),
   }),
   defineModule({

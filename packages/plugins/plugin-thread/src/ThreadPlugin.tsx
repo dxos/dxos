@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, Events, contributes, createIntent, defineModule, definePlugin } from '@dxos/app-framework';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -23,7 +23,7 @@ import {
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
 import { translations } from './translations';
-import { ChannelType, ThreadAction, ThreadType } from './types';
+import { Channel, Thread, ThreadAction } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -60,29 +60,30 @@ export const ThreadPlugin = definePlugin(meta, () => [
     activatesOn: Events.SetupMetadata,
     activate: () => [
       contributes(Capabilities.Metadata, {
-        id: ChannelType.typename,
+        id: Type.getTypename(Channel.Channel),
         metadata: {
           icon: 'ph--hash--regular',
+          iconHue: 'rose',
         },
       }),
       contributes(Capabilities.Metadata, {
-        id: ThreadType.typename,
+        id: Type.getTypename(Thread.Thread),
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (thread: ThreadType) => await Ref.Array.loadAll(thread.messages ?? []),
+          loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
         },
       }),
       contributes(Capabilities.Metadata, {
         id: DataType.Message.typename,
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
-          loadReferences: (message: DataType.Message) => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
+          loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
       }),
       contributes(Capabilities.Metadata, {
         id: THREAD_ITEM,
         metadata: {
-          parse: (item: ThreadType, type: string) => {
+          parse: (item: Thread.Thread, type: string) => {
             switch (type) {
               case 'node':
                 return { id: item.id, label: item.name, data: item };
@@ -103,7 +104,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
       contributes(
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
-          objectSchema: ChannelType,
+          objectSchema: Channel.Channel,
           getIntent: (_, options) => createIntent(ThreadAction.CreateChannel, { spaceId: options.space.id }),
         }),
       ),
@@ -112,7 +113,7 @@ export const ThreadPlugin = definePlugin(meta, () => [
     id: `${meta.id}/module/schema`,
     activatesOn: ClientEvents.SetupSchema,
     activate: () =>
-      contributes(ClientCapabilities.Schema, [AnchoredTo, ThreadType, DataType.Message, DataType.MessageV1]),
+      contributes(ClientCapabilities.Schema, [AnchoredTo, Thread.Thread, DataType.Message, DataType.MessageV1]),
   }),
   defineModule({
     id: `${meta.id}/module/migration`,

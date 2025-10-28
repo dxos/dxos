@@ -56,9 +56,6 @@
       "path": "../../sdk/schema"
     },
     {
-      "path": "../agent"
-    },
-    {
       "path": "../ai"
     },
     {

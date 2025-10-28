@@ -10,17 +10,10 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  LINEAR_BLUEPRINT,
-  RESEARCH_BLUEPRINT,
-  ResearchDataTypes,
-  ResearchGraph,
-  ResearchOn,
-  agent,
-} from '@dxos/assistant-testing';
+import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { FunctionTrigger, ScriptType, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { Script, Trigger, exampleFunctions, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { BLUEPRINT_KEY } from '@dxos/plugin-assistant';
@@ -570,7 +563,7 @@ export const WithTriggers: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       space.db.add(
-        Obj.make(FunctionTrigger, {
+        Trigger.make({
           function: Ref.make(serializeFunction(exampleFunctions.reply)),
           enabled: true,
           spec: {
@@ -617,7 +610,7 @@ export const WithChessTrigger: Story = {
       );
 
       space.db.add(
-        Obj.make(FunctionTrigger, {
+        Trigger.make({
           function: Ref.make(serializeFunction(chessFunctions.play)),
           enabled: true,
           spec: {
@@ -669,7 +662,7 @@ export const WithResearchQueue: Story = {
       );
 
       space.db.add(
-        Obj.make(FunctionTrigger, {
+        Trigger.make({
           function: Ref.make(serializeFunction(agent)),
           enabled: true,
           spec: {
@@ -702,13 +695,13 @@ export const WithProject: Story = {
       Tag.Tag,
       DataType.Employer,
       DataType.HasConnection,
+      DataType.HasSubject,
       DataType.Message,
       DataType.Organization,
       DataType.Person,
       DataType.Project,
       DataType.View,
       Mailbox.Mailbox,
-      ResearchOn,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -735,8 +728,8 @@ export const WithProject: Story = {
       );
       const blueyardResearch = space.db.add(
         Markdown.makeDocument({
-          name: 'Blue Yard Research',
-          content: 'Blue Yard is a venture capital firm that invests in early-stage startups.',
+          name: 'BlueYard Research',
+          content: 'BlueYard is a venture capital firm that invests in early-stage startups.',
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
@@ -752,14 +745,14 @@ export const WithProject: Story = {
       });
       // TODO(wittjosiah): Support relations.
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: dxosResearch,
       //     [Relation.Target]: dxos,
       //     completedAt: new Date().toISOString(),
       //   }),
       // );
       // space.db.add(
-      //   Relation.make(ResearchOn, {
+      //   Relation.make(HasSubject, {
       //     [Relation.Source]: blueyardResearch,
       //     [Relation.Target]: blueyard,
       //     completedAt: new Date().toISOString(),
@@ -780,12 +773,12 @@ export const WithProject: Story = {
           output: Schema.Any,
 
           instructions:
-            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).\n\n{{org}}',
           blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
         }),
       );
 
-      const researchTrigger = Obj.make(FunctionTrigger, {
+      const researchTrigger = Trigger.make({
         function: Ref.make(serializeFunction(agent)),
         enabled: true,
         spec: {
@@ -796,7 +789,9 @@ export const WithProject: Story = {
         },
         input: {
           prompt: Ref.make(researchPrompt),
-          input: '{{event.subject}}',
+          input: {
+            org: '{{event.subject}}',
+          },
         },
       });
       space.db.add(researchTrigger);
@@ -848,7 +843,7 @@ export const WithScript: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), ScriptPlugin()],
     config: config.local,
-    types: [ScriptType, DataType.Text],
+    types: [Script.Script, DataType.Text],
     onInit: async ({ client, space }) => {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
@@ -858,22 +853,16 @@ export const WithScript: Story = {
       invariant(template.name, 'Template name not found');
 
       // Ensure at least one Script exists so the React surface can render.
-      const source = Obj.make(DataType.Text, {
-        content: template.source,
-      });
       space.db.add(
-        Obj.make(ScriptType, {
+        Script.make({
           name: template.name,
           description: 'Function to get the exchange rates between two currencies.',
           changed: true,
-          source: Ref.make(source),
+          source: template.source,
         }),
       );
 
-      await space.db.flush();
-    },
-    onChatCreated: async ({ space, binder }) => {
-      const bp = space.db.add(
+      space.db.add(
         Blueprint.make({
           key: 'dxos.org/blueprint/forex',
           name: 'Forex',
@@ -886,10 +875,45 @@ export const WithScript: Story = {
         }),
       );
 
-      await binder.bind({ blueprints: [Ref.make(bp)] });
+      await space.db.flush();
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects: blueprints } = await space.db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
+      await binder.bind({ blueprints: blueprints.map((blueprint) => Ref.make(blueprint)) });
     },
   }),
   args: {
     deckComponents: [[ChatContainer], [ScriptContainer]],
+  },
+};
+
+export const WithPrompt: Story = {
+  decorators: getDecorators({
+    plugins: [MarkdownPlugin()],
+    config: config.remote,
+    types: [DataType.Text],
+    onInit: async ({ client, space }) => {
+      space.db.add(serializeFunction(agent));
+
+      space.db.add(
+        Prompt.make({
+          name: 'Research',
+          description: 'Research organization',
+          input: Schema.Struct({
+            org: Schema.Any,
+          }),
+          output: Schema.Any,
+
+          instructions:
+            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+        }),
+      );
+
+      await space.db.flush();
+    },
+  }),
+  args: {
+    deckComponents: [[PromptContainer], [InvocationsContainer]],
   },
 };

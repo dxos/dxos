@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 import {
+  Format,
   FormatAnnotation,
   FormatEnum,
   GeneratorAnnotation,
@@ -74,14 +75,31 @@ const OrganizationSchema = Schema.Struct({
     GeneratorAnnotation.set('internet.url'),
     Schema.optional,
   ),
-}).pipe(
+}).pipe();
+
+export const Organization = OrganizationSchema.pipe(
+  Schema.extend(
+    Schema.Struct({
+      location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
+    }),
+  ),
   Schema.annotations({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   ItemAnnotation.set(true),
   IconAnnotation.set('ph--building--regular'),
+  Type.Obj({
+    typename: 'dxos.org/type/Organization',
+    version: '0.1.0',
+  }),
 );
 
-export const Organization = OrganizationSchema.pipe(
+// TODO(wittjosiah): Remove to move location into base schema.
+//   GeoPoint format currently breaks Anthropic schema validation.
+export const LegacyOrganization = OrganizationSchema.pipe(
+  Schema.annotations({ title: 'Organization', description: 'An organization.' }),
+  LabelAnnotation.set(['name']),
+  ItemAnnotation.set(true),
+  IconAnnotation.set('ph--building--regular'),
   Type.Obj({
     typename: 'dxos.org/type/Organization',
     version: '0.1.0',

@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
+import { batch } from '@preact/signals-core';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { DXN, Obj, Tag, Type } from '@dxos/echo';
-import { DescriptionAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { getSpace } from '@dxos/react-client/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -16,16 +16,9 @@ import { Form, useRefQueryLookupHandler } from '@dxos/react-ui-form';
 
 import { meta as pluginMeta } from '../../meta';
 
+// TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
 const BaseSchema = Schema.Struct({
-  label: Schema.String.pipe(Schema.optional),
   // TODO(wittjosiah): Support multiple tags.
-  tag: Type.Ref(Tag.Tag).pipe(Schema.optional),
-});
-
-// TODO(wittjosiah): Use extend but need to be able to control order of fields.
-const BaseSchemaWithDescription = Schema.Struct({
-  label: Schema.String.pipe(Schema.optional),
-  description: Schema.String.pipe(Schema.optional),
   tag: Type.Ref(Tag.Tag).pipe(Schema.optional),
 });
 
@@ -44,26 +37,20 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   const handleRefQueryLookup = useRefQueryLookupHandler({ space });
 
   const formSchema = useMemo(() => {
-    const description = Function.pipe(
+    return Function.pipe(
       Obj.getSchema(object),
       Option.fromNullable,
-      Option.flatMap((schema) => DescriptionAnnotation.get(schema)),
+      Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
       Option.getOrUndefined,
     );
-    if (description) {
-      return BaseSchemaWithDescription;
-    } else {
-      return BaseSchema;
-    }
   }, [object]);
 
   const meta = Obj.getMeta(object);
   const tag = meta.tags?.[0] ? space?.db.ref(DXN.parse(meta.tags?.[0])) : undefined;
   const values = useMemo(
     () => ({
-      label: Obj.getLabel(object),
-      description: Obj.getDescription(object),
       tag,
+      ...object,
     }),
     [object, tag],
   );
@@ -76,29 +63,32 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
   }, []);
 
   const handleSave = useCallback(
-    (values: Schema.Schema.Type<typeof BaseSchemaWithDescription>) => {
-      if (values.label !== undefined && Obj.getLabel(object) !== values.label) {
-        Obj.setLabel(object, values.label);
-      }
+    ({ tag, ...values }: Schema.Schema.Type<typeof formSchema>) => {
+      batch(() => {
+        const meta = Obj.getMeta(object);
+        const currentTag = meta.tags?.[0];
+        if (tag !== undefined && currentTag !== tag?.dxn.toString()) {
+          meta.tags = [tag.dxn.toString()];
+        }
 
-      if (values.description !== undefined && Obj.getDescription(object) !== values.description) {
-        Obj.setDescription(object, values.description);
-      }
-
-      const meta = Obj.getMeta(object);
-      const currentTag = meta.tags?.[0];
-      if (values.tag !== undefined && currentTag !== values.tag?.dxn.toString()) {
-        meta.tags = [values.tag.dxn.toString()];
-      }
+        Object.entries(values).forEach(([key, value]) => {
+          if (value !== undefined && value !== object[key as keyof Obj.Any]) {
+            Object.defineProperty(object, key, { value });
+          }
+        });
+      });
     },
     [object],
   );
 
-  // TODO(wittjosiah): The schema for this form should be based on the schema of the object.
-  //  Perhaps with fields filtered down to only those with a specific settings annotation.
+  if (!formSchema) {
+    return null;
+  }
+
   return (
     <>
       <Form
+        classNames={classNames}
         outerSpacing={false}
         autoSave
         schema={formSchema}

@@ -7,6 +7,11 @@ import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
+export type PreviewBlock = {
+  link: PreviewLinkRef;
+  el: HTMLElement;
+};
+
 export type PreviewLinkRef = {
   suggest?: boolean;
   block?: boolean;
@@ -21,8 +26,8 @@ export type PreviewLinkTarget = {
 };
 
 export type PreviewOptions = {
-  addBlockContainer?: (link: PreviewLinkRef, el: HTMLElement) => void;
-  removeBlockContainer?: (link: PreviewLinkRef) => void;
+  addBlockContainer?: (block: PreviewBlock) => void;
+  removeBlockContainer?: (block: PreviewBlock) => void;
 };
 
 /**
@@ -178,11 +183,11 @@ class PreviewBlockWidget extends WidgetType {
   override toDOM(_view: EditorView): HTMLDivElement {
     const root = document.createElement('div');
     root.classList.add('cm-preview-block', 'density-coarse');
-    this._options.addBlockContainer?.(this._link, root);
+    this._options.addBlockContainer?.({ link: this._link, el: root });
     return root;
   }
 
-  override destroy() {
-    this._options.removeBlockContainer?.(this._link);
+  override destroy(root: HTMLDivElement) {
+    this._options.removeBlockContainer?.({ link: this._link, el: root });
   }
 }

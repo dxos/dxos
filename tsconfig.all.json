@@ -118,16 +118,13 @@
       "path": "packages/common/util/tsconfig.json"
     },
     {
-      "path": "packages/core/agent/tsconfig.json"
-    },
-    {
       "path": "packages/core/ai/tsconfig.json"
     },
     {
       "path": "packages/core/assistant/tsconfig.json"
     },
     {
-      "path": "packages/core/assistant-testing/tsconfig.json"
+      "path": "packages/core/assistant-toolkit/tsconfig.json"
     },
     {
       "path": "packages/core/blueprints/tsconfig.json"

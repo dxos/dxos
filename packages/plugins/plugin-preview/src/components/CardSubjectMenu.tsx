@@ -9,13 +9,54 @@ import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-frame
 import { ACTION_TYPE } from '@dxos/app-graph';
 import { Obj } from '@dxos/echo';
 import { SpaceAction } from '@dxos/plugin-space/types';
-import { type Space, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { IconButton, type IconButtonProps, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, DropdownMenu, MenuProvider, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  DropdownMenu,
+  type MenuActions,
+  MenuProvider,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { meta } from '../meta';
+import { type PreviewProps } from '../types';
 
-const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
+/**
+ * Generic menu for objects; builds menu with common actions.
+ */
+// TODO(burdon): Reconcile title and menu with main Card header.
+export const CardSubjectMenu = ({
+  subject,
+  activeSpace,
+  ...props
+}: PreviewProps & Omit<IconButtonProps, 'icon' | 'label'>) => {
+  const { t } = useTranslation(meta.id);
+  const menuProps = useSubjectMenuGroupItems({ subject, activeSpace });
+
+  if (!activeSpace) {
+    return null;
+  }
+
+  return (
+    <MenuProvider {...menuProps}>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger asChild>
+          <IconButton
+            variant='ghost'
+            icon='ph--dots-three-vertical--bold'
+            iconOnly
+            label={t('more options label')}
+            size={5}
+            {...props}
+          />
+        </DropdownMenu.Trigger>
+      </DropdownMenu.Root>
+    </MenuProvider>
+  );
+};
+
+const useSubjectMenuGroupItems = ({ subject, activeSpace }: PreviewProps): MenuActions => {
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const result: ActionGraphProps = { edges: [], nodes: [] };
 
@@ -47,36 +88,4 @@ const useSubjectMenuGroupItems = (subject: Obj.Any, activeSpace?: Space) => {
   });
 
   return useMenuActions(Rx.make(result));
-};
-
-/**
- * This is a generic menu for objects that tries to infer common actions.
- */
-export const CardSubjectMenu = ({
-  subject,
-  activeSpace,
-  ...props
-}: Omit<IconButtonProps, 'icon' | 'label'> & { subject: Obj.Any; activeSpace?: Space }) => {
-  const { t } = useTranslation(meta.id);
-  const menuProps = useSubjectMenuGroupItems(subject, activeSpace);
-
-  if (!activeSpace) {
-    return null;
-  }
-
-  return (
-    <MenuProvider {...menuProps}>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <IconButton
-            iconOnly
-            variant='ghost'
-            icon='ph--dots-three-vertical--bold'
-            label={t('more options label')}
-            {...props}
-          />
-        </DropdownMenu.Trigger>
-      </DropdownMenu.Root>
-    </MenuProvider>
-  );
 };

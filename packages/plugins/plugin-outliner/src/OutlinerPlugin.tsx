@@ -26,12 +26,14 @@ export const OutlinerPlugin = definePlugin(meta, () => [
         id: JournalType.typename,
         metadata: {
           icon: 'ph--calendar-check--regular',
+          iconHue: 'indigo',
         },
       }),
       contributes(Capabilities.Metadata, {
         id: OutlineType.typename,
         metadata: {
           icon: 'ph--tree-structure--regular',
+          iconHue: 'indigo',
         },
       }),
     ],

@@ -11,6 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { Unit } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -57,7 +58,7 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
   }, [offline, needsToUpload, needsToDownload]);
 
   const title = t(`${status} label`);
-  const icon = <Icon icon={getIcon(status)} size={4} classNames={classNames} />;
+  const icon = <Icon icon={getIcon(status)} classNames={classNames} />;
 
   return (
     <Popover.Root>
@@ -90,20 +91,23 @@ const EdgeConnectionPopover = () => {
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
 
   return (
-    <div className='p-3 min-w-[240px]'>
+    <div className='min-is-[240px] p-2'>
       {/* Connection Status Header */}
-      <div className='flex items-center gap-2 mb-3 pb-2 border-b border-neutral-100 dark:border-neutral-800'>
-        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-success-500 animate-pulse' : 'bg-error-500'}`} />
-        <span className='font-medium text-sm text-neutral-900 dark:text-neutral-100'>
-          {isConnected ? t('Edge connected') : t('Edge disconnected')}
+      <div className='flex items-center gap-2 mbe-2'>
+        <Icon
+          icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
+          classNames={mx(isConnected ? 'text-successText' : 'text-errorText animate-pulse')}
+        />
+        <span className='font-medium text-sm'>
+          {isConnected ? t('sync edge connected label') : t('sync edge disconnected label')}
         </span>
       </div>
 
       {/* Connection Details */}
       {status?.state === EdgeStatus.ConnectionState.NOT_CONNECTED && (
-        <div className='flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400'>
-          <Icon icon='ph--cloud-x--regular' size={4} />
-          <span>{t('No connection to edge service')}</span>
+        <div className='flex items-center gap-2 text-sm text-description'>
+          <Icon icon='ph--cloud-x--regular' />
+          <span>{t('sync no connection label')}</span>
         </div>
       )}
 
@@ -111,33 +115,29 @@ const EdgeConnectionPopover = () => {
         <div className='space-y-2'>
           {/* Latency */}
           <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400'>
-              <Icon icon='ph--timer--regular' size={4} />
-              <span>{t('Latency')}</span>
+            <div className='flex items-center gap-2 text-sm text-description'>
+              <Icon icon='ph--timer--regular' />
+              <span>{t('sync latency label')}</span>
             </div>
-            <span className='text-sm font-mono text-neutral-900 dark:text-neutral-100'>{status.rtt.toFixed(0)} ms</span>
+            <span className='text-sm font-mono'>{status.rtt.toFixed(0)} ms</span>
           </div>
 
           {/* Upload Speed */}
           <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400'>
-              <Icon icon='ph--arrow-up--regular' size={4} />
-              <span>{t('Upload')}</span>
+            <div className='flex items-center gap-2 text-sm text-description'>
+              <Icon icon='ph--arrow-up--regular' />
+              <span>{t('sync upload label')}</span>
             </div>
-            <span className='text-sm font-mono text-neutral-900 dark:text-neutral-100'>
-              {Unit.Kilobyte(status.rateBytesUp, 0)}/s
-            </span>
+            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesUp, 0)}/s</span>
           </div>
 
           {/* Download Speed */}
           <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400'>
-              <Icon icon='ph--arrow-down--regular' size={4} />
-              <span>{t('Download')}</span>
+            <div className='flex items-center gap-2 text-sm text-description'>
+              <Icon icon='ph--arrow-down--regular' />
+              <span>{t('sync download label')}</span>
             </div>
-            <span className='text-sm font-mono text-neutral-900 dark:text-neutral-100'>
-              {Unit.Kilobyte(status.rateBytesDown, 0)}/s
-            </span>
+            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesDown, 0)}/s</span>
           </div>
         </div>
       )}

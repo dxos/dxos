@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { meta } from '../meta';
 
-import { DiagramType } from './diagram';
+import * as Diagram from './Diagram';
 
 export namespace SketchAction {
   const SKETCH_ACTION = `${meta.id}/action`;
@@ -19,7 +19,7 @@ export namespace SketchAction {
       content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
     }),
     output: Schema.Struct({
-      object: DiagramType,
+      object: Diagram.Diagram,
     }),
   }) {}
 }

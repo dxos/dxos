@@ -16,11 +16,10 @@ import { StackItem } from '@dxos/react-ui-stack';
 import {
   AssistantSettings,
   BlueprintContainer,
+  BlueprintSettings,
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  PromptSettings,
-  SequenceContainer,
 } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
@@ -50,12 +49,6 @@ export default () =>
       component: ({ data, role }) => <ChatCompanion role={role} data={data} />,
     }),
     createSurface({
-      id: `${meta.id}/sequence`,
-      role: 'article',
-      filter: (data): data is { subject: Sequence } => Obj.instanceOf(Sequence, data.subject),
-      component: ({ data }) => <SequenceContainer sequence={data.subject} />,
-    }),
-    createSurface({
       id: `${meta.id}/companion-logs`,
       role: 'article',
       filter: (data): data is { companionTo: Sequence } =>
@@ -77,10 +70,10 @@ export default () =>
       component: ({ data }) => <BlueprintContainer blueprint={data.subject} />,
     }),
     createSurface({
-      id: `${meta.id}/prompt-settings`,
+      id: `${meta.id}/blueprint-settings`,
       role: 'object-settings',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
-      component: ({ data }) => <PromptSettings template={data.subject.instructions} />,
+      component: ({ data }) => <BlueprintSettings blueprint={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

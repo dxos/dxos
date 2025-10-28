@@ -45,7 +45,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant-testing"
+      "path": "../../core/assistant-toolkit"
     },
     {
       "path": "../../core/blueprints"

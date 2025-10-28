@@ -39,6 +39,8 @@ export const tailwindConfig = ({
         spacing: {
           prose: 'var(--dx-prose)',
           containerMaxWidth: 'var(--dx-containerMaxWidth)',
+          cardMinWidth: 'var(--dx-cardMinWidth)',
+          cardMaxWidth: 'var(--dx-cardMaxWidth)',
           popoverMaxWidth: 'var(--dx-popoverMaxWidth)',
         },
         borderRadius: {
@@ -223,10 +225,10 @@ export const tailwindConfig = ({
     },
   },
   plugins: [
-    tailwindcssLogical,
-    tailwindcssForms,
-    tailwindcssRadix(),
     tailwindcssContainerQueries,
+    tailwindcssForms,
+    tailwindcssLogical,
+    tailwindcssRadix(),
     // https://adoxography.github.io/tailwind-scrollbar/utilities
     tailwindScrollbar,
   ],

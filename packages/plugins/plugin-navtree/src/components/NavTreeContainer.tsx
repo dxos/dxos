@@ -118,7 +118,7 @@ export const NavTreeContainer = memo(({ tab, popoverAnchorId, topbar }: NavTreeC
         className: mx(node.properties.className, node.properties.modified && 'italic'), // TODO(burdon): Italic?
         headingClassName: node.properties.headingClassName,
         icon: node.properties.icon,
-        iconClassName: node.properties.iconClassName,
+        iconHue: node.properties.iconHue,
         testId: node.properties.testId,
       };
     },

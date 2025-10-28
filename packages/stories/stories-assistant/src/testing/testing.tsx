@@ -35,11 +35,11 @@ import {
   research,
   updateDocument,
   updateTasks,
-} from '@dxos/assistant-testing';
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { FunctionTrigger, FunctionType, exampleFunctions } from '@dxos/functions';
+import { Function, Trigger, exampleFunctions } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -129,13 +129,13 @@ export const getDecorators = ({
       SpacePlugin({}),
       ClientPlugin({
         types: [
-          Markdown.Document,
           Assistant.Chat,
           Blueprint.Blueprint,
-          Prompt.Prompt,
           DataType.AccessToken,
-          FunctionTrigger,
-          FunctionType,
+          Function.Function,
+          Markdown.Document,
+          Prompt.Prompt,
+          Trigger.Trigger,
           ...types,
         ],
         onClientInitialized: async ({ client }) => {
