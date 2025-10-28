@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Filter, type Obj, Ref } from '@dxos/echo';
+import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -27,14 +27,13 @@ export const RecordMain = ({ record }: RecordMainProps) => {
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
-    // TODO(wittjosiah): Support links via relations as well.
-    // const relations = objects.filter((obj) => Relation.isRelation(obj));
-    // const targetObjects = relations
-    //   .filter((relation) => Relation.getSource(relation) === record)
-    //   .map((relation) => Relation.getTarget(relation));
-    // const sourceObjects = relations
-    //   .filter((relation) => Relation.getTarget(relation) === record)
-    //   .map((relation) => Relation.getSource(relation));
+    const relations = objects.filter((obj) => Relation.isRelation(obj));
+    const targetObjects = relations
+      .filter((relation) => Relation.getSource(relation) === record)
+      .map((relation) => Relation.getTarget(relation));
+    const sourceObjects = relations
+      .filter((relation) => Relation.getTarget(relation) === record)
+      .map((relation) => Relation.getSource(relation));
 
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
@@ -43,7 +42,7 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       return refs.some((ref) => ref.target === record);
     });
 
-    return [...referencedObjects, ...referencingObjects];
+    return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
   }, [record, objects]);
 
   return (
