@@ -10,10 +10,9 @@ import {
   RESEARCH_BLUEPRINT,
   WEB_SEARCH_BLUEPRINT,
   agent,
-  createResearchNote,
   entityExtraction,
   fetchDiscordMessages,
-  research,
+  researchTools,
   syncLinearIssues,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
@@ -53,16 +52,16 @@ const blueprint = createBlueprint();
 
 // TODO(dmaretskyi): Consider splitting into multiple modules.
 export default (): Capability<any>[] => [
+  contributes(Capabilities.Functions, [agent, entityExtraction]),
   contributes(Capabilities.Functions, functions),
-  contributes(Capabilities.Functions, [agent]),
-  contributes(Capabilities.Functions, [research, createResearchNote, entityExtraction]),
+  contributes(Capabilities.Functions, researchTools),
   contributes(Capabilities.BlueprintDefinition, blueprint),
   contributes(Capabilities.BlueprintDefinition, RESEARCH_BLUEPRINT),
+  contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
 
   // TODO(burdon): Move out of assistant.
   contributes(Capabilities.Functions, [syncLinearIssues]),
   contributes(Capabilities.Functions, [fetchDiscordMessages]),
   contributes(Capabilities.BlueprintDefinition, LINEAR_BLUEPRINT),
   contributes(Capabilities.BlueprintDefinition, DISCORD_BLUEPRINT),
-  contributes(Capabilities.BlueprintDefinition, WEB_SEARCH_BLUEPRINT),
 ];

@@ -8,15 +8,18 @@ import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { createResearchNote, research } from '../../functions';
+import { researchTools } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
  */
 const instructions = trim`
-  You are capable of running research tasks that scrape the web and create structured data.
+  {{! Research }}
+
+  You are an analyst that does research tasks using tools that scrape the web and create structured data.
   The result of the research is a set of structured entities forming an interconnected graph.
-  When you are done, reply with the created objects. Do not print the data, instead reply with inline references to the created objects.
+  When you are done, reply with the created objects.
+  Do not print the data, instead reply with inline references to the created objects.
   Those will be later substituted with the pills representing the created objects.
   Print the rest of the created objects as block references after the main note.
 
@@ -36,7 +39,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(research.key), ToolId.make(createResearchNote.key)],
+  tools: researchTools.map((tool) => ToolId.make(tool.key)),
 });
 
 export default blueprint;

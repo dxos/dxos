@@ -3,11 +3,11 @@
 //
 
 import { DeferredTask, Event, sleep } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
+import { type GossipMessage } from '@dxos/client/mesh';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
-import { type GossipMessage } from '@dxos/react-client/mesh';
 
 import { type AwarenessInfo, type AwarenessPosition, type AwarenessProvider, type AwarenessState } from './awareness';
 

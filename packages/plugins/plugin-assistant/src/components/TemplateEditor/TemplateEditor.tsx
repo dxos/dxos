@@ -42,18 +42,21 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     return {
       initialValue: text.content ?? '',
       extensions: [
-        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+        createDataExtensions({
+          id,
+          text: createDocAccessor(text, ['content']),
+        }),
         createBasicExtensions({
           bracketMatching: false,
           lineNumbers,
-          lineWrapping: true,
+          lineWrapping: false,
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
         decorateMarkdown(), // TODO(burdon): Move into bundle.
-        xml(),
         handlebars(),
+        xml(),
         syntaxHighlighting(defaultHighlightStyle),
       ].filter(isNonNullable),
     };

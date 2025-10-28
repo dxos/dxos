@@ -37,7 +37,7 @@ import {
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
 import { DataType, createView } from '@dxos/schema';
-import { range } from '@dxos/util';
+import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
@@ -147,8 +147,11 @@ export const generator = () => ({
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
-              instructions:
-                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
+              instructions: trim`
+                Research the organization provided as input.
+                Create a research note for it at the end.
+                NOTE: Do mocked reseach (set mockSearch to true).
+              `,
               blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
             }),
           );
@@ -205,6 +208,7 @@ export const generator = () => ({
             }),
           );
         });
+
         cb?.(objects.flat());
         return objects.flat();
       },

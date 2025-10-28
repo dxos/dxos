@@ -12,27 +12,33 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 export default defineFunction({
   key: 'dxos.org/function/create-research-note',
   name: 'Create research note',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    // TODO(dmaretskyi): Use a specialized type for this (e.g. ArtifactId renamed as RefFromLLM)
-    target: Schema.String.annotations({
-      description: 'Id of the object (org, contact, etc.) for which the research was performed. This must be a ulid.',
-    }),
-
     name: Schema.String.annotations({
       description: 'Name of the note.',
     }),
 
     content: Schema.String.annotations({
-      description:
-        'Content of the note. Supports (and are prefered) references to research objects using @ syntax and <object> tags (refer to research blueprint instructions).',
+      description: trim`
+        Content of the note. 
+        Supports (and are prefered) references to research objects using @ syntax and <object> tags (refer to research blueprint instructions).
+      `,
+    }),
+
+    // TODO(dmaretskyi): Use a specialized type for this (e.g., ArtifactId renamed as RefFromLLM).
+    target: Schema.String.annotations({
+      description: trim`
+        Id of the object (organization, contact, etc.) for which the research was performed. 
+        This must be a ulid.
+      `,
     }),
   }),
-  outputSchema: Schema.Struct({}),
+  outputSchema: Schema.Struct({}), // TODO(burdon): Schema.Void?
   handler: Effect.fnUntraced(function* ({ data: { target, name, content } }) {
     log.info('Creating research note', { target, name, content });
 
@@ -58,7 +64,6 @@ export default defineFunction({
     yield* DatabaseService.flush({ indexes: true });
 
     log.info('Created research note', { target, name, content });
-
     return {};
   }),
 });

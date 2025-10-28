@@ -64,7 +64,7 @@ const TestLayer = Layer.mergeAll(
 );
 
 // TODO(dmaretskyi): Out-of-memory.
-describe.skip('Research', () => {
+describe.skipIf(process.env.CI)('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(

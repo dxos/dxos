@@ -2,8 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as research } from './research';
+import { default as createResearchNote } from './create-research-note';
+import { default as research } from './research';
+
 export * from './graph';
 export * from './research-graph';
 export * from './types';
-export { default as createResearchNote } from './create-research-note';
+
+// TODO(burdon): How to organize/package blueprints, tools, and functions?
+export const researchTools = [research, createResearchNote] as const;

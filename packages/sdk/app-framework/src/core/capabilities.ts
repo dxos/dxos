@@ -41,12 +41,12 @@ export type Capability<T> = {
   /**
    * The interface definition of the capability.
    */
-  interface: InterfaceDef<T>;
+  readonly interface: InterfaceDef<T>;
 
   /**
    * The implementation of the capability.
    */
-  implementation: T;
+  readonly implementation: T;
 
   /**
    * Called when the capability is deactivated.
@@ -75,7 +75,7 @@ class CapabilityImpl<T> {
  */
 export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
-  implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],
+  implementation: Readonly<Capability<InterfaceDef.Implementation<I>>['implementation']>,
   deactivate?: Capability<InterfaceDef.Implementation<I>>['deactivate'],
 ): Capability<I> => {
   return { interface: interfaceDef, implementation, deactivate } satisfies Capability<I>;
