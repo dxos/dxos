@@ -80,7 +80,7 @@ export const getSchemaProperties = <T extends BaseObject>(
     if (processed) {
       props.push(processed);
     } else {
-      log.warn('cannot process property', { prop });
+      log('cannot process property', { prop });
     }
 
     return props;
