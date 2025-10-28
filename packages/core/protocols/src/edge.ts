@@ -66,7 +66,7 @@ export type EdgeFailure = {
 /**
  * Represents a body response from the Edge service.
  */
-export type EdgeResponse<T> = EdgeSuccess<T> | EdgeFailure;
+export type EdgeBody<T> = EdgeSuccess<T> | EdgeFailure;
 
 /**
  * Use this to create a response from the Edge service.
@@ -80,7 +80,7 @@ export const EdgeResponse = Object.freeze({
       JSON.stringify({
         success: true,
         data,
-      }),
+      } satisfies EdgeSuccess<T>),
       {
         status,
         headers,
@@ -137,7 +137,7 @@ export const EdgeResponse = Object.freeze({
         reason,
         errorData,
         cause: cause ? ErrorCodec.encode(cause) : undefined,
-      }),
+      } satisfies EdgeFailure),
       {
         status,
         headers,

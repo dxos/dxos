@@ -17,8 +17,8 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
+  type EdgeBody,
   EdgeCallFailedError,
-  type EdgeResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -398,7 +398,7 @@ export class EdgeHttpClient {
         const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
         if (response.ok) {
-          const body = (await response.json()) as EdgeResponse<T>;
+          const body = (await response.json()) as EdgeBody<T>;
 
           if (args.rawResponse) {
             return body as any;
