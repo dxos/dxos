@@ -109,7 +109,7 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             })(),
           ],
         },
-        target: 'esnext',
+        target: 'es2020',
       },
     }),
   });
