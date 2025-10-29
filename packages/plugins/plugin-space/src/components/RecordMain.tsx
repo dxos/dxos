@@ -33,7 +33,7 @@ export const RecordMain = ({ record }: RecordMainProps) => {
         .filter((value) => Ref.isRef(value)) as Ref.Any[];
     };
 
-    const relations = objects.filter((obj) => Relation.isRelation(obj));
+    const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
     const targetObjects = relations
       .filter((relation) => Relation.getTarget(relation) === record)
       .map((relation) => Relation.getSource(relation));
@@ -82,3 +82,12 @@ const Card = ({ data: subject }: { data: Obj.Any }) => {
 };
 
 export default RecordMain;
+
+// Workaround until https://github.com/dxos/dxos/pull/10100 lands
+const isValidRelation = (obj: Obj.Any) => {
+  try {
+    return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
+  } catch {
+    return false;
+  }
+};
