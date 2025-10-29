@@ -27,7 +27,7 @@ export const RecordMain = ({ record }: RecordMainProps) => {
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
-    const relations = objects.filter((obj) => Relation.isRelation(obj));
+    const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
     const targetObjects = relations
       .filter((relation) => Relation.getSource(relation) === record)
       .map((relation) => Relation.getTarget(relation));
@@ -81,3 +81,12 @@ const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
 };
 
 export default RecordMain;
+
+// Workaround until https://github.com/dxos/dxos/pull/10100 lands
+const isValidRelation = (obj: Obj.Any) => {
+  try {
+    return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
+  } catch {
+    return false;
+  }
+};
