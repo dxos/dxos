@@ -81,7 +81,7 @@ export const config = {
   }),
 };
 
-class TestingToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -92,19 +92,22 @@ class TestingToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (_context: PluginContext) =>
-    TestingToolkit.toLayer({
+);
+
+namespace TestingToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (_context: PluginContext) =>
+    Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
-  Pick<StoryPluginOptions, 'onChatCreated'> & {
-    plugins?: Plugin[];
-    accessTokens?: DataType.AccessToken[];
-    onInit?: (props: { client: Client; space: Space }) => Promise<void>;
-  };
+type DecoratorsProps = {
+  plugins?: Plugin[];
+  accessTokens?: DataType.AccessToken[];
+  onInit?: (props: { client: Client; space: Space }) => Promise<void>;
+} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
 /**
  * Create storybook decorators.
@@ -229,7 +232,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       activatesOn: Events.Startup,
       activate: (context) => [
         contributes(Capabilities.Toolkit, TestingToolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+        contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
       ],
     }),
     defineModule({
