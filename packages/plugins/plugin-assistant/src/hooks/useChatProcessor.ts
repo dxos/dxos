@@ -45,9 +45,9 @@ export const useChatProcessor = ({
     const conversation = new AiConversation(chat.queue.target as Queue<any>);
     await conversation.open();
     setConversation(conversation);
-
     return () => {
       void conversation.close();
+      setConversation(undefined);
     };
   }, [chat?.queue.target]);
 
@@ -57,12 +57,7 @@ export const useChatProcessor = ({
       return undefined;
     }
 
-    log('creating processor', {
-      preset,
-      model: preset?.model,
-      settings,
-    });
-
+    log('creating processor', { preset, model: preset?.model, settings });
     return new AiChatProcessor(conversation, services, {
       observableRegistry,
       blueprintRegistry,

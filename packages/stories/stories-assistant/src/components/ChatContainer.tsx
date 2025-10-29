@@ -8,7 +8,6 @@ import { Filter } from '@dxos/echo';
 import {
   Assistant,
   Chat,
-  ChatToolbar,
   useBlueprintRegistry,
   useChatProcessor,
   useChatServices,
@@ -22,7 +21,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ExecutionGraphContainer } from './ExecutionGraphContainer';
 import { type ComponentProps } from './types';
 
-export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
+export const ChatContainer = ({ space }: ComponentProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
@@ -39,41 +38,43 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
     }
   }, [processor, chat]);
 
-  return !chat || !processor ? null : (
-    <StackItem.Content toolbar>
-      <div role='none' className='flex items-center gap-2 pie-2'>
-        <ChatToolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content>
-              <ExecutionGraphContainer space={space} />
-              <Popover.Arrow />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
-        <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
-        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
-      </div>
+  // TODO(burdon): Allow undefined chat (create on first submission).
+  if (!chat || !processor) {
+    return null;
+  }
 
-      <div role='none' className='relative'>
-        <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
-          <Chat.Thread />
-          {/* <ChatProgress chat={chat} /> */}
-          <div className='flex justify-center p-4'>
-            <Chat.Prompt
-              {...chatProps}
-              outline
-              classNames='max-is-prose'
-              preset={preset?.id}
-              online={online}
-              onOnlineChange={setOnline}
-            />
+  return (
+    <StackItem.Content toolbar>
+      <Chat.Root chat={chat} processor={processor}>
+        <Chat.Toolbar />
+
+        {/* TODO(burdon): Optionally extend menu. */}
+        {false && (
+          <div role='none' className='flex items-center gap-2 pie-2'>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content>
+                  <ExecutionGraphContainer space={space} />
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+            <div className='truncate text-subdued'>{chat?.name ?? 'no name'}</div>
+            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
           </div>
-        </Chat.Root>
-      </div>
+        )}
+
+        {/* TODO(burdon): Why add relative here? */}
+        <Chat.Content classNames='relative container-max-width'>
+          <Chat.Thread />
+          <div role='none' className='p-4'>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          </div>
+        </Chat.Content>
+      </Chat.Root>
     </StackItem.Content>
   );
 };

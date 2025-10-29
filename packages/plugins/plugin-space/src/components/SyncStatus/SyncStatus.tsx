@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import type { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
@@ -25,12 +25,7 @@ export const SyncStatus = () => {
   const client = useClient();
   const state = useSyncState();
   const [saved, setSaved] = useState(true);
-
-  useEffect(() => {
-    return createClientSaveTracker(client, (state) => {
-      setSaved(state === 'saved');
-    });
-  }, []);
+  useEffect(() => createClientSaveTracker(client, (state) => setSaved(state === 'saved')), []);
 
   return <SyncStatusIndicator state={state} saved={saved} />;
 };
