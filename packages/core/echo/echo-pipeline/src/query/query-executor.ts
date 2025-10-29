@@ -671,9 +671,10 @@ export class QueryExecutor extends Resource {
     switch (order.kind) {
       case 'natural':
         return a.objectId.localeCompare(b.objectId);
-      case 'property':
+      case 'property': {
         const comparison = this._compareByProperty(a, b, order.property);
         return order.direction === 'desc' ? -comparison : comparison;
+      }
       default:
         // Should never reach here with proper TypeScript types
         return 0;
