@@ -5,7 +5,7 @@
 import importSource from '@dxos/vite-plugin-import-source';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import react from '@vitejs/plugin-react-swc';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sourcemaps from 'rollup-plugin-sourcemaps';
@@ -104,6 +104,18 @@ export default defineConfig((env) => ({
   },
   plugins: [
     ...sharedPlugins(env),
+
+    // Handle .md?raw imports.
+    {
+      name: 'raw-md-loader',
+      load(id) {
+        if (id.endsWith('.md?raw')) {
+          const filePath = id.replace(/\?raw$/, '');
+          const content = readFileSync(filePath, 'utf-8');
+          return `export default ${JSON.stringify(content)}`;
+        }
+      },
+    },
 
     // https://github.com/antfu-collective/vite-plugin-inspect#readme
     // Open: http://localhost:5173/__inspect

@@ -41,18 +41,24 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
     }
 
     // TODO(burdon): Garbage collection of queues?
-    // TODO(wittjosiah): Figure out how to prevent companion chats from showing up in the navtree.
     await Effect.gen(function* () {
       const { objects } = yield* DatabaseService.runQuery(
         Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
       );
 
       // TODO(wittjosiah): This should be the default sort order.
-      let nextChat = objects.toSorted((a, b) => a.id.localeCompare(b.id)).at(-1);
+      let nextChat = objects.toSorted(({ id: a }, { id: b }) => a.localeCompare(b)).at(-1);
       if (!nextChat) {
-        const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-        nextChat = object;
-        yield* dispatch(createIntent(SpaceAction.AddObject, { object: nextChat, target: space, hidden: true }));
+        ({ object: nextChat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space })));
+
+        // TODO(burdon): Lazily add to space and companionTo.
+        yield* dispatch(
+          createIntent(SpaceAction.AddObject, {
+            object: nextChat,
+            target: space,
+            hidden: true,
+          }),
+        );
         yield* dispatch(
           createIntent(SpaceAction.AddRelation, {
             space,
@@ -111,7 +117,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
   }, [space, blueprintRegistry, blueprintKeys]);
 
   useAsyncEffect(async () => {
-    if (!binder) {
+    if (!binder?.isOpen) {
       return;
     }
 
@@ -124,7 +130,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
     } else {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
-  }, [binder, companionTo, pluginBlueprints]);
+  }, [binder, companionTo, blueprintKeys]);
 
   if (!chat) {
     return null;
