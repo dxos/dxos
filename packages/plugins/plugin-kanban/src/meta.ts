@@ -3,11 +3,15 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/kanban',
   name: 'Kanban',
-  description: 'Display table data in kanban columns to track progress and trigger automations.',
+  description: trim`
+    Visual project management using customizable kanban boards to track workflow progress.
+    Organize table data into columns, drag and drop items between stages, and trigger automations based on status changes.
+  `,
   icon: 'ph--kanban--regular',
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-kanban',
