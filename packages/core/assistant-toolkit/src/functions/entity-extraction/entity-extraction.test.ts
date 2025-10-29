@@ -20,7 +20,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
-import { ObjectId, PublicKey } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { testToolkit } from '../../blueprints/testing';
@@ -51,7 +51,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe.skip('Entity extraction', () => {
+describe('Entity extraction', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
