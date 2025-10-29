@@ -14,8 +14,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
+import { StackItem } from '@dxos/react-ui-stack';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/react-ui-theme';
 
 import { type ComponentProps } from './types';
 
@@ -46,7 +46,7 @@ export const GraphContainer = ({ space }: ComponentProps) => {
   );
 
   return (
-    <div className={mx('relative bs-full grid', open && 'grid-rows-[min-content_1fr]')}>
+    <StackItem.Content toolbar classNames={['relative bs-full grid', open && 'grid-rows-[min-content_1fr]']}>
       <SearchBar space={space} onSubmit={handleSubmit} />
       <D3ForceGraph classNames='min-bs-[50vh]' model={model} />
 
@@ -71,7 +71,7 @@ export const GraphContainer = ({ space }: ComponentProps) => {
           />
         </div>
       )}
-    </div>
+    </StackItem.Content>
   );
 };
 
@@ -80,8 +80,8 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <Toolbar.Root classNames='border-be border-subduedSeparator'>
-      <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' db={space.db} onChange={onSubmit} />
+    <Toolbar.Root>
+      <QueryEditor classNames='p-1 is-full' db={space.db} onChange={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly

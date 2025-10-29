@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -28,7 +28,7 @@ import { type JoinPanelProps } from '@dxos/shell/react';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
-  CollectionMain,
+  CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   type CreateObjectDialogProps,
@@ -44,7 +44,7 @@ import {
   POPOVER_RENAME_SPACE,
   PopoverRenameObject,
   PopoverRenameSpace,
-  RecordMain,
+  RecordArticle,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
@@ -62,8 +62,6 @@ import { SpaceCapabilities } from './capabilities';
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
-
-const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
@@ -89,14 +87,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data }) => <RecordMain record={data.subject} />,
+      component: ({ data }) => <RecordArticle record={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
-      component: ({ data }) => <CollectionMain collection={data.subject} />,
+      component: ({ data }) => <CollectionArticle collection={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/plugin-settings`,
