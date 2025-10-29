@@ -6,7 +6,16 @@ import React from 'react';
 
 import { useAppGraph } from '@dxos/app-framework';
 import { ROOT_ID, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Button, ButtonGroup, DensityProvider, IconButton, Tooltip, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  ButtonGroup,
+  DensityProvider,
+  IconButton,
+  type Size,
+  Tooltip,
+  useTranslation,
+} from '@dxos/react-ui';
 import { DropdownMenu, MenuProvider } from '@dxos/react-ui-menu';
 import { mx, surfaceZIndex } from '@dxos/react-ui-theme';
 
@@ -20,6 +29,12 @@ export const bottomNavRoot = mx(
 export type BottomNavProps = {
   activeId?: string;
   onActiveIdChange?: (nextActiveId: string | null) => void;
+};
+
+const navButtonProps = {
+  iconOnly: true,
+  size: 6 as Size,
+  classNames: 'aspect-square bs-[--dx-mobile-bottombar-content-height]',
 };
 
 export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
@@ -36,34 +51,30 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
       <nav className={bottomNavRoot}>
         <ButtonGroup>
           <IconButton
-            iconOnly
-            size={5}
+            {...navButtonProps}
             label={t('browse label')}
             icon='ph--squares-four--regular'
             onClick={() => onActiveIdChange?.(null)}
-            classNames='aspect-square'
             variant={isBrowseActive ? 'primary' : 'default'}
             {...(isBrowseActive && { 'aria-current': 'location' })}
           />
           <IconButton
-            iconOnly
-            size={5}
+            {...navButtonProps}
             label={t('notifications label')}
             icon='ph--bell-simple--regular'
             onClick={() => onActiveIdChange?.('notifications')}
-            classNames='aspect-square'
             variant={activeId === 'notifications' ? 'primary' : 'default'}
             {...(activeId === 'notifications' && { 'aria-current': 'location' })}
           />
           <Button
             variant={activeId === 'profile' ? 'primary' : 'default'}
             onClick={() => onActiveIdChange?.('profile')}
-            classNames='pli-0 aspect-square'
+            classNames={navButtonProps.classNames}
           >
             <span className='sr-only'>{t('profile label')}</span>
             <Avatar.Root>
               <Avatar.Label classNames='sr-only'>Profile display name</Avatar.Label>
-              <Avatar.Content size={6} status='active' hue='cyan' fallback='🗿' />
+              <Avatar.Content size={8} status='active' hue='cyan' fallback='🗿' />
             </Avatar.Root>
           </Button>
         </ButtonGroup>
@@ -71,13 +82,7 @@ export const BottomNav = ({ activeId, onActiveIdChange }: BottomNavProps) => {
           <DropdownMenu.Root group={graph.root} items={menuActions}>
             <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
               <DropdownMenu.Trigger data-testid='spacePlugin.addSpace' asChild>
-                <IconButton
-                  iconOnly
-                  size={5}
-                  icon='ph--plus--regular'
-                  label={t('main menu label')}
-                  classNames='aspect-square'
-                />
+                <IconButton {...navButtonProps} icon='ph--plus--regular' label={t('main menu label')} />
               </DropdownMenu.Trigger>
             </Tooltip.Trigger>
           </DropdownMenu.Root>

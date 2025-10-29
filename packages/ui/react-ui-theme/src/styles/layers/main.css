@@ -166,7 +166,7 @@
     --dx-mobile-topbar-height: calc(var(--dx-mobile-topbar-content-height) + var(--dx-mobile-topbar-padding-top));
 
     --dx-mobile-bottombar-content-height: 48px;
-    --dx-mobile-bottombar-inset-bottom: env(safe-area-inset-bottom);
+    --dx-mobile-bottombar-inset-bottom: max(env(safe-area-inset-bottom), .5rem);
     --dx-mobile-bottombar-height: calc(var(--dx-mobile-topbar-content-height) + var(--dx-mobile-bottombar-inset-bottom));
   }
 
