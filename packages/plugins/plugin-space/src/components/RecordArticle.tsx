@@ -21,26 +21,26 @@ export type RecordArticleProps = {
 
 export const RecordArticle = ({ record }: RecordArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const data = useMemo(() => ({ subject: record }), [record]);
   const space = getSpace(record);
-  const objects = useRelatedObjects(space, record);
+  const object = useMemo(() => ({ subject: record }), [record]);
+  const related = useRelatedObjects(space, record);
 
-  // TODO(burdon): Create stack for activity (separate from related objects).
+  // TODO(burdon): Create stack for activity (e.g., meetings, outliner), separate from related objects.
   return (
     <StackItem.Content classNames='flex flex-col items-center'>
       <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>
         <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
-          <Surface role='section' data={data} limit={1} />
+          <Surface role='section' data={object} limit={1} />
         </div>
 
-        {objects.length > 0 && (
-          <div role='none' className={mx('flex flex-col gap-1', objects.length === 1 ? 'card-max-width' : 'is-full')}>
+        {related.length > 0 && (
+          <div role='none' className={mx('flex flex-col gap-1', related.length === 1 ? 'card-max-width' : 'is-full')}>
             <label className='text-description text-sm mbs-2'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any>
-              items={objects}
+              items={related}
               render={Card}
               intrinsicHeight
-              columnCount={objects.length === 1 ? 1 : undefined}
+              columnCount={related.length === 1 ? 1 : undefined}
             />
           </div>
         )}

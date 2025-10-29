@@ -40,7 +40,6 @@ export default (context: PluginContext) => [
 
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-
           space.db.add(chat);
         }),
     }),

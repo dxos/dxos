@@ -8,7 +8,7 @@ import { WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { AssistantToolkit, SystemToolkit } from '../toolkits';
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, AssistantToolkit),
+  contributes(Capabilities.Toolkit, AssistantToolkit.Toolkit),
   contributes(Capabilities.ToolkitHandler, AssistantToolkit.createLayer(context)),
 
   // TODO(burdon): How to manage dependencies?
