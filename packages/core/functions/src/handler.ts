@@ -170,7 +170,7 @@ export const defineFunction: {
     inputSchema,
     outputSchema,
     handler: handlerWithSpan,
-  };
+  } satisfies FunctionDefinition.Any;
 };
 
 export const FunctionDefinition = {
