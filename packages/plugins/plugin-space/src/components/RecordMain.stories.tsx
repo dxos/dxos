@@ -62,7 +62,7 @@ const meta = {
             role: 'card',
             component: ({ data }) => (
               <Card.SurfaceRoot classNames='p-2'>
-                <pre className='overflow-is-auto'>{JSON.stringify(data, null, 2)}</pre>
+                <pre className='overflow-x-auto'>{JSON.stringify(data, null, 2)}</pre>
               </Card.SurfaceRoot>
             ),
           }),
