@@ -35,6 +35,12 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       .filter((relation) => Relation.getSource(relation) === record)
       .map((relation) => Relation.getTarget(relation));
 
+    const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
+      return Object.getOwnPropertyNames(obj)
+        .map((name) => obj[name as keyof Obj.Any])
+        .filter((value) => Ref.isRef(value)) as Ref.Any[];
+    };
+
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
     const referencingObjects = objects.filter((obj) => {
@@ -42,6 +48,7 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       return refs.some((ref) => ref.target === record);
     });
 
+    // TODO(burdon): Create sections?
     return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
   }, [record, objects]);
 
@@ -72,12 +79,6 @@ export const RecordMain = ({ record }: RecordMainProps) => {
 const Card = ({ data: subject }: { data: Obj.Any }) => {
   const data = useMemo(() => ({ subject }), [subject]);
   return <Surface role='card' data={data} limit={1} />;
-};
-
-const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
-  return Object.getOwnPropertyNames(obj)
-    .map((name) => obj[name as keyof Obj.Any])
-    .filter((value) => Ref.isRef(value)) as Ref.Any[];
 };
 
 export default RecordMain;
