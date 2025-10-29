@@ -24,8 +24,8 @@
     "dist"
   ],
   "dependencies": {
-    "@ch-ui/colors": "1.2.0",
-    "@ch-ui/tokens": "2.4.0",
+    "@ch-ui/colors": "1.2.1",
+    "@ch-ui/tokens": "3.0.1",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
