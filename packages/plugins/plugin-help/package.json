@@ -52,6 +52,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "^9.24.2",
     "@preact-signals/safe-react": "^0.9.0",
     "react-joyride": "^2.7.2"

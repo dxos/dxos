@@ -1,0 +1,27 @@
+name: DXOS
+description: Decentralized operating system and application framework
+
+# Project-specific context
+instructions: |
+  - Project uses moon to run tasks, tests, lint etc. (moon run package-name:task-name)
+  - Check the `moon.yml` for any package to see available tasks
+  - Lint task takes `--fix` argument to fix issues
+  - Use `moon :build --quiet --no-bail` to build all packages
+  - When reaching a natural stopping point, run the linter for impacted packages
+  - Create a new branch before starting work
+  - Use `gh pr create` to create a pull request
+  - Use "Conventional Commits" for PR titles
+  - Ask for confirmation to ensure all work is complete and if so check that all packages build and pass linting and fix any problems that come up
+  - Composer is the main product; it is made up from a set of plugins (in packages/plugins); each plugin has a `meta.ts` file
+  - Use single quotes for strings in Typescript
+
+formatter:
+  - prettier
+
+# Documentation and guidelines
+docs:
+  - CLAUDE.md
+  - REPOSITORY_GUIDE.md
+  - OPS_GUIDE.md
+  - CONTRIBUTING.md
+  - TROUBLESHOOTING.md
