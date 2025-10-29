@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 
-// Default size in rem
+// Default size in rem.
 const DEFAULT_INLINE_SIZE = 24;
 const MIN_INLINE_SIZE = 8;
 const DEFAULT_BLOCK_SIZE = 24;

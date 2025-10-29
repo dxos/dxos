@@ -17,7 +17,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@storybook/addon-docs": "^9.1.15",
