@@ -27,6 +27,12 @@ export const RecordMain = ({ record }: RecordMainProps) => {
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
+    const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
+      return Object.getOwnPropertyNames(obj)
+        .map((name) => obj[name as keyof Obj.Any])
+        .filter((value) => Ref.isRef(value)) as Ref.Any[];
+    };
+
     const relations = objects.filter((obj) => Relation.isRelation(obj));
     const targetObjects = relations
       .filter((relation) => Relation.getTarget(relation) === record)
@@ -35,12 +41,6 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       .filter((relation) => Relation.getSource(relation) === record)
       .map((relation) => Relation.getTarget(relation));
 
-    const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
-      return Object.getOwnPropertyNames(obj)
-        .map((name) => obj[name as keyof Obj.Any])
-        .filter((value) => Ref.isRef(value)) as Ref.Any[];
-    };
-
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
     const referencingObjects = objects.filter((obj) => {
@@ -48,7 +48,7 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       return refs.some((ref) => ref.target === record);
     });
 
-    // TODO(burdon): Create sections?
+    // TODO(burdon): Create sections (or section indicators)?
     return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
   }, [record, objects]);
 
