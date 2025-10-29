@@ -21,7 +21,7 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { ExecutionGraphContainer } from './ExecutionGraphContainer';
 import { type ComponentProps } from './types';
 
-export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
+export const ChatContainer = ({ space }: ComponentProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
@@ -46,7 +46,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
   return (
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor}>
-        <Chat.Toolbar onReset={() => onEvent?.('reset')} />
+        <Chat.Toolbar />
 
         {/* TODO(burdon): Optionally extend menu. */}
         {false && (

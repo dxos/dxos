@@ -119,14 +119,6 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
-    switch (event) {
-      case 'reset': {
-        void client?.reset().then(() => {
-          document.location.reload();
-        });
-        break;
-      }
-    }
   }, []);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));

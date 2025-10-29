@@ -13,16 +13,15 @@ import { SpaceAction } from '@dxos/plugin-space/types';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
-import { meta } from '../../meta';
-import { Assistant, AssistantAction } from '../../types';
+import { meta } from '../meta';
+import { Assistant, AssistantAction } from '../types';
 
 export type ChatToolbarActionsProps = {
   chat?: Assistant.Chat;
   companionTo?: Obj.Any;
-  onReset?: () => void;
 };
 
-export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolbarActionsProps) => {
+export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsProps) => {
   const { dispatch } = useIntentDispatcher();
   const space = getSpace(chat);
   const query = companionTo
@@ -49,9 +48,8 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
             },
             () =>
               Effect.gen(function* () {
+                // TODO(burdon): Defer creation until first message.
                 invariant(space);
-                console.log('NEW');
-
                 const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
                 yield* dispatch(createIntent(SpaceAction.AddObject, { object, target: space, hidden: true }));
                 if (companionTo) {
@@ -109,20 +107,8 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
           );
         }
 
-        if (onReset) {
-          builder.action(
-            'reset',
-            {
-              label: ['button reset', { ns: meta.id }],
-              icon: 'ph--trash--regular',
-              type: 'reset',
-            },
-            onReset,
-          );
-        }
-
         return builder.build();
       });
-    }, [chats.length, space?.id, companionTo?.id, dispatch, onReset]),
+    }, [chats.length, space?.id, companionTo?.id, dispatch]),
   );
 };

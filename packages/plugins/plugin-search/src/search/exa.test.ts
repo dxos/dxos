@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { log } from '@dxos/log';
 import { Testing } from '@dxos/schema/testing';
-import { trim } from '@dxos/util';
 
 import { search } from './exa';
 
@@ -77,8 +76,7 @@ describe.skip('Search', () => {
   });
 });
 
-// TODO(dmaretskyi): Import as txt.
-const COMPOSER_DXOS_DOC = trim`
+const COMPOSER_DXOS_DOC = `
 ![img](https://dxos.network/dxos-logotype-blue.png)
 # Welcome to Composer by DXOS
 

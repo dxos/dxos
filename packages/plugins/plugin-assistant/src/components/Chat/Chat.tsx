@@ -13,15 +13,16 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { useReferencesProvider } from '../../hooks';
+import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
@@ -38,7 +39,6 @@ import {
   ChatThread as NaturalChatThread,
   type ChatThreadProps as NaturalChatThreadProps,
 } from '../ChatThread';
-import { ChatToolbar as NaturalChatToolbar, type ChatToolbarProps as NaturalChatToolbarProps } from '../ChatToolbar';
 
 import { type ChatEvent } from './events';
 
@@ -73,15 +73,15 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const [debug, setDebug] = useState(false);
   const space = getSpace(chat);
 
-  // Messages.
-  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
+  // Messages.
+  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
-    return Array.dedupeWith([...queueMessages, ...pending], (a, b) => a.id === b.id);
+    return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [queue?.objects, pending]);
 
   // Events.
@@ -398,12 +398,17 @@ ChatThread.displayName = 'Chat.Thread';
 // Toolbar
 //
 
-type ChatToolbarProps = Omit<NaturalChatToolbarProps, 'chat'>;
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
 
-const ChatToolbar = (props: ChatToolbarProps) => {
+const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);
+  const menu = useChatToolbarActions({ chat, companionTo });
 
-  return <NaturalChatToolbar chat={chat} {...props} />;
+  return (
+    <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>
+      <ToolbarMenu classNames={classNames} textBlockWidth />
+    </MenuProvider>
+  );
 };
 
 ChatToolbar.displayName = 'Chat.Toolbar';

@@ -6,7 +6,9 @@ import { Capabilities, LayoutAction, type PluginContext, contributes, createInte
 import { Filter, Query } from '@dxos/echo';
 import { SPACES, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 
-import { INITIAL_CONTENT, INITIAL_DOC_TITLE } from '../../../constants';
+import README_CONTENT from '../content/README.md?raw';
+
+const SPACE_ICON = 'house-line';
 
 export default async (context: PluginContext) => {
   const { Obj, Ref } = await import('@dxos/echo');
@@ -20,11 +22,11 @@ export default async (context: PluginContext) => {
   const client = context.getCapability(ClientCapabilities.Client);
 
   const space = client.spaces.default;
-  space.properties.icon = 'house-line';
+  space.properties.icon = SPACE_ICON;
 
   const readme = Markdown.makeDocument({
-    name: INITIAL_DOC_TITLE,
-    content: INITIAL_CONTENT.join('\n\n'),
+    name: 'README',
+    content: README_CONTENT,
   });
 
   const defaultSpaceCollection = space.properties[DataType.Collection.typename].target;

@@ -34,7 +34,6 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
     return null;
   }
 
-  // TODO(burdon): Support undefined chat (create on demand).
   return (
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor}>
