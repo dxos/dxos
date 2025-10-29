@@ -68,7 +68,7 @@
     "@dxos/react-ui-types": "workspace:*",
     "@types/lodash.merge": "^4.6.6",
     "@types/postcss-import": "^14.0.3",
-    "esbuild": "0.25.10",
+    "esbuild": "0.25.11",
     "vite": "7.1.9"
   },
   "publishConfig": {
