@@ -91,6 +91,7 @@ export const systemSememes = {
   //
 
   baseSurface: elevationCadence(0),
+  baseSurfaceOverlay: elevationCadence(0, 0, 0.5),
   groupSurface: elevationCadence(1),
   modalSurface: elevationCadence(2, 1.7),
 

@@ -164,12 +164,16 @@
     --dx-mobile-topbar-content-height: 48px;
     --dx-mobile-topbar-padding-top: env(safe-area-inset-top);
     --dx-mobile-topbar-height: calc(var(--dx-mobile-topbar-content-height) + var(--dx-mobile-topbar-padding-top));
+
+    --dx-mobile-bottombar-content-height: 48px;
+    --dx-mobile-bottombar-inset-bottom: env(safe-area-inset-bottom);
+    --dx-mobile-bottombar-height: calc(var(--dx-mobile-topbar-content-height) + var(--dx-mobile-bottombar-inset-bottom));
   }
 
   .dx-mobile-main-scroll-area--padded {
-    @apply pbs-[calc(var(--dx-cardSpacingBlock)+var(--dx-mobile-topbar-height))] pbe-[calc(var(--dx-cardSpacingBlock)+env(safe-area-inset-bottom))]
+    @apply pbs-[calc(var(--dx-cardSpacingBlock)+var(--dx-mobile-topbar-height))] pbe-[calc(var(--dx-cardSpacingBlock)+var(--dx-mobile-bottombar-height))]
   }
   .dx-mobile-main-scroll-area--flush {
-    @apply pbs-[--dx-mobile-topbar-height] pbe-[env(safe-area-inset-bottom)]
+    @apply pbs-[--dx-mobile-topbar-height] pbe-[--dx-mobile-bottombar-height]
   }
 }

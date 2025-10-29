@@ -13,10 +13,11 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { MobileLayoutState } from '../capabilities';
 
+import { Banner } from './Banner';
+import { BottomNav } from './BottomNav';
 import { ContentError } from './ContentError';
 import { ContentLoading } from './ContentLoading';
 import { Home } from './Home';
-import { NavHeader } from './NavHeader';
 
 export const Main = () => {
   const layout = useCapability(MobileLayoutState);
@@ -39,19 +40,24 @@ export const Main = () => {
     [node, node?.data, node?.properties, layout.popoverAnchorId, variant],
   );
 
+  const handleActiveIdChange = (nextActiveId: string | null) => {
+    console.log('[navigate]', nextActiveId);
+  };
+
   // TODO(wittjosiah): Content probably needs a header with title and back button.
   return (
     <NaturalMain.Root complementarySidebarState='closed' navigationSidebarState='closed'>
-      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush'>
+      <NaturalMain.Content bounce classNames='dx-mobile-main dx-mobile-main-scroll-area--flush !overflow-y-auto'>
         <Activity mode={id === 'default' ? 'visible' : 'hidden'}>
           <Home />
         </Activity>
         <Activity mode={id !== 'default' ? 'visible' : 'hidden'}>
-          <NavHeader node={node} />
+          <Banner node={node} />
           <section className='container-max-width pli-cardSpacingInline plb-cardSpacingBlock'>
             <Surface key={id} role='article' data={data} limit={1} fallback={ContentError} placeholder={placeholder} />
           </section>
         </Activity>
+        <BottomNav activeId={id} onActiveIdChange={handleActiveIdChange} />
       </NaturalMain.Content>
     </NaturalMain.Root>
   );
