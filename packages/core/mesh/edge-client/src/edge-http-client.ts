@@ -78,6 +78,7 @@ type EdgeHttpRequestArgs = {
 
   /**
    * Do not expect a standard EDGE JSON response with a `success` field.
+   * @deprecated Use only for debugging.
    */
   rawResponse?: boolean;
 };

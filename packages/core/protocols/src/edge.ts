@@ -70,7 +70,6 @@ export type EdgeBody<T> = EdgeSuccess<T> | EdgeFailure;
 
 /**
  * Use this to create a response from the Edge service.
- * It returns a Response object with the 200 status code
  */
 export const EdgeResponse = Object.freeze({
   success: <T>(data: T, status: number = 200): Response => {
