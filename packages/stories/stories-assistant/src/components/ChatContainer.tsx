@@ -70,14 +70,9 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
         {/* TODO(burdon): Why add relative here? */}
         <Chat.Content classNames='relative container-max-width'>
           <Chat.Thread />
-          <Chat.Prompt
-            {...chatProps}
-            classNames='mbs-4 mbe-4'
-            outline
-            preset={preset?.id}
-            online={online}
-            onOnlineChange={setOnline}
-          />
+          <div role='none' className='p-4'>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          </div>
         </Chat.Content>
       </Chat.Root>
     </StackItem.Content>

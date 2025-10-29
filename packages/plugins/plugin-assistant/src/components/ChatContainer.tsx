@@ -41,14 +41,9 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
         <Chat.Toolbar companionTo={companionTo} />
         <Chat.Content classNames='container-max-width'>
           <Chat.Thread />
-          <Chat.Prompt
-            {...chatProps}
-            classNames='mbs-4 mbe-4'
-            outline
-            preset={preset?.id}
-            online={online}
-            onOnlineChange={setOnline}
-          />
+          <div role='none' className='p-4'>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          </div>
         </Chat.Content>
       </Chat.Root>
     </StackItem.Content>
