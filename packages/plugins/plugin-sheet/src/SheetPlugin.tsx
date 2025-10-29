@@ -57,7 +57,7 @@ export const SheetPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Sheet.Sheet,
-          getIntent: (props, options) => createIntent(SheetAction.Create, { ...props, space: options.space }),
+          getIntent: (props) => createIntent(SheetAction.Create, { ...props }),
         }),
       ),
   }),

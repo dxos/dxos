@@ -3,11 +3,15 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/script',
   name: 'Scripts',
-  description: 'Deploy custom functions for AI agents and spreadsheet cells.',
+  description: trim`
+    Write and deploy custom JavaScript functions that extend your workspace capabilities.
+    Create AI agent tools, spreadsheet formulas, and automation scripts that integrate seamlessly with other plugins.
+  `,
   icon: 'ph--code--regular',
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',

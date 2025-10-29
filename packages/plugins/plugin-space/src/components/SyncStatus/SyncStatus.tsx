@@ -119,7 +119,10 @@ const EdgeConnectionPopover = () => {
               <Icon icon='ph--timer--regular' />
               <span>{t('sync latency label')}</span>
             </div>
-            <span className='text-sm font-mono'>{status.rtt.toFixed(0)} ms</span>
+            <span className='text-sm font-mono text-subdued'>
+              {status.rtt.toFixed(0)}
+              ms
+            </span>
           </div>
 
           {/* Upload Speed */}
@@ -128,7 +131,7 @@ const EdgeConnectionPopover = () => {
               <Icon icon='ph--arrow-up--regular' />
               <span>{t('sync upload label')}</span>
             </div>
-            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesUp, 0)}/s</span>
+            <span className='text-sm font-mono text-subdued'>{Unit.Kilobyte(status.rateBytesUp, 0)}/s</span>
           </div>
 
           {/* Download Speed */}
@@ -137,7 +140,7 @@ const EdgeConnectionPopover = () => {
               <Icon icon='ph--arrow-down--regular' />
               <span>{t('sync download label')}</span>
             </div>
-            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesDown, 0)}/s</span>
+            <span className='text-sm font-mono text-subdued'>{Unit.Kilobyte(status.rateBytesDown, 0)}/s</span>
           </div>
         </div>
       )}

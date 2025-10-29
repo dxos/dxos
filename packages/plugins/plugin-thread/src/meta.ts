@@ -3,12 +3,16 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 // TODO(wittjosiah): Needs screenshots.
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/thread',
   name: 'Chat',
-  description: 'Chat via text, voice, and video, or comment on objects.',
+  description: trim`
+    Multi-modal communication platform supporting text chat, voice, and video conferencing.
+    Create threaded conversations and add contextual comments directly on any workspace object.
+  `,
   icon: 'ph--video-conference--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',

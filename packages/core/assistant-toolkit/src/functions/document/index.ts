@@ -2,5 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as readDocument } from './read';
-export { default as updateDocument } from './update';
+import { default as read$ } from './read';
+import { default as update$ } from './update';
+
+export namespace Document {
+  export const read = read$;
+  export const update = update$;
+}

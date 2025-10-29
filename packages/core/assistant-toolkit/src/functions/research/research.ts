@@ -17,10 +17,10 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
-import { Obj } from '@dxos/echo';
+import { type DXN, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
-import { type DXN } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
 import { exaFunction, exaMockFunction } from '../exa';
 
@@ -36,16 +36,24 @@ import { ResearchDataTypes } from './types';
 export default defineFunction({
   key: 'dxos.org/function/research',
   name: 'Research',
-  description:
-    'Research the web for information. Inserts structured data into the research graph. Will return research summary and the objects created.',
+  description: trim`
+    Research the web for information. 
+    Inserts structured data into the research graph. 
+    Will return research summary and the objects created.
+  `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
-      description: 'The query to search for.',
+      description: trim`
+        The query to search for.
+        If doing research on an object, load it first and pass it as a JSON string.
+      `,
     }),
 
     researchInstructions: Schema.optional(Schema.String).annotations({
-      description:
-        'The instructions for the research agent. E.g. preference on fast responses or in-depth analysis, number of web searcher or the objects created.',
+      description: trim`
+        The instructions for the research agent. 
+        E.g., preference on fast responses or in-depth analysis, number of web searcher or the objects created.
+      `,
     }),
 
     // TOOD(burdon): Move to context.
@@ -72,8 +80,13 @@ export default defineFunction({
             phoneNumbers: [{ value: '123-456-7890' }],
           }),
         );
+
         return {
-          note: `The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}`,
+          note: trim`
+            The research run in test-mode and was mocked. 
+            Proceed as usual.
+            We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}
+          `,
           objects: [Obj.toJSON(mockPerson)],
         };
       }
@@ -112,8 +125,10 @@ export default defineFunction({
         toolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-      const lastBlock = result.at(-1)?.blocks.at(-1);
-      const note = lastBlock?._tag === 'text' ? lastBlock.text : undefined;
+      const note = result
+        .at(-1)
+        ?.blocks.filter((block) => block._tag === 'text')
+        .at(-1)?.text;
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );

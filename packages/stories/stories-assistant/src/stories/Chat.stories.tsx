@@ -10,13 +10,13 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import { LINEAR_BLUEPRINT, RESEARCH_BLUEPRINT, ResearchDataTypes, ResearchGraph, agent } from '@dxos/assistant-toolkit';
+import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Script, Trigger, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { BLUEPRINT_KEY } from '@dxos/plugin-assistant';
+import { ASSISTANT_BLUEPRINT_KEY } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
@@ -103,6 +103,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 
     // Add blueprints to context.
     const binder = new AiContextBinder(await chat.queue.load());
+    await binder.open();
     const registry = new Blueprint.Registry(blueprintsDefinitions);
     const blueprintObjects = blueprints
       .map((key) => {
@@ -113,6 +114,7 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       })
       .filter(isNonNullable);
     await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
+    await binder.close();
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
@@ -290,7 +292,7 @@ export const WithDocument: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', CommentsContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
 
@@ -347,7 +349,7 @@ export const WithChess: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
 
@@ -370,7 +372,7 @@ export const WithMail: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
 
@@ -390,7 +392,7 @@ export const WithGmail: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces', MessageContainer, TokenManagerContainer]],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
 
@@ -419,7 +421,7 @@ export const WithMap: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
 
@@ -491,16 +493,24 @@ export const WithBoard: Story = {
   },
 };
 
+// Test with prompt: Create a research note for the organization.
 export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph],
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
+    onInit: async ({ space }) => {
+      space.db.add(Obj.make(DataType.Organization, { name: 'BlueYard Capital' }));
+    },
+    onChatCreated: async ({ space, binder }) => {
+      const { objects } = await space.db.query(Filter.type(DataType.Organization)).run();
+      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+    },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
-    blueprints: [RESEARCH_BLUEPRINT.key],
+    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer, 'surfaces']],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, ResearchBlueprint.key],
   },
 };
 
@@ -535,7 +545,7 @@ export const WithTranscription: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], ['surfaces']],
-    blueprints: [BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
+    blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
 
@@ -553,7 +563,7 @@ export const WithLinearSync: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], [GraphContainer]],
-    blueprints: [LINEAR_BLUEPRINT.key],
+    blueprints: [LinearBlueprint.key],
   },
 };
 
@@ -564,7 +574,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          function: Ref.make(serializeFunction(Example.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -657,13 +667,13 @@ export const WithResearchQueue: Story = {
 
           instructions:
             'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+          blueprints: [Ref.make(ResearchBlueprint)],
         }),
       );
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(agent)),
+          function: Ref.make(serializeFunction(Agent.prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -682,7 +692,7 @@ export const WithResearchQueue: Story = {
       [ResearchInputStack, ResearchOutputStack],
       [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
     ],
-    blueprints: [RESEARCH_BLUEPRINT.key],
+    blueprints: [ResearchBlueprint.key],
   },
 };
 
@@ -738,7 +748,7 @@ export const WithProject: Story = {
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
-      const blueyard = organizations.find((org) => org.name === 'Blue Yard')!;
+      const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         const meta = Obj.getMeta(organization);
         meta.tags = [tagDxn];
@@ -768,18 +778,22 @@ export const WithProject: Story = {
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
-            org: Schema.Any,
+            organization: Schema.Any,
           }),
           output: Schema.Any,
+          instructions: trim`
+            Research the organization provided as input. 
+            Absolutely, in all cases, create a research note for it at the end. 
+            NOTE: Do mocked reseach (set mockSearch to true).
 
-          instructions:
-            'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).\n\n{{org}}',
-          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+            {{organization}}
+          `,
+          blueprints: [Ref.make(ResearchBlueprint)],
         }),
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(agent)),
+        function: Ref.make(serializeFunction(Agent.prompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -790,7 +804,7 @@ export const WithProject: Story = {
         input: {
           prompt: Ref.make(researchPrompt),
           input: {
-            org: '{{event.subject}}',
+            organization: '{{event.subject}}',
           },
         },
       });
@@ -892,8 +906,8 @@ export const WithPrompt: Story = {
     plugins: [MarkdownPlugin()],
     config: config.remote,
     types: [DataType.Text],
-    onInit: async ({ client, space }) => {
-      space.db.add(serializeFunction(agent));
+    onInit: async ({ space }) => {
+      space.db.add(serializeFunction(Agent.prompt));
 
       space.db.add(
         Prompt.make({
@@ -906,7 +920,7 @@ export const WithPrompt: Story = {
 
           instructions:
             'Research the organization provided as input. Absolutely, in all cases, create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-          blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+          blueprints: [Ref.make(ResearchBlueprint)],
         }),
       );
 

@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 
-import { agent } from '@dxos/assistant-toolkit';
+import { Agent } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query } from '@dxos/echo';
 import {
@@ -46,7 +46,7 @@ export const PromptContainer = ({ space }: { space: Space }) => {
       // Resolve the function
       const {
         objects: [serializedFunction],
-      } = yield* DatabaseService.runQuery(Query.select(Filter.type(Function.Function, { key: agent.key })));
+      } = yield* DatabaseService.runQuery(Query.select(Filter.type(Function.Function, { key: Agent.prompt.key })));
       invariant(Obj.instanceOf(Function.Function, serializedFunction));
       const functionDef = deserializeFunction(serializedFunction);
 

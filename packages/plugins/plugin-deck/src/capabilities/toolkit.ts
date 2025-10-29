@@ -7,14 +7,21 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, LayoutAction, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import {
+  Capabilities,
+  type Capability,
+  LayoutAction,
+  type PluginContext,
+  contributes,
+  createIntent,
+} from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-class DeckToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -25,9 +32,13 @@ class DeckToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (context: PluginContext) =>
-    DeckToolkit.toLayer({
+);
+
+export namespace DeckToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (context: PluginContext) =>
+    Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
           const state = context.getCapability(DeckCapabilities.DeckState);
@@ -51,7 +62,7 @@ class DeckToolkit extends Toolkit.make(
     });
 }
 
-export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, DeckToolkit),
-  contributes(Capabilities.ToolkitHandler, DeckToolkit.layer(context)),
+export default (context: PluginContext): Capability<any>[] => [
+  contributes(Capabilities.Toolkit, DeckToolkit.Toolkit),
+  contributes(Capabilities.ToolkitHandler, DeckToolkit.createLayer(context)),
 ];

@@ -8,28 +8,27 @@ import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { syncLinearIssues } from '../../functions';
+import { Discord } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
  */
 const instructions = trim`
-  You are able to sync Linear workspaces.
-  Sometimes sync does not complete in one go and you need to call the function again.
+  You are able to fetch messages from Discord servers.
 
-  Known workspaces:
+  Known servers:
 
-  DXOS teamId: 1127c63a-6f77-4725-9229-50f6cd47321c
+  DXOS serverId: 837138313172353095
 `;
 
 export const blueprint = Obj.make(Blueprint.Blueprint, {
-  key: 'dxos.org/blueprint/linear',
-  name: 'Linear',
-  description: 'Syncs Linear workspaces.',
+  key: 'dxos.org/blueprint/discord',
+  name: 'Discord',
+  description: 'Discord integration.',
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(syncLinearIssues.key)],
+  tools: [ToolId.make(Discord.fetch.key)],
 });
 
 export default blueprint;

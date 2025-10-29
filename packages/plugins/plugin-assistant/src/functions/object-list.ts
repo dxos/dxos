@@ -9,15 +9,15 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-// TODO(burdon): Factor out to space plugin.
+// TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
-  key: 'dxos.org/function/assistant/list',
-  name: 'Assistant list',
+  key: 'dxos.org/function/assistant/object-list',
+  name: 'List objects',
   description:
     // TODO(wittjosiah): Find a better way to prompt for looking up typenames before querying with them.
     trim`
       Lists the objects of the given type.
-      Check the list-schemas tool for available types before calling this function.
+      Check the get-schemas tool for available types before calling this function.
     `,
   inputSchema: Schema.Struct({
     typename: Schema.String.annotations({

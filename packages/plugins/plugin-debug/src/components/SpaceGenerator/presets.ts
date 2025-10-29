@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RESEARCH_BLUEPRINT, agent, entityExtraction } from '@dxos/assistant-toolkit';
+import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
@@ -37,7 +37,7 @@ import {
   rectToPoints,
 } from '@dxos/react-ui-canvas-editor';
 import { DataType, createView } from '@dxos/schema';
-import { range } from '@dxos/util';
+import { range, trim } from '@dxos/util';
 
 import { type ObjectGenerator } from './ObjectGenerator';
 
@@ -129,7 +129,7 @@ export const generator = () => ({
               kind: 'queue',
               queue: mailbox.queue.dxn.toString(),
             },
-            function: Ref.make(serializeFunction(entityExtraction)),
+            function: Ref.make(serializeFunction(EntityExtraction.extract)),
             input: {
               source: '{{event.item}}',
             },
@@ -147,9 +147,12 @@ export const generator = () => ({
 
               // TODO(dmaretskyi): This mocks research (returns pre-baked result), the actual research might take compute minutes.
               // Remove the mock prompt to do the actual research.
-              instructions:
-                'Research the organization provided as input. Create a research note for it at the end. NOTE: Do mocked reseach (set mockSearch to true).',
-              blueprints: [Ref.make(RESEARCH_BLUEPRINT)],
+              instructions: trim`
+                Research the organization provided as input.
+                Create a research note for it at the end.
+                NOTE: Do mocked reseach (set mockSearch to true).
+              `,
+              blueprints: [Ref.make(ResearchBlueprint)],
             }),
           );
 
@@ -161,7 +164,7 @@ export const generator = () => ({
                 ast: organizationsQuery.ast,
               },
             },
-            function: Ref.make(serializeFunction(agent)),
+            function: Ref.make(serializeFunction(Agent.prompt)),
             input: {
               prompt: Ref.make(researchPrompt),
               input: '{{event.subject}}',
@@ -205,6 +208,7 @@ export const generator = () => ({
             }),
           );
         });
+
         cb?.(objects.flat());
         return objects.flat();
       },
