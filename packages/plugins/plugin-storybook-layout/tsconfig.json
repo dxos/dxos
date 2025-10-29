@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/live-object"
     },
     {

@@ -3,11 +3,15 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/map',
   name: 'Maps',
-  description: 'Plot table data with Lat/Long fields on an interactive map.',
+  description: trim`
+    Interactive mapping visualization that plots table records containing latitude and longitude coordinates.
+    Explore spatial data, add custom markers, and visualize geographic patterns in your datasets.
+  `,
   icon: 'ph--compass--regular',
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-map',

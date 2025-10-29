@@ -27,6 +27,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

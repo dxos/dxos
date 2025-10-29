@@ -51,6 +51,7 @@
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "effect": "3.18.3"
   },
