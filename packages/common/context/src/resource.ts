@@ -41,6 +41,17 @@ export abstract class Resource implements Lifecycle {
    */
   #parentCtx: Context = this.#createParentContext();
 
+  /**
+   * ```ts
+   * await using resource = new Resource();
+   * await resource.open();
+   * ```
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
+   */
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.close();
+  }
+
   get #name() {
     return Object.getPrototypeOf(this).constructor.name;
   }
@@ -84,6 +95,8 @@ export abstract class Resource implements Lifecycle {
 
   /**
    * Calls the provided function, opening and closing the resource.
+   * NOTE: Consider using `using` instead.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
    */
   async use<T>(fn: (resource: this) => Promise<T>): Promise<T> {
     try {
@@ -143,10 +156,6 @@ export abstract class Resource implements Lifecycle {
       throw new Error('Resource is not being opened');
     }
     await this.#openPromise;
-  }
-
-  async [Symbol.asyncDispose](): Promise<void> {
-    await this.close();
   }
 
   async #open(ctx?: Context): Promise<void> {

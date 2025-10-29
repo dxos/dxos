@@ -10,16 +10,10 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  AgentFunction,
-  LinearBlueprint,
-  ResearchBlueprint,
-  ResearchDataTypes,
-  ResearchGraph,
-} from '@dxos/assistant-toolkit';
+import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Script, Trigger, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ASSISTANT_BLUEPRINT_KEY } from '@dxos/plugin-assistant';
@@ -43,9 +37,8 @@ import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
-import { useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { Toolbar, useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
@@ -84,7 +77,7 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
+const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden';
 
 type StoryProps = {
   debug?: boolean;
@@ -93,9 +86,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
-  const client = useClient();
   const space = useSpace();
-
   const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
   useAsyncEffect(async () => {
     if (!space) {
@@ -125,14 +116,6 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
-    switch (event) {
-      case 'reset': {
-        void client?.reset().then(() => {
-          document.location.reload();
-        });
-        break;
-      }
-    }
   }, []);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
@@ -152,42 +135,42 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       size='split'
       rail={false}
       itemsCount={deckComponents.length}
-      classNames='  absolute inset-0 gap-[--stack-gap]'
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
       {deckComponents.map((plankComponents, i) => {
         const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
         const renderSurfaces = plankComponents.includes('surfaces');
-        let j = 0;
+
         return (
-          <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+          <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
+              classNames='gap-[--stack-gap]'
               size={i > 0 ? 'contain' : 'split'}
               rail={false}
               itemsCount={plankComponents.length + (i > 0 ? objects.length : 0)}
             >
-              {Components.map((Component) => {
-                const item = (
-                  <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
-                    <Component space={space} debug={debug} onEvent={handleEvent} />
-                  </StackItem.Root>
-                );
-                j += 1;
-                return item;
-              })}
+              {Components.map((Component, i) => (
+                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                  <Component space={space} debug={debug} onEvent={handleEvent} />
+                </StackItem.Root>
+              ))}
 
               {renderSurfaces &&
-                objects.map((object, index) => {
-                  const k = index + j;
+                objects.map((object, j) => {
                   return (
-                    <StackItem.Root key={k} order={k + 1} item={{ id: `${k}` }} classNames={panelClassNames}>
-                      {debug && (
-                        <div role='heading' className='flex gap-2 items-center text-xs justify-center text-subdued'>
-                          <span>{Obj.getTypename(object)}</span>
-                          <span>{object.id}</span>
+                    <StackItem.Root key={j} item={{ id: `${i}-${j}` }} classNames={panelClassNames}>
+                      <StackItem.Content toolbar={debug}>
+                        {debug && (
+                          <Toolbar.Root classNames='justify-center text-sm'>
+                            <span>{Obj.getTypename(object)}</span>
+                            <span>{object.id}</span>
+                          </Toolbar.Root>
+                        )}
+                        <div className='p-2'>
+                          <Surface role='section' limit={1} data={{ subject: object }} />
                         </div>
-                      )}
-                      <Surface role='section' limit={1} data={{ subject: object }} />
+                      </StackItem.Content>
                     </StackItem.Root>
                   );
                 })}
@@ -580,7 +563,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          function: Ref.make(serializeFunction(Example.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -679,7 +662,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(AgentFunction)),
+          function: Ref.make(serializeFunction(Agent.prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -799,7 +782,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(AgentFunction)),
+        function: Ref.make(serializeFunction(Agent.prompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -912,8 +895,8 @@ export const WithPrompt: Story = {
     plugins: [MarkdownPlugin()],
     config: config.remote,
     types: [DataType.Text],
-    onInit: async ({ client, space }) => {
-      space.db.add(serializeFunction(AgentFunction));
+    onInit: async ({ space }) => {
+      space.db.add(serializeFunction(Agent.prompt));
 
       space.db.add(
         Prompt.make({

@@ -187,7 +187,7 @@ test.describe('Table', () => {
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
     await page.pause();
-    await page.getByPlaceholder('Search...').focus();
+    await page.getByPlaceholder('Search…').focus();
 
     // Type the first few letters of an org name.
     const orgName =
@@ -240,7 +240,7 @@ test.describe('Table', () => {
 
     // Click on the combobox to open options
     await page.getByRole('combobox').click();
-    await page.getByPlaceholder('Search...').focus();
+    await page.getByPlaceholder('Search…').focus();
 
     // Type the first few letters of an org name.
     const orgName = 'Sally';
@@ -254,7 +254,7 @@ test.describe('Table', () => {
     await page.pause();
 
     // Click the save button in the popover
-    await page.getByTestId('save-button').click();
+    await page.getByTestId('create-referenced-object-form').getByTestId('save-button').click();
 
     // Assert that the cell element has the org name
     await expect(targetCell).toHaveText(orgName);

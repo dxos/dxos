@@ -9,7 +9,7 @@ import react from '@vitejs/plugin-react-swc';
  */
 export default defineConfig(async () => ({
   esbuild: {
-    target: 'es2020',
+    target: 'esnext',
   },
   test: {
     environment: 'node',

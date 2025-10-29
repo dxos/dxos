@@ -21,6 +21,9 @@
       "path": "../../common/keyboard"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

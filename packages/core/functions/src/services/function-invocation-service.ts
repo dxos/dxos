@@ -53,7 +53,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   static layerTest = ({
     functions = [],
   }: {
-    functions?: FunctionDefinition<any, any>[];
+    functions?: readonly FunctionDefinition<any, any>[];
   } = {}): Layer.Layer<
     FunctionInvocationService,
     never,
@@ -73,7 +73,7 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   static layerTestMocked = ({
     functions,
   }: {
-    functions: FunctionDefinition<any, any>[];
+    functions?: readonly FunctionDefinition<any, any>[];
   }): Layer.Layer<FunctionInvocationService> =>
     FunctionInvocationService.layerTest({ functions }).pipe(
       Layer.provide(AiService.notAvailable),

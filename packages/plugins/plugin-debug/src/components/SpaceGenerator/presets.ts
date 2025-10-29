@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentFunction, ResearchBlueprint, entityExtraction } from '@dxos/assistant-toolkit';
+import { Agent, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
@@ -129,7 +129,7 @@ export const generator = () => ({
               kind: 'queue',
               queue: mailbox.queue.dxn.toString(),
             },
-            function: Ref.make(serializeFunction(entityExtraction)),
+            function: Ref.make(serializeFunction(EntityExtraction.extract)),
             input: {
               source: '{{event.item}}',
             },
@@ -164,7 +164,7 @@ export const generator = () => ({
                 ast: organizationsQuery.ast,
               },
             },
-            function: Ref.make(serializeFunction(AgentFunction)),
+            function: Ref.make(serializeFunction(Agent.prompt)),
             input: {
               prompt: Ref.make(researchPrompt),
               input: '{{event.subject}}',

@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { syncLinearIssues } from '../../functions';
+import { Linear } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -29,7 +29,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(syncLinearIssues.key)],
+  tools: [Linear.sync].map((tool) => ToolId.make(tool.key)),
 });
 
 export default blueprint;

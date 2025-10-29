@@ -2,4 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as syncLinearIssues } from './sync-issues';
+import { default as sync$ } from './sync-issues';
+
+export namespace Linear {
+  export const sync = sync$;
+}

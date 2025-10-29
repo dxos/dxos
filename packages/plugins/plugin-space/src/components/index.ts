@@ -20,7 +20,7 @@ export * from './SpaceSettings';
 export * from './SyncStatus';
 export * from './ViewEditor';
 
-export const CollectionMain = lazy(() => import('./CollectionMain'));
+export const CollectionArticle = lazy(() => import('./CollectionArticle'));
 export const ObjectDetailsPanel = lazy(() => import('./ObjectDetailsPanel'));
 export const ObjectSettingsContainer = lazy(() => import('./ObjectSettings'));
-export const RecordMain = lazy(() => import('./RecordMain'));
+export const RecordArticle = lazy(() => import('./RecordArticle'));
