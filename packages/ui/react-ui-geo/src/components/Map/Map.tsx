@@ -8,10 +8,8 @@ import { createContext } from '@radix-ui/react-context';
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds } from 'leaflet';
 import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { MapContainerProps } from 'react-leaflet';
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
-import { debounce } from '@dxos/async';
 import { ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { defaultTx, mx } from '@dxos/react-ui-theme';
 
@@ -25,7 +23,7 @@ import { ActionControls, type ControlProps, ZoomControls, controlPositions } fro
 const defaults = {
   center: { lat: 51, lng: 0 } as L.LatLngLiteral,
   zoom: 4,
-};
+} as const;
 
 //
 // Controller
@@ -42,6 +40,7 @@ type MapController = {
 
 type MapContextValue = {
   attention?: boolean;
+  onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
 };
 
 const [MapContextProvier, useMapContext] = createContext<MapContextValue>('Map');
@@ -50,27 +49,14 @@ const [MapContextProvier, useMapContext] = createContext<MapContextValue>('Map')
 // Root
 //
 
-type MapRootProps = ThemedClassName<
-  MapContainerProps & {
-    onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
-  }
->;
+type MapRootProps = ThemedClassName<MapContainerProps & Pick<MapContextValue, 'onChange'>>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
 const MapRoot = forwardRef<MapController, MapRootProps>(
   (
-    {
-      classNames,
-      scrollWheelZoom = true,
-      doubleClickZoom = true,
-      touchZoom = true,
-      center = defaults.center,
-      zoom = defaults.zoom,
-      onChange,
-      ...props
-    },
+    { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, onChange, ...props },
     forwardedRef,
   ) => {
     const [attention, setAttention] = useState(false);
@@ -90,32 +76,6 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
       [],
     );
 
-    // Events.
-    useEffect(() => {
-      if (!map) {
-        return;
-      }
-
-      const handler = debounce(() => {
-        setAttention(true);
-        onChange?.({
-          center: map.getCenter(),
-          zoom: map.getZoom(),
-        });
-      }, 100);
-
-      map.on('move', handler);
-      map.on('zoom', handler);
-      map.on('focus', () => setAttention(true));
-      map.on('blur', () => setAttention(false));
-      return () => {
-        map.off('move');
-        map.off('zoom');
-        map.off('focus');
-        map.off('blur');
-      };
-    }, [map, onChange]);
-
     // Enable/disable scroll wheel zoom.
     // TODO(burdon): Use attention:
     // const {hasAttention} = useAttention(props.id);
@@ -132,7 +92,7 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
     }, [map, attention]);
 
     return (
-      <MapContextProvier attention={attention}>
+      <MapContextProvier attention={attention} onChange={onChange}>
         <MapContainer
           {...props}
           ref={mapRef}
@@ -142,8 +102,8 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
           scrollWheelZoom={scrollWheelZoom}
           doubleClickZoom={doubleClickZoom}
           touchZoom={touchZoom}
-          center={center}
-          zoom={zoom}
+          center={center ?? defaults.center}
+          zoom={zoom ?? defaults.zoom}
           // whenReady={() => {}}
         />
       </MapContextProvier>
@@ -162,6 +122,16 @@ type MapTilesProps = {};
 
 const MapTiles = (_props: MapTilesProps) => {
   const ref = useRef<L.TileLayer>(null);
+  const { onChange } = useMapContext(MapTiles.displayName);
+
+  useMapEvents({
+    zoomstart: (ev) => {
+      onChange?.({
+        center: ev.target.getCenter(),
+        zoom: ev.target.getZoom(),
+      });
+    },
+  });
 
   // NOTE: Need to dynamically update data attribute since TileLayer doesn't update, but
   // Tailwind requires setting the property for static analysis.

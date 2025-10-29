@@ -25,20 +25,11 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import {
-  AgentFunction,
-  DesignBlueprint,
-  PlanningBlueprint,
-  Research,
-  readDocument,
-  readTasks,
-  updateDocument,
-  updateTasks,
-} from '@dxos/assistant-toolkit';
+import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, Trigger, exampleFunctions } from '@dxos/functions';
+import { Example, Function, Trigger } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -81,7 +72,7 @@ export const config = {
   }),
 };
 
-class TestingToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -92,19 +83,22 @@ class TestingToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (_context: PluginContext) =>
-    TestingToolkit.toLayer({
+);
+
+namespace TestingToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (_context: PluginContext) =>
+    Toolkit$.toLayer({
       'open-item': ({ id }) => Console.log('Called open-item', { id }),
     });
 }
 
-type DecoratorsProps = Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
-  Pick<StoryPluginOptions, 'onChatCreated'> & {
-    plugins?: Plugin[];
-    accessTokens?: DataType.AccessToken[];
-    onInit?: (props: { client: Client; space: Space }) => Promise<void>;
-  };
+type DecoratorsProps = {
+  plugins?: Plugin[];
+  accessTokens?: DataType.AccessToken[];
+  onInit?: (props: { client: Client; space: Space }) => Promise<void>;
+} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> & Pick<StoryPluginOptions, 'onChatCreated'>);
 
 /**
  * Create storybook decorators.
@@ -214,14 +208,13 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/testing',
       activatesOn: Events.SetupArtifactDefinition,
       activate: () => [
-        // TODO(burdon): Move into assistnat?
         contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
         contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-        contributes(Capabilities.Functions, [AgentFunction]),
-        contributes(Capabilities.Functions, [readDocument, updateDocument]),
-        contributes(Capabilities.Functions, [readTasks, updateTasks]),
-        contributes(Capabilities.Functions, Research.tools),
-        contributes(Capabilities.Functions, [exampleFunctions.reply]),
+        contributes(Capabilities.Functions, [Agent.prompt]),
+        contributes(Capabilities.Functions, [Document.read, Document.update]),
+        contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
+        contributes(Capabilities.Functions, [Research.create, Research.research]),
+        contributes(Capabilities.Functions, [Example.reply]),
       ],
     }),
     defineModule({
@@ -229,7 +222,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       activatesOn: Events.Startup,
       activate: (context) => [
         contributes(Capabilities.Toolkit, TestingToolkit),
-        contributes(Capabilities.ToolkitHandler, TestingToolkit.layer(context)),
+        contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
       ],
     }),
     defineModule({

@@ -130,6 +130,7 @@ type GlobeRootProps = PropsWithChildren<ThemedClassName<GlobeContextProviderProp
 
 const GlobeRoot = ({ classNames, children, ...props }: GlobeRootProps) => {
   const { ref, width, height } = useResizeDetector<HTMLDivElement>();
+
   return (
     <div ref={ref} className={mx('relative flex grow overflow-hidden', classNames)}>
       <GlobeContextProvider size={{ width, height }} {...props}>
@@ -156,16 +157,16 @@ type GlobeCanvasProps = {
  */
 // TODO(burdon): Move controller to root.
 const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
-  ({ projection: _projection, topology, features, styles: _styles }, forwardRef) => {
+  ({ projection: projectionParam, topology, features, styles: stylesParam }, forwardRef) => {
     const { themeMode } = useThemeContext();
-    const styles = useMemo(() => _styles ?? defaultStyles[themeMode], [_styles, themeMode]);
+    const styles = useMemo(() => stylesParam ?? defaultStyles[themeMode], [stylesParam, themeMode]);
 
     // Canvas.
     const [canvas, setCanvas] = useState<HTMLCanvasElement>(null);
     const canvasRef = (canvas: HTMLCanvasElement) => setCanvas(canvas);
 
     // Projection.
-    const projection = useMemo(() => getProjection(_projection), [_projection]);
+    const projection = useMemo(() => getProjection(projectionParam), [projectionParam]);
 
     // Layers.
     // TODO(burdon): Generate on the fly based on what is visible.
