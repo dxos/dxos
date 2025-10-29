@@ -9,16 +9,13 @@ import { type Preview } from '@storybook/react';
 
 // import { DocsContainer } from '@dxos/storybook-utils';
 
-//
-// DO NOT depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
-// TODO(burdon): Move to @dxos/storybook-* to ui (to make it clear that it depends on the UI stack).
-//
-
 import { docsTheme, withLayout } from './theme';
 
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
+ *
+ * NOTE: Do not depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
  */
 export const preview: Preview = {
   // NOTE: Does not affect docs.
@@ -31,8 +28,6 @@ export const preview: Preview = {
         light: 'light',
       },
     }),
-
-    withLayout,
   ],
 
   /**
