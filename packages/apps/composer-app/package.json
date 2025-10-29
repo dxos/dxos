@@ -117,7 +117,7 @@
     "@tauri-apps/cli": "^2.8.4",
     "@types/jsdom": "^21.1.7",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "jsdom": "^27.0.0",
     "pwa-asset-generator": "^6.4.0",
     "rollup-plugin-visualizer": "^5.12.0",
