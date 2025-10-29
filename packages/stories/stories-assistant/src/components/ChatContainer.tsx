@@ -38,7 +38,11 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
     }
   }, [processor, chat]);
 
-  return !chat || !processor ? null : (
+  if (!chat || !processor) {
+    return null;
+  }
+
+  return (
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
         <Chat.Toolbar onReset={() => onEvent?.('reset')} />

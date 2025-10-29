@@ -28,6 +28,7 @@ export const useChatToolbarActions = ({ chat, companionTo, onReset }: ChatToolba
   const query = companionTo
     ? Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source()
     : Query.select(Filter.nothing());
+
   // TODO(wittjosiah): Query in react vs query in rx?
   const chats = useQuery(space, query);
 
