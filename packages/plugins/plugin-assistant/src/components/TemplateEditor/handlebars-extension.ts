@@ -8,8 +8,18 @@ import {
   autocompletion,
   completionKeymap,
 } from '@codemirror/autocomplete';
-import { type Extension } from '@codemirror/state';
-import { Decoration, type DecorationSet, type EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
+import { type Extension, RangeSetBuilder } from '@codemirror/state';
+import {
+  Decoration,
+  type DecorationSet,
+  type EditorView,
+  ViewPlugin,
+  type ViewUpdate,
+  WidgetType,
+  keymap,
+} from '@codemirror/view';
+
+import { Domino } from '@dxos/react-ui';
 
 export type HandlebarsOptions = {};
 
@@ -39,6 +49,7 @@ const regex = {
   brackets: /\{\{[^}]*\}\}/g,
   command: /\{\{[#/]([^}]+)\}\}/g,
   var: /\{\{(?!\s*!)(\w[^}]*)\}\}/g,
+  dxn: /dxn:\S+/g,
 };
 
 /**
@@ -52,34 +63,55 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
       this.decorations = this.buildDecorations(view);
     }
 
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged || update.selectionSet) {
+        this.decorations = this.buildDecorations(update.view);
+      }
+    }
+
     // NOTE: Decorations may clash with other extensions (e.g., markdown).
     buildDecorations(view: EditorView) {
-      const widgets: any[] = [];
+      const selection = view.state.selection.main;
+      const decorations: Array<{ from: number; to: number; decoration: Decoration }> = [];
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to);
 
-        // Match comments: {{! comment }}
-        // {
-        //   let match;
-        //   while ((match = regex.comment.exec(text)) !== null) {
-        //     const start = from + match.index;
-        //     const end = start + match[0].length;
-        //     widgets.push(Decoration.mark({ class: '!text-roseText' }).range(start, end));
-        //   }
-        // }
+        // Match DXN.
+        {
+          let match;
+          while ((match = regex.dxn.exec(text)) !== null) {
+            const start = from + match.index;
+            const end = start + match[0].length;
+            // Only show widget if selection doesn't overlap with the match range.
+            const overlaps = selection.from < end && selection.to > start;
+            if (!overlaps) {
+              decorations.push({
+                from: start,
+                to: end,
+                decoration: Decoration.widget({
+                  widget: new DXNWidget(match[0]),
+                }),
+              });
+            }
+          }
+        }
 
-        // Match brackets: {{ and }}
+        // Match brackets: {{ and }}.
         {
           let match;
           while ((match = regex.brackets.exec(text)) !== null) {
             const start = from + match.index;
             const end = start + match[0].length;
-            widgets.push(Decoration.mark({ class: 'text-subdued' }).range(start, end));
+            decorations.push({
+              from: start,
+              to: end,
+              decoration: Decoration.mark({ class: 'text-subdued' }),
+            });
           }
         }
 
-        // Match commands: {{#command}} and {{/command}}
+        // Match commands: {{#command}} and {{/command}}.
         {
           let match;
           while ((match = regex.command.exec(text)) !== null) {
@@ -89,39 +121,77 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             const parts = text.split(/\s+/);
             if (parts.length > 1) {
               const idx = start + parts[0].length;
-              widgets.push(Decoration.mark({ class: 'text-greenText' }).range(idx, end));
+              decorations.push({
+                from: idx,
+                to: end,
+                decoration: Decoration.mark({ class: 'text-greenText' }),
+              });
               end = idx;
             }
-            widgets.push(Decoration.mark({ class: 'text-blueText' }).range(start, end));
+            decorations.push({
+              from: start,
+              to: end,
+              decoration: Decoration.mark({ class: 'text-blueText' }),
+            });
           }
         }
 
-        // Match variables: {{var}}
+        // Match variables: {{var}}.
         {
           let match;
           while ((match = regex.var.exec(text)) !== null) {
             const start = from + match.index + 2;
             const end = start + match[0].length - 4;
-            widgets.push(Decoration.mark({ class: 'text-greenText' }).range(start, end));
+            decorations.push({
+              from: start,
+              to: end,
+              decoration: Decoration.mark({ class: 'text-greenText' }),
+            });
           }
         }
       }
 
-      // Sort decorations by position to avoid "Ranges must be added sorted" error.
-      widgets.sort((a, b) => a.from - b.from || a.startSide - b.startSide);
-      return Decoration.set(widgets);
-    }
+      // Sort decorations by position to satisfy RangeSetBuilder requirements.
+      decorations.sort((a, b) => a.from - b.from || a.to - b.to);
 
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = this.buildDecorations(update.view);
+      // Add sorted decorations to builder.
+      const builder = new RangeSetBuilder<Decoration>();
+      for (const { from, to, decoration } of decorations) {
+        builder.add(from, to, decoration);
       }
+
+      return builder.finish();
     }
   },
   {
     decorations: (v) => v.decorations,
   },
 );
+
+class DXNWidget extends WidgetType {
+  constructor(private readonly _identifier: string) {
+    super();
+  }
+
+  override ignoreEvent() {
+    return false;
+  }
+
+  override eq(other: this) {
+    return this._identifier === other._identifier;
+  }
+
+  override toDOM() {
+    const text = this._identifier
+      .split(':')
+      .map((part) => part.slice(0, 8))
+      .join(':');
+    return Domino.of('span')
+      .classNames(['pli-1 font-mono bg-neutralSurface text-neutralText rounded-sm'])
+      .text(text)
+      .build();
+  }
+}
 
 // TODO(burdon): Pass in variables.
 const variables = ['this'];

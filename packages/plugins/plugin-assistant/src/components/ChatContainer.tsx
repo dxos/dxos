@@ -16,9 +16,9 @@ import { type Assistant } from '../types';
 import { Chat } from './Chat';
 
 export type ChatContainerProps = {
+  role?: string;
   chat?: Assistant.Chat;
   companionTo?: Obj.Any;
-  role?: string;
 };
 
 export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {

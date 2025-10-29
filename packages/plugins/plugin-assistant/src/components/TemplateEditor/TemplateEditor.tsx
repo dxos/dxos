@@ -49,12 +49,12 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         createBasicExtensions({
           bracketMatching: false,
           lineNumbers,
-          lineWrapping: false,
+          lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
-        decorateMarkdown(), // TODO(burdon): Move into bundle.
+        decorateMarkdown(),
         handlebars(),
         xml(),
         syntaxHighlighting(defaultHighlightStyle),

@@ -29,6 +29,8 @@ const TEMPLATE = trim`
 
   Reponse in the format: <suggestion>SUGGESTION</suggestion>
 
+  dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
+
   ---
 
   {{input}}
