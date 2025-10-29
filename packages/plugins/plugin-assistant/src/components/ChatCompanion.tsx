@@ -40,22 +40,25 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
       return;
     }
 
-    // TODO(burdon): New chat on each load.
-
     // TODO(burdon): Garbage collection of queues?
     await Effect.gen(function* () {
       const { objects } = yield* DatabaseService.runQuery(
         Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
       );
 
-      // TODO(burdon): Lazily create chat object.
       // TODO(wittjosiah): This should be the default sort order.
       let nextChat = objects.toSorted(({ id: a }, { id: b }) => a.localeCompare(b)).at(-1);
       if (!nextChat) {
-        console.log('creating new chat');
-        const { object } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
-        nextChat = object;
-        yield* dispatch(createIntent(SpaceAction.AddObject, { object: nextChat, target: space, hidden: true }));
+        ({ object: nextChat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space })));
+
+        // TODO(burdon): Lazily add to space and companionTo.
+        yield* dispatch(
+          createIntent(SpaceAction.AddObject, {
+            object: nextChat,
+            target: space,
+            hidden: true,
+          }),
+        );
         yield* dispatch(
           createIntent(SpaceAction.AddRelation, {
             space,

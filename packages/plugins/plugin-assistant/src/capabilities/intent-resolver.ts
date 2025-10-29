@@ -40,6 +40,7 @@ export default (context: PluginContext) => [
 
           // Create default chat.
           const { object: chat } = yield* dispatch(createIntent(AssistantAction.CreateChat, { space }));
+
           space.db.add(chat);
         }),
     }),
@@ -48,9 +49,10 @@ export default (context: PluginContext) => [
       resolve: async ({ space, name }) => {
         const queue = space.queues.create();
         const chat = Assistant.makeChat({ name, queue });
-        const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
+
         // TODO(wittjosiah): This should be a space-level setting.
         // TODO(burdon): Clone when activated. Copy-on-write for template.
+        const { objects: blueprints } = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
         let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === ASSISTANT_BLUEPRINT_KEY);
         if (!defaultBlueprint) {
           defaultBlueprint = space.db.add(createBlueprint());

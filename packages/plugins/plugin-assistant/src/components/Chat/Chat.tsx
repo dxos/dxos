@@ -13,7 +13,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
@@ -51,7 +51,6 @@ import { type ChatEvent } from './events';
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
-  space: Space;
   chat?: Assistant.Chat;
   messages: DataType.Message[];
   processor: AiChatProcessor;
@@ -71,8 +70,6 @@ type ChatRootProps = PropsWithChildren<
 
 const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
-  const space = getSpace(chat);
-
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
@@ -127,20 +124,8 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
     });
   }, [event, processor, streaming, onEvent]);
 
-  if (!space) {
-    return null;
-  }
-
   return (
-    <ChatContextProvider
-      debug={debug}
-      event={event}
-      chat={chat}
-      space={space}
-      messages={messages}
-      processor={processor}
-      {...props}
-    >
+    <ChatContextProvider debug={debug} event={event} chat={chat} messages={messages} processor={processor} {...props}>
       {children}
     </ChatContextProvider>
   );
@@ -192,7 +177,8 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
+  const { chat, processor, event } = useChatContext(ChatPrompt.displayName);
+  const space = getSpace(chat);
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useRxValue(processor.streaming);
@@ -309,7 +295,7 @@ const ChatPrompt = ({
         />
       </div>
 
-      {settings && (
+      {space && settings && (
         <div role='none' className='flex pbs-2 items-center'>
           <ChatOptions
             space={space}
