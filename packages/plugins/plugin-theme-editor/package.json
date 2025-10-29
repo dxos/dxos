@@ -24,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@ch-ui/tokens": "2.4.0",
+    "@ch-ui/tokens": "3.0.0",
     "@codemirror/lang-json": "6.0.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",

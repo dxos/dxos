@@ -9923,8 +9923,8 @@ importers:
   packages/plugins/plugin-theme-editor:
     dependencies:
       '@ch-ui/tokens':
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: 3.0.0
+        version: 3.0.0
       '@codemirror/lang-json':
         specifier: 6.0.2
         version: 6.0.2
@@ -12116,8 +12116,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       '@ch-ui/tokens':
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
@@ -14930,11 +14930,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: 2.7.0
-        version: 2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))
+        specifier: 2.8.0
+        version: 2.8.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))
       '@ch-ui/tokens':
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: 3.0.0
+        version: 3.0.0
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -16492,14 +16492,14 @@ packages:
     resolution: {integrity: sha512-RKFKEC6jeNcERFAsdJ2AuK25ZevYLUI8I8PoH2CCIjD2xkP3oSVCDbnS7a2BjOOc/HTzK93Bt5cYbuvGyMR0PA==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/tailwind-tokens@2.7.0':
-    resolution: {integrity: sha512-Oi3h1h8zPcPX/H2ZbGCpfVskYiZ5cnQYBt2QyCtP3zzFuyqEB8zodqgqRHKFRcagEcc6dzZYCTlhW1NhiXvtcQ==}
+  '@ch-ui/tailwind-tokens@2.8.0':
+    resolution: {integrity: sha512-fZHRjsSMN5uDxkscvXvAtNF+k5ZpJz6aejElMp83RFoI+TQ1r8MkX1WcvtPdyhyHpJJtGzV/PUBtXZ6EmrcKxw==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
 
-  '@ch-ui/tokens@2.4.0':
-    resolution: {integrity: sha512-YS9LgFfDYK9RGoMvyrM1ApgbeLqE8zZv12Ym/lWEDCOZFDQZIfQfrUg9VTytRIuPAdd9vniNUPKkzjs1qFwhrw==}
+  '@ch-ui/tokens@3.0.0':
+    resolution: {integrity: sha512-yZ+qQYPHUovs646z87/Azya10jNEW6j23MI4szT0UYLWwzMgc9MPIUZ223vpfBxexHtrabPbD+4qOEC+Plc6Ug==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -25374,6 +25374,10 @@ packages:
   depd@2.0.0:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
     engines: {node: '>= 0.8'}
+
+  dependency-graph@1.0.0:
+    resolution: {integrity: sha512-cW3gggJ28HZ/LExwxP2B++aiKxhJXMSIt9K48FOXQkm+vuG5gyatXnLsONRJdzO/7VfjDIiaOOa/bs4l464Lwg==}
+    engines: {node: '>=4'}
 
   dependency-tree@11.1.1:
     resolution: {integrity: sha512-pnkCd8VGOq70EVaEQxDC9mZCjCwYj4yG4j8h+PEJswuWp+rdE6p8zbtVvWk+yPwaVimOjlhNi782U9K5KOU9MQ==}
@@ -35657,16 +35661,17 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.7.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))':
+  '@ch-ui/tailwind-tokens@2.8.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))':
     dependencies:
-      '@ch-ui/tokens': 2.4.0
+      '@ch-ui/tokens': 3.0.0
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3))
 
-  '@ch-ui/tokens@2.4.0':
+  '@ch-ui/tokens@3.0.0':
     dependencies:
       '@ch-ui/colors': 1.2.0
+      dependency-graph: 1.0.0
       invariant: 2.2.4
-      postcss: 8.5.3
+      postcss: 8.5.6
 
   '@chainsafe/is-ip@2.0.2': {}
 
@@ -45767,6 +45772,8 @@ snapshots:
   depd@1.1.2: {}
 
   depd@2.0.0: {}
+
+  dependency-graph@1.0.0: {}
 
   dependency-tree@11.1.1:
     dependencies:
