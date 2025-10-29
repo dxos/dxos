@@ -15,7 +15,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DataType } from '@dxos/schema';
 
-import { default as reply } from '../examples/reply';
+import { Example } from '../example';
 import { serializeFunction } from '../handler';
 import {
   ComputeEventLogger,
@@ -38,7 +38,7 @@ const TestLayer = Fn.pipe(
     Layer.mergeAll(
       AiService.notAvailable,
       CredentialsService.layerConfig([]),
-      FunctionInvocationService.layerTestMocked({ functions: [reply] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [Example.reply] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),
@@ -79,7 +79,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should manually invoke trigger',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -105,7 +105,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke scheduled timer triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -134,7 +134,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle disabled triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         const enabledTrigger = Trigger.make({
@@ -175,7 +175,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'cron triggers are invoked periodically on schedule',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // cron every 5 minutes
@@ -226,7 +226,7 @@ describe('TriggerDispatcher', () => {
         // Initially no triggers in database
 
         // Add a trigger dynamically
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -249,7 +249,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should support Effect cron expressions',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         const validPatterns = [
@@ -283,7 +283,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle invalid cron expressions gracefully',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // Test with an invalid pattern
@@ -326,7 +326,7 @@ describe('TriggerDispatcher', () => {
       'should invoke scheduled queue triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -355,7 +355,7 @@ describe('TriggerDispatcher', () => {
       'triggers are invoked one by one',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -402,7 +402,7 @@ describe('TriggerDispatcher', () => {
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
         const queue = yield* QueueService.createQueue();
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
@@ -445,7 +445,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object creation',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger that watches for DataType.Person objects
@@ -483,7 +483,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke triggers on object updates',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // Create a person object first
@@ -527,7 +527,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger first
@@ -577,7 +577,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should handle multiple object types with filters',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         // Create a subscription trigger that only watches for DataType.Task objects
@@ -621,7 +621,7 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should pass correct event data to function',
       Effect.fnUntraced(function* ({ expect }) {
-        const functionObj = serializeFunction(reply);
+        const functionObj = serializeFunction(Example.reply);
         yield* DatabaseService.add(functionObj);
 
         const person = Obj.make(DataType.Person, {
