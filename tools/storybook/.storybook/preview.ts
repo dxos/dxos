@@ -7,8 +7,6 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-// import { DocsContainer } from '@dxos/storybook-utils';
-
 import { docsTheme, withLayout } from './theme';
 
 /**
@@ -50,6 +48,7 @@ export const preview: Preview = {
     },
     docs: {
       inlineStories: true,
+      // TODO(burdon): Move from storybook-utils.
       // container: DocsContainer,
       theme: docsTheme,
       source: {
