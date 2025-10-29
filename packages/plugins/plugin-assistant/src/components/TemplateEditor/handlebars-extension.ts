@@ -204,7 +204,7 @@ class DXNWidget extends WidgetType {
       .split(':')
       .map((part) => part.slice(0, 8))
       .join(':');
-    return Domino.of('span').classNames(['dx-tag--amber', tagPadding]).text(text).build();
+    return Domino.of('span').classNames(['dx-tag--blue', tagPadding]).text(text).build();
   }
 }
 
