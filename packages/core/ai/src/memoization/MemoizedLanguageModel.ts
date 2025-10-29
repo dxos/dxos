@@ -301,6 +301,10 @@ const ConversationStore = Schema.Struct({
 }).pipe(Schema.mutable);
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
+/**
+ * Formats the conversation for diffing and displaying to the developer.
+ * Doesn't need to be lossless.
+ */
 const formatMemoizedConversation = (conversation: MemoziedConversation): string => {
   return (
     jsonStableStringify(
