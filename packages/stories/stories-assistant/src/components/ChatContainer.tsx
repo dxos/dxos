@@ -38,13 +38,14 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
     }
   }, [processor, chat]);
 
+  // TODO(burdon): Allow undefined chat (create on first submission).
   if (!chat || !processor) {
     return null;
   }
 
   return (
     <StackItem.Content toolbar>
-      <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
+      <Chat.Root chat={chat} processor={processor}>
         <Chat.Toolbar onReset={() => onEvent?.('reset')} />
 
         {/* TODO(burdon): Optionally extend menu. */}

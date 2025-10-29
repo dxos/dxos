@@ -14,7 +14,6 @@ import { meta } from '../meta';
 import { type Assistant } from '../types';
 
 import { Chat } from './Chat';
-import { ChatToolbar } from './ChatToolbar';
 
 export type ChatContainerProps = {
   chat?: Assistant.Chat;
@@ -37,9 +36,9 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
 
   return (
     <StackItem.Content toolbar>
-      <ChatToolbar chat={chat} companionTo={companionTo} />
-      <Chat.Root classNames='container-max-width' chat={chat} processor={processor}>
-        <Chat.Content>
+      <Chat.Root chat={chat} processor={processor}>
+        <Chat.Toolbar companionTo={companionTo} />
+        <Chat.Content classNames='container-max-width'>
           <Chat.Thread />
           <Chat.Prompt
             {...chatProps}

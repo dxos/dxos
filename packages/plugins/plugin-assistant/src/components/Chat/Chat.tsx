@@ -63,15 +63,13 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 // Root
 //
 
-type ChatRootProps = ThemedClassName<
-  PropsWithChildren<
-    Pick<ChatContextValue, 'chat' | 'processor'> & {
-      onEvent?: (event: ChatEvent) => void;
-    }
-  >
+type ChatRootProps = PropsWithChildren<
+  Pick<ChatContextValue, 'chat' | 'processor'> & {
+    onEvent?: (event: ChatEvent) => void;
+  }
 >;
 
-const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const space = getSpace(chat);
 
@@ -400,7 +398,7 @@ ChatThread.displayName = 'Chat.Thread';
 // Toolbar
 //
 
-type ChatToolbarProps = Omit<NaturalChatToolbarProps, 'chat' | 'companionTo'>;
+type ChatToolbarProps = Omit<NaturalChatToolbarProps, 'chat'>;
 
 const ChatToolbar = (props: ChatToolbarProps) => {
   const { chat } = useChatContext(ChatToolbar.displayName);
