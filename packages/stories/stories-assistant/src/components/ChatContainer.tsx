@@ -8,7 +8,6 @@ import { Filter } from '@dxos/echo';
 import {
   Assistant,
   Chat,
-  ChatToolbar,
   useBlueprintRegistry,
   useChatProcessor,
   useChatServices,
@@ -41,39 +40,41 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
 
   return !chat || !processor ? null : (
     <StackItem.Content toolbar>
-      <div role='none' className='flex items-center gap-2 pie-2'>
-        <ChatToolbar classNames='is-min grow' chat={chat} onReset={() => onEvent?.('reset')} />
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content>
-              <ExecutionGraphContainer space={space} />
-              <Popover.Arrow />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
-        <div className='truncate text-subdued'>{chat.name ?? 'no name'}</div>
-        <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
-      </div>
+      <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
+        <Chat.Toolbar onReset={() => onEvent?.('reset')} />
 
-      <div role='none' className='relative'>
-        <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
-          <Chat.Thread />
-          {/* <ChatProgress chat={chat} /> */}
-          <div className='flex justify-center p-4'>
-            <Chat.Prompt
-              {...chatProps}
-              outline
-              classNames='max-is-prose'
-              preset={preset?.id}
-              online={online}
-              onOnlineChange={setOnline}
-            />
+        {/* TODO(burdon): Add to menu. */}
+        {false && (
+          <div role='none' className='flex items-center gap-2 pie-2'>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content>
+                  <ExecutionGraphContainer space={space} />
+                  <Popover.Arrow />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+            <div className='truncate text-subdued'>{chat?.name ?? 'no name'}</div>
+            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Update name' onClick={handleUpdateName} />
           </div>
-        </Chat.Root>
-      </div>
+        )}
+
+        {/* TODO(burdon): Why add relative here? */}
+        <Chat.Content classNames='relative container-max-width'>
+          <Chat.Thread />
+          <Chat.Prompt
+            {...chatProps}
+            classNames='m-4'
+            outline
+            preset={preset?.id}
+            online={online}
+            onOnlineChange={setOnline}
+          />
+        </Chat.Content>
+      </Chat.Root>
     </StackItem.Content>
   );
 };

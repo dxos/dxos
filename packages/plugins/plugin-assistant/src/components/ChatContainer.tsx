@@ -17,7 +17,7 @@ import { Chat } from './Chat';
 import { ChatToolbar } from './ChatToolbar';
 
 export type ChatContainerProps = {
-  chat: Assistant.Chat;
+  chat?: Assistant.Chat;
   companionTo?: Obj.Any;
   role?: string;
 };
@@ -39,10 +39,17 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
     <StackItem.Content toolbar>
       <ChatToolbar chat={chat} companionTo={companionTo} />
       <Chat.Root classNames='container-max-width' chat={chat} processor={processor}>
-        <Chat.Thread />
-        <div className='p-2'>
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
-        </div>
+        <Chat.Content>
+          <Chat.Thread />
+          <Chat.Prompt
+            {...chatProps}
+            classNames='m-2'
+            outline
+            preset={preset?.id}
+            online={online}
+            onOnlineChange={setOnline}
+          />
+        </Chat.Content>
       </Chat.Root>
     </StackItem.Content>
   );

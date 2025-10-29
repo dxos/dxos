@@ -17,7 +17,7 @@ import { meta } from '../../meta';
 import { Assistant, AssistantAction } from '../../types';
 
 export type ChatToolbarActionsProps = {
-  chat: Assistant.Chat;
+  chat?: Assistant.Chat;
   companionTo?: Obj.Any;
   onReset?: () => void;
 };

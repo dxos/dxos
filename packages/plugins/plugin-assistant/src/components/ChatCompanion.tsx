@@ -47,6 +47,7 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
         Query.select(Filter.ids(companionTo.id)).targetOf(Assistant.CompanionTo).source(),
       );
 
+      // TODO(burdon): Lazily create chat object.
       // TODO(wittjosiah): This should be the default sort order.
       let nextChat = objects.toSorted((a, b) => a.id.localeCompare(b.id)).at(-1);
       if (!nextChat) {

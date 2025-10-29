@@ -38,6 +38,7 @@ import {
   ChatThread as NaturalChatThread,
   type ChatThreadProps as NaturalChatThreadProps,
 } from '../ChatThread';
+import { ChatToolbar as NaturalChatToolbar, type ChatToolbarProps as NaturalChatToolbarProps } from '../ChatToolbar';
 
 import { type ChatEvent } from './events';
 
@@ -51,7 +52,7 @@ type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
   space: Space;
-  chat: Assistant.Chat;
+  chat?: Assistant.Chat;
   messages: DataType.Message[];
   processor: AiChatProcessor;
 };
@@ -142,14 +143,26 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
       processor={processor}
       {...props}
     >
-      <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
-        {children}
-      </div>
+      {children}
     </ChatContextProvider>
   );
 };
 
 ChatRoot.displayName = 'Chat.Root';
+
+//
+// Content
+//
+
+type ChatContentProps = ThemedClassName<PropsWithChildren>;
+
+const ChatContent = ({ classNames, children }: ChatContentProps) => {
+  return (
+    <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
+      {children}
+    </div>
+  );
+};
 
 //
 // Prompt
@@ -384,13 +397,29 @@ const ChatThread = (props: ChatThreadProps) => {
 ChatThread.displayName = 'Chat.Thread';
 
 //
+// Toolbar
+//
+
+type ChatToolbarProps = Omit<NaturalChatToolbarProps, 'chat' | 'companionTo'>;
+
+const ChatToolbar = (props: ChatToolbarProps) => {
+  const { chat } = useChatContext(ChatToolbar.displayName);
+
+  return <NaturalChatToolbar chat={chat} {...props} />;
+};
+
+ChatToolbar.displayName = 'Chat.Toolbar';
+
+//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
+  Content: ChatContent,
   Prompt: ChatPrompt,
   Thread: ChatThread,
+  Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };
+export type { ChatRootProps, ChatContentProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };
