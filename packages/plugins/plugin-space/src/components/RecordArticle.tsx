@@ -15,11 +15,11 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export type RecordMainProps = {
+export type RecordArticleProps = {
   record: Obj.Any;
 };
 
-export const RecordMain = ({ record }: RecordMainProps) => {
+export const RecordArticle = ({ record }: RecordArticleProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(record);
   const data = useMemo(() => ({ subject: record }), [record]);
@@ -90,4 +90,4 @@ const Card = ({ data: subject }: { data: Obj.Any }) => {
   return <Surface role='card' data={data} limit={1} />;
 };
 
-export default RecordMain;
+export default RecordArticle;

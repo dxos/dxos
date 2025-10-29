@@ -21,7 +21,7 @@ import { render } from '@dxos/storybook-utils';
 
 import { translations } from '../translations';
 
-import { RecordMain } from './RecordMain';
+import { RecordArticle } from './RecordArticle';
 
 faker.seed(1);
 const generator: ValueGenerator = faker as any;
@@ -33,12 +33,12 @@ const DefaultStory = () => {
     return null;
   }
 
-  return <RecordMain record={org} />;
+  return <RecordArticle record={org} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-space/RecordMain',
-  component: RecordMain as any,
+  title: 'plugins/plugin-space/RecordArticle',
+  component: RecordArticle as any,
   render: render(DefaultStory),
   decorators: [
     withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
