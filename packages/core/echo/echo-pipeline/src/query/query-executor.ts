@@ -7,7 +7,13 @@ import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
 
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import { DatabaseDirectory, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  DatabaseDirectory,
+  ObjectStructure,
+  type QueryAST,
+  isEncodedReference,
+  EncodedReference,
+} from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
@@ -23,6 +29,7 @@ import { filterMatchObject } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
+import { Obj } from '../../../echo/src/Type';
 
 const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.isNullable;
 
@@ -433,7 +440,31 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
   ): Promise<StepExecutionResult> {
     const expected = step.mode === 'only-deleted';
-    const result = workingSet.filter((item) => ObjectStructure.isDeleted(item.doc) === expected);
+    const result: QueryItem[] = [];
+
+    for (const item of workingSet) {
+      if (ObjectStructure.isDeleted(item.doc) !== expected) {
+        continue;
+      }
+
+      // Checking dependencies: schema, relation source and target.
+      const dependencies = getStrongDependencies(item.doc);
+      const dependencyItems = await Promise.all(
+        dependencies.map((dependency) => this._loadFromDXN(dependency, { sourceSpaceId: item.spaceId })),
+      );
+      if (
+        dependencyItems.every(
+          (dependencyItem) =>
+            dependencyItem !== null &&
+            // Allow non-deleted endpoints, or deleted endpoints if we're filtering deleted.
+            (ObjectStructure.isDeleted(dependencyItem!.doc) === false ||
+              (step.mode === 'only-deleted' && ObjectStructure.isDeleted(dependencyItem!.doc))),
+        )
+      ) {
+        result.push(item);
+      }
+    }
+
     return {
       workingSet: result,
       trace: {
@@ -819,3 +850,32 @@ export class QueryExecutor extends Resource {
     };
   }
 }
+
+/**
+ * Strong dependencies are objects that are required to be loaded before the object.
+ * If they are deleted, the object should be considered deleted as well.
+ */
+// NOTE: Keep in sync with ObjectCore.getStrongDependencies
+const getStrongDependencies = (obj: ObjectStructure): DXN[] => {
+  const dependencies: DXN[] = [];
+  const typeReference = ObjectStructure.getTypeReference(obj);
+  const typeReferenceDXN = typeReference !== undefined ? EncodedReference.toDXN(typeReference) : undefined;
+  if (typeReferenceDXN && typeReferenceDXN.kind === DXN.kind.ECHO) {
+    dependencies.push(typeReferenceDXN);
+  }
+
+  if (ObjectStructure.getEntityKind(obj) === 'relation') {
+    const source = ObjectStructure.getRelationSource(obj);
+    const sourceDXN = source !== undefined ? EncodedReference.toDXN(source) : undefined;
+    if (sourceDXN && sourceDXN.kind === DXN.kind.ECHO) {
+      dependencies.push(sourceDXN);
+    }
+    const target = ObjectStructure.getRelationTarget(obj);
+    const targetDXN = target !== undefined ? EncodedReference.toDXN(target) : undefined;
+    if (targetDXN && targetDXN.kind === DXN.kind.ECHO) {
+      dependencies.push(targetDXN);
+    }
+  }
+
+  return dependencies;
+};

@@ -431,7 +431,6 @@ export class ObjectCore {
       return false;
     }
     const deps = this.getStrongDependencies();
-    log.info('deps', { deps, doc: this.getDecoded([]) });
     return deps.some((dep) => {
       if (!dep.isLocalObjectId()) {
         return false;
