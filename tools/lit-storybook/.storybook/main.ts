@@ -1,10 +1,10 @@
-// This file has been automatically migrated to valid ESM format by Storybook.
-import { fileURLToPath } from "node:url";
 //
 // Copyright 2024 DXOS.org
+// This file has been automatically migrated to valid ESM format by Storybook.
 //
 
-import { join, resolve, dirname } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { type StorybookConfig } from '@storybook/web-components-vite';
 import { type InlineConfig } from 'vite';
