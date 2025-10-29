@@ -39,16 +39,17 @@ export const RecordMain = ({ record }: RecordMainProps) => {
       return null;
     }
   };
-
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
     const relations = objects.filter((obj) => Relation.isRelation(obj));
     const targetObjects = relations
       .filter((relation) => getTarget(relation) === record)
-      .map((relation) => getTarget(relation));
+      .map((relation) => getTarget(relation))
+      .filter(isNonNullable);
     const sourceObjects = relations
       .filter((relation) => getSource(relation) === record)
-      .map((relation) => getSource(relation));
+      .map((relation) => getSource(relation))
+      .filter(isNonNullable);
 
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
