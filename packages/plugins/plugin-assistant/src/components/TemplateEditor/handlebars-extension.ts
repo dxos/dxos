@@ -20,6 +20,7 @@ import {
 } from '@codemirror/view';
 
 import { Domino } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 export type HandlebarsOptions = {};
 
@@ -49,8 +50,11 @@ const regex = {
   brackets: /\{\{[^}]*\}\}/g,
   command: /\{\{[#/]([^}]+)\}\}/g,
   var: /\{\{(?!\s*!)(\w[^}]*)\}\}/g,
-  dxn: /dxn:\S+/g,
+  dxn: /dxn:[\w@:]+/g,
+  url: /[\w.-]+\.[\w.-]+\/[\w/]+/g,
 };
+
+const tagPadding = 'mli-0.5 pli-1 rounded-sm';
 
 /**
  * ViewPlugin that decorates Handlebars syntax.
@@ -94,6 +98,20 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
                 }),
               });
             }
+          }
+        }
+
+        // Match URLs.
+        {
+          let match;
+          while ((match = regex.url.exec(text)) !== null) {
+            const start = from + match.index;
+            const end = start + match[0].length;
+            decorations.push({
+              from: start,
+              to: end,
+              decoration: Decoration.mark({ class: mx('dx-tag--blue', tagPadding) }),
+            });
           }
         }
 
@@ -186,10 +204,7 @@ class DXNWidget extends WidgetType {
       .split(':')
       .map((part) => part.slice(0, 8))
       .join(':');
-    return Domino.of('span')
-      .classNames(['pli-1 font-mono bg-neutralSurface text-neutralText rounded-sm'])
-      .text(text)
-      .build();
+    return Domino.of('span').classNames(['dx-tag--amber', tagPadding]).text(text).build();
   }
 }
 
