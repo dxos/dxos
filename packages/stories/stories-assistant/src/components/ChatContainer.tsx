@@ -72,7 +72,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
           <Chat.Thread />
           <Chat.Prompt
             {...chatProps}
-            classNames='m-4'
+            classNames='mbs-4 mbe-4'
             outline
             preset={preset?.id}
             online={online}
