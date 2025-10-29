@@ -25,16 +25,7 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import {
-  AgentFunction,
-  DesignBlueprint,
-  PlanningBlueprint,
-  Research,
-  readDocument,
-  readTasks,
-  updateDocument,
-  updateTasks,
-} from '@dxos/assistant-toolkit';
+import { AgentFunction, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
@@ -221,8 +212,8 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
         contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
         contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
         contributes(Capabilities.Functions, [AgentFunction]),
-        contributes(Capabilities.Functions, [readDocument, updateDocument]),
-        contributes(Capabilities.Functions, [readTasks, updateTasks]),
+        contributes(Capabilities.Functions, [Document.read, Document.update]),
+        contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
         contributes(Capabilities.Functions, Research.tools),
         contributes(Capabilities.Functions, [exampleFunctions.reply]),
       ],

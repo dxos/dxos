@@ -2,5 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as readTasks } from './read';
-export { default as updateTasks } from './update';
+import { default as read$ } from './read';
+import { default as update$ } from './update';
+
+export namespace Tasks {
+  export const read = read$;
+  export const update = update$;
+}
