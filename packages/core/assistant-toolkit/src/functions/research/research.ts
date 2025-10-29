@@ -24,7 +24,7 @@ import { trim } from '@dxos/util';
 
 import { exaFunction, exaMockFunction } from '../exa';
 
-import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from './graph';
+import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
