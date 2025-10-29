@@ -43,7 +43,7 @@ export const ChatContainer = ({ space, onEvent }: ComponentProps) => {
       <Chat.Root chat={chat} processor={processor} classNames='absolute inset-0'>
         <Chat.Toolbar onReset={() => onEvent?.('reset')} />
 
-        {/* TODO(burdon): Add to menu. */}
+        {/* TODO(burdon): Optionally extend menu. */}
         {false && (
           <div role='none' className='flex items-center gap-2 pie-2'>
             <Popover.Root>
