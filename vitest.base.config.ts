@@ -94,7 +94,7 @@ const createBrowserProject = ({ browserName, nodeExternal = false, injectGlobals
       },
     },
     esbuild: {
-      target: 'es2020',
+      target: 'esnext',
     },
     test: {
       env: {
@@ -138,7 +138,7 @@ type NodeOptions = {
 const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = [], plugins = [] }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
-      target: 'es2020',
+      target: 'esnext',
     },
     server: {
       fs: {
