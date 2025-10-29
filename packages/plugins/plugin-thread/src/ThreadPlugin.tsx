@@ -105,7 +105,10 @@ export const ThreadPlugin = definePlugin(meta, () => [
         SpaceCapabilities.ObjectForm,
         defineObjectForm({
           objectSchema: Channel.Channel,
-          getIntent: (_, options) => createIntent(ThreadAction.CreateChannel, { spaceId: options.space.id }),
+          getIntent: (_, options) =>
+            createIntent(ThreadAction.CreateChannel, {
+              spaceId: options.space.id,
+            }),
         }),
       ),
   }),

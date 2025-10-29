@@ -9,9 +9,9 @@ import { trim } from '@dxos/util';
 
 import { create, move, play } from '../functions';
 
-export const BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
-
 const functions: FunctionDefinition[] = [create, move, play];
+
+export const CHESS_BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
 
 export default () => {
   return [
@@ -19,7 +19,7 @@ export default () => {
     contributes(
       Capabilities.BlueprintDefinition,
       Blueprint.make({
-        key: BLUEPRINT_KEY,
+        key: CHESS_BLUEPRINT_KEY,
         name: 'Chess',
         tools: Blueprint.toolDefinitions({ functions }),
         instructions: Template.make({

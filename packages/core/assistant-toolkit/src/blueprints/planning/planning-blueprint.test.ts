@@ -31,10 +31,10 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { readTasks, updateTasks } from '../../functions';
+import { Tasks } from '../../functions';
 import { type TestStep, runSteps, testToolkit } from '../testing';
 
-import blueprint from './planning';
+import blueprint from './planning-blueprint';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   it.scoped(
@@ -108,17 +108,17 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
       Effect.provide(
         Layer.mergeAll(
           TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] }),
-          makeToolResolverFromFunctions([readTasks, updateTasks], testToolkit),
+          makeToolResolverFromFunctions([Tasks.read, Tasks.update], testToolkit),
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationService.layerTestMocked({ functions: [readTasks, updateTasks] }).pipe(
+            FunctionInvocationService.layerTestMocked({ functions: [Tasks.read, Tasks.update] }).pipe(
               Layer.provideMerge(ComputeEventLogger.layerFromTracing),
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [readTasks, updateTasks] })),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [Tasks.read, Tasks.update] })),
           Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
         ),

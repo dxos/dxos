@@ -41,6 +41,7 @@ export const Subgraph = Schema.Struct({
   /** Objects and relations. */
   objects: Schema.Array(Schema.Any),
 });
+
 export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
 
 export type RelatedSchema = {
@@ -103,7 +104,7 @@ const isSchemaAddressableByDxn = (schema: Schema.Schema.AnyNoContext, dxn: DXN):
  * Perform vector search in the local database.
  */
 // TODO(dmaretskyi): Rename `GraphReadToolkit`.
-export class LocalSearchToolkit extends Toolkit.make(
+export const LocalSearchToolkit = Toolkit.make(
   Tool.make('search_local_search', {
     description: 'Search the local database for information using a vector index',
     parameters: {
@@ -115,7 +116,7 @@ export class LocalSearchToolkit extends Toolkit.make(
     failure: Schema.Never,
     dependencies: [DatabaseService],
   }),
-) {}
+);
 
 export const LocalSearchHandler = LocalSearchToolkit.toLayer({
   search_local_search: Effect.fn(function* ({ query }) {

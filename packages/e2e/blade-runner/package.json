@@ -36,9 +36,9 @@
   },
   "dependencies": {
     "@automerge/automerge": "3.1.2",
-    "@automerge/automerge-repo": "2.3.1",
-    "@automerge/automerge-repo-network-websocket": "2.3.1",
-    "@automerge/automerge-repo-storage-indexeddb": "2.3.1",
+    "@automerge/automerge-repo": "2.4.0",
+    "@automerge/automerge-repo-network-websocket": "2.4.0",
+    "@automerge/automerge-repo-storage-indexeddb": "2.4.0",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",

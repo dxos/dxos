@@ -34,6 +34,7 @@
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@preact/signals-core": "^1.12.1",
     "@preact/signals-react": "^3.3.0"
@@ -45,7 +46,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",

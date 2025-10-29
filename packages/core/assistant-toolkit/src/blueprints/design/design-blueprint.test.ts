@@ -31,10 +31,10 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { readDocument, updateDocument } from '../../functions';
+import { Document } from '../../functions';
 import { testToolkit } from '../testing';
 
-import blueprint from './design';
+import blueprint from './design-blueprint';
 
 describe('Design Blueprint', { timeout: 120_000 }, () => {
   it.scoped(
@@ -88,14 +88,14 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
       },
       Effect.provide(
         Layer.mergeAll(
-          makeToolResolverFromFunctions([readDocument, updateDocument], testToolkit),
+          makeToolResolverFromFunctions([Document.read, Document.update], testToolkit),
           makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(TestDatabaseLayer({ types: [DataType.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(AiServiceTestingPreset('direct')),
           Layer.provideMerge(
-            FunctionInvocationService.layerTestMocked({ functions: [readDocument, updateDocument] }).pipe(
+            FunctionInvocationService.layerTestMocked({ functions: [Document.read, Document.update] }).pipe(
               Layer.provideMerge(ComputeEventLogger.layerFromTracing),
               Layer.provideMerge(TracingService.layerNoop),
             ),

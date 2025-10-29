@@ -25,13 +25,13 @@ import { type DataType } from '@dxos/schema';
 
 import { AiChatProcessor, type AiChatServices } from './processor';
 
-class TestToolkit extends Toolkit.make(
+const TestToolkit = Toolkit.make(
   Tool.make('random', {
     description: 'Random number generator',
     parameters: {},
     success: Schema.Number,
   }),
-) {}
+);
 
 // TODO(burdon): Create minimal toolkit.
 const toolkit = Toolkit.merge(TestToolkit) as Toolkit.Toolkit<any>;

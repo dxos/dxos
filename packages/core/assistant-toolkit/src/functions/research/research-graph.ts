@@ -21,6 +21,7 @@ export const ResearchGraph = Schema.Struct({
     version: '0.1.0',
   }),
 );
+
 export interface ResearchGraph extends Schema.Schema.Type<typeof ResearchGraph> {}
 
 export const queryResearchGraph: () => Effect.Effect<ResearchGraph | undefined, never, DatabaseService> = Effect.fn(
