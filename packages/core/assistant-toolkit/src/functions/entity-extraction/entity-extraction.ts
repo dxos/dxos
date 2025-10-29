@@ -17,7 +17,8 @@ import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { contextQueueLayerFromResearchGraph, makeGraphWriterHandler, makeGraphWriterToolkit } from '../research';
+import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
+import { contextQueueLayerFromResearchGraph } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',

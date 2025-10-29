@@ -22,9 +22,9 @@ import { DatabaseService, FunctionInvocationService, TracingService, defineFunct
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
+import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { exaFunction, exaMockFunction } from '../exa';
 
-import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 // TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
 import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
