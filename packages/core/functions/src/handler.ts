@@ -5,7 +5,6 @@
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import type * as Types from 'effect/Types';
 
 import { Obj, Type } from '@dxos/echo';
 import { type HasId } from '@dxos/echo/internal';
@@ -114,16 +113,18 @@ export type FunctionDefinition<T = any, O = any> = {
   };
 };
 
+export type FunctionProps<T, O> = {
+  key: string;
+  name: string;
+  description?: string;
+  inputSchema: Schema.Schema<T, any>;
+  outputSchema?: Schema.Schema<O, any>;
+  handler: FunctionHandler<T, O>;
+};
+
 // TODO(dmaretskyi): Output type doesn't get typechecked.
 export const defineFunction: {
-  <I, O>(params: {
-    key: string;
-    name: string;
-    description?: string;
-    inputSchema: Schema.Schema<I, any>;
-    outputSchema?: Schema.Schema<O, any>;
-    handler: Types.NoInfer<FunctionHandler<I, O>>;
-  }): FunctionDefinition<I, O>;
+  <I, O>(params: FunctionProps<I, O>): FunctionDefinition<I, O>;
 } = ({ key, name, description, inputSchema, outputSchema = Schema.Any, handler }) => {
   if (!Schema.isSchema(inputSchema)) {
     throw new Error('Input schema must be a valid schema');

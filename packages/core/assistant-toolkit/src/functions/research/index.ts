@@ -10,5 +10,5 @@ export * from './research-graph';
 export * from './types';
 
 export namespace Research {
-  export const tools = [research, createDocument] as const;
+  export const tools = [createDocument, research] as const;
 }

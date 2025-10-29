@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { fetchDiscordMessages } from '../../functions';
+import { Discord } from '../../functions';
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -28,7 +28,7 @@ export const blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [ToolId.make(fetchDiscordMessages.key)],
+  tools: [ToolId.make(Discord.fetch.key)],
 });
 
 export default blueprint;

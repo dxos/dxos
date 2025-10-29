@@ -6,14 +6,14 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 import { templates } from '@dxos/assistant';
 import {
   AgentFunction,
+  Discord,
   DiscordBlueprint,
+  EntityExtraction,
+  Linear,
   LinearBlueprint,
   Research,
   ResearchBlueprint,
   WebSearchBlueprint,
-  entityExtraction,
-  fetchDiscordMessages,
-  syncLinearIssues,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
@@ -53,14 +53,14 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.BlueprintDefinition, ResearchBlueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [AgentFunction, entityExtraction]),
+  contributes(Capabilities.Functions, [AgentFunction, EntityExtraction.extract]),
   contributes(Capabilities.BlueprintDefinition, WebSearchBlueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [fetchDiscordMessages]),
+  contributes(Capabilities.Functions, [Discord.fetch]),
   contributes(Capabilities.BlueprintDefinition, DiscordBlueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [syncLinearIssues]),
+  contributes(Capabilities.Functions, [Linear.sync]),
   contributes(Capabilities.BlueprintDefinition, LinearBlueprint),
 ];
