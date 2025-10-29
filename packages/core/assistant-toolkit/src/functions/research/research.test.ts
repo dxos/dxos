@@ -55,8 +55,7 @@ const TestLayer = Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       // AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
-        // TODO(dmaretskyi): define the constant space key in the test-builder.
-        spaceKey: PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723'),
+        spaceKey: 'fixed',
         indexing: { vector: true },
         types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
       }),
