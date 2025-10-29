@@ -44,7 +44,7 @@
     "@sentry/vite-plugin": "^4.0.2",
     "@types/chrome": "^0.0.125",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "@types/webextension-polyfill": "^0.12.3",
     "@vitejs/plugin-react": "^5.0.0",
     "body-parser": "1.19.0",

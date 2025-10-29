@@ -65,7 +65,7 @@
     "@types/d3": "^7.4.3",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "@types/topojson-client": "^3.1.4",
     "@types/topojson-specification": "^1.0.5",
     "postcss": "^8.4.41",
