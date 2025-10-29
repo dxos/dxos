@@ -9,6 +9,7 @@ import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -397,43 +398,35 @@ export class EdgeHttpClient {
       try {
         const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
-        if (response.ok) {
-          const body = (await response.json()) as EdgeBody<T>;
+        const body: EdgeBody<T> | undefined =
+          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
+        if (response.ok) {
           if (args.rawResponse) {
             return body as any;
           }
-
+          invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
           }
-
           if (body.success) {
             return body.data;
-          }
-
-          log.warn('unsuccessful edge response', { url, body });
-          if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
-            processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else if (body.success === false) {
-            // Edge service returned a EdgeFailure with status code is 200.
-            processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
+        }
+
+        invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
+
+        if (body?.errorData?.type === 'auth_challenge' && typeof body?.errorData?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+        } else if (body?.success === false) {
+          processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
-          if (response.headers.get('Content-Type') === 'application/json') {
-            const copy = response.clone();
-            const body = await copy.json();
-            if ('success' in body && body.success === false) {
-              // Edge service returned a EdgeSuccess with status code not 200.
-              processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
-            } else {
-              processingError = await EdgeCallFailedError.fromHttpFailure(response);
-            }
-          }
+          invariant(!response.ok, 'Expected response to not be ok.');
+          processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);

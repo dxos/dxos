@@ -441,11 +441,11 @@ export const EdgeHttpErrorCodec = Object.freeze({
 
   decode: async (response: Response): Promise<Error | undefined> => {
     if (response.headers.get('Content-Type') !== 'application/json') {
-      const body = await response.text();
+      const body = await response.clone().text();
       return new Error(body.slice(0, 256));
     }
 
-    const body = await response.json();
+    const body = await response.clone().json();
     if (!('error' in body)) {
       return undefined;
     }
