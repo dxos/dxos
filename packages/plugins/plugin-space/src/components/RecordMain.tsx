@@ -25,31 +25,15 @@ export const RecordMain = ({ record }: RecordMainProps) => {
   const data = useMemo(() => ({ subject: record }), [record]);
 
   // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
-  const getSource = (relation: Relation.Any) => {
-    try {
-      return Relation.getSource(relation);
-    } catch {
-      return null;
-    }
-  };
-  const getTarget = (relation: Relation.Any) => {
-    try {
-      return Relation.getTarget(relation);
-    } catch {
-      return null;
-    }
-  };
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
     const relations = objects.filter((obj) => Relation.isRelation(obj));
     const targetObjects = relations
-      .filter((relation) => getTarget(relation) === record)
-      .map((relation) => getTarget(relation))
-      .filter(isNonNullable);
+      .filter((relation) => Relation.getTarget(relation) === record)
+      .map((relation) => Relation.getSource(relation));
     const sourceObjects = relations
-      .filter((relation) => getSource(relation) === record)
-      .map((relation) => getSource(relation))
-      .filter(isNonNullable);
+      .filter((relation) => Relation.getSource(relation) === record)
+      .map((relation) => Relation.getTarget(relation));
 
     const references = getReferencesFromObject(record);
     const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
