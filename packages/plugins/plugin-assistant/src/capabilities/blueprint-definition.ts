@@ -57,7 +57,7 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.BlueprintDefinition, WebSearchBlueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [Discord.fetchMessages]),
+  contributes(Capabilities.Functions, [Discord.fetch]),
   contributes(Capabilities.BlueprintDefinition, DiscordBlueprint),
 
   // TODO(burdon): Factor out.
