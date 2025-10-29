@@ -3,11 +3,15 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/mermaid',
   name: 'Mermaid',
-  description: 'Create diagrams from text definitions.',
+  description: trim`
+    Generate diagrams from simple text-based definitions using Mermaid syntax.
+    Create flowcharts, sequence diagrams, and other visualizations that stay in sync with your documentation.
+  `,
   icon: 'ph--anchor-simple--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-mermaid',
 };
