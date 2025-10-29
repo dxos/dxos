@@ -17,7 +17,7 @@ import { TestHelpers } from '@dxos/effect';
 import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/functions/testing';
 
-import { syncLinearIssues } from '../functions';
+import { Discord, Linear } from '../functions';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -38,7 +38,7 @@ const TestLayer = Layer.mergeAll(
         { service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') },
         { service: 'linear.app', apiKey: Config.redacted('LINEAR_API_KEY') },
       ]),
-      FunctionInvocationService.layerTestMocked({ functions: [syncLinearIssues] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [Linear.sync, Discord.fetch] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),
@@ -83,7 +83,7 @@ describe('Feed', { timeout: 600_000 }, () => {
         // }).pipe(Effect.provide(AiService.model('@anthropic/claude-3-5-haiku-latest')));
         // console.log(result);
 
-        const linearIssues = yield* FunctionInvocationService.invokeFunction(syncLinearIssues, {
+        const linearIssues = yield* FunctionInvocationService.invokeFunction(Linear.sync, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
         });
         console.log(linearIssues);

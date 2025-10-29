@@ -51,13 +51,13 @@ const TestToolExecutionService = Layer.sync(ToolExecutionService, () => ({
     } as any),
 }));
 
-class UserToolkit extends Toolkit.make(
+const UserToolkit = Toolkit.make(
   Tool.make('test/age', {
     description: 'Gets the age of the user',
     parameters: {},
     success: Schema.Number,
   }),
-) {}
+);
 
 const userToolkitLayer = UserToolkit.toLayer({
   'test/age': Effect.fn(function* () {

@@ -140,7 +140,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
     ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
   }
 >() {
-  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+  static layerTest = ({ functions }: { functions: readonly FunctionDefinition<any, any>[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
       resolveFunctionImplementation: <I, O>(functionDef: FunctionDefinition<I, O>) => {
         const resolved = functions.find((f) => f.key === functionDef.key);
