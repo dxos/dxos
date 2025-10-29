@@ -2533,8 +2533,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -2664,8 +2664,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -4705,14 +4705,14 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@automerge/automerge-repo-network-websocket':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@automerge/automerge-repo-storage-indexeddb':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -10873,8 +10873,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11054,8 +11054,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -11311,8 +11311,8 @@ importers:
         specifier: 3.1.1
         version: 3.1.1
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
@@ -13433,11 +13433,11 @@ importers:
         version: 4.1.0
     devDependencies:
       '@automerge/automerge-repo':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: 2.3.1
-        version: 2.3.1
+        specifier: 2.4.0
+        version: 2.4.0
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
@@ -15621,17 +15621,17 @@ packages:
   '@atlaskit/pragmatic-drag-and-drop@1.4.0':
     resolution: {integrity: sha512-qRY3PTJIcxfl/QB8Gwswz+BRvlmgAC5pB+J2hL6dkIxgqAgVwOhAamMUKsrOcFU/axG2Q7RbNs1xfoLKDuhoPg==}
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.3.1':
-    resolution: {integrity: sha512-e2m2/ZWL59i6/NEjn2VQPF6dvMSq15byF3nidx+ZZew043Ke1N4QP2491C4rgaAP501L+a4K4WeZFKXYeYyMMA==}
+  '@automerge/automerge-repo-network-broadcastchannel@2.4.0':
+    resolution: {integrity: sha512-e/zPfrR7GdYNEH9ThIyAsVhlsPHUQTpzXhLLYpqNcX/oevNDxhBILWiSymJYNAOOfxB+b/8a6TDgbRf9jY4A1A==}
 
-  '@automerge/automerge-repo-network-websocket@2.3.1':
-    resolution: {integrity: sha512-imoxIIwd59exxU1zSHSKl+i25PgWn3Wvr6i948fcBDVXt7LkixK+wWMXMgbttjt/48YNbQRidSaKWzgzicYSKA==}
+  '@automerge/automerge-repo-network-websocket@2.4.0':
+    resolution: {integrity: sha512-xdJEMO+7oK40Y7hs/YyiTwaOrgxWv4JCQlQnVZ5KlGIkTwyzFoPguZYZskxYIJqmx239XXm8YikVsmm0CSSlDQ==}
 
-  '@automerge/automerge-repo-storage-indexeddb@2.3.1':
-    resolution: {integrity: sha512-Nw8cvA30cGhiSkJ73RvbHGv6eY9zuQCyFvUWpwmuHB6SDSgYT+fIS44DAtTyfiejVFJyU0vW7O8SxBjbvDMdMw==}
+  '@automerge/automerge-repo-storage-indexeddb@2.4.0':
+    resolution: {integrity: sha512-oZlcr0Cp091aKr01F5YMPLhxpUxNfTEL6q/Ywjf7wMruSCWApA6Lt/S/jbU4bXIyvwjLUPQ6Ok7dzk1dr6Sdsg==}
 
-  '@automerge/automerge-repo@2.3.1':
-    resolution: {integrity: sha512-ZQ6jdwSsdjAiQoT+1vAvmMRcXaxtMv4PH298x9VSVPD5o5N0nNUweE2HuAsNNrXleZ/apfG2vH8uYentSQQFvQ==}
+  '@automerge/automerge-repo@2.4.0':
+    resolution: {integrity: sha512-cpSl4VRyu4iDoxi1eFl91mAND+VXnZUt80Clxd15JMn6XD6RUzpAGVACVKLLhgsccqpQQ5VeFuyTFrszHV6PsA==}
 
   '@automerge/automerge@3.1.1':
     resolution: {integrity: sha512-x7tZiMBLk4/SKYimVEVl1/wPntT9buGvLOWCey9ZcH8JUsB0dgm49C0S7Ojzgvflcs2hc/YjiXRPcFeFkinIgw==}
@@ -34195,15 +34195,15 @@ snapshots:
       bind-event-listener: 3.0.0
       raf-schd: 4.0.3
 
-  '@automerge/automerge-repo-network-broadcastchannel@2.3.1':
+  '@automerge/automerge-repo-network-broadcastchannel@2.4.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.1
+      '@automerge/automerge-repo': 2.4.0
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo-network-websocket@2.3.1':
+  '@automerge/automerge-repo-network-websocket@2.4.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.1
+      '@automerge/automerge-repo': 2.4.0
       cbor-x: 1.5.4
       debug: 4.4.1
       eventemitter3: 5.0.1
@@ -34214,13 +34214,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@automerge/automerge-repo-storage-indexeddb@2.3.1':
+  '@automerge/automerge-repo-storage-indexeddb@2.4.0':
     dependencies:
-      '@automerge/automerge-repo': 2.3.1
+      '@automerge/automerge-repo': 2.4.0
     transitivePeerDependencies:
       - supports-color
 
-  '@automerge/automerge-repo@2.3.1':
+  '@automerge/automerge-repo@2.4.0':
     dependencies:
       '@automerge/automerge': 3.1.1
       bs58check: 3.0.1
