@@ -25,7 +25,7 @@ export const Home = () => {
     <>
       <Header />
       <Card.Heading classNames='container-max-width'>{t('workspaces heading')}</Card.Heading>
-      <section className='container-max-width pli-cardSpacingInline mbe-8'>
+      <section className='container-max-width pli-cardSpacingInline mbe-8 space-y-cardSpacingBlock'>
         {workspaces.map((node) => (
           <Workspace key={node.id} node={node} />
         ))}
