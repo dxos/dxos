@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { log } from '@dxos/log';
 import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
@@ -40,6 +41,17 @@ export abstract class Resource implements Lifecycle {
    * Provided in the open method.
    */
   #parentCtx: Context = this.#createParentContext();
+
+  /**
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
+   */
+  [Symbol.dispose]() {
+    if (this.isOpen) {
+      log.warn('resource disposed while open', { name: this.#name });
+    }
+
+    void this.close();
+  }
 
   get #name() {
     return Object.getPrototypeOf(this).constructor.name;
@@ -84,6 +96,8 @@ export abstract class Resource implements Lifecycle {
 
   /**
    * Calls the provided function, opening and closing the resource.
+   * NOTE: Consider using `using` instead.
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/using
    */
   async use<T>(fn: (resource: this) => Promise<T>): Promise<T> {
     try {

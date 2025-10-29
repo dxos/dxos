@@ -56,10 +56,8 @@ export default (context: PluginContext) => [
           defaultBlueprint = space.db.add(createBlueprint());
         }
 
-        const binder = new AiContextBinder(queue);
-        await binder.open();
-        await binder.bind({ blueprints: [Ref.make(defaultBlueprint)] });
-        await binder.close();
+        using binder = new AiContextBinder(queue);
+        await binder.use((binder) => binder.bind({ blueprints: [Ref.make(defaultBlueprint)] }));
 
         return {
           data: { object: chat },

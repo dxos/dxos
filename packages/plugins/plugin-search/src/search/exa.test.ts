@@ -86,7 +86,7 @@ const COMPOSER_DXOS_DOC = trim`
 
 Composer is an extensible application that includes familiar components such as documents, diagrams, and tables. It leverages DXOS — a full stack framework for building collaborative local-first applications.
 
-With our upcoming SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
+With our SDK, you'll be able to build custom plugins, leverage external APIs and integrate with LLMs. All inside of a private collaborative workspace.
 
 ## Disclaimer
 
