@@ -9923,8 +9923,8 @@ importers:
   packages/plugins/plugin-theme-editor:
     dependencies:
       '@ch-ui/tokens':
-        specifier: 3.0.0
-        version: 3.0.0
+        specifier: 3.0.1
+        version: 3.0.1
       '@codemirror/lang-json':
         specifier: 6.0.2
         version: 6.0.2
@@ -12113,11 +12113,11 @@ importers:
   packages/ui/lit-theme-editor:
     dependencies:
       '@ch-ui/colors':
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 1.2.1
+        version: 1.2.1
       '@ch-ui/tokens':
-        specifier: 3.0.0
-        version: 3.0.0
+        specifier: 3.0.1
+        version: 3.0.1
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../lit-ui
@@ -14930,11 +14930,11 @@ importers:
   packages/ui/react-ui-theme:
     dependencies:
       '@ch-ui/tailwind-tokens':
-        specifier: 2.8.0
-        version: 2.8.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))
+        specifier: 2.8.1
+        version: 2.8.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))
       '@ch-ui/tokens':
-        specifier: 3.0.0
-        version: 3.0.0
+        specifier: 3.0.1
+        version: 3.0.1
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
@@ -14991,8 +14991,8 @@ importers:
         version: 2.8.0
     devDependencies:
       '@ch-ui/colors':
-        specifier: 1.2.0
-        version: 1.2.0
+        specifier: 1.2.1
+        version: 1.2.1
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../react-ui-types
@@ -16484,22 +16484,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@ch-ui/colors@1.2.0':
-    resolution: {integrity: sha512-+kXVvIDVWq/X65sO+daSpz8nFiVwqPrOv944fpcHCx/6gzuptV4oKkthsElyGGd0NQrwW8noFUB86x6C1HBR6g==}
+  '@ch-ui/colors@1.2.1':
+    resolution: {integrity: sha512-s2uFrSVOsdV3T+STroZEBty5RL8FP6t//8HO1nvYkFSPEuS7lNteiKgX+N7IbvrJRtAi0lw5HPXnJjCLc4eUHw==}
     engines: {node: '>=20.0.0'}
 
   '@ch-ui/icons@1.0.1':
     resolution: {integrity: sha512-RKFKEC6jeNcERFAsdJ2AuK25ZevYLUI8I8PoH2CCIjD2xkP3oSVCDbnS7a2BjOOc/HTzK93Bt5cYbuvGyMR0PA==}
     engines: {node: '>=20.0.0'}
 
-  '@ch-ui/tailwind-tokens@2.8.0':
-    resolution: {integrity: sha512-fZHRjsSMN5uDxkscvXvAtNF+k5ZpJz6aejElMp83RFoI+TQ1r8MkX1WcvtPdyhyHpJJtGzV/PUBtXZ6EmrcKxw==}
+  '@ch-ui/tailwind-tokens@2.8.1':
+    resolution: {integrity: sha512-JGW8yujyqPpmThhCsZyUnqZYy0gna5mXm3cbPM9/RUBs74F/AwWIxAvSKsoEnHo3bCwBaQh7ov52DuWgVKbXyQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       tailwindcss: 3.x.x
 
-  '@ch-ui/tokens@3.0.0':
-    resolution: {integrity: sha512-yZ+qQYPHUovs646z87/Azya10jNEW6j23MI4szT0UYLWwzMgc9MPIUZ223vpfBxexHtrabPbD+4qOEC+Plc6Ug==}
+  '@ch-ui/tokens@3.0.1':
+    resolution: {integrity: sha512-B6W14xdXO3Hu7vsxMk78D3qFQFH2yWmSjvszgUNAh+AwvyGDBTCOmJ2Ie9XH/jrBZUcZ35GCW3K6z2BzyFpk6Q==}
     engines: {node: '>=20.0.0'}
 
   '@chainsafe/is-ip@2.0.2':
@@ -24877,6 +24877,7 @@ packages:
   crx@5.0.1:
     resolution: {integrity: sha512-n/PzBx/fR1+xZCiJBats9y5zw/a+YBcoJ0ABnUaY56xb1RpXuFhsiCMpNY6WjVtylLzhUUXSWsbitesVg7v2vg==}
     engines: {node: '>=10'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     hasBin: true
 
   crypto-random-string@2.0.0:
@@ -35653,7 +35654,7 @@ snapshots:
   '@cbor-extract/cbor-extract-win32-x64@2.2.0':
     optional: true
 
-  '@ch-ui/colors@1.2.0':
+  '@ch-ui/colors@1.2.1':
     dependencies:
       colorjs: colorjs.io@0.5.2
 
@@ -35661,14 +35662,14 @@ snapshots:
     dependencies:
       svg-sprite: 2.0.4
 
-  '@ch-ui/tailwind-tokens@2.8.0(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))':
+  '@ch-ui/tailwind-tokens@2.8.1(tailwindcss@3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3)))':
     dependencies:
-      '@ch-ui/tokens': 3.0.0
+      '@ch-ui/tokens': 3.0.1
       tailwindcss: 3.4.1(ts-node@10.9.1(patch_hash=8b505128d4c01d9dc6b047b35aac1252bda23c8fbc895b5a42388b2f97112636)(@swc/core@1.13.5(@swc/helpers@0.5.17))(@swc/wasm@1.13.3)(@types/node@22.10.2)(typescript@5.9.3))
 
-  '@ch-ui/tokens@3.0.0':
+  '@ch-ui/tokens@3.0.1':
     dependencies:
-      '@ch-ui/colors': 1.2.0
+      '@ch-ui/colors': 1.2.1
       dependency-graph: 1.0.0
       invariant: 2.2.4
       postcss: 8.5.6

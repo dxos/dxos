@@ -42,8 +42,8 @@
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {
-    "@ch-ui/tailwind-tokens": "2.8.0",
-    "@ch-ui/tokens": "3.0.0",
+    "@ch-ui/tailwind-tokens": "2.8.1",
+    "@ch-ui/tokens": "3.0.1",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "5.0.16",
@@ -64,7 +64,7 @@
     "tailwindcss-radix": "^2.8.0"
   },
   "devDependencies": {
-    "@ch-ui/colors": "1.2.0",
+    "@ch-ui/colors": "1.2.1",
     "@dxos/react-ui-types": "workspace:*",
     "@types/lodash.merge": "^4.6.6",
     "@types/postcss-import": "^14.0.3",
