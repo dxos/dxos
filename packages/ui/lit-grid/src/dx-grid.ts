@@ -1447,6 +1447,7 @@ export class DxGrid extends LitElement {
       data-dx-grid-action="cell"
       aria-colindex=${col}
       aria-rowindex=${row}
+      data-testid=${`${plane}.${col}.${row}`}
       style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
