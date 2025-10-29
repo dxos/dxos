@@ -18,7 +18,7 @@ import { log } from '@dxos/log';
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 
 export default defineFunction({
-  key: 'dxos.org/function/agent',
+  key: 'dxos.org/function/prompt',
   name: 'Agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({

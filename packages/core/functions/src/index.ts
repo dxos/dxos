@@ -3,7 +3,7 @@
 //
 
 export * from './errors';
-export * as exampleFunctions from './examples';
+export * from './examples';
 export * from './executor';
 export * from './handler';
 export * from './services';

@@ -25,11 +25,11 @@ import {
 } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import { AgentFunction, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
+import { Agent, DesignBlueprint, Document, PlanningBlueprint, Research, Tasks } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, Trigger, exampleFunctions } from '@dxos/functions';
+import { Example, Function, Trigger } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Assistant, AssistantAction, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -208,14 +208,13 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/testing',
       activatesOn: Events.SetupArtifactDefinition,
       activate: () => [
-        // TODO(burdon): Move into assistnat?
         contributes(Capabilities.BlueprintDefinition, DesignBlueprint),
         contributes(Capabilities.BlueprintDefinition, PlanningBlueprint),
-        contributes(Capabilities.Functions, [AgentFunction]),
+        contributes(Capabilities.Functions, [Agent.prompt]),
         contributes(Capabilities.Functions, [Document.read, Document.update]),
         contributes(Capabilities.Functions, [Tasks.read, Tasks.update]),
-        contributes(Capabilities.Functions, Research.tools),
-        contributes(Capabilities.Functions, [exampleFunctions.reply]),
+        contributes(Capabilities.Functions, [Research.create, Research.research]),
+        contributes(Capabilities.Functions, [Example.reply]),
       ],
     }),
     defineModule({

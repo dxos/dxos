@@ -10,16 +10,10 @@ import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities, Surface, useCapabilities } from '@dxos/app-framework';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  AgentFunction,
-  LinearBlueprint,
-  ResearchBlueprint,
-  ResearchDataTypes,
-  ResearchGraph,
-} from '@dxos/assistant-toolkit';
+import { Agent, LinearBlueprint, ResearchBlueprint, ResearchDataTypes, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
-import { Script, Trigger, exampleFunctions, serializeFunction } from '@dxos/functions';
+import { Example, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ASSISTANT_BLUEPRINT_KEY } from '@dxos/plugin-assistant';
@@ -580,7 +574,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(exampleFunctions.reply)),
+          function: Ref.make(serializeFunction(Example.reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -679,7 +673,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(AgentFunction)),
+          function: Ref.make(serializeFunction(Agent.prompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -799,7 +793,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(AgentFunction)),
+        function: Ref.make(serializeFunction(Agent.prompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -912,8 +906,8 @@ export const WithPrompt: Story = {
     plugins: [MarkdownPlugin()],
     config: config.remote,
     types: [DataType.Text],
-    onInit: async ({ client, space }) => {
-      space.db.add(serializeFunction(AgentFunction));
+    onInit: async ({ space }) => {
+      space.db.add(serializeFunction(Agent.prompt));
 
       space.db.add(
         Prompt.make({

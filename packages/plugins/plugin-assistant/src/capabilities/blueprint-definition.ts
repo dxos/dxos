@@ -5,7 +5,7 @@
 import { Capabilities, type Capability, contributes } from '@dxos/app-framework';
 import { templates } from '@dxos/assistant';
 import {
-  AgentFunction,
+  Agent,
   Discord,
   DiscordBlueprint,
   EntityExtraction,
@@ -49,11 +49,11 @@ export default (): Capability<any>[] => [
   contributes(Capabilities.BlueprintDefinition, blueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, Research.tools),
+  contributes(Capabilities.Functions, [Research.create, Research.research]),
   contributes(Capabilities.BlueprintDefinition, ResearchBlueprint),
 
   // TODO(burdon): Factor out.
-  contributes(Capabilities.Functions, [AgentFunction, EntityExtraction.extract]),
+  contributes(Capabilities.Functions, [Agent.prompt, EntityExtraction.extract]),
   contributes(Capabilities.BlueprintDefinition, WebSearchBlueprint),
 
   // TODO(burdon): Factor out.
