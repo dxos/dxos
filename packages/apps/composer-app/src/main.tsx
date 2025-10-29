@@ -4,6 +4,7 @@
 
 import '@dxos-theme';
 
+import * as Match from 'effect/Match';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -88,6 +89,16 @@ const main = async () => {
     !observabilityDisabled,
   );
 
+  const isTauri = !!(globalThis as any).__TAURI__;
+  const isMobile = await Match.value(isTauri).pipe(
+    Match.when(true, async () => {
+      const { type } = await import('@tauri-apps/plugin-os');
+      const osType = type();
+      return osType === 'ios' || osType === 'android';
+    }),
+    Match.orElse(() => isTrue(config.values.runtime?.app?.env?.DX_MOBILE)),
+  );
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -96,13 +107,14 @@ const main = async () => {
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
-    isTauri: !!(globalThis as any).__TAURI__,
+    isTauri,
+    isMobile,
     isLabs: isTrue(config.values.runtime?.app?.env?.DX_LABS),
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
   const plugins = getPlugins(conf);
-  const core = getCore(conf);
+  const core = await getCore(conf);
   const defaults = getDefaults(conf);
 
   const Fallback = ({ error }: { error: Error }) => (

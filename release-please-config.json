@@ -550,6 +550,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-mobile-layout/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-native/package.json",
           "jsonpath": "$.version"
         },

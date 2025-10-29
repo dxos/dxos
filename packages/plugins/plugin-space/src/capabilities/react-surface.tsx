@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -62,8 +62,6 @@ import { SpaceCapabilities } from './capabilities';
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
-
-const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [

@@ -8,6 +8,7 @@ import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 import { type DeckAction, type NewPlankPositioning } from './types';
 
+// TODO(wittjosiah): Factor out.
 export const createEntryId = (entryId: string, variant?: string) =>
   variant ? `${entryId}${ATTENDABLE_PATH_SEPARATOR}${variant}` : entryId;
 

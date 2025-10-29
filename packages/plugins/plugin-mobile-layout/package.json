@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/plugin-masonry",
-  "version": "0.0.0",
-  "description": "Masonry DXOS Surface plugin",
+  "name": "@dxos/plugin-mobile-layout",
+  "version": "0.8.3",
+  "description": "Mobile layout plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -12,8 +12,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "browser": "./dist/lib/browser/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -23,30 +22,19 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@dxos/echo": "workspace:*",
-    "@dxos/echo-query": "workspace:*",
-    "@dxos/effect": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
-    "@dxos/plugin-search": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-components": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-masonry": "workspace:*",
+    "@dxos/live-object": "workspace:*",
+    "@dxos/plugin-graph": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
-    "@preact/signals-core": "^1.12.1",
-    "@preact/signals-react": "^3.3.0"
+    "@radix-ui/react-context": "^1.1.2"
   },
   "devDependencies": {
-    "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
-    "@dxos/random": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
+    "@effect-rx/rx-react": "0.42.4",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.1",
     "effect": "3.18.3",
@@ -57,6 +45,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
+    "@effect-rx/rx-react": "^0.34.1",
     "effect": "^3.13.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

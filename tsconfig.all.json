@@ -316,6 +316,9 @@
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-mobile-layout/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-native/tsconfig.json"
     },
     {
