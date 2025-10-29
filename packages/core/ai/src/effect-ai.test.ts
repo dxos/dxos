@@ -66,7 +66,7 @@ const createChat = Effect.fn(function* (prompt: string) {
 });
 
 // Tool definitions.
-class TestToolkit extends Toolkit.make(
+const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
@@ -86,7 +86,7 @@ class TestToolkit extends Toolkit.make(
     },
     success: Schema.DateFromString,
   }),
-) {}
+);
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({

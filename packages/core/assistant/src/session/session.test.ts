@@ -33,7 +33,7 @@ const CalendarEventSchema = Schema.Struct({
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 
-class TestToolkit extends Toolkit.make(
+const TestToolkit = Toolkit.make(
   Tool.make('Calculator', {
     description: 'Basic calculator tool',
     parameters: {
@@ -46,7 +46,7 @@ class TestToolkit extends Toolkit.make(
     }),
     failure: Schema.Never,
   }),
-) {}
+);
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({

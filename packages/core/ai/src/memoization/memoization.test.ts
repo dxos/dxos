@@ -21,24 +21,23 @@ import { AiServiceTestingPreset, TestingToolkit, testingLayer } from '../testing
 
 import * as MemoizedAiService from './MemoizedAiService';
 
-class DateToolkit extends Toolkit.make(
+const DateToolkit = Toolkit.make(
   Tool.make('get-date', {
     description: 'Get the current date',
     success: Schema.DateFromString,
   }),
-) {
-  static layerTest = DateToolkit.toLayer({
-    'get-date': Effect.fnUntraced(function* () {
-      return new Date('2025-10-01');
-    }),
-  });
-}
+);
 
-const TestLayer = Layer.mergeAll(
-  testingLayer,
-  DateToolkit.layerTest,
-  AiService.model('@anthropic/claude-sonnet-4-0'),
-).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('direct')));
+const layerTest = DateToolkit.toLayer({
+  'get-date': Effect.fnUntraced(function* () {
+    return new Date('2025-10-01');
+  }),
+});
+
+const TestLayer = Layer.mergeAll(testingLayer, layerTest, AiService.model('@anthropic/claude-sonnet-4-0')).pipe(
+  Layer.provideMerge(MemoizedAiService.layerTest()),
+  Layer.provide(AiServiceTestingPreset('direct')),
+);
 
 describe('memoization', () => {
   it.effect(
@@ -53,10 +52,9 @@ describe('memoization', () => {
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* LanguageModel.generateText({
+        yield* LanguageModel.generateText({
           prompt: 'Write me a poem!',
         });
-        // console.log(result);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -75,7 +73,7 @@ describe('memoization', () => {
             toolkit: TestingToolkit,
           });
           yield* stream.pipe(
-            Stream.runForEach((part) => {
+            Stream.runForEach((_part) => {
               // console.log(part);
               return Effect.void;
             }),

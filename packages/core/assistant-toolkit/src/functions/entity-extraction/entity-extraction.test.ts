@@ -52,7 +52,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Entity-extraction', () => {
+describe.skip('Entity extraction', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(

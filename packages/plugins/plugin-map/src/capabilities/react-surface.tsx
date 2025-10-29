@@ -29,8 +29,8 @@ export default () =>
       filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
-        const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
-        const [zoom, setZoom] = useState(14);
+        const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
+        const [zoom, setZoom] = useState<number | undefined>(undefined);
 
         const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
           setCenter(center);
@@ -56,8 +56,8 @@ export default () =>
         Obj.instanceOf(DataType.View, data.subject) && Obj.instanceOf(Map.Map, data.subject.presentation.target),
       component: ({ data, role }) => {
         const state = useCapability(MapCapabilities.MutableState);
-        const [center, setCenter] = useState<LatLngLiteral>({ lat: 0, lng: 0 });
-        const [zoom, setZoom] = useState(14);
+        const [center, setCenter] = useState<LatLngLiteral | undefined>(undefined);
+        const [zoom, setZoom] = useState<number | undefined>(undefined);
 
         const handleChange = useCallback(({ center, zoom }: { center: LatLngLiteral; zoom: number }) => {
           setCenter(center);
@@ -82,7 +82,7 @@ export default () =>
     //   filter: (data) => Obj.instanceOf(MapType, data),
     //   component: ({ data }) => {
     //     const [lng = 0, lat = 0] = data?.coordinates ?? [];
-    //     return <MapControl center={{ lat, lng }} zoom={14} />;
+    //     return <MapControl center={{ lat, lng }} zoom={8} />;
     //   },
     // }),
     createSurface({

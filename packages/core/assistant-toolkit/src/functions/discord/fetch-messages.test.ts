@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect';
 import { ComputeEventLogger, CredentialsService, FunctionInvocationService, TracingService } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 
-import { default as fetchDiscordMessages } from './fetch-messages';
+import { default as fetchMessages } from './fetch-messages';
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -30,7 +30,7 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({}),
       CredentialsService.layerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
       FetchHttpClient.layer,
-      FunctionInvocationService.layerTestMocked({ functions: [fetchDiscordMessages] }).pipe(
+      FunctionInvocationService.layerTestMocked({ functions: [fetchMessages] }).pipe(
         Layer.provideMerge(ComputeEventLogger.layerFromTracing),
         Layer.provideMerge(TracingService.layerLogInfo()),
       ),
@@ -45,7 +45,7 @@ describe('Feed', { timeout: 600_000 }, () => {
     'fetch discord messages',
     Effect.fnUntraced(
       function* (_) {
-        const messages = yield* FunctionInvocationService.invokeFunction(fetchDiscordMessages, {
+        const messages = yield* FunctionInvocationService.invokeFunction(fetchMessages, {
           serverId: DXOS_SERVER_ID,
           // channelId: '1404487604761526423',
           last: '7d',
