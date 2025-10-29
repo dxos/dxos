@@ -17,6 +17,7 @@ import {
   decodeReference,
   encodeReference,
   isEncodedReference,
+  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -423,7 +424,25 @@ export class ObjectCore {
 
   isDeleted(): boolean {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    return typeof value === 'boolean' ? value : false;
+    if (typeof value === 'boolean' ? value : false) {
+      return true;
+    }
+    if (!this.database) {
+      return false;
+    }
+    const deps = this.getStrongDependencies();
+    log.info('deps', { deps, doc: this.getDecoded([]) });
+    return deps.some((dep) => {
+      if (!dep.isLocalObjectId()) {
+        return false;
+      }
+      const depObjectId = dep.parts[1];
+      const depCore = this.database?.getObjectCoreById(depObjectId);
+      if (!depCore) {
+        return true;
+      }
+      return depCore.isDeleted();
+    });
   }
 
   setDeleted(value: boolean): void {
@@ -435,6 +454,7 @@ export class ObjectCore {
    * Strong references are loaded together with the source object.
    * Currently this is the schema reference and the source and target for relations
    */
+  // NOTE: Keep in sync with QueryExecutor.getStrongDependencies
   getStrongDependencies(): DXN[] {
     const res: DXN[] = [];
 

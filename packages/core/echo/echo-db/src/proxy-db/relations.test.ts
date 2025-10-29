@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Query, Obj } from '@dxos/echo';
 import { live } from '@dxos/echo/internal';
 import { RelationSourceId, RelationTargetId } from '@dxos/echo/internal';
 import { TestingDeprecated } from '@dxos/echo/testing';
@@ -66,5 +66,29 @@ describe('Relations', () => {
       expect(getTarget(HasManager!).name).toEqual('Alice');
       expect(HasManager!.since).to.equal('2022');
     }
+  });
+
+  test('deleting an endpoint deletes the relation', async () => {
+    const alice = db.add(
+      live(TestingDeprecated.Contact, {
+        name: 'Alice',
+      }),
+    );
+    const bob = db.add(
+      live(TestingDeprecated.Contact, {
+        name: 'Bob',
+      }),
+    );
+    const hasManager = db.add(
+      live(TestingDeprecated.HasManager, {
+        [RelationSourceId]: bob,
+        [RelationTargetId]: alice,
+        since: '2022',
+      }),
+    );
+
+    expect(Obj.isDeleted(hasManager as any)).to.be.false;
+    db.remove(bob);
+    expect(Obj.isDeleted(hasManager as any)).to.be.true;
   });
 });
