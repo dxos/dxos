@@ -17,7 +17,6 @@ import {
   decodeReference,
   encodeReference,
   isEncodedReference,
-  DATA_NAMESPACE,
 } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';

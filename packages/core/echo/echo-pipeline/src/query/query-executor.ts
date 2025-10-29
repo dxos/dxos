@@ -9,10 +9,10 @@ import * as Predicate from 'effect/Predicate';
 import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import {
   DatabaseDirectory,
+  EncodedReference,
   ObjectStructure,
   type QueryAST,
   isEncodedReference,
-  EncodedReference,
 } from '@dxos/echo-protocol';
 import { EscapedPropPath, type FindResult, type Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -29,7 +29,6 @@ import { filterMatchObject } from '../filter';
 
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
-import { Obj } from '../../../echo/src/Type';
 
 const isNullable: Predicate.Refinement<unknown, null | undefined> = Predicate.isNullable;
 
