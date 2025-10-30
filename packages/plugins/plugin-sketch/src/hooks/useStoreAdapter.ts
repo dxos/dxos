@@ -27,7 +27,6 @@ export const useStoreAdapter = (object?: Diagram.Diagram) => {
 
     const t = setTimeout(async () => {
       invariant(object.canvas.target);
-      console.log(JSON.stringify(object.canvas.target, undefined, 2));
       const accessor = createDocAccessor(object.canvas.target, ['content']);
       await adapter.open(accessor);
       forceUpdate({});
