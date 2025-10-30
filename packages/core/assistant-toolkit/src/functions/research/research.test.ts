@@ -64,8 +64,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-// TODO(dmaretskyi): Too broken.
-describe.skip('Research', () => {
+describe('Research', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(
@@ -80,7 +79,6 @@ describe.skip('Research', () => {
 
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and investors of airbnb.',
-          mockSearch: false,
         });
 
         console.log(inspect(result, { depth: null, colors: true }));
@@ -88,18 +86,21 @@ describe.skip('Research', () => {
 
         yield* DatabaseService.flush({ indexes: true });
         const researchGraph = yield* queryResearchGraph();
-        const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
-          Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-        );
-        console.log(inspect(data, { depth: null, colors: true }));
+        if (researchGraph) {
+          const data = yield* DatabaseService.load(researchGraph.queue).pipe(
+            Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
+          );
+          console.log(inspect(data, { depth: null, colors: true }));
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
+    60_000,
+    // MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 
-  it.scoped(
+  it.scoped.skip(
     'research blueprint',
     Effect.fnUntraced(
       function* (_) {

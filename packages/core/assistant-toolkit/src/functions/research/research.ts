@@ -2,12 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import { pipe, flow } from 'effect/Function';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
+import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
 import {
@@ -21,6 +25,7 @@ import { type DXN, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
+import { Template } from '@dxos/blueprints';
 
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { exaFunction, exaMockFunction } from '../exa';
@@ -61,6 +66,12 @@ export default defineFunction({
       description: 'Whether to use the mock search tool.',
       default: false,
     }),
+
+    entityExtraction: Schema.optional(Schema.Boolean).annotations({
+      description:
+        'Whether to extract structured entities from the research. Experimental feature only enable if user explicitly requests it.',
+      default: false,
+    }),
   }),
   outputSchema: Schema.Struct({
     note: Schema.optional(Schema.String).annotations({
@@ -71,7 +82,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, mockSearch, researchInstructions } }) {
+    function* ({ data: { query, researchInstructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
         const mockPerson = yield* DatabaseService.add(
           Obj.make(DataType.Person, {
@@ -94,47 +105,44 @@ export default defineFunction({
       yield* DatabaseService.flush({ indexes: true });
       yield* TracingService.emitStatus({ message: 'Researching...' });
 
-      const objectDXNs: DXN[] = [];
-      const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
-      const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
-        onAppend: (dxns) => objectDXNs.push(...dxns),
-      });
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
+      let toolkit: Toolkit.Any = NativeWebSearch;
+      let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
-      const toolkit = yield* createToolkit({
-        toolkit: Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit, NativeWebSearch),
-        // toolIds: [mockSearch ? ToolId.make(exaMockFunction.key) : ToolId.make(exaFunction.key)],
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            //
-            GraphWriterHandler,
-            LocalSearchHandler,
-          ).pipe(Layer.provide(contextQueueLayerFromResearchGraph)),
-        ),
-      );
+      const objectDXNs: DXN[] = [];
+      if (entityExtraction) {
+        const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
+        const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
+          onAppend: (dxns) => objectDXNs.push(...dxns),
+        });
+        toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
+        handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
+          Layer.provide(contextQueueLayerFromResearchGraph),
+        ) as any;
+      }
+
+      const finishedToolkit = yield* createToolkit({
+        toolkit: toolkit as any,
+      }).pipe(Effect.provide(handlers));
 
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
         system:
-          PROMPT +
+          Template.process(PROMPT, { entityExtraction }) +
           (researchInstructions
             ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
             : ''),
-        toolkit,
+        toolkit: finishedToolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
-      const note = result
-        .at(-1)
-        ?.blocks.filter((block) => block._tag === 'text')
-        .at(-1)?.text;
+
       const objects = yield* Effect.forEach(objectDXNs, (dxn) => DatabaseService.resolve(dxn)).pipe(
         Effect.map(Array.map((obj) => Obj.toJSON(obj))),
       );
 
       return {
-        note,
+        note: extractLastTextBlock(result),
         objects,
       };
     },
@@ -153,3 +161,26 @@ export default defineFunction({
     ),
   ),
 });
+
+/**
+ * Extracts the last text block from the result.
+ * Skips citations.
+ */
+const extractLastTextBlock = (result: DataType.Message[]) => {
+  return pipe(
+    result,
+    Array.last,
+    Option.map(
+      flow(
+        (_) => _.blocks,
+        Array.reverse,
+        Array.dropWhile((_) => _._tag === 'summary'),
+        Array.takeWhile((_) => _._tag === 'text'),
+        Array.reverse,
+        Array.map((_) => _.text),
+        Array.reduce('', String.concat),
+      ),
+    ),
+    Option.getOrElse(() => ''),
+  );
+};
