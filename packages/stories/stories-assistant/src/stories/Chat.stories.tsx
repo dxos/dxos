@@ -37,7 +37,6 @@ import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
-import { useClient } from '@dxos/react-client';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -78,23 +77,23 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded border border-separator overflow-hidden mbe-[--stack-gap] last:mbe-0';
+const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
 
 type StoryProps = {
-  debug?: boolean;
-  deckComponents: (FC<ComponentProps> | 'surfaces')[][];
+  modules: FC<ComponentProps>[][];
+  showContext?: boolean;
   blueprints?: string[];
 };
 
-const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryProps) => {
-  const client = useClient();
-  const space = useSpace();
-
+const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
   const blueprintsDefinitions = useCapabilities(Capabilities.BlueprintDefinition);
+
+  const space = useSpace();
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
+
     const { objects: chats = [] } = await space.db.query(Filter.type(Assistant.Chat)).run();
     const chat = chats[0];
     if (!chat) {
@@ -102,8 +101,6 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
     }
 
     // Add blueprints to context.
-    const binder = new AiContextBinder(await chat.queue.load());
-    await binder.open();
     const registry = new Blueprint.Registry(blueprintsDefinitions);
     const blueprintObjects = blueprints
       .map((key) => {
@@ -113,20 +110,13 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
         }
       })
       .filter(isNonNullable);
-    await binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) });
-    await binder.close();
+
+    const binder = new AiContextBinder(await chat.queue.load());
+    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
   const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
     log.info('event', { event });
-    switch (event) {
-      case 'reset': {
-        void client?.reset().then(() => {
-          document.location.reload();
-        });
-        break;
-      }
-    }
   }, []);
 
   const chats = useQuery(space, Filter.type(Assistant.Chat));
@@ -145,50 +135,48 @@ const DefaultStory = ({ debug = true, deckComponents, blueprints = [] }: StoryPr
       orientation='horizontal'
       size='split'
       rail={false}
-      itemsCount={deckComponents.length}
-      classNames='  absolute inset-0 gap-[--stack-gap]'
+      itemsCount={modules.length + (showContext ? 1 : 0)}
+      classNames='absolute inset-0 gap-[--stack-gap]'
     >
-      {deckComponents.map((plankComponents, i) => {
-        const Components: FC<ComponentProps>[] = plankComponents.filter((item) => item !== 'surfaces');
-        const renderSurfaces = plankComponents.includes('surfaces');
-        let j = 0;
+      {modules.map((Components, i) => {
         return (
-          <StackItem.Root order={i + 1} item={{ id: `${i}` }} key={i}>
+          <StackItem.Root key={i} item={{ id: `${i}` }}>
             <Stack
               orientation='vertical'
+              classNames='gap-[--stack-gap]'
               size={i > 0 ? 'contain' : 'split'}
+              itemsCount={Components.length}
               rail={false}
-              itemsCount={plankComponents.length + (i > 0 ? objects.length : 0)}
             >
-              {Components.map((Component) => {
-                const item = (
-                  <StackItem.Root key={j} order={j + 1} item={{ id: `${i}:${j}` }} classNames={panelClassNames}>
-                    <Component space={space} debug={debug} onEvent={handleEvent} />
-                  </StackItem.Root>
-                );
-                j += 1;
-                return item;
-              })}
-
-              {renderSurfaces &&
-                objects.map((object, index) => {
-                  const k = index + j;
-                  return (
-                    <StackItem.Root key={k} order={k + 1} item={{ id: `${k}` }} classNames={panelClassNames}>
-                      {debug && (
-                        <div role='heading' className='flex gap-2 items-center text-xs justify-center text-subdued'>
-                          <span>{Obj.getTypename(object)}</span>
-                          <span>{object.id}</span>
-                        </div>
-                      )}
-                      <Surface role='section' limit={1} data={{ subject: object }} />
-                    </StackItem.Root>
-                  );
-                })}
+              {Components.map((Component, i) => (
+                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                  <Component space={space} onEvent={handleEvent} />
+                </StackItem.Root>
+              ))}
             </Stack>
           </StackItem.Root>
         );
       })}
+
+      {showContext && <StackContainer objects={objects} />}
+    </Stack>
+  );
+};
+
+const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
+  return (
+    <Stack
+      orientation='vertical'
+      classNames='gap-[--stack-gap]'
+      size='contain'
+      rail={false}
+      itemsCount={objects.length}
+    >
+      {objects.map((object) => (
+        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
+          <Surface role='section' limit={1} data={{ subject: object }} />
+        </StackItem.Root>
+      ))}
     </Stack>
   );
 };
@@ -198,8 +186,8 @@ const storybook: Meta<typeof DefaultStory> = {
   render: render(DefaultStory),
   decorators: [withTheme],
   parameters: {
+    layout: 'fullscreen',
     translations,
-    controls: { disable: true },
   },
 };
 
@@ -219,6 +207,16 @@ const MARKDOWN_DOCUMENT = trim`
   Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
+`;
+
+const DXOS_DOCUMENT = trim`
+  # DXOS
+  - ECHO Semantic Graph Database
+  - AI-Native workflows
+  - Privacy preserving P2P sync
+  - Edge computing
+  - Flexible access control
+  - Open and extensible
 `;
 
 const STYLE_GUIDE = trim`
@@ -251,7 +249,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer]],
+    modules: [[ChatContainer]],
   },
 };
 
@@ -261,7 +259,7 @@ export const WithWebSearch: Story = {
     config: config.remote,
   }),
   args: {
-    deckComponents: [[ChatContainer]],
+    modules: [[ChatContainer]],
     blueprints: ['dxos.org/blueprint/web-search'],
   },
 };
@@ -291,7 +289,8 @@ export const WithDocument: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', CommentsContainer]],
+    showContext: true,
+    modules: [[ChatContainer], [CommentsContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
@@ -309,7 +308,7 @@ export const WithBlueprints: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [TasksContainer, BlueprintContainer]],
+    modules: [[ChatContainer], [TasksContainer, BlueprintContainer]],
   },
 };
 
@@ -348,7 +347,8 @@ export const WithChess: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
@@ -371,7 +371,8 @@ export const WithMail: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', MessageContainer]],
+    showContext: true,
+    modules: [[ChatContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
@@ -391,7 +392,8 @@ export const WithGmail: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces', MessageContainer, TokenManagerContainer]],
+    showContext: true,
+    modules: [[ChatContainer], [MessageContainer, TokenManagerContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -420,7 +422,8 @@ export const WithMap: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
@@ -470,7 +473,8 @@ export const WithTrip: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatContainer]],
   },
 };
 
@@ -488,8 +492,8 @@ export const WithBoard: Story = {
     },
   }),
   args: {
-    debug: true,
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatContainer]],
   },
 };
 
@@ -502,14 +506,17 @@ export const WithResearch: Story = {
     accessTokens: [Obj.make(DataType.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     onInit: async ({ space }) => {
       space.db.add(Obj.make(DataType.Organization, { name: 'BlueYard Capital' }));
+      space.db.add(Markdown.makeDocument({ name: 'DXOS', content: DXOS_DOCUMENT }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const { objects } = await space.db.query(Filter.type(DataType.Organization)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const { objects: organizations } = await space.db.query(Filter.type(DataType.Organization)).run();
+      const { objects: documents } = await space.db.query(Filter.type(Markdown.Document)).run();
+      await binder.bind({ objects: [...organizations, ...documents].map((object) => Ref.make(object)) });
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer, 'surfaces']],
+    showContext: true,
+    modules: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
     blueprints: [
       // ASSISTANT_BLUEPRINT_KEY, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
@@ -526,7 +533,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
+    modules: [[ChatContainer], [GraphContainer]],
   },
 };
 
@@ -547,7 +554,8 @@ export const WithTranscription: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], ['surfaces']],
+    showContext: true,
+    modules: [[ChatContainer]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
@@ -565,7 +573,7 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    deckComponents: [[ChatContainer], [GraphContainer]],
+    modules: [[ChatContainer], [GraphContainer]],
     blueprints: [LinearBlueprint.key],
   },
 };
@@ -588,7 +596,7 @@ export const WithTriggers: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
   },
 };
@@ -641,7 +649,7 @@ export const WithChessTrigger: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
   },
 };
@@ -691,7 +699,7 @@ export const WithResearchQueue: Story = {
     },
   }),
   args: {
-    deckComponents: [
+    modules: [
       [ResearchInputStack, ResearchOutputStack],
       [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
     ],
@@ -851,7 +859,7 @@ export const WithProject: Story = {
     },
   }),
   args: {
-    deckComponents: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
     blueprints: [],
   },
 };
@@ -900,7 +908,7 @@ export const WithScript: Story = {
     },
   }),
   args: {
-    deckComponents: [[ChatContainer], [ScriptContainer]],
+    modules: [[ChatContainer], [ScriptContainer]],
   },
 };
 
@@ -931,6 +939,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    deckComponents: [[PromptContainer], [InvocationsContainer]],
+    modules: [[PromptContainer], [InvocationsContainer]],
   },
 };

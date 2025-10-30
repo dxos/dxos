@@ -14,7 +14,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { StackItem } from '@dxos/react-ui-stack';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/react-ui-theme';
 
 import { type ComponentProps } from './types';
@@ -35,43 +36,40 @@ export const GraphContainer = ({ space }: ComponentProps) => {
   const parser = useMemo(() => new QueryBuilder(), []);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      // TODO(burdon): Get AST from filter?
       const { filter } = parser.build(text);
-      if (filter) {
-        setFilter(filter);
-        setOpen(true);
-      }
+      setFilter(filter ?? Filter.everything());
+      setOpen(!!filter);
     },
     [space, parser],
   );
 
   return (
-    <div className={mx('relative bs-full grid', open && 'grid-rows-[min-content_1fr]')}>
+    <StackItem.Content toolbar classNames={['relative bs-full grid', open && 'grid-rows-[min-content_1fr]']}>
       <SearchBar space={space} onSubmit={handleSubmit} />
       <D3ForceGraph classNames='min-bs-[50vh]' model={model} />
 
-      {/* TODO(burdon): Create component with context state for story. */}
-      {(open && (
-        <div className='absolute left-2 right-2 bottom-2 h-[8rem] flex overflow-hidden bg-baseSurface border border-subduedSeparator'>
-          <SyntaxHighlighter language='json' classNames='text-sm'>
-            {JSON.stringify({ filter }, null, 2)}
-          </SyntaxHighlighter>
-          <div className='absolute bottom-1 right-1'>
-            <IconButton variant='ghost' icon='ph--x--regular' iconOnly label='Close' onClick={() => setOpen(false)} />
-          </div>
-        </div>
-      )) || (
-        <div className='absolute bottom-3 right-3'>
-          <IconButton
-            variant='ghost'
-            icon='ph--arrow-line-up--regular'
-            iconOnly
-            label='Open'
-            onClick={() => setOpen(true)}
-          />
+      {open && (
+        <div
+          role='none'
+          className={mx(
+            'flex absolute left-2 right-2 bottom-2 bs-[8rem]',
+            'overflow-hidden bg-baseSurface border border-subduedSeparator opacity-80',
+          )}
+        >
+          <Json classNames='text-sm' data={filter} />
         </div>
       )}
-    </div>
+
+      <div role='none' className='absolute bottom-4 right-4 z-10'>
+        <IconButton
+          variant='ghost'
+          icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
+          iconOnly
+          label={open ? 'Close' : 'Open'}
+          onClick={() => setOpen((open) => !open)}
+        />
+      </div>
+    </StackItem.Content>
   );
 };
 
@@ -80,8 +78,8 @@ export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorP
   const editorRef = useRef<EditorController>(null);
 
   return (
-    <Toolbar.Root classNames='border-be border-subduedSeparator'>
-      <QueryEditor classNames='p-2 is-full border-b border-subduedSeparator' db={space.db} onChange={onSubmit} />
+    <Toolbar.Root>
+      <QueryEditor classNames='p-1 is-full' db={space.db} onChange={onSubmit} />
       <Toolbar.IconButton
         icon='ph--magnifying-glass--regular'
         iconOnly

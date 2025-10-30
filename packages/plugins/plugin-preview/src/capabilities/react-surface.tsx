@@ -23,7 +23,7 @@ import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
 
 export default () =>
@@ -54,9 +54,9 @@ export default () =>
         );
 
         return (
-          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
+          <PersonCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
-          </ContactCard>
+          </PersonCard>
         );
       },
     }),
@@ -139,7 +139,7 @@ export default () =>
       component: ({ data }) => {
         return (
           <div role='none' className='flex justify-center'>
-            <div role='none' className='card-max-width'>
+            <div role='none' className='p-4 card-max-width'>
               <Surface role='card' data={data} limit={1} />
             </div>
           </div>

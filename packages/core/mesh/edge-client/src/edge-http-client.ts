@@ -9,6 +9,7 @@ import * as Function from 'effect/Function';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -18,7 +19,6 @@ import {
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
-  type EdgeHttpResponse,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
   type ExportBundleRequest,
@@ -77,6 +77,7 @@ type EdgeHttpRequestArgs = {
 
   /**
    * Do not expect a standard EDGE JSON response with a `success` field.
+   * @deprecated Use only for debugging.
    */
   rawResponse?: boolean;
 };
@@ -388,50 +389,52 @@ export class EdgeHttpClient {
   // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
   private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    const requestContext = args.context ?? new Context();
+    const requestContext = args.context ?? Context.default();
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
     while (true) {
       let processingError: EdgeCallFailedError | undefined = undefined;
-      let retryAfterHeaderValue: number = Number.NaN;
       try {
         const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
-        retryAfterHeaderValue = Number(response.headers.get('Retry-After'));
-        if (response.ok) {
-          const body = (await response.json()) as EdgeHttpResponse<T>;
 
+        if (response.ok) {
+          const body = await response.clone().json();
           if (args.rawResponse) {
             return body as any;
           }
-
+          invariant(body, 'Expected body to be present');
           if (!('success' in body)) {
             return body;
           }
-
           if (body.success) {
             return body.data;
-          }
-
-          log.warn('unsuccessful edge response', { url, body });
-          if (body.errorData?.type === 'auth_challenge' && typeof body.errorData?.challenge === 'string') {
-            processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
-          } else if (body.errorData) {
-            processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
           }
         } else if (response.status === 401 && !handledAuth) {
           this._authHeader = await this._handleUnauthorized(response);
           handledAuth = true;
           continue;
+        }
+
+        const body =
+          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
+
+        invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
+
+        if (body?.errorData?.type === 'auth_challenge' && typeof body?.errorData?.challenge === 'string') {
+          processingError = new EdgeAuthChallengeError(body.errorData.challenge, body.errorData);
+        } else if (body?.success === false) {
+          processingError = EdgeCallFailedError.fromUnsuccessfulResponse(response, body);
         } else {
+          invariant(!response.ok, 'Expected response to not be ok.');
           processingError = await EdgeCallFailedError.fromHttpFailure(response);
         }
       } catch (error: any) {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError?.isRetryable && (await shouldRetry(requestContext, retryAfterHeaderValue))) {
+      if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
         log('retrying edge request', { url, processingError });
       } else {
         throw processingError!;
@@ -491,7 +494,7 @@ const createRetryHandler = ({ retry }: EdgeHttpRequestArgs) => {
   const maxRetries = retry.count ?? DEFAULT_MAX_RETRIES_COUNT;
   const baseTimeout = retry.timeout ?? DEFAULT_RETRY_TIMEOUT;
   const jitter = retry.jitter ?? DEFAULT_RETRY_JITTER;
-  return async (ctx: Context, retryAfter: number) => {
+  return async (ctx: Context, retryAfter?: number) => {
     if (++retries > maxRetries || ctx.disposed) {
       return false;
     }

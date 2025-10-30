@@ -18,7 +18,7 @@ import { type ContentBlock, DataType } from '@dxos/schema';
 import { createTestData } from '@dxos/schema/testing';
 import { trim } from '@dxos/util';
 
-const summarizationFn = defineFunction({
+const summarization = defineFunction({
   key: 'dxos.org/function/summarization/summarize',
   name: 'Summarize transcript',
   description: 'Summarize a document',
@@ -84,7 +84,7 @@ const summarizationFn = defineFunction({
   },
 });
 
-const refinementFn = defineFunction({
+const refinement = defineFunction({
   key: 'dxos.org/function/summarization/refine',
   name: 'Refine transcript summary',
   description: 'Refine a summary',
@@ -172,7 +172,7 @@ describe.skip('Summarization', () => {
 
     for (let i = 0; i < transcriptMessages.length; i++) {
       const blocks = transcriptMessages.slice(Math.max(0, i - 2), i + 1);
-      const result = await executor.invoke(summarizationFn, {
+      const result = await executor.invoke(summarization, {
         document: summary,
         transcript: blocks,
       });
@@ -186,7 +186,7 @@ describe.skip('Summarization', () => {
 
       if (i % 3 === 0 && i > 0) {
         const history: any = summaries.slice(-5);
-        const result = await executor.invoke(refinementFn, {
+        const result = await executor.invoke(refinement, {
           summaries: history,
         });
         summary.content = result.summary.content;

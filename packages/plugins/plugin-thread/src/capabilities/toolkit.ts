@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -79,7 +79,7 @@ export namespace ThreadToolkit {
     });
 }
 
-export default (context: PluginContext) => [
+export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, ThreadToolkit.Toolkit),
   contributes(Capabilities.ToolkitHandler, ThreadToolkit.createLayer(context)),
 ];

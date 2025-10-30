@@ -10,7 +10,7 @@ import { type DataType } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-export const CollectionMain = ({ collection }: { collection: DataType.Collection }) => {
+export const CollectionArticle = ({ collection }: { collection: DataType.Collection }) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -29,4 +29,4 @@ export const CollectionMain = ({ collection }: { collection: DataType.Collection
   );
 };
 
-export default CollectionMain;
+export default CollectionArticle;

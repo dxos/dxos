@@ -152,7 +152,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
         return (
           <ControlItemInput title={label} description={t('archive space description')}>
-            <Button disabled={space === client.spaces.default} onClick={handleChange}>
+            <Button
+              disabled={space === client.spaces.default}
+              variant={getValue() ? 'default' : 'destructive'}
+              onClick={handleChange}
+            >
               {getValue() ? t('unarchive space label') : t('archive space label')}
             </Button>
           </ControlItemInput>
