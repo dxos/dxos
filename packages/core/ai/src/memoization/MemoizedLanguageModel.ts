@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { deepMapValues } from '@dxos/util';
 import * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
@@ -19,6 +18,8 @@ import * as Order from 'effect/Order';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
+
+import { deepMapValues } from '@dxos/util';
 
 // Can be performance-intensive
 const DISABLE_CLOSEST_MATCH_SEARCH = false;
