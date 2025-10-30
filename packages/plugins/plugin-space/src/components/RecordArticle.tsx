@@ -16,21 +16,21 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../meta';
 
 export type RecordArticleProps = {
-  record: Obj.Any;
+  object: Obj.Any;
 };
 
-export const RecordArticle = ({ record }: RecordArticleProps) => {
+export const RecordArticle = ({ object }: RecordArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(record);
-  const object = useMemo(() => ({ subject: record }), [record]);
-  const related = useRelatedObjects(space, record);
+  const space = getSpace(object);
+  const data = useMemo(() => ({ subject: object }), [object]);
+  const related = useRelatedObjects(space, object);
 
   // TODO(burdon): Create stack for activity (e.g., meetings, outliner), separate from related objects.
   return (
     <StackItem.Content classNames='flex flex-col items-center'>
       <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>
         <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
-          <Surface role='section' data={object} limit={1} />
+          <Surface role='section' data={data} limit={1} />
         </div>
 
         {related.length > 0 && (

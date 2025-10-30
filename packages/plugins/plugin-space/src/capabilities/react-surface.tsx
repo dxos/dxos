@@ -87,7 +87,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data }) => <RecordArticle record={data.subject} />,
+      component: ({ data }) => <RecordArticle object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/collection-fallback`,
