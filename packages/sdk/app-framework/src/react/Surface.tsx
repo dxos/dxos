@@ -49,22 +49,20 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
       const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
 
-      return fallback ? (
+      return (
         <ErrorBoundary data={data} fallback={fallback}>
           {suspense}
         </ErrorBoundary>
-      ) : (
-        suspense
       );
     },
   ),
 );
 
-// TODO(burdon): Make user facing.
+// TODO(burdon): Make user facing, with telemetry.
 const DefaultFallback = ({ data, error }: { data: any; error: Error }) => {
   return (
-    <div className='flex flex-col gap-4 p-6 is-full overflow-y-auto'>
-      <h1 className='text-description text-sm mbs-2'>[ERROR]: {error.message}</h1>
+    <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto border border-rose-500'>
+      <h1 className='flex gap-2 text-sm mbs-2 text-rose-500'>{error.message}</h1>
       <pre className='overflow-auto text-xs text-description'>{error.stack}</pre>
       <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
     </div>
