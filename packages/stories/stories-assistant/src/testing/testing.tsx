@@ -221,7 +221,7 @@ const StoryPlugin = definePlugin<StoryPluginOptions>(
       id: 'example.com/plugin/testing/module/toolkit',
       activatesOn: Events.Startup,
       activate: (context) => [
-        contributes(Capabilities.Toolkit, TestingToolkit),
+        contributes(Capabilities.Toolkit, TestingToolkit.Toolkit),
         contributes(Capabilities.ToolkitHandler, TestingToolkit.createLayer(context)),
       ],
     }),
