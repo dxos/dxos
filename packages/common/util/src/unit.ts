@@ -46,7 +46,7 @@ export const Unit: Record<string, UnitFormat> = {
   // Time.
   Hour: createFormat({ symbol: 'h', quotient: MS_HOURS }),
   Minute: createFormat({ symbol: 'm', quotient: MS_MINUTES }),
-  Second: createFormat({ symbol: 's', quotient: MS_SECONDS }),
+  Second: createFormat({ symbol: 's', quotient: MS_SECONDS, precision: 1 }),
   Millisecond: createFormat({ symbol: 'ms', quotient: 1 }),
   Duration: (n: number) => {
     const hours = Math.floor(n / MS_HOURS);
@@ -61,8 +61,8 @@ export const Unit: Record<string, UnitFormat> = {
       };
     }
 
-    const seconds = Math.floor((n % MS_HOURS) / MS_SECONDS);
     if (minutes) {
+      const seconds = (n - MS_MINUTES * minutes) / MS_SECONDS;
       const formattedValue = seconds ? `${minutes}m ${seconds}s` : `${minutes}m`;
       return {
         unit: { symbol: 'm', quotient: MS_MINUTES },
@@ -72,22 +72,11 @@ export const Unit: Record<string, UnitFormat> = {
       };
     }
 
+    const seconds = n >= MS_SECONDS;
     if (seconds) {
-      const formattedValue = `${seconds}s`;
-      return {
-        unit: { symbol: 's', quotient: MS_SECONDS },
-        value: seconds,
-        formattedValue,
-        toString: () => formattedValue,
-      };
+      return Unit.Second(n);
     }
 
-    const formattedValue = `${n}ms`;
-    return {
-      unit: { symbol: 'ms2', quotient: 1 },
-      value: n,
-      formattedValue,
-      toString: () => formattedValue,
-    };
+    return Unit.Millisecond(n);
   },
 } as const;
