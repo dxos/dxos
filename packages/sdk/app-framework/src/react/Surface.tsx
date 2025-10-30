@@ -49,12 +49,10 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
       const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
 
-      return fallback ? (
+      return (
         <ErrorBoundary data={data} fallback={fallback}>
           {suspense}
         </ErrorBoundary>
-      ) : (
-        suspense
       );
     },
   ),
