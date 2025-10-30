@@ -25,7 +25,6 @@ export const RecordArticle = ({ object }: RecordArticleProps) => {
   const data = useMemo(() => ({ subject: object }), [object]);
   const related = useRelatedObjects(space, object, { relations: true, references: true });
 
-  // TODO(burdon): Create stack for activity (e.g., meetings, outliner), separate from related objects.
   return (
     <StackItem.Content classNames='flex flex-col items-center'>
       <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>

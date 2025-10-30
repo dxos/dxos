@@ -60,7 +60,7 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
   ),
 );
 
-// TODO(burdon): Make user facing.
+// TODO(burdon): Make user facing, with telemetry.
 const DefaultFallback = ({ data, error }: { data: any; error: Error }) => {
   return (
     <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto border border-rose-500'>
