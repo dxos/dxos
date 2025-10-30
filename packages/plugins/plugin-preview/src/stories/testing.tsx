@@ -9,7 +9,7 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
+import { PersonCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
 import { type PreviewProps } from '../types';
 
 type CardProps<T extends Obj.Any> = {
@@ -92,7 +92,7 @@ export const createCards = (image = true): CardProps<any>[] => {
       image,
     },
     {
-      Component: ContactCard,
+      Component: PersonCard,
       subject: contact,
       icon: 'ph--user--regular',
       image,
