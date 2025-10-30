@@ -15,7 +15,8 @@ import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { StackItem } from '@dxos/react-ui-stack';
-import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
+import { mx } from '@dxos/react-ui-theme';
 
 import { type ComponentProps } from './types';
 
@@ -47,27 +48,27 @@ export const GraphContainer = ({ space }: ComponentProps) => {
       <SearchBar space={space} onSubmit={handleSubmit} />
       <D3ForceGraph classNames='min-bs-[50vh]' model={model} />
 
-      {/* TODO(burdon): Create component with context state for story. */}
-      {(open && (
-        <div className='absolute left-2 right-2 bottom-2 h-[8rem] flex overflow-hidden bg-baseSurface border border-subduedSeparator'>
-          <SyntaxHighlighter language='json' classNames='text-sm'>
-            {JSON.stringify({ filter }, null, 2)}
-          </SyntaxHighlighter>
-          <div className='absolute bottom-1 right-1'>
-            <IconButton variant='ghost' icon='ph--x--regular' iconOnly label='Close' onClick={() => setOpen(false)} />
-          </div>
-        </div>
-      )) || (
-        <div className='absolute bottom-3 right-3'>
-          <IconButton
-            variant='ghost'
-            icon='ph--arrow-line-up--regular'
-            iconOnly
-            label='Open'
-            onClick={() => setOpen(true)}
-          />
+      {open && (
+        <div
+          role='none'
+          className={mx(
+            'flex absolute left-2 right-2 bottom-2 bs-[8rem]',
+            'overflow-hidden bg-baseSurface border border-subduedSeparator opacity-80',
+          )}
+        >
+          <Json classNames='text-sm' data={filter} />
         </div>
       )}
+
+      <div role='none' className='absolute bottom-4 right-4 z-10'>
+        <IconButton
+          variant='ghost'
+          icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
+          iconOnly
+          label={open ? 'Close' : 'Open'}
+          onClick={() => setOpen((open) => !open)}
+        />
+      </div>
     </StackItem.Content>
   );
 };
