@@ -19,6 +19,8 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
+import { PARAM_SAFE_MODE } from '../config';
+
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
   const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
@@ -43,12 +45,13 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type FatalErrorProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  observability?: Promise<Observability>;
   isDev?: boolean;
+  observability?: Promise<Observability>;
 };
 
 export const ResetDialog = ({
   error: propsError,
+  isDev,
   observability: observabilityPromise,
   defaultOpen,
   open,
@@ -93,6 +96,12 @@ export const ResetDialog = ({
     }
   }, [needRefresh, updateServiceWorker]);
 
+  const handleSafeMode = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set(PARAM_SAFE_MODE, 'true');
+    window.location.href = url.toString();
+  }, []);
+
   return (
     <AlertDialog.Root
       {...(typeof defaultOpen === 'undefined' && typeof open === 'undefined' && typeof onOpenChange === 'undefined'
@@ -105,14 +114,16 @@ export const ResetDialog = ({
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
           {error && (
             <>
-              <IconButton
-                icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-                variant='ghost'
-                classNames='flex items-center'
-                label={t('show stack label')}
-                onClick={() => setShowStack((showStack) => !showStack)}
-                data-testid='resetDialog.showStackTrace'
-              />
+              <div role='none' className='mbs-4'>
+                <IconButton
+                  icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+                  variant='ghost'
+                  classNames='flex items-center'
+                  label={t('show stack label')}
+                  onClick={() => setShowStack((showStack) => !showStack)}
+                  data-testid='resetDialog.showStackTrace'
+                />
+              </div>
               {showStack && (
                 <Message.Root
                   key={error.message}
@@ -133,25 +144,31 @@ export const ResetDialog = ({
             </>
           )}
           <div role='none' className='flex gap-2 mbs-4'>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button data-testid='resetDialog.reset' variant='ghost'>
-                  {t('reset app label')}
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content side='top'>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
-                      {t('reset app confirm label')}
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-            <div role='none' className='flex-grow' />
+            {!isDev ? (
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Button data-testid='resetDialog.reset' variant='destructive'>
+                    {t('reset app label')}
+                  </Button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content side='top'>
+                    <DropdownMenu.Viewport>
+                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
+                        {t('reset app confirm label')}
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Viewport>
+                    <DropdownMenu.Arrow />
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+            ) : (
+              <Button variant='primary' onClick={handleSafeMode}>
+                {t('safe mode label')}
+              </Button>
+            )}
 
+            <div role='none' className='flex-grow' />
             {observabilityPromise && (
               <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
                 <Popover.Trigger asChild>
