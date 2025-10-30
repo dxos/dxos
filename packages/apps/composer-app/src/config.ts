@@ -5,6 +5,9 @@
 import { Remote } from '@dxos/client';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 
+export const PARAM_SAFE_MODE = 'safe';
+export const PARAM_LOG_LEVEL = 'log';
+
 export const setupConfig = async () => {
   const sources = [await Storage(), Envs(), Local(), Defaults()];
   // Not available in the worker.

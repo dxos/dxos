@@ -59,30 +59,30 @@ export type UseAppOptions = {
  */
 export const useApp = ({
   pluginManager,
-  pluginLoader: _pluginLoader,
-  plugins: _plugins,
-  core: _core,
-  defaults: _defaults,
+  pluginLoader: pluginLoaderParam,
+  plugins: pluginsParam,
+  core: coreParam,
+  defaults: defaultsParam,
   placeholder,
   fallback = DefaultFallback,
   cacheEnabled = false,
   safeMode = false,
   debounce = 0,
 }: UseAppOptions) => {
-  const plugins = useDefaultValue(_plugins, () => []);
-  const core = useDefaultValue(_core, () => plugins.map(({ meta }) => meta.id));
-  const defaults = useDefaultValue(_defaults, () => []);
+  const plugins = useDefaultValue(pluginsParam, () => []);
+  const core = useDefaultValue(coreParam, () => plugins.map(({ meta }) => meta.id));
+  const defaults = useDefaultValue(defaultsParam, () => []);
 
   // TODO(wittjosiah): Provide a custom plugin loader which supports loading via url.
   const pluginLoader = useMemo(
     () =>
-      _pluginLoader ??
+      pluginLoaderParam ??
       ((id: string) => {
         const plugin = plugins.find((plugin) => plugin.meta.id === id);
         invariant(plugin, `Plugin not found: ${id}`);
         return plugin;
       }),
-    [_pluginLoader, plugins],
+    [pluginLoaderParam, plugins],
   );
 
   const state = useMemo(() => live({ ready: false, error: null }), []);

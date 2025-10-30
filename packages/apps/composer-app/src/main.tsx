@@ -17,13 +17,11 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { Placeholder, ResetDialog } from './components';
 import { setupConfig } from './config';
+import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
-
-const PARAM_SAFE_MODE = 'safe';
-const PARAM_LOG_LEVEL = 'log';
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -108,7 +106,7 @@ const main = async () => {
   const Fallback = ({ error }: { error: Error }) => (
     <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
       <Tooltip.Provider>
-        <ResetDialog error={error} observability={observability} />
+        <ResetDialog isDev={conf.isDev} error={error} observability={observability} />
       </Tooltip.Provider>
     </ThemeProvider>
   );
