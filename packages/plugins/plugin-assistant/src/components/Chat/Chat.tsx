@@ -296,7 +296,7 @@ const ChatPrompt = ({
       </div>
 
       {space && settings && (
-        <div role='none' className='flex pbs-2 items-center'>
+        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}
@@ -306,7 +306,7 @@ const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='pli-cardSpacingChrome grow'>
+          <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
             <ChatReferences space={space} context={processor.context} />
           </div>
 
