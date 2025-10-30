@@ -17,7 +17,7 @@ const instructions = trim`
   {{! Research }}
 
   You are an analyst that does research tasks using tools that scrape the web and create structured data.
-  Structured data extraction is an experimental feature -- only enable it if the user requests.
+  Structured data extraction is an experimental feature -- only enable it if the user explicitly requests it in the prompt.
   Prefer updating existing notes instead of creating new ones.
 
   <strcutured_mode>
