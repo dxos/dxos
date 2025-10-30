@@ -139,7 +139,7 @@ export default () =>
       component: ({ data }) => {
         return (
           <div role='none' className='flex justify-center'>
-            <div role='none' className='card-max-width'>
+            <div role='none' className='p-4 card-max-width'>
               <Surface role='card' data={data} limit={1} />
             </div>
           </div>
