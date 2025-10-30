@@ -38,7 +38,7 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { Transcript } from '@dxos/plugin-transcription/types';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Toolbar, useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
+import { Input, Toolbar, useAsyncEffect, useSignalsMemo } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Table } from '@dxos/react-ui-table/types';
@@ -178,8 +178,12 @@ const StackContainer = ({ objects, debug }: { objects: Obj.Any[]; debug?: boolea
           <StackItem.Content toolbar={debug}>
             {debug && (
               <Toolbar.Root classNames='justify-center text-sm'>
-                <span>{Obj.getTypename(object)}</span>
-                <span>{object.id}</span>
+                <Input.Root>
+                  <Input.TextInput value={Obj.getTypename(object)} disabled />
+                </Input.Root>
+                <Input.Root>
+                  <Input.TextInput value={object.id} disabled />
+                </Input.Root>
               </Toolbar.Root>
             )}
             <div className='p-2'>
