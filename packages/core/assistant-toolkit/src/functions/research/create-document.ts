@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
@@ -13,6 +13,7 @@ import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
+import { ArtifactId } from '@dxos/assistant';
 
 export default defineFunction({
   key: 'dxos.org/function/research/create-document',
@@ -38,7 +39,9 @@ export default defineFunction({
       `,
     }),
   }),
-  outputSchema: Schema.Struct({}), // TODO(burdon): Schema.Void?
+  outputSchema: Schema.Struct({
+    researchDocument: ArtifactId,
+  }),
   handler: Effect.fnUntraced(function* ({ data: { target, name, content } }) {
     log.info('Creating research document', { target, name, content });
 
@@ -64,6 +67,6 @@ export default defineFunction({
     yield* DatabaseService.flush({ indexes: true });
 
     log.info('Created research document', { target, name, content });
-    return {};
+    return { researchDocument: Obj.getDXN(doc).toString() };
   }),
 });

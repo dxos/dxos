@@ -18,7 +18,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Query, Filter } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -31,11 +31,14 @@ import {
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { invariant } from '@dxos/invariant';
 
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
 import createDocument from './create-document';
+import updateDocument from './update-document';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
@@ -44,11 +47,11 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
-  makeToolResolverFromFunctions([research, createDocument], testToolkit),
+  makeToolResolverFromFunctions([research, createDocument, updateDocument], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument] })),
+  Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument, updateDocument] })),
   Layer.provideMerge(
     Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
@@ -56,9 +59,9 @@ const TestLayer = Layer.mergeAll(
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
-        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint],
+        types: [...ResearchDataTypes, ResearchGraph, Blueprint.Blueprint, Markdown.Document, DataType.HasSubject],
       }),
-      CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
+      CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
     ),
   ),
@@ -96,35 +99,72 @@ describe('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    60_000,
-    // MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
   );
 
-  it.scoped.skip(
-    'research blueprint',
+  it.scoped(
+    'create and update research report',
     Effect.fnUntraced(
       function* (_) {
+        const airbnb = yield* DatabaseService.add(
+          Obj.make(DataType.Organization, {
+            name: 'Airbnb',
+            website: 'https://www.airbnb.com/',
+          }),
+        );
+
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
 
-        const org = Obj.make(DataType.Organization, { name: 'Airbnb', website: 'https://www.airbnb.com/' });
-        yield* DatabaseService.add(org);
         yield* DatabaseService.flush({ indexes: true });
 
         const blueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
-        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(blueprint)] }));
-
+        yield* Effect.promise(() =>
+          conversation.context.bind({ blueprints: [Ref.make(blueprint)], objects: [Ref.make(airbnb)] }),
+        );
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
+
         yield* conversation.createRequest({
           observer,
-          prompt: `Research airbnb founders.`,
+          prompt: `research airbnb founders.`,
         });
+        {
+          const { objects: researchDocs } = yield* DatabaseService.runQuery(
+            Query.select(Filter.ids(airbnb.id)).targetOf(DataType.HasSubject).source(),
+          );
+          if (researchDocs.length !== 1) {
+            throw new Error(
+              `Expected 1 research document, got ${researchDocs.length}: ${researchDocs.map((_) => _.name)}`,
+            );
+          }
+          const researchDoc = researchDocs[0];
+          invariant(Obj.instanceOf(Markdown.Document, researchDoc));
+          console.log({
+            name: researchDoc.name,
+            content: yield* DatabaseService.load(researchDoc.content).pipe(Effect.map((_) => _.content)),
+          });
+        }
 
-        const researchGraph = yield* queryResearchGraph();
-        const data = yield* DatabaseService.load(researchGraph!.queue).pipe(
-          Effect.flatMap((queue) => Effect.promise(() => queue.queryObjects())),
-        );
-        console.log(inspect(data, { depth: null, colors: true }));
+        yield* conversation.createRequest({
+          observer,
+          prompt: `add a section about the investment rationalle into airbnb.`,
+        });
+        {
+          const { objects: researchDocs } = yield* DatabaseService.runQuery(
+            Query.select(Filter.ids(airbnb.id)).targetOf(DataType.HasSubject).source(),
+          );
+          if (researchDocs.length !== 1) {
+            throw new Error(
+              `Expected 1 research document, got ${researchDocs.length}: ${researchDocs.map((_) => _.name)}`,
+            );
+          }
+          const researchDoc = researchDocs[0];
+          invariant(Obj.instanceOf(Markdown.Document, researchDoc));
+          console.log({
+            name: researchDoc.name,
+            content: yield* DatabaseService.load(researchDoc.content).pipe(Effect.map((_) => _.content)),
+          });
+        }
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

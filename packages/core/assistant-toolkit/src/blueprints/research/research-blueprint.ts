@@ -18,6 +18,7 @@ const instructions = trim`
 
   You are an analyst that does research tasks using tools that scrape the web and create structured data.
   Structured data extraction is an experimental feature -- only enable it if the user requests.
+  Prefer updating existing notes instead of creating new ones.
 
   <strcutured_mode>
     When you are done, reply with the created objects.
@@ -46,7 +47,7 @@ export const blueprint: Blueprint.Blueprint = Obj.make(Blueprint.Blueprint, {
   instructions: {
     source: Ref.make(DataType.makeText(instructions)),
   },
-  tools: [Research.create, Research.research].map((fn) => ToolId.make(fn.key)),
+  tools: [Research.create, Research.update, Research.research].map((fn) => ToolId.make(fn.key)),
 });
 
 export default blueprint;

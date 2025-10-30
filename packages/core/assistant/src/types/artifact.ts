@@ -3,10 +3,13 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Effect from 'effect/Effect';
 
 import { type ObjectId } from '@dxos/echo/internal';
+import { Type, ObjectNotFoundError } from '@dxos/echo';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
+import { DatabaseService } from '@dxos/functions';
 
 /**
  * @deprecated
@@ -17,9 +20,13 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  */
-// TODO(burdon): Rename ObjectReference?
+// TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
+  resolve: <S extends Type.Obj.Any | Type.Relation.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ) => Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
 } = class extends Schema.String.annotations({
   description: trim`
     The ID of the referenced object. Formats accepted:
@@ -46,6 +53,17 @@ export const ArtifactId: Schema.Schema<string> & {
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }
+  }
+
+  /**
+   * Resolves an artifact ID to an object.
+   */
+  static resolve<S extends Type.Obj.Any | Type.Relation.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> {
+    const dxn = ArtifactId.toDXN(ref);
+    return DatabaseService.resolve(dxn, schema);
   }
 };
 
