@@ -28,6 +28,7 @@ export const ArtifactId: Schema.Schema<string> & {
     ref: ArtifactId,
   ) => Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
 } = class extends Schema.String.annotations({
+  // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The ID of the referenced object. Formats accepted:
     - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
