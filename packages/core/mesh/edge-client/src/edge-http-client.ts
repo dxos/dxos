@@ -18,7 +18,6 @@ import {
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
   EdgeAuthChallengeError,
-  type EdgeBody,
   EdgeCallFailedError,
   type EdgeStatus,
   type ExecuteWorkflowResponseBody,
@@ -399,10 +398,9 @@ export class EdgeHttpClient {
       try {
         const request = createRequest(args, this._authHeader);
         const response = await fetch(url, request);
-        const body: EdgeBody<T> | undefined =
-          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
         if (response.ok) {
+          const body = await response.clone().json();
           if (args.rawResponse) {
             return body as any;
           }
@@ -418,6 +416,9 @@ export class EdgeHttpClient {
           handledAuth = true;
           continue;
         }
+
+        const body =
+          response.headers.get('Content-Type') === 'application/json' ? await response.clone().json() : undefined;
 
         invariant(!body?.success, 'Expected body to not be a failure response or undefined.');
 
