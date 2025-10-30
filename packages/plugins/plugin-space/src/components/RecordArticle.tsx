@@ -23,7 +23,7 @@ export const RecordArticle = ({ object }: RecordArticleProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object);
+  const related = useRelatedObjects(space, object, { relations: true, references: false });
 
   // TODO(burdon): Create stack for activity (e.g., meetings, outliner), separate from related objects.
   return (
@@ -55,7 +55,11 @@ const Card = ({ data: subject }: { data: Obj.Any }) => {
 };
 
 // TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
-const useRelatedObjects = (space?: Space, record?: Obj.Any) => {
+const useRelatedObjects = (
+  space?: Space,
+  record?: Obj.Any,
+  options: { relations?: boolean; references?: boolean } = {},
+) => {
   const objects = useQuery(space, Filter.everything());
   const related = useMemo(() => {
     if (!record) {
@@ -77,23 +81,33 @@ const useRelatedObjects = (space?: Space, record?: Obj.Any) => {
       }
     };
 
-    const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
-    const targetObjects = relations
-      .filter((relation) => Relation.getTarget(relation) === record)
-      .map((relation) => Relation.getSource(relation));
-    const sourceObjects = relations
-      .filter((relation) => Relation.getSource(relation) === record)
-      .map((relation) => Relation.getTarget(relation));
+    const related: Obj.Any[] = [];
 
-    const references = getReferencesFromObject(record);
-    const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
-    const referencingObjects = objects.filter((obj) => {
-      const refs = getReferencesFromObject(obj);
-      return refs.some((ref) => ref.target === record);
-    });
+    if (options.relations) {
+      const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
+      const targetObjects = relations
+        .filter((relation) => Relation.getTarget(relation) === record)
+        .map((relation) => Relation.getSource(relation));
+      const sourceObjects = relations
+        .filter((relation) => Relation.getSource(relation) === record)
+        .map((relation) => Relation.getTarget(relation));
+
+      related.push(...targetObjects, ...sourceObjects);
+    }
+
+    if (options.references) {
+      const references = getReferencesFromObject(record);
+      const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
+      const referencingObjects = objects.filter((obj) => {
+        const refs = getReferencesFromObject(obj);
+        return refs.some((ref) => ref.target === record);
+      });
+
+      related.push(...referencedObjects, ...referencingObjects);
+    }
 
     // TODO(burdon): Create sections (or section indicators)?
-    return [...referencedObjects, ...referencingObjects, ...targetObjects, ...sourceObjects];
+    return related;
   }, [record, objects]);
 
   return related;
