@@ -48,11 +48,14 @@ export const MasonryContainer = ({ view, role }: { view: DataType.View; role?: s
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   // TODO(wittjosiah): This currently explodes if items are removed from the list.
+  // Note(thure): Masonry.Root should not apply padding, as masonic makes (often incorrect) assumptions about available
+  // space if you do. Outer spacing is best applied by the consumer anyway.
   return (
     <Masonry.Root
       items={filteredObjects}
       render={Item as any}
-      classNames='is-full max-is-full bs-full max-bs-full overflow-y-auto p-4'
+      columnWidth={15}
+      classNames={['is-full max-is-full', role !== 'section' && 'bs-full max-bs-full overflow-y-auto']}
       intrinsicHeight={role === 'section'}
     />
   );

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework';
-import { Query, Ref, Type } from '@dxos/echo';
+import { type Filter, Query, Ref, Type } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -15,6 +15,8 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { DataType } from '@dxos/schema';
 
 import { Masonry } from '../types';
+
+import Any = Query.Any;
 
 const VIEW = Type.getTypename(DataType.View);
 
@@ -45,7 +47,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
       view.query.raw = value;
       const filter = builder.build(value);
       if (filter) {
-        view.query.ast = Query.select(filter).ast;
+        view.query.ast = Query.select(filter as Filter.Any).ast;
       }
     },
     [view, builder],
@@ -53,7 +55,7 @@ export const SpaceMain = ({ space }: { space: Space }) => {
 
   return (
     <StackItem.Content>
-      <Toolbar.Root>
+      <Toolbar.Root classNames='mbe-4'>
         <QueryEditor value={view?.query.raw ?? ''} db={space.db} onChange={handleChange} />
       </Toolbar.Root>
       <Surface role='section' data={data} limit={1} />
