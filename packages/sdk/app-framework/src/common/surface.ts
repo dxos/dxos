@@ -45,6 +45,7 @@ type CoreSurfaceProps<T extends Record<string, any> = Record<string, unknown>> =
 
   /**
    * The data to be rendered by the surface.
+   * NOTE: This must be a stable value.
    */
   data: T;
 
