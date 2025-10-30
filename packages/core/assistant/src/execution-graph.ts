@@ -10,6 +10,8 @@ import { LogLevel } from '@dxos/log';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
+
 /**
  * Mercurial-style Commit.
  */
@@ -360,6 +362,10 @@ const createBlockCommit = (
   parents: string[],
   idx: number,
 ): Commit | null => {
+  if (SKIP_BLOCKS.includes(block._tag)) {
+    return null;
+  }
+
   const timestamp = new Date(message.created);
   switch (block._tag) {
     case 'text':
