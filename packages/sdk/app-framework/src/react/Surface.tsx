@@ -28,7 +28,10 @@ const DEFAULT_PLACEHOLDER = <Fragment />;
  */
 export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElement>> = memo(
   forwardRef(
-    ({ id: _id, role, data: dataParam, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+    (
+      { id: _id, role, data: dataParam, limit, fallback = DefaultFallback, placeholder = DEFAULT_PLACEHOLDER, ...rest },
+      forwardedRef,
+    ) => {
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
       //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
@@ -56,6 +59,17 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
     },
   ),
 );
+
+// TODO(burdon): Make user facing.
+const DefaultFallback = ({ data, error }: { data: any; error: Error }) => {
+  return (
+    <div className='flex flex-col gap-4 p-6 is-full overflow-y-auto'>
+      <h1 className='text-description text-sm mbs-2'>[ERROR]: {error.message}</h1>
+      <pre className='overflow-auto text-xs text-description'>{error.stack}</pre>
+      <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  );
+};
 
 /**
  * @internal
