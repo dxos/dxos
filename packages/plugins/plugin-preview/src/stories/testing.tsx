@@ -9,7 +9,7 @@ import { faker } from '@dxos/random';
 import { CardContainer } from '@dxos/react-ui-stack/testing';
 import { DataType } from '@dxos/schema';
 
-import { PersonCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { type PreviewProps } from '../types';
 
 type CardProps<T extends Obj.Any> = {
