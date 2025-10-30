@@ -126,7 +126,7 @@ describe('Research', () => {
 
         yield* conversation.createRequest({
           observer,
-          prompt: `research airbnb founders.`,
+          prompt: `create a research document about airbnb founders.`,
         });
         {
           const { objects: researchDocs } = yield* DatabaseService.runQuery(
