@@ -23,7 +23,7 @@ export const RecordArticle = ({ object }: RecordArticleProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object, { relations: true, references: false });
+  const related = useRelatedObjects(space, object, { relations: true, references: true });
 
   // TODO(burdon): Create stack for activity (e.g., meetings, outliner), separate from related objects.
   return (
@@ -66,12 +66,6 @@ const useRelatedObjects = (
       return [];
     }
 
-    const getReferencesFromObject = (obj: Obj.Any): Ref.Any[] => {
-      return Object.getOwnPropertyNames(obj)
-        .map((name) => obj[name as keyof Obj.Any])
-        .filter((value) => Ref.isRef(value)) as Ref.Any[];
-    };
-
     // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
     const isValidRelation = (obj: Obj.Any) => {
       try {
@@ -96,14 +90,15 @@ const useRelatedObjects = (
     }
 
     if (options.references) {
-      const references = getReferencesFromObject(record);
-      const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
-      const referencingObjects = objects.filter((obj) => {
-        const refs = getReferencesFromObject(obj);
-        return refs.some((ref) => ref.target === record);
-      });
+      const getReferences = (obj: Obj.Any): Ref.Any[] => {
+        return Object.getOwnPropertyNames(obj)
+          .map((name) => obj[name as keyof Obj.Any])
+          .filter((value) => Ref.isRef(value)) as Ref.Any[];
+      };
 
-      related.push(...referencedObjects, ...referencingObjects);
+      const references = getReferences(record);
+      const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
+      related.push(...referencedObjects);
     }
 
     // TODO(burdon): Create sections (or section indicators)?
