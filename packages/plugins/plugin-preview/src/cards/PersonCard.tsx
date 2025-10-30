@@ -12,9 +12,8 @@ import { type DataType } from '@dxos/schema';
 import { CardRow, CardSubjectMenu, gridRow } from '../components';
 import { type PreviewProps } from '../types';
 
-// TODO(burdon): Rename PersonCard.
-export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<DataType.Person>) => {
-  const { fullName, image, organization: { target: organization } = {}, emails } = subject;
+export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: PreviewProps<DataType.Person>) => {
+  const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
     <Card.SurfaceRoot role={role}>
@@ -43,20 +42,19 @@ export const ContactCard = ({ children, role, subject, activeSpace, onSelect }: 
           onClick={onSelect ? () => onSelect(organization) : undefined}
         />
       )}
-      {emails?.length && (
+      {emails.length > 0 && (
         <dl className={mx(cardText, gridRow, '[&_dt]:text-subdued [&_dt]:pbs-0.5 [&_dd]:min-is-0')}>
-          {emails?.length &&
-            emails.map(({ label, value }) => (
-              <Fragment key={value}>
-                <dt>
-                  <span className='sr-only'>{label}</span>
-                  <Icon icon='ph--at--regular' size={5} />
-                </dt>
-                <dd key={value} className='col-span-2 break-words'>
-                  {value}
-                </dd>
-              </Fragment>
-            ))}
+          {emails.map(({ label, value }) => (
+            <Fragment key={value}>
+              <dt>
+                <span className='sr-only'>{label}</span>
+                <Icon icon='ph--at--regular' size={5} />
+              </dt>
+              <dd key={value} className='col-span-2 break-words'>
+                {value}
+              </dd>
+            </Fragment>
+          ))}
         </dl>
       )}
       {children}
