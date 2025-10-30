@@ -35,12 +35,9 @@ export const GraphContainer = ({ space }: ComponentProps) => {
   const parser = useMemo(() => new QueryBuilder(), []);
   const handleSubmit = useCallback<NonNullable<ChatEditorProps['onSubmit']>>(
     (text) => {
-      // TODO(burdon): Get AST from filter?
       const { filter } = parser.build(text);
-      if (filter) {
-        setFilter(filter);
-        setOpen(true);
-      }
+      setFilter(filter ?? Filter.everything());
+      setOpen(!!filter);
     },
     [space, parser],
   );

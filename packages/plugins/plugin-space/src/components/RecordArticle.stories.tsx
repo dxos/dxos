@@ -28,12 +28,12 @@ const generator: ValueGenerator = faker as any;
 
 const DefaultStory = () => {
   const { space } = useClientProvider();
-  const [org] = useQuery(space, Filter.type(DataType.Organization));
-  if (!org) {
+  const [object] = useQuery(space, Filter.type(DataType.Organization));
+  if (!object) {
     return null;
   }
 
-  return <RecordArticle record={org} />;
+  return <RecordArticle object={object} />;
 };
 
 const meta = {
