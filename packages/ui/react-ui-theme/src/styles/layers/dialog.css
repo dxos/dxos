@@ -23,7 +23,7 @@
   }
   .dx-dialog__content {
     /* TODO(thure): `flex` should not be default. */
-    @apply flex flex-col max-is-full p-4 animate-slideUpAndFade shadow-md backdrop-blur is-[95dvw] border rounded-md border-separator;
+    @apply flex flex-col max-is-full p-4 animate-slideUpAndFade shadow-md backdrop-blur is-full border rounded-md border-separator;
     will-change: opacity, transform;
     @media (min-width: theme('screens.md')) {
       @apply max-is-[24rem];
