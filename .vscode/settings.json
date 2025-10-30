@@ -389,8 +389,8 @@
     "effect/Effect",
     "effect/Console"
   ],
-  "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.suggest.autoImports": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
   "vitest.disableWorkspaceWarning": true,
   "vitest.rootConfig": "vitest.all.config.ts"
 }
