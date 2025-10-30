@@ -5,15 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Relation } from '@dxos/echo';
-import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
-import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { DataType } from '@dxos/schema';
-import { trim } from '@dxos/util';
 import { ArtifactId } from '@dxos/assistant';
+import { DatabaseService, defineFunction } from '@dxos/functions';
+import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
   key: 'dxos.org/function/research/update-document',

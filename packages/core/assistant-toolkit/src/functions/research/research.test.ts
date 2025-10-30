@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { AiServiceTestingPreset, EXA_API_KEY } from '@dxos/ai/testing';
+import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -18,7 +18,7 @@ import {
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Obj, Ref, Query, Filter } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -29,19 +29,19 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
-import { ObjectId } from '@dxos/keys';
-import { DataType } from '@dxos/schema';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { DataType } from '@dxos/schema';
 
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
 import createDocument from './create-document';
-import updateDocument from './update-document';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
+import updateDocument from './update-document';
 
 ObjectId.dangerouslyDisableRandomness();
 

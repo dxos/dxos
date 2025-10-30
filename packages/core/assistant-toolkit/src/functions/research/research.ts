@@ -2,15 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { pipe, flow } from 'effect/Function';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as AnthropicTool from '@effect/ai-anthropic/AnthropicTool';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
+import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 import * as Option from 'effect/Option';
-import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
@@ -21,11 +20,11 @@ import {
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
 } from '@dxos/assistant';
+import { Template } from '@dxos/blueprints';
 import { type DXN, Obj } from '@dxos/echo';
 import { DatabaseService, FunctionInvocationService, TracingService, defineFunction } from '@dxos/functions';
 import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
-import { Template } from '@dxos/blueprints';
 
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { exaFunction, exaMockFunction } from '../exa';
@@ -167,11 +166,11 @@ export default defineFunction({
  * Skips citations.
  */
 const extractLastTextBlock = (result: DataType.Message[]) => {
-  return pipe(
+  return Function.pipe(
     result,
     Array.last,
     Option.map(
-      flow(
+      Function.flow(
         (_) => _.blocks,
         Array.reverse,
         Array.dropWhile((_) => _._tag === 'summary'),
