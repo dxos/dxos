@@ -510,7 +510,10 @@ export const WithResearch: Story = {
   }),
   args: {
     deckComponents: [[ChatContainer], [GraphContainer, ExecutionGraphContainer, 'surfaces']],
-    blueprints: [ASSISTANT_BLUEPRINT_KEY, ResearchBlueprint.key],
+    blueprints: [
+      // ASSISTANT_BLUEPRINT_KEY, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
+      ResearchBlueprint.key,
+    ],
   },
 };
 
