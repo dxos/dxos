@@ -34,6 +34,8 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
     return null;
   }
 
+  // return null;
+
   return (
     <StackItem.Content toolbar>
       <Chat.Root chat={chat} processor={processor}>

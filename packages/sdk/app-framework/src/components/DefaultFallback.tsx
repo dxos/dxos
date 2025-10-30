@@ -19,7 +19,7 @@ export const DefaultFallback = ({ error }: { error: Error }) => {
       }}
     >
       {/* TODO(wittjosiah): Link to docs for replacing default. */}
-      <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem' }}>[ERROR]: {error.message}</h1>
+      <h1 style={{ margin: '0.5rem 0', fontSize: '1.2rem' }}>ERROR: {error.message}</h1>
       <pre style={{ overflow: 'auto', fontSize: '1rem', whiteSpace: 'pre-wrap', color: '#888888' }}>{error.stack}</pre>
     </div>
   );

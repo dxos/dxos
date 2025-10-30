@@ -3,94 +3,118 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, List, ListItem } from '@dxos/react-ui';
+import { List, ListItem, Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { getHashStyles, mx } from '@dxos/react-ui-theme';
 
 import { Capabilities, createSurface } from '../common';
-import { type PluginManager } from '../core';
-import { setupPluginManager } from '../testing';
+import { withPluginManager } from '../testing';
 
-import { PluginManagerProvider, usePluginManager } from './PluginManagerProvider';
+import { usePluginManager } from './PluginManagerProvider';
 import { Surface, useSurfaces } from './Surface';
 
-const randomColor = (): string => {
-  const hue = faker.number.int({ min: 0, max: 360 });
-  const saturation = faker.number.int({ min: 50, max: 90 });
-  const lightness = faker.number.int({ min: 40, max: 70 });
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
-
-const Component = () => {
+const DefaultStory = () => {
+  const [selected, setSelected] = useState<string | undefined>();
   const manager = usePluginManager();
   const surfaces = useSurfaces();
-  const [picked, setPicked] = useState('test');
 
   const handleAdd = useCallback(() => {
-    const id = `test-${faker.number.int({ min: 0, max: 1_000_000 })}`;
-    const backgroundColor = randomColor();
+    const id = `test-${faker.number.int({ min: 0, max: 1_000 })}`;
+    const styles = getHashStyles(id);
 
     manager.context.contributeCapability({
       module: 'test',
       interface: Capabilities.ReactSurface,
       implementation: createSurface({
         id,
-        role: id,
+        role: 'item',
+        filter: (data): data is any => (data as any)?.id === id,
         component: () => (
-          <div className='flex-1' style={{ backgroundColor }}>
-            {id}
+          <div className={mx('flex justify-center items-center border rounded', styles.surface, styles.border)}>
+            <span className={mx('dx-tag font-mono text-lg', styles.text)}>{id}</span>
           </div>
         ),
       }),
     });
 
-    setPicked(id);
+    setSelected(id);
   }, [manager]);
 
-  const handlePick = useCallback(() => {
-    setPicked(faker.helpers.arrayElement(surfaces).id);
+  const handleSelect = useCallback(() => {
+    setSelected(faker.helpers.arrayElement(surfaces)?.id);
   }, [surfaces]);
 
+  const handleError = useCallback(() => {
+    manager.context.contributeCapability({
+      module: 'error',
+      interface: Capabilities.ReactSurface,
+      implementation: createSurface({
+        id: 'error',
+        role: 'item',
+        filter: (data): data is any => (data as any)?.id === 'error',
+        component: () => {
+          const [count, setCount] = useState(3);
+          useEffect(() => {
+            const interval = setInterval(() => {
+              setCount((count) => {
+                if (count <= 1) {
+                  clearInterval(interval);
+                }
+
+                return count - 1;
+              });
+            }, 1_000);
+            return () => clearInterval(interval);
+          }, []);
+
+          if (count <= 0) {
+            throw new Error('BANG!');
+          }
+
+          return (
+            <div className='flex justify-center items-center border border-rose-500 rounded'>
+              <span className='font-mono'>Ticking... {count}</span>
+            </div>
+          );
+        },
+      }),
+    });
+
+    setSelected('error');
+  }, [manager]);
+
   return (
-    <div className='flex flex-col gap-2'>
-      <div className='flex gap-2'>
-        <Button onClick={handleAdd}>Add</Button>
-        <Button onClick={handlePick}>Pick</Button>
-      </div>
-      <div className='flex gap-2'>
-        <div className='flex-1'>
-          <List itemSizes='one'>
+    <div className='flex flex-col bs-full overflow-hidden'>
+      <Toolbar.Root>
+        <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
+        <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
+        <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
+      </Toolbar.Root>
+      <div className='grid grid-cols-2 bs-full gap-4 overflow-hidden'>
+        <Surface role='item' data={selected ? { id: selected } : undefined} limit={1} />
+        <div className='overflow-y-auto bs-full'>
+          <List>
             {surfaces.map((surface) => (
               <ListItem.Root key={surface.id} id={surface.id}>
-                <ListItem.Heading classNames='grow pbs-2'>{surface.id}</ListItem.Heading>
+                <ListItem.Heading classNames='flex items-center'>{surface.id}</ListItem.Heading>
               </ListItem.Root>
             ))}
           </List>
-        </div>
-        <div className='flex-1'>
-          <Surface role={picked} limit={1} />
         </div>
       </div>
     </div>
   );
 };
 
-const DefaultStory = (props: { manager: PluginManager }) => {
-  return (
-    <PluginManagerProvider value={props.manager}>
-      <Component />
-    </PluginManagerProvider>
-  );
-};
-
 const meta = {
   title: 'sdk/app-framework/Surface',
   render: DefaultStory,
-  decorators: [withTheme],
-  args: {
-    manager: setupPluginManager(),
+  decorators: [withTheme, withPluginManager({ capabilities: [] })],
+  parameters: {
+    layout: 'fullscreen',
   },
 } satisfies Meta<typeof DefaultStory>;
 

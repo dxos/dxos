@@ -15,11 +15,12 @@ import { log } from '@dxos/log';
 
 describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
+    const LOCAL = false;
     const config = new Config({
       version: 1,
       runtime: {
         services: {
-          edge: { url: 'https://edge-main.dxos.workers.dev' },
+          edge: { url: LOCAL ? 'http://localhost:8787' : 'https://edge-main.dxos.workers.dev' },
         },
       },
     });
@@ -32,7 +33,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     await space.waitUntilReady();
 
     // Inline echo function source.
-    const source = await readFile(new URL('../examples/forex-effect.ts', import.meta.url), 'utf-8');
+    const source = await readFile(new URL('../example/forex-effect.ts', import.meta.url), 'utf-8');
 
     // Bundle and upload.
     const bundler = new Bundler({ platform: 'node', sandboxedModules: [], remoteModules: {} });

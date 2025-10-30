@@ -23,7 +23,7 @@ import { Assistant, AssistantAction } from '../types';
 
 export type ChatCompanionProps = {
   role?: string;
-  data: { companionTo: Obj.Any; subject: Assistant.Chat | 'assistant-chat' };
+  data: { subject: Assistant.Chat | 'assistant-chat'; companionTo: Obj.Any };
 };
 
 export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
@@ -131,10 +131,6 @@ export const ChatCompanion = ({ role, data }: ChatCompanionProps) => {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
   }, [binder, companionTo, blueprintKeys]);
-
-  if (!chat) {
-    return null;
-  }
 
   return <ChatContainer role={role} chat={chat} companionTo={companionTo} />;
 };
