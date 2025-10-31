@@ -2,10 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type SyntheticEvent, useRef, useState } from 'react';
+import React, { type SyntheticEvent, useCallback, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+
+const cache = new Map<string, string>();
 
 export type ImageProps = ThemedClassName<
   {
@@ -33,23 +35,35 @@ export const Image = ({
     setCrossOriginState(undefined);
   };
 
-  const handleImageLoad = ({ target }: SyntheticEvent<HTMLImageElement>): void => {
-    const img = target as HTMLImageElement;
-    if (!canvasRef.current) {
-      return;
-    }
-
-    try {
-      const color = extractDominantColor(canvasRef.current, img, { sampleSize, contrast });
-      if (color) {
-        setDominantColor(`rgb(${color[0]}, ${color[1]}, ${color[2]})`);
+  const handleImageLoad = useCallback(
+    ({ target }: SyntheticEvent<HTMLImageElement>): void => {
+      const rgb = cache.get(src);
+      if (rgb) {
+        setDominantColor(rgb);
+        setImageLoaded(true);
+        return;
       }
-    } catch {
-      setCrossOriginState(undefined);
-    }
 
-    setImageLoaded(true);
-  };
+      const img = target as HTMLImageElement;
+      if (!canvasRef.current) {
+        return;
+      }
+
+      try {
+        const color = extractDominantColor(canvasRef.current, img, { sampleSize, contrast });
+        if (color) {
+          const rgb = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+          cache.set(src, rgb);
+          setDominantColor(rgb);
+        }
+      } catch {
+        setCrossOriginState(undefined);
+      }
+
+      setImageLoaded(true);
+    },
+    [sampleSize, contrast, src],
+  );
 
   return (
     <div
@@ -93,7 +107,9 @@ type ColorOptions = {
   contrast?: number;
 };
 
-// TODO(burdon): Cache?
+/**
+ * Get dominant color from image (esp. from corners).
+ */
 const extractDominantColor = (
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
@@ -123,27 +139,41 @@ const extractDominantColor = (
   let b = 0;
   let totalWeight = 0;
 
-  // Calculate average color with more weight to vibrant colors.
-  for (let i = 0; i < pixels.length; i += 4) {
-    const red = pixels[i];
-    const green = pixels[i + 1];
-    const blue = pixels[i + 2];
-    const alpha = pixels[i + 3];
+  // Define corner sampling areas (e.g., 25% of each dimension from each corner).
+  const cornerSize = Math.floor(sampleSize * 0.125);
 
-    // Skip transparent pixels.
-    if (alpha === 0) continue;
+  // Sample only pixels in corner areas.
+  for (let y = 0; y < sampleSize; y++) {
+    for (let x = 0; x < sampleSize; x++) {
+      // Check if pixel is in any corner area.
+      const isInTopLeft = x < cornerSize && y < cornerSize;
+      const isInTopRight = x >= sampleSize - cornerSize && y < cornerSize;
+      const isInBottomLeft = x < cornerSize && y >= sampleSize - cornerSize;
+      const isInBottomRight = x >= sampleSize - cornerSize && y >= sampleSize - cornerSize;
+      if (!isInTopLeft && !isInTopRight && !isInBottomLeft && !isInBottomRight) {
+        continue; // Skip pixels not in corner areas.
+      }
 
-    // Calculate saturation to weight vibrant colors more.
-    const max = Math.max(red, green, blue);
-    const min = Math.min(red, green, blue);
-    // Give more weight to saturated colors.
-    const saturation = max === 0 ? 0 : (max - min) / max;
-    const weight = 1 + saturation * 2;
+      const i = (y * sampleSize + x) * 4;
+      const red = pixels[i];
+      const green = pixels[i + 1];
+      const blue = pixels[i + 2];
+      const alpha = pixels[i + 3];
 
-    r += red * weight;
-    g += green * weight;
-    b += blue * weight;
-    totalWeight += weight;
+      // Skip transparent pixels.
+      if (alpha === 0) continue;
+
+      // Calculate saturation to weight vibrant colors more.
+      const max = Math.max(red, green, blue);
+      const min = Math.min(red, green, blue);
+      const saturation = max === 0 ? 0 : (max - min) / max;
+      const weight = 1 + saturation * 2;
+
+      r += red * weight;
+      g += green * weight;
+      b += blue * weight;
+      totalWeight += weight;
+    }
   }
 
   if (totalWeight > 0) {

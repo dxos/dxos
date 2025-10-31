@@ -31,7 +31,9 @@ export default () =>
   contributes(Capabilities.ReactSurface, [
     //
     // Specific schema types.
+    // TODO(burdon): Create helpers and factor out.
     //
+
     createSurface({
       id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
@@ -39,7 +41,7 @@ export default () =>
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
-        const activeSpace = useActiveSpace();
+        const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
         const handleSelect = useCallback<NonNullable<PreviewProps['onSelect']>>(
           (object) =>
             dispatch(
@@ -87,12 +89,15 @@ export default () =>
       id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
-      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
+      component: ({ data, role }) => {
+        return <TaskCard subject={data.subject} role={role} />;
+      },
     }),
 
     //
     // Fallback for any object.
     //
+
     createSurface({
       id: `${meta.id}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
@@ -117,6 +122,7 @@ export default () =>
         return (
           <Card.SurfaceRoot role={role}>
             <Form
+              id={data.subject.id}
               schema={schema}
               projection={data.projection}
               values={data.subject}

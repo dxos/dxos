@@ -1,3 +1,7 @@
+/**
+ * NOTE: The order of the layers is important and defined in the root `index.html`.
+ */
+
 @import './anchored-overflow.css';
 @import './animation.css';
 @import './attention.css';

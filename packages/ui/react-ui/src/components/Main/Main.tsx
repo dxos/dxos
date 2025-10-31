@@ -31,21 +31,11 @@ import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider'
 
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
+const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
-const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
-
-type SidebarState = 'expanded' | 'collapsed' | 'closed';
-
-type MainContextValue = {
-  resizing: boolean;
-  navigationSidebarState: SidebarState;
-  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-  complementarySidebarState: SidebarState;
-  setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-};
 
 const landmarkAttr = 'data-main-landmark';
 
@@ -72,8 +62,8 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     [propsOnKeyDown],
   );
 
-  // TODO(thure): This was disconnected once before in #8818, if this should change again to support the browser
-  //  extension, please ensure the change doesn’t break web, desktop and mobile.
+  // TODO(thure): This was disconnected once before in #8818;
+  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {
@@ -82,6 +72,16 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     tabIndex: 0,
     ...focusableGroupAttrs,
   };
+};
+
+type SidebarState = 'expanded' | 'collapsed' | 'closed';
+
+type MainContextValue = {
+  resizing: boolean;
+  navigationSidebarState: SidebarState;
+  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+  complementarySidebarState: SidebarState;
+  setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
