@@ -38,10 +38,12 @@ export const useStackDropForElements = ({
     const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
 
     return combine(
-      autoScrollForElements({
-        element: scrollElement!,
-        getAllowedAxis: () => orientation,
-      }),
+      scrollElement
+        ? autoScrollForElements({
+            element: scrollElement,
+            getAllowedAxis: () => orientation,
+          })
+        : () => {},
 
       selfDroppable
         ? dropTargetForElements({
