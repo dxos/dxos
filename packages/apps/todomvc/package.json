@@ -32,7 +32,7 @@
     "@sentry/vite-plugin": "^4.0.2",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",
-    "vite": "7.1.9",
+    "vite": "7.1.11",
     "vite-plugin-top-level-await": "^1.6.0",
     "vite-plugin-wasm": "^3.5.0"
   }
