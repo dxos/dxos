@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { SettingsStore } from '@dxos/local-storage';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { AssistantSettings, BlueprintContainer, ChatCompanion, ChatContainer, ChatDialog } from '../components';
+import { AssistantSettings, BlueprintArticle, ChatCompanion, ChatContainer, ChatDialog } from '../components';
 import { ASSISTANT_DIALOG, meta } from '../meta';
 import { Assistant } from '../types';
 
@@ -60,7 +60,7 @@ export default () =>
       id: `${meta.id}/blueprint`,
       role: 'article',
       filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
-      component: ({ data }) => <BlueprintContainer blueprint={data.subject} />,
+      component: ({ data }) => <BlueprintArticle object={data.subject} />,
     }),
     createSurface({
       id: ASSISTANT_DIALOG,

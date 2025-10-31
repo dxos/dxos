@@ -14,9 +14,28 @@ import { meta } from '../meta';
 
 type SchemaPanelProps = { space: Space };
 
-// TODO(ZaymonFC):
-//   - Support deleting Schema. This should tie in to some sort of
-//     'DangerZone™️' / 'Are you really sure?' / 'this might have consequences' component.
+export const SchemaContainer = ({ space }: SchemaPanelProps) => {
+  const { t } = useTranslation(meta.id);
+  const schemas = useQuerySpaceSchemas(space);
+
+  // TODO(ZaymonFC): Support deleting Schema (DangerZone section).
+  return (
+    <StackItem.Content scrollable>
+      <ControlPage>
+        <ControlSection title={t('schema verbose label')} description={t('schema description')}>
+          <div role='none' className={controlItemClasses}>
+            {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
+            {schemas.map((schema) => (
+              <div role='none' key={schema.id}>
+                {schema.typename}
+              </div>
+            ))}
+          </div>
+        </ControlSection>
+      </ControlPage>
+    </StackItem.Content>
+  );
+};
 
 /**
  * Subscribe to and retrieve all schemas from a space's schema registry.
@@ -34,26 +53,4 @@ export const useQuerySpaceSchemas = (space: Space): Type.Schema[] => {
   }, [space]);
 
   return schemas;
-};
-
-export const SchemaContainer = ({ space }: SchemaPanelProps) => {
-  const { t } = useTranslation(meta.id);
-  const schemas = useQuerySpaceSchemas(space);
-
-  return (
-    <StackItem.Content scrollable>
-      <ControlPage>
-        <ControlSection title={t('schema verbose label')} description={t('schema description')}>
-          <div role='none' className={controlItemClasses}>
-            {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
-            {schemas.map((schema) => (
-              <div key={schema.id}>
-                <div>{schema.typename}</div>
-              </div>
-            ))}
-          </div>
-        </ControlSection>
-      </ControlPage>
-    </StackItem.Content>
-  );
 };

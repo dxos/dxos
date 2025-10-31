@@ -109,6 +109,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "~19.2.2",
     "@types/react-dom": "~19.2.2",

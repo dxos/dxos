@@ -20,6 +20,9 @@
       "path": "../../packages/common/storybook-addon-logger"
     },
     {
+      "path": "../../packages/common/storybook-utils"
+    },
+    {
       "path": "../../packages/ui/react-ui-theme"
     },
     {

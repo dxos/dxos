@@ -233,7 +233,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
 
   return {
     passWithNoTests: true,
-    reporters: ['json', 'verbose'],
+    reporters: ['json', 'default'],
     outputFile: join(resultsDirectory, 'results.json'),
     coverage: {
       enabled: coverageEnabled,
