@@ -75,13 +75,13 @@ describe('Research', () => {
       function* (_) {
         yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
-            name: 'Airbnb',
-            website: 'https://www.airbnb.com/',
+            name: 'BlueYard',
+            website: 'https://blueyard.com',
           }),
         );
         yield* DatabaseService.flush({ indexes: true });
         const result = yield* FunctionInvocationService.invokeFunction(research, {
-          query: 'Founders and investors of airbnb.',
+          query: 'Founders and portfolio of BlueYard.',
         });
 
         console.log(inspect(result, { depth: null, colors: true }));
@@ -106,62 +106,61 @@ describe('Research', () => {
     'create and update research report',
     Effect.fnUntraced(
       function* (_) {
-        const airbnb = yield* DatabaseService.add(
+        const organization = yield* DatabaseService.add(
           Obj.make(DataType.Organization, {
-            name: 'Airbnb',
-            website: 'https://www.airbnb.com/',
+            name: 'BlueYard',
+            website: 'https://blueyard.com',
           }),
         );
 
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
-        yield* DatabaseService.flush({ indexes: true });
 
+        yield* DatabaseService.flush({ indexes: true });
         const blueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
         yield* Effect.promise(() =>
-          conversation.context.bind({ blueprints: [Ref.make(blueprint)], objects: [Ref.make(airbnb)] }),
+          conversation.context.bind({ blueprints: [Ref.make(blueprint)], objects: [Ref.make(organization)] }),
         );
+
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
 
         yield* conversation.createRequest({
           observer,
-          prompt: `create a research document about airbnb founders.`,
+          prompt: `Create a research summary about ${organization.name}.`,
         });
         {
-          const { objects: researchDocs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(airbnb.id)).targetOf(DataType.HasSubject).source(),
+          const { objects: docs } = yield* DatabaseService.runQuery(
+            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
           );
-          if (researchDocs.length !== 1) {
-            throw new Error(
-              `Expected 1 research document, got ${researchDocs.length}: ${researchDocs.map((_) => _.name)}`,
-            );
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
-          const researchDoc = researchDocs[0];
-          invariant(Obj.instanceOf(Markdown.Document, researchDoc));
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
-            name: researchDoc.name,
-            content: yield* DatabaseService.load(researchDoc.content).pipe(Effect.map((_) => _.content)),
+            name: doc.name,
+            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
 
         yield* conversation.createRequest({
           observer,
-          prompt: `add a section about the investment rationalle into airbnb.`,
+          prompt: 'Add a section about their portfolio.',
         });
         {
-          const { objects: researchDocs } = yield* DatabaseService.runQuery(
-            Query.select(Filter.ids(airbnb.id)).targetOf(DataType.HasSubject).source(),
+          const { objects: docs } = yield* DatabaseService.runQuery(
+            Query.select(Filter.ids(organization.id)).targetOf(DataType.HasSubject).source(),
           );
-          if (researchDocs.length !== 1) {
-            throw new Error(
-              `Expected 1 research document, got ${researchDocs.length}: ${researchDocs.map((_) => _.name)}`,
-            );
+          if (docs.length !== 1) {
+            throw new Error(`Expected 1 research document; got ${docs.length}: ${docs.map((_) => _.name)}`);
           }
-          const researchDoc = researchDocs[0];
-          invariant(Obj.instanceOf(Markdown.Document, researchDoc));
+
+          const doc = docs[0];
+          invariant(Obj.instanceOf(Markdown.Document, doc));
           console.log({
-            name: researchDoc.name,
-            content: yield* DatabaseService.load(researchDoc.content).pipe(Effect.map((_) => _.content)),
+            name: doc.name,
+            content: yield* DatabaseService.load(doc.content).pipe(Effect.map((_) => _.content)),
           });
         }
       },
