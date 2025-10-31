@@ -30,7 +30,7 @@ import { default as entityExtraction } from './entity-extraction';
 
 ObjectId.dangerouslyDisableRandomness();
 
-const TestLayer = Layer.mergeAll(
+export const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
   makeToolResolverFromFunctions([], testToolkit),
   makeToolExecutionServiceFromFunctions(testToolkit, testToolkit.toLayer({}) as any),

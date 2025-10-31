@@ -4,6 +4,7 @@
 
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as Prompt from '@effect/ai/Prompt';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
@@ -24,14 +25,16 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { todo } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { TracingService, DatabaseService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { DataType, ContentBlock } from '@dxos/schema';
 
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
+import { SessionContext } from './session-context';
+import { Predicate } from 'effect';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -39,7 +42,8 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | DatabaseService;
 
 export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   prompt: string;
@@ -50,9 +54,35 @@ export type AiSessionRunParams<Tools extends Record<string, Tool.Any>> = {
   blueprints?: Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
   observer?: GenerationObserver;
+
+  /**
+   * Allows to provide additional context to the session.
+   */
+  contextProviders?: ContextProvider[];
 };
 
 export type AiSessionOptions = {};
+
+/**
+ * Provides additional context to the session.
+ */
+// TODO(dmaretskyi): This seems really simiar to blueprints.
+export type ContextProvider = () => Effect.Effect<
+  {
+    /**
+     * Appended to the system prompt.
+     */
+    system?: string;
+
+    /**
+     * Appended to the history before the user prompt.
+     */
+    // TODO(dmaretsky): Add trailing history.
+    // trailing?: ContentBlock.Any[];
+  },
+  never,
+  DatabaseService
+>;
 
 /**
  * Contains message history, tools, current context.
@@ -85,6 +115,7 @@ export class AiSession {
     blueprints = [],
     toolkit,
     observer = GenerationObserver.noop(),
+    contextProviders = [],
   }: AiSessionRunParams<Tools>): Effect.Effect<DataType.Message[], AiSessionRunError, AiSessionRunRequirements> =>
     Effect.gen(this, function* () {
       this._history = [...history];
@@ -102,8 +133,15 @@ export class AiSession {
       // TODO(burdon): Remove if cancelled?
       const promptMessage = yield* submitMessage(yield* formatUserPrompt({ prompt, history }));
 
+      const additionalContext = yield* Effect.all(contextProviders.map((provider) => provider()));
+
       // Generate system and prompt messages.
-      const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects });
+      const system = yield* formatSystemPrompt({
+        system: systemTemplate,
+        blueprints,
+        objects,
+        additionalContext: additionalContext.map((_) => _.system).filter(Predicate.isNotNullable),
+      });
 
       // Tool call loop.
       do {
@@ -152,6 +190,14 @@ export class AiSession {
           throw new Error('No toolkit provided'); // TODO(burdon): Throw user error?
         }
 
+        const sessionContext: SessionContext.Service = {
+          historyPrompt: Effect.gen(this, function* () {
+            return yield* AiPreprocessor.preprocessPrompt([...this._history, ...this._pending], { system }).pipe(
+              Effect.orDie,
+            );
+          }),
+        };
+
         // Execute the tool calls.
         // TODO(burdon): Retry errors? Write result when each completes individually?
         const toolResults = yield* Effect.forEach(toolCalls, (toolCall) => {
@@ -163,6 +209,7 @@ export class AiSession {
                 toolCallId: toolCall.toolCallId,
               })),
             ),
+            Effect.provideService(SessionContext, sessionContext),
           );
         });
 

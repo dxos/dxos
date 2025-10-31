@@ -86,3 +86,8 @@ export const failedInvariant = (message1?: unknown, message2?: string, meta?: Ca
 
   throw new InvariantViolation(errorMessage);
 };
+
+/**
+ * Code should never reach this point.
+ */
+export const unreachable = failedInvariant;

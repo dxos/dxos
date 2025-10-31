@@ -224,3 +224,16 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
 
   return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
+
+export type ModelUsageAnnotation = {
+  /**
+   * If true, the model can modify this field.
+   */
+  writeable: boolean;
+};
+
+/**
+ * How this field is treated by large language models.
+ */
+export const ModelUsageAnnotationId = Symbol.for('@dxos/schema/annotation/ModelUsage');
+export const ModelUsageAnnotation = createAnnotationHelper<ModelUsageAnnotation>(ModelUsageAnnotationId);

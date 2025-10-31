@@ -7,6 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -27,6 +28,8 @@ import {
   getSchemaTypename,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
+  ModelUsageAnnotation,
+  ModelUsageAnnotationId,
 } from '@dxos/echo/internal';
 import { type EchoDatabase, type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
@@ -158,7 +161,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Schema.Schema.AnyNo
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-      dependencies: [DatabaseService, ContextQueueService],
+      dependencies: [DatabaseService],
     }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
@@ -170,7 +173,42 @@ export const makeGraphWriterHandler = (
   }: {
     onAppend?: (object: DXN[]) => void;
   } = {},
-) => {
+): Layer.Layer<
+  Tool.HandlersFor<Toolkit.Tools<ReturnType<typeof makeGraphWriterToolkit>>>,
+  never,
+  ContextQueueService
+> => {
+  const { schema } = Context.get(
+    toolkit.tools.graph_writer.annotations as Context.Context<GraphWriterSchema>,
+    GraphWriterSchema,
+  );
+
+  return toolkit.toLayer(
+    Effect.gen(function* () {
+      const { queue } = yield* ContextQueueService;
+      return {
+        graph_writer: Effect.fn(function* (input) {
+          const { db } = yield* DatabaseService;
+          const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
+          yield* Effect.promise(() => queue.append(data as Obj.Any[]));
+
+          const dxns = data.map((obj) => Obj.getDXN(obj));
+          onAppend?.(dxns);
+          return dxns;
+        }),
+      };
+    }),
+  );
+};
+
+export const makeGraphWriterHandlerToDatabase = (
+  toolkit: ReturnType<typeof makeGraphWriterToolkit>,
+  {
+    onAppend,
+  }: {
+    onAppend?: (object: DXN[]) => void;
+  } = {},
+): Layer.Layer<Tool.HandlersFor<Toolkit.Tools<ReturnType<typeof makeGraphWriterToolkit>>>> => {
   const { schema } = Context.get(
     toolkit.tools.graph_writer.annotations as Context.Context<GraphWriterSchema>,
     GraphWriterSchema,
@@ -179,9 +217,8 @@ export const makeGraphWriterHandler = (
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
       const { db } = yield* DatabaseService;
-      const { queue } = yield* ContextQueueService;
-      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
-      yield* Effect.promise(() => queue.append(data as Obj.Any[]));
+      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db));
+      data.forEach((obj) => db.add(obj));
 
       const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
@@ -360,10 +397,35 @@ const preprocessSchema = (schema: Schema.Schema.AnyNoContext) => {
       return SoftRef.ast;
     }
 
+    if (SchemaAST.isTypeLiteral(ast)) {
+      return new SchemaAST.TypeLiteral(
+        ast.propertySignatures.filter((prop) => {
+          const modelUsage = ModelUsageAnnotation.getFromAst(prop.type);
+          if (Option.isSome(modelUsage) && !modelUsage.value.writeable) {
+            return false;
+          }
+          if (
+            SchemaAST.isUnion(prop.type) &&
+            prop.type.types.length === 2 &&
+            SchemaAST.isUndefinedKeyword(prop.type.types[1])
+          ) {
+            const nonOptionalType = prop.type.types[0];
+            const modelUsage = ModelUsageAnnotation.getFromAst(nonOptionalType);
+            if (Option.isSome(modelUsage) && !modelUsage.value.writeable) {
+              return false;
+            }
+          }
+          return true;
+        }),
+        ast.indexSignatures,
+        ast.annotations,
+      );
+    }
+
     return mapAst(ast, (child) => go(child, visited));
   };
 
-  return Schema.make<any, any, never>(mapAst(schema.ast, (ast) => go(ast))).pipe(
+  return Schema.make<any, any, never>(go(schema.ast)).pipe(
     Schema.omit('id'),
     Schema.extend(
       Schema.Struct({

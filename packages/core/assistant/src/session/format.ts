@@ -29,7 +29,10 @@ export const formatSystemPrompt = ({
   system,
   blueprints = [],
   objects = [],
-}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'>) =>
+  additionalContext = [],
+}: Pick<AiSessionRunParams<any>, 'system' | 'blueprints' | 'objects'> & {
+  additionalContext?: string[];
+}) =>
   Effect.gen(function* () {
     const blueprintDefs = yield* Function.pipe(
       blueprints,
@@ -64,7 +67,9 @@ export const formatSystemPrompt = ({
     );
 
     return yield* Function.pipe(
-      Effect.succeed([system, blueprintDefs, objectDefs].filter((def): def is string => def !== undefined)),
+      Effect.succeed(
+        [system, blueprintDefs, objectDefs, ...additionalContext].filter((def): def is string => def !== undefined),
+      ),
       Effect.map((parts) => parts.join('\n\n')),
     );
   });

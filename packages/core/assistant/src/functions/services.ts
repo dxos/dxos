@@ -3,7 +3,7 @@
 //
 
 import * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Toolkit from '@effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -27,10 +27,13 @@ import { invariant } from '@dxos/invariant';
  *
  * Requires `DatabaseService` in the environment.
  */
-export const makeToolResolverFromFunctions = (
-  functions: FunctionDefinition<any, any>[],
-  toolkit: Toolkit.Toolkit<any>,
-): Layer.Layer<ToolResolverService, never, DatabaseService> => {
+export const makeToolResolverFromFunctions = ({
+  functions = [],
+  toolkit = Toolkit.empty as Toolkit.Toolkit<any>,
+}: {
+  functions?: FunctionDefinition<any, any>[];
+  toolkit?: Toolkit.Toolkit<any>;
+} = {}): Layer.Layer<ToolResolverService, never, DatabaseService> => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
@@ -62,10 +65,13 @@ export const makeToolResolverFromFunctions = (
   );
 };
 
-export const makeToolExecutionServiceFromFunctions = (
-  toolkit: Toolkit.Toolkit<any>,
-  handlersLayer: Layer.Layer<Tool.Handler<any>, never, never>,
-): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
+export const makeToolExecutionServiceFromFunctions = ({
+  toolkit = Toolkit.empty,
+  handlersLayer = Layer.empty as Layer.Layer<Tool.Handler<any>, never, never>,
+}: {
+  toolkit?: Toolkit.Toolkit<any>;
+  handlersLayer?: Layer.Layer<Tool.Handler<any>, never, never>;
+} = {}): Layer.Layer<ToolExecutionService, never, FunctionInvocationService> => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
