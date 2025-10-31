@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework';
+import { type ArticleComponentProps, Surface } from '@dxos/app-framework';
 import { Filter, type Obj, Ref, Relation } from '@dxos/echo';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -15,31 +15,28 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export type RecordArticleProps = {
-  object: Obj.Any;
-};
-
-export const RecordArticle = ({ object }: RecordArticleProps) => {
+export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
   const related = useRelatedObjects(space, object, { relations: true, references: true });
+  const singleColumn = related.length === 1;
 
   return (
-    <StackItem.Content classNames='flex flex-col items-center'>
-      <div role='none' className={mx('flex flex-col gap-4 p-6 is-full overflow-y-auto')}>
-        <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
+    <StackItem.Content>
+      <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
+        <div role='none' className={mx('flex card-min-width card-max-width')}>
           <Surface role='section' data={data} limit={1} />
         </div>
 
         {related.length > 0 && (
-          <div role='none' className={mx('flex flex-col gap-1', related.length === 1 ? 'card-max-width' : 'is-full')}>
-            <label className='text-description text-sm mbs-2'>{t('related objects label')}</label>
+          <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'is-full')}>
+            <label className='mbs-2 text-sm text-description'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any>
               items={related}
               render={Card}
+              columnCount={singleColumn ? 1 : undefined}
               intrinsicHeight
-              columnCount={related.length === 1 ? 1 : undefined}
             />
           </div>
         )}
@@ -60,23 +57,23 @@ const useRelatedObjects = (
   options: { relations?: boolean; references?: boolean } = {},
 ) => {
   const objects = useQuery(space, Filter.everything());
-  const related = useMemo(() => {
+  return useMemo(() => {
     if (!record) {
       return [];
     }
 
-    // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
-    const isValidRelation = (obj: Obj.Any) => {
-      try {
-        return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
-      } catch {
-        return false;
-      }
-    };
-
     const related: Obj.Any[] = [];
 
     if (options.relations) {
+      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
+      const isValidRelation = (obj: Obj.Any) => {
+        try {
+          return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
+        } catch {
+          return false;
+        }
+      };
+
       const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
       const targetObjects = relations
         .filter((relation) => Relation.getTarget(relation) === record)
@@ -100,11 +97,8 @@ const useRelatedObjects = (
       related.push(...referencedObjects);
     }
 
-    // TODO(burdon): Create sections (or section indicators)?
     return related;
   }, [record, objects]);
-
-  return related;
 };
 
 export default RecordArticle;

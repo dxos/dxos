@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/web-components-vite';
 import { html } from 'lit';
 
 export const withLayout: Decorator = (Story, context) => {

@@ -31,8 +31,8 @@ import {
   type CreateObjectDialogProps,
   JOIN_DIALOG,
   type JoinDialogProps,
-  POPOVER_RENAME_OBJECT,
-  POPOVER_RENAME_SPACE,
+  OBJECT_RENAME_POPOVER,
+  SPACE_RENAME_POPOVER,
 } from '../components';
 import { SpaceEvents } from '../events';
 import { meta } from '../meta';
@@ -259,7 +259,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
           intents: [
             createIntent(LayoutAction.UpdatePopover, {
               part: 'popover',
-              subject: POPOVER_RENAME_SPACE,
+              subject: SPACE_RENAME_POPOVER,
               options: {
                 anchorId: `dxos.org/ui/${caller}/${space.id}`,
                 props: space,
@@ -665,7 +665,7 @@ export default ({ context, observability, createInvitationUrl }: IntentResolverO
         intents: [
           createIntent(LayoutAction.UpdatePopover, {
             part: 'popover',
-            subject: POPOVER_RENAME_OBJECT,
+            subject: OBJECT_RENAME_POPOVER,
             options: {
               anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
               props: object,

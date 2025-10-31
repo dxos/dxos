@@ -29,9 +29,8 @@ import { trim } from '@dxos/util';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { exaFunction, exaMockFunction } from '../exa';
 
-// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
-import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
+import PROMPT from './research-instructions.tpl?raw';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -41,22 +40,21 @@ export default defineFunction({
   key: 'dxos.org/function/research',
   name: 'Research',
   description: trim`
-    Research the web for information. 
+    Search the web to research information about the given subject.
     Inserts structured data into the research graph. 
-    Will return research summary and the objects created.
+    Creates a research summary and returns the objects created.
   `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: trim`
-        The query to search for.
-        If doing research on an object, load it first and pass it as a JSON string.
+        The search query.
+        If doing research on an object then load it first and pass it as JSON.
       `,
     }),
 
-    researchInstructions: Schema.optional(Schema.String).annotations({
+    instructions: Schema.optional(Schema.String).annotations({
       description: trim`
         The instructions for the research agent. 
-        E.g., preference on fast responses or in-depth analysis, number of web searcher or the objects created.
       `,
     }),
 
@@ -67,21 +65,23 @@ export default defineFunction({
     }),
 
     entityExtraction: Schema.optional(Schema.Boolean).annotations({
-      description:
-        'Whether to extract structured entities from the research. Experimental feature only enable if user explicitly requests it.',
+      description: trim`
+        Whether to extract structured entities from the research. 
+        Experimental feature only enable if user explicitly requests it.
+      `,
       default: false,
     }),
   }),
   outputSchema: Schema.Struct({
-    note: Schema.optional(Schema.String).annotations({
-      description: 'A note from the research agent.',
+    document: Schema.optional(Schema.String).annotations({
+      description: 'The generated research document.',
     }),
     objects: Schema.Array(Schema.Unknown).annotations({
-      description: 'The structured objects created as a result of the research.',
+      description: 'Structured objects created during the research process.',
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, researchInstructions, mockSearch = false, entityExtraction = false } }) {
+    function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
         const mockPerson = yield* DatabaseService.add(
           Obj.make(DataType.Person, {
@@ -92,9 +92,8 @@ export default defineFunction({
         );
 
         return {
-          note: trim`
-            The research run in test-mode and was mocked. 
-            Proceed as usual.
+          document: trim`
+            The research ran in test-mode and was mocked. Proceed as usual.
             We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}
           `,
           objects: [Obj.toJSON(mockPerson)],
@@ -102,9 +101,10 @@ export default defineFunction({
       }
 
       yield* DatabaseService.flush({ indexes: true });
-      yield* TracingService.emitStatus({ message: 'Researching...' });
+      yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
+
       let toolkit: Toolkit.Any = NativeWebSearch;
       let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
@@ -114,6 +114,7 @@ export default defineFunction({
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
           onAppend: (dxns) => objectDXNs.push(...dxns),
         });
+
         toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
         handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
           Layer.provide(contextQueueLayerFromResearchGraph),
@@ -127,11 +128,10 @@ export default defineFunction({
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system:
-          Template.process(PROMPT, { entityExtraction }) +
-          (researchInstructions
-            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
-            : ''),
+        system: join(
+          Template.process(PROMPT, { entityExtraction }),
+          instructions && `<instructions>${instructions}</instructions>`,
+        ),
         toolkit: finishedToolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
@@ -141,7 +141,7 @@ export default defineFunction({
       );
 
       return {
-        note: extractLastTextBlock(result),
+        document: extractLastTextBlock(result),
         objects,
       };
     },
@@ -161,10 +161,14 @@ export default defineFunction({
   ),
 });
 
+// TODO(burdon): Factor out.
+const join = (...strings: (string | undefined)[]) => strings.filter(Boolean).join('\n\n');
+
 /**
  * Extracts the last text block from the result.
  * Skips citations.
  */
+// TODO(burdon): Factor out.
 const extractLastTextBlock = (result: DataType.Message[]) => {
   return Function.pipe(
     result,

@@ -36,7 +36,7 @@
         "_tag": "toolCall",
         "toolCallId": "toolu_01Loo95BkQXpKkN4A1WPNWhF",
         "name": "dxos_org_function_research",
-        "input": "{\"query\":\"Blue Yard venture capital firm Berlin investments portfolio\",\"researchInstructions\":\"Focus on: company overview, investment thesis, key team members, notable portfolio companies, investment stages and sectors they focus on, recent investments, and any notable exits or successes\"}",
+        "input": "{\"query\":\"Blue Yard venture capital firm Berlin investments portfolio\",\"instructions\":\"Focus on: company overview, investment thesis, key team members, notable portfolio companies, investment stages and sectors they focus on, recent investments, and any notable exits or successes\"}",
         "providerExecuted": false
       },
       {
@@ -412,7 +412,7 @@
         "_tag": "toolCall",
         "toolCallId": "toolu_01FRyentsT5unq3ArucPyd9v",
         "name": "dxos_org_function_research",
-        "input": "{\"query\":\"Blue Yard capital Berlin Ciarán O'Leary Jason Whitmire investments\",\"researchInstructions\":\"Gather information about the founding partners, their investment philosophy, specific portfolio companies they've invested in, and their approach to early-stage investing in Europe\"}",
+        "input": "{\"query\":\"Blue Yard capital Berlin Ciarán O'Leary Jason Whitmire investments\",\"instructions\":\"Gather information about the founding partners, their investment philosophy, specific portfolio companies they've invested in, and their approach to early-stage investing in Europe\"}",
         "providerExecuted": false
       },
       {
@@ -576,7 +576,7 @@
         "_tag": "toolCall",
         "toolCallId": "toolu_0184yyWFfy8eUDJMKQhZ9iVt",
         "name": "dxos_org_function_research",
-        "input": "{\"query\":\"BlueYard VC Berlin early stage investments decentralized web\",\"researchInstructions\":\"Research their focus on decentralization, web3, and emerging technologies. Include information about their team, investment strategy, and portfolio companies\"}",
+        "input": "{\"query\":\"BlueYard VC Berlin early stage investments decentralized web\",\"instructions\":\"Research their focus on decentralization, web3, and emerging technologies. Include information about their team, investment strategy, and portfolio companies\"}",
         "providerExecuted": false
       },
       {
