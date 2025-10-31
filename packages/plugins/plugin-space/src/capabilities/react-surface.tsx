@@ -25,6 +25,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
+// TODO(burdon): Component name standard: NounVerbComponent.
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -38,17 +39,17 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
-  ObjectDetailsPanel,
-  ObjectSettingsContainer,
   OBJECT_RENAME_POPOVER,
-  SPACE_RENAME_POPOVER,
+  ObjectDetailsPanel,
   ObjectRenamePopover,
-  SpaceRenamePopover,
+  ObjectSettingsContainer,
   RecordArticle,
+  SPACE_RENAME_POPOVER,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
   SpacePresence,
+  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
