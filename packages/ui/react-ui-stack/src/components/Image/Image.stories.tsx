@@ -50,6 +50,13 @@ export const Cors: Story = {
   },
 };
 
+export const Corners: Story = {
+  args: {
+    src: 'https://media.licdn.com/dms/image/v2/D4D0BAQEY4OiENeMR4A/company-logo_200_200/company-logo_200_200/0/1728648673877/moonfire_logo?e=1763596800&v=beta&t=_Jmhg-vu5uqUR88YiTbDFOC4ShlUbjk63_7-JQpgK9A',
+    classNames: 'w-[20rem]',
+  },
+};
+
 export const SVG: Story = {
   args: {
     src: 'https://dxos.network/bg-kube.svg',
@@ -66,7 +73,6 @@ export const Many: Story = {
       () => Array.from({ length: 9 }, (_, i) => `https://picsum.photos/seed/${seed + i}/500/500`),
       [],
     );
-    console.log(images);
     return (
       <div className='is-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
         {images.map((src, i) => (
