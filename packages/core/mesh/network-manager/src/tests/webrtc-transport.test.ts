@@ -8,12 +8,14 @@ import { TEST_SIGNAL_HOSTS, TestBuilder } from '../testing';
 
 import { basicTestSuite } from './basic-test-suite';
 
-describe('WebRTC transport', { timeout: 10_000 }, () => {
+// Segfault in node-datachannel.
+describe.skip('WebRTC transport', { timeout: 10_000 }, () => {
   const testBuilder = new TestBuilder();
   basicTestSuite(testBuilder);
 });
 
-describe('WebRTC transport proxy', { timeout: 10_000 }, () => {
+// Segfault in node-datachannel.
+describe.skip('WebRTC transport proxy', { timeout: 10_000 }, () => {
   const testBuilder = new TestBuilder({ bridge: true });
   basicTestSuite(testBuilder);
 });

@@ -389,13 +389,7 @@
     "effect/Effect",
     "effect/Console"
   ],
-  "typescript.preferences.importModuleSpecifier": "relative",
-  "typescript.suggest.autoImports": true,
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
-  "typescript.tsserver.log": "terse",
-  // Doesn't work in a big monorepo.
-  "typescript.updateImportsOnPaste.enabled": false,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
   "vitest.disableWorkspaceWarning": true,
   "vitest.rootConfig": "vitest.all.config.ts"
 }

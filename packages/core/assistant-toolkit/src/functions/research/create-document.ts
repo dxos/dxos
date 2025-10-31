@@ -5,10 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Relation } from '@dxos/echo';
+import { ArtifactId } from '@dxos/assistant';
+import { Obj, Relation } from '@dxos/echo';
 import { DatabaseService, TracingService, defineFunction } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { DataType } from '@dxos/schema';
@@ -30,23 +29,21 @@ export default defineFunction({
       `,
     }),
 
-    // TODO(dmaretskyi): Use a specialized type for this (e.g., ArtifactId renamed as RefFromLLM).
-    target: Schema.String.annotations({
+    target: ArtifactId.annotations({
       description: trim`
         Id of the object (organization, contact, etc.) for which the research was performed. 
-        This must be a ulid.
       `,
     }),
   }),
-  outputSchema: Schema.Struct({}), // TODO(burdon): Schema.Void?
+  outputSchema: Schema.Struct({
+    researchDocument: ArtifactId,
+  }),
   handler: Effect.fnUntraced(function* ({ data: { target, name, content } }) {
     log.info('Creating research document', { target, name, content });
 
     yield* DatabaseService.flush({ indexes: true });
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
-    invariant(ObjectId.isValid(target));
-
-    const targetObj = yield* DatabaseService.resolve(DXN.fromLocalObjectId(target));
+    const targetObj = yield* DatabaseService.resolve(ArtifactId.toDXN(target));
 
     const doc = yield* DatabaseService.add(
       Markdown.makeDocument({
@@ -64,6 +61,6 @@ export default defineFunction({
     yield* DatabaseService.flush({ indexes: true });
 
     log.info('Created research document', { target, name, content });
-    return {};
+    return { researchDocument: Obj.getDXN(doc).toString() };
   }),
 });

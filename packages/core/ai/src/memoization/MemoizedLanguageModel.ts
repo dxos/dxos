@@ -19,6 +19,11 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
+import { deepMapValues } from '@dxos/util';
+
+// Can be performance-intensive
+const DISABLE_CLOSEST_MATCH_SEARCH = false;
+
 export interface LayerOptions {
   modelName: string;
   storePath: string;
@@ -222,7 +227,7 @@ class MemoizedStore {
         stored.conversations,
         Array.sortBy(
           Order.mapInput(Order.number, (x) =>
-            levensteinDistance(formatMemoizedConversation(x), formatMemoizedConversation(prompted)),
+            gitDiffDistance(formatMemoizedConversation(x), formatMemoizedConversation(prompted)),
           ),
         ),
         Option.fromIterable,
@@ -297,61 +302,63 @@ const ConversationStore = Schema.Struct({
 }).pipe(Schema.mutable);
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
+/**
+ * Formats the conversation for diffing and displaying to the developer.
+ * Doesn't need to be lossless.
+ */
 const formatMemoizedConversation = (conversation: MemoziedConversation): string => {
   return (
     jsonStableStringify(
       {
         parameters: conversation.parameters,
-        prompt: conversation.prompt,
+        // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
+        prompt: deepMapValues(conversation.prompt, (value, recurse, key) => {
+          if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
+            return sanitizeString(value);
+          }
+          return recurse(value);
+        }),
       },
       { space: 2 },
     ) ?? ''
   );
 };
 
-const levensteinDistance = (a: string, b: string): number => {
-  const m = a.length;
-  const n = b.length;
-
-  if (m === 0) {
-    return n;
-  }
-  if (n === 0) {
-    return m;
+const sanitizeString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    hash = (hash * 31 + charCode) | 0;
   }
 
-  const dp = Array.replicate(0, m + 1).map(() => Array.replicate(0, n + 1));
+  const sanitized = `<sanitized ${hash}>`;
+  return sanitized;
+};
 
-  for (let i = 0; i <= m; i++) {
-    dp[i][0] = i;
-  }
-  for (let j = 0; j <= n; j++) {
-    dp[0][j] = j;
-  }
-
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    }
-  }
-
-  return dp[m][n];
+/**
+ * @returns Metric of similarity between two strings. Lower is better.
+ */
+const gitDiffDistance = (a: string, b: string): number => {
+  const diff = createPatch('a', a, b);
+  return diff.length;
 };
 
 const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: MemoziedConversation) =>
   Effect.gen(function* () {
-    const closestMatch = yield* store.getClosestMatch(conversation);
-    if (Option.isSome(closestMatch)) {
-      const patch = createPatch(
-        'converstaion',
-        formatMemoizedConversation(closestMatch.value),
-        formatMemoizedConversation(conversation),
-        'saved',
-        'new',
-      );
-      return yield* Effect.dieMessage(
-        `No memoized conversation found for the given prompt. Closest match:\n${patch}\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.`,
-      );
+    if (!DISABLE_CLOSEST_MATCH_SEARCH) {
+      const closestMatch = yield* store.getClosestMatch(conversation);
+      if (Option.isSome(closestMatch)) {
+        const patch = createPatch(
+          'converstaion',
+          formatMemoizedConversation(closestMatch.value),
+          formatMemoizedConversation(conversation),
+          'saved',
+          'new',
+        );
+        return yield* Effect.dieMessage(
+          `No memoized conversation found for the given prompt. Closest match:\n${patch}\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.`,
+        );
+      }
     }
     return yield* Effect.dieMessage(
       'No memoized conversation found for the given prompt.\n\nRe-run with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
