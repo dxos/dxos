@@ -14,7 +14,7 @@ import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/research/create-document',
+  key: 'dxos.org/function/research/document-create',
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({

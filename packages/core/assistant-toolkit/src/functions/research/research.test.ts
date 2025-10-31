@@ -37,11 +37,11 @@ import { DataType } from '@dxos/schema';
 import { ResearchBlueprint } from '../../blueprints';
 import { testToolkit } from '../../blueprints/testing';
 
-import createDocument from './create-document';
+import { default as createDocument } from './document-create';
+import { default as updateDocument } from './document-update';
 import { default as research } from './research';
 import { ResearchGraph, queryResearchGraph } from './research-graph';
 import { ResearchDataTypes } from './types';
-import updateDocument from './update-document';
 
 ObjectId.dangerouslyDisableRandomness();
 

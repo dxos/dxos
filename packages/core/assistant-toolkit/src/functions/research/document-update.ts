@@ -11,7 +11,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 
 // TODO(burdon): Remove and rely on the Markdown tools to update the document.
 export default defineFunction({
-  key: 'dxos.org/function/research/update-document',
+  key: 'dxos.org/function/research/document-update',
   name: 'Update research document',
   description: 'Updates a note summarizing the research.',
   inputSchema: Schema.Struct({
