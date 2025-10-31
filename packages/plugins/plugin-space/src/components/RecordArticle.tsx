@@ -23,7 +23,7 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <StackItem.Content classNames='flex flex-col items-center'>
+    <StackItem.Content>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
         <div role='none' className={mx('flex card-min-width card-max-width')}>
           <Surface role='section' data={data} limit={1} />
@@ -31,7 +31,7 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
 
         {related.length > 0 && (
           <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'is-full')}>
-            <label className='mbs-2 text-description text-sm'>{t('related objects label')}</label>
+            <label className='mbs-2 text-sm text-description'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any>
               items={related}
               render={Card}
@@ -57,7 +57,7 @@ const useRelatedObjects = (
   options: { relations?: boolean; references?: boolean } = {},
 ) => {
   const objects = useQuery(space, Filter.everything());
-  const related = useMemo(() => {
+  return useMemo(() => {
     if (!record) {
       return [];
     }
@@ -99,8 +99,6 @@ const useRelatedObjects = (
 
     return related;
   }, [record, objects]);
-
-  return related;
 };
 
 export default RecordArticle;
