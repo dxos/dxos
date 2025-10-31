@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import React, {
   type KeyboardEvent,
   type PropsWithChildren,
@@ -111,6 +112,7 @@ const PlankContainer = ({
   return (
     <div
       role='none'
+      data-popover-collision-boundary={true}
       className={mx(
         'absolute inset-[--main-spacing] grid',
         encapsulate && 'border border-separator rounded overflow-hidden',
@@ -156,6 +158,7 @@ const PlankComponent = memo(
   }: PlankComponentProps) => {
     const { dispatchPromise: dispatch } = useIntentDispatcher();
     const { deck, popoverAnchorId, scrollIntoView } = useCapability(DeckCapabilities.DeckState);
+    const { findFirstFocusable } = useFocusFinders();
     const canResize = layoutMode === 'deck';
 
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
@@ -179,8 +182,15 @@ const PlankComponent = memo(
 
     // TODO(thure): Tabster’s focus group should handle moving focus to Main, but something is blocking it.
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
-      if (event.target === event.currentTarget && event.key === 'Escape') {
-        rootElement.current?.closest('main')?.focus();
+      if (event.target === event.currentTarget) {
+        switch (event.key) {
+          case 'Escape':
+            rootElement.current?.closest('main')?.focus();
+            break;
+          case 'Enter':
+            rootElement.current && findFirstFocusable(rootElement.current)?.focus();
+            break;
+        }
       }
     }, []);
 
@@ -234,6 +244,7 @@ const PlankComponent = memo(
       <Root
         ref={rootElement}
         data-testid='deck.plank'
+        data-popover-collision-boundary={true}
         tabIndex={0}
         {...(part.startsWith('solo')
           ? ({ ...sizeAttrs, className } as any)

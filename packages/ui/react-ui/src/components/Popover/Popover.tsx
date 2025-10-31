@@ -31,6 +31,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -432,6 +433,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
       onFocusOutside,
       onInteractOutside,
       collisionPadding = 8,
+      collisionBoundary,
       classNames,
       ...contentProps
     } = props;
@@ -443,6 +445,20 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
 
     // Make sure the whole tree has focus guards as our `Popover` may be the last element in the DOM (because of the `Portal`)
     useFocusGuards();
+
+    // Check for the closest annotated collision boundary in the DOM tree.
+    const computedCollisionBoundary = useMemo(() => {
+      const closestBoundary = context.triggerRef.current?.closest(
+        '[data-popover-collision-boundary]',
+      ) as HTMLElement | null;
+      return closestBoundary
+        ? Array.isArray(collisionBoundary)
+          ? [closestBoundary, ...collisionBoundary]
+          : collisionBoundary
+            ? [closestBoundary, collisionBoundary]
+            : [closestBoundary]
+        : collisionBoundary;
+    }, [context.open, collisionBoundary, context.triggerRef.current]);
 
     return (
       <FocusScope
@@ -468,6 +484,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
             {...popperScope}
             {...contentProps}
             collisionPadding={safeCollisionPadding}
+            collisionBoundary={computedCollisionBoundary}
             className={tx('popover.content', 'popover', { elevation }, classNames)}
             ref={forwardedRef}
             style={{
