@@ -62,18 +62,18 @@ const useRelatedObjects = (
       return [];
     }
 
-    // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
-    const isValidRelation = (obj: Obj.Any) => {
-      try {
-        return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
-      } catch {
-        return false;
-      }
-    };
-
     const related: Obj.Any[] = [];
 
     if (options.relations) {
+      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
+      const isValidRelation = (obj: Obj.Any) => {
+        try {
+          return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
+        } catch {
+          return false;
+        }
+      };
+
       const relations = objects.filter((obj) => Relation.isRelation(obj)).filter((obj) => isValidRelation(obj));
       const targetObjects = relations
         .filter((relation) => Relation.getTarget(relation) === record)
