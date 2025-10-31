@@ -16,7 +16,7 @@ export const PersonCard = ({ children, role, subject, activeSpace, onSelect }: P
   const { fullName, image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
-    <Card.SurfaceRoot role={role}>
+    <Card.SurfaceRoot id={subject.id} role={role}>
       <Avatar.Root>
         <Card.Text role='group' classNames={mx('grid gap-2 grid-cols-[1fr_min-content]')}>
           <div role='none' className={mx(gridRow, 'grid-rows-2')}>

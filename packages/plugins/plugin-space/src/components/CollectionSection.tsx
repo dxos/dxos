@@ -15,7 +15,7 @@ export const CollectionSection = ({ object }: SectionComponentProps<DataType.Col
 
   // TODO(wittjosiah): Better placeholder.
   return (
-    <div className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
+    <div role='none' className='min-bs-[3.5rem] grid grid-rows-subgrid grid-cols-subgrid items-center'>
       <span className='truncate'>{object.name ?? t('unnamed collection label')}</span>
     </div>
   );

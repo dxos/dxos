@@ -29,6 +29,7 @@ export type ComponentLookup = (args: {
 export type CustomInputMap = Partial<Record<string, InputComponent>>;
 
 export type FormProps<T extends BaseObject> = ThemedClassName<{
+  id?: string;
   values: Partial<T>;
   // TODO(burdon): Autofocus first input.
   autoFocus?: boolean;
@@ -46,6 +47,7 @@ export type FormProps<T extends BaseObject> = ThemedClassName<{
 
 export const Form = <T extends BaseObject>({
   classNames,
+  id,
   testId,
   values: initialValues,
   autoFocus,
@@ -93,7 +95,7 @@ export const Form = <T extends BaseObject>({
       onValid={handleValid}
       onSave={onSave}
     >
-      <div role='none' className='contents' data-testid={testId}>
+      <div role='none' className='contents' {...(id && { 'data-object-id': id })} data-testid={testId}>
         <FormFields
           {...props}
           ref={formRef}
