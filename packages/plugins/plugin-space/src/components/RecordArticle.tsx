@@ -65,7 +65,7 @@ const useRelatedObjects = (
     const related: Obj.Any[] = [];
 
     if (options.relations) {
-      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands
+      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
       const isValidRelation = (obj: Obj.Any) => {
         try {
           return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
@@ -85,6 +85,7 @@ const useRelatedObjects = (
       related.push(...targetObjects, ...sourceObjects);
     }
 
+    // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
       const getReferences = (obj: Obj.Any): Ref.Any[] => {
         return Object.getOwnPropertyNames(obj)
