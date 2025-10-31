@@ -197,6 +197,9 @@ const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedCo
   return true;
 };
 
+// TODO(dmaretskyi): Currently this doesn't clean the old memoized convesations and the memoization files can grow quickly.
+// To solve this, we can separate convesations for each test, put the time the conversation was last used, and then delete the ones that are unused.
+// We will only edit the files when ALLOW_LLM_GENERATION=1 is specified.
 class MemoizedStore {
   #path: string;
 
