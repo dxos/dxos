@@ -15,10 +15,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../meta';
 
-// TODO(burdon): role?
-export type RecordArticleProps = ArticleComponentProps;
-
-export const RecordArticle = ({ object }: RecordArticleProps) => {
+export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);

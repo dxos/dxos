@@ -4,18 +4,21 @@
 
 import { type Obj } from '@dxos/echo';
 
-export type ArticleComponentProps = {
-  object: Obj.Any;
+// TODO(burdon): PluginSettings, ObjectSettings.
+
+// TODO(burdon): subject?
+export type ArticleComponentProps<T extends Obj.Any = Obj.Any> = {
+  object: T;
 };
 
-export type CompanionComponentProps = {
-  object: Obj.Any;
+export type CompanionComponentProps<T extends Obj.Any = Obj.Any> = {
+  object: T;
 };
 
-export type SectionComponentProps = {
-  object: Obj.Any;
+export type SectionComponentProps<T extends Obj.Any = Obj.Any> = {
+  object: T;
 };
 
-export type CardComponentProps = {
-  object: Obj.Any;
+export type CardComponentProps<T extends Obj.Any = Obj.Any> = {
+  object: T;
 };

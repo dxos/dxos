@@ -14,9 +14,8 @@ import { meta } from '../meta';
 
 type SchemaPanelProps = { space: Space };
 
-// TODO(ZaymonFC):
-//   - Support deleting Schema. This should tie in to some sort of
-//     'DangerZone™️' / 'Are you really sure?' / 'this might have consequences' component.
+// TODO(ZaymonFC): Support deleting Schema. This should tie in to some sort of
+//  'DangerZone™️' / 'Are you really sure?' / 'this might have consequences' component.
 
 /**
  * Subscribe to and retrieve all schemas from a space's schema registry.

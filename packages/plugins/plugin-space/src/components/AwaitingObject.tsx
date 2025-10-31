@@ -16,10 +16,10 @@ const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
 const TOAST_TIMEOUT = 240e3; // 4 minutes
 
 export const AwaitingObject = ({ id }: { id: string }) => {
+  const { t } = useTranslation(meta.id);
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
-  const { t } = useTranslation(meta.id);
   const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useLayout();
 

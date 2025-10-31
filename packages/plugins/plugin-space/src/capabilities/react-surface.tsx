@@ -94,7 +94,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
-      component: ({ data }) => <CollectionArticle collection={data.subject} />,
+      component: ({ data }) => <CollectionArticle object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -317,7 +317,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/collection-section`,
       role: 'section',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
-      component: ({ data }) => <CollectionSection collection={data.subject} />,
+      component: ({ data }) => <CollectionSection object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/status`,
