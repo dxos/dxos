@@ -40,22 +40,22 @@ export default defineFunction({
   key: 'dxos.org/function/research',
   name: 'Research',
   description: trim`
-    Research the web for information. 
+    Search the web to research information about a given subject.
     Inserts structured data into the research graph. 
-    Will return research summary and the objects created.
+    Creates a research summary and returns the objects created.
   `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: trim`
         The query to search for.
-        If doing research on an object, load it first and pass it as a JSON string.
+        If doing research on an object, load it first and pass it as JSON.
       `,
     }),
 
     instructions: Schema.optional(Schema.String).annotations({
       description: trim`
         The instructions for the research agent. 
-        E.g., preference on fast responses or in-depth analysis, number of web searcher or the objects created.
+        E.g., preference for fast responses or in-depth analysis; number of web searches.
       `,
     }),
 
@@ -66,14 +66,16 @@ export default defineFunction({
     }),
 
     entityExtraction: Schema.optional(Schema.Boolean).annotations({
-      description:
-        'Whether to extract structured entities from the research. Experimental feature only enable if user explicitly requests it.',
+      description: trim`
+        Whether to extract structured entities from the research. 
+        Experimental feature only enable if user explicitly requests it.
+      `,
       default: false,
     }),
   }),
   outputSchema: Schema.Struct({
-    note: Schema.optional(Schema.String).annotations({
-      description: 'A note from the research agent.',
+    document: Schema.optional(Schema.String).annotations({
+      description: 'The research document from the research agent.',
     }),
     objects: Schema.Array(Schema.Unknown).annotations({
       description: 'The structured objects created as a result of the research.',
@@ -91,9 +93,8 @@ export default defineFunction({
         );
 
         return {
-          note: trim`
-            The research run in test-mode and was mocked. 
-            Proceed as usual.
+          document: trim`
+            The research ran in test-mode and was mocked. Proceed as usual.
             We reference John Doe to test reference: ${Obj.getDXN(mockPerson)}
           `,
           objects: [Obj.toJSON(mockPerson)],
@@ -101,9 +102,10 @@ export default defineFunction({
       }
 
       yield* DatabaseService.flush({ indexes: true });
-      yield* TracingService.emitStatus({ message: 'Researching...' });
+      yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
+
       let toolkit: Toolkit.Any = NativeWebSearch;
       let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
@@ -113,6 +115,7 @@ export default defineFunction({
         const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
           onAppend: (dxns) => objectDXNs.push(...dxns),
         });
+
         toolkit = Toolkit.merge(toolkit, LocalSearchToolkit, GraphWriterToolkit);
         handlers = Layer.mergeAll(handlers, LocalSearchHandler, GraphWriterHandler).pipe(
           Layer.provide(contextQueueLayerFromResearchGraph),
@@ -126,12 +129,10 @@ export default defineFunction({
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system: [
+        system: join(
           Template.process(PROMPT, { entityExtraction }),
           instructions && `<instructions>${instructions}</instructions>`,
-        ]
-          .filter(Boolean)
-          .join('\n\n'),
+        ),
         toolkit: finishedToolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });
@@ -141,7 +142,7 @@ export default defineFunction({
       );
 
       return {
-        note: extractLastTextBlock(result),
+        document: extractLastTextBlock(result),
         objects,
       };
     },
@@ -161,10 +162,14 @@ export default defineFunction({
   ),
 });
 
+// TODO(burdon): Factor out.
+const join = (...strings: (string | undefined)[]) => strings.filter(Boolean).join('\n\n');
+
 /**
  * Extracts the last text block from the result.
  * Skips citations.
  */
+// TODO(burdon): Factor out.
 const extractLastTextBlock = (result: DataType.Message[]) => {
   return Function.pipe(
     result,
