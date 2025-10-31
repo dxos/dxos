@@ -65,7 +65,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const serviceLayer =
           this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
-        // TODO(dmaretskyi): Make those reactive.
+        // TODO(dmaretskyi): Make these reactive.
         const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
         const handlers = this.#context.getCapabilities(Capabilities.ToolkitHandler);
         const functions = this.#context.getCapabilities(Capabilities.Functions);

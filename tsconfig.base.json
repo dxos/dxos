@@ -36,10 +36,7 @@
         // Example: import * as Effect from "effect"
         // Why: namespace imports avoid name collisions and tend to tree-shake better,
         // especially with bundlers like esbuild.
-        "namespaceImportPackages": [
-          "effect",
-          "@effect/*"
-        ],
+        "namespaceImportPackages": ["effect", "@effect/*"],
 
         // When a symbol is re-exported through a barrel (e.g. index.ts),
         // the language service will "follow" the re-export and import directly
