@@ -20,7 +20,7 @@ import { mx } from '@dxos/react-ui-theme';
 
 import { type ComponentProps } from './types';
 
-export const GraphContainer = ({ space }: ComponentProps) => {
+export const GraphModule = ({ space }: ComponentProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 

@@ -47,23 +47,23 @@ import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
 import {
-  BlueprintContainer,
-  ChatContainer,
-  ChessContainer,
-  CommentsContainer,
+  BlueprintModule,
+  ChatModule,
+  ChessModule,
+  CommentsModule,
   type ComponentProps,
-  ExecutionGraphContainer,
-  GraphContainer,
-  InvocationsContainer,
-  MessageContainer,
-  ProjectContainer,
-  PromptContainer,
-  ResearchInputStack,
-  ResearchOutputStack,
-  ScriptContainer,
-  TasksContainer,
-  TokenManagerContainer,
-  TriggersContainer,
+  ExecutionGraphModule,
+  GraphModule,
+  InvocationsModule,
+  MessageModule,
+  ProjectModule,
+  PromptModule,
+  ResearchInputModule,
+  ResearchOutputModule,
+  ScriptModule,
+  TasksModule,
+  TokenManagerModule,
+  TriggersModule,
 } from '../components';
 import {
   ResearchInputQueue,
@@ -202,9 +202,12 @@ type Story = StoryObj<typeof storybook>;
 const MARKDOWN_DOCUMENT = trim`
   # Hello, world!
 
-  This is a test document that contains Markdown content. Markdown is a lightweight markup language for writing formatted text in plain text form. Its goal is to be easy to read and write in raw form, easy to convert to HTML.
+  This is a test document that contains Markdown content. 
+  Markdown is a lightweight markup language for writing formatted text in plain text form. 
+  Its goal is to be easy to read and write in raw form, easy to convert to HTML.
 
-  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
+  Markdown’s simplicity makes it highly adaptable: it can be written in any text editor, stored in plain .md files, and rendered into HTML, PDF, or other formats with converters. 
+  Because of this portability, it’s widely used in software documentation, static site generators, technical blogging, and collaborative platforms like GitHub and Notion. 
 
   Many applications extend the core syntax with extras (e.g., tables, task lists, math notation), but the core idea remains the same—clean, minimal markup that stays readable even without rendering.
 `;
@@ -249,7 +252,7 @@ export const Default: Story = {
     config: config.remote,
   }),
   args: {
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
   },
 };
 
@@ -259,7 +262,7 @@ export const WithWebSearch: Story = {
     config: config.remote,
   }),
   args: {
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: ['dxos.org/blueprint/web-search'],
   },
 };
@@ -290,7 +293,7 @@ export const WithDocument: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer], [CommentsContainer]],
+    modules: [[ChatModule], [CommentsModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/markdown'],
   },
 };
@@ -308,7 +311,7 @@ export const WithBlueprints: Story = {
     },
   }),
   args: {
-    modules: [[ChatContainer], [TasksContainer, BlueprintContainer]],
+    modules: [[ChatModule], [TasksModule, BlueprintModule]],
   },
 };
 
@@ -348,7 +351,7 @@ export const WithChess: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/chess'],
   },
 };
@@ -372,7 +375,7 @@ export const WithMail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox', 'dxos.org/blueprint/markdown'],
   },
 };
@@ -393,7 +396,7 @@ export const WithGmail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer], [MessageContainer, TokenManagerContainer]],
+    modules: [[ChatModule], [MessageModule, TokenManagerModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/inbox'],
   },
 };
@@ -423,7 +426,7 @@ export const WithMap: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/map'],
   },
 };
@@ -474,7 +477,7 @@ export const WithTrip: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
   },
 };
 
@@ -493,7 +496,7 @@ export const WithBoard: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
   },
 };
 
@@ -518,7 +521,7 @@ export const WithResearch: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer], [GraphContainer, ExecutionGraphContainer]],
+    modules: [[ChatModule], [GraphModule, ExecutionGraphModule]],
     blueprints: [
       // ASSISTANT_BLUEPRINT_KEY, -- too many open-ended tools (querying for tools, querying for schema) confuses the model.
       ResearchBlueprint.key,
@@ -535,7 +538,7 @@ export const WithSearch: Story = {
     },
   }),
   args: {
-    modules: [[ChatContainer], [GraphContainer]],
+    modules: [[ChatModule], [GraphModule]],
   },
 };
 
@@ -557,7 +560,7 @@ export const WithTranscription: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatContainer]],
+    modules: [[ChatModule]],
     blueprints: [ASSISTANT_BLUEPRINT_KEY, 'dxos.org/blueprint/transcription'],
   },
 };
@@ -575,7 +578,7 @@ export const WithLinearSync: Story = {
     }),
   }),
   args: {
-    modules: [[ChatContainer], [GraphContainer]],
+    modules: [[ChatModule], [GraphModule]],
     blueprints: [LinearBlueprint.key],
   },
 };
@@ -598,7 +601,7 @@ export const WithTriggers: Story = {
     },
   }),
   args: {
-    modules: [[ChatContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChatModule], [TriggersModule, InvocationsModule]],
     blueprints: [],
   },
 };
@@ -651,7 +654,7 @@ export const WithChessTrigger: Story = {
     },
   }),
   args: {
-    modules: [[ChessContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ChessModule], [TriggersModule, InvocationsModule]],
     blueprints: [],
   },
 };
@@ -702,8 +705,8 @@ export const WithResearchQueue: Story = {
   }),
   args: {
     modules: [
-      [ResearchInputStack, ResearchOutputStack],
-      [TriggersContainer, InvocationsContainer, PromptContainer, GraphContainer],
+      [ResearchInputModule, ResearchOutputModule],
+      [TriggersModule, InvocationsModule, PromptModule, GraphModule],
     ],
     blueprints: [ResearchBlueprint.key],
   },
@@ -861,7 +864,7 @@ export const WithProject: Story = {
     },
   }),
   args: {
-    modules: [[ProjectContainer], [TriggersContainer, InvocationsContainer]],
+    modules: [[ProjectModule], [TriggersModule, InvocationsModule]],
     blueprints: [],
   },
 };
@@ -910,7 +913,7 @@ export const WithScript: Story = {
     },
   }),
   args: {
-    modules: [[ChatContainer], [ScriptContainer]],
+    modules: [[ChatModule], [ScriptModule]],
   },
 };
 
@@ -941,6 +944,6 @@ export const WithPrompt: Story = {
     },
   }),
   args: {
-    modules: [[PromptContainer], [InvocationsContainer]],
+    modules: [[PromptModule], [InvocationsModule]],
   },
 };

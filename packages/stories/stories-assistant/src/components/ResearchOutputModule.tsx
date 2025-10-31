@@ -11,19 +11,17 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';
 
-export const ResearchOutputStack = ({ space }: ComponentProps) => {
+export const ResearchOutputModule = ({ space }: ComponentProps) => {
   const [researchGraph] = useQuery(space, Filter.type(ResearchGraph));
   const queue = useQueue(researchGraph?.queue.dxn);
 
   return (
-    <div className='p-4 overflow-y-auto h-full'>
-      <ul className='space-y-4 '>
-        {queue?.objects.map((object) => (
-          <li key={object.id}>
-            <Surface role='card' data={{ subject: object }} limit={1} />
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul className='flex flex-col gap-4 p-4 bs-full overflow-y-auto'>
+      {queue?.objects.map((object) => (
+        <li key={object.id}>
+          <Surface role='card' data={{ subject: object }} limit={1} />
+        </li>
+      ))}
+    </ul>
   );
 };

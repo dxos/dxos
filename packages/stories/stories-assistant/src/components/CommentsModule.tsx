@@ -10,7 +10,7 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';
 
-export const CommentsContainer = ({ space }: ComponentProps) => {
+export const CommentsModule = ({ space }: ComponentProps) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
   const binder = useContextBinder(chats.at(-1));
   const object = binder?.objects.value[0]?.target;

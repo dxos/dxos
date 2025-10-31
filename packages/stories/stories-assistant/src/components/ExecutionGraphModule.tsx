@@ -13,7 +13,7 @@ import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
 import { type ComponentProps } from './types';
 
-export const ExecutionGraphContainer = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
+export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
   const chats = useQuery(space, Filter.type(Assistant.Chat));
   const invocations =
     useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??

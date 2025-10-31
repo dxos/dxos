@@ -18,10 +18,10 @@ import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover } from '@dxos/react-ui';
 import { StackItem } from '@dxos/react-ui-stack';
 
-import { ExecutionGraphContainer } from './ExecutionGraphContainer';
+import { ExecutionGraphModule } from './ExecutionGraphModule';
 import { type ComponentProps } from './types';
 
-export const ChatContainer = ({ space }: ComponentProps) => {
+export const ChatModule = ({ space }: ComponentProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
@@ -57,7 +57,7 @@ export const ChatContainer = ({ space }: ComponentProps) => {
               </Popover.Trigger>
               <Popover.Portal>
                 <Popover.Content>
-                  <ExecutionGraphContainer space={space} />
+                  <ExecutionGraphModule space={space} />
                   <Popover.Arrow />
                 </Popover.Content>
               </Popover.Portal>

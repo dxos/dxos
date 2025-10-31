@@ -12,7 +12,7 @@ import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 
 import { type ComponentProps } from './types';
 
-export const MessageContainer = ({ space }: ComponentProps) => {
+export const MessageModule = ({ space }: ComponentProps) => {
   const [mailbox] = useQuery(space, Filter.type(Mailbox.Mailbox));
   const state = useCapability(InboxCapabilities.MailboxState);
   const message = mailbox && state[fullyQualifiedId(mailbox)];

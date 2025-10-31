@@ -27,7 +27,7 @@ import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 
-export const PromptContainer = ({ space }: { space: Space }) => {
+export const PromptModule = ({ space }: { space: Space }) => {
   const [prompt] = useQuery(space, Filter.type(Prompt.Prompt));
 
   const inputData = useMemo(
