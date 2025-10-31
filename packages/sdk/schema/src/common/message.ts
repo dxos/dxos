@@ -170,10 +170,13 @@ export namespace ContentBlock {
       toolCalls && `${toolCalls} tool uses`,
       usage &&
         [
-          `${Unit.Thousand(usage.totalTokens ?? 0)} tokens`,
+          `${String(Unit.Thousand(usage.totalTokens ?? 0))} tokens`,
           verbose &&
             paren(
-              [`→${Unit.Thousand(usage.inputTokens ?? 0)}`, `←${Unit.Thousand(usage.outputTokens ?? 0)}`].join(' '),
+              [
+                `→${String(Unit.Thousand(usage.inputTokens ?? 0))}`,
+                `←${String(Unit.Thousand(usage.outputTokens ?? 0))}`,
+              ].join(' '),
             ),
         ]
           .filter(isTruthy)

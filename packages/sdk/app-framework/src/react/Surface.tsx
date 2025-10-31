@@ -28,7 +28,10 @@ const DEFAULT_PLACEHOLDER = <Fragment />;
  */
 export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElement>> = memo(
   forwardRef(
-    ({ id: _id, role, data: dataParam, limit, fallback, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
+    (
+      { id: _id, role, data: dataParam, limit, fallback = DefaultFallback, placeholder = DEFAULT_PLACEHOLDER, ...rest },
+      forwardedRef,
+    ) => {
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
       //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
@@ -46,16 +49,25 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 
       const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
 
-      return fallback ? (
+      return (
         <ErrorBoundary data={data} fallback={fallback}>
           {suspense}
         </ErrorBoundary>
-      ) : (
-        suspense
       );
     },
   ),
 );
+
+// TODO(burdon): Make user facing, with telemetry.
+const DefaultFallback = ({ data, error }: { data: any; error: Error }) => {
+  return (
+    <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto border border-rose-500'>
+      <h1 className='flex gap-2 text-sm mbs-2 text-rose-500'>{error.message}</h1>
+      <pre className='overflow-auto text-xs text-description'>{error.stack}</pre>
+      <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+    </div>
+  );
+};
 
 /**
  * @internal

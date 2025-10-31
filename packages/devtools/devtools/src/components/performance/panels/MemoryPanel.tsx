@@ -20,11 +20,11 @@ export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: Me
       title={'Memory'}
       info={
         <div className='flex items-center gap-2'>
-          <span title='Used (heap size)'>{Unit.Megabyte(memory?.usedJSHeapSize ?? 0)}</span>
-          <span title='Allocated (heap size)'>{Unit.Megabyte(memory?.totalJSHeapSize ?? 0)}</span>
+          <span title='Used (heap size)'>{String(Unit.Megabyte(memory?.usedJSHeapSize ?? 0))}</span>
+          <span title='Allocated (heap size)'>{String(Unit.Megabyte(memory?.totalJSHeapSize ?? 0))}</span>
           {memory?.used !== undefined && (
             <span title='Used (available)' className={mx(memory?.used > MEM_WARNING && 'text-red-500')}>
-              {Unit.Percent(memory?.used ?? 0)}
+              {String(Unit.Percent(memory?.used ?? 0))}
             </span>
           )}
         </div>
