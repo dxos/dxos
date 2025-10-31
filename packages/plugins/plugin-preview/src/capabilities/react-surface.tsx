@@ -122,6 +122,7 @@ export default () =>
         return (
           <Card.SurfaceRoot role={role}>
             <Form
+              id={data.subject.id}
               schema={schema}
               projection={data.projection}
               values={data.subject}

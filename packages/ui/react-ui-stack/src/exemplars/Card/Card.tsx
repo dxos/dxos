@@ -37,7 +37,7 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: strin
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
     return (
-      <Root {...(id && { 'data-id': id })} {...props} {...rootProps} ref={forwardedRef}>
+      <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -57,7 +57,7 @@ const CardSurfaceRoot = ({
   if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
       <div
-        {...(id && { 'data-id': id })}
+        {...(id && { 'data-object-id': id })}
         className={mx(
           role === 'card--popover'
             ? 'popover-card-width'
