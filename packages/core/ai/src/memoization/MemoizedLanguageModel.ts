@@ -58,7 +58,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
 
   return LanguageModel.make({
     generateText: Effect.fn('MemoizedLanguageModel.generateText')(function* (params) {
-      const conversation = getConverstaionFromOptions(options.modelName, false, params);
+      const conversation = getConversationFromOptions(options.modelName, false, params);
       const memoized = yield* store.getMemoizedConversation(conversation);
       if (Option.isSome(memoized)) {
         return memoized.value.response as Response.PartEncoded[];
@@ -100,7 +100,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
     streamText: (params) =>
       Stream.unwrap(
         Effect.gen(function* () {
-          const conversation = getConverstaionFromOptions(options.modelName, true, params);
+          const conversation = getConversationFromOptions(options.modelName, true, params);
 
           const memoized = yield* store.getMemoizedConversation(conversation);
           if (Option.isSome(memoized)) {
@@ -172,7 +172,7 @@ const getMemoizedConversationParameters = (
   };
 };
 
-const getConverstaionFromOptions = (
+const getConversationFromOptions = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
@@ -197,6 +197,9 @@ const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedCo
   return true;
 };
 
+// TODO(dmaretskyi): Currently this doesn't clean the old memoized convesations and the memoization files can grow quickly.
+// To solve this, we can separate convesations for each test, put the time the conversation was last used, and then delete the ones that are unused.
+// We will only edit the files when ALLOW_LLM_GENERATION=1 is specified.
 class MemoizedStore {
   #path: string;
 
@@ -349,7 +352,7 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
       const closestMatch = yield* store.getClosestMatch(conversation);
       if (Option.isSome(closestMatch)) {
         const patch = createPatch(
-          'converstaion',
+          'conversation',
           formatMemoizedConversation(closestMatch.value),
           formatMemoizedConversation(conversation),
           'saved',

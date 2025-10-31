@@ -75,6 +75,7 @@ export const preprocessPrompt: (
       }),
     ),
     Effect.map(Array.flatten),
+    Effect.map(Array.filter((_) => _.content.length > 0)),
     Effect.map(Prompt.fromMessages),
   );
 
