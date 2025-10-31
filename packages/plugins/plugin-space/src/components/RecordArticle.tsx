@@ -25,7 +25,7 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   return (
     <StackItem.Content classNames='flex flex-col items-center'>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
-        <div role='none' className={mx('flex flex-col gap-1 card-min-width card-max-width')}>
+        <div role='none' className={mx('flex card-min-width card-max-width')}>
           <Surface role='section' data={data} limit={1} />
         </div>
 
