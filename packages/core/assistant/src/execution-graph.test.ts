@@ -12,7 +12,7 @@ import { DataType } from '@dxos/schema';
 
 import { ExecutionGraph } from './execution-graph';
 
-// Helper function to create valid object IDs for testing
+// Helper function to create valid object IDs for testing.
 const createTestId = () => ObjectId.random();
 
 describe('ExecutionGraph', () => {

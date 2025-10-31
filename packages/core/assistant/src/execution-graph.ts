@@ -10,7 +10,7 @@ import { LogLevel } from '@dxos/log';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 
 /**
  * Mercurial-style Commit.
@@ -280,10 +280,10 @@ export class ExecutionGraph {
   }
 }
 
-// TODO(burdon): Pass in AiToolProvider.
 /**
  * Creates commits for all blocks in a message.
  */
+// TODO(burdon): Pass in AiToolProvider.
 const messageToCommits = (
   message: DataType.Message,
   lastBlockId?: string,
@@ -320,7 +320,7 @@ const getBlockParents = (
   const parents: string[] = [];
 
   if (block._tag === 'toolResult') {
-    // Tool results have two parents: previous block and last block from tool call branch
+    // Tool results have two parents: previous block and last block from tool call branch.
     if (previousBlockId) {
       parents.push(previousBlockId);
     }
