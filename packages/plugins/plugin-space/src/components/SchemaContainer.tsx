@@ -26,8 +26,8 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
           <div role='none' className={controlItemClasses}>
             {schemas.length === 0 && <div className='text-center plb-4'>{t('no schemas found message')}</div>}
             {schemas.map((schema) => (
-              <div key={schema.id}>
-                <div>{schema.typename}</div>
+              <div role='none' key={schema.id}>
+                {schema.typename}
               </div>
             ))}
           </div>
