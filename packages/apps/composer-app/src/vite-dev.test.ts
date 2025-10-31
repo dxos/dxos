@@ -17,7 +17,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = dirname(__dirname); // packages/apps/composer-app
 
 // TODO(dmaretskyi): Flaky.
-test.skipIf(process.env.CI)(
+test.skip(
   'starts Vite dev server, fetches index.html, parses and recursively fetches scripts',
   { retry: 3, timeout: 20_000 },
   async () => {

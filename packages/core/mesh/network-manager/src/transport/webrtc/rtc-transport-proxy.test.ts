@@ -19,7 +19,8 @@ import { RtcTransportProxy } from './rtc-transport-proxy';
 import { RtcTransportService } from './rtc-transport-service';
 import { handleChannelErrors } from './test-utils';
 
-describe('RtcPeerTransportProxy', () => {
+// Segfault in node-datachannel.
+describe.skip('RtcPeerTransportProxy', () => {
   test('open and close', async () => {
     const { proxy } = await setupProxy();
     await proxy.open();

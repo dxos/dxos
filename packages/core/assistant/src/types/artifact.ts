@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { type ObjectNotFoundError, type Type } from '@dxos/echo';
 import { type ObjectId } from '@dxos/echo/internal';
+import { DatabaseService } from '@dxos/functions';
 import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -17,10 +20,15 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  * A model-friendly way to reference an object.
  * Supports vairous formats that will be normalized to a DXN.
  */
-// TODO(burdon): Rename ObjectReference?
+// TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
   toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
+  resolve: <S extends Type.Obj.Any | Type.Relation.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ) => Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService>;
 } = class extends Schema.String.annotations({
+  // TODO(dmaretskyi): This section gets overriden.
   description: trim`
     The ID of the referenced object. Formats accepted:
     - DXN (dxn:echo:@:XXXXX). DXNs can be prepended with an @ symbol for compatibility with in-text references.
@@ -46,6 +54,17 @@ export const ArtifactId: Schema.Schema<string> & {
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }
+  }
+
+  /**
+   * Resolves an artifact ID to an object.
+   */
+  static resolve<S extends Type.Obj.Any | Type.Relation.Any>(
+    schema: S,
+    ref: ArtifactId,
+  ): Effect.Effect<Schema.Schema.Type<S>, ObjectNotFoundError, DatabaseService> {
+    const dxn = ArtifactId.toDXN(ref);
+    return DatabaseService.resolve(dxn, schema);
   }
 };
 

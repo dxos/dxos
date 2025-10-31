@@ -10,6 +10,8 @@ import { LogLevel } from '@dxos/log';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
+
 /**
  * Mercurial-style Commit.
  */
@@ -58,6 +60,8 @@ export class ExecutionGraph {
   private _lastCommitByBranch = new Map<string, string>(); // branch -> last commitId
   private _pendingToolResults = new Map<string, string>(); // toolCallId -> toolResultCommitId
 
+  constructor(private readonly _skipBlocks: ContentBlock.Any['_tag'][] = SKIP_BLOCKS) {}
+
   /**
    * Adds events to the graph.
    */
@@ -81,6 +85,7 @@ export class ExecutionGraph {
       this._lastBlockId,
       this._toolCallCommitIds,
       this._lastCommitByBranch,
+      this._skipBlocks,
     );
     this._commits.push(...messageCommits);
 
@@ -278,15 +283,16 @@ export class ExecutionGraph {
   }
 }
 
-// TODO(burdon): Pass in AiToolProvider.
 /**
  * Creates commits for all blocks in a message.
  */
+// TODO(burdon): Pass in AiToolProvider.
 const messageToCommits = (
   message: DataType.Message,
   lastBlockId?: string,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
+  skipBlocks?: ContentBlock.Any['_tag'][],
 ): Commit[] => {
   let previousBlockId: string | undefined = lastBlockId;
 
@@ -294,6 +300,9 @@ const messageToCommits = (
     .map((block, idx) => {
       const branch = getMessageBranch(message);
       const parents = getBlockParents(block, previousBlockId, message, toolCallIds, lastCommitByBranch);
+      if (skipBlocks?.includes(block._tag)) {
+        return null;
+      }
 
       const commit = createBlockCommit(block, message, branch, parents, idx);
       if (commit) {
@@ -318,7 +327,7 @@ const getBlockParents = (
   const parents: string[] = [];
 
   if (block._tag === 'toolResult') {
-    // Tool results have two parents: previous block and last block from tool call branch
+    // Tool results have two parents: previous block and last block from tool call branch.
     if (previousBlockId) {
       parents.push(previousBlockId);
     }

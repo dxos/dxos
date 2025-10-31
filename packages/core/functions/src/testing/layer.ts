@@ -24,10 +24,16 @@ export const testStoragePath = ({ name = PublicKey.random().toHex() }: { name?: 
   return `/tmp/dxos-${name}`;
 };
 
+const FIXED_SPACE_KEY = PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723');
+
 export type TestDatabaseOptions = {
   indexing?: Partial<EchoHostIndexingConfig>;
   types?: Schema.Schema.AnyNoContext[];
-  spaceKey?: PublicKey;
+  /**
+   * Setting this to fixed will use the same space key for all tests.
+   * Important for tests with memoization.
+   */
+  spaceKey?: PublicKey | 'fixed';
   storagePath?: string;
   onInit?: () => Effect.Effect<void, never, DatabaseService | QueueService>;
 };
@@ -35,6 +41,8 @@ export type TestDatabaseOptions = {
 export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onInit }: TestDatabaseOptions = {}) =>
   Layer.scopedContext(
     Effect.gen(function* () {
+      const key = spaceKey === 'fixed' ? FIXED_SPACE_KEY : (spaceKey ?? PublicKey.random());
+
       const builder = yield* testBuilder;
 
       let kv: LevelDB | undefined;
@@ -62,7 +70,6 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
         });
         log('starting persistant test db', { storagePath, testMetadata });
         if (!testMetadata) {
-          const key = spaceKey ?? PublicKey.random();
           db = yield* Effect.promise(() => peer.createDatabase(key));
           queues = peer.client.constructQueueFactory(db.spaceId);
 
@@ -83,7 +90,7 @@ export const TestDatabaseLayer = ({ indexing, types, spaceKey, storagePath, onIn
           queues = peer.client.constructQueueFactory(db.spaceId);
         }
       } else {
-        db = yield* Effect.promise(() => peer.createDatabase(spaceKey));
+        db = yield* Effect.promise(() => peer.createDatabase(key));
         queues = peer.client.constructQueueFactory(db.spaceId);
         if (onInit) {
           yield* onInit().pipe(
