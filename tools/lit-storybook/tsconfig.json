@@ -1,21 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {},
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out"
-  ],
-  "include": [
-    ".storybook/*.ts",
-    "config/**/*.mts"
-  ],
+  "exclude": ["dist", "node_modules", "out"],
+  "include": [".storybook/*.ts", "config/**/*.mts"],
   "references": [
     {
       "path": "../../packages/common/log"
-    },
-    {
-      "path": "../../packages/common/storybook-utils"
     },
     {
       "path": "../../packages/ui/react-ui-theme"
