@@ -29,9 +29,8 @@ import { trim } from '@dxos/util';
 import { LocalSearchHandler, LocalSearchToolkit, makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 import { exaFunction, exaMockFunction } from '../exa';
 
-// TODO(dmaretskyi): Vite build bug with instruction files with the same filename getting mixed-up.
-import PROMPT from './instructions-research.tpl?raw';
 import { contextQueueLayerFromResearchGraph } from './research-graph';
+import PROMPT from './research-instructions.tpl?raw';
 import { ResearchDataTypes } from './types';
 
 /**
@@ -53,7 +52,7 @@ export default defineFunction({
       `,
     }),
 
-    researchInstructions: Schema.optional(Schema.String).annotations({
+    instructions: Schema.optional(Schema.String).annotations({
       description: trim`
         The instructions for the research agent. 
         E.g., preference on fast responses or in-depth analysis, number of web searcher or the objects created.
@@ -81,7 +80,7 @@ export default defineFunction({
     }),
   }),
   handler: Effect.fnUntraced(
-    function* ({ data: { query, researchInstructions, mockSearch = false, entityExtraction = false } }) {
+    function* ({ data: { query, instructions, mockSearch = false, entityExtraction = false } }) {
       if (mockSearch) {
         const mockPerson = yield* DatabaseService.add(
           Obj.make(DataType.Person, {
@@ -127,11 +126,12 @@ export default defineFunction({
       const session = new AiSession();
       const result = yield* session.run({
         prompt: query,
-        system:
-          Template.process(PROMPT, { entityExtraction }) +
-          (researchInstructions
-            ? '\n\n' + `<research_instructions>${researchInstructions}</research_instructions>`
-            : ''),
+        system: [
+          Template.process(PROMPT, { entityExtraction }),
+          instructions && `<instructions>${instructions}</instructions>`,
+        ]
+          .filter(Boolean)
+          .join('\n\n'),
         toolkit: finishedToolkit,
         observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
       });

@@ -18,49 +18,58 @@ export default defineFunction({
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    name: Schema.String.annotations({
-      description: 'Name of the note.',
+    subject: ArtifactId.annotations({
+      description: trim`
+        ID of the object (organization, contact, etc.) for which the research was performed. 
+      `,
     }),
-
+    name: Schema.String.annotations({
+      description: 'Name of the document.',
+    }),
     content: Schema.String.annotations({
       description: trim`
         Content of the note. 
         Supports (and are prefered) references to research objects using @ syntax and <object> tags (refer to research blueprint instructions).
       `,
     }),
-
-    target: ArtifactId.annotations({
-      description: trim`
-        Id of the object (organization, contact, etc.) for which the research was performed. 
-      `,
-    }),
   }),
   outputSchema: Schema.Struct({
-    researchDocument: ArtifactId,
+    document: ArtifactId.annotations({
+      description: 'DXN of the created document.',
+    }),
   }),
-  handler: Effect.fnUntraced(function* ({ data: { target, name, content } }) {
-    log.info('Creating research document', { target, name, content });
+  handler: Effect.fnUntraced(function* ({ data: { subject, name, content } }) {
+    log.info('Creating research document', { subject, name, content });
 
+    // TODO(burdon): Auto flush before and after calling function?
     yield* DatabaseService.flush({ indexes: true });
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
-    const targetObj = yield* DatabaseService.resolve(ArtifactId.toDXN(target));
 
-    const doc = yield* DatabaseService.add(
+    // TODO(burdon): Type check.
+    const target = (yield* DatabaseService.resolve(ArtifactId.toDXN(subject))) as Obj.Any;
+
+    // Create document.
+    const object = yield* DatabaseService.add(
       Markdown.makeDocument({
         name,
         content,
       }),
     );
+
+    // Create relation.
     yield* DatabaseService.add(
       Relation.make(DataType.HasSubject, {
-        [Relation.Source]: doc,
-        [Relation.Target]: targetObj as any,
+        [Relation.Source]: object,
+        [Relation.Target]: target,
         completedAt: new Date().toISOString(),
       }),
     );
-    yield* DatabaseService.flush({ indexes: true });
 
-    log.info('Created research document', { target, name, content });
-    return { researchDocument: Obj.getDXN(doc).toString() };
+    yield* DatabaseService.flush({ indexes: true });
+    log.info('Created research document', { subject, object });
+
+    return {
+      document: Obj.getDXN(object).toString(),
+    };
   }),
 });

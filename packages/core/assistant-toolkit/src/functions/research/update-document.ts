@@ -16,13 +16,11 @@ export default defineFunction({
   description: 'Updates a note summarizing the research.',
   inputSchema: Schema.Struct({
     note: ArtifactId.annotations({
-      description: 'The id or DXN of the note to update.',
+      description: 'The ID or DXN of the note to update.',
     }),
-
     name: Schema.optional(Schema.String).annotations({
       description: 'New name of the note (if changed).',
     }),
-
     content: Schema.optional(Schema.String).annotations({
       description: 'New content of the note (if changed).',
     }),
@@ -33,10 +31,12 @@ export default defineFunction({
     if (name !== undefined) {
       noteObj.name = name;
     }
+
     if (content) {
       const text = yield* DatabaseService.load(noteObj.content);
       text.content = content;
     }
+
     yield* DatabaseService.flush({ indexes: true });
     return {};
   }),

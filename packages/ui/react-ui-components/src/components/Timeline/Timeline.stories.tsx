@@ -408,7 +408,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01Diussd9i7CVjeaq8hc1AbU',
         name: 'dxos_org_function_research',
         input:
-          '{"query":"DXOS organization dxos.org","mockSearch":true,"researchInstructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
+          '{"query":"DXOS organization dxos.org","mockSearch":true,"instructions":"Research DXOS organization, including their mission, products, team, technology stack, and any notable projects or achievements. Focus on understanding what they do and their position in the tech ecosystem."}',
         providerExecuted: false,
       },
       {
