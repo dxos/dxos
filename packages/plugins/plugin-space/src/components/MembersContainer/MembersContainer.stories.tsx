@@ -13,7 +13,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import { render } from '@dxos/storybook-utils';
 
-import { translations } from '../translations';
+import { translations } from '../../translations';
 
 import { MembersContainer } from './MembersContainer';
 

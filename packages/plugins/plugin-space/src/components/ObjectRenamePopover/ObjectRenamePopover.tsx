@@ -6,15 +6,14 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { type Live } from '@dxos/live-object';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-export const POPOVER_RENAME_OBJECT = `${meta.id}/PopoverRenameObject`;
+export const OBJECT_RENAME_POPOVER = `${meta.id}/ObjectRenamePopover`;
 
-export const PopoverRenameObject = ({ object }: { object: Live<any> }) => {
+export const ObjectRenamePopover = ({ object }: { object: Obj.Any }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(Obj.getLabel(object));

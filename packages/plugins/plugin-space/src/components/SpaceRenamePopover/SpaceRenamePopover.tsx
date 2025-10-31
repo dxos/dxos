@@ -8,11 +8,11 @@ import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-frame
 import { type Space } from '@dxos/react-client/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
-import { meta } from '../meta';
+import { meta } from '../../meta';
 
-export const POPOVER_RENAME_SPACE = `${meta.id}/PopoverRenameSpace`;
+export const SPACE_RENAME_POPOVER = `${meta.id}/SpaceRenamePopover`;
 
-export const PopoverRenameSpace = ({ space }: { space: Space }) => {
+export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState(space.properties.name ?? '');

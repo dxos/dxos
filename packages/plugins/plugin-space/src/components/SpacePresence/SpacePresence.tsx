@@ -27,10 +27,10 @@ import {
 import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { SpaceCapabilities } from '../capabilities';
-import { usePath } from '../hooks';
-import { meta } from '../meta';
-import type { ObjectViewerProps } from '../types';
+import { SpaceCapabilities } from '../../capabilities';
+import { usePath } from '../../hooks';
+import { meta } from '../../meta';
+import { type ObjectViewerProps } from '../../types';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -42,7 +42,12 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: Type.Expando; spaceKey?: PublicKey }) => {
+export type SpacePresenceProps = {
+  object: Type.Expando;
+  spaceKey?: PublicKey;
+};
+
+export const SpacePresence = ({ object, spaceKey }: SpacePresenceProps) => {
   // TODO(wittjosiah): Doesn't need to be mutable but readonly type messes with ComplexMap.
   const spaceState = useCapability(SpaceCapabilities.MutableState);
   const client = useClient();
