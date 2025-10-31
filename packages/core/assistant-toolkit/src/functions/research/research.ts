@@ -40,22 +40,21 @@ export default defineFunction({
   key: 'dxos.org/function/research',
   name: 'Research',
   description: trim`
-    Search the web to research information about a given subject.
+    Search the web to research information about the given subject.
     Inserts structured data into the research graph. 
     Creates a research summary and returns the objects created.
   `,
   inputSchema: Schema.Struct({
     query: Schema.String.annotations({
       description: trim`
-        The query to search for.
-        If doing research on an object, load it first and pass it as JSON.
+        The search query.
+        If doing research on an object then load it first and pass it as JSON.
       `,
     }),
 
     instructions: Schema.optional(Schema.String).annotations({
       description: trim`
         The instructions for the research agent. 
-        E.g., preference for fast responses or in-depth analysis; number of web searches.
       `,
     }),
 
@@ -75,10 +74,10 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     document: Schema.optional(Schema.String).annotations({
-      description: 'The research document from the research agent.',
+      description: 'The generated research document.',
     }),
     objects: Schema.Array(Schema.Unknown).annotations({
-      description: 'The structured objects created as a result of the research.',
+      description: 'Structured objects created during the research process.',
     }),
   }),
   handler: Effect.fnUntraced(
