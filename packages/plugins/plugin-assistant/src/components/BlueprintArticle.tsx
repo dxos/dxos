@@ -13,7 +13,9 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';
 
-export const BlueprintArticle = ({ object }: ArticleComponentProps<Blueprint.Blueprint>) => {
+export type BlueprintArticleProps = ArticleComponentProps<Blueprint.Blueprint>;
+
+export const BlueprintArticle = ({ object }: BlueprintArticleProps) => {
   const { hasAttention } = useAttention(fullyQualifiedId(object));
 
   return (

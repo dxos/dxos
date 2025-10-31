@@ -13,7 +13,7 @@ import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 
 import { type ComponentProps } from './types';
 
-export const BlueprintArticle = ({ space }: ComponentProps) => {
+export const BlueprintContainer = ({ space }: ComponentProps) => {
   const [blueprint] = useQuery(space, Filter.type(Blueprint.Blueprint));
   const { t } = useTranslation(meta.id);
 

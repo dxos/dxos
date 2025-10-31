@@ -4,7 +4,7 @@
 
 export * from './types';
 
-export * from './BlueprintArticle';
+export * from './BlueprintContainer';
 export * from './ChatContainer';
 export * from './ChessContainer';
 export * from './CommentsContainer';
