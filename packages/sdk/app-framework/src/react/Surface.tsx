@@ -35,7 +35,7 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
       //   This effectively means that plugin modules which contribute surfaces need to all be activated at startup.
-      //   This should be fine for now because it's how it worked prior to capabilities api anyways.
+      //   This should be fine for now because it's how it worked prior to capabilities api anyway.
       //   In the future, it would be nice to be able to bucket the surface contributions by role.
       const surfaces = useSurfaces();
       const data = useDefaultValue(dataParam, () => ({}));
@@ -43,10 +43,11 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
       // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
       const definitions = findCandidates(surfaces, { role, data });
       const candidates = limit ? definitions.slice(0, limit) : definitions;
-      const nodes = candidates.map(({ component: Component, id }) => (
+      const nodes = candidates.map(({ id, component: Component }) => (
         <Component ref={forwardedRef} key={id} id={id} role={role} data={data} limit={limit} {...rest} />
       ));
 
+      // TODO(burdon): Able to inject DOM properties into root (e.g., object.id).
       const suspense = <Suspense fallback={placeholder}>{nodes}</Suspense>;
 
       return (

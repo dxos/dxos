@@ -10,6 +10,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, type FocusEvent, type PropsWithChildren, forwardRef, useMemo } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -80,7 +81,7 @@ const RootAttentionProvider = ({
   const attention = useDefaultValue(propsAttention, () => new AttentionManager());
   const handleFocus = (event: FocusEvent) => {
     // NOTE(thure): Use the following to debug focus movement across the app:
-    // console.log('[focus]', event.relatedTarget, event.target);
+    log('focus', { related: event.relatedTarget, target: event.target });
 
     const selector = [
       '[data-attendable-id]',

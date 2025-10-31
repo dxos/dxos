@@ -31,7 +31,7 @@ export const TaskCard = ({ subject, role, activeSpace }: PreviewProps<DataType.T
   const statusOption = getActiveStatusOption(status);
 
   return (
-    <Card.SurfaceRoot role={role}>
+    <Card.SurfaceRoot id={subject.id} role={role}>
       <div role='none' className={mx('flex items-center gap-2', cardSpacing)}>
         <Card.Heading classNames={[cardNoSpacing, 'min-is-0 flex-1 truncate']}>{title}</Card.Heading>
         {statusOption && (

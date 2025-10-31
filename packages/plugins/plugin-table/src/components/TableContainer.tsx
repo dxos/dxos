@@ -96,6 +96,7 @@ export const TableContainer = ({ role, view }: TableContainerProps) => {
     (): TableRowAction[] => [{ id: 'open', label: ['open record label', { ns: meta.id }] }],
     [],
   );
+
   const handleRowAction = useCallback(
     (actionId: string, data: any) =>
       Match.value(actionId).pipe(
