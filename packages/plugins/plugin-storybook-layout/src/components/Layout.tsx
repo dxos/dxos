@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework';
 import {
@@ -57,14 +57,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     }
   }, []);
 
-  const collisionBoundaries: HTMLElement[] = useMemo(() => {
-    const closest = layout.popoverAnchor?.closest('[data-popover-collision-boundary]') as
-      | HTMLElement
-      | null
-      | undefined;
-    return closest ? [closest] : [];
-  }, [layout.popoverAnchor]);
-
   const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
   const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : Dialog.Overlay;
 
@@ -103,7 +95,6 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
           side={layout.popoverSide}
           onInteractOutside={handleInteractOutside}
           onEscapeKeyDown={handleInteractOutside}
-          collisionBoundary={collisionBoundaries}
           sticky='always'
           hideWhenDetached
         >
