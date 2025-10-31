@@ -15169,9 +15169,6 @@ importers:
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../packages/common/storybook-utils
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
@@ -15237,9 +15234,6 @@ importers:
       '@dxos/storybook-addon-logger':
         specifier: workspace:*
         version: link:../../packages/common/storybook-addon-logger
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../packages/common/storybook-utils
       '@dxos/vite-plugin-icons':
         specifier: workspace:*
         version: link:../vite-plugin-icons
