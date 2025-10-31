@@ -19,11 +19,11 @@ const meta = {
   title: 'plugins/plugin-preview/Card',
   render: Defaultstory,
   decorators: [
-    withTheme, // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
+    withTheme,
+    // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: [IntentPlugin()] }),
   ],
   parameters: {
-    layout: 'fullscreen',
     translations,
   },
   tags: ['cards'],

@@ -72,7 +72,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const allFunctions = functions.flat();
 
         const toolkit = Toolkit.merge(...toolkits);
-        const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
+        const toolkitLayer = Layer.mergeAll(Layer.empty, ...handlers);
 
         const space = client.spaces.get(spaceId);
         invariant(space);
@@ -84,7 +84,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               InvocationTracerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               makeToolResolverFromFunctions(allFunctions, toolkit),
-              makeToolExecutionServiceFromFunctions(toolkit, handlersLayer),
+              makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
             ),
           ),
           Layer.provideMerge(

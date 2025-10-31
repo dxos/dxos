@@ -11,7 +11,9 @@ import { type DxAvatarProps } from './dx-avatar';
 
 export default {
   title: 'dx-avatar',
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'centered',
+  },
 };
 
 export const Basic = (_props: DxAvatarProps) => {

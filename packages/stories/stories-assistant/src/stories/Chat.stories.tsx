@@ -440,30 +440,30 @@ export const WithTrip: Story = {
         Markdown.makeDocument({
           name: 'Itinerary',
           content: trim`
-              # Itinerary
+            # Itinerary
 
-              ## Day 1
-              - Visit the Sagrada Familia
-              - Visit the Park Güell
-              - Visit the Casa Batlló
+            ## Day 1
+            - Visit the Sagrada Familia
+            - Visit the Park Güell
+            - Visit the Casa Batlló
 
-              ## Day 2
-              - Visit the Eiffel Tower
-              - Visit the Louvre
-              - Visit the Musée d'Orsay
-            `,
+            ## Day 2
+            - Visit the Eiffel Tower
+            - Visit the Louvre
+            - Visit the Musée d'Orsay
+          `,
         }),
       );
       space.db.add(
         Markdown.makeDocument({
           name: 'Barcelona',
           content: trim`
-              # Barcelona
+            # Barcelona
 
-              Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
-              It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
-              The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
-            `,
+            Barcelona is the capital and most populous city of Catalonia, an autonomous community in northeastern Spain. 
+            It is located on the Mediterranean coast, on the banks of the Llobregat River, in the comarca of the Baix Llobregat. 
+            The city is known for its rich history, vibrant culture, and stunning architecture, including the Sagrada Familia, Park Güell, and Casa Batlló.
+          `,
         }),
       );
     },
@@ -497,7 +497,9 @@ export const WithBoard: Story = {
   },
 };
 
-// Test with prompt: Create a research note for the organization.
+/**
+ * PROMPT: "Create a research note for the organization."
+ */
 export const WithResearch: Story = {
   decorators: getDecorators({
     plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
@@ -589,7 +591,7 @@ export const WithTriggers: Story = {
           enabled: true,
           spec: {
             kind: 'timer',
-            cron: '*/5 * * * * *', // Every 5 seconds
+            cron: '*/5 * * * * *', // Every 5 seconds.
           },
         }),
       );
@@ -893,8 +895,8 @@ export const WithScript: Story = {
           name: 'Forex',
           instructions: Template.make({
             source: trim`
-            You can get the exchange rate between two currencies.
-          `,
+              You can get the exchange rate between two currencies.
+            `,
           }),
           tools: [ToolId.make('dxos.org/script/forex-effect')],
         }),

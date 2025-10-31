@@ -5,63 +5,20 @@
 import '@dxos-theme';
 
 import { withThemeByClassName } from '@storybook/addon-themes';
-import { type Decorator, type Preview } from '@storybook/web-components-vite';
-import { html } from 'lit';
+import { type Preview } from '@storybook/web-components-vite';
 
-import { mx } from '@dxos/react-ui-theme';
-
-const withLayout: Decorator = (Story, context) => {
-  const {
-    parameters: { layout },
-  } = context;
-  const { type, classNames, scroll } = typeof layout === 'object' ? layout : { type: layout };
-
-  switch (type) {
-    // Fullscreen.
-    case 'fullscreen':
-      return html`
-        <div role="none" class="${mx('fixed inset-0 flex flex-col overflow-hidden bg-baseSurface', classNames)}">
-          ${Story()}
-        </div>
-      `;
-
-    // Centered column.
-    case 'column':
-      return html`
-        <div role="none" class="fixed inset-0 flex justify-center overflow-hidden bg-deckSurface">
-          <div
-            role="none"
-            class="${mx(
-              'flex flex-col bs-full is-[40rem] bg-baseSurface border-is border-ie border-subduedSeparator',
-              classNames,
-              scroll ? 'overflow-y-auto' : 'overflow-hidden',
-            )}"
-          >
-            ${Story()}
-          </div>
-        </div>
-      `;
-
-    // Centered.
-    case 'centered':
-      return html`
-        <div role="none" class="fixed inset-0 grid place-items-center bg-deckSurface">
-          <div role="none" class="${mx('contents bg-baseSurface', classNames)}">${Story()}</div>
-        </div>
-      `;
-
-    default:
-      return Story();
-  }
-};
+import { withLayout } from './theme';
 
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
+ *
+ * NOTE: Do not depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
  */
 export const preview: Preview = {
+  // NOTE: Does not affect docs.
   decorators: [
-    // Note: Does not affect docs.
+    withLayout,
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {
