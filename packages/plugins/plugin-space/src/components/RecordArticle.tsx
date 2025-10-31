@@ -94,8 +94,13 @@ const useRelatedObjects = (
       };
 
       const references = getReferences(record);
-      const referencedObjects = references.map((ref) => ref.target).filter(isNonNullable);
-      related.push(...referencedObjects);
+      const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
+      const referenceSources = objects.filter((obj) => {
+        const refs = getReferences(obj);
+        return refs.some((ref) => ref.target === record);
+      });
+
+      related.push(...referenceTargets, ...referenceSources);
     }
 
     return related;
