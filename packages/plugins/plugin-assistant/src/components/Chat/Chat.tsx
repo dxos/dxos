@@ -296,7 +296,7 @@ const ChatPrompt = ({
       </div>
 
       {space && settings && (
-        <div role='none' className='flex pbs-2 items-center'>
+        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}
@@ -306,7 +306,7 @@ const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='pli-cardSpacingChrome grow'>
+          <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
             <ChatReferences space={space} context={processor.context} />
           </div>
 
@@ -317,10 +317,11 @@ const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
+            {/* TODO(burdon): Move switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>
-                <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
+                <Input.Switch classNames='mli-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
           </ChatActions>

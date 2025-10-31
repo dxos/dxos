@@ -40,7 +40,7 @@ export const ChatOptions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex gap-0.5'>
+    <div role='none' className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly size={5} label={t('button context objects')} />

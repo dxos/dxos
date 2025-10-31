@@ -23,7 +23,7 @@ export const ChatReferences = ({ classNames, context, space }: ChatReferencesPro
   const { objects, onUpdateObject } = useContextObjects({ space, context });
 
   return (
-    <ul className={mx('flex flex-wrap', classNames)}>
+    <ul className={mx('flex', classNames)}>
       {objects.map((obj) => {
         const dxn = Obj.getDXN(obj);
         const typename = Obj.getTypename(obj);

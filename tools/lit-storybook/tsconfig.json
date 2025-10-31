@@ -15,9 +15,6 @@
       "path": "../../packages/common/log"
     },
     {
-      "path": "../../packages/common/storybook-utils"
-    },
-    {
       "path": "../../packages/ui/react-ui-theme"
     },
     {

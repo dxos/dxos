@@ -1,8 +1,10 @@
 //
 // Copyright 2023 DXOS.org
+// This file has been automatically migrated to valid ESM format by Storybook.
 //
 
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import { type InlineConfig } from 'vite';
@@ -13,6 +15,9 @@ import wasm from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 
