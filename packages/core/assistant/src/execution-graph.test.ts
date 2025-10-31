@@ -8,12 +8,14 @@ import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { DataType } from '@dxos/schema';
+import { type ContentBlock, DataType } from '@dxos/schema';
 
 import { ExecutionGraph } from './execution-graph';
 
 // Helper function to create valid object IDs for testing.
 const createTestId = () => ObjectId.random();
+
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
 
 describe('ExecutionGraph', () => {
   describe('basic functionality', () => {
@@ -26,7 +28,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should add a simple user message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
         id: messageId,
@@ -56,7 +58,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle basic status & message processing', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const status = Obj.make(AgentStatus, {
         created: '2025-01-01T00:00:00Z',
         message: 'Running Research',
@@ -90,7 +92,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should add an assistant message with text', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
         id: messageId,
@@ -120,7 +122,7 @@ describe('ExecutionGraph', () => {
 
   describe('sequential chaining within messages', () => {
     it('should chain blocks within a message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
         id: messageId,
@@ -168,7 +170,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should chain across multiple messages', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       // First message
       const message1Id = createTestId();
@@ -211,7 +213,7 @@ describe('ExecutionGraph', () => {
 
   describe('tool calls and results', () => {
     it('should handle tool calls and results with proper parent relationships', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -296,7 +298,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle tool errors with proper parent relationships', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -373,7 +375,7 @@ describe('ExecutionGraph', () => {
 
   describe('different processing orders', () => {
     it('should handle AgentStatus processed after tool result', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -432,7 +434,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle AgentStatus processed before tool result', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const message1Id = createTestId();
       const message2Id = createTestId();
@@ -493,7 +495,7 @@ describe('ExecutionGraph', () => {
 
   describe('complex scenarios', () => {
     it('should handle multiple tool calls in sequence', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const msg1Id = createTestId();
       const msg2Id = createTestId();
@@ -605,7 +607,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle mixed block types in a message', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -642,7 +644,7 @@ describe('ExecutionGraph', () => {
 
   describe('edge cases', () => {
     it('should handle empty text blocks', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -666,7 +668,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle messages with no blocks', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const messageId = createTestId();
       const message = Obj.make(DataType.Message, {
@@ -684,7 +686,7 @@ describe('ExecutionGraph', () => {
     });
 
     it('should handle getGraph with lastRequest filter', () => {
-      const graph = new ExecutionGraph();
+      const graph = new ExecutionGraph(SKIP_BLOCKS);
 
       const msg1Id = createTestId();
       const msg2Id = createTestId();

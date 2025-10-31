@@ -10,7 +10,7 @@ import { LogLevel } from '@dxos/log';
 import { ContentBlock, DataType } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = [];
+const SKIP_BLOCKS: ContentBlock.Any['_tag'][] = ['text'];
 
 /**
  * Mercurial-style Commit.
@@ -60,6 +60,8 @@ export class ExecutionGraph {
   private _lastCommitByBranch = new Map<string, string>(); // branch -> last commitId
   private _pendingToolResults = new Map<string, string>(); // toolCallId -> toolResultCommitId
 
+  constructor(private readonly _skipBlocks: ContentBlock.Any['_tag'][] = SKIP_BLOCKS) {}
+
   /**
    * Adds events to the graph.
    */
@@ -83,6 +85,7 @@ export class ExecutionGraph {
       this._lastBlockId,
       this._toolCallCommitIds,
       this._lastCommitByBranch,
+      this._skipBlocks,
     );
     this._commits.push(...messageCommits);
 
@@ -289,6 +292,7 @@ const messageToCommits = (
   lastBlockId?: string,
   toolCallIds?: Map<string, string>,
   lastCommitByBranch?: Map<string, string>,
+  skipBlocks?: ContentBlock.Any['_tag'][],
 ): Commit[] => {
   let previousBlockId: string | undefined = lastBlockId;
 
@@ -296,6 +300,9 @@ const messageToCommits = (
     .map((block, idx) => {
       const branch = getMessageBranch(message);
       const parents = getBlockParents(block, previousBlockId, message, toolCallIds, lastCommitByBranch);
+      if (skipBlocks?.includes(block._tag)) {
+        return null;
+      }
 
       const commit = createBlockCommit(block, message, branch, parents, idx);
       if (commit) {
@@ -362,10 +369,6 @@ const createBlockCommit = (
   parents: string[],
   idx: number,
 ): Commit | null => {
-  if (SKIP_BLOCKS.includes(block._tag)) {
-    return null;
-  }
-
   const timestamp = new Date(message.created);
   switch (block._tag) {
     case 'text':
