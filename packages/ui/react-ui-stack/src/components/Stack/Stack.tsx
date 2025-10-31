@@ -93,14 +93,12 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const selfDroppable = !!(itemsCount < 1 && onRearrange && props.id);
 
-    // TODO(burdon): Autoscroll issue.
-    //  If columns scroll vertically then this blocks horizontal autoscroll.
     const { dropping } = useStackDropForElements({
       id: props.id,
       element: getDropElement && stackElement ? getDropElement(stackElement) : stackElement,
       scrollElement: stackElement,
       selfDroppable,
-      orientation, // TODO(burdon): Only set on top-level stack.
+      orientation,
       onRearrange,
     });
 
