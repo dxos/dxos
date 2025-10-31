@@ -47,7 +47,7 @@ import { render } from '@dxos/storybook-utils';
 import { isNonNullable, trim } from '@dxos/util';
 
 import {
-  BlueprintContainer,
+  BlueprintArticle,
   ChatContainer,
   ChessContainer,
   CommentsContainer,
@@ -308,7 +308,7 @@ export const WithBlueprints: Story = {
     },
   }),
   args: {
-    modules: [[ChatContainer], [TasksContainer, BlueprintContainer]],
+    modules: [[ChatContainer], [TasksContainer, BlueprintArticle]],
   },
 };
 

@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type ArticleComponentProps } from '@dxos/app-framework';
 import { type Blueprint } from '@dxos/blueprints';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -12,19 +13,15 @@ import { StackItem } from '@dxos/react-ui-stack';
 
 import { TemplateEditor } from './TemplateEditor';
 
-export type BlueprintContainerProps = {
-  blueprint: Blueprint.Blueprint;
-};
-
-export const BlueprintContainer = ({ blueprint }: BlueprintContainerProps) => {
-  const { hasAttention } = useAttention(fullyQualifiedId(blueprint));
+export const BlueprintArticle = ({ object }: ArticleComponentProps<Blueprint.Blueprint>) => {
+  const { hasAttention } = useAttention(fullyQualifiedId(object));
 
   return (
     <StackItem.Content toolbar>
       <Toolbar.Root disabled={!hasAttention} />
-      <TemplateEditor id={blueprint.id} template={blueprint.instructions} classNames='container-max-width' />
+      <TemplateEditor id={object.id} template={object.instructions} classNames='container-max-width' />
     </StackItem.Content>
   );
 };
 
-export default BlueprintContainer;
+export default BlueprintArticle;
