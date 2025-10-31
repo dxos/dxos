@@ -58,7 +58,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
 
   return LanguageModel.make({
     generateText: Effect.fn('MemoizedLanguageModel.generateText')(function* (params) {
-      const conversation = getConverstaionFromOptions(options.modelName, false, params);
+      const conversation = getConversationFromOptions(options.modelName, false, params);
       const memoized = yield* store.getMemoizedConversation(conversation);
       if (Option.isSome(memoized)) {
         return memoized.value.response as Response.PartEncoded[];
@@ -100,7 +100,7 @@ export const make = (options: MakeModelOptions): Effect.Effect<LanguageModel.Ser
     streamText: (params) =>
       Stream.unwrap(
         Effect.gen(function* () {
-          const conversation = getConverstaionFromOptions(options.modelName, true, params);
+          const conversation = getConversationFromOptions(options.modelName, true, params);
 
           const memoized = yield* store.getMemoizedConversation(conversation);
           if (Option.isSome(memoized)) {
@@ -172,7 +172,7 @@ const getMemoizedConversationParameters = (
   };
 };
 
-const getConverstaionFromOptions = (
+const getConversationFromOptions = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
@@ -349,7 +349,7 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
       const closestMatch = yield* store.getClosestMatch(conversation);
       if (Option.isSome(closestMatch)) {
         const patch = createPatch(
-          'converstaion',
+          'conversation',
           formatMemoizedConversation(closestMatch.value),
           formatMemoizedConversation(conversation),
           'saved',

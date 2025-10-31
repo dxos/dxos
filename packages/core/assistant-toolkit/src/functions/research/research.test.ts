@@ -54,6 +54,7 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument, updateDocument] })),
   Layer.provideMerge(
     Layer.mergeAll(
+      // TODO(burdon): Document how to create memoized file.
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       // AiServiceTestingPreset('direct'),
       TestDatabaseLayer({
@@ -79,7 +80,6 @@ describe('Research', () => {
           }),
         );
         yield* DatabaseService.flush({ indexes: true });
-
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and investors of airbnb.',
         });
@@ -99,7 +99,7 @@ describe('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 
   it.scoped(
@@ -115,7 +115,6 @@ describe('Research', () => {
 
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
-
         yield* DatabaseService.flush({ indexes: true });
 
         const blueprint = yield* DatabaseService.add(Obj.clone(ResearchBlueprint));
@@ -169,6 +168,6 @@ describe('Research', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    MemoizedAiService.isGenerationEnabled() ? 240_000 : undefined,
+    MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
 });
