@@ -31,10 +31,10 @@ import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider'
 
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
+const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'MainRoot';
 const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
-const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
 const landmarkAttr = 'data-main-landmark';
@@ -43,7 +43,6 @@ const landmarkAttr = 'data-main-landmark';
  * Facilitates moving focus between landmarks.
  * Ref https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/landmark_role
  */
-// TODO(burdon): See logic from Stack.handleKeyDown.
 const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -63,8 +62,8 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     [propsOnKeyDown],
   );
 
-  // TODO(thure): This was disconnected once before in #8818, if this should change again to support the browser
-  //  extension, please ensure the change doesn’t break web, desktop and mobile.
+  // TODO(thure): This was disconnected once before in #8818;
+  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
   const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
 
   return {

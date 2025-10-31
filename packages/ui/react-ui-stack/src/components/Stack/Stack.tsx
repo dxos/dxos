@@ -23,6 +23,7 @@ import { type StackContextValue } from '../defs';
 import { StackContext } from '../StackContext';
 
 export type Orientation = 'horizontal' | 'vertical';
+
 /**
  * Size is how Stack and its StackItems coordinate the dimensions of the items with the available space.
  * - `intrinsic` signals to Stack and its StackItems to occupy their intrinsic size
@@ -31,14 +32,6 @@ export type Orientation = 'horizontal' | 'vertical';
  *   - `split` divides the Stack’s available space among the StackItems
  */
 export type Size = 'intrinsic' | 'contain' | 'split';
-
-export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
-  Partial<StackContextValue> & {
-    itemsCount?: number;
-    getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
-    separatorOnScroll?: number;
-    circularFocus?: boolean;
-  };
 
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--rail-size)_[content-start]_1fr_[content-end]]';
@@ -60,6 +53,14 @@ const scrollIntoViewAndFocus = (el: HTMLElement, orientation: StackProps['orient
   });
   return el.focus();
 };
+
+export type StackProps = Omit<ThemedClassName<ComponentPropsWithRef<'div'>>, 'aria-orientation'> &
+  Partial<StackContextValue> & {
+    itemsCount?: number;
+    getDropElement?: (stackElement: HTMLDivElement) => HTMLDivElement;
+    separatorOnScroll?: number;
+    circularFocus?: boolean;
+  };
 
 export const Stack = forwardRef<HTMLDivElement, StackProps>(
   (
@@ -92,12 +93,14 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
 
     const selfDroppable = !!(itemsCount < 1 && onRearrange && props.id);
 
+    // TODO(burdon): Autoscroll issue.
+    //  If columns scroll vertically then this blocks horizontal autoscroll.
     const { dropping } = useStackDropForElements({
       id: props.id,
       element: getDropElement && stackElement ? getDropElement(stackElement) : stackElement,
       scrollElement: stackElement,
       selfDroppable,
-      orientation,
+      orientation, // TODO(burdon): Only set on top-level stack.
       onRearrange,
     });
 
@@ -245,7 +248,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                       const itemRect = item.getBoundingClientRect();
                       const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
                       const distance = Math.abs(itemPosition - targetPosition);
-
                       if (distance < closestDistance) {
                         closestDistance = distance;
                         closestItem = item;
