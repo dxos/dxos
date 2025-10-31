@@ -19,7 +19,7 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const { t } = useTranslation(meta.id);
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
-  const related = useRelatedObjects(space, object, { relations: true, references: true });
+  const related = useRelatedObjects(space, object, { references: true, relations: true });
   const singleColumn = related.length === 1;
 
   return (
@@ -54,7 +54,7 @@ const Card = ({ data: subject }: { data: Obj.Any }) => {
 const useRelatedObjects = (
   space?: Space,
   record?: Obj.Any,
-  options: { relations?: boolean; references?: boolean } = {},
+  options: { references?: boolean; relations?: boolean } = {},
 ) => {
   const objects = useQuery(space, Filter.everything());
   return useMemo(() => {
@@ -63,6 +63,25 @@ const useRelatedObjects = (
     }
 
     const related: Obj.Any[] = [];
+
+    // TODO(burdon): Change Person => Organization to relations.
+    // TODO(burdon): Filter relation types.
+    if (options.references) {
+      const getReferences = (obj: Obj.Any): Ref.Any[] => {
+        return Object.getOwnPropertyNames(obj)
+          .map((name) => obj[name as keyof Obj.Any])
+          .filter((value) => Ref.isRef(value)) as Ref.Any[];
+      };
+
+      const references = getReferences(record);
+      const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
+      const referenceSources = objects.filter((obj) => {
+        const refs = getReferences(obj);
+        return refs.some((ref) => ref.target === record);
+      });
+
+      related.push(...referenceTargets, ...referenceSources);
+    }
 
     if (options.relations) {
       // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
@@ -83,24 +102,6 @@ const useRelatedObjects = (
         .map((relation) => Relation.getTarget(relation));
 
       related.push(...targetObjects, ...sourceObjects);
-    }
-
-    // TODO(burdon): Change Person => Organization to relations.
-    if (options.references) {
-      const getReferences = (obj: Obj.Any): Ref.Any[] => {
-        return Object.getOwnPropertyNames(obj)
-          .map((name) => obj[name as keyof Obj.Any])
-          .filter((value) => Ref.isRef(value)) as Ref.Any[];
-      };
-
-      const references = getReferences(record);
-      const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
-      const referenceSources = objects.filter((obj) => {
-        const refs = getReferences(obj);
-        return refs.some((ref) => ref.target === record);
-      });
-
-      related.push(...referenceTargets, ...referenceSources);
     }
 
     return related;
