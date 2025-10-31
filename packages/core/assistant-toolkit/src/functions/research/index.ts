@@ -11,6 +11,6 @@ export * from './types';
 
 export namespace Research {
   export const create = create$;
-  export const research = research$;
   export const update = update$;
+  export const research = research$;
 }

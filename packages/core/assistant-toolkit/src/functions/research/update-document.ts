@@ -9,6 +9,7 @@ import { ArtifactId } from '@dxos/assistant';
 import { DatabaseService, defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
+// TODO(burdon): Remove and rely on the Markdown tools to update the document.
 export default defineFunction({
   key: 'dxos.org/function/research/update-document',
   name: 'Update research document',
