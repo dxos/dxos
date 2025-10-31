@@ -59,8 +59,17 @@ export const Surface: NamedExoticComponent<SurfaceProps & RefAttributes<HTMLElem
 );
 
 // TODO(burdon): Make user facing, with telemetry.
-// TODO(burdon): Change based on dev/prod mode.
-const DefaultFallback = ({ data, error }: { data: any; error: Error }) => {
+// TODO(burdon): Change based on dev/prod mode; infer subject type, id.
+const DefaultFallback = ({ data, error, dev }: { data: any; error: Error; dev?: boolean }) => {
+  if (dev) {
+    return (
+      <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto'>
+        <h1 className='flex gap-2 text-sm mbs-2'>{error.message}</h1>
+        <pre className='overflow-auto text-xs text-description'>{JSON.stringify(data, null, 2)}</pre>
+      </div>
+    );
+  }
+
   return (
     <div className='flex flex-col gap-4 p-4 is-full overflow-y-auto border border-rose-500'>
       <h1 className='flex gap-2 text-sm mbs-2 text-rose-500'>{error.message}</h1>
