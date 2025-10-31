@@ -6,5 +6,5 @@
 import './globals';
 import util from 'util/';
 
-export default util;
 export { callbackify, debuglog, format, inspect, promisify, stripVTControlCharacters } from 'util/';
+export default util;
