@@ -20,8 +20,8 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
   const space = getSpace(object);
   const data = useMemo(() => ({ subject: object }), [object]);
   const related = useRelatedObjects(space, object, { relations: true, references: true });
+  const singleColumn = related.length === 1;
 
-  // TODO(burdon): Create sections (or section indicators)?
   return (
     <StackItem.Content classNames='flex flex-col items-center'>
       <div role='none' className={mx('flex flex-col gap-4 p-4 is-full overflow-y-auto')}>
@@ -30,13 +30,13 @@ export const RecordArticle = ({ object }: ArticleComponentProps) => {
         </div>
 
         {related.length > 0 && (
-          <div role='none' className={mx('flex flex-col gap-1', related.length === 1 ? 'card-max-width' : 'is-full')}>
-            <label className='text-description text-sm mbs-2'>{t('related objects label')}</label>
+          <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'card-max-width' : 'is-full')}>
+            <label className='mbs-2 text-description text-sm'>{t('related objects label')}</label>
             <Masonry.Root<Obj.Any>
               items={related}
               render={Card}
+              columnCount={singleColumn ? 1 : undefined}
               intrinsicHeight
-              columnCount={related.length === 1 ? 1 : undefined}
             />
           </div>
         )}
