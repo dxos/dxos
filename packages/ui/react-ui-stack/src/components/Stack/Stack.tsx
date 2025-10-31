@@ -135,9 +135,9 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     );
 
     /**
-     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack; if the arrow key matches the
-     * orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item; or, if there is no
-     * such stack item, focus is passed to the adjacent empty stack if one can be found.
+     * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack;
+     * if the arrow key matches the orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item;
+     * or, if there is no such stack item, focus is passed to the adjacent empty stack if one can be found.
      */
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -241,7 +241,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                       closestStackOrientation === 'vertical' ? ownedItemRect.top : ownedItemRect.left;
 
                     let closestDistance = Infinity;
-
                     for (const item of adjacentStackItems) {
                       const itemRect = item.getBoundingClientRect();
                       const itemPosition = closestStackOrientation === 'vertical' ? itemRect.top : itemRect.left;
@@ -294,6 +293,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       if (!rail) {
         return orientation === 'horizontal' ? 'grid-rows-1 pli-[--stack-gap]' : 'grid-cols-1 plb-[--stack-gap]';
       }
+
       if (orientation === 'horizontal') {
         return railGridHorizontal;
       } else {

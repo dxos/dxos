@@ -37,22 +37,13 @@ const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 const MAIN_NAME = 'Main';
 const GENERIC_CONSUMER_NAME = 'GenericConsumer';
 
-type SidebarState = 'expanded' | 'collapsed' | 'closed';
-
-type MainContextValue = {
-  resizing: boolean;
-  navigationSidebarState: SidebarState;
-  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-  complementarySidebarState: SidebarState;
-  setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-};
-
 const landmarkAttr = 'data-main-landmark';
 
 /**
  * Facilitates moving focus between landmarks.
  * Ref https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/landmark_role
  */
+// TODO(burdon): See logic from Stack.handleKeyDown.
 const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -82,6 +73,16 @@ const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKey
     tabIndex: 0,
     ...focusableGroupAttrs,
   };
+};
+
+type SidebarState = 'expanded' | 'collapsed' | 'closed';
+
+type MainContextValue = {
+  resizing: boolean;
+  navigationSidebarState: SidebarState;
+  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
+  complementarySidebarState: SidebarState;
+  setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
 };
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
