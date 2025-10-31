@@ -66,15 +66,13 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           this.#context.getCapability(Capabilities.AiServiceLayer) ?? Layer.die('AiService not found');
 
         // TODO(dmaretskyi): Make those reactive.
-        const functions = this.#context.getCapabilities(Capabilities.Functions);
         const toolkits = this.#context.getCapabilities(Capabilities.Toolkit);
         const handlers = this.#context.getCapabilities(Capabilities.ToolkitHandler);
-
+        const functions = this.#context.getCapabilities(Capabilities.Functions);
         const allFunctions = functions.flat();
-        // TODO(wittjosiah): Don't cast.
-        console.log(toolkits);
-        const toolkit = Toolkit.merge(...toolkits) as Toolkit.Toolkit<any>;
-        const handlersLayer = Layer.mergeAll(Layer.empty, ...handlers);
+
+        const toolkit = Toolkit.merge(...toolkits);
+        const toolkitLayer = Layer.mergeAll(Layer.empty, ...handlers);
 
         const space = client.spaces.get(spaceId);
         invariant(space);
@@ -86,7 +84,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               InvocationTracerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               makeToolResolverFromFunctions(allFunctions, toolkit),
-              makeToolExecutionServiceFromFunctions(toolkit, handlersLayer),
+              makeToolExecutionServiceFromFunctions(toolkit, toolkitLayer),
             ),
           ),
           Layer.provideMerge(
