@@ -5,7 +5,6 @@
 import type * as Tool from '@effect/ai/Tool';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AgentStatus } from '@dxos/ai';
 import { useTranslation } from '@dxos/react-ui';
 import {
   NumericTabs,
@@ -33,15 +32,7 @@ export type ToolBlockProps = {
 export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const getToolCaption = (tool?: Tool.Any, status?: AgentStatus) => {
-    if (!tool) {
-      return t('calling tool label');
-    }
-
-    return status?.message ?? tool.description ?? [t('calling label'), tool.name].join(' ');
-  };
-
-  const items = useMemo(() => {
+  const items = useMemo<ToolContainerParams['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
@@ -57,7 +48,7 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
             const tool = tools.find((tool) => tool.name === block.name);
             lastToolCall = { tool, block };
             return {
-              title: getToolCaption(lastToolCall?.tool),
+              title: tool?.description ?? [t('tool call label'), tool?.name].join(' '),
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -69,12 +60,13 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
             // TODO(burdon): Parse error type.
             if (block.error) {
               return {
-                title: t('error label'),
+                title: t('tool error label'),
                 content: block,
               };
             }
 
-            const title = getToolCaption(lastToolCall?.tool ?? t('tool result label'));
+            const title =
+              lastToolCall?.tool?.description ?? [t('tool result label'), lastToolCall?.tool?.name].join(' ');
             lastToolCall = undefined;
             return {
               title,
@@ -133,7 +125,7 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
   return (
     <ToggleContainer.Root classNames={chatMessagePanel} open={open} onChangeOpen={setOpen}>
       <ToggleContainer.Header classNames={chatMessagePanelHeader}>
-        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} />
+        <TextCrawl key='status-roll' autoAdvance lines={items.map((item) => item.title)} />
       </ToggleContainer.Header>
       <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', chatMessagePanelContent]}>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />

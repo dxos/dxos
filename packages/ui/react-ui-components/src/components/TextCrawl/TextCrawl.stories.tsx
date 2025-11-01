@@ -6,10 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { Button, Toolbar } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { TextCrawl, sizes } from './TextCrawl';
+
+faker.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-components/TextCrawl',
@@ -22,35 +24,47 @@ const meta = {
 
 export default meta;
 
+const createLines = () => {
+  const length = faker.number.int({ min: 1, max: 10 });
+  return Array.from({ length }, (_, i) => `[${i + 1}/${length}] ${faker.lorem.paragraph()}`);
+};
+
 type Story = StoryObj<typeof TextCrawl>;
 
 export const Default: Story = {
   args: {
-    classNames: 'w-96 px-2',
-    lines: Array.from({ length: 5 }, (_, i) => `${i}. ${faker.lorem.paragraph()}`),
+    classNames: 'is-[20rem] pli-1',
+    lines: createLines(),
     autoAdvance: true,
   },
 };
 
 export const Cyclic: Story = {
   args: {
-    classNames: 'w-96 px-2',
-    lines: Array.from({ length: 5 }, (_, i) => `${i}. ${faker.lorem.paragraph()}`),
+    classNames: 'is-[20rem] pli-1',
+    lines: createLines(),
     autoAdvance: true,
     cyclic: true,
   },
 };
 
-export const Demo: Story = {
+export const Controlled: Story = {
   render: () => {
-    const [lines, setLines] = useState<string[]>([]);
+    const [lines, setLines] = useState<string[]>(createLines());
     return (
-      <div className='flex flex-col is-[20rem] gap-4 p-1'>
+      <div className='flex flex-col is-[20rem] gap-4'>
         <Toolbar.Root>
-          <Button onClick={() => setLines((lines) => [...lines, `${lines.length + 1}. ${faker.lorem.paragraph()}`])}>
+          <Toolbar.Button
+            onClick={() =>
+              setLines((lines) => {
+                return [...lines, `[${lines.length + 1}/${lines.length + 1}] ${faker.lorem.paragraph()}`];
+              })
+            }
+          >
             Add
-          </Button>
-          <Button onClick={() => setLines([])}>Reset</Button>
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => setLines(createLines())}>Generate</Toolbar.Button>
+          <Toolbar.Button onClick={() => setLines([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
         <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance />
       </div>
