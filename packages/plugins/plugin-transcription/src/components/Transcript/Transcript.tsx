@@ -13,6 +13,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  editorSlots,
   preview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
@@ -71,7 +72,7 @@ export const TranscriptView = ({ classNames, space, transcript: object, model }:
       extensions: [
         createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
         createMarkdownExtensions(),
-        createThemeExtensions({ themeMode }),
+        createThemeExtensions({ themeMode, slots: editorSlots }),
         decorateMarkdown(),
         preview(),
         transcript({

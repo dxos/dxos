@@ -131,8 +131,12 @@ export const transcript = ({ model, started }: TranscriptOptions): Extension => 
     ),
 
     EditorView.theme({
+      '.cm-gutters': {
+        backgroundColor: 'var(--dx-baseSurface)',
+      },
       '.cm-timestamp-gutter': {
         width: '6rem',
+        paddingLeft: '0.5rem',
         paddingRight: '1rem',
       },
       '.cm-timestamp-gutter > .cm-gutterElement > div': {
