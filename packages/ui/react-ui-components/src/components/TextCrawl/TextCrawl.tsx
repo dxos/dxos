@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
@@ -20,6 +20,7 @@ const sizeClassNames: Record<Size, { height: number; className: string }> = {
 };
 
 export type TextCrawlProps = ThemedClassName<{
+  textClassNames?: ClassNameValue;
   size?: Size;
   index?: number;
   lines?: string[];
@@ -34,6 +35,7 @@ export type TextCrawlProps = ThemedClassName<{
  */
 export const TextCrawl = ({
   classNames,
+  textClassNames,
   size = 'md',
   index: indexParam,
   lines = emptyLines,
@@ -43,19 +45,19 @@ export const TextCrawl = ({
   minDuration = 1_000,
 }: TextCrawlProps) => {
   const { className, height } = sizeClassNames[size];
-  const rootRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const prevLinesRef = useRef<string[]>(lines);
   const [index, setIndex] = useState(indexParam ?? 0);
 
   const updatedRef = useRef(Date.now());
   const setPosition = useCallback(
     (index: number, animate = false) => {
-      if (!rootRef.current) {
+      if (!containerRef.current) {
         return;
       }
 
-      rootRef.current.style.transform = `translateY(-${index * height}px)`;
-      rootRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+      containerRef.current.style.transform = `translateY(-${index * height}px)`;
+      containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
     },
     [height, transition],
   );
@@ -68,7 +70,7 @@ export const TextCrawl = ({
 
     const next = Math.max(0, Math.min(indexParam, lines.length - 1));
     setIndex(next);
-    setPosition(next, false);
+    setPosition(next, true);
   }, [indexParam]);
 
   // Uncontrolled.
@@ -131,42 +133,43 @@ export const TextCrawl = ({
   }, [lines, indexParam, autoAdvance, cyclic, transition, minDuration]);
 
   return (
-    <div role='none' className={mx('relative overflow-hidden', classNames)}>
-      <div role='none' ref={rootRef} className={mx(className)}>
-        <div role='none' className='flex flex-col'>
-          {lines.map((line, i) => (
-            <div
-              key={i}
-              role='none'
-              style={{
-                transitionDuration: `${transition / 2}ms`,
-              }}
-              className={mx(
-                'items-center truncate transition-opacity',
-                index === i || (i === 0 && index === lines.length) ? 'opacity-100' : 'opacity-50',
-                className,
-              )}
-            >
-              {line}
-            </div>
-          ))}
-          {cyclic && (
-            <div
-              role='none'
-              style={{
-                transitionDuration: `${transition / 2}ms`,
-              }}
-              className={mx(
-                'items-center truncate transition-opacity',
-                index === lines.length || index === 0 ? 'opacity-100' : 'opacity-50',
-                className,
-              )}
-            >
-              {lines[0]}
-            </div>
-          )}
-        </div>
+    <div role='none' className={mx('relative overflow-hidden', classNames, className)}>
+      <div role='none' ref={containerRef} className={mx('flex flex-col')}>
+        {lines.map((line, i) => (
+          <Line
+            key={i}
+            line={lines[i]}
+            active={index === i || (i === 0 && index === lines.length)}
+            transition={transition}
+            classNames={[className, textClassNames]}
+          />
+        ))}
+        {cyclic && (
+          <Line
+            line={lines[0]}
+            active={index === lines.length || index === 0}
+            transition={transition}
+            classNames={[className, textClassNames]}
+          />
+        )}
       </div>
+    </div>
+  );
+};
+
+const Line = ({
+  classNames,
+  line,
+  active,
+  transition,
+}: ThemedClassName<{ line: string; active: boolean; transition: number }>) => {
+  return (
+    <div
+      role='none'
+      style={{ transitionDuration: `${transition / 2}ms` }}
+      className={mx('flex items-center truncate transition-opacity', active ? 'opacity-100' : 'opacity-50', classNames)}
+    >
+      {line}
     </div>
   );
 };
