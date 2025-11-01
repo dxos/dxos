@@ -15,7 +15,7 @@ import { AiSession } from '../../session';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 import { ReferencedQuotes, insertReferences } from '../quotes';
 
-import PROMPT from './instructions.tpl?raw';
+import PROMPT from './transcription-instructions.tpl?raw';
 
 export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
   key: 'dxos.org/function/extraction/extract-entities',
