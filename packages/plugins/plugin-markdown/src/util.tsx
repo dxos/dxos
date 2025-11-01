@@ -32,22 +32,20 @@ export const isMarkdownProperties = (data: unknown): data is MarkdownProperties 
 
 const nonTitleChars = /[^\w ]/g;
 
-export const getFallbackName = (content: string) => {
+export const getFallbackName = (content = '') => {
   return content.substring(0, 31).split('\n')[0].replaceAll(nonTitleChars, '').trim();
 };
 
-export const getContentSnippet = (content: string) => {
+export const getContentSnippet = (content = '') => {
   const abstract = content
     .split('\n')
     .filter((line) => !line.startsWith('#'))
-    .filter((line) => line.trim() !== '')[0]
-    .replaceAll(nonTitleChars, '')
-    .trim();
+    .filter((line) => line.trim() !== '');
 
-  return abstract + '...';
+  return abstract.length > 0 ? abstract[0].replaceAll(nonTitleChars, '').trim() + '...' : '';
 };
 
-export const setFallbackName = debounce((doc: Markdown.Document, content: string) => {
+export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
   const name = getFallbackName(content);
   if (doc.fallbackName !== name) {
     doc.fallbackName = name;

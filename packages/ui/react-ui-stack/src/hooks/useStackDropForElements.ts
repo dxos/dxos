@@ -10,6 +10,8 @@ import { useLayoutEffect, useState } from 'react';
 
 import { type Orientation, type StackItemData, type StackItemRearrangeHandler } from '../components';
 
+const noop = () => {};
+
 /**
  * Hook to handle drag and drop functionality for Stack components.
  */
@@ -38,13 +40,6 @@ export const useStackDropForElements = ({
     const acceptSourceType = orientation === 'horizontal' ? 'column' : 'card';
 
     return combine(
-      scrollElement
-        ? autoScrollForElements({
-            element: scrollElement,
-            getAllowedAxis: () => orientation,
-          })
-        : () => {},
-
       selfDroppable
         ? dropTargetForElements({
             element,
@@ -74,7 +69,14 @@ export const useStackDropForElements = ({
               }
             },
           })
-        : () => {},
+        : noop,
+
+      scrollElement
+        ? autoScrollForElements({
+            element: scrollElement,
+            getAllowedAxis: () => orientation,
+          })
+        : noop,
     );
   }, [element, scrollElement, selfDroppable, orientation, id, onRearrange]);
 

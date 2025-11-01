@@ -236,7 +236,7 @@ const RawTreeItem = <T extends HasId = any>({
           ghostFocusWithin,
           className,
         ]}
-        data-itemid={id}
+        data-object-id={id}
         data-testid={testId}
         // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
         //   without alerting the user (except for in the correct link element). See also:
