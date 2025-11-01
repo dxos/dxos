@@ -52,12 +52,12 @@ export const TextCrawl = ({
     setIndex(indexParam);
   }, [indexParam]);
 
+  useEffect(() => {
+    setIndex(0);
+  }, [lines]);
+
   // Auto-advance.
   useEffect(() => {
-    if (lines.length < indexRef.current) {
-      setIndex(0);
-    }
-
     if (!autoAdvance) {
       setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
       return;
@@ -99,8 +99,8 @@ export const TextCrawl = ({
         }, transition);
       }
 
-      containerRef.current.style.transition = `transform ${transition}ms cubic-bezier(0.25, 1.25, 0.5, 1)`;
       containerRef.current.style.transform = `translateY(-${i * height}px)`;
+      containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
     }
   }, [height, index]);
 
