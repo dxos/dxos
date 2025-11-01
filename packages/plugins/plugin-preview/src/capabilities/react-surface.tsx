@@ -143,8 +143,8 @@ export default () =>
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => {
         return (
-          <div role='none' className='flex justify-center'>
-            <div role='none' className='pbs-2 pbe-2 card-max-width'>
+          <div role='none' className='flex is-full justify-center'>
+            <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
               <Surface role='card' data={data} limit={1} />
             </div>
           </div>
