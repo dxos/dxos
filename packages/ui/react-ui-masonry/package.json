@@ -24,7 +24,8 @@
   "dependencies": {
     "@dxos/react-hooks": "workspace:*",
     "@radix-ui/react-compose-refs": "1.1.1",
-    "masonic": "^4.1.0"
+    "masonic": "^4.1.0",
+    "react-resize-detector": "^11.0.1"
   },
   "devDependencies": {
     "@dxos/client": "workspace:*",
