@@ -95,7 +95,7 @@ const invokeFunction = (
       },
     };
 
-    log.info('invoking function', { name: functionDef.name, input });
+    log('invoking function', { name: functionDef.name, input });
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
@@ -119,7 +119,7 @@ const invokeFunction = (
       ),
     );
 
-    log.info('completed', { function: functionDef.name, input, data });
+    log('completed', { function: functionDef.name, input, data });
 
     // Assert output matches schema.
     try {
