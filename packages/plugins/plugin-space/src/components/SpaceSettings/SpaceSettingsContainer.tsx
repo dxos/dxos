@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useMulticastObservable, useTranslation, useFileDownload } from '@dxos/react-ui';
+import { Button, Input, useFileDownload, useMulticastObservable, useTranslation } from '@dxos/react-ui';
 import {
   ControlItem,
   ControlItemInput,
