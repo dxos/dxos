@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import { Button, Input, useMulticastObservable, useTranslation, useFileDownload } from '@dxos/react-ui';
 import {
   ControlItem,
   ControlItemInput,
@@ -166,6 +166,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [t, space],
   );
 
+  const download = useFileDownload();
+  const handleBackup = useCallback(async () => {
+    const archive = await space.internal.export();
+    download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
+  }, [space, download]);
+
   return (
     <StackItem.Content scrollable>
       <ControlPage>
@@ -183,6 +189,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             classNames='container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'
           />
         </ControlSection>
+        <ControlItemInput
+          title={t('backup space label', { ns: meta.id })}
+          description={t('backup space description', { ns: meta.id })}
+        >
+          <Button onClick={handleBackup}>{t('download backup')}</Button>
+        </ControlItemInput>
       </ControlPage>
     </StackItem.Content>
   );
