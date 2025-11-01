@@ -23,6 +23,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useScroller } from '@dxos/react-hooks';
 import { type ThemedClassName, usePx } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/react-ui-theme';
 import { mx } from '@dxos/react-ui-theme';
 
 type MasonryRootProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> &
@@ -58,13 +59,12 @@ const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount'
   }, [remProps, remInPx]);
 };
 
-// TODO(burdon): Currently not responsive to width.
 const MasonryRootImpl = <Item,>(
   {
     columnCount,
     maxColumnCount,
-    columnWidth = 18, // cardMaxWidth
-    maxColumnWidth = 22,
+    columnWidth = cardMinInlineSize,
+    maxColumnWidth = cardMaxInlineSize,
     columnGutter = 1,
     rowGutter,
     items,

@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { hoverableControls, mx } from '@dxos/react-ui-theme';
+import { cardMinInlineSize, hoverableControls, mx } from '@dxos/react-ui-theme';
 
 import { Image, StackItem } from '../../components';
 import { translationKey } from '../../translations';
@@ -23,7 +23,7 @@ import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './frag
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
-const cardDefaultInlineSize = 18;
+const cardDefaultInlineSize = cardMinInlineSize;
 
 /**
  * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
