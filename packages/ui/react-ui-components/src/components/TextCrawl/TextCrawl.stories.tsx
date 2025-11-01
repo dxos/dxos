@@ -33,7 +33,7 @@ type Story = StoryObj<typeof TextCrawl>;
 
 export const Default: Story = {
   args: {
-    classNames: 'w-96 px-2',
+    classNames: 'is-[20rem] pli-1',
     lines: createLines(),
     autoAdvance: true,
   },
@@ -41,39 +41,30 @@ export const Default: Story = {
 
 export const Cyclic: Story = {
   args: {
-    classNames: 'w-96 px-2',
+    classNames: 'is-[20rem] pli-1',
     lines: createLines(),
     autoAdvance: true,
     cyclic: true,
   },
 };
 
-export const Reset: Story = {
-  render: (args) => {
-    const [lines, setLines] = useState<string[]>(createLines());
-    return (
-      <div className='flex flex-col gap-4'>
-        <Toolbar.Root>
-          <Toolbar.Button onClick={() => setLines(createLines())}>Reset</Toolbar.Button>
-        </Toolbar.Root>
-        <TextCrawl {...args} lines={lines} autoAdvance />
-      </div>
-    );
-  },
-  args: {
-    classNames: 'w-96 px-2',
-    autoAdvance: true,
-  },
-};
-
-export const Demo: Story = {
+export const Controlled: Story = {
   render: () => {
     const [lines, setLines] = useState<string[]>(createLines());
     return (
-      <div className='flex flex-col is-[20rem] gap-4 p-1'>
+      <div className='flex flex-col is-[20rem] gap-4'>
         <Toolbar.Root>
-          <Toolbar.Button onClick={() => setLines(createLines())}>Add</Toolbar.Button>
-          <Toolbar.Button onClick={() => setLines([])}>Reset</Toolbar.Button>
+          <Toolbar.Button
+            onClick={() =>
+              setLines((lines) => {
+                return [...lines, `[${lines.length + 1}/${lines.length + 1}] ${faker.lorem.paragraph()}`];
+              })
+            }
+          >
+            Add
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => setLines(createLines())}>Generate</Toolbar.Button>
+          <Toolbar.Button onClick={() => setLines([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
         <TextCrawl classNames='border-b border-separator' lines={lines} autoAdvance />
       </div>

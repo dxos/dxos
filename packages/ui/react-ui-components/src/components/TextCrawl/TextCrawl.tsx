@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { type ThemedClassName, useDynamicRef, useStateWithRef } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const emptyLines: string[] = [];
@@ -35,87 +35,134 @@ export type TextCrawlProps = ThemedClassName<{
 export const TextCrawl = ({
   classNames,
   size = 'md',
-  index: indexParam = -1,
+  index: indexParam,
   lines = emptyLines,
-  cyclic,
   autoAdvance = false,
-  transition = 250,
+  cyclic,
+  transition = 500,
   minDuration = 1_000,
 }: TextCrawlProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const linesLength = useDynamicRef(lines.length);
-  const lastRoll = useRef(Date.now());
-  const [index, setIndex, indexRef] = useStateWithRef(indexParam);
+  const { className, height } = sizeClassNames[size];
+  const rootRef = useRef<HTMLDivElement>(null);
+  const prevLinesRef = useRef<string[]>(lines);
+  const [index, setIndex] = useState(indexParam ?? 0);
 
-  // Index.
+  const updatedRef = useRef(Date.now());
+  const setPosition = useCallback(
+    (index: number, animate = false) => {
+      if (!rootRef.current) {
+        return;
+      }
+
+      rootRef.current.style.transform = `translateY(-${index * height}px)`;
+      rootRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+    },
+    [height, transition],
+  );
+
+  // Controlled.
   useEffect(() => {
-    setIndex(indexParam);
+    if (indexParam === undefined) {
+      return;
+    }
+
+    const next = Math.max(0, Math.min(indexParam, lines.length - 1));
+    setIndex(next);
+    setPosition(next, false);
   }, [indexParam]);
 
+  // Uncontrolled.
   useEffect(() => {
-    setIndex(0);
-  }, [lines]);
+    if (indexParam !== undefined) {
+      return;
+    }
+
+    let i: NodeJS.Timeout;
+    setPosition(index, index !== 0);
+    if (cyclic && index >= lines.length) {
+      i = setTimeout(() => {
+        setPosition(0, false);
+        setIndex(0);
+      }, transition);
+    }
+
+    return () => {
+      clearTimeout(i);
+    };
+  }, [lines, index, indexParam, cyclic]);
 
   // Auto-advance.
   useEffect(() => {
     if (!autoAdvance) {
-      setIndex(indexParam === -1 ? lines.length - 1 : indexParam);
       return;
     }
 
     const next = () => {
       setIndex((prev) => {
-        if (prev >= linesLength.current! - 1) {
-          return cyclic ? 0 : prev;
+        const next = Math.min(prev + 1, lines.length);
+        if (next >= lines.length) {
+          if (cyclic) {
+            return next;
+          } else {
+            clearInterval(i);
+            return prev;
+          }
         }
 
-        lastRoll.current = Date.now();
-        return prev + 1;
+        return next;
       });
     };
 
-    let i: NodeJS.Timeout | undefined = undefined;
-    if (Date.now() - lastRoll.current > minDuration) {
-      clearInterval(i);
+    // Determine if `lines` is completely different or a new line was added.
+    const prevLines = prevLinesRef.current;
+    const wasReset =
+      lines.length < prevLines.length ||
+      (lines.length > 0 && prevLines.length > 0 && !prevLines.every((line, i) => line === lines[i]));
+    prevLinesRef.current = lines;
+    if (wasReset) {
+      setIndex(0);
+    } else if (Date.now() - updatedRef.current >= minDuration) {
       next();
     }
+    updatedRef.current = Date.now();
 
-    i = setInterval(next, minDuration);
+    const i = setInterval(next, minDuration);
     return () => clearInterval(i);
-  }, [lines.length, cyclic, autoAdvance, minDuration]);
-
-  const { className, height } = sizeClassNames[size];
-  useEffect(() => {
-    if (containerRef.current) {
-      let i = index;
-      if (cyclic && index === 0) {
-        i = lines.length;
-        setTimeout(() => {
-          // Jump back to start.
-          if (containerRef.current) {
-            containerRef.current.style.transition = 'transform 0ms';
-            containerRef.current.style.transform = 'translateY(0px)';
-          }
-        }, transition);
-      }
-
-      containerRef.current.style.transform = `translateY(-${i * height}px)`;
-      containerRef.current.style.transition = `transform ${transition}ms ease-in-out`;
-    }
-  }, [height, index]);
+  }, [lines, indexParam, autoAdvance, cyclic, transition, minDuration]);
 
   return (
-    <div className={mx('relative overflow-hidden', classNames)}>
-      <div ref={containerRef} className={mx(className)}>
-        <div className='flex flex-col'>
+    <div role='none' className={mx('relative overflow-hidden', classNames)}>
+      <div role='none' ref={rootRef} className={mx(className)}>
+        <div role='none' className='flex flex-col'>
           {lines.map((line, i) => (
-            <div key={i} className={mx('flex items-center', className)}>
-              <span className='truncate'>{line}</span>
+            <div
+              key={i}
+              role='none'
+              style={{
+                transitionDuration: `${transition / 2}ms`,
+              }}
+              className={mx(
+                'items-center truncate transition-opacity',
+                index === i || (i === 0 && index === lines.length) ? 'opacity-100' : 'opacity-50',
+                className,
+              )}
+            >
+              {line}
             </div>
           ))}
           {cyclic && (
-            <div className={mx('flex items-center', className)}>
-              <span className='truncate'>{lines[0]}</span>
+            <div
+              role='none'
+              style={{
+                transitionDuration: `${transition / 2}ms`,
+              }}
+              className={mx(
+                'items-center truncate transition-opacity',
+                index === lines.length || index === 0 ? 'opacity-100' : 'opacity-50',
+                className,
+              )}
+            >
+              {lines[0]}
             </div>
           )}
         </div>
