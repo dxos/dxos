@@ -15,10 +15,11 @@ export class ReferenceWidget extends WidgetType {
   }
 
   override toDOM(): HTMLElement {
-    return Domino.of<any>('dx-anchor')
-      .classNames('dx-tag--anchor')
-      .attributes({ refid: this.refid })
-      .text(this.text)
+    return Domino.of('div')
+      .classNames('mbs-2 mbe-2')
+      .children(
+        Domino.of<any>('dx-anchor').classNames('dx-tag--anchor').attributes({ refid: this.refid }).text(this.text),
+      )
       .build();
   }
 

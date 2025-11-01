@@ -221,9 +221,8 @@ export class Client {
   }
 
   /**
-   * @deprecated Temporary.
+   * ECHO graph.
    */
-  // TODO(dmaretskyi): What should we use instead?
   get graph(): Hypergraph {
     return this._echoClient.graph;
   }
