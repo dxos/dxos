@@ -61,9 +61,9 @@ export const translations = [
         'type filter placeholder': 'Type',
         'any type filter label': 'Any',
         'no blueprint message': 'No active blueprints',
-        'calling tool label': 'Calling tool...',
-        'calling label': 'Calling',
-        'error label': 'Error',
+        'tool call label': 'Calling tool...',
+        'tool result label': 'Success',
+        'tool error label': 'Tool call failed',
 
         'sequence logs label': 'Logs',
 
