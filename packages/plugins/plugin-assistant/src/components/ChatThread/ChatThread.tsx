@@ -23,7 +23,7 @@ import { keyToFallback } from '@dxos/util';
 import { type ChatEvent } from '../Chat';
 
 import { blockToMarkdown, componentRegistry } from './registry';
-import { MessageSyncer } from './sync';
+import { MessageSyncer, type TextModel } from './sync';
 
 export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
 
@@ -56,7 +56,8 @@ export const ChatThread = forwardRef<ChatThreadController | null, ChatThreadProp
     }, [controller, error]);
 
     // Update document.
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, blockToMarkdown), [controller]);
+    const textModel: TextModel | null = controller;
+    const syncer = useMemo(() => textModel && new MessageSyncer(textModel, blockToMarkdown), [controller]);
     useEffect(() => {
       syncer?.sync(messages);
     }, [syncer, messages]);
