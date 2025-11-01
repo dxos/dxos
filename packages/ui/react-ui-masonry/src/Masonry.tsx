@@ -19,9 +19,11 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
-import { useScroller, useSize } from '@dxos/react-hooks';
+import { useScroller } from '@dxos/react-hooks';
 import { type ThemedClassName, usePx } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/react-ui-theme';
 import { mx } from '@dxos/react-ui-theme';
 
 type MasonryRootProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> &
@@ -57,13 +59,12 @@ const usePxProps = (remProps: Omit<UsePositionerOptions, 'width' | 'columnCount'
   }, [remProps, remInPx]);
 };
 
-// TODO(burdon): Currently not responsive to width.
 const MasonryRootImpl = <Item,>(
   {
     columnCount,
     maxColumnCount,
-    columnWidth = 18, // cardMaxWidth
-    maxColumnWidth = 22,
+    columnWidth = cardMinInlineSize,
+    maxColumnWidth = cardMaxInlineSize,
     columnGutter = 1,
     rowGutter,
     items,
@@ -80,21 +81,22 @@ const MasonryRootImpl = <Item,>(
 ) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const ref = useComposedRefs(rootRef, forwardedRef);
-  const { width, height } = useSize(rootRef);
+  const { width = 0, height = 0 } = useResizeDetector({ targetRef: rootRef });
   const { scrollTop, isScrolling } = useScroller(rootRef);
   const remProps = useMemo(
     () => ({ columnWidth, maxColumnWidth, columnGutter, rowGutter }),
     [columnWidth, maxColumnWidth, columnGutter, rowGutter],
   );
   const pxProps = usePxProps(remProps);
+  const numItems = items.length;
   const positionerProps = useMemo<UsePositionerOptions>(
     () => ({
       width,
       columnCount,
-      maxColumnCount,
+      maxColumnCount: Math.max(maxColumnCount ?? 1, numItems),
       ...pxProps,
     }),
-    [width, pxProps, columnCount, maxColumnCount],
+    [width, columnCount, maxColumnCount, numItems, pxProps],
   );
   const positioner = usePositioner(positionerProps, [positionerProps]);
   const resizeObserver = useResizeObserver(positioner);
