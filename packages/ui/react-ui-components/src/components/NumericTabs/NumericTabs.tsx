@@ -8,7 +8,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 const diameter = 24;
-const connector = 4;
+const connector = 0;
+// const connector = 4;
 
 export type NumericTabsProps = ThemedClassName<{
   length: number;
@@ -64,7 +65,7 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               className='relative flex justify-center cursor-pointer'
               style={{ width: diameter, height: diameter + connector }}
             >
-              {i < length - 1 && (
+              {connector > 0 && i < length - 1 && (
                 <div
                   style={{ left: (diameter - 1) / 2, top: diameter, width: 2, height: connector }}
                   className='absolute border-l border-groupSurface'
@@ -72,15 +73,16 @@ export const NumericTabs = forwardRef<HTMLDivElement, NumericTabsProps>(
               )}
               <div
                 className={mx(
-                  'flex justify-center items-center text-xs bg-groupSurface hover:bg-hoverSurface rounded-full',
-                  selected === i ? 'bg-infoSurface' : 'text-subdued',
+                  'flex justify-center items-center text-xs bg-groupSurface hover:bg-hoverSurface',
+                  selected === i ? 'bg-inputSurface' : 'text-subdued',
+                  connector && 'rounded-full',
                 )}
                 style={{ width: diameter, height: diameter }}
                 onClick={() => {
                   onSelect?.(i);
                 }}
               >
-                {i}
+                {i + 1}
               </div>
             </div>
           );

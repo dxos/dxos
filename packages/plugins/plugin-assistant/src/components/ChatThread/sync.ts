@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { type XmlWidgetStateManager } from '@dxos/react-ui-editor';
@@ -20,6 +21,11 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
 
   updateWidget<T>(id: string, value: T) {
     this._widgetState?.updateWidget(id, value);
+  }
+
+  // TODO(burdon): Resolve from hypergraph.
+  getObjectLabel(_id: DXN) {
+    return 'Object';
   }
 }
 
