@@ -28,7 +28,6 @@ import {
   type XmlWidgetState,
   type XmlWidgetStateManager,
   autoScroll,
-  bookmarks,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -43,6 +42,7 @@ import {
   xmlTags,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
 
@@ -59,13 +59,14 @@ export type MarkdownStreamEvent = {
 };
 
 export type MarkdownStreamProps = ThemedClassName<{
+  debug?: boolean;
   content?: string;
   onEvent?: (event: MarkdownStreamEvent) => void;
 }> &
   (XmlTagsOptions & StreamerOptions & AutoScrollOptions);
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, registry, content, fadeIn, cursor, overscroll, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
     const { parentRef, view } = useTextEditor(() => {
@@ -83,17 +84,20 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               },
             },
           }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
           extendedMarkdown({ registry }),
-          decorateMarkdown({
-            skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-          }),
-          preview(),
-          xmlTags({ registry, setWidgets }),
-          streamer({ cursor, fadeIn }),
-          autoScroll({ autoScroll: false, overscroll }),
-          bookmarks(),
-        ],
+          debug
+            ? []
+            : [
+                decorateMarkdown({
+                  skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+                }),
+                preview(),
+                xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+                streamer({ cursor, fadeIn }),
+                autoScroll({ autoScroll: false, overscroll: 0 }),
+              ],
+        ].filter(isNonNullable),
       };
     }, [themeMode, registry]);
 

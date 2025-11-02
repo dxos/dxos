@@ -23,8 +23,8 @@ export class PromptWidget extends WidgetType {
    */
   override toDOM() {
     return Domino.of('div')
-      .classNames('flex justify-end')
-      .children(Domino.of('div').classNames('pli-3 plb-2 bg-[--user-fill] rounded-sm').text(this.text))
+      .classNames('flex justify-end mlb-2')
+      .children(Domino.of('div').classNames('pli-3 plb-1.5 bg-[--user-fill] rounded-sm').text(this.text))
       .build();
   }
 }

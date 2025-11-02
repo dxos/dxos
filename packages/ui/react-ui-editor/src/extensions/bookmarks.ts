@@ -59,9 +59,7 @@ const bookmarksField = StateField.define<BookmarkFieldState>({
 
     // Process effects.
     for (const effect of tr.effects) {
-      // console.log('effect', effect);
       if (effect.is(addBookmark)) {
-        console.log('!!!!!!!!!!!!!!!!!!!!');
         bookmarks = [...bookmarks, effect.value];
       } else if (effect.is(removeBookmark)) {
         bookmarks = bookmarks.filter((b) => b.id !== effect.value);
@@ -69,8 +67,6 @@ const bookmarksField = StateField.define<BookmarkFieldState>({
         bookmarks = [];
       }
     }
-
-    console.log('bookmarks', bookmarks);
 
     // Sort bookmarks by position.
     bookmarks.sort(({ pos: a }, { pos: b }) => a - b);

@@ -35,7 +35,7 @@ export type TextBoxProps = ThemedClassName<
 >;
 
 export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
-  ({ classNames, value = '', centered, onBlur, onEnter, onCancel, language, ...rest }, forwardedRef) => {
+  ({ classNames, value = '', centered, onEnter, onCancel, language, ...rest }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const modified = useRef(false);
     const doc = useRef(value);
@@ -59,7 +59,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             themeMode,
             syntaxHighlighting: !!language,
             slots: {
-              editor: { className: 'w-full h-full [&>.cm-scroller]:scrollbar-none p-2' },
+              editor: { className: 'is-full bs-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),

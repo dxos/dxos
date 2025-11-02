@@ -12,8 +12,9 @@ const lineHeight = 24;
 export const scrollToBottomEffect = StateEffect.define<any>();
 
 export type AutoScrollOptions = {
-  autoScroll?: boolean;
+  // NOTE: This must be zero if using scrollPastEnd.
   overscroll?: number;
+  autoScroll?: boolean;
   throttle?: number;
 };
 
@@ -22,8 +23,8 @@ export type AutoScrollOptions = {
  */
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
-  autoScroll = true,
   overscroll = 4 * lineHeight,
+  autoScroll = true,
   throttle = 2_000,
 }: Partial<AutoScrollOptions> = {}) => {
   let isThrottled = false;
@@ -32,6 +33,8 @@ export const autoScroll = ({
   let buttonContainer: HTMLDivElement | undefined;
   let lastScrollTop = 0;
   let scrollCounter = 0;
+
+  console.log(overscroll);
 
   const hideScrollbar = (view: EditorView) => {
     view.scrollDOM.classList.add('cm-hide-scrollbar');

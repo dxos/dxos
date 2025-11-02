@@ -13,7 +13,7 @@ import {
   SummaryWidget,
   ToggleContainer,
 } from '@dxos/react-ui-components';
-import { type XmlWidgetProps, type XmlWidgetRegistry, addBookmark, getXmlTextChild } from '@dxos/react-ui-editor';
+import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 
@@ -42,14 +42,7 @@ export const componentRegistry: XmlWidgetRegistry = {
 
   ['prompt' as const]: {
     block: true,
-    factory: ({ state, range, children, ...props }) => {
-      if (state && range) {
-        console.log('add', range.from, props, children);
-        // TODO(burdon): Use block ID to identify.
-        state.update({
-          effects: [addBookmark.of({ id: 'prompt', pos: range.from, name: 'Prompt' })],
-        });
-      }
+    factory: ({ children }) => {
       const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
@@ -133,7 +126,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Me
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        return `\n<prompt>${block.text}</prompt>\n`;
+        return `<prompt>${block.text}</prompt>`;
       } else {
         const text = block.text.trim();
         if (text.length > 0) {
