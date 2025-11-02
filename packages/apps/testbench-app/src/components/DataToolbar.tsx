@@ -68,13 +68,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <Toolbar.ToggleGroupItem value='table'>
-            <Icon icon='ph--table--regular' size={5} />
+            <Icon icon='ph--table--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='list'>
-            <Icon icon='ph--list--regular' size={5} />
+            <Icon icon='ph--list--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='debug'>
-            <Icon icon='ph--list-magnifying-glass--regular' size={5} />
+            <Icon icon='ph--list-magnifying-glass--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
       )}

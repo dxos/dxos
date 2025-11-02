@@ -27,7 +27,6 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
         icon='ph--plus--regular'
         label='zoom in'
         iconOnly
-        size={5}
         classNames='px-0 aspect-square'
         onClick={() => onAction?.('zoom-in')}
       />
@@ -35,7 +34,6 @@ export const ZoomControls = ({ classNames, onAction }: ControlProps) => {
         icon='ph--minus--regular'
         label='zoom out'
         iconOnly
-        size={5}
         classNames='px-0 aspect-square'
         onClick={() => onAction?.('zoom-out')}
       />
@@ -50,7 +48,6 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
         icon='ph--play--regular'
         label='start'
         iconOnly
-        size={5}
         classNames='px-0 aspect-square'
         onClick={() => onAction?.('start')}
       />
@@ -58,7 +55,6 @@ export const ActionControls = ({ classNames, onAction }: ControlProps) => {
         icon='ph--globe-hemisphere-west--regular'
         label='toggle'
         iconOnly
-        size={5}
         classNames='px-0 aspect-square'
         onClick={() => onAction?.('toggle')}
       />

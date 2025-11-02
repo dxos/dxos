@@ -17,7 +17,7 @@ export const PopoverCardContainer = ({
         <Popover.Arrow />
       </Popover.Content>
       <Popover.Trigger>
-        <Icon icon={icon} size={5} />
+        <Icon icon={icon} />
       </Popover.Trigger>
     </Popover.Root>
   );

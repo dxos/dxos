@@ -88,12 +88,12 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
           </ControlItemInput>
           <ControlItemInput title={t('settings download diagnostics')}>
             <Button onClick={handleDownload}>
-              <Icon icon='ph--download-simple--regular' size={5} />
+              <Icon icon='ph--download-simple--regular' />
             </Button>
           </ControlItemInput>
           <ControlItemInput title={t('settings repair')}>
             <Button onClick={handleRepair}>
-              <Icon icon='ph--first-aid-kit--regular' size={5} />
+              <Icon icon='ph--first-aid-kit--regular' />
             </Button>
           </ControlItemInput>
 
@@ -102,7 +102,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             <Toast.Root>
               <Toast.Body>
                 <Toast.Title>
-                  <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
+                  <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
                   <span>{toast.title}</span>
                 </Toast.Title>
                 {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
