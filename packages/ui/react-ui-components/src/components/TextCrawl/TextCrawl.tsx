@@ -128,7 +128,17 @@ export const TextCrawl = ({
     return () => clearInterval(i);
   }, [lines, wasReset, indexParam, autoAdvance, greedy, minDuration, cyclic, transition]);
 
-  return <TextRibbon ref={controllerRef} size={size} lines={lines} index={index} cyclic={cyclic} {...props} />;
+  return (
+    <TextRibbon
+      ref={controllerRef}
+      size={size}
+      lines={lines}
+      index={index}
+      cyclic={cyclic}
+      transition={transition}
+      {...props}
+    />
+  );
 };
 
 //
