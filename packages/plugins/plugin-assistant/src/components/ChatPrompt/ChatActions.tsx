@@ -29,7 +29,6 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
       <IconButton
         disabled={!processing}
         variant='ghost'
-        size={5}
         icon='ph--x--regular'
         iconOnly
         label={t('button cancel processing')}
@@ -41,7 +40,6 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           disabled={!processing}
           classNames={mx(recording && 'bg-primary-500')}
           variant='ghost'
-          size={5}
           icon='ph--microphone--regular'
           iconOnly
           noTooltip

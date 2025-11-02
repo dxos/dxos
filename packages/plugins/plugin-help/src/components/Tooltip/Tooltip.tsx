@@ -67,7 +67,6 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
               iconOnly
               label={backProps['aria-label']}
               onClick={backProps.onClick}
-              size={5}
               variant='primary'
               data-testid='helpPlugin.tooltip.back'
             />

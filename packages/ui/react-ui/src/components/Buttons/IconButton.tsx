@@ -18,9 +18,16 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     noTooltip?: boolean;
     caretDown?: boolean;
     iconClassNames?: ThemedClassName<any>['classNames'];
-    tooltipPortal?: boolean;
     tooltipSide?: TooltipSide;
   };
+
+const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, forwardedRef) =>
+  props.iconOnly ? (
+    <IconOnlyButton {...props} ref={forwardedRef} />
+  ) : (
+    <LabelledIconButton {...props} ref={forwardedRef} />
+  ),
+);
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ noTooltip, tooltipSide, ...props }, forwardedRef) => {
@@ -37,7 +44,7 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 );
 
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ icon, size, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
+  ({ icon, size = 5, iconOnly, label, classNames, iconClassNames, caretDown, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <Button {...props} classNames={tx('iconButton.root', 'iconButton', { iconOnly }, classNames)} ref={forwardedRef}>
@@ -47,14 +54,6 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       </Button>
     );
   },
-);
-
-const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, forwardedRef) =>
-  props.iconOnly ? (
-    <IconOnlyButton {...props} ref={forwardedRef} />
-  ) : (
-    <LabelledIconButton {...props} ref={forwardedRef} />
-  ),
 );
 
 export { IconButton };

@@ -32,12 +32,12 @@ export const ChatReferences = ({ classNames, context, space }: ChatReferencesPro
           <li key={dxn.toString()} className='dx-tag plb-0 pis-2 flex items-center' data-hue='neutral'>
             {toLocalizedString(label, t)}
             <IconButton
+              icon='ph--x--bold'
               iconOnly
               variant='ghost'
               label={t('remove object in context label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
-              icon='ph--x--bold'
               onClick={() => onUpdateObject?.(dxn, false)}
             />
           </li>

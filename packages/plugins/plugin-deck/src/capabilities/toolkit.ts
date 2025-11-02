@@ -42,11 +42,9 @@ export namespace DeckToolkit {
       'open-item': ({ id }) =>
         Effect.gen(function* () {
           const state = context.getCapability(DeckCapabilities.DeckState);
-          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId);
-
-          // TODO(wittjosiah): Support other variants.
-          const echoDxn = dxn.asEchoDXN();
-          if (!echoDxn) {
+          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId).asEchoDXN();
+          if (!dxn) {
+            // TODO(wittjosiah): Support other variants.
             throw new Error(`Invalid object ID: ${id}`);
           }
 
@@ -54,7 +52,7 @@ export namespace DeckToolkit {
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(
             createIntent(LayoutAction.Open, {
-              subject: [`${echoDxn.spaceId!}:${echoDxn.echoId}`],
+              subject: [`${dxn.spaceId!}:${dxn.echoId}`],
               part: 'main',
             }),
           );

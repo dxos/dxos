@@ -99,7 +99,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 <IconButton
                   label={toLocalizedString(companion.properties.label, t)}
                   icon={companion.properties.icon}
-                  size={5}
                   iconOnly
                   tooltipSide='left'
                   data-value={getCompanionId(companion.id)}

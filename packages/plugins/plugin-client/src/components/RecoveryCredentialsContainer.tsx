@@ -31,7 +31,6 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create passkey label')}
               icon='ph--key--duotone'
               variant='primary'
-              size={5}
               onClick={() => dispatch(createIntent(ClientAction.CreatePasskey))}
             />
           </ControlItem>
@@ -40,7 +39,6 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create recovery code label')}
               icon='ph--receipt--duotone'
               variant='default'
-              size={5}
               onClick={() => dispatch(createIntent(ClientAction.CreateRecoveryCode))}
             />
           </ControlItem>
@@ -57,7 +55,7 @@ export const RecoveryCredentialsContainer = () => {
             {recoveryCredentials.map((credential) => (
               <ListItem.Root key={credential.id?.toHex()}>
                 <ListItem.Endcap>
-                  <Icon icon='ph--key--regular' size={5} />
+                  <Icon icon='ph--key--regular' />
                 </ListItem.Endcap>
                 <ListItem.Heading>{credential.issuanceDate.toLocaleString()}</ListItem.Heading>
               </ListItem.Root>

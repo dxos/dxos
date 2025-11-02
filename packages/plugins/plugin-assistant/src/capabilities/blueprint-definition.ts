@@ -21,10 +21,9 @@ import { type FunctionDefinition } from '@dxos/functions';
 import { analysis, list, load } from '../functions';
 import { AssistantToolkit, SystemToolkit } from '../toolkits';
 
-// TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Test framework for developing functions. Error handling.
-// TODO(burdon): Convert tools to functions? (Deps).
+// TODO(burdon): Function naming pattern (noun-verb); fully-qualified?
 
 // TODO(wittjosiah): Factor out to a generic app-framework blueprint.
 const deckTools = ['open-item'];

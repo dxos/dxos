@@ -27,7 +27,7 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
 
   return (
     <Toolbar.Root>
-      <Toolbar.IconButton icon='ph--plus--regular' label='Create objects' iconOnly onClick={() => onAdd(count)} />
+      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Create objects' onClick={() => onAdd(count)} />
       <Input.Root>
         <Input.TextInput
           classNames='max-w-16 text-right'

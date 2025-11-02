@@ -89,7 +89,7 @@ export const PromptModule = ({ space }: { space: Space }) => {
   return (
     <div style={{ minHeight: '300px' }}>
       <Toolbar.Root>
-        <Toolbar.IconButton iconOnly icon='ph--play--regular' label='Run' size={5} onClick={handleRun} />
+        <Toolbar.IconButton iconOnly icon='ph--play--regular' label='Run' onClick={handleRun} />
       </Toolbar.Root>
       <TemplateEditor id={prompt.id} template={prompt.instructions} />
     </div>

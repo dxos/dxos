@@ -32,7 +32,7 @@ export const Options = ({ classNames }: OptionsProps) => {
 
       <div className='flex flex-col gap-4'>
         <div className='flex justify-center'>
-          <IconButton icon='ph--user--regular' label={t('button.auth')} size={5} onClick={handleAuth} />
+          <IconButton icon='ph--user--regular' label={t('button.auth')} onClick={handleAuth} />
         </div>
       </div>
     </div>

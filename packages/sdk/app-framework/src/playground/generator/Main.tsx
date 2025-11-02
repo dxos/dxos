@@ -30,7 +30,6 @@ const Item = ({
           variant='ghost'
           icon='ph--x--regular'
           label='Remove'
-          size={5}
           disabled={disabled}
           onClick={handleRemove}
         />

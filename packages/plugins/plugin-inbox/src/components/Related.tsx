@@ -31,7 +31,6 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
             <Button classNames='gap-2 mbe-1 last:mbe-0' onClick={() => onContactClick?.(contact)}>
               <Avatar.Content
                 hue='neutral'
-                size={5}
                 fallback={contact.fullName}
                 imgSrc={contact.image}
                 icon={'ph--user--regular'}
