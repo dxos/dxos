@@ -117,12 +117,7 @@ export const ProfileContainer = () => {
         );
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker
-              value={getValue()}
-              onChange={handleChange}
-              onReset={handleHueReset}
-              classNames='[--hue-preview-size:1.5rem] justify-self-end'
-            />
+            <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
           </ControlItem>
         );
       },

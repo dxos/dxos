@@ -108,7 +108,7 @@ const SelectScrollDownButton = forwardRef<HTMLDivElement, SelectScrollDownButton
 type SelectViewportProps = ThemedClassName<SelectPrimitive.SelectViewportProps>;
 
 const SelectViewport = forwardRef<HTMLDivElement, SelectViewportProps>(
-  ({ classNames, asChild, children, ...props }, forwardedRef) => {
+  ({ classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <SelectPrimitive.SelectViewport

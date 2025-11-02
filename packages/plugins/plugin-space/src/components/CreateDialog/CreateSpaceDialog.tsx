@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 
@@ -31,8 +31,18 @@ export const CreateSpaceDialog = () => {
     async (data: FormValues) => {
       const program = Effect.gen(function* () {
         const { space } = yield* dispatch(createIntent(SpaceAction.Create, data));
-        yield* dispatch(createIntent(LayoutAction.SwitchWorkspace, { part: 'workspace', subject: space.id }));
-        yield* dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+        yield* dispatch(
+          createIntent(LayoutAction.SwitchWorkspace, {
+            part: 'workspace',
+            subject: space.id,
+          }),
+        );
+        yield* dispatch(
+          createIntent(LayoutAction.UpdateDialog, {
+            part: 'dialog',
+            options: { state: false },
+          }),
+        );
       });
       await Effect.runPromise(program);
     },
@@ -46,9 +56,16 @@ export const CreateSpaceDialog = () => {
       <div role='none' className={cardDialogHeader}>
         <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={4} />
-          </Button>
+          <IconButton
+            ref={closeRef}
+            icon='ph--x--regular'
+            size={4}
+            label='Close'
+            iconOnly
+            density='fine'
+            variant='ghost'
+            autoFocus
+          />
         </Dialog.Close>
       </div>
       <div role='none' className='contents'>

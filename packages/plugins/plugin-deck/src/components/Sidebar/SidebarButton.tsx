@@ -20,8 +20,8 @@ export const ToggleSidebarButton = ({
   return (
     <IconButton
       variant={variant}
-      iconOnly
       icon='ph--sidebar--regular'
+      iconOnly
       size={4}
       label={t('open navigation sidebar label')}
       onClick={() =>
@@ -38,8 +38,8 @@ export const CloseSidebarButton = () => {
   return (
     <IconButton
       variant='ghost'
-      iconOnly
       icon='ph--caret-line-left--regular'
+      iconOnly
       size={4}
       label={t('close navigation sidebar label')}
       onClick={() => (layoutContext.sidebarState = 'collapsed')}
@@ -74,14 +74,14 @@ export const ToggleComplementarySidebarButton = ({
 
   return (
     <IconButton
-      iconOnly
-      onClick={handleClick}
       variant='ghost'
-      label={t('open complementary sidebar label')}
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
+      iconOnly
+      label={t('open complementary sidebar label')}
       size={inR0 ? 5 : 4}
       tooltipSide={inR0 ? 'left' : undefined}
+      onClick={handleClick}
     />
   );
 };

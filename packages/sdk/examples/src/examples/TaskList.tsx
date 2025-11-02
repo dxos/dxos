@@ -7,7 +7,7 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import type { PublicKey } from '@dxos/client';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { IconButton, Input } from '@dxos/react-ui';
 
 import { TaskType } from '../types';
 
@@ -49,9 +49,15 @@ const TaskList = ({ id, spaceKey }: { id: number; spaceKey?: PublicKey }) => {
               <Input.Checkbox checked={!!task.completed} onCheckedChange={() => (task.completed = !task.completed)} />
             </Input.Root>
             <div className='grow'>{task.title}</div>
-            <Button variant='ghost' onClick={() => space?.db.remove(task)}>
-              <Icon icon='ph--x--regular' size={4} />
-            </Button>
+            <IconButton
+              icon='ph--x--regular'
+              size={4}
+              label={`Delete ${task.title}`}
+              iconOnly
+              noTooltip
+              variant='ghost'
+              onClick={() => space?.db.remove(task)}
+            />
           </li>
         ))}
       </ul>

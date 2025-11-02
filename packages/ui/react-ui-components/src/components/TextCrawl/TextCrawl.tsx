@@ -25,14 +25,19 @@ export type TextCrawlProps = ThemedClassName<{
   index?: number;
   lines?: string[];
   autoAdvance?: boolean;
+  greedy?: boolean;
   cyclic?: boolean;
+  // Animation duration.
   transition?: number;
+  // Minimum time after update before scrolling.
   minDuration?: number;
 }>;
 
 /**
  * Single line of text that scrolls.
  */
+// TODO(burdon): Component is overly complex.
+//  Create simpler controlled component and variant that has auto-advance capability.
 export const TextCrawl = ({
   classNames,
   textClassNames,
@@ -40,14 +45,16 @@ export const TextCrawl = ({
   index: indexParam,
   lines = emptyLines,
   autoAdvance = false,
+  greedy = false,
   cyclic,
   transition = 500,
-  minDuration = 1_000,
+  minDuration = 2_000,
 }: TextCrawlProps) => {
   const { className, height } = sizeClassNames[size];
   const containerRef = useRef<HTMLDivElement>(null);
   const prevLinesRef = useRef<string[]>(lines);
-  const [index, setIndex] = useState(indexParam ?? 0);
+  const [index, setIndex] = useState(greedy ? lines.length - 1 : 0);
+  console.log(index, lines.length, greedy);
 
   const updatedRef = useRef(Date.now());
   const setPosition = useCallback(
@@ -56,22 +63,28 @@ export const TextCrawl = ({
         return;
       }
 
-      containerRef.current.style.transform = `translateY(-${index * height}px)`;
+      console.log('====', index, animate);
       containerRef.current.style.transition = animate ? `transform ${transition}ms ease-in-out` : 'transform 0ms';
+      containerRef.current.style.transform = `translateY(-${index * height}px)`;
     },
     [height, transition],
   );
 
+  // Starting index.
+  useEffect(() => {
+    setPosition(index, false);
+  }, [setPosition]);
+
   // Controlled.
   useEffect(() => {
-    if (indexParam === undefined) {
+    if (indexParam === undefined || indexParam === index) {
       return;
     }
 
     const next = Math.max(0, Math.min(indexParam, lines.length - 1));
     setIndex(next);
     setPosition(next, true);
-  }, [indexParam]);
+  }, [setPosition, indexParam, index]);
 
   // Uncontrolled.
   useEffect(() => {
@@ -91,7 +104,7 @@ export const TextCrawl = ({
     return () => {
       clearTimeout(i);
     };
-  }, [lines, index, indexParam, cyclic]);
+  }, [setPosition, lines, index, indexParam, cyclic]);
 
   // Auto-advance.
   useEffect(() => {

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type KeyBinding, Keyboard } from '@dxos/keyboard';
-import { Button, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { Key } from './Key';
 
@@ -31,9 +31,16 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
         <Shortcut key={binding.shortcut} binding={binding} />
       ))}
       {onClose && (
-        <Button variant='ghost' classNames='p-0 cursor-pointer' onClick={onClose}>
-          <Icon icon='ph--x--regular' size={4} />
-        </Button>
+        <IconButton
+          icon='ph--x--regular'
+          size={4}
+          label='Close'
+          iconOnly
+          noTooltip
+          variant='ghost'
+          classNames='p-0 cursor-pointer'
+          onClick={onClose}
+        />
       )}
     </div>
   );

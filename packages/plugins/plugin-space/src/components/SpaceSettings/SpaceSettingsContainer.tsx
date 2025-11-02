@@ -130,12 +130,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <ControlItem title={label} description={t('hue description')}>
-            <HuePicker
-              value={getValue()}
-              onChange={handleChange}
-              onReset={handleReset}
-              classNames='[--hue-preview-size:1.25rem] justify-self-end'
-            />
+            <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
           </ControlItem>
         );
       },

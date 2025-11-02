@@ -8,7 +8,7 @@ import { Capabilities, useCapabilities } from '@dxos/app-framework';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { Button, Icon, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { ControlGroup, ControlItemInput, ControlPage, ControlSection } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
@@ -46,7 +46,9 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
 
   const handleDownload = async () => {
     const data = await client.diagnostics();
-    const file = new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' });
+    const file = new Blob([JSON.stringify(data, undefined, 2)], {
+      type: 'text/plain',
+    });
     const fileName = `composer-${new Date().toISOString().replace(/\W/g, '-')}.json`;
     download(file, fileName);
 
@@ -56,12 +58,18 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
         log.error('diagnostics failed to upload to IPFS');
         return;
       }
-      handleToast({ title: t('settings uploaded'), description: t('settings uploaded to clipboard') });
+      handleToast({
+        title: t('settings uploaded'),
+        description: t('settings uploaded to clipboard'),
+      });
 
       // TODO(nf): move to IpfsPlugin?
       const url = client.config.values.runtime!.services!.ipfs!.gateway + '/' + info.cid;
       void navigator.clipboard.writeText(url);
-      handleToast({ title: t('settings uploaded'), description: t('settings uploaded to clipboard') });
+      handleToast({
+        title: t('settings uploaded'),
+        description: t('settings uploaded to clipboard'),
+      });
       log.info('diagnostics', { url });
     }
   };
@@ -70,9 +78,15 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
     try {
       const info = await client.repair();
       setStorageConfig(await Storage());
-      handleToast({ title: t('settings repair success'), description: JSON.stringify(info, undefined, 2) });
+      handleToast({
+        title: t('settings repair success'),
+        description: JSON.stringify(info, undefined, 2),
+      });
     } catch (err: any) {
-      handleToast({ title: t('settings repair failed'), description: err.message });
+      handleToast({
+        title: t('settings repair failed'),
+        description: err.message,
+      });
     }
   };
 
@@ -87,14 +101,20 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             />
           </ControlItemInput>
           <ControlItemInput title={t('settings download diagnostics')}>
-            <Button onClick={handleDownload}>
-              <Icon icon='ph--download-simple--regular' />
-            </Button>
+            <IconButton
+              icon='ph--download-simple--regular'
+              iconOnly
+              label={t('settings download diagnostics')}
+              onClick={handleDownload}
+            />
           </ControlItemInput>
           <ControlItemInput title={t('settings repair')}>
-            <Button onClick={handleRepair}>
-              <Icon icon='ph--first-aid-kit--regular' />
-            </Button>
+            <IconButton
+              icon='ph--first-aid-kit--regular'
+              iconOnly
+              label={t('settings repair')}
+              onClick={handleRepair}
+            />
           </ControlItemInput>
 
           {/* TODO(burdon): Move to layout? */}
@@ -102,7 +122,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             <Toast.Root>
               <Toast.Body>
                 <Toast.Title>
-                  <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
+                  <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
                   <span>{toast.title}</span>
                 </Toast.Title>
                 {toast.description && <Toast.Description>{toast.description}</Toast.Description>}
@@ -114,7 +134,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
             <Select.Root
               value={
                 Object.entries(StorageAdapters).find(
-                  ([name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
+                  ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
                 )?.[0]
               }
               onValueChange={(value) => {

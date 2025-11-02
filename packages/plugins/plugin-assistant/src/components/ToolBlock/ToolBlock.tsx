@@ -112,17 +112,15 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
     setSelected(index);
   };
 
-  const data = items[selected]?.content;
-
   return (
     <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>
       <ToggleContainer.Header classNames='text-sm text-placeholder'>
-        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance />
+        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </ToggleContainer.Header>
       <ToggleContainer.Content classNames='grid grid-cols-[32px_1fr]'>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json
-          data={data}
+          data={items[selected]?.content}
           classNames='p-1 text-xs bg-transparent'
           replacer={{
             maxDepth: 3,

@@ -10,7 +10,7 @@ import { type SignalResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon, Toolbar } from '@dxos/react-ui';
+import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../components';
@@ -36,7 +36,13 @@ const views: View<SignalResponse>[] = [
     // TODO(burdon): Add id property (can't use date?) Same for swarm panel.
 
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', sort: 'desc', size: 194 },
+      {
+        name: 'receivedAt',
+        format: FormatEnum.DateTime,
+        title: 'received',
+        sort: 'desc',
+        size: 194,
+      },
       {
         name: 'response',
         format: FormatEnum.SingleSelect,
@@ -71,7 +77,12 @@ const views: View<SignalResponse>[] = [
       return !!response.message;
     },
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', size: 194 },
+      {
+        name: 'receivedAt',
+        format: FormatEnum.DateTime,
+        title: 'received',
+        size: 194,
+      },
       { name: 'author', format: FormatEnum.DID },
       { name: 'recipient', format: FormatEnum.DID },
       { name: 'message', format: FormatEnum.DID },
@@ -94,7 +105,12 @@ const views: View<SignalResponse>[] = [
       return response.message?.payload['@type'] === 'dxos.mesh.messaging.Acknowledgement';
     },
     properties: [
-      { name: 'receivedAt', format: FormatEnum.DateTime, title: 'received', size: 194 },
+      {
+        name: 'receivedAt',
+        format: FormatEnum.DateTime,
+        title: 'received',
+        size: 194,
+      },
       { name: 'author', format: FormatEnum.DID },
       { name: 'recipient', format: FormatEnum.DID },
       { name: 'message', format: FormatEnum.DID },
@@ -114,22 +130,18 @@ export type ViewType = (typeof views)[number]['id'];
 const getView = (id: ViewType): View<SignalResponse> => views.find((type) => type.id === id)!;
 
 // TODO(burdon): Factor out.
-const ToggleConnection: FC<{ connection: ConnectionState; onToggleConnection: () => void }> = ({
-  connection,
-  onToggleConnection,
-}) => (
-  <Toolbar.Button
-    title='Toggle connection state.'
+const ToggleConnection: FC<{
+  connection: ConnectionState;
+  onToggleConnection: () => void;
+}> = ({ connection, onToggleConnection }) => (
+  <Toolbar.IconButton
+    icon={connection === ConnectionState.ONLINE ? 'ph--wifi-high--regular' : 'ph--wifi-slash--regular'}
+    iconOnly
+    size={6}
+    label='Toggle connection'
     classNames='mli-2 p-0 px-2 items-center'
     onClick={onToggleConnection}
-  >
-    {connection === ConnectionState.ONLINE ? (
-      <Icon icon='ph--wifi-high--regular' size={6} />
-    ) : (
-      <Icon icon='ph--wifi-slash--regular' size={6} classNames='text-selection-text' />
-    )}
-    <span className='pl-2 whitespace-nowrap'>Toggle connection</span>
-  </Toolbar.Button>
+  />
 );
 
 export const SignalMessageTable = () => {

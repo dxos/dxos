@@ -16,7 +16,12 @@ type State = 'pending' | 'responding';
 /**
  * Request or response.
  */
-type Message = { type: 'request' | 'response'; text?: string; data?: any; error?: Error };
+type Message = {
+  type: 'request' | 'response';
+  text?: string;
+  data?: any;
+  error?: Error;
+};
 
 export type TestPanelProps = ThemedClassName<{
   functionUrl?: string;
@@ -61,7 +66,15 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     inputRef.current?.focus();
   };
 
-  const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
+  const handleResponse = ({
+    text,
+    data,
+    error,
+  }: {
+    text?: string;
+    data?: any;
+    error?: Error;
+  } = {}) => {
     controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setResult('');
@@ -108,7 +121,9 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
       // Check for error.
       if (!response.ok) {
         const text = await response.text();
-        handleResponse({ error: new Error(text || response.statusText || String(response.status)) });
+        handleResponse({
+          error: new Error(text || response.statusText || String(response.status)),
+        });
         return;
       }
 
@@ -174,12 +189,20 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.Button onClick={() => handleRequest(input)}>
-          <Icon icon='ph--play--regular' size={4} />
-        </Toolbar.Button>
-        <Toolbar.Button onClick={() => (state ? handleStop() : handleClear())}>
-          <Icon icon={state ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
-        </Toolbar.Button>
+        <Toolbar.IconButton
+          icon='ph--play--regular'
+          size={4}
+          label='Execute'
+          iconOnly
+          onClick={() => handleRequest(input)}
+        />
+        <Toolbar.IconButton
+          icon={state ? 'ph--stop--regular' : 'ph--trash--regular'}
+          size={4}
+          label={state ? 'Stop' : 'Clear'}
+          iconOnly
+          onClick={() => (state ? handleStop() : handleClear())}
+        />
       </Toolbar.Root>
     </div>
   );
