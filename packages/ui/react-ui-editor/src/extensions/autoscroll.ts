@@ -20,7 +20,6 @@ export type AutoScrollOptions = {
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-// TODO(burdon): Auto scroll is pretty clunky.
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
   autoScroll = true,
@@ -68,8 +67,10 @@ export const autoScroll = ({
       });
 
       // Maybe scroll if doc changed and pinned.
-      if (update.docChanged && isPinned && !isThrottled) {
-        const distanceFromBottom = calcDistance(update.view.scrollDOM);
+      // TODO(burdon): Autoscrolling is jerky.
+      // NOTE: Geometry changed is triggered when tool block is opened.
+      const distanceFromBottom = calcDistance(update.view.scrollDOM);
+      if (update.heightChanged && isPinned && !isThrottled) {
         if (distanceFromBottom >= overscroll) {
           if (autoScroll) {
             isThrottled = true;

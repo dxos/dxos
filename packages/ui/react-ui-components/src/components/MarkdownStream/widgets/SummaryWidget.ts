@@ -14,11 +14,11 @@ export class SummaryWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLElement {
-    return Domino.of('div').classNames('mbs-2 mbe-4 pis-2 pie-2 text-sm text-placeholder').text(this.text).build();
+  override eq(other: WidgetType) {
+    return other instanceof SummaryWidget && other.text === this.text;
   }
 
-  override eq(other: WidgetType): boolean {
-    return other instanceof SummaryWidget && other.text === this.text;
+  override toDOM() {
+    return Domino.of('div').classNames('mbs-2 mbe-4 pis-2 pie-2 text-sm text-placeholder').text(this.text).build();
   }
 }

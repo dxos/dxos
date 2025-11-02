@@ -14628,6 +14628,9 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@preact-signals/safe-react':
         specifier: ^0.9.0
         version: 0.9.0(@babel/core@7.28.0)(@swc/helpers@0.5.17)(react@19.2.0)
@@ -14650,9 +14653,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@types/jsonpath':
         specifier: ^0.2.4
         version: 0.2.4

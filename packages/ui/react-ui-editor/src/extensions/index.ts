@@ -7,6 +7,7 @@ export * from './autocomplete';
 export * from './autoscroll';
 export * from './automerge';
 export * from './awareness';
+export * from './bookmarks';
 export * from './blast';
 export * from './comments';
 export * from './debug';

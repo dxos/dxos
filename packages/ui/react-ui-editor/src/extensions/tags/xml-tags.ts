@@ -35,9 +35,12 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 /**
  * Widget component.
  */
-export type XmlWidgetProps<TContext = any, TProps = any> = TProps & {
+export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
   context: TContext;
+  view?: EditorView;
+  state?: EditorState;
+  range?: { from: number; to: number };
   onEvent?: XmlEventHandler;
 };
 
@@ -51,9 +54,9 @@ export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler
  */
 export type XmlWidgetDef = {
   block?: boolean;
-  /** Native widget. */
+  /** Native widget (rendered inline). */
   factory?: XmlWidgetFactory;
-  /** React widget. */
+  /** React widget (rendered in portals outside of the editor). */
   Component?: FC<XmlWidgetProps>;
 };
 
@@ -90,7 +93,7 @@ export type XmlWidgetState = {
   id: string;
   props: any;
   root: HTMLElement;
-  Component: ComponentType<any>;
+  Component: ComponentType<XmlWidgetProps>;
 };
 
 export interface XmlWidgetNotifier {
@@ -291,7 +294,7 @@ const buildDecorations = (
   from: number,
   to: number,
   context: any,
-  widgetState: XmlWidgetStateMap,
+  widgetStateMap: XmlWidgetStateMap,
   options: XmlTagsOptions,
   notifier: XmlWidgetNotifier,
 ): WidgetDecorationSet => {
@@ -315,8 +318,11 @@ const buildDecorations = (
                 const def = options.registry[props._tag];
                 if (def) {
                   const { block, factory, Component } = def;
-                  const state = props.id ? widgetState[props.id] : undefined;
-                  const args = { context, ...props, ...state };
+                  const widgetState = props.id ? widgetStateMap[props.id] : undefined;
+                  const range = { from: node.node.from, to: node.node.to };
+                  const args = { ...widgetState, ...props, context, state, range } satisfies XmlWidgetProps;
+
+                  // Create widget.
                   const widget: WidgetType | undefined = factory
                     ? factory(args)
                     : Component
@@ -326,8 +332,8 @@ const buildDecorations = (
                   if (widget) {
                     from = node.node.to;
                     builder.add(
-                      node.node.from,
-                      node.node.to,
+                      range.from,
+                      range.to,
                       Decoration.replace({
                         widget,
                         block,
@@ -355,7 +361,7 @@ const buildDecorations = (
 /**
  * Placeholder for React widgets.
  */
-class PlaceholderWidget<TProps = {}> extends WidgetType {
+class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   private _root: HTMLElement | null = null;
 
   constructor(

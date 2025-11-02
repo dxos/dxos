@@ -13,7 +13,7 @@ import {
   SummaryWidget,
   ToggleContainer,
 } from '@dxos/react-ui-components';
-import { type XmlWidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/react-ui-editor';
+import { type XmlWidgetProps, type XmlWidgetRegistry, addBookmark, getXmlTextChild } from '@dxos/react-ui-editor';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ContentBlock, type DataType } from '@dxos/schema';
 
@@ -42,22 +42,29 @@ export const componentRegistry: XmlWidgetRegistry = {
 
   ['prompt' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ state, range, children, ...props }) => {
+      if (state && range) {
+        console.log('add', range.from, props, children);
+        // TODO(burdon): Use block ID to identify.
+        state.update({
+          effects: [addBookmark.of({ id: 'prompt', pos: range.from, name: 'Prompt' })],
+        });
+      }
+      const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
   ['reference' as const]: {
     block: false,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
-      return text && props.ref ? new ReferenceWidget(text, props.ref) : null;
+    factory: ({ children, ref }) => {
+      const text = getXmlTextChild(children);
+      return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
   ['select' as const]: {
     block: true,
-    factory: (props) => {
-      const options = props.children
+    factory: ({ children }) => {
+      const options = children
         ?.map((option: any) => option._tag === 'option' && getXmlTextChild(option.children))
         .filter(Boolean);
       return options?.length ? new SelectWidget(options) : null;
@@ -65,15 +72,15 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   ['suggestion' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
   ['summary' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SummaryWidget(text) : null;
     },
   },

@@ -14,10 +14,14 @@ export class SelectWidget extends WidgetType {
     super();
   }
 
+  override eq(other: WidgetType) {
+    return other instanceof SelectWidget && JSON.stringify(other.options) === JSON.stringify(this.options);
+  }
+
   /**
    * NOTE: Container must set var based on user's identity.
    */
-  override toDOM(): HTMLElement {
+  override toDOM() {
     return Domino.of('div')
       .attributes({ role: 'group' })
       .classNames('flex flex-wrap mbs-2 mbe-2 gap-1')
@@ -32,9 +36,5 @@ export class SelectWidget extends WidgetType {
         ),
       )
       .build();
-  }
-
-  override eq(other: WidgetType): boolean {
-    return other instanceof SelectWidget && JSON.stringify(other.options) === JSON.stringify(this.options);
   }
 }

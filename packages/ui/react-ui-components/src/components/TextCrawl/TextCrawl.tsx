@@ -14,11 +14,11 @@ export type Size = 'sm' | 'md' | 'lg';
 export const sizes: Size[] = ['sm', 'md', 'lg'];
 
 export type TextCrawlProps = {
-  // Auto-advance after `minDuration`.
+  /** Auto-advance after `minDuration`. */
   autoAdvance?: boolean;
-  // Start at the last line.
+  /** Start at the last line. */
   greedy?: boolean;
-  // Minimum time after update before scrolling.
+  /** Minimum time after update before scrolling. */
   minDuration?: number;
 } & Pick<TextRibbonProps, 'classNames' | 'textClassNames' | 'size' | 'lines' | 'index' | 'cyclic' | 'transition'>;
 

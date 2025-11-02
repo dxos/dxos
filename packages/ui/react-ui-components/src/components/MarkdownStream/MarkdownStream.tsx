@@ -28,6 +28,7 @@ import {
   type XmlWidgetState,
   type XmlWidgetStateManager,
   autoScroll,
+  bookmarks,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -91,6 +92,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           xmlTags({ registry, setWidgets }),
           streamer({ cursor, fadeIn }),
           autoScroll({ autoScroll: false, overscroll }),
+          bookmarks(),
         ],
       };
     }, [themeMode, registry]);
@@ -201,10 +203,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
 
     return (
       <>
+        {/* Markdown editor. */}
         <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />
+
+        {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
         </ErrorBoundary>
       </>
