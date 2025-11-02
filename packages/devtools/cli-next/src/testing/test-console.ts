@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import util from 'node:util';
+import { inspect } from 'node:util';
 
 import * as Console from 'effect/Console';
 import * as Context from 'effect/Context';
@@ -16,7 +16,7 @@ function logToString(...args: any[]): string {
         return arg;
       }
 
-      return util.inspect(arg, { colors: false, depth: null });
+      return inspect(arg, { colors: false, depth: null });
     })
     .join(' ');
 }

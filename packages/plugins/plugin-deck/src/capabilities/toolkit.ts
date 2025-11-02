@@ -21,7 +21,7 @@ import { trim } from '@dxos/util';
 
 import { DeckCapabilities } from './capabilities';
 
-export class DeckToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('open-item', {
     description: trim`
       Opens an item in the application.
@@ -32,17 +32,19 @@ export class DeckToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (context: PluginContext) =>
-    DeckToolkit.toLayer({
+);
+
+export namespace DeckToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (context: PluginContext) =>
+    Toolkit$.toLayer({
       'open-item': ({ id }) =>
         Effect.gen(function* () {
           const state = context.getCapability(DeckCapabilities.DeckState);
-          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId);
-
-          // TODO(wittjosiah): Support other variants.
-          const echoDxn = dxn.asEchoDXN();
-          if (!echoDxn) {
+          const dxn = ArtifactId.toDXN(id, state.activeDeck as SpaceId).asEchoDXN();
+          if (!dxn) {
+            // TODO(wittjosiah): Support other variants.
             throw new Error(`Invalid object ID: ${id}`);
           }
 
@@ -50,7 +52,7 @@ export class DeckToolkit extends Toolkit.make(
           const { dispatch } = context.getCapability(Capabilities.IntentDispatcher);
           yield* dispatch(
             createIntent(LayoutAction.Open, {
-              subject: [`${echoDxn.spaceId!}:${echoDxn.echoId}`],
+              subject: [`${dxn.spaceId!}:${dxn.echoId}`],
               part: 'main',
             }),
           );
@@ -59,6 +61,6 @@ export class DeckToolkit extends Toolkit.make(
 }
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, DeckToolkit),
-  contributes(Capabilities.ToolkitHandler, DeckToolkit.layer(context)),
+  contributes(Capabilities.Toolkit, DeckToolkit.Toolkit),
+  contributes(Capabilities.ToolkitHandler, DeckToolkit.createLayer(context)),
 ];

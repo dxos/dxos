@@ -14,12 +14,11 @@ import { meta } from '../meta';
 import { type Assistant } from '../types';
 
 import { Chat } from './Chat';
-import { ChatToolbar } from './ChatToolbar';
 
 export type ChatContainerProps = {
-  chat: Assistant.Chat;
-  companionTo?: Obj.Any;
   role?: string;
+  chat?: Assistant.Chat;
+  companionTo?: Obj.Any;
 };
 
 export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
@@ -35,14 +34,18 @@ export const ChatContainer = ({ chat, companionTo }: ChatContainerProps) => {
     return null;
   }
 
+  // return null;
+
   return (
     <StackItem.Content toolbar>
-      <ChatToolbar chat={chat} companionTo={companionTo} />
-      <Chat.Root classNames='container-max-width' chat={chat} processor={processor}>
-        <Chat.Thread />
-        <div className='p-2'>
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
-        </div>
+      <Chat.Root chat={chat} processor={processor}>
+        <Chat.Toolbar companionTo={companionTo} />
+        <Chat.Content classNames='container-max-width'>
+          <Chat.Thread />
+          <div role='none' className='p-4'>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+          </div>
+        </Chat.Content>
       </Chat.Root>
     </StackItem.Content>
   );

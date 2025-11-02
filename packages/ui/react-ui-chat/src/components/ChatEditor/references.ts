@@ -103,7 +103,7 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
     },
     {
       decorations: (v) => v.decorations,
-      provide: (plugin) => [
+      provide: () => [
         EditorView.atomicRanges.of(
           (view): DecorationSet => view.plugin(decorationField)?.decorations ?? RangeSet.empty,
         ),
@@ -160,7 +160,7 @@ class ReferenceWidget extends WidgetType {
 
   override toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.textContent = `@ ${this.data.label}`;
+    span.textContent = `@${this.data.label}`;
     span.className = 'cm-reference-pill';
     return span;
   }

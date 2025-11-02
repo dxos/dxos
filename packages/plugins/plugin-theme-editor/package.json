@@ -24,7 +24,7 @@
     "src"
   ],
   "dependencies": {
-    "@ch-ui/tokens": "2.4.0",
+    "@ch-ui/tokens": "3.0.1",
     "@codemirror/lang-json": "6.0.2",
     "@dxos/app-framework": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -32,6 +32,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "@types/lodash.debounce": "^4.0.9",
     "lodash.debounce": "^4.0.8"
@@ -43,7 +44,7 @@
     "@effect-rx/rx-react": "0.42.4",
     "@effect/platform": "0.92.1",
     "@types/react": "~19.2.2",
-    "@types/react-dom": "~19.2.1",
+    "@types/react-dom": "~19.2.2",
     "effect": "3.18.3",
     "react": "~19.2.0",
     "react-dom": "~19.2.0",

@@ -20,7 +20,7 @@ import {
   TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
-import { ObjectId, PublicKey } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 
 import { testToolkit } from '../../blueprints/testing';
@@ -41,8 +41,7 @@ const TestLayer = Layer.mergeAll(
     Layer.mergeAll(
       MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
       TestDatabaseLayer({
-        // TODO(dmaretskyi): define the constant space key in the test-builder.
-        spaceKey: PublicKey.from('665c420e0dec9aa36c2bedca567afb0778701920e346eaf83ab2bd3403859723'),
+        spaceKey: 'fixed',
         indexing: { vector: true },
         types: [Blueprint.Blueprint, DataType.Message, DataType.Person, DataType.Organization, ResearchGraph],
       }),
@@ -52,7 +51,7 @@ const TestLayer = Layer.mergeAll(
   ),
 );
 
-describe('Entity-extraction', () => {
+describe('Entity extraction', () => {
   it.effect(
     'call a function to generate a research report',
     Effect.fnUntraced(

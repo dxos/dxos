@@ -25,6 +25,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
 } from 'react';
 
@@ -234,19 +235,35 @@ interface DropdownMenuContentProps extends Omit<MenuContentProps, 'onEntryFocus'
 
 const DropdownMenuContent = forwardRef<DropdownMenuContentElement, DropdownMenuContentProps>(
   (props: ScopedProps<DropdownMenuContentProps>, forwardedRef) => {
-    const { __scopeDropdownMenu, classNames, collisionPadding = 8, ...contentProps } = props;
+    const { __scopeDropdownMenu, classNames, collisionPadding = 8, collisionBoundary, ...contentProps } = props;
     const { tx } = useThemeContext();
     const context = useDropdownMenuContext(CONTENT_NAME, __scopeDropdownMenu);
     const elevation = useElevationContext();
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const hasInteractedOutsideRef = useRef(false);
     const safeCollisionPadding = useSafeCollisionPadding(collisionPadding);
+
+    // Check for the closest annotated collision boundary in the DOM tree.
+    const computedCollisionBoundary = useMemo(() => {
+      const closestBoundary = context.triggerRef.current?.closest(
+        '[data-popover-collision-boundary]',
+      ) as HTMLElement | null;
+      return closestBoundary
+        ? Array.isArray(collisionBoundary)
+          ? [closestBoundary, ...collisionBoundary]
+          : collisionBoundary
+            ? [closestBoundary, collisionBoundary]
+            : [closestBoundary]
+        : collisionBoundary;
+    }, [context.open, collisionBoundary, context.triggerRef.current]);
+
     return (
       <MenuPrimitive.Content
         id={context.contentId}
         aria-labelledby={context.triggerId}
         {...menuScope}
         {...contentProps}
+        collisionBoundary={computedCollisionBoundary}
         collisionPadding={safeCollisionPadding}
         ref={forwardedRef}
         onCloseAutoFocus={composeEventHandlers(props.onCloseAutoFocus, (event) => {

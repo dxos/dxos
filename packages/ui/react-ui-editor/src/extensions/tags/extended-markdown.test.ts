@@ -40,8 +40,9 @@ describe('extended-markdown', () => {
       <toolkit />
     `;
 
-    const nodes: SyntaxNode[] = [];
     const state = createEditorState(doc);
+
+    const nodes: SyntaxNode[] = [];
     const tree = syntaxTree(state);
     tree.iterate({
       enter: (node) => {

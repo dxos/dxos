@@ -2,7 +2,7 @@
 // Copyright 2019 DXOS.org
 //
 
-import util from 'node:util';
+import { promisify } from 'node:util';
 
 import { type AbstractValueEncoding } from 'hypercore';
 import { describe, expect, test } from 'vitest';
@@ -33,7 +33,7 @@ describe('Hypercore', () => {
 
     {
       // Check open is idempotent.
-      const open = util.promisify(core.open.bind(core));
+      const open = promisify(core.open.bind(core));
       await open();
       await open();
     }
@@ -41,7 +41,7 @@ describe('Hypercore', () => {
     {
       // Append block.
       expect(core.length).to.eq(0);
-      const append = util.promisify(core.append.bind(core));
+      const append = promisify(core.append.bind(core));
       const seq = await append('test');
       expect(core.length).to.eq(1);
       expect(seq).to.eq(0);
@@ -49,14 +49,14 @@ describe('Hypercore', () => {
 
     {
       // Get block.
-      const get = util.promisify(core.get.bind(core));
+      const get = promisify(core.get.bind(core));
       const block: any = await get(0);
       expect(block.toString()).to.eq('test');
     }
 
     {
       // Check open is idempotent.
-      const close = util.promisify(core.close.bind(core));
+      const close = promisify(core.close.bind(core));
       await close();
       await close();
     }
@@ -68,7 +68,7 @@ describe('Hypercore', () => {
     const core = factory.createFeed(publicKey, { secretKey, valueEncoding });
 
     {
-      const append = util.promisify(core.append.bind(core));
+      const append = promisify(core.append.bind(core));
 
       expect(core.length).to.eq(0);
       const seq = await append({
@@ -81,7 +81,7 @@ describe('Hypercore', () => {
     }
 
     {
-      const head = util.promisify(core.head.bind(core));
+      const head = promisify(core.head.bind(core));
 
       const { key, value } = await head();
       expect(key).to.eq('test-1');
@@ -89,7 +89,7 @@ describe('Hypercore', () => {
     }
 
     {
-      const get = util.promisify(core.get.bind(core));
+      const get = promisify(core.get.bind(core));
 
       const { key, value } = await get(0);
       expect(key).to.eq('test-1');

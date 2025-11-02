@@ -125,7 +125,7 @@ const Header = ({ classNames, children, icon }: HeaderProps) => {
           classNames={['transition transition-transform ease-in-out', open ? 'rotate-90' : 'transform-none']}
         />
       </IconBlock>
-      <div className='flex items-center overflow-hidden text-sm text-description truncate'>{children}</div>
+      <div className='flex items-center overflow-hidden truncate'>{children}</div>
       {icon && <IconBlock>{icon}</IconBlock>}
     </div>
   );

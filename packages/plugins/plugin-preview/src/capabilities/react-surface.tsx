@@ -23,14 +23,17 @@ import { Card } from '@dxos/react-ui-stack';
 import { descriptionMessage, mx } from '@dxos/react-ui-theme';
 import { DataType, type ProjectionModel } from '@dxos/schema';
 
-import { ContactCard, OrganizationCard, ProjectCard, TaskCard } from '../cards';
+import { OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { meta } from '../meta';
+import { type PreviewProps } from '../types';
 
 export default () =>
   contributes(Capabilities.ReactSurface, [
     //
     // Specific schema types.
+    // TODO(burdon): Create helpers and factor out.
     //
+
     createSurface({
       id: `${meta.id}/schema-popover--contact`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
@@ -38,13 +41,13 @@ export default () =>
       component: ({ data, role }) => {
         const { dispatchPromise: dispatch } = useIntentDispatcher();
         const space = getSpace(data.subject);
-        const activeSpace = useActiveSpace();
-        const handleSelect = useCallback(
-          (org: Obj.Any) =>
+        const activeSpace = useActiveSpace(); // TODO(burdon): Disambiguate with space?
+        const handleSelect = useCallback<NonNullable<PreviewProps['onSelect']>>(
+          (object) =>
             dispatch(
               createIntent(LayoutAction.Open, {
                 part: 'main',
-                subject: [fullyQualifiedId(org)],
+                subject: [fullyQualifiedId(object)],
                 options: {
                   workspace: space?.id,
                 },
@@ -54,9 +57,9 @@ export default () =>
         );
 
         return (
-          <ContactCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
+          <PersonCard role={role} subject={data.subject} activeSpace={activeSpace} onSelect={handleSelect}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
-          </ContactCard>
+          </PersonCard>
         );
       },
     }),
@@ -66,7 +69,6 @@ export default () =>
       filter: (data): data is { subject: DataType.Organization } => Obj.instanceOf(DataType.Organization, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
-
         return (
           <OrganizationCard role={role} subject={data.subject} activeSpace={activeSpace}>
             {role === 'card--popover' && <Surface role='related' data={data} />}
@@ -80,7 +82,6 @@ export default () =>
       filter: (data): data is { subject: DataType.Project } => Obj.instanceOf(DataType.Project, data.subject),
       component: ({ data, role }) => {
         const activeSpace = useActiveSpace();
-
         return <ProjectCard subject={data.subject} role={role} activeSpace={activeSpace} />;
       },
     }),
@@ -88,12 +89,15 @@ export default () =>
       id: `${meta.id}/schema-popover--task`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
       filter: (data): data is { subject: DataType.Task } => Obj.instanceOf(DataType.Task, data.subject),
-      component: ({ data, role }) => <TaskCard subject={data.subject} role={role} />,
+      component: ({ data, role }) => {
+        return <TaskCard subject={data.subject} role={role} />;
+      },
     }),
 
     //
     // Fallback for any object.
     //
+
     createSurface({
       id: `${meta.id}/fallback-popover`,
       role: ['card--popover', 'card--intrinsic', 'card--transclusion', 'card--extrinsic', 'card'],
@@ -118,6 +122,7 @@ export default () =>
         return (
           <Card.SurfaceRoot role={role}>
             <Form
+              id={data.subject.id}
               schema={schema}
               projection={data.projection}
               values={data.subject}
@@ -138,8 +143,8 @@ export default () =>
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
       component: ({ data }) => {
         return (
-          <div role='none' className='flex justify-center'>
-            <div role='none' className='card-max-width'>
+          <div role='none' className='flex is-full justify-center'>
+            <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
               <Surface role='card' data={data} limit={1} />
             </div>
           </div>

@@ -5,17 +5,8 @@
 import type * as Tool from '@effect/ai/Tool';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { type AgentStatus } from '@dxos/ai';
 import { useTranslation } from '@dxos/react-ui';
-import {
-  NumericTabs,
-  TextCrawl,
-  ToggleContainer,
-  chatMessageJson,
-  chatMessagePanel,
-  chatMessagePanelContent,
-  chatMessagePanelHeader,
-} from '@dxos/react-ui-components';
+import { NumericTabs, TextCrawl, ToggleContainer } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 import { isNonNullable, safeParseJson } from '@dxos/util';
@@ -33,15 +24,7 @@ export type ToolBlockProps = {
 export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const getToolCaption = (tool?: Tool.Any, status?: AgentStatus) => {
-    if (!tool) {
-      return t('calling tool label');
-    }
-
-    return status?.message ?? tool.description ?? [t('calling label'), tool.name].join(' ');
-  };
-
-  const items = useMemo(() => {
+  const items = useMemo<ToolContainerParams['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
@@ -57,7 +40,7 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
             const tool = tools.find((tool) => tool.name === block.name);
             lastToolCall = { tool, block };
             return {
-              title: getToolCaption(lastToolCall?.tool),
+              title: tool?.description ?? [t('tool call label'), tool?.name].join(' '),
               content: {
                 ...block,
                 input: safeParseJson(block.input),
@@ -69,12 +52,13 @@ export const ToolBlock = ({ blocks = [] }: ToolBlockProps) => {
             // TODO(burdon): Parse error type.
             if (block.error) {
               return {
-                title: t('error label'),
+                title: t('tool error label'),
                 content: block,
               };
             }
 
-            const title = getToolCaption(lastToolCall?.tool ?? t('tool result label'));
+            const title =
+              lastToolCall?.tool?.description ?? [t('tool result label'), lastToolCall?.tool?.name].join(' ');
             lastToolCall = undefined;
             return {
               title,
@@ -131,15 +115,15 @@ export const ToolContainer = ({ items }: ToolContainerParams) => {
   const data = items[selected]?.content;
 
   return (
-    <ToggleContainer.Root classNames={chatMessagePanel} open={open} onChangeOpen={setOpen}>
-      <ToggleContainer.Header classNames={chatMessagePanelHeader}>
-        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} />
+    <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>
+      <ToggleContainer.Header classNames='text-sm text-placeholder'>
+        <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance />
       </ToggleContainer.Header>
-      <ToggleContainer.Content classNames={['grid grid-cols-[32px_1fr]', chatMessagePanelContent]}>
+      <ToggleContainer.Content classNames='grid grid-cols-[32px_1fr]'>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json
           data={data}
-          classNames={chatMessageJson}
+          classNames='p-1 text-xs bg-transparent'
           replacer={{
             maxDepth: 3,
             maxArrayLen: 10,

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { xml } from '@codemirror/lang-xml';
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import React from 'react';
 
@@ -23,6 +22,7 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '../../meta';
 
 import { handlebars } from './handlebars-extension';
+import { xmlDecorator } from './xml-extension';
 
 export type TemplateEditorProps = ThemedClassName<{
   id: string;
@@ -42,7 +42,10 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     return {
       initialValue: text.content ?? '',
       extensions: [
-        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
+        createDataExtensions({
+          id,
+          text: createDocAccessor(text, ['content']),
+        }),
         createBasicExtensions({
           bracketMatching: false,
           lineNumbers,
@@ -51,9 +54,11 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
         }),
         createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
-        decorateMarkdown(), // TODO(burdon): Move into bundle.
-        xml(),
+        decorateMarkdown(),
         handlebars(),
+        // xml(),
+        // NOTE: Since we're using markdown only HTML nodes are parsed.
+        xmlDecorator(),
         syntaxHighlighting(defaultHighlightStyle),
       ].filter(isNonNullable),
     };

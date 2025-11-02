@@ -328,7 +328,8 @@ export namespace SpaceAction {
 
   export class RemoveObjects extends Schema.TaggedClass<RemoveObjects>()(`${SPACE_ACTION}/remove-objects`, {
     input: Schema.Struct({
-      objects: Schema.Array(EchoObjectSchema),
+      // TODO(wittjosiah): Should be Schema.Union(Type.Obj, Type.Relation).
+      objects: Schema.Array(ReactiveObjectSchema),
       target: Schema.optional(DataType.Collection),
       deletionData: Schema.optional(DeletionData),
     }),

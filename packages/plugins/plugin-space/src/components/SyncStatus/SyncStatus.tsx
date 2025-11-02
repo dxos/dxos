@@ -6,13 +6,13 @@ import React, { useEffect, useState } from 'react';
 
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import type { QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { Unit } from '@dxos/util';
+import { Unit, type UnitFormat } from '@dxos/util';
 
 import { meta } from '../../meta';
 
@@ -25,12 +25,7 @@ export const SyncStatus = () => {
   const client = useClient();
   const state = useSyncState();
   const [saved, setSaved] = useState(true);
-
-  useEffect(() => {
-    return createClientSaveTracker(client, (state) => {
-      setSaved(state === 'saved');
-    });
-  }, []);
+  useEffect(() => createClientSaveTracker(client, (state) => setSaved(state === 'saved')), []);
 
   return <SyncStatusIndicator state={state} saved={saved} />;
 };
@@ -114,33 +109,47 @@ const EdgeConnectionPopover = () => {
       {status?.state === EdgeStatus.ConnectionState.CONNECTED && (
         <div className='space-y-2'>
           {/* Latency */}
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2 text-sm text-description'>
+          <div className='flex items-center justify-between text-sm'>
+            <div className='flex items-center gap-2 text-description'>
               <Icon icon='ph--timer--regular' />
               <span>{t('sync latency label')}</span>
             </div>
-            <span className='text-sm font-mono'>{status.rtt.toFixed(0)} ms</span>
+            <UnitValue value={status.rtt} format={Unit.Millisecond} />
           </div>
 
           {/* Upload Speed */}
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2 text-sm text-description'>
+          <div className='flex items-center justify-between text-sm'>
+            <div className='flex items-center gap-2 text-description'>
               <Icon icon='ph--arrow-up--regular' />
               <span>{t('sync upload label')}</span>
             </div>
-            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesUp, 0)}/s</span>
+            <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
           </div>
 
           {/* Download Speed */}
-          <div className='flex items-center justify-between'>
+          <div className='flex items-center justify-between text-sm'>
             <div className='flex items-center gap-2 text-sm text-description'>
               <Icon icon='ph--arrow-down--regular' />
               <span>{t('sync download label')}</span>
             </div>
-            <span className='text-sm font-mono'>{Unit.Kilobyte(status.rateBytesDown, 0)}/s</span>
+            <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />
           </div>
         </div>
       )}
     </div>
+  );
+};
+
+// TODO(burdon): Factor out.
+const UnitValue = ({ value: input, format, suffix }: { value: number; format: UnitFormat; suffix?: string }) => {
+  const { formattedValue, unit } = format(input);
+  return (
+    <span className='font-mono'>
+      {formattedValue}
+      <span className='mis-1 text-subdued'>
+        {unit.symbol}
+        {suffix}
+      </span>
+    </span>
   );
 };

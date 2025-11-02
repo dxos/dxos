@@ -40,14 +40,16 @@ export const ChatOptions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex gap-0.5'>
+    <div role='none' className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly size={5} label={t('button context objects')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <ObjectsPanel space={space} context={context} />
+            <Popover.Viewport>
+              <ObjectsPanel space={space} context={context} />
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>
@@ -65,24 +67,26 @@ export const ChatOptions = ({
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
-            <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
-              <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
-                <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                  <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
-                </Tabs.Tabpanel>
-                <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
-                  <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                </Tabs.Tabpanel>
-                <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
-                  <Tabs.IconTab
-                    value='blueprints'
-                    icon='ph--blueprint--regular'
-                    label={t('blueprints in context title')}
-                  />
-                  <Tabs.IconTab value='model' label={t('chat model title')} icon='ph--cpu--regular' />
-                </Tabs.Tablist>
-              </Tabs.Viewport>
-            </Tabs.Root>
+            <Popover.Viewport>
+              <Tabs.Root orientation='horizontal' defaultValue='blueprints' defaultActivePart='list' tabIndex={-1}>
+                <Tabs.Viewport classNames='max-bs-[--radix-popover-content-available-height] grid grid-rows-[1fr_min-content] [&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content] [&_[role="listbox"]]:min-bs-0 [&_[role="listbox"]]:overflow-y-auto [&_[role="tabpanel"]]:min-bs-0 [&_[role="tabpanel"]]:pli-cardSpacingChrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden'>
+                  <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                    <BlueprintsPanel blueprintRegistry={blueprintRegistry} space={space} context={context} />
+                  </Tabs.Tabpanel>
+                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset !pli-0'>
+                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+                  </Tabs.Tabpanel>
+                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-[--dx-cardSpacingChrome] border-bs border-subduedSeparator order-last'>
+                    <Tabs.IconTab
+                      value='blueprints'
+                      icon='ph--blueprint--regular'
+                      label={t('blueprints in context title')}
+                    />
+                    <Tabs.IconTab value='model' label={t('chat model title')} icon='ph--cpu--regular' />
+                  </Tabs.Tablist>
+                </Tabs.Viewport>
+              </Tabs.Root>
+            </Popover.Viewport>
             <Popover.Arrow />
           </Popover.Content>
         </Popover.Portal>

@@ -12,9 +12,9 @@ import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { DataType } from '@dxos/schema';
 
 import {
+  ASSISTANT_BLUEPRINT_KEY,
   AnchorSort,
   AppGraphSerializer,
-  BLUEPRINT_KEY,
   BlueprintDefinition,
   IntentResolver,
   MarkdownSettings,
@@ -57,7 +57,7 @@ export const MarkdownPlugin = definePlugin(meta, () => [
           label: (object: Markdown.Document) => object.name || object.fallbackName,
           icon: 'ph--text-aa--regular',
           iconHue: 'indigo',
-          blueprints: [BLUEPRINT_KEY],
+          blueprints: [ASSISTANT_BLUEPRINT_KEY],
           graphProps: {
             managesAutofocus: true,
           },

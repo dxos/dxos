@@ -15,7 +15,7 @@ export const ProjectCard = ({ subject, role, activeSpace }: PreviewProps<DataTyp
   const { name, image, description } = subject;
 
   return (
-    <Card.SurfaceRoot role={role}>
+    <Card.SurfaceRoot id={subject.id} role={role}>
       {image && <Card.Poster image={image} alt={Obj.getLabel(subject) ?? ''} aspect='auto' />}
       <CardHeader label={name} subject={subject} activeSpace={activeSpace} />
       {description && <Card.Text classNames='line-clamp-2'>{description}</Card.Text>}

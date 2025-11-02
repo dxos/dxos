@@ -19,7 +19,7 @@ describe('url', () => {
     ];
 
     tests.forEach(([input, output]) => {
-      expect(Unit.Duration(input)).toBe(output);
+      expect(Unit.Duration(input).toString(), input.toString()).toBe(output);
     });
   });
 });

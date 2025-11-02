@@ -3,11 +3,15 @@
 //
 
 import { type PluginMeta } from '@dxos/app-framework';
+import { trim } from '@dxos/util';
 
 export const meta: PluginMeta = {
   id: 'dxos.org/plugin/wnfs',
   name: 'WNFS',
-  description: 'Manage files using the Web Native File System.',
+  description: trim`
+    Decentralized file storage using the Web Native File System protocol.
+    Store and sync files with end-to-end encryption across devices without central servers.
+  `,
   icon: 'ph--file-cloud--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-wnfs',

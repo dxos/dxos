@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Surface, contributes, createSurface, useCapability, useLayout } from '@dxos/app-framework';
-import { Obj, Type } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { SettingsStore } from '@dxos/local-storage';
 import {
@@ -25,10 +25,11 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { DataType, type TypenameAnnotation, TypenameAnnotationId } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
+// TODO(burdon): Component name standard: NounVerbComponent.
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
-  CollectionMain,
+  CollectionArticle,
   CollectionSection,
   CreateObjectDialog,
   type CreateObjectDialogProps,
@@ -38,17 +39,17 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
+  OBJECT_RENAME_POPOVER,
   ObjectDetailsPanel,
+  ObjectRenamePopover,
   ObjectSettingsContainer,
-  POPOVER_RENAME_OBJECT,
-  POPOVER_RENAME_SPACE,
-  PopoverRenameObject,
-  PopoverRenameSpace,
-  RecordMain,
+  RecordArticle,
+  SPACE_RENAME_POPOVER,
   SchemaContainer,
   SmallPresenceLive,
   SpacePluginSettings,
   SpacePresence,
+  SpaceRenamePopover,
   SpaceSettingsContainer,
   SyncStatus,
   ViewEditor,
@@ -62,8 +63,6 @@ import { SpaceCapabilities } from './capabilities';
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
 };
-
-const OMIT = [DataType.Collection.typename, Type.getTypename(DataType.QueryCollection)];
 
 export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
   contributes(Capabilities.ReactSurface, [
@@ -89,14 +88,14 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: Obj.Any } => Obj.isObject(data.subject),
-      component: ({ data }) => <RecordMain record={data.subject} />,
+      component: ({ data }) => <RecordArticle object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/collection-fallback`,
       role: 'article',
       position: 'fallback',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
-      component: ({ data }) => <CollectionMain collection={data.subject} />,
+      component: ({ data }) => <CollectionArticle object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/plugin-settings`,
@@ -255,17 +254,17 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       component: ({ data }) => <ViewEditor view={data.subject} />,
     }),
     createSurface({
-      id: POPOVER_RENAME_SPACE,
+      id: SPACE_RENAME_POPOVER,
       role: 'card--popover',
-      filter: (data): data is { props: Space } => data.component === POPOVER_RENAME_SPACE && isSpace(data.props),
-      component: ({ data }) => <PopoverRenameSpace space={data.props} />,
+      filter: (data): data is { props: Space } => data.component === SPACE_RENAME_POPOVER && isSpace(data.props),
+      component: ({ data }) => <SpaceRenamePopover space={data.props} />,
     }),
     createSurface({
-      id: POPOVER_RENAME_OBJECT,
+      id: OBJECT_RENAME_POPOVER,
       role: 'card--popover',
       filter: (data): data is { props: Obj.Any } =>
-        data.component === POPOVER_RENAME_OBJECT && isLiveObject(data.props),
-      component: ({ data }) => <PopoverRenameObject object={data.props} />,
+        data.component === OBJECT_RENAME_POPOVER && isLiveObject(data.props),
+      component: ({ data }) => <ObjectRenamePopover object={data.props} />,
     }),
     createSurface({
       id: `${meta.id}/menu-footer`,
@@ -319,7 +318,7 @@ export default ({ createInvitationUrl }: ReactSurfaceOptions) =>
       id: `${meta.id}/collection-section`,
       role: 'section',
       filter: (data): data is { subject: DataType.Collection } => Obj.instanceOf(DataType.Collection, data.subject),
-      component: ({ data }) => <CollectionSection collection={data.subject} />,
+      component: ({ data }) => <CollectionSection object={data.subject} />,
     }),
     createSurface({
       id: `${meta.id}/status`,

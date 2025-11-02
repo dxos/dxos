@@ -95,7 +95,7 @@ const invokeFunction = (
       },
     };
 
-    log.info('invoking function', { name: functionDef.name, input });
+    log('invoking function', { name: functionDef.name, input });
 
     // TODO(dmaretskyi): This should be delegated to a function invoker service.
     const data = yield* Effect.gen(function* () {
@@ -119,7 +119,7 @@ const invokeFunction = (
       ),
     );
 
-    log.info('completed', { function: functionDef.name, input, data });
+    log('completed', { function: functionDef.name, input, data });
 
     // Assert output matches schema.
     try {
@@ -140,7 +140,7 @@ export class FunctionImplementationResolver extends Context.Tag('@dxos/functions
     ): Effect.Effect<FunctionDefinition<I, O>, FunctionNotFoundError>;
   }
 >() {
-  static layerTest = ({ functions }: { functions: FunctionDefinition<any, any>[] }) =>
+  static layerTest = ({ functions }: { functions: readonly FunctionDefinition<any, any>[] }) =>
     Layer.succeed(FunctionImplementationResolver, {
       resolveFunctionImplementation: <I, O>(functionDef: FunctionDefinition<I, O>) => {
         const resolved = functions.find((f) => f.key === functionDef.key);

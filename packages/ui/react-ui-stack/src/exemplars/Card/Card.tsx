@@ -13,31 +13,31 @@ import React, {
 } from 'react';
 
 import { Icon, IconButton, type ThemedClassName, Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
-import { hoverableControls, mx } from '@dxos/react-ui-theme';
+import { cardMinInlineSize, hoverableControls, mx } from '@dxos/react-ui-theme';
 
 import { Image, StackItem } from '../../components';
 import { translationKey } from '../../translations';
 
 import { cardChrome, cardHeading, cardRoot, cardSpacing, cardText } from './fragments';
 
-type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
-
 /**
  * The default width of cards. It should be no larger than 320px per WCAG 2.1 SC 1.4.10.
  */
-const cardDefaultInlineSize = 18;
+const cardDefaultInlineSize = cardMinInlineSize;
+
 /**
- * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the
- * inline axis.
+ * This is `cardDefaultInlineSize` plus 2 times the sum of the inner and outer spacing applied by CardStack on the inline axis.
  */
 const cardStackDefaultInlineSizeRem = cardDefaultInlineSize + 2.125;
 
-const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
-  ({ children, classNames, asChild, role = 'group', ...props }, forwardedRef) => {
+type SharedCardProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { asChild?: boolean };
+
+const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps & { id?: string }>(
+  ({ children, classNames, id, asChild, role = 'group', ...props }, forwardedRef) => {
     const Root = asChild ? Slot : 'div';
     const rootProps = asChild ? { classNames: [cardRoot, classNames] } : { className: mx(cardRoot, classNames), role };
     return (
-      <Root {...props} {...rootProps} ref={forwardedRef}>
+      <Root {...(id && { 'data-object-id': id })} {...props} {...rootProps} ref={forwardedRef}>
         {children}
       </Root>
     );
@@ -45,18 +45,19 @@ const CardStaticRoot = forwardRef<HTMLDivElement, SharedCardProps>(
 );
 
 /**
- * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g.
- * in a Popover) and knows this based on the `role` it receives. This will render a `Card.StaticRoot` by default, otherwise
- * it will render a `div` primitive with the appropriate styling for specific handled situations.
+ * This should be used by Surface fulfillments in cases where the content may or may not already be encapsulated (e.g., in a Popover) and knows this based on the `role` it receives.
+ * This will render a `Card.StaticRoot` by default, otherwise it will render a `div` primitive with the appropriate styling for specific handled situations.
  */
 const CardSurfaceRoot = ({
+  id,
   role = 'never',
   children,
   classNames,
-}: ThemedClassName<PropsWithChildren<{ role?: string }>>) => {
+}: ThemedClassName<PropsWithChildren<{ id?: string; role?: string }>>) => {
   if (['card--popover', 'card--intrinsic', 'card--extrinsic'].includes(role)) {
     return (
       <div
+        {...(id && { 'data-object-id': id })}
         className={mx(
           role === 'card--popover'
             ? 'popover-card-width'
@@ -72,6 +73,7 @@ const CardSurfaceRoot = ({
   } else {
     return (
       <CardStaticRoot
+        id={id}
         classNames={[
           role === 'card--transclusion' && 'mlb-1',
           role === 'card--transclusion' && hoverableControls,

@@ -13,15 +13,16 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 import { Event } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { type Space, getSpace, useQueue } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, useQueue } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, references } from '@dxos/react-ui-chat';
+import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/react-ui-theme';
 import { DataType } from '@dxos/schema';
 import { isTruthy } from '@dxos/util';
 
-import { useReferencesProvider } from '../../hooks';
+import { useChatToolbarActions, useReferencesProvider } from '../../hooks';
 import { meta } from '../../meta';
 import { type AiChatProcessor } from '../../processor';
 import { type Assistant } from '../../types';
@@ -50,8 +51,7 @@ import { type ChatEvent } from './events';
 type ChatContextValue = {
   debug?: boolean;
   event: Event<ChatEvent>;
-  space: Space;
-  chat: Assistant.Chat;
+  chat?: Assistant.Chat;
   messages: DataType.Message[];
   processor: AiChatProcessor;
 };
@@ -62,27 +62,23 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 // Root
 //
 
-type ChatRootProps = ThemedClassName<
-  PropsWithChildren<
-    Pick<ChatContextValue, 'chat' | 'processor'> & {
-      onEvent?: (event: ChatEvent) => void;
-    }
-  >
+type ChatRootProps = PropsWithChildren<
+  Pick<ChatContextValue, 'chat' | 'processor'> & {
+    onEvent?: (event: ChatEvent) => void;
+  }
 >;
 
-const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
-  const space = getSpace(chat);
-
-  // Messages.
-  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const pending = useRxValue(processor.messages);
   const streaming = useRxValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
+  // Messages.
+  const queue = useQueue<DataType.Message>(chat?.queue.dxn);
   const messages = useMemo(() => {
     const queueMessages = queue?.objects?.filter(Obj.instanceOf(DataType.Message)) ?? [];
-    return Array.dedupeWith([...queueMessages, ...pending], (a, b) => a.id === b.id);
+    return Array.dedupeWith([...queueMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [queue?.objects, pending]);
 
   // Events.
@@ -128,28 +124,28 @@ const ChatRoot = ({ classNames, children, chat, processor, onEvent, ...props }: 
     });
   }, [event, processor, streaming, onEvent]);
 
-  if (!space) {
-    return null;
-  }
-
   return (
-    <ChatContextProvider
-      debug={debug}
-      event={event}
-      chat={chat}
-      space={space}
-      messages={messages}
-      processor={processor}
-      {...props}
-    >
-      <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
-        {children}
-      </div>
+    <ChatContextProvider debug={debug} event={event} chat={chat} messages={messages} processor={processor} {...props}>
+      {children}
     </ChatContextProvider>
   );
 };
 
 ChatRoot.displayName = 'Chat.Root';
+
+//
+// Content
+//
+
+type ChatContentProps = ThemedClassName<PropsWithChildren>;
+
+const ChatContent = ({ classNames, children }: ChatContentProps) => {
+  return (
+    <div role='none' className={mx('flex flex-col bs-full is-full', classNames)}>
+      {children}
+    </div>
+  );
+};
 
 //
 // Prompt
@@ -181,7 +177,8 @@ const ChatPrompt = ({
   onOnlineChange,
 }: ChatPromptProps) => {
   const { t } = useTranslation(meta.id);
-  const { space, event, processor } = useChatContext(ChatPrompt.displayName);
+  const { chat, processor, event } = useChatContext(ChatPrompt.displayName);
+  const space = getSpace(chat);
 
   const error = useRxValue(processor.error).pipe(Option.getOrUndefined);
   const streaming = useRxValue(processor.streaming);
@@ -298,8 +295,8 @@ const ChatPrompt = ({
         />
       </div>
 
-      {settings && (
-        <div role='none' className='flex pbs-2 items-center'>
+      {space && settings && (
+        <div role='none' className='flex pbs-2 items-center overflow-hidden'>
           <ChatOptions
             space={space}
             blueprintRegistry={processor.blueprintRegistry}
@@ -309,7 +306,7 @@ const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='pli-cardSpacingChrome grow'>
+          <div role='none' className='flex grow overflow-x-auto scrollbar-none'>
             <ChatReferences space={space} context={processor.context} />
           </div>
 
@@ -320,10 +317,11 @@ const ChatPrompt = ({
             processing={streaming}
             onEvent={handleEvent}
           >
+            {/* TODO(burdon): Move switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
                 <Input.Label srOnly>{t('online switch label')}</Input.Label>
-                <Input.Switch classNames='mis-2 mie-2' checked={online} onCheckedChange={onOnlineChange} />
+                <Input.Switch classNames='mli-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
           </ChatActions>
@@ -384,13 +382,34 @@ const ChatThread = (props: ChatThreadProps) => {
 ChatThread.displayName = 'Chat.Thread';
 
 //
+// Toolbar
+//
+
+type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Any }>;
+
+const ChatToolbar = ({ classNames, companionTo }: ChatToolbarProps) => {
+  const { chat } = useChatContext(ChatToolbar.displayName);
+  const menu = useChatToolbarActions({ chat, companionTo });
+
+  return (
+    <MenuProvider {...menu} attendableId={companionTo ? fullyQualifiedId(companionTo) : fullyQualifiedId(chat)}>
+      <ToolbarMenu classNames={classNames} textBlockWidth />
+    </MenuProvider>
+  );
+};
+
+ChatToolbar.displayName = 'Chat.Toolbar';
+
+//
 // Chat
 //
 
 export const Chat = {
   Root: ChatRoot,
+  Content: ChatContent,
   Prompt: ChatPrompt,
   Thread: ChatThread,
+  Toolbar: ChatToolbar,
 };
 
-export type { ChatRootProps, ChatThreadProps, ChatPromptProps, ChatEvent };
+export type { ChatRootProps, ChatContentProps, ChatThreadProps, ChatPromptProps, ChatToolbarProps, ChatEvent };

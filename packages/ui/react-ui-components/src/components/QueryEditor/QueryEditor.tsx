@@ -12,6 +12,7 @@ import {
   type EditorProps,
   type Extension,
   PopoverMenuProvider,
+  type PopoverMenuProviderProps,
   type UsePopoverMenuProps,
   createBasicExtensions,
   createMenuGroup,
@@ -29,14 +30,14 @@ export type QueryEditorProps = ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
-  } & (CompletionOptions & Omit<EditorProps, 'initialValue'>)
+  } & (CompletionOptions & Omit<EditorProps, 'initialValue'> & Pick<PopoverMenuProviderProps, 'numItems'>)
 >;
 
 /**
  * Query editor with decorations and autocomplete.
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
-  ({ db, tags, value, readonly, ...props }, forwardedRef) => {
+  ({ db, tags, value, readonly, numItems = 8, ...props }, forwardedRef) => {
     const [controller, setController] = useState<EditorController | null>(null);
     useEffect(() => {
       updateRef(forwardedRef, controller);
@@ -79,7 +80,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     );
 
     return (
-      <PopoverMenuProvider view={controller?.view} groups={groupsRef.current} {...menuProps} numItems={4}>
+      <PopoverMenuProvider numItems={numItems} view={controller?.view} groups={groupsRef.current} {...menuProps}>
         <Editor {...props} initialValue={value} extensions={extensions} moveToEnd ref={setController} />
       </PopoverMenuProvider>
     );

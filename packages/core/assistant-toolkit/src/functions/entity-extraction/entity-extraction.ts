@@ -15,8 +15,10 @@ import { DatabaseService, FunctionInvocationService, defineFunction } from '@dxo
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataType } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
-import { contextQueueLayerFromResearchGraph, makeGraphWriterHandler, makeGraphWriterToolkit } from '../research';
+import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
+import { contextQueueLayerFromResearchGraph } from '../research';
 
 export default defineFunction({
   key: 'dxos.org/functions/entity-extraction',
@@ -51,11 +53,11 @@ export default defineFunction({
         );
 
         yield* new AiSession().run({
-          system:
-            `
+          system: trim`
             Extract the sender's organization from the email. If you are not sure, do nothing.
             The extracted organization URL must match the sender's email domain.
-          ` + (instructions ? `\n<user_intructions>${instructions}</user_intructions>` : ''),
+            ${instructions ? '<user_intructions>' + instructions + '</user_intructions>' : ''},
+          `,
           prompt: JSON.stringify({ source, contact }),
           toolkit,
         });

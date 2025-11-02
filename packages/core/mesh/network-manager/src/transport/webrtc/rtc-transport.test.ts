@@ -16,7 +16,8 @@ import { chooseInitiatorPeer } from './utils';
 
 const connectionFactory = getRtcConnectionFactory();
 
-describe('RtcTransport', () => {
+// Segfault in node-datachannel.
+describe.skip('RtcTransport', () => {
   test('channel open and close', async () => {
     const peer = await createConnection();
     const channel = createChannel(peer);

@@ -41,7 +41,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    dim: 5,
-    count: 20,
+    dim: 8,
+    size: 16,
+    dotSize: 6,
+    count: 32,
   },
 };

@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
+import { Capabilities, type Capability, type PluginContext, contributes, createIntent } from '@dxos/app-framework';
 import { ArtifactId, computeDiffsWithCursors } from '@dxos/assistant';
 import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -20,7 +20,7 @@ import { trim } from '@dxos/util';
 import { ThreadAction } from '../types';
 
 // TODO(wittjosiah): How to make this work for more than Documents?
-class ThreadToolkit extends Toolkit.make(
+const Toolkit$ = Toolkit.make(
   Tool.make('add-proposals', {
     description: trim`
       Proposes a set of changes to a document.
@@ -34,9 +34,13 @@ class ThreadToolkit extends Toolkit.make(
     success: Schema.Any,
     failure: Schema.Never,
   }),
-) {
-  static layer = (context: PluginContext) =>
-    ThreadToolkit.toLayer({
+);
+
+export namespace ThreadToolkit {
+  export const Toolkit = Toolkit$;
+
+  export const createLayer = (context: PluginContext) =>
+    Toolkit$.toLayer({
       'add-proposals': ({ id, diffs: _diffs }) =>
         Effect.gen(function* () {
           // TODO(wittjosiah): Get capabilities via layers.
@@ -45,7 +49,6 @@ class ThreadToolkit extends Toolkit.make(
           const state = context.getCapability(Capabilities.Layout);
 
           const dxn = ArtifactId.toDXN(id, state.workspace as SpaceId);
-
           const echoDxn = dxn.asEchoDXN();
           if (!echoDxn) {
             throw new Error(`Invalid object ID: ${id}`);
@@ -76,7 +79,7 @@ class ThreadToolkit extends Toolkit.make(
     });
 }
 
-export default (context: PluginContext) => [
-  contributes(Capabilities.Toolkit, ThreadToolkit),
-  contributes(Capabilities.ToolkitHandler, ThreadToolkit.layer(context)),
+export default (context: PluginContext): Capability<any>[] => [
+  contributes(Capabilities.Toolkit, ThreadToolkit.Toolkit),
+  contributes(Capabilities.ToolkitHandler, ThreadToolkit.createLayer(context)),
 ];

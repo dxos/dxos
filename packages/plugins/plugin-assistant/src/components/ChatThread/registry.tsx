@@ -113,7 +113,7 @@ export const blockToMarkdown: BlockRenderer = (
   message: DataType.Message,
   block: ContentBlock.Any,
 ) => {
-  let str = _blockToMarkdown(context, message, block);
+  let str = blockToMarkdownImpl(context, message, block);
   if (str && !block.pending) {
     return (str += '\n');
   }
@@ -121,8 +121,8 @@ export const blockToMarkdown: BlockRenderer = (
   return str;
 };
 
-const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
-  log('blockToMarkdown', { block: JSON.stringify(block) });
+const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
+  log.info('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
@@ -135,7 +135,6 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       }
       break;
     }
-
     case 'suggestion': {
       if (block.pending) {
         return;
@@ -146,19 +145,16 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       if (block.pending || block.options.length === 0) {
         return;
       }
-
       return `<select>${block.options.map((option) => `<option>${option}</option>`).join('')}</select>`;
     }
-
-    // TODO(burdon): Need label.
     case 'reference': {
-      return `<reference ref="${block.reference.dxn.toString()}">Ref</reference>`;
+      const dxn = block.reference.dxn;
+      return `<reference ref="${dxn.toString()}">${context.getObjectLabel(dxn)}</reference>`;
     }
-
+    // TODO(burdon): Implement.
     // case 'toolkit': {
     //   return `<toolkit />`;
     // }
-
     case 'toolCall': {
       context.updateWidget(block.toolCallId, {
         blocks: [block],
@@ -171,11 +167,9 @@ const _blockToMarkdown = (context: MessageThreadContext, message: DataType.Messa
       }));
       break;
     }
-
     case 'summary': {
       return `<summary>${ContentBlock.createSummaryMessage(block)}</summary>`;
     }
-
     // TODO(burdon): Need stable ID.
     default: {
       return `<json id="${message.id}">\n${JSON.stringify(block)}\n</json>`;

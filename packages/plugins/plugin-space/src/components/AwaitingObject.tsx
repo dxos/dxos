@@ -12,15 +12,15 @@ import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { meta } from '../meta';
 import { SpaceAction } from '../types';
 
-const WAIT_FOR_OBJECT_TIMEOUT = 180e3; // 3 minutes
-const TOAST_TIMEOUT = 240e3; // 4 minutes
+const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
+const TOAST_TIMEOUT = 4 * 60 * 1_000;
 
 export const AwaitingObject = ({ id }: { id: string }) => {
+  const { t } = useTranslation(meta.id);
+  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const [open, setOpen] = useState(true);
   const [waiting, setWaiting] = useState(true);
   const [found, setFound] = useState(false);
-  const { t } = useTranslation(meta.id);
-  const { dispatchPromise: dispatch } = useIntentDispatcher();
   const layout = useLayout();
 
   const client = useClient();
@@ -31,17 +31,13 @@ export const AwaitingObject = ({ id }: { id: string }) => {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      setWaiting(false);
-    }, WAIT_FOR_OBJECT_TIMEOUT);
-
-    () => clearTimeout(timeout);
+    const timeout = setTimeout(() => setWaiting(false), WAIT_FOR_OBJECT_TIMEOUT);
+    return () => clearTimeout(timeout);
   }, [id]);
 
   useEffect(() => {
     if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
       setFound(true);
-
       if (layout.active.includes(id)) {
         setOpen(false);
       }

@@ -119,9 +119,9 @@ const L0ItemRoot = forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
     const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
     const rootProps =
       type === 'tab'
-        ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
+        ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
         : type !== 'collection'
-          ? { onClick: handleClick, 'data-testid': testId, 'data-itemid': id }
+          ? { onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
           : { onClick: handleClick, role: 'button' };
 
     return (
@@ -287,7 +287,7 @@ const L0Collection = ({ item, path }: L0ItemProps) => {
       role='group'
       className='contents group/l0c'
       aria-labelledby={`${item.id}__label`}
-      data-itemid={id}
+      data-object-id={id}
       data-testid={testId}
     >
       {collectionItems.map((collectionItem) => (

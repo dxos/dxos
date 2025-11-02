@@ -2,4 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as entityExtraction } from './entity-extraction';
+import { default as extract$ } from './entity-extraction';
+
+export namespace EntityExtraction {
+  export const extract = extract$;
+}

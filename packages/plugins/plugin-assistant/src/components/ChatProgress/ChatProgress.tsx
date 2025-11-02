@@ -61,7 +61,7 @@ export const ChatProgress = ({ chat }: ChatProgressProps) => {
   return (
     <Flex column tabIndex={0} ref={ref} classNames='outline-none'>
       <ProgressBar nodes={nodes} index={index} onSelect={handleSelect} />
-      <TextCrawl lines={lines} index={index} autoAdvance classNames='pis-4 text-sm text-subdued' />
+      <TextCrawl classNames='pis-4 text-sm text-description' lines={lines} autoAdvance />
     </Flex>
   );
 };

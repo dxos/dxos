@@ -5,11 +5,11 @@
 import { type EditorView } from '@codemirror/view';
 import React, { type ReactNode, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
+import { createDocAccessor, createObject } from '@dxos/client/echo';
 import { Expando } from '@dxos/echo/internal';
 import { live } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { createDocAccessor, createObject } from '@dxos/react-client/echo';
 import { useForwardedRef, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';

@@ -24,6 +24,9 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

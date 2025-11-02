@@ -7,18 +7,18 @@ import '@dxos-theme';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react';
 
-// TODO(wittjosiah): Don't depend on storybook-utils in root storybook config.
-// import { DocsContainer } from '@dxos/storybook-utils';
-
-import { docsTheme } from './theme';
+import { docsTheme, withLayout } from './theme';
 
 /**
  * Configure Storybook rendering.
  * https://storybook.js.org/docs/configure#configure-story-rendering
+ *
+ * NOTE: Do not depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
  */
 export const preview: Preview = {
-  // Note: Does not affect docs.
+  // NOTE: Does not affect docs.
   decorators: [
+    withLayout,
     withThemeByClassName({
       defaultTheme: 'dark',
       themes: {
@@ -48,6 +48,7 @@ export const preview: Preview = {
     },
     docs: {
       inlineStories: true,
+      // TODO(burdon): Move from storybook-utils.
       // container: DocsContainer,
       theme: docsTheme,
       source: {

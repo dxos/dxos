@@ -75,7 +75,6 @@ const DefaultStory = ({ generator = [], delay = 0, ...props }: StoryProps) => {
   );
 };
 
-// TODO(burdon): Factor out.
 // TODO(burdon): Provide renderer for preview extension.
 const PreviewCard = () => {
   const { target } = usePreviewPopover('PreviewCard');
