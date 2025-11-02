@@ -109,6 +109,7 @@ export const ResetDialog = ({
         : { defaultOpen, open, onOpenChange })}
     >
       <AlertDialog.Overlay>
+        {/* TODO(burdon): Replace max-is-[40rem] with standard size. */}
         <AlertDialog.Content classNames='md:max-is-[40rem]' data-testid='resetDialog'>
           <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
           <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
