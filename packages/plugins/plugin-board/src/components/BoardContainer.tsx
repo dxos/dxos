@@ -38,7 +38,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
   const attendableId = fullyQualifiedId(board);
   const { hasAttention } = useAttention(attendableId);
 
-  // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board.
+  // TODO(burdon): Use search.
   const objects = useQuery(getSpace(board), Filter.everything());
   const options = useMemo<ObjectPickerContentProps['options']>(
     () =>
