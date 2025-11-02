@@ -43,7 +43,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             </Button>
           </div>
           <div className='flex justify-center'>
-            <IconButton {...args} label='Test' icon='ph--atom--regular' size={5} density='fine' classNames='px-2' />
+            <IconButton {...args} label='Test' icon='ph--atom--regular' density='fine' classNames='px-2' />
           </div>
           <div className='flex justify-center'>
             <IconButton
@@ -51,7 +51,6 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               label='Test'
               icon='ph--atom--regular'
               iconOnly
-              size={5}
               density='fine'
               classNames='py-1 px-1.5'
             />
@@ -101,7 +100,6 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             variant='primary'
             icon='ph--arrows-clockwise--regular'
             label='Test'
-            size={5}
           />
         </div>
       </div>

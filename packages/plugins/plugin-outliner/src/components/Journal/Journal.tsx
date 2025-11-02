@@ -103,7 +103,6 @@ const JournalEntry = ({ entry, classNames, ...props }: JournalEntryProps) => {
       <div className='flex items-center gap-2 bg-transparent'>
         <IconButton
           label={format(date, 'MMM d, yyyy')}
-          size={5}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />

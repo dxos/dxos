@@ -114,7 +114,7 @@ describe('ComputeGraphRegistry', () => {
     await functionsUpdated.wait();
 
     // Autocomplete should now include the binding.
-    const echoFunctions = graph.getFunctions({ standard: false, echo: true }).map((f) => f.name);
+    const echoFunctions = graph.getFunctions({ standard: false, echo: true }).map((fn) => fn.name);
     expect(echoFunctions).toContain('ADD');
 
     // And the binding should execute when used in a formula.
