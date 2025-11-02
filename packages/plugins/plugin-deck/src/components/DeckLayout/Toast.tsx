@@ -35,7 +35,7 @@ export const Toast = ({
     <NaturalToast.Root data-testid={id} defaultOpen duration={duration} onOpenChange={onOpenChange}>
       <NaturalToast.Body>
         <NaturalToast.Title classNames='items-center'>
-          {icon && <Icon icon={icon} size={5} classNames='inline mr-1' />}
+          {icon && <Icon icon={icon} classNames='inline mr-1' />}
           {title && <span>{toLocalizedString(title, t)}</span>}
         </NaturalToast.Title>
         {description && (

@@ -122,7 +122,7 @@ export const blockToMarkdown: BlockRenderer = (
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Message, block: ContentBlock.Any) => {
-  log.info('blockToMarkdown', { block: JSON.stringify(block) });
+  log('blockToMarkdown', { block: JSON.stringify(block) });
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {

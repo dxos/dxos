@@ -42,14 +42,7 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
       <div className='grow' />
       <div className='flex gap-2 items-center'>
         <div className='font-mono'>{identity?.identityKey.truncate()}</div>
-        <IconButton
-          classNames='pli-[7px]'
-          icon='ph--user--regular'
-          iconOnly
-          label='Profile'
-          onClick={onProfile}
-          size={5}
-        />
+        <IconButton classNames='pli-[7px]' icon='ph--user--regular' iconOnly label='Profile' onClick={onProfile} />
       </div>
     </div>
   );

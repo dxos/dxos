@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/react-ui-theme';
@@ -26,25 +26,24 @@ export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: str
   }, []);
 
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames='@container'>
       <Chessboard.Root game={game} ref={controller}>
         <Toolbar.Root>
-          <IconButton
-            variant='ghost'
+          <Toolbar.IconButton
             icon='ph--info--regular'
             iconOnly
             label={t('toggle info button')}
-            size={6}
-            classNames={mx('invisible', !open && '@3xl:visible')}
+            disabled={open}
+            classNames={mx('invisible @2xl:visible')}
             onClick={() => setOpen((open) => !open)}
           />
         </Toolbar.Root>
         <div
           className={mx(
-            'grid _grid-rows-[1fr_4rem] bs-full is-full gap-2',
-            open && '@3xl:grid-cols-[1fr_320px]',
+            'grid bs-full is-full gap-2',
+            open && '@2xl:grid-cols-[1fr_320px]',
             role === 'section' && 'aspect-square',
-            role === 'section' && open && '@3xl:aspect-auto',
+            role === 'section' && open && '@2xl:aspect-auto',
           )}
         >
           <Chessboard.Content>

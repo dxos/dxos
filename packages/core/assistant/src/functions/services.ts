@@ -114,14 +114,15 @@ const toolCache = new WeakMap<FunctionDefinition<any, any>, Tool.Any>();
  *
  * @param fn The function definition to project into a tool.
  * @param meta Optional projection metadata.
- * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present. This is the
- *        EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
+ * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present.
+ *    This is the EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
  */
 const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
 
+  // TODO(burdon): Use and map function.key?
   const tool = Tool.make(makeToolName(fn.name), {
     description: fn.description,
     parameters: createStructFieldsFromSchema(fn.inputSchema),
@@ -136,8 +137,8 @@ const projectFunctionToTool = (fn: FunctionDefinition<any, any>): Tool.Any => {
  * @returns Tool name produced from function name by escaping invalid characters.
  */
 const makeToolName = (name: string) => {
-  const toolName = name.replace(/[^a-zA-Z0-9]/g, '_');
-  invariant(toolName.match(/^[a-zA-Z_][a-zA-Z0-9-_]*$/));
+  const toolName = name.toLowerCase().replace(/[^a-zA-Z0-9]/g, '-');
+  invariant(toolName.match(/^[a-z_][a-z0-9-_]*$/));
   return toolName;
 };
 

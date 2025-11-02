@@ -43,7 +43,7 @@ export const ChatOptions = ({
     <div role='none' className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly size={5} label={t('button context objects')} />
+          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('button context objects')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
@@ -61,7 +61,6 @@ export const ChatOptions = ({
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
-            size={5}
             label={t('button context settings')}
           />
         </Popover.Trigger>

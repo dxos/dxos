@@ -17,7 +17,7 @@ export const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, e
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('mbe-trimSm last:mbe-0 font-medium flex items-center gap-trimXs', etc);
+  return mx('mbe-trimSm last:mbe-0 font-medium flex items-center gap-2 gap-trimXs', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
