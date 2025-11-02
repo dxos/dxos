@@ -40,7 +40,7 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
 
   // Memoize options for ObjectPicker containing all ECHO objects in the same space as the Board.
   const objects = useQuery(getSpace(board), Filter.everything());
-  const options = useMemo(
+  const options = useMemo<ObjectPickerContentProps['options']>(
     () =>
       objects
         .filter((obj) => obj.id !== board.id)
@@ -50,11 +50,12 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             return {
               id: obj.id,
               label,
-              // hue: 'neutral' as const,
+              hue: 'neutral' as const,
             };
           }
         })
-        .filter(isNonNullable),
+        .filter(isNonNullable)
+        .sort(({ label: a }, { label: b }) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase())),
     [objects],
   );
 
@@ -138,7 +139,6 @@ export const BoardContainer = ({ board }: BoardContainerProps) => {
             </Board.Viewport>
           </Board.Container>
         </StackItem.Content>
-        {/* TODO(burdon): Currently clipped by sidebar. */}
         <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='popover-card-width' />
         <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
       </ObjectPicker.Root>
