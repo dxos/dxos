@@ -45,10 +45,10 @@ const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
 // Heading
 //
 
-type ThreadHeaderProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { detached?: boolean };
+type ThreadHeaderProps = ComponentPropsWithRef<'div'> & { detached?: boolean };
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
-  ({ classNames, children, detached, ...props }, forwardedRef) => {
+  ({ children, detached, ...props }, forwardedRef) => {
     return (
       <>
         <div role='none' className='flex items-center justify-center text-description'>

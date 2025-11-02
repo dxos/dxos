@@ -63,9 +63,7 @@ const DefaultStory = (props: StorybookToolbarProps) => {
       </Toolbar.Button>
       <Toolbar.Separator />
       <Toolbar.Button>Test</Toolbar.Button>
-      <Toolbar.Button>
-        <Icon icon='ph--arrow-clockwise--regular' />
-      </Toolbar.Button>
+      <Toolbar.IconButton icon='ph--arrow-clockwise--regular' label='Refresh' iconOnly />
     </Toolbar.Root>
   );
 };

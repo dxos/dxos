@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type KeyboardEvent, useState } from 'react';
 
-import { Button, Icon, Input } from '@dxos/react-ui';
+import { type Button, IconButton, Input } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -54,9 +54,14 @@ const CommandDialog = ({ onAction }: { onAction: (action?: any) => void }) => {
             onKeyDown={handleKeyDown}
           />
         </Input.Root>
-        <Button variant='ghost' classNames='pli-0' onClick={() => onAction({ type: 'cancel' })}>
-          <Icon icon='ph--x--regular' size={5} />
-        </Button>
+        <IconButton
+          icon='ph--x--regular'
+          label='Cancel'
+          iconOnly
+          variant='ghost'
+          classNames='pli-0'
+          onClick={() => onAction({ type: 'cancel' })}
+        />
       </div>
     </div>
   );

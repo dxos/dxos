@@ -19,7 +19,7 @@ import { Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { type Space, getSpace, isLiveObject, isSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { cardDialogContent, cardDialogHeader } from '@dxos/react-ui-stack';
 import { DataType, getTypenameFromQuery } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -86,7 +86,11 @@ export const CreateObjectDialog = ({
         if (isLiveObject(object) && !Obj.instanceOf(DataType.StoredSchema, object)) {
           // TODO(wittjosiah): Selection in navtree isn't working as expected when hidden typenames evals to true.
           const hidden = form.hidden || hiddenTypenames.includes(Type.getTypename(form.objectSchema));
-          const addObjectIntent = createIntent(SpaceAction.AddObject, { target, object, hidden });
+          const addObjectIntent = createIntent(SpaceAction.AddObject, {
+            target,
+            object,
+            hidden,
+          });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
             yield* dispatch(Function.pipe(addObjectIntent, chain(LayoutAction.Open, { part: 'main' })));
@@ -107,13 +111,23 @@ export const CreateObjectDialog = ({
       <div role='none' className={cardDialogHeader}>
         <Dialog.Title>
           {t('create object dialog title', {
-            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Item' }),
+            object: t('typename label', {
+              ns: typename,
+              defaultValue: views ? 'View' : 'Item',
+            }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>
-          <Button ref={closeRef} density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--regular' size={4} />
-          </Button>
+          <IconButton
+            ref={closeRef}
+            icon='ph--x--regular'
+            size={4}
+            label='Close'
+            iconOnly
+            density='fine'
+            variant='ghost'
+            autoFocus
+          />
         </Dialog.Close>
       </div>
 

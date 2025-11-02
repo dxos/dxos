@@ -17,7 +17,7 @@ import { DXN } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Icon, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Avatar, Input, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
@@ -90,7 +90,15 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     inputRef.current?.focus();
   };
 
-  const handleResponse = ({ text, data, error }: { text?: string; data?: any; error?: Error } = {}) => {
+  const handleResponse = ({
+    text,
+    data,
+    error,
+  }: {
+    text?: string;
+    data?: any;
+    error?: Error;
+  } = {}) => {
     controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
     setIsExecuting(false);
@@ -158,12 +166,20 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.Button onClick={() => handleRequest(input)}>
-          <Icon icon='ph--play--regular' size={4} />
-        </Toolbar.Button>
-        <Toolbar.Button onClick={() => (isExecuting ? handleStop() : handleClear())}>
-          <Icon icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'} size={4} />
-        </Toolbar.Button>
+        <Toolbar.IconButton
+          icon='ph--play--regular'
+          size={4}
+          label='Execute'
+          iconOnly
+          onClick={() => handleRequest(input)}
+        />
+        <Toolbar.IconButton
+          icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
+          size={4}
+          label={isExecuting ? 'Stop' : 'Clear'}
+          iconOnly
+          onClick={() => (isExecuting ? handleStop() : handleClear())}
+        />
       </Toolbar.Root>
     </div>
   );
@@ -242,4 +258,9 @@ const inputTemplateFromAst = (ast: SchemaAST.AST): string => {
 /**
  * Request or response.
  */
-type Message = { type: 'request' | 'response'; text?: string; data?: any; error?: Error };
+type Message = {
+  type: 'request' | 'response';
+  text?: string;
+  data?: any;
+  error?: Error;
+};
