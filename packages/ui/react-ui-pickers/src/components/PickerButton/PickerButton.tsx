@@ -8,7 +8,7 @@ import React, { type FC, useEffect, useState } from 'react';
 import { Button, DropdownMenu, Icon, type IconProps, type ThemedClassName, Toolbar, Tooltip } from '@dxos/react-ui';
 
 export type PickerButtonProps = ThemedClassName<{
-  Component: FC<{ value: string; iconSize?: IconProps['size'] }>;
+  Component: FC<{ value: string; size?: IconProps['size'] }>;
   label: string;
   icon: string;
   values: string[];
@@ -25,8 +25,8 @@ export const PickerButton = ({
   Component,
   disabled,
   classNames,
-  defaultValue: _defaultValue,
-  value: _value,
+  defaultValue: defaultValueParam,
+  value: valueParam,
   values,
   label,
   icon,
@@ -36,15 +36,14 @@ export const PickerButton = ({
   iconSize = 5,
 }: PickerButtonProps) => {
   const [value, setValue] = useControllableState<string>({
-    prop: _value,
-    defaultProp: _defaultValue,
+    prop: valueParam,
+    defaultProp: defaultValueParam,
     onChange,
   });
   // TODO(burdon): useControllableState doesn't update the prop when the value is changed. Replace it.
-  useEffect(() => setValue(_value), [_value]);
+  useEffect(() => setValue(valueParam), [valueParam]);
 
   const [open, setOpen] = useState<boolean>(false);
-
   const TriggerRoot = rootVariant === 'toolbar-button' ? Toolbar.Button : Button;
 
   return (
@@ -53,7 +52,7 @@ export const PickerButton = ({
         <DropdownMenu.Trigger asChild>
           <TriggerRoot classNames={['gap-2 plb-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
-            {(value && <Component value={value} iconSize={iconSize} />) || <Icon icon={icon} size={iconSize} />}
+            {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
             <Icon icon='ph--caret-down--bold' size={3} />
           </TriggerRoot>
         </DropdownMenu.Trigger>
@@ -69,7 +68,7 @@ export const PickerButton = ({
                   onCheckedChange={() => setValue(_value)}
                   classNames={'p-1 items-center justify-center aspect-square'}
                 >
-                  <Component value={_value} iconSize={iconSize} />
+                  <Component value={_value} size={iconSize} />
                 </DropdownMenu.CheckboxItem>
               );
             })}

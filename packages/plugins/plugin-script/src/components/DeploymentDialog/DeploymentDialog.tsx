@@ -6,7 +6,7 @@ import React, { useEffect, useMemo } from 'react';
 
 import { LayoutAction, createIntent, useIntentDispatcher } from '@dxos/app-framework';
 import { getSpace } from '@dxos/react-client/echo';
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { type DataType } from '@dxos/schema';
 
 import { useCreateAndDeployScriptTemplates } from '../../hooks/useCreateAndDeployScriptTemplates';
@@ -50,10 +50,20 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
           },
         }),
       );
-      void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      void dispatch(
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
+          options: { state: false },
+        }),
+      );
     }
     if (status === 'error') {
-      void dispatch(createIntent(LayoutAction.UpdateDialog, { part: 'dialog', options: { state: false } }));
+      void dispatch(
+        createIntent(LayoutAction.UpdateDialog, {
+          part: 'dialog',
+          options: { state: false },
+        }),
+      );
       void dispatch(
         createIntent(LayoutAction.AddToast, {
           part: 'toast',
@@ -75,14 +85,16 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       <div className='flex justify-between items-center'>
         <Dialog.Title>{t('deployment dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Button density='fine' variant='ghost'>
-            <Icon icon='ph--x--regular' size={4} />
-          </Button>
+          <IconButton icon='ph--x--regular' size={4} label='Close' iconOnly density='fine' variant='ghost' />
         </Dialog.Close>
       </div>
       <div role='none' className='plb-4'>
         {/* TODO: Implement deployment logic and UI. */}
-        <p>{t('deployment dialog scripts found message', { count: scriptTemplates.length })}</p>
+        <p>
+          {t('deployment dialog scripts found message', {
+            count: scriptTemplates.length,
+          })}
+        </p>
         <ul className='pbs-2'>
           {scriptTemplates.map((template) => {
             return <li key={template.id}>{template.name}</li>;
@@ -92,8 +104,12 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       <div role='none' className='flex flex-row-reverse gap-1'>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
-            ? t('deployment dialog deploy functions pending button label', { count: scriptTemplates.length })
-            : t('deployment dialog deploy functions button label', { count: scriptTemplates.length })}
+            ? t('deployment dialog deploy functions pending button label', {
+                count: scriptTemplates.length,
+              })
+            : t('deployment dialog deploy functions button label', {
+                count: scriptTemplates.length,
+              })}
         </Button>
         <Dialog.Close asChild disabled={status === 'pending'}>
           <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>

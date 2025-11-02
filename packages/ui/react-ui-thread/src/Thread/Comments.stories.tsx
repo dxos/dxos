@@ -11,7 +11,7 @@ import { createDocAccessor, createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button, Icon, useThemeContext } from '@dxos/react-ui';
+import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import {
   type Comment,
@@ -187,9 +187,14 @@ const StoryThread: FC<{
           onSend={handleCreateMessage}
         />
         <Thread.Status />
-        <Button variant='ghost' classNames='px-1' title='Resolve' onClick={onResolve}>
-          <Icon icon='ph--check--regular' />
-        </Button>
+        <IconButton
+          variant='ghost'
+          icon='ph--check--regular'
+          iconOnly
+          classNames='px-1'
+          label='Resolve'
+          onClick={onResolve}
+        />
       </div>
     </Thread.Root>
   );

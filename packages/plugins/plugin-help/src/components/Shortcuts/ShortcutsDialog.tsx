@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
+import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
@@ -19,11 +19,8 @@ export const ShortcutsDialogContent = () => {
     <Dialog.Content classNames='p-0 bs-content max-bs-full md:max-is-[25rem] overflow-hidden'>
       <div role='none' className='flex justify-between mbe-1 pbs-3 pis-2 pie-3 @md:pbs-4 @md:pis-4 @md:pie-5'>
         <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
-
         <Dialog.Close asChild>
-          <Button density='fine' variant='ghost' autoFocus>
-            <Icon icon='ph--x--bold' size={3} />
-          </Button>
+          <IconButton icon='ph--x--bold' iconOnly size={3} label='Close' variant='ghost' autoFocus />
         </Dialog.Close>
       </div>
 
