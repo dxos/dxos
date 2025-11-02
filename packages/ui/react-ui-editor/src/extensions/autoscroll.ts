@@ -34,8 +34,6 @@ export const autoScroll = ({
   let lastScrollTop = 0;
   let scrollCounter = 0;
 
-  console.log(overscroll);
-
   const hideScrollbar = (view: EditorView) => {
     view.scrollDOM.classList.add('cm-hide-scrollbar');
     clearTimeout(timeout);
@@ -71,10 +69,11 @@ export const autoScroll = ({
 
       // Maybe scroll if doc changed and pinned.
       // TODO(burdon): Autoscrolling is jerky.
+      // TODO(burdon): Find pos of last line.
       // NOTE: Geometry changed is triggered when tool block is opened.
       const distanceFromBottom = calcDistance(update.view.scrollDOM);
       if (update.heightChanged && isPinned && !isThrottled) {
-        if (distanceFromBottom >= overscroll) {
+        if (distanceFromBottom > overscroll) {
           if (autoScroll) {
             isThrottled = true;
             requestAnimationFrame(() => {
@@ -135,6 +134,7 @@ export const autoScroll = ({
                 }),
             )
             .build();
+
           scroller?.appendChild(buttonContainer);
         }
       },

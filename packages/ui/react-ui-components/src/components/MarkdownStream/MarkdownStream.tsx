@@ -27,13 +27,13 @@ import {
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
-  autoScroll,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
   preview,
   scrollToBottomEffect,
+  smoothScroll,
   streamer,
   useTextEditor,
   xmlTagContextEffect,
@@ -80,12 +80,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-is-[100cqi]`.
-                className: 'size-container pli-cardSpacingInline plb-cardSpacingBlock',
+                className: 'size-container pli-cardSpacingInline',
               },
             },
           }),
           createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
           extendedMarkdown({ registry }),
+          smoothScroll(),
           debug
             ? []
             : [
@@ -95,7 +96,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                autoScroll({ autoScroll: false, overscroll: 0 }),
+                // autoScroll({ autoScroll: false, overscroll: 0 }),
               ],
         ].filter(isNonNullable),
       };

@@ -25,6 +25,7 @@ export * from './outliner';
 export * from './popover';
 export * from './preview';
 export * from './selection';
+export * from './scrolling';
 export * from './state';
 export * from './tags';
 export * from './typewriter';

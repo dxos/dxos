@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
+import { scrollToLineEffect } from '../scrolling';
 
 import { nodeToJson } from './xml-util';
 
@@ -181,7 +182,7 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
             {
               key: 'Mod-ArrowUp',
               run: (view) => {
-                const cursorPos = view.state.selection.main.head;
+                const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).from;
                 let widget: { from: number; to: number; tag: string } | null = null;
                 const { decorations } = view.state.field(widgetDecorationsField);
                 for (const range of decorationSetToArray(decorations)) {
@@ -195,16 +196,10 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
                   }
                 }
 
-                // TODO(burdon): Smooth scrolling.
-                // view.scrollDOM.scrollTo({
-                //   top: view.scrollDOM.scrollHeight,
-                //   behavior: 'smooth',
-                // });
-
-                const pos = widget?.from ?? 0;
+                const line = view.state.doc.lineAt(widget?.from ?? 0);
                 view.dispatch({
-                  selection: { anchor: pos, head: pos },
-                  effects: EditorView.scrollIntoView(pos, { y: 'start', yMargin: 16 }),
+                  selection: { anchor: line.from, head: line.from },
+                  effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
                 });
 
                 return true;
@@ -227,17 +222,17 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
                   }
                 }
 
-                const pos = widget?.from;
-                if (pos) {
+                if (widget) {
+                  const line = view.state.doc.lineAt(widget?.from);
                   view.dispatch({
-                    selection: { anchor: pos, head: pos },
-                    effects: EditorView.scrollIntoView(pos, { y: 'start', yMargin: 16 }),
+                    selection: { anchor: line.to, head: line.to },
+                    effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
                   });
                 } else {
-                  const to = view.state.doc.length;
+                  const line = view.state.doc.lineAt(view.state.doc.length);
                   view.dispatch({
-                    selection: { anchor: to, head: to },
-                    effects: EditorView.scrollIntoView(to, { y: 'end', yMargin: 16 }),
+                    selection: { anchor: line.to, head: line.to },
+                    effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16, position: 'end' } }),
                   });
                 }
 
