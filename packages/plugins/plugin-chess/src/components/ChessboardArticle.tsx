@@ -34,16 +34,16 @@ export const ChessboardArticle = ({ game, role }: { game: Chess.Game; role?: str
             iconOnly
             label={t('toggle info button')}
             disabled={open}
-            classNames={mx('invisible @2xl:visible')}
+            classNames={mx('invisible @3xl:visible')}
             onClick={() => setOpen((open) => !open)}
           />
         </Toolbar.Root>
         <div
           className={mx(
             'grid bs-full is-full gap-2',
-            open && '@2xl:grid-cols-[1fr_320px]',
+            open && '@3xl:grid-cols-[1fr_320px]',
             role === 'section' && 'aspect-square',
-            role === 'section' && open && '@2xl:aspect-auto',
+            role === 'section' && open && '@3xl:aspect-auto',
           )}
         >
           <Chessboard.Content>
