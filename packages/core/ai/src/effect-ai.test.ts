@@ -25,7 +25,6 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiParser } from '@dxos/ai';
-import { Format } from '@dxos/echo/internal';
 import { TestHelpers } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
@@ -67,7 +66,7 @@ const createChat = Effect.fn(function* (prompt: string) {
 
 // Tool definitions.
 const TestToolkit = Toolkit.make(
-  Tool.make('Calculator', {
+  Tool.make('calculator', {
     description: 'Basic calculator tool',
     parameters: {
       input: Schema.String.annotations({
@@ -79,10 +78,11 @@ const TestToolkit = Toolkit.make(
     }),
     failure: Schema.Never,
   }),
-  Tool.make('Date', {
+  Tool.make('get-date', {
     description: 'Get the current date',
     parameters: {
-      location: Format.GeoPoint,
+      // TODO(burdon): This isn't working.
+      // location: Format.GeoPoint,
     },
     success: Schema.DateFromString,
   }),
@@ -90,7 +90,7 @@ const TestToolkit = Toolkit.make(
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({
-  Calculator: ({ input }) =>
+  ['calculator' as const]: ({ input }) =>
     Effect.gen(function* () {
       const result = (() => {
         // Restrict to basic arithmetic operations for safety.
@@ -105,7 +105,7 @@ const toolkitLayer = TestToolkit.toLayer({
       yield* Console.log(`Executing calculation: ${input} = ${result}`);
       return { result };
     }),
-  Date: ({ location }) =>
+  ['get-date' as const]: () =>
     Effect.gen(function* () {
       return new Date('2025-10-01');
     }),
