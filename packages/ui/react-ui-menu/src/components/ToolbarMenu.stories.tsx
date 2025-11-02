@@ -40,7 +40,7 @@ export const DropdownMenu: Story = {
       <MenuProvider useGroupItems={resolveGroupItems}>
         <NaturalDropdownMenu.Root>
           <NaturalDropdownMenu.Trigger asChild>
-            <IconButton icon='ph--list-checks--regular' size={5} label='Options' />
+            <IconButton icon='ph--list-checks--regular' label='Options' />
           </NaturalDropdownMenu.Trigger>
         </NaturalDropdownMenu.Root>
       </MenuProvider>

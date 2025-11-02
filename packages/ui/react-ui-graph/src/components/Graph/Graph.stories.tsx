@@ -307,14 +307,14 @@ const Debug = ({
   return (
     <div className='flex flex-col overflow-hidden'>
       <Toolbar.Root>
-        <IconButton onClick={onToggleProjector} size={5} label='Projector' icon='ph--graph--regular' iconOnly />
-        <IconButton onClick={onRefresh} size={5} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
-        <IconButton onClick={onRepaint} size={5} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
-        <IconButton onClick={onRegenerate} size={5} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
-        <IconButton onClick={onClear} size={5} label='Clear' icon='ph--trash--regular' iconOnly />
-        <IconButton onClick={onAdd} size={5} label='Add' icon='ph--plus--regular' iconOnly />
-        <IconButton onClick={onDelete} size={5} label='Delete' icon='ph--x--regular' iconOnly />
-        <IconButton onClick={onPing} size={5} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
+        <IconButton onClick={onToggleProjector} label='Projector' icon='ph--graph--regular' iconOnly />
+        <IconButton onClick={onRefresh} label='Refresh' icon='ph--arrow-clockwise--regular' iconOnly />
+        <IconButton onClick={onRepaint} label='Repaint' icon='ph--paint-roller--regular' iconOnly />
+        <IconButton onClick={onRegenerate} label='Regenerate' icon='ph--arrows-clockwise--regular' iconOnly />
+        <IconButton onClick={onClear} label='Clear' icon='ph--trash--regular' iconOnly />
+        <IconButton onClick={onAdd} label='Add' icon='ph--plus--regular' iconOnly />
+        <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
+        <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
       <JsonFilter data={data} classNames='text-sm' />
     </div>

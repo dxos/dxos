@@ -179,7 +179,6 @@ export const PlankHeading = memo(
                 icon={icon}
                 iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
                 label={toLocalizedString(label, t)}
-                size={5}
                 variant={node?.id === id ? 'primary' : 'ghost'}
                 onClick={handleTabClick}
               />
@@ -202,7 +201,7 @@ export const PlankHeading = memo(
               ) : (
                 <StackItem.SigilButton>
                   <span className='sr-only'>{label}</span>
-                  <Icon icon={icon} size={5} />
+                  <Icon icon={icon} />
                 </StackItem.SigilButton>
               )}
             </ActionRoot>

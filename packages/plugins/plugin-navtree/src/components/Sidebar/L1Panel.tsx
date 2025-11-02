@@ -127,7 +127,6 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
           variant='ghost'
           icon='ph--arrow-u-down-left--regular'
           iconOnly
-          size={5}
           label={t('button back')}
           classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
           onClick={handleBack}
@@ -139,7 +138,6 @@ const L1PanelHeader = ({ item, path, onBack }: L1PanelProps) => {
             variant='ghost'
             icon={alternateTree.properties.icon ?? 'ph--placeholder--regular'}
             iconOnly
-            size={5}
             label={toLocalizedString(alternateTree.properties.label ?? alternateTree.id, t)}
             classNames={[hoverableControlItem, hoverableOpenControlItem, 'pointer-fine:pli-1']}
             onClick={handleOpen}

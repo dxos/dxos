@@ -329,7 +329,6 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
         // TODO(burdon): Make this pluggable so that the container can provide a menu trigger.
         <IconButton
           icon='ph--plus--regular'
-          size={5}
           iconOnly
           label={t('button add')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'

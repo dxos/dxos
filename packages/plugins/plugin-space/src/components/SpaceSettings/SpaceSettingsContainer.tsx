@@ -121,7 +121,6 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               onChange={handleChange}
               onReset={handleReset}
               classNames='justify-self-end'
-              iconSize={5}
             />
           </ControlItem>
         );

@@ -47,7 +47,6 @@ export const CardSubjectMenu = ({
             icon='ph--dots-three-vertical--bold'
             iconOnly
             label={t('more options label')}
-            size={5}
             {...props}
           />
         </DropdownMenu.Trigger>
