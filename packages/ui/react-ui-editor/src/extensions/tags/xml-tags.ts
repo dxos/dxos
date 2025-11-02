@@ -232,7 +232,7 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
                   const line = view.state.doc.lineAt(view.state.doc.length);
                   view.dispatch({
                     selection: { anchor: line.to, head: line.to },
-                    effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16, position: 'end' } }),
+                    effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
                   });
                 }
 
