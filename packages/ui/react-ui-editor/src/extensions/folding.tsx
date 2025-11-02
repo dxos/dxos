@@ -26,7 +26,6 @@ export const folding = (_props: FoldingOptions = {}): Extension => [
     markerDOM: (open) => {
       return renderRoot(
         Domino.of('div').classNames('flex h-full items-center').build(),
-        // TODO(burdon): Use sprite directly.
         <Icon icon='ph--caret-right--bold' size={3} classNames={['mx-3 cursor-pointer', open && 'rotate-90']} />,
       );
     },

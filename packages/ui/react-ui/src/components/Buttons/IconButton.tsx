@@ -23,10 +23,11 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
   };
 
 const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
-  ({ noTooltip, tooltipPortal = true, tooltipSide, ...props }, forwardedRef) => {
+  ({ noTooltip, tooltipSide, ...props }, forwardedRef) => {
     if (noTooltip) {
       return <LabelledIconButton {...props} ref={forwardedRef} />;
     }
+
     return (
       <Tooltip.Trigger asChild content={props.label} side={tooltipSide}>
         <LabelledIconButton {...props} ref={forwardedRef} />

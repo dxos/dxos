@@ -13,9 +13,9 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useMultiClient, withMultiClientProvider } from '@dxos/react-client/testing';
-import { Button, ButtonGroup, Clipboard, Icon, List } from '@dxos/react-ui';
+import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { activeSurface, getSize } from '@dxos/react-ui-theme';
+import { activeSurface } from '@dxos/react-ui-theme';
 
 import { IdentityListItem, SpaceListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
@@ -66,17 +66,24 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
       const controls = (
         <ButtonGroup classNames='mbe-4'>
           {/* <Tooltip content='Create Space'> */}
-          <Button
+          <IconButton
+            icon='ph--plus-circle--regular'
+            size={6}
+            label='Create Space'
+            iconOnly
             onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
             data-testid='invitations.create-space'
-          >
-            <Icon icon='ph--plus-circle--regular' classNames={getSize(6)} />
-          </Button>
+          />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
-          <Button onClick={() => setPanel('join')} data-testid='invitations.open-join-space'>
-            <Icon icon='ph--sign-in--fill' classNames={getSize(6)} />
-          </Button>
+          <IconButton
+            icon='ph--sign-in--fill'
+            size={6}
+            label='Join Space'
+            iconOnly
+            onClick={() => setPanel('join')}
+            data-testid='invitations.open-join-space'
+          />
           {/* </Tooltip> */}
         </ButtonGroup>
       );
@@ -131,52 +138,62 @@ const Invitations = () => {
   const controls = (
     <ButtonGroup classNames='mbe-4'>
       {/* <Tooltip content='Create Identity'> */}
-      <Button
+      <IconButton
+        icon='ph--plus--regular'
+        size={6}
+        label='Create Identity'
+        iconOnly
         onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
         disabled={Boolean(identity)}
         data-testid='invitations.create-identity'
-      >
-        <Icon icon='ph--plus--regular' classNames={getSize(6)} />
-      </Button>
+      />
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
-      <Button
+      <IconButton
+        icon='ph--qr-code--fill'
+        size={6}
+        label='Join Existing Identity'
+        iconOnly
         onClick={() => setPanel('identity')}
         disabled={panel === 'identity'}
         data-testid='invitations.open-join-identity'
-      >
-        <Icon icon='ph--qr-code--fill' classNames={getSize(6)} />
-      </Button>
+      />
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
-      <Button
+      <IconButton
+        icon='ph--laptop--fill'
+        size={6}
+        label='Devices'
+        iconOnly
         onClick={() => setPanel('devices')}
         disabled={!identity || panel === 'devices'}
         data-testid='invitations.open-devices'
-      >
-        <Icon icon='ph--laptop--fill' classNames={getSize(6)} />
-      </Button>
+      />
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
-      <Button onClick={() => setPanel(undefined)} disabled={!panel} data-testid='invitations.list-spaces'>
-        <Icon icon='ph--planet--fill' classNames={getSize(6)} />
-      </Button>
+      <IconButton
+        icon='ph--planet--fill'
+        size={6}
+        label='List Spaces'
+        iconOnly
+        onClick={() => setPanel(undefined)}
+        disabled={!panel}
+        data-testid='invitations.list-spaces'
+      />
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
-      <Button
+      <IconButton
+        icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
+        size={6}
+        label='Toggle Network'
+        iconOnly
         onClick={() =>
           client.mesh.updateConfig(
             networkStatus === ConnectionState.ONLINE ? ConnectionState.OFFLINE : ConnectionState.ONLINE,
           )
         }
         data-testid='invitations.toggle-network'
-      >
-        {networkStatus === ConnectionState.ONLINE ? (
-          <Icon icon='ph--wifi-high--fill' classNames={getSize(6)} />
-        ) : (
-          <Icon icon='ph--wifi-slash--fill' classNames={getSize(6)} />
-        )}
-      </Button>
+      />
       {/* </ToolTip> */}
     </ButtonGroup>
   );

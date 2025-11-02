@@ -12,10 +12,10 @@ import {
   ButtonGroup,
   type ButtonProps,
   Icon,
+  IconButton,
   Popover,
   type ThemedClassName,
   Toolbar,
-  Tooltip,
   useMediaQuery,
   useThemeContext,
   useTranslation,
@@ -60,14 +60,15 @@ export const EmojiPickerToolbarButton = ({
         setEmojiPickerOpen(nextOpen);
       }}
     >
-      <Tooltip.Trigger asChild content={t('select emoji label')} side='bottom'>
-        <Popover.Trigger asChild>
-          <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
-            <span className='sr-only'>{t('select emoji label')}</span>
-            <Icon icon='ph--user-circle--regular' size={5} />
-          </Toolbar.Button>
-        </Popover.Trigger>
-      </Tooltip.Trigger>
+      <Popover.Trigger asChild>
+        <Toolbar.IconButton
+          icon='ph--user-circle--regular'
+          label={t('select emoji label')}
+          iconOnly
+          tooltipSide='bottom'
+          disabled={disabled}
+        />
+      </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           side='bottom'
@@ -157,12 +158,15 @@ export const EmojiPickerBlock = ({
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Root>
-      <Tooltip.Trigger asChild content={t('clear label')} side='right'>
-        <Button variant={triggerVariant} onClick={onClickClear} disabled={disabled}>
-          <span className='sr-only'>{t('clear label')}</span>
-          <Icon icon='ph--arrow-counter-clockwise--regular' size={5} />
-        </Button>
-      </Tooltip.Trigger>
+      <IconButton
+        icon='ph--arrow-counter-clockwise--regular'
+        iconOnly
+        label={t('clear label')}
+        tooltipSide='right'
+        variant={triggerVariant}
+        onClick={onClickClear}
+        disabled={disabled}
+      />
     </ButtonGroup>
   );
 };
