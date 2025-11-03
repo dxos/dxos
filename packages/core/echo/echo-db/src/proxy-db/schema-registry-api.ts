@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { type CleanupFn } from '@dxos/async';
-import { type EchoSchema, type ObjectId } from '@dxos/echo/internal';
+import { type EchoSchema, type ObjectId, JsonSchemaType } from '@dxos/echo/internal';
 
 export type SchemaSubscriptionCallback = (schema: EchoSchema[]) => void;
 
@@ -105,4 +105,6 @@ export interface SchemaRegistryPreparedQuery<T> {
  * Input for schema registration.
  * The typename, version and schema mutability metadata is read from the schema annotations.
  */
-export type RegisterSchemaInput = AnyEchoObjectSchema;
+export type RegisterSchemaInput =
+  | AnyEchoObjectSchema
+  | { typename: string; version: string; jsonSchema: JsonSchemaType };

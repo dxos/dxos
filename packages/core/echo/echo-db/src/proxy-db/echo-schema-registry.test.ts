@@ -63,6 +63,31 @@ describe('schema registry', () => {
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
+  test('add new schema from json-schema', async () => {
+    const { registry } = await setupTest();
+    const [echoSchema] = await registry.register([
+      {
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+        jsonSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    ]);
+    expect(registry.hasSchema(echoSchema)).to.be.true;
+    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    expect(echoSchema.typename).toEqual('example.com/type/Contact');
+    expect(echoSchema.version).toEqual('0.1.0');
+    expect(echoSchema.jsonSchema.properties).toEqual({
+      name: expect.any(Object),
+    });
+  });
+
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);

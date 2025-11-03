@@ -35,6 +35,7 @@ import type {
   SchemaSubscriptionCallback,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
+import { Type } from '../../../echo/src';
 
 export type EchoSchemaRegistryOptions = {
   /**
@@ -195,10 +196,21 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
-      if (!Schema.isSchema(input)) {
+      if (Schema.isSchema(input)) {
+        results.push(this._addSchema(input));
+      } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
+        results.push(
+          this._addSchema(
+            Type.toEffectSchema({
+              ...input.jsonSchema,
+              typename: input.typename,
+              version: input.version,
+            }),
+          ),
+        );
+      } else {
         throw new TypeError('Invalid schema');
       }
-      results.push(this._addSchema(input));
     }
     return results;
   }
