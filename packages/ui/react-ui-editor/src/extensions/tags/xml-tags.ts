@@ -28,6 +28,9 @@ export const navigatePreviousEffect = StateEffect.define<void>();
  */
 export const navigateNextEffect = StateEffect.define<void>();
 
+/**
+ * Dispatch function for updating state.
+ */
 export type StateDispatch<T> = T | ((state: T) => T);
 
 /**
@@ -226,7 +229,6 @@ const createNavigationEffectPlugin = (
           const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).from;
           let widget: { from: number; to: number; tag: string } | null = null;
           const { decorations } = view.state.field(widgetDecorationsField);
-
           for (const range of decorationSetToArray(decorations)) {
             if (range.from < cursorPos) {
               const tag = range.value.spec.tag;
@@ -243,12 +245,15 @@ const createNavigationEffectPlugin = (
             selection: { anchor: line.from, head: line.from },
             effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
           });
-        } else if (effect.is(navigateNextEffect)) {
+
+          continue;
+        }
+
+        if (effect.is(navigateNextEffect)) {
           const view = update.view;
           const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).to;
           let widget: { from: number; to: number; tag: string } | null = null;
           const { decorations } = view.state.field(widgetDecorationsField);
-
           for (const range of decorationSetToArray(decorations)) {
             if (range.from > cursorPos) {
               const tag = range.value.spec.tag;
@@ -273,6 +278,8 @@ const createNavigationEffectPlugin = (
               effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
             });
           }
+
+          continue;
         }
       }
     });

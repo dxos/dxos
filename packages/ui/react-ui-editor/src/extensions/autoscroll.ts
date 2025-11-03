@@ -11,7 +11,7 @@ import { Domino } from '@dxos/react-ui';
 import { scrollToLineEffect } from './scrolling';
 
 // TODO(burdon): Reconcile with scrollToLineEffect (scrolling).
-export const scrollToBottomEffect = StateEffect.define<any>();
+export const scrollToBottomEffect = StateEffect.define<void>();
 
 export type AutoScrollOptions = {
   /** Auto-scroll when reaches the bottom. */
@@ -92,8 +92,8 @@ export const autoScroll = ({
       if (heightChanged && autoScroll && isPinned) {
         const scrollerRect = view.scrollDOM.getBoundingClientRect();
         const coords = view.coordsAtPos(view.state.doc.length);
-        const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-        if (distanceFromBottom + threshold > 0) {
+        const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
+        if (distanceFromBottom < threshold) {
           const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
           if (shouldScroll) {
             triggerUpdate(view);

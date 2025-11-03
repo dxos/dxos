@@ -86,7 +86,7 @@ export const selectionState = ({ getState, setState }: Partial<EditorStateStore>
     getState &&
       keymap.of([
         {
-          key: 'ctrl-r', // TODO(burdon): Setting to jump back to selection.
+          key: 'Ctrl-r', // TODO(burdon): Setting to jump back to selection.
           run: (view) => {
             const state = getState(view.state.facet(documentId));
             if (state) {
