@@ -35,7 +35,7 @@ export const typewriter = ({ delay = 75, items = defaultItems }: DemoOptions = {
       {
         // Next prompt.
         // TODO(burdon): Press 1-9 to select prompt?
-        key: "shift-meta-'",
+        key: "Shift-Meta-'",
         run: (view) => {
           clearTimeout(t);
           // TODO(burdon): Add space if needed.

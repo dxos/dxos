@@ -11,7 +11,7 @@ import { Domino } from '@dxos/react-ui';
 import { scrollToLineEffect } from './scrolling';
 
 // TODO(burdon): Reconcile with scrollToLineEffect (scrolling).
-export const scrollToBottomEffect = StateEffect.define<any>();
+export const scrollToBottomEffect = StateEffect.define<void>();
 
 export type AutoScrollOptions = {
   /** Auto-scroll when reaches the bottom. */

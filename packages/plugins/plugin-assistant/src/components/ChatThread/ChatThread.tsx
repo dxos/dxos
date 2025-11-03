@@ -25,7 +25,10 @@ import { type ChatEvent } from '../Chat';
 import { blockToMarkdown, componentRegistry } from './registry';
 import { MessageSyncer, type TextModel } from './sync';
 
-export type ChatThreadController = Pick<MarkdownStreamController, 'setContext' | 'scrollToBottom'>;
+export type ChatThreadController = Pick<
+  MarkdownStreamController,
+  'setContext' | 'scrollToBottom' | 'navigatePrevious' | 'navigateNext'
+>;
 
 export type ChatThreadProps = ThemedClassName<
   {
