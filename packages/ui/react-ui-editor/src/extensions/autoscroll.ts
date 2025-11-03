@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { debounce, debounceAndThrottle } from '@dxos/async';
+import { debounce, throttle } from '@dxos/async';
 import { Domino } from '@dxos/react-ui';
 
 import { scrollToLineEffect } from './scrolling';
@@ -30,14 +30,19 @@ export type AutoScrollOptions = {
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
   autoScroll = true,
-  threshold = 64,
-  throttleDelay = 2_000,
+  threshold = 100,
+  throttleDelay = 1_000,
   onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
   let hideTimeout: NodeJS.Timeout | undefined;
-  let isPinned = true;
   let lastScrollTop = 0;
+  let isPinned = true;
+
+  const setPinned = (pin: boolean) => {
+    isPinned = pin;
+    buttonContainer?.classList.toggle('opacity-0', pin);
+  };
 
   // Temporarily hide the scrollbar while auto-scrolling.
   const hideScrollbar = (view: EditorView) => {
@@ -48,13 +53,8 @@ export const autoScroll = ({
     }, 1_000);
   };
 
-  const setPinned = (pin: boolean) => {
-    isPinned = pin;
-    buttonContainer?.classList.toggle('opacity-0', pin);
-  };
-
   // Throttled scroll to bottom.
-  const scrollToBottom = debounceAndThrottle((view: EditorView) => {
+  const scrollToBottom = (view: EditorView) => {
     setPinned(true);
     hideScrollbar(view);
     const line = view.state.doc.lineAt(view.state.doc.length);
@@ -62,56 +62,62 @@ export const autoScroll = ({
       selection: { anchor: line.to, head: line.to },
       effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold } }),
     });
+  };
+
+  // Throttled check for distance from bottom (for downward scrolls only).
+  const checkDistance = throttle((view: EditorView) => {
+    const scrollerRect = view.scrollDOM.getBoundingClientRect();
+    const coords = view.coordsAtPos(view.state.doc.length);
+    const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
+    setPinned(distanceFromBottom < threshold);
   }, throttleDelay);
+
+  // Debounce scroll updates so rapid edits don't cause clunky scrolling.
+  const triggerUpdate = debounce((view: EditorView) => scrollToBottom(view), throttleDelay);
 
   return [
     // Update listener for logging when scrolling is needed.
-    EditorView.updateListener.of((update) => {
+    EditorView.updateListener.of(({ view, transactions, heightChanged }) => {
       // TODO(burdon): Remove and use scrollToLineEffect instead.
-      update.transactions.forEach((transaction) => {
+      transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
           if (effect.is(scrollToBottomEffect)) {
-            scrollToBottom(update.view);
+            scrollToBottom(view);
           }
         }
       });
 
       // Maybe scroll if doc changed and pinned.
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
-      if (autoScroll && update.heightChanged && isPinned) {
-        const scrollerRect = update.view.scrollDOM.getBoundingClientRect();
-        const coords = update.view.coordsAtPos(update.state.doc.length);
+      if (autoScroll && heightChanged && isPinned) {
+        const scrollerRect = view.scrollDOM.getBoundingClientRect();
+        const coords = view.coordsAtPos(view.state.doc.length);
         const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
         if (distanceFromBottom + threshold > 0) {
-          const shouldScroll = onAutoScroll?.({ view: update.view, distanceFromBottom }) ?? true;
-          if (!shouldScroll) {
-            return;
+          const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
+          if (shouldScroll) {
+            triggerUpdate(view);
           }
-
-          scrollToBottom(update.view);
         }
       }
     }),
 
     // Detect user scroll.
     EditorView.domEventHandlers({
-      scroll: debounce((event, view) => {
+      scroll: (event, view) => {
         const currentScrollTop = view.scrollDOM.scrollTop;
         const scrollingUp = currentScrollTop < lastScrollTop;
         lastScrollTop = currentScrollTop;
 
-        // If user scrolls up, unpin auto-scroll.
+        // If user scrolls up, immediately unpin auto-scroll.
         if (scrollingUp) {
           setPinned(false);
           return;
         }
 
-        // For downward scrolls, check distance from bottom.
-        const scrollerRect = view.scrollDOM.getBoundingClientRect();
-        const coords = view.coordsAtPos(view.state.doc.length);
-        const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-        setPinned(distanceFromBottom < threshold);
-      }, 1_000),
+        // For downward scrolls, throttle the distance check.
+        checkDistance(view);
+      },
     }),
 
     // Scroll button.

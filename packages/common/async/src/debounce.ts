@@ -5,6 +5,28 @@
 type Callback = (...args: any[]) => void;
 
 /**
+ * Delay callback execution by a specified time.
+ * Unlike debounce, subsequent calls during the delay period are ignored.
+ *
+ * @param cb Callback to invoke.
+ * @param delay Time to wait before invoking the callback.
+ * @returns A new function that schedules the callback once and ignores subsequent calls until executed.
+ */
+export const delay = <CB extends Callback>(cb: CB, delay = 100): CB => {
+  let pending = false;
+  return ((...args: any[]) => {
+    if (pending) {
+      return;
+    }
+    pending = true;
+    setTimeout(() => {
+      cb(...args);
+      pending = false;
+    }, delay);
+  }) as CB;
+};
+
+/**
  * Debounce callback.
  *
  * @param cb Callback to invoke.
