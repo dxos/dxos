@@ -9,7 +9,6 @@ import type * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
-import { type PluginContext } from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/assistant';
 import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
@@ -154,7 +153,7 @@ export const SystemToolkit = Toolkit.make(
 
 export const tools = Record.keys(SystemToolkit.tools);
 
-export const layer = (context: PluginContext): Layer.Layer<Tool.Handler<any>, never, never> =>
+export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
   SystemToolkit.toLayer({
     'schema-list': Effect.fnUntraced(function* () {
       const { db } = yield* DatabaseService;
