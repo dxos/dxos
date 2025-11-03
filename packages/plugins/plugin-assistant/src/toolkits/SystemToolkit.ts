@@ -150,6 +150,9 @@ const Toolkit$ = Toolkit.make(
   }),
 );
 
+/**
+ * @deprecated Moved to assistant-toolkit
+ */
 export namespace SystemToolkit {
   export const Toolkit = Toolkit$;
 
