@@ -37,8 +37,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input as any).pipe(
       Effect.map(
-        // TODO(dmaretskyi): For some reason toolkit returns double-wrapped value: { result: { result, encodedResult }, encodedResult: { result, encodedResult } }
-        ({ result: { result } }) =>
+        ({ result }) =>
           ({
             _tag: 'toolResult',
             toolCallId: toolCall.toolCallId,
