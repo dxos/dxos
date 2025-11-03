@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
@@ -33,9 +34,12 @@ import type {
   SchemaRegistryPreparedQuery,
   SchemaRegistryQuery,
   SchemaSubscriptionCallback,
+  ExtractSchemaQueryResult,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { Type } from '../../../echo/src';
+import { Type } from '@dxos/echo';
+
+const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
 
 export type EchoSchemaRegistryOptions = {
   /**
@@ -101,51 +105,106 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
     // Nothing to do.
   }
 
-  query(query: SchemaRegistryQuery = {}): SchemaRegistryPreparedQuery<EchoSchema> {
+  query<Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
+    _query?: Query & SchemaRegistryQuery,
+  ): SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>> {
     const self = this;
+    const query: SchemaRegistryQuery = _query ?? {};
+    const allowedLocations = query.location ?? ['database'];
 
-    const filterOrderResults = (schemas: EchoSchema[]) => {
+    type Entry =
+      | {
+          source: 'runtime';
+          schema: Schema.Schema.AnyNoContext;
+        }
+      | {
+          source: 'database';
+          schema: EchoSchema;
+        };
+
+    const getSortKey = (entry: Entry) =>
+      Type.getTypename(entry.schema) + ':' + Type.getVersion(entry.schema) + ':' + Type.getDXN(entry.schema);
+
+    const filterOrderResults = (schemas: Entry[]) => {
       log('Filtering schemas', { schemas, query });
-      return (
-        schemas
-          .filter((schema) => validateStoredSchemaIntegrity(schema.storedSchema))
-          .filter((object) => {
-            const idFilter = coerceArray(query.id);
-            if (idFilter.length > 0) {
-              if (object.jsonSchema.$id && !idFilter.includes(object.jsonSchema.$id)) {
+      return schemas
+        .filter((object) => {
+          if (!allowedLocations.includes(object.source)) {
+            return false;
+          }
+
+          switch (object.source) {
+            case 'runtime': {
+              const typename = Type.getTypename(object.schema);
+
+              if (!query.includeSystem && SYSTEM_SCHEMA.includes(typename)) {
                 return false;
               }
-            }
 
-            const backingObjectIdFilter = coerceArray(query.backingObjectId);
-            if (backingObjectIdFilter.length > 0) {
-              if (!backingObjectIdFilter.includes(object.id)) {
+              const typenameFilter = coerceArray(query.typename);
+              if (typenameFilter.length > 0) {
+                if (!typenameFilter.includes(typename)) {
+                  return false;
+                }
+              }
+
+              if (query.version) {
+                if (!query.version.match(/^[0-9.]+$/)) {
+                  throw new Error('Semver version ranges not supported.');
+                }
+
+                const version = Type.getVersion(object.schema);
+                if (version !== query.version) {
+                  return false;
+                }
+              }
+
+              return true;
+            }
+            case 'database': {
+              if (!validateStoredSchemaIntegrity(object.schema.storedSchema)) {
                 return false;
               }
-            }
 
-            const typenameFilter = coerceArray(query.typename);
-            if (typenameFilter.length > 0) {
-              if (!typenameFilter.includes(object.typename)) {
-                return false;
-              }
-            }
-
-            if (query.version) {
-              if (!query.version.match(/^[0-9.]+$/)) {
-                throw new Error('Semver version ranges not supported.');
+              const idFilter = coerceArray(query.id);
+              if (idFilter.length > 0) {
+                if (object.schema.jsonSchema.$id && !idFilter.includes(object.schema.jsonSchema.$id)) {
+                  return false;
+                }
               }
 
-              if (object.version !== query.version) {
-                return false;
+              const backingObjectIdFilter = coerceArray(query.backingObjectId);
+              if (backingObjectIdFilter.length > 0) {
+                if (!backingObjectIdFilter.includes(object.schema.id)) {
+                  return false;
+                }
               }
-            }
 
-            return true;
-          })
-          // TODO(dmaretskyi): Come up with a better stable sorting method (e.g. [typename, version, id]).
-          .sort((a, b) => a.id.localeCompare(b.id))
-      );
+              const typenameFilter = coerceArray(query.typename);
+              if (typenameFilter.length > 0) {
+                if (!typenameFilter.includes(object.schema.typename)) {
+                  return false;
+                }
+              }
+
+              if (query.version) {
+                if (!query.version.match(/^[0-9.]+$/)) {
+                  throw new Error('Semver version ranges not supported.');
+                }
+
+                if (object.schema.version !== query.version) {
+                  return false;
+                }
+              }
+              return true;
+            }
+            default: {
+              return false;
+            }
+          }
+        })
+        .sort((a, b) => getSortKey(a).localeCompare(getSortKey(b)))
+        .map((entry) => entry.schema);
     };
 
     const changes = new Event();
@@ -159,21 +218,39 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
           .map((result) => result.object)
           .filter((object) => object != null);
 
-        const results = filterOrderResults(
-          objects.map((stored) => {
-            return self._register(stored);
+        const results = filterOrderResults([
+          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
+            return {
+              source: 'runtime',
+              schema,
+            } as const;
           }),
-        );
+          ...objects.map((stored) => {
+            return {
+              source: 'database',
+              schema: self._register(stored),
+            } as const;
+          }),
+        ]);
         return results;
       },
       async getResults() {
         const { objects } = await self._db.query(Filter.type(StoredSchema)).run();
 
-        return filterOrderResults(
-          objects.map((stored) => {
-            return self._register(stored);
+        return filterOrderResults([
+          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
+            return {
+              source: 'runtime',
+              schema,
+            } as const;
           }),
-        );
+          ...objects.map((stored) => {
+            return {
+              source: 'database',
+              schema: self._register(stored),
+            } as const;
+          }),
+        ]);
       },
       async start() {
         if (unsubscribe) {
@@ -187,7 +264,7 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
         unsubscribe?.();
         unsubscribe = undefined;
       },
-    });
+    }) as SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>>;
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
@@ -199,15 +276,17 @@ export class EchoSchemaRegistry extends Resource implements SchemaRegistry {
       if (Schema.isSchema(input)) {
         results.push(this._addSchema(input));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
-        results.push(
-          this._addSchema(
-            Type.toEffectSchema({
-              ...input.jsonSchema,
-              typename: input.typename,
-              version: input.version,
-            }),
-          ),
+        const schema = this._addSchema(
+          Type.toEffectSchema({
+            ...input.jsonSchema,
+            typename: input.typename,
+            version: input.version,
+          }),
         );
+        results.push(schema);
+        if (input.name) {
+          schema.storedSchema.name = input.name;
+        }
       } else {
         throw new TypeError('Invalid schema');
       }

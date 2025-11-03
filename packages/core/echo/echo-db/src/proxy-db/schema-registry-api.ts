@@ -3,6 +3,7 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { type CleanupFn } from '@dxos/async';
 import { type EchoSchema, type ObjectId, JsonSchemaType } from '@dxos/echo/internal';
@@ -19,8 +20,14 @@ export type SchemaId = string & { __SchemaId: never };
 export type AnyEchoObjectSchema = Schema.Schema.AnyNoContext;
 // export type AnyEchoObjectSchema = Schema.Struct<{ [key: string]: Schema.Schema.AnyNoContext }>;
 
+export type ExtractSchemaQueryResult<Query> = Query extends { location: ('database' | 'runtime')[] }
+  ? Schema.Schema.AnyNoContext
+  : EchoSchema;
+
 export interface SchemaRegistry {
-  query(query?: SchemaRegistryQuery): SchemaRegistryPreparedQuery<EchoSchema>;
+  query<Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
+    query?: Query & SchemaRegistryQuery,
+  ): SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>>;
 
   /**
    * Registers the provided schema.
@@ -58,6 +65,25 @@ export type SchemaRegistryQuery = {
    * [Semver Range](https://docs.npmjs.com/cli/v6/using-npm/semver#ranges) for the schema version.
    */
   version?: string;
+
+  /**
+   * Where to look for the schema.
+   *
+   * Database schema are stored in the database of the current space.
+   * Runtime schema are registered in the runtime.
+   *
+   * @default ['database']
+   */
+  location?: ('database' | 'runtime')[];
+
+  /**
+   * Include system schemas.
+   * @default false
+   *
+   * The system schema include but are not limited to:
+   *  - dxos.org/type/Schema
+   */
+  includeSystem?: boolean;
 };
 
 export interface SchemaRegistryPreparedQuery<T> {
@@ -107,4 +133,12 @@ export interface SchemaRegistryPreparedQuery<T> {
  */
 export type RegisterSchemaInput =
   | AnyEchoObjectSchema
-  | { typename: string; version: string; jsonSchema: JsonSchemaType };
+  | {
+      typename: string;
+      version: string;
+      jsonSchema: JsonSchemaType;
+      /**
+       * Display name of the schema.
+       */
+      name?: string;
+    };
