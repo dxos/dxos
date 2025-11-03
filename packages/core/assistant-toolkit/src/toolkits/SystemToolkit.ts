@@ -219,16 +219,12 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     }),
 
     'tag-add': Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const { db } = yield* DatabaseService;
-
       const object = yield* DatabaseService.resolve(DXN.parse(objectId));
       Obj.addTag(object, DXN.parse(tagId).toString());
       return object;
     }),
 
     'tag-remove': Effect.fnUntraced(function* ({ tagId, objectId }) {
-      const { db } = yield* DatabaseService;
-
       const object = yield* DatabaseService.resolve(DXN.parse(objectId));
       Obj.removeTag(object, DXN.parse(tagId).toString());
       return object;
