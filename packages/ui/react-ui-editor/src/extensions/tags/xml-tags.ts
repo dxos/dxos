@@ -18,6 +18,16 @@ import { scrollToLineEffect } from '../scrolling';
 
 import { nodeToJson } from './xml-util';
 
+/**
+ * StateEffect for navigating to previous bookmark.
+ */
+export const navigatePreviousEffect = StateEffect.define<void>();
+
+/**
+ * StateEffect for navigating to next bookmark.
+ */
+export const navigateNextEffect = StateEffect.define<void>();
+
 export type StateDispatch<T> = T | ((state: T) => T);
 
 /**
@@ -176,66 +186,21 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
     widgetStateField,
     widgetDecorationsField,
     createWidgetUpdatePlugin(widgetDecorationsField, notifier),
+    createNavigationEffectPlugin(widgetDecorationsField, bookmarks),
     bookmarks?.length
       ? Prec.highest(
           keymap.of([
             {
               key: 'Mod-ArrowUp',
               run: (view) => {
-                const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).from;
-                let widget: { from: number; to: number; tag: string } | null = null;
-                const { decorations } = view.state.field(widgetDecorationsField);
-                for (const range of decorationSetToArray(decorations)) {
-                  if (range.from < cursorPos) {
-                    const tag = range.value.spec.tag;
-                    if (bookmarks.includes(tag)) {
-                      if (!widget || range.from > widget.from) {
-                        widget = { from: range.from, to: range.to, tag };
-                      }
-                    }
-                  }
-                }
-
-                const line = view.state.doc.lineAt(widget?.from ?? 0);
-                view.dispatch({
-                  selection: { anchor: line.from, head: line.from },
-                  effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
-                });
-
+                view.dispatch({ effects: navigatePreviousEffect.of() });
                 return true;
               },
             },
             {
               key: 'Mod-ArrowDown',
               run: (view) => {
-                const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).to;
-                let widget: { from: number; to: number; tag: string } | null = null;
-                const { decorations } = view.state.field(widgetDecorationsField);
-                for (const range of decorationSetToArray(decorations)) {
-                  if (range.from > cursorPos) {
-                    const tag = range.value.spec.tag;
-                    if (bookmarks.includes(tag)) {
-                      if (!widget || range.from < widget.from) {
-                        widget = { from: range.from, to: range.to, tag };
-                      }
-                    }
-                  }
-                }
-
-                if (widget) {
-                  const line = view.state.doc.lineAt(widget?.from);
-                  view.dispatch({
-                    selection: { anchor: line.to, head: line.to },
-                    effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
-                  });
-                } else {
-                  const line = view.state.doc.lineAt(view.state.doc.length);
-                  view.dispatch({
-                    selection: { anchor: line.to, head: line.to },
-                    effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
-                  });
-                }
-
+                view.dispatch({ effects: navigateNextEffect.of() });
                 return true;
               },
             },
@@ -243,6 +208,75 @@ export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Ex
         )
       : [],
   ];
+};
+
+/**
+ * Effect processing plugin for navigation.
+ * Handles navigation up/down effects.
+ */
+const createNavigationEffectPlugin = (
+  widgetDecorationsField: StateField<WidgetDecorationSet>,
+  bookmarks?: string[],
+) => {
+  return EditorView.updateListener.of((update) => {
+    update.transactions.forEach((transaction) => {
+      for (const effect of transaction.effects) {
+        if (effect.is(navigatePreviousEffect)) {
+          const view = update.view;
+          const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).from;
+          let widget: { from: number; to: number; tag: string } | null = null;
+          const { decorations } = view.state.field(widgetDecorationsField);
+
+          for (const range of decorationSetToArray(decorations)) {
+            if (range.from < cursorPos) {
+              const tag = range.value.spec.tag;
+              if (bookmarks?.includes(tag)) {
+                if (!widget || range.from > widget.from) {
+                  widget = { from: range.from, to: range.to, tag };
+                }
+              }
+            }
+          }
+
+          const line = view.state.doc.lineAt(widget?.from ?? 0);
+          view.dispatch({
+            selection: { anchor: line.from, head: line.from },
+            effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+          });
+        } else if (effect.is(navigateNextEffect)) {
+          const view = update.view;
+          const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).to;
+          let widget: { from: number; to: number; tag: string } | null = null;
+          const { decorations } = view.state.field(widgetDecorationsField);
+
+          for (const range of decorationSetToArray(decorations)) {
+            if (range.from > cursorPos) {
+              const tag = range.value.spec.tag;
+              if (bookmarks?.includes(tag)) {
+                if (!widget || range.from < widget.from) {
+                  widget = { from: range.from, to: range.to, tag };
+                }
+              }
+            }
+          }
+
+          if (widget) {
+            const line = view.state.doc.lineAt(widget?.from);
+            view.dispatch({
+              selection: { anchor: line.to, head: line.to },
+              effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+            });
+          } else {
+            const line = view.state.doc.lineAt(view.state.doc.length);
+            view.dispatch({
+              selection: { anchor: line.to, head: line.to },
+              effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
+            });
+          }
+        }
+      }
+    });
+  });
 };
 
 /**

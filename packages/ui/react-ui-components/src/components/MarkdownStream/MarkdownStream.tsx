@@ -27,6 +27,7 @@ import {
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
+  autoScroll,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
@@ -96,7 +97,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
                 preview(),
                 xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
                 streamer({ cursor, fadeIn }),
-                // autoScroll({ autoScroll: false, overscroll: 0 }),
+                autoScroll({ autoScroll: false, overscroll: 0 }),
               ],
         ].filter(isNonNullable),
       };

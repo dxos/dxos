@@ -15,11 +15,6 @@ export type SmoothScrollOptions = {
    */
   duration?: number;
   /**
-   * CSS easing function for the animation.
-   * @default 'ease-in-out'
-   */
-  easing?: string;
-  /**
    * Additional offset from the target line in pixels.
    * Positive values scroll past the line, negative values stop before it.
    * @default 0
@@ -85,40 +80,21 @@ export const scrollToLineEffect = StateEffect.define<ScrollToLineParams>();
  * });
  * ```
  */
-export const smoothScroll = ({
-  duration = 500,
-  easing = 'ease-in-out',
-  offset = 0,
-  position = 'start',
-}: Partial<SmoothScrollOptions> = {}) => {
+export const smoothScroll = ({ duration = 500, offset = 0, position = 'start' }: Partial<SmoothScrollOptions> = {}) => {
   // ViewPlugin to manage scroll animations.
   const scrollPlugin = ViewPlugin.fromClass(
     class SmoothScrollPlugin {
-      private animationId: number | null = null;
-
       constructor(private view: EditorView) {}
 
       destroy() {
-        this.cancelActiveAnimation();
-      }
-
-      /**
-       * Cancel any currently running scroll animation.
-       */
-      private cancelActiveAnimation() {
-        if (this.animationId !== null) {
-          cancelAnimationFrame(this.animationId);
-          this.animationId = null;
-        }
+        // No-op.
       }
 
       /**
        * Perform smooth scroll to the specified line.
        */
       scrollToLine(lineNumber: number, options: SmoothScrollOptions) {
-        this.cancelActiveAnimation();
-
-        const { duration: animDuration, easing: animEasing, offset: animOffset, position: animPosition } = options;
+        const { duration: animDuration, offset: animOffset, position: animPosition } = options;
         const scroller = this.view.scrollDOM;
 
         // Convert 1-based line number to 0-based.
@@ -129,13 +105,12 @@ export const smoothScroll = ({
         if (targetLine >= doc.lines) {
           // Line doesn't exist, scroll to end.
           const targetScrollTop = scroller.scrollHeight - scroller.clientHeight + (animOffset || 0);
-          this.animateScroll(scroller, targetScrollTop, animDuration || 500, animEasing || 'ease-in-out');
+          this.animateScroll(scroller, targetScrollTop, animDuration || 500);
           return;
         }
 
         const lineStart = doc.line(targetLine + 1).from;
         const coords = this.view.coordsAtPos(lineStart);
-
         if (!coords) {
           return;
         }
@@ -147,7 +122,8 @@ export const smoothScroll = ({
 
         if (animPosition === 'end') {
           // Position line at end (bottom) of viewport.
-          targetScrollTop = currentScrollTop + coords.top - scrollerRect.bottom + coords.bottom - coords.top + (animOffset || 0);
+          targetScrollTop =
+            currentScrollTop + coords.top - scrollerRect.bottom + coords.bottom - coords.top + (animOffset || 0);
         } else {
           // Default: position line at start (top) of viewport.
           targetScrollTop = currentScrollTop + coords.top - scrollerRect.top + (animOffset || 0);
@@ -156,59 +132,22 @@ export const smoothScroll = ({
         // Clamp to valid scroll range.
         const maxScrollTop = scroller.scrollHeight - scroller.clientHeight;
         const clampedScrollTop = Math.max(0, Math.min(targetScrollTop, maxScrollTop));
-
-        this.animateScroll(scroller, clampedScrollTop, animDuration || 500, animEasing || 'ease-in-out');
+        this.animateScroll(scroller, clampedScrollTop, animDuration || 500);
       }
 
       /**
-       * Animate scroll using requestAnimationFrame with easing.
+       * Animate scroll using browser's built-in smooth scrolling.
        */
-      private animateScroll(element: HTMLElement, targetScrollTop: number, duration: number, easingName: string) {
-        const startScrollTop = element.scrollTop;
-        const distance = targetScrollTop - startScrollTop;
-
-        if (Math.abs(distance) < 1) {
-          // Already at target position
+      private animateScroll(element: HTMLElement, targetScrollTop: number, _duration: number) {
+        if (Math.abs(targetScrollTop - element.scrollTop) < 1) {
           return;
         }
 
-        const startTime = performance.now();
-        const easingFunction = this.getEasingFunction(easingName);
-
-        const animate = (currentTime: number) => {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-
-          const easedProgress = easingFunction(progress);
-          const currentScrollTop = startScrollTop + distance * easedProgress;
-
-          element.scrollTop = currentScrollTop;
-
-          if (progress < 1) {
-            this.animationId = requestAnimationFrame(animate);
-          } else {
-            this.animationId = null;
-          }
-        };
-
-        this.animationId = requestAnimationFrame(animate);
-      }
-
-      /**
-       * Get easing function by name.
-       */
-      private getEasingFunction(name: string): (t: number) => number {
-        switch (name) {
-          case 'linear':
-            return (t) => t;
-          case 'ease-in':
-            return (t) => t * t;
-          case 'ease-out':
-            return (t) => t * (2 - t);
-          case 'ease-in-out':
-          default:
-            return (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
-        }
+        // Use browser's built-in smooth scrolling
+        element.scrollTo({
+          top: targetScrollTop,
+          behavior: 'smooth',
+        });
       }
     },
   );
@@ -222,18 +161,14 @@ export const smoothScroll = ({
         for (const effect of transaction.effects) {
           if (effect.is(scrollToLineEffect)) {
             const { line, options = {} } = effect.value;
-            const effectiveOptions = {
-              duration,
-              easing,
-              offset,
-              position,
-              ...options,
-            };
-
-            // Get the plugin instance and call scrollToLine.
             const plugin = update.view.plugin(scrollPlugin);
             if (plugin) {
-              plugin.scrollToLine(line, effectiveOptions);
+              plugin.scrollToLine(line, {
+                duration,
+                offset,
+                position,
+                ...options,
+              });
             }
           }
         }
