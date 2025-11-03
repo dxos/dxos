@@ -12,7 +12,9 @@ const lineHeight = 24;
 export const scrollToBottomEffect = StateEffect.define<any>();
 
 export type AutoScrollOptions = {
+  // NOTE: This must be zero if using scrollPastEnd.
   overscroll?: number;
+  autoScroll?: boolean;
   throttle?: number;
 };
 
@@ -20,7 +22,11 @@ export type AutoScrollOptions = {
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
 // TODO(burdon): Reconcile with transcript-extension.
-export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Partial<AutoScrollOptions> = {}) => {
+export const autoScroll = ({
+  overscroll = 4 * lineHeight,
+  autoScroll = true,
+  throttle = 2_000,
+}: Partial<AutoScrollOptions> = {}) => {
   let isThrottled = false;
   let isPinned = true;
   let timeout: NodeJS.Timeout | undefined;
@@ -62,19 +68,26 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
       });
 
       // Maybe scroll if doc changed and pinned.
-      if (update.docChanged && isPinned && !isThrottled) {
-        const distanceFromBottom = calcDistance(update.view.scrollDOM);
-        if (distanceFromBottom >= overscroll) {
-          isThrottled = true;
-          requestAnimationFrame(() => {
-            scrollToBottom(update.view);
-          });
+      // TODO(burdon): Autoscrolling is jerky.
+      // TODO(burdon): Find pos of last line.
+      // NOTE: Geometry changed is triggered when tool block is opened.
+      const distanceFromBottom = calcDistance(update.view.scrollDOM);
+      if (update.heightChanged && isPinned && !isThrottled) {
+        if (distanceFromBottom > overscroll) {
+          if (autoScroll) {
+            isThrottled = true;
+            requestAnimationFrame(() => {
+              scrollToBottom(update.view);
+            });
 
-          // Reset throttle.
-          setTimeout(() => {
-            isThrottled = false;
-            scrollToBottom(update.view);
-          }, throttle);
+            // Reset throttle.
+            setTimeout(() => {
+              isThrottled = false;
+              scrollToBottom(update.view);
+            }, throttle);
+          } else {
+            buttonContainer?.classList.remove('opacity-0');
+          }
         }
       }
     }),
@@ -121,6 +134,7 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
                 }),
             )
             .build();
+
           scroller?.appendChild(buttonContainer);
         }
       },
@@ -138,7 +152,6 @@ export const autoScroll = ({ overscroll = 4 * lineHeight, throttle = 2_000 }: Pa
       '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
         display: 'none',
       },
-
       '.cm-scroll-button': {
         position: 'absolute',
         bottom: '0.5rem',

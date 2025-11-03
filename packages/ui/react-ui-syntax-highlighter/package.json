@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/util": "workspace:*",
     "@preact-signals/safe-react": "^0.9.0",
     "jsonpath": "^1.1.1",
     "react-syntax-highlighter": "^15.6.1"

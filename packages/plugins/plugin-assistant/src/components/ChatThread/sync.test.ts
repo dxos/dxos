@@ -44,11 +44,11 @@ describe('reducers', () => {
       ];
 
       syncer.sync(messages);
-      expect(doc.content).toEqual(['\n<prompt>Hello</prompt>\n', 'Hi there!', ''].join('\n'));
+      expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
       messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
       syncer.sync(messages);
-      expect(doc.content).toEqual(['\n<prompt>Hello</prompt>\n', 'Hi there!', 'How can I help?', ''].join('\n'));
+      expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
     }),
   );
 
@@ -64,7 +64,7 @@ describe('reducers', () => {
       ];
 
       syncer.sync(messages);
-      expect(doc.content).toEqual(['\n<prompt>Hello</prompt>\n', 'Hi there!'].join('\n'));
+      expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
       const block = messages[1].blocks[0] as ContentBlock.Text;
       block.text = 'Hi there! How are you?';
@@ -74,7 +74,7 @@ describe('reducers', () => {
       messages[1].blocks.push({ _tag: 'text', text: 'How can I help?' });
       syncer.sync(messages);
       expect(doc.content).toEqual(
-        ['\n<prompt>Hello</prompt>\n', 'Hi there! How are you?', 'How can I help?', ''].join('\n'),
+        ['<prompt>Hello</prompt>', 'Hi there! How are you?', 'How can I help?', ''].join('\n'),
       );
     }),
   );

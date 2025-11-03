@@ -179,6 +179,7 @@ export type ThemeExtensionsOptions = {
       className?: string;
     };
     scroll?: {
+      // NOTE: Do not apply vertical padding to scroll container.
       className?: string;
     };
     content?: {
