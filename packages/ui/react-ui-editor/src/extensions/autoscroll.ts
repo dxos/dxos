@@ -16,6 +16,8 @@ export const scrollToBottomEffect = StateEffect.define<any>();
 export type AutoScrollOptions = {
   /** Auto-scroll when reaches the bottom. */
   autoScroll?: boolean;
+  /** Threshold in px to trigger scroll from bottom. */
+  threshold?: number;
   /** Throttle time in ms. */
   throttleDelay?: number;
   /** Callback when auto-scrolling. */
@@ -28,6 +30,7 @@ export type AutoScrollOptions = {
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
   autoScroll = true,
+  threshold = 64,
   throttleDelay = 2_000,
   onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
@@ -52,7 +55,7 @@ export const autoScroll = ({
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
-      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
+      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end', offset: threshold } }),
     });
   }, throttleDelay);
 
@@ -74,7 +77,7 @@ export const autoScroll = ({
         const scrollerRect = update.view.scrollDOM.getBoundingClientRect();
         const coords = update.view.coordsAtPos(update.state.doc.length);
         const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
-        if (distanceFromBottom > 0) {
+        if (distanceFromBottom + threshold > 0) {
           const shouldScroll = onAutoScroll?.({ view: update.view, distanceFromBottom }) ?? true;
           if (!shouldScroll) {
             return;
@@ -127,7 +130,7 @@ export const autoScroll = ({
                 .data('density', 'fine')
                 .children(Domino.of<any>('dx-icon').attributes({ icon: 'ph--arrow-down--regular' }))
                 .on('click', () => {
-                  // scrollToBottom(view);
+                  scrollToBottom(view);
                 }),
             )
             .build();
