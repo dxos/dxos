@@ -3,17 +3,15 @@
 //
 
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
-import { WebSearchToolkit } from '@dxos/assistant-toolkit';
-
-import { AssistantToolkit, SystemToolkit } from '../toolkits';
+import { WebSearchToolkit, AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
 
 export default (context: PluginContext): Capability<any>[] => [
-  contributes(Capabilities.Toolkit, AssistantToolkit.Toolkit),
-  contributes(Capabilities.ToolkitHandler, AssistantToolkit.createLayer(context)),
+  contributes(Capabilities.Toolkit, AssistantToolkit.AssistantToolkit),
+  contributes(Capabilities.ToolkitHandler, AssistantToolkit.layer()),
 
   // TODO(burdon): How to manage dependencies?
-  contributes(Capabilities.Toolkit, SystemToolkit.Toolkit),
-  contributes(Capabilities.ToolkitHandler, SystemToolkit.createLayer(context)),
+  contributes(Capabilities.Toolkit, SystemToolkit.SystemToolkit),
+  contributes(Capabilities.ToolkitHandler, SystemToolkit.layer()),
 
   contributes(Capabilities.Toolkit, WebSearchToolkit),
 ];
