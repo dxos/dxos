@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { Icon, Input, Select, Toolbar } from '@dxos/react-ui';
+import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
 
@@ -78,9 +79,4 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       )}
     </Toolbar.Root>
   );
-};
-
-const safeParseInt = (str: string): number | undefined => {
-  const value = parseInt(str);
-  return isNaN(value) ? undefined : value;
 };

@@ -42,22 +42,22 @@ export const componentRegistry: XmlWidgetRegistry = {
 
   ['prompt' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new PromptWidget(text) : null;
     },
   },
   ['reference' as const]: {
     block: false,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
-      return text && props.ref ? new ReferenceWidget(text, props.ref) : null;
+    factory: ({ children, ref }) => {
+      const text = getXmlTextChild(children);
+      return text && ref ? new ReferenceWidget(text, ref) : null;
     },
   },
   ['select' as const]: {
     block: true,
-    factory: (props) => {
-      const options = props.children
+    factory: ({ children }) => {
+      const options = children
         ?.map((option: any) => option._tag === 'option' && getXmlTextChild(option.children))
         .filter(Boolean);
       return options?.length ? new SelectWidget(options) : null;
@@ -65,15 +65,15 @@ export const componentRegistry: XmlWidgetRegistry = {
   },
   ['suggestion' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SuggestionWidget(text) : null;
     },
   },
   ['summary' as const]: {
     block: true,
-    factory: (props) => {
-      const text = getXmlTextChild(props.children);
+    factory: ({ children }) => {
+      const text = getXmlTextChild(children);
       return text ? new SummaryWidget(text) : null;
     },
   },
@@ -126,7 +126,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: DataType.Me
   switch (block._tag) {
     case 'text': {
       if (message.sender.role === 'user') {
-        return `\n<prompt>${block.text}</prompt>\n`;
+        return `<prompt>${block.text}</prompt>`;
       } else {
         const text = block.text.trim();
         if (text.length > 0) {

@@ -7,6 +7,7 @@ import jp from 'jsonpath';
 import React, { useEffect, useState } from 'react';
 
 import { Input, type ThemedClassName } from '@dxos/react-ui';
+import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
@@ -27,7 +28,7 @@ export const Json = ({ filter, ...params }: JsonProps) => {
   const { classNames, data, replacer, testId } = params;
   return (
     <SyntaxHighlighter language='json' classNames={[defaultClassNames, classNames]} data-testid={testId}>
-      {JSON.stringify(data, replacer && createReplacer(replacer), 2)}
+      {safeStringify(data, replacer && createReplacer(replacer), 2)}
     </SyntaxHighlighter>
   );
 };
@@ -62,69 +63,8 @@ export const JsonFilter = ({ classNames, data: initialData, replacer, testId }: 
         />
       </Input.Root>
       <SyntaxHighlighter language='json' classNames={[defaultClassNames, classNames]} data-testid={testId}>
-        {JSON.stringify(data, replacer && createReplacer(replacer), 2)}
+        {safeStringify(data, replacer && createReplacer(replacer), 2)}
       </SyntaxHighlighter>
     </div>
   );
-};
-
-export type CreateReplacerProps = {
-  omit?: string[];
-  parse?: string[];
-  maxDepth?: number;
-  maxArrayLen?: number;
-  maxStringLen?: number;
-};
-
-export type JsonReplacer = (this: any, key: string, value: any) => any;
-
-export const createReplacer = ({
-  omit,
-  parse,
-  maxDepth,
-  maxArrayLen,
-  maxStringLen,
-}: CreateReplacerProps): JsonReplacer => {
-  let currentDepth = 0;
-  const depthMap = new WeakMap<object, number>();
-
-  return function (this: any, key: string, value: any) {
-    // Track depth.
-    if (key === '') {
-      currentDepth = 0;
-    } else if (this && typeof this === 'object') {
-      const parentDepth = depthMap.get(this) ?? 0;
-      currentDepth = parentDepth + 1;
-    }
-
-    // Store depth for this object.
-    if (value && typeof value === 'object') {
-      depthMap.set(value, currentDepth);
-
-      // Check max depth.
-      if (maxDepth != null && currentDepth >= maxDepth) {
-        return Array.isArray(value) ? `[{ length: ${value.length} }]` : `{ keys: ${Object.keys(value).length} }`;
-      }
-    }
-
-    // Apply other filters.
-    if (omit?.includes(key)) {
-      return undefined;
-    }
-    if (parse?.includes(key) && typeof value === 'string') {
-      try {
-        return JSON.parse(value);
-      } catch {
-        return value;
-      }
-    }
-    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
-      return `[length: ${value.length}]`;
-    }
-    if (maxStringLen != null && typeof value === 'string' && value.length > maxStringLen) {
-      return value.slice(0, maxStringLen) + '...';
-    }
-
-    return value;
-  };
 };

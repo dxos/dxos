@@ -3,23 +3,30 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import {
-  type EditorState,
-  type Extension,
-  RangeSetBuilder,
-  StateEffect,
-  StateField,
-  Transaction,
-} from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { Prec } from '@codemirror/state';
+import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 import { type ComponentType, type FC } from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
+import { scrollToLineEffect } from '../scrolling';
 
 import { nodeToJson } from './xml-util';
+
+/**
+ * StateEffect for navigating to previous bookmark.
+ */
+export const navigatePreviousEffect = StateEffect.define<void>();
+
+/**
+ * StateEffect for navigating to next bookmark.
+ */
+export const navigateNextEffect = StateEffect.define<void>();
 
 export type StateDispatch<T> = T | ((state: T) => T);
 
@@ -35,9 +42,11 @@ export type XmlEventHandler<TEvent = any> = (event: TEvent) => void;
 /**
  * Widget component.
  */
-export type XmlWidgetProps<TContext = any, TProps = any> = TProps & {
+export type XmlWidgetProps<TProps = any, TContext = any> = TProps & {
   _tag: string;
   context: TContext;
+  view?: EditorView;
+  range?: { from: number; to: number };
   onEvent?: XmlEventHandler;
 };
 
@@ -50,10 +59,11 @@ export type XmlWidgetFactory = (props: XmlWidgetProps, onEvent?: XmlEventHandler
  * Widget registry definition.
  */
 export type XmlWidgetDef = {
+  /** Block widget. */
   block?: boolean;
-  /** Native widget. */
+  /** Native widget (rendered inline). */
   factory?: XmlWidgetFactory;
-  /** React widget. */
+  /** React widget (rendered in portals outside of the editor). */
   Component?: FC<XmlWidgetProps>;
 };
 
@@ -90,7 +100,7 @@ export type XmlWidgetState = {
   id: string;
   props: any;
   root: HTMLElement;
-  Component: ComponentType<any>;
+  Component: ComponentType<XmlWidgetProps>;
 };
 
 export interface XmlWidgetNotifier {
@@ -98,145 +108,248 @@ export interface XmlWidgetNotifier {
   unmounted(id: string): void;
 }
 
+/**
+ * Context state.
+ */
+const contextStateField = StateField.define<any>({
+  create: () => undefined,
+  update: (value, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(xmlTagContextEffect)) {
+        return effect.value;
+      }
+    }
+
+    return value;
+  },
+});
+
+/**
+ * Widget state management.
+ */
+const widgetStateField = StateField.define<XmlWidgetStateMap>({
+  create: () => ({}),
+  update: (map, tr) => {
+    for (const effect of tr.effects) {
+      if (effect.is(xmlTagResetEffect)) {
+        return {};
+      }
+
+      if (effect.is(xmlTagUpdateEffect)) {
+        // Update accumulated widget props by id.
+        const { id, value } = effect.value;
+        const state = typeof value === 'function' ? value(map[id]) : value;
+        return { ...map, [id]: state };
+      }
+    }
+
+    return map;
+  },
+});
+
 export type XmlTagsOptions = {
-  registry?: XmlWidgetRegistry;
+  registry: XmlWidgetRegistry;
+
   /**
-   * Called when a widget is mounted or unmounted.
+   * Called when widgets are mounted or unmounted.
    */
   setWidgets?: (widgets: XmlWidgetState[]) => void;
+
+  /**
+   * Tags to bookmark.
+   */
+  bookmarks?: string[];
 };
 
 /**
  * Extension that adds thread-related functionality including XML tag decorations.
  */
-export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
-  //
-  // Context state.
-  //
-  const contextState = StateField.define<any>({
-    create: () => undefined,
-    update: (value, tr) => {
-      for (const effect of tr.effects) {
-        if (effect.is(xmlTagContextEffect)) {
-          return effect.value;
-        }
-      }
-
-      return value;
-    },
-  });
-
-  //
+export const xmlTags = ({ registry, setWidgets, bookmarks }: XmlTagsOptions): Extension => {
   // Active widgets.
-  //
+  // TODO(burdon): Batch.
+  // TODO(burdon): Better way to share with outside?
   const widgets = new Map<string, XmlWidgetState>();
   const notifier = {
     mounted: (widget: XmlWidgetState) => {
       widgets.set(widget.id, widget);
-      options.setWidgets?.([...widgets.values()]);
+      setWidgets?.([...widgets.values()]);
     },
     unmounted: (id: string) => {
       widgets.delete(id);
-      options.setWidgets?.([...widgets.values()]);
+      setWidgets?.([...widgets.values()]);
     },
   } satisfies XmlWidgetNotifier;
 
-  //
-  // Widget decorations.
-  //
-  const decorationsState = StateField.define<WidgetDecorationSet>({
+  const widgetDecorationsField = createWidgetDecorationsField(registry, notifier);
+  return [
+    contextStateField,
+    widgetStateField,
+    widgetDecorationsField,
+    createWidgetUpdatePlugin(widgetDecorationsField, notifier),
+    createNavigationEffectPlugin(widgetDecorationsField, bookmarks),
+    bookmarks?.length
+      ? Prec.highest(
+          keymap.of([
+            {
+              key: 'Mod-ArrowUp',
+              run: (view) => {
+                view.dispatch({ effects: navigatePreviousEffect.of() });
+                return true;
+              },
+            },
+            {
+              key: 'Mod-ArrowDown',
+              run: (view) => {
+                view.dispatch({ effects: navigateNextEffect.of() });
+                return true;
+              },
+            },
+          ]),
+        )
+      : [],
+  ];
+};
+
+/**
+ * Effect processing plugin for navigation.
+ * Handles navigation up/down effects.
+ */
+const createNavigationEffectPlugin = (
+  widgetDecorationsField: StateField<WidgetDecorationSet>,
+  bookmarks?: string[],
+) => {
+  return EditorView.updateListener.of((update) => {
+    update.transactions.forEach((transaction) => {
+      for (const effect of transaction.effects) {
+        if (effect.is(navigatePreviousEffect)) {
+          const view = update.view;
+          const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).from;
+          let widget: { from: number; to: number; tag: string } | null = null;
+          const { decorations } = view.state.field(widgetDecorationsField);
+
+          for (const range of decorationSetToArray(decorations)) {
+            if (range.from < cursorPos) {
+              const tag = range.value.spec.tag;
+              if (bookmarks?.includes(tag)) {
+                if (!widget || range.from > widget.from) {
+                  widget = { from: range.from, to: range.to, tag };
+                }
+              }
+            }
+          }
+
+          const line = view.state.doc.lineAt(widget?.from ?? 0);
+          view.dispatch({
+            selection: { anchor: line.from, head: line.from },
+            effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+          });
+        } else if (effect.is(navigateNextEffect)) {
+          const view = update.view;
+          const cursorPos = view.state.doc.lineAt(view.state.selection.main.head).to;
+          let widget: { from: number; to: number; tag: string } | null = null;
+          const { decorations } = view.state.field(widgetDecorationsField);
+
+          for (const range of decorationSetToArray(decorations)) {
+            if (range.from > cursorPos) {
+              const tag = range.value.spec.tag;
+              if (bookmarks?.includes(tag)) {
+                if (!widget || range.from < widget.from) {
+                  widget = { from: range.from, to: range.to, tag };
+                }
+              }
+            }
+          }
+
+          if (widget) {
+            const line = view.state.doc.lineAt(widget?.from);
+            view.dispatch({
+              selection: { anchor: line.to, head: line.to },
+              effects: scrollToLineEffect.of({ line: line.number, options: { offset: -16 } }),
+            });
+          } else {
+            const line = view.state.doc.lineAt(view.state.doc.length);
+            view.dispatch({
+              selection: { anchor: line.to, head: line.to },
+              effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
+            });
+          }
+        }
+      }
+    });
+  });
+};
+
+/**
+ * Effect processing plugin.
+ * Handles widget updates.
+ */
+const createWidgetUpdatePlugin = (
+  widgetDecorationsField: StateField<WidgetDecorationSet>,
+  notifier: XmlWidgetNotifier,
+) =>
+  ViewPlugin.fromClass(
+    class {
+      update(update: ViewUpdate) {
+        const widgetStateMap = update.state.field(widgetStateField);
+        const { decorations } = update.state.field(widgetDecorationsField);
+
+        // Check for widget update effects and re-render widgets.
+        for (const effect of update.transactions.flatMap((tr) => tr.effects)) {
+          if (effect.is(xmlTagUpdateEffect)) {
+            const widgetState = widgetStateMap[effect.value.id];
+
+            // Find and render widget.
+            for (const range of decorationSetToArray(decorations)) {
+              const deco = range.value;
+              const widget = deco?.spec?.widget;
+              if (widget && widget instanceof PlaceholderWidget && widget.id === effect.value.id && widget.root) {
+                const props = { ...widget.props, ...widgetState };
+                notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
+              }
+            }
+          }
+        }
+      }
+    },
+  );
+
+/**
+ * Builds and maintains decorations for XML widgets.
+ * Must be a StateField because block decorations cannot be provided via ViewPlugin.
+ */
+const createWidgetDecorationsField = (registry: XmlWidgetRegistry, notifier: XmlWidgetNotifier) =>
+  StateField.define<WidgetDecorationSet>({
     create: (state) => {
-      return buildDecorations(
-        state,
-        0,
-        state.doc.length,
-        state.field(contextState),
-        state.field(widgetState),
-        options,
-        notifier,
-      );
+      return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
     },
     update: ({ from, decorations }, tr) => {
+      // Check for reset effect.
       for (const effect of tr.effects) {
         if (effect.is(xmlTagResetEffect)) {
           return { from: 0, decorations: Decoration.none };
         }
       }
 
-      // Check if user pressed Backspace or Delete and remove adjacent decorations if present.
-      const userEvent = tr.annotation(Transaction.userEvent);
-      if (userEvent === 'delete.backward' || userEvent === 'delete.forward') {
-        const { state } = tr;
-        const decorationArray = decorationSetToArray(decorations);
-        const filteredDecorations = [];
-
-        // Get cursor position after the change.
-        const cursorPos = state.selection.main.head;
-
-        for (const range of decorationArray) {
-          let shouldKeep = true;
-
-          // For Backspace (delete.backward), check if decoration is immediately after cursor.
-          if (userEvent === 'delete.backward' && range.from === cursorPos) {
-            shouldKeep = false;
-          }
-
-          // For Delete (delete.forward), check if decoration is immediately before cursor.
-          if (userEvent === 'delete.forward' && range.to === cursorPos) {
-            shouldKeep = false;
-          }
-
-          if (shouldKeep) {
-            // Map the decoration position through the transaction changes.
-            const mappedFrom = tr.changes.mapPos(range.from, -1);
-            const mappedTo = tr.changes.mapPos(range.to, 1);
-
-            // Only keep the decoration if mapping was successful and positions are valid.
-            if (mappedFrom >= 0 && mappedTo >= mappedFrom && mappedTo <= state.doc.length) {
-              filteredDecorations.push({
-                from: mappedFrom,
-                to: mappedTo,
-                value: range.value,
-              });
-            }
-          }
-        }
-
-        // Return updated decorations with adjacent ones removed and positions mapped.
-        return {
-          from,
-          decorations: Decoration.set(filteredDecorations),
-        };
-      }
-
       if (tr.docChanged) {
         const { state } = tr;
 
         // Flag if the transaction has modified the head of the document.
-        // (i.e., any changes that touch before the current `from` position).
         const reset = tr.changes.touchesRange(0, from);
+        if (reset) {
+          // Full rebuild from start.
+          return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
+        } else {
+          // Append-only: rebuild decorations from after the last widget.
+          const result = buildDecorations(state, { from, to: state.doc.length }, registry, notifier);
 
-        // Since append-only, rebuild decorations from after the last widget.
-        const result = buildDecorations(
-          state,
-          reset ? 0 : from,
-          state.doc.length,
-          state.field(contextState),
-          state.field(widgetState),
-          options,
-          notifier,
-        );
-
-        // Merge with existing decorations.
-        return {
-          from: result.from,
-          decorations: decorations.update({ add: decorationSetToArray(result.decorations) }),
-        };
+          // Merge with existing decorations.
+          return {
+            from: result.from,
+            decorations: decorations.update({ add: decorationSetToArray(result.decorations) }),
+          };
+        }
       }
 
-      // No document changes: avoid mapping decorations through an empty ChangeSet,
-      // which can throw when the decoration set was created for a different base length.
-      // Simply return the existing decorations unchanged.
       return { from, decorations };
     },
     provide: (field) => [
@@ -245,117 +358,86 @@ export const xmlTags = (options: XmlTagsOptions = {}): Extension => {
     ],
   });
 
-  //
-  // Widget state management.
-  //
-  const widgetState = StateField.define<XmlWidgetStateMap>({
-    create: () => ({}),
-    update: (map, tr) => {
-      for (const effect of tr.effects) {
-        if (effect.is(xmlTagResetEffect)) {
-          return {};
-        }
-
-        if (effect.is(xmlTagUpdateEffect)) {
-          // Update accumulated widget props by id.
-          const { id, value } = effect.value;
-          const state = typeof value === 'function' ? value(map[id]) : value;
-
-          // Find and render widget.
-          const { decorations } = tr.state.field(decorationsState);
-          for (const range of decorationSetToArray(decorations)) {
-            const deco = range.value;
-            const widget = deco?.spec?.widget;
-            if (widget && widget instanceof PlaceholderWidget && widget.id === effect.value.id && widget.root) {
-              const props = { ...widget.props, ...state };
-              notifier.mounted({ id: widget.id, props, root: widget.root, Component: widget.Component });
-            }
-          }
-
-          return { ...map, [id]: state };
-        }
-      }
-
-      return map;
-    },
-  });
-
-  return [contextState, decorationsState, widgetState];
-};
-
 /**
  * Creates widget decorations for XML tags in the document using the syntax tree.
  */
 const buildDecorations = (
   state: EditorState,
-  from: number,
-  to: number,
-  context: any,
-  widgetState: XmlWidgetStateMap,
-  options: XmlTagsOptions,
+  range: Range,
+  registry: XmlWidgetRegistry,
   notifier: XmlWidgetNotifier,
 ): WidgetDecorationSet => {
+  const context = state.field(contextStateField, false);
+  const widgetStateMap = state.field(widgetStateField, false) ?? {};
+
   const builder = new RangeSetBuilder<Decoration>();
   const tree = syntaxTree(state);
   if (!tree || (tree.type.name === 'Program' && tree.length === 0)) {
-    return { from, decorations: Decoration.none };
+    return { from: range.from, decorations: Decoration.none };
   }
 
+  // TODO(burdon): Currently creating new decorations for each transaction?
+
+  let last = 0;
   tree.iterate({
-    from,
-    to,
+    from: range.from,
+    to: range.to,
     enter: (node) => {
       switch (node.type.name) {
         // XML Element.
         case 'Element': {
           try {
-            if (options.registry) {
-              const props = nodeToJson(state, node.node);
-              if (props) {
-                const def = options.registry[props._tag];
-                if (def) {
-                  const { block, factory, Component } = def;
-                  const state = props.id ? widgetState[props.id] : undefined;
-                  const args = { context, ...props, ...state };
-                  const widget: WidgetType | undefined = factory
-                    ? factory(args)
-                    : Component
-                      ? props.id && new PlaceholderWidget(props.id, Component, args, notifier)
-                      : undefined;
+            const props = nodeToJson(state, node.node);
+            if (props) {
+              const def = registry[props._tag];
+              if (def) {
+                const { block, factory, Component } = def;
+                const widgetState = props.id ? widgetStateMap[props.id] : undefined;
+                const nodeRange = { from: node.node.from, to: node.node.to };
+                const args = { ...widgetState, ...props, context, range: nodeRange } satisfies XmlWidgetProps;
 
-                  if (widget) {
-                    from = node.node.to;
-                    builder.add(
-                      node.node.from,
-                      node.node.to,
-                      Decoration.replace({
-                        widget,
-                        block,
-                        atomic: true,
-                        inclusive: true,
-                      }),
-                    );
-                  }
+                // Create widget.
+                const widget: WidgetType | undefined = factory
+                  ? factory(args)
+                  : Component
+                    ? props.id && new PlaceholderWidget(props.id, Component, args, notifier)
+                    : undefined;
+
+                if (widget) {
+                  last = nodeRange.from;
+                  builder.add(
+                    nodeRange.from,
+                    nodeRange.to,
+                    Decoration.replace({
+                      widget,
+                      block,
+                      atomic: true,
+                      inclusive: true,
+                      tag: props._tag,
+                    }),
+                  );
                 }
               }
             }
           } catch (err) {
+            // TODO(burdon): Track errors.
             log.catch(err);
           }
 
-          return false; // Don't descend into children.
+          // Don't descend into children.
+          return false;
         }
       }
     },
   });
 
-  return { from, decorations: builder.finish() };
+  return { from: last, decorations: builder.finish() };
 };
 
 /**
  * Placeholder for React widgets.
  */
-class PlaceholderWidget<TProps = {}> extends WidgetType {
+class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
   private _root: HTMLElement | null = null;
 
   constructor(

@@ -14,7 +14,11 @@ export class SuggestionWidget extends WidgetType {
     super();
   }
 
-  override toDOM(): HTMLElement {
+  override eq(other: WidgetType) {
+    return other instanceof SuggestionWidget && other.text === this.text;
+  }
+
+  override toDOM() {
     return (
       Domino.of('span')
         // NOTW: Scroll container must have `size-container`.
@@ -32,9 +36,5 @@ export class SuggestionWidget extends WidgetType {
         )
         .build()
     );
-  }
-
-  override eq(other: WidgetType): boolean {
-    return other instanceof SuggestionWidget && other.text === this.text;
   }
 }

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useThemeContext } from '@dxos/react-ui';
@@ -22,10 +22,22 @@ import {
 import { useTextEditor } from '../hooks';
 
 const registry = {
-  // <test/>
+  /**
+   * Custom tag: <test/>
+   */
   ['test' as const]: {
     block: true,
-    Component: () => <div className='p-2 border border-separator rounded'>Test</div>,
+    Component: () => {
+      const [count, setCount] = useState(0);
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setCount((prev) => prev + 1);
+        }, 1_000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return <div className='p-2 border border-separator rounded'>Test {count}</div>;
+    },
   },
 } satisfies XmlWidgetRegistry;
 
@@ -36,7 +48,7 @@ const DefaultStory = ({ text }: { text?: string }) => {
     initialValue: text,
     extensions: [
       createThemeExtensions({ themeMode }),
-      createBasicExtensions({ lineWrapping: true, readOnly: true }),
+      createBasicExtensions({ lineWrapping: true }),
       decorateMarkdown(),
       extendedMarkdown({ registry }),
       xmlTags({ registry, setWidgets }),
@@ -56,13 +68,15 @@ const DefaultStory = ({ text }: { text?: string }) => {
 const text = trim`
   # Tags
 
+  React widget below.
+
   <test id="123" />
 
   React widget above.
 `;
 
 const meta = {
-  title: 'ui/react-ui-editor/Tags',
+  title: 'ui/react-ui-editor/XmlTags',
   render: DefaultStory,
   decorators: [withTheme],
   parameters: {
