@@ -21,7 +21,7 @@ import { JsonSchemaType } from '../../../echo/echo/dist/types/src/internal';
 // TODO(burdon): Factor out (is there a way to remove plugin deps?)
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
 
-const Toolkit$ = Toolkit.make(
+export const SystemToolkit = Toolkit.make(
   //
   // Schema
   //
@@ -155,92 +155,86 @@ const Toolkit$ = Toolkit.make(
   }),
 );
 
-export namespace SystemToolkit {
-  export const Toolkit = Toolkit$;
+export const tools = Record.keys(SystemToolkit.tools);
 
-  export const tools = Record.keys(Toolkit$.tools);
+export const layer = (context: PluginContext): Layer.Layer<Tool.Handler<any>, never, never> =>
+  SystemToolkit.toLayer({
+    'schema-list': Effect.fnUntraced(function* () {
+      const { db } = yield* DatabaseService;
+      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
 
-  export const createLayer = (context: PluginContext): Layer.Layer<Tool.Handler<any>, never, never> =>
-    Toolkit$.toLayer({
-      'schema-list': Effect.fnUntraced(function* () {
-        const { db } = yield* DatabaseService;
-        const schema = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ location: ['database', 'runtime'] }).run(),
-        );
+      return schema.map((schema) => {
+        const meta = Type.getMeta(schema);
+        return {
+          typename: Type.getTypename(schema),
+          jsonSchema: Type.toJsonSchema(schema),
+          kind: meta?.sourceSchema ? 'relation' : 'record',
+        };
+      });
+    }),
 
-        return schema.map((schema) => {
-          const meta = Type.getMeta(schema);
-          return {
-            typename: Type.getTypename(schema),
-            jsonSchema: Type.toJsonSchema(schema),
-            kind: meta?.sourceSchema ? 'relation' : 'record',
-          };
-        });
-      }),
+    'schema-add': Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
+      const { db } = yield* DatabaseService;
 
-      'schema-add': Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
-        const { db } = yield* DatabaseService;
+      db.schemaRegistry.register([
+        {
+          typename,
+          version: '0.1.0',
+          jsonSchema,
+          name,
+        },
+      ]);
+    }),
 
-        db.schemaRegistry.register([
-          {
-            typename,
-            version: '0.1.0',
-            jsonSchema,
-            name,
-          },
-        ]);
-      }),
+    'object-create': Effect.fnUntraced(function* ({ typename, data }) {
+      const { db } = yield* DatabaseService;
+      const schema = yield* Effect.promise(() =>
+        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      );
 
-      'object-create': Effect.fnUntraced(function* ({ typename, data }) {
-        const { db } = yield* DatabaseService;
-        const schema = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
-        );
+      const object = db.add(Obj.make(schema, data));
+      // TODO(dmaretskyi): How to add object to a collection???
+      return object;
+    }),
 
-        const object = db.add(Obj.make(schema, data));
-        // TODO(dmaretskyi): How to add object to a collection???
-        return object;
-      }),
+    'object-remove': Effect.fnUntraced(function* ({ id }) {
+      const { db } = yield* DatabaseService;
+      const object = yield* DatabaseService.resolve(DXN.parse(id));
+      db.remove(object);
+      return object;
+    }),
 
-      'object-remove': Effect.fnUntraced(function* ({ id }) {
-        const { db } = yield* DatabaseService;
-        const object = yield* DatabaseService.resolve(DXN.parse(id));
-        db.remove(object);
-        return object;
-      }),
+    'relation-create': Effect.fnUntraced(function* ({ typename, source, target, data }) {
+      const { db } = yield* DatabaseService;
+      const schema = yield* Effect.promise(() =>
+        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      );
 
-      'relation-create': Effect.fnUntraced(function* ({ typename, source, target, data }) {
-        const { db } = yield* DatabaseService;
-        const schema = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
-        );
+      const sourceObj = yield* DatabaseService.resolve(DXN.parse(source));
+      const targetObj = yield* DatabaseService.resolve(DXN.parse(target));
+      const relation = db.add(
+        Relation.make(schema, {
+          [Relation.Source]: sourceObj,
+          [Relation.Target]: targetObj,
+          ...data,
+        }),
+      );
+      return relation;
+    }),
 
-        const sourceObj = yield* DatabaseService.resolve(DXN.parse(source));
-        const targetObj = yield* DatabaseService.resolve(DXN.parse(target));
-        const relation = db.add(
-          Relation.make(schema, {
-            [Relation.Source]: sourceObj,
-            [Relation.Target]: targetObj,
-            ...data,
-          }),
-        );
-        return relation;
-      }),
+    'tag-add': Effect.fnUntraced(function* ({ tagId, objectId }) {
+      const { db } = yield* DatabaseService;
 
-      'tag-add': Effect.fnUntraced(function* ({ tagId, objectId }) {
-        const { db } = yield* DatabaseService;
+      const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+      Obj.addTag(object, DXN.parse(tagId).toString());
+      return object;
+    }),
 
-        const object = yield* DatabaseService.resolve(DXN.parse(objectId));
-        Obj.addTag(object, DXN.parse(tagId).toString());
-        return object;
-      }),
+    'tag-remove': Effect.fnUntraced(function* ({ tagId, objectId }) {
+      const { db } = yield* DatabaseService;
 
-      'tag-remove': Effect.fnUntraced(function* ({ tagId, objectId }) {
-        const { db } = yield* DatabaseService;
-
-        const object = yield* DatabaseService.resolve(DXN.parse(objectId));
-        Obj.removeTag(object, DXN.parse(tagId).toString());
-        return object;
-      }),
-    });
-}
+      const object = yield* DatabaseService.resolve(DXN.parse(objectId));
+      Obj.removeTag(object, DXN.parse(tagId).toString());
+      return object;
+    }),
+  });
