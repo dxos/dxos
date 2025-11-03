@@ -305,8 +305,7 @@ const createNavigationEffectPlugin = (
 };
 
 /**
- * Effect processing plugin.
- * Handles widget updates.
+ * Handles effect that updates widget state.
  */
 const createWidgetUpdatePlugin = (
   widgetDecorationsField: StateField<WidgetDecorationSet>,
@@ -414,6 +413,7 @@ const buildDecorations = (
             if (args) {
               const def = registry[args._tag];
               if (def) {
+                // NOTE: The widget state may already have been updated before the widget is mounted.
                 const { block, factory, Component } = def;
                 const widgetState = args.id ? widgetStateMap[args.id] : undefined;
                 const nodeRange = { from: node.node.from, to: node.node.to };
@@ -426,8 +426,8 @@ const buildDecorations = (
                     ? args.id && new PlaceholderWidget(args.id, Component, props, notifier)
                     : undefined;
 
+                // Add decoration.
                 if (widget) {
-                  last = nodeRange.to - 1;
                   builder.add(
                     nodeRange.from,
                     nodeRange.to,
@@ -439,11 +439,13 @@ const buildDecorations = (
                       tag: args._tag,
                     }),
                   );
+
+                  // Track last widget (NOTE: range is inclusive).
+                  last = nodeRange.to - 1;
                 }
               }
             }
           } catch (err) {
-            // TODO(burdon): Track errors.
             log.catch(err);
           }
 
@@ -477,8 +479,8 @@ class PlaceholderWidget<TProps extends XmlWidgetProps> extends WidgetType {
     return this._root;
   }
 
-  override eq(other: PlaceholderWidget<TProps>): boolean {
-    return this.id === other.id;
+  override eq(other: WidgetType): boolean {
+    return other instanceof PlaceholderWidget && this.id === other.id;
   }
 
   override ignoreEvent() {
