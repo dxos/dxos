@@ -227,6 +227,25 @@ export const setDescription = (obj: Any | Relation.Any, description: string) => 
   }
 };
 
+export const addTag = (obj: Any | Relation.Any, tag: string) => {
+  const meta = getMeta(obj);
+  meta.tags ??= [];
+  meta.tags.push(tag);
+};
+
+export const removeTag = (obj: Any | Relation.Any, tag: string) => {
+  const meta = getMeta(obj);
+  if (!meta.tags) {
+    return;
+  }
+  for (let i = 0; i < meta.tags.length; i++) {
+    if (meta.tags[i] === tag) {
+      meta.tags.splice(i, 1);
+      i--;
+    }
+  }
+};
+
 const compare = (a?: string, b?: string) => {
   if (a == null) {
     return b == null ? 0 : 1;

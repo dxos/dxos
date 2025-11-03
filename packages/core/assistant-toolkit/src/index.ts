@@ -7,3 +7,4 @@ export * from './functions';
 export * from './plugins';
 export * from './sync';
 export * from './crud';
+export * from './toolkits';
