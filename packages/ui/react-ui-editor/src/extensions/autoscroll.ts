@@ -5,7 +5,7 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { debounceAndThrottle } from '@dxos/async';
+import { debounce, debounceAndThrottle } from '@dxos/async';
 import { Domino } from '@dxos/react-ui';
 
 import { scrollToLineEffect } from './scrolling';
@@ -37,6 +37,7 @@ export const autoScroll = ({
   let buttonContainer: HTMLDivElement | undefined;
   let hideTimeout: NodeJS.Timeout | undefined;
   let isPinned = true;
+  let lastScrollTop = 0;
 
   // Temporarily hide the scrollbar while auto-scrolling.
   const hideScrollbar = (view: EditorView) => {
@@ -47,11 +48,15 @@ export const autoScroll = ({
     }, 1_000);
   };
 
+  const setPinned = (pin: boolean) => {
+    isPinned = pin;
+    buttonContainer?.classList.toggle('opacity-0', pin);
+  };
+
   // Throttled scroll to bottom.
   const scrollToBottom = debounceAndThrottle((view: EditorView) => {
-    isPinned = true;
+    setPinned(true);
     hideScrollbar(view);
-    buttonContainer?.classList.add('opacity-0');
     const line = view.state.doc.lineAt(view.state.doc.length);
     view.dispatch({
       selection: { anchor: line.to, head: line.to },
@@ -72,7 +77,7 @@ export const autoScroll = ({
       });
 
       // Maybe scroll if doc changed and pinned.
-      // NOTE: Geometry changed is triggered when tool block is opened.
+      // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
       if (autoScroll && update.heightChanged && isPinned) {
         const scrollerRect = update.view.scrollDOM.getBoundingClientRect();
         const coords = update.view.coordsAtPos(update.state.doc.length);
@@ -84,44 +89,35 @@ export const autoScroll = ({
           }
 
           scrollToBottom(update.view);
-        } else {
-          buttonContainer?.classList.remove('opacity-0');
         }
       }
     }),
 
     // Detect user scroll.
-    // NOTE: Multiple scroll events are triggered during programmatic smooth scrolling.
-    /*
     EditorView.domEventHandlers({
-      scroll: (event, view) => {
-        const scroller = view.scrollDOM;
-        // Suspect delta goes positive when rendering widgets, so count positive deltas.
-        // TODO(burdon): Detect user scroll directly (wheel, touch, keys, etc.)
-        if (lastScrollTop > scroller.scrollTop) {
-          scrollCounter++;
+      scroll: debounce((event, view) => {
+        const currentScrollTop = view.scrollDOM.scrollTop;
+        const scrollingUp = currentScrollTop < lastScrollTop;
+        lastScrollTop = currentScrollTop;
+
+        // If user scrolls up, unpin auto-scroll.
+        if (scrollingUp) {
+          setPinned(false);
+          return;
         }
-        lastScrollTop = scroller.scrollTop;
-        const distanceFromBottom = calcDistance(scroller);
-        if (distanceFromBottom === 0) {
-          // Pin to bottom.
-          isPinned = true;
-          buttonContainer?.classList.add('opacity-0');
-          scrollCounter = 0;
-        } else if (scrollCounter > 3) {
-          // Break pin if user scrolls up.
-          isPinned = false;
-          buttonContainer?.classList.remove('opacity-0');
-        }
-      },
+
+        // For downward scrolls, check distance from bottom.
+        const scrollerRect = view.scrollDOM.getBoundingClientRect();
+        const coords = view.coordsAtPos(view.state.doc.length);
+        const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
+        setPinned(distanceFromBottom < threshold);
+      }, 1_000),
     }),
-    */
 
     // Scroll button.
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const scroller = view.scrollDOM.parentElement;
           buttonContainer = Domino.of('div')
             .classNames(true && 'cm-scroll-button transition-opacity duration-300 opacity-0')
             .children(
@@ -135,7 +131,7 @@ export const autoScroll = ({
             )
             .build();
 
-          scroller?.appendChild(buttonContainer);
+          view.scrollDOM.parentElement!.appendChild(buttonContainer);
         }
       },
     ),
