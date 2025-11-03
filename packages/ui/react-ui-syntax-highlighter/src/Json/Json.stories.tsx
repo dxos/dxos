@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -90,4 +91,16 @@ export const Large: Story = {
       maxStringLen: 10,
     },
   },
+};
+
+const cycle: any = {
+  a: 1,
+  b: [],
+};
+
+cycle.b.push(cycle);
+
+// NOTE: Storybook args cannot be circular.
+export const Cycle: Story = {
+  render: () => <Json data={cycle} />,
 };

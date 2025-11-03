@@ -34,6 +34,7 @@ import {
   extendedMarkdown,
   preview,
   scrollToBottomEffect,
+  smoothScroll,
   streamer,
   useTextEditor,
   xmlTagContextEffect,
@@ -42,6 +43,7 @@ import {
   xmlTags,
 } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
+import { isNonNullable } from '@dxos/util';
 
 import { createStreamer } from './stream';
 
@@ -58,13 +60,14 @@ export type MarkdownStreamEvent = {
 };
 
 export type MarkdownStreamProps = ThemedClassName<{
+  debug?: boolean;
   content?: string;
   onEvent?: (event: MarkdownStreamEvent) => void;
 }> &
   (XmlTagsOptions & StreamerOptions & AutoScrollOptions);
 
 export const MarkdownStream = forwardRef<MarkdownStreamController | null, MarkdownStreamProps>(
-  ({ classNames, registry, content, fadeIn, cursor, overscroll, onEvent }, forwardedRef) => {
+  ({ classNames, debug, content, registry, fadeIn, cursor, onEvent }, forwardedRef) => {
     const { themeMode } = useThemeContext();
     const [widgets, setWidgets] = useState<XmlWidgetState[]>([]);
     const { parentRef, view } = useTextEditor(() => {
@@ -78,20 +81,25 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
             slots: {
               scroll: {
                 // NOTE: Child widgets must have `max-is-[100cqi]`.
-                className: 'size-container pli-cardSpacingInline plb-cardSpacingBlock',
+                className: 'size-container pli-cardSpacingInline',
               },
             },
           }),
-          createBasicExtensions({ lineWrapping: true, readOnly: true }),
+          createBasicExtensions({ lineWrapping: true, readOnly: true, scrollPastEnd: true }),
           extendedMarkdown({ registry }),
-          decorateMarkdown({
-            skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-          }),
-          preview(),
-          xmlTags({ registry, setWidgets }),
-          streamer({ cursor, fadeIn }),
-          autoScroll({ overscroll }),
-        ],
+          smoothScroll(),
+          debug
+            ? []
+            : [
+                decorateMarkdown({
+                  skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+                }),
+                preview(),
+                xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+                streamer({ cursor, fadeIn }),
+                autoScroll({ autoScroll: false, overscroll: 0 }),
+              ],
+        ].filter(isNonNullable),
       };
     }, [themeMode, registry]);
 
@@ -201,10 +209,13 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
 
     return (
       <>
+        {/* Markdown editor. */}
         <div ref={parentRef} className={mx('bs-full is-full overflow-hidden', classNames)} />
+
+        {/* React widgets are rendered in portals outside of the editor. */}
         <ErrorBoundary>
           {widgets.map(({ Component, root, id, props }) => (
-            <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+            <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
         </ErrorBoundary>
       </>
