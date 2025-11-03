@@ -391,5 +391,6 @@
   ],
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "vitest.disableWorkspaceWarning": true,
-  "vitest.rootConfig": "vitest.all.config.ts"
+  "vitest.rootConfig": "vitest.all.config.ts",
+  "typescript.updateImportsOnPaste.enabled": false
 }
