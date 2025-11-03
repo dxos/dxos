@@ -5,17 +5,21 @@
 import { StateEffect } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
+import { debounceAndThrottle } from '@dxos/async';
 import { Domino } from '@dxos/react-ui';
 
-const lineHeight = 24;
+import { scrollToLineEffect } from './scrolling';
 
+// TODO(burdon): Reconcile with scrollToLineEffect (scrolling).
 export const scrollToBottomEffect = StateEffect.define<any>();
 
 export type AutoScrollOptions = {
-  // NOTE: This must be zero if using scrollPastEnd.
-  overscroll?: number;
+  /** Auto-scroll when reaches the bottom. */
   autoScroll?: boolean;
-  throttle?: number;
+  /** Throttle time in ms. */
+  throttleDelay?: number;
+  /** Callback when auto-scrolling. */
+  onAutoScroll?: (props: { view: EditorView; distanceFromBottom: number }) => boolean | void;
 };
 
 /**
@@ -23,42 +27,39 @@ export type AutoScrollOptions = {
  */
 // TODO(burdon): Reconcile with transcript-extension.
 export const autoScroll = ({
-  overscroll = 4 * lineHeight,
   autoScroll = true,
-  throttle = 2_000,
+  throttleDelay = 2_000,
+  onAutoScroll,
 }: Partial<AutoScrollOptions> = {}) => {
-  let isThrottled = false;
-  let isPinned = true;
-  let timeout: NodeJS.Timeout | undefined;
   let buttonContainer: HTMLDivElement | undefined;
-  let lastScrollTop = 0;
-  let scrollCounter = 0;
+  let hideTimeout: NodeJS.Timeout | undefined;
+  let isPinned = true;
 
+  // Temporarily hide the scrollbar while auto-scrolling.
   const hideScrollbar = (view: EditorView) => {
     view.scrollDOM.classList.add('cm-hide-scrollbar');
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
+    clearTimeout(hideTimeout);
+    hideTimeout = setTimeout(() => {
       view.scrollDOM.classList.remove('cm-hide-scrollbar');
     }, 1_000);
   };
 
-  const scrollToBottom = (view: EditorView) => {
+  // Throttled scroll to bottom.
+  const scrollToBottom = debounceAndThrottle((view: EditorView) => {
     isPinned = true;
-    scrollCounter = 0;
+    hideScrollbar(view);
     buttonContainer?.classList.add('opacity-0');
-    requestAnimationFrame(() => {
-      hideScrollbar(view);
-      view.scrollDOM.scrollTo({
-        top: view.scrollDOM.scrollHeight,
-        behavior: 'smooth',
-      });
+    const line = view.state.doc.lineAt(view.state.doc.length);
+    view.dispatch({
+      selection: { anchor: line.to, head: line.to },
+      effects: scrollToLineEffect.of({ line: line.number, options: { position: 'end' } }),
     });
-  };
+  }, throttleDelay);
 
   return [
     // Update listener for logging when scrolling is needed.
     EditorView.updateListener.of((update) => {
-      // Listen for effects.
+      // TODO(burdon): Remove and use scrollToLineEffect instead.
       update.transactions.forEach((transaction) => {
         for (const effect of transaction.effects) {
           if (effect.is(scrollToBottomEffect)) {
@@ -68,32 +69,27 @@ export const autoScroll = ({
       });
 
       // Maybe scroll if doc changed and pinned.
-      // TODO(burdon): Autoscrolling is jerky.
-      // TODO(burdon): Find pos of last line.
       // NOTE: Geometry changed is triggered when tool block is opened.
-      const distanceFromBottom = calcDistance(update.view.scrollDOM);
-      if (update.heightChanged && isPinned && !isThrottled) {
-        if (distanceFromBottom > overscroll) {
-          if (autoScroll) {
-            isThrottled = true;
-            requestAnimationFrame(() => {
-              scrollToBottom(update.view);
-            });
-
-            // Reset throttle.
-            setTimeout(() => {
-              isThrottled = false;
-              scrollToBottom(update.view);
-            }, throttle);
-          } else {
-            buttonContainer?.classList.remove('opacity-0');
+      if (autoScroll && update.heightChanged && isPinned) {
+        const scrollerRect = update.view.scrollDOM.getBoundingClientRect();
+        const coords = update.view.coordsAtPos(update.state.doc.length);
+        const distanceFromBottom = coords ? coords.bottom - scrollerRect.bottom : 0;
+        if (distanceFromBottom > 0) {
+          const shouldScroll = onAutoScroll?.({ view: update.view, distanceFromBottom }) ?? true;
+          if (!shouldScroll) {
+            return;
           }
+
+          scrollToBottom(update.view);
+        } else {
+          buttonContainer?.classList.remove('opacity-0');
         }
       }
     }),
 
     // Detect user scroll.
     // NOTE: Multiple scroll events are triggered during programmatic smooth scrolling.
+    /*
     EditorView.domEventHandlers({
       scroll: (event, view) => {
         const scroller = view.scrollDOM;
@@ -116,6 +112,7 @@ export const autoScroll = ({
         }
       },
     }),
+    */
 
     // Scroll button.
     ViewPlugin.fromClass(
@@ -130,7 +127,7 @@ export const autoScroll = ({
                 .data('density', 'fine')
                 .children(Domino.of<any>('dx-icon').attributes({ icon: 'ph--arrow-down--regular' }))
                 .on('click', () => {
-                  scrollToBottom(view);
+                  // scrollToBottom(view);
                 }),
             )
             .build();
@@ -143,7 +140,6 @@ export const autoScroll = ({
     // Styles.
     EditorView.theme({
       '.cm-scroller': {
-        paddingBottom: `${overscroll}px`,
         scrollbarWidth: 'thin',
       },
       '.cm-scroller.cm-hide-scrollbar': {
@@ -159,12 +155,4 @@ export const autoScroll = ({
       },
     }),
   ];
-};
-
-const calcDistance = (scroller: HTMLElement) => {
-  const scrollTop = scroller.scrollTop;
-  const scrollHeight = scroller.scrollHeight;
-  const clientHeight = scroller.clientHeight;
-  const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
-  return distanceFromBottom;
 };
