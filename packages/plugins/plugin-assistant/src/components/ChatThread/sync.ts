@@ -5,7 +5,7 @@
 import { type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { type XmlWidgetStateManager } from '@dxos/react-ui-editor';
+import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/react-ui-editor';
 import { type ContentBlock, type DataType } from '@dxos/schema';
 
 /**
@@ -19,7 +19,7 @@ export type TextModel = Pick<MarkdownStreamController, 'reset' | 'append' | 'upd
 export class MessageThreadContext implements Pick<MarkdownStreamController, 'updateWidget'> {
   constructor(private readonly _widgetState?: XmlWidgetStateManager) {}
 
-  updateWidget<T>(id: string, value: T) {
+  updateWidget<T>(id: string, value: StateDispatch<T>) {
     this._widgetState?.updateWidget(id, value);
   }
 
