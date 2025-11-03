@@ -82,7 +82,8 @@ export const makeToolExecutionServiceFromFunctions = (
                   throw new Error('Attempted to call a provider-defined tool');
                 }
                 // TODO(wittjosiah): Everything is `never` here.
-                return yield* (toolkitHandler.handle as any)(tool.name, input);
+                const { result } = yield* (toolkitHandler.handle as any)(tool.name, input);
+                return result;
               }
 
               const { definition: functionDef } = Context.get(FunctionToolAnnotation)(tool.annotations as any);

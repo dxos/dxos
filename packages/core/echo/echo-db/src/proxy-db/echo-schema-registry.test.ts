@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -63,6 +63,38 @@ describe('schema registry', () => {
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 
+  test('add new schema from json-schema', async () => {
+    const { registry } = await setupTest();
+    const [echoSchema] = await registry.register([
+      {
+        typename: 'example.com/type/Contact',
+        version: '0.1.0',
+        jsonSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+            },
+          },
+        },
+      },
+    ]);
+    expect(registry.hasSchema(echoSchema)).to.be.true;
+    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    expect(echoSchema.typename).toEqual('example.com/type/Contact');
+    expect(echoSchema.version).toEqual('0.1.0');
+    expect(echoSchema.jsonSchema.properties).toEqual({
+      name: expect.any(Object),
+    });
+  });
+
+  test('database schema work with echo APIs', async () => {
+    const { registry } = await setupTest();
+    const [echoSchema] = await registry.register([Contact]);
+    expect(Type.getTypename(echoSchema)).toEqual('example.com/type/Contact');
+    expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
+  });
+
   test('add new schema - preserves field order', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Organization]);
@@ -95,6 +127,33 @@ describe('schema registry', () => {
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
     }
+  });
+
+  test('query both database and runtime schemas', async () => {
+    const { registry, db } = await setupTest();
+    db.graph.schemaRegistry.addSchema([Organization]);
+
+    const [echoSchema] = await registry.register([Contact]);
+    const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Contact', 'example.com/type/Organization']);
+  });
+
+  test('query only runtime schemas', async () => {
+    const { registry, db } = await setupTest();
+    db.graph.schemaRegistry.addSchema([Organization]);
+
+    const [echoSchema] = await registry.register([Contact]);
+    const retrieved = await registry.query({ location: ['runtime'] }).run();
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Organization']);
+  });
+
+  test('query only database schemas', async () => {
+    const { registry, db } = await setupTest();
+    db.graph.schemaRegistry.addSchema([Organization]);
+
+    const [echoSchema] = await registry.register([Contact]);
+    const retrieved = await registry.query({ location: ['database'] }).run();
+    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Contact']);
   });
 
   test('is registered if was stored in db', async () => {

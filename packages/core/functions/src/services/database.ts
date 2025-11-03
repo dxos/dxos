@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import {
   type Filter,
@@ -18,8 +19,14 @@ import {
   type Relation,
   type Type,
 } from '@dxos/echo';
-import type { EchoSchema } from '@dxos/echo/internal';
-import type { EchoDatabase, FlushOptions, OneShotQueryResult, QueryResult, SchemaRegistryQuery } from '@dxos/echo-db';
+import type {
+  EchoDatabase,
+  ExtractSchemaQueryResult,
+  FlushOptions,
+  OneShotQueryResult,
+  QueryResult,
+  SchemaRegistryQuery,
+} from '@dxos/echo-db';
 import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -135,6 +142,8 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
     return DatabaseService.pipe(Effect.map(({ db }) => db.getObjectById(id)));
   };
 
+  // TODO(dmaretskyi): Change API to `yield* DatabaseService.query(...).first` and `yield* DatabaseService.query(...).objects`.
+
   /**
    * Creates a `QueryResult` object that can be subscribed to.
    */
@@ -158,17 +167,19 @@ export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseServic
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
 
-  static schemaQuery = <Q extends SchemaRegistryQuery>(
-    query: Q,
-  ): Effect.Effect<SchemaRegistryPreparedQuery<EchoSchema>, never, DatabaseService> =>
+  // TODO(dmaretskyi): Change API to `yield* DatabaseService.querySchema(...).first` and `yield* DatabaseService.querySchema(...).schema`.
+
+  static schemaQuery = <Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
+    query?: Query & SchemaRegistryQuery,
+  ): Effect.Effect<SchemaRegistryPreparedQuery<ExtractSchemaQueryResult<Query>>, never, DatabaseService> =>
     DatabaseService.pipe(
       Effect.map(({ db }) => db.schemaRegistry.query(query)),
       Effect.withSpan('DatabaseService.schemaQuery'),
     );
 
-  static runSchemaQuery = <Q extends SchemaRegistryQuery>(
-    query: Q,
-  ): Effect.Effect<EchoSchema[], never, DatabaseService> =>
+  static runSchemaQuery = <Query extends Types.NoExcessProperties<SchemaRegistryQuery, Query>>(
+    query?: Query & SchemaRegistryQuery,
+  ): Effect.Effect<ExtractSchemaQueryResult<Query>[], never, DatabaseService> =>
     DatabaseService.schemaQuery(query).pipe(
       Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
     );
