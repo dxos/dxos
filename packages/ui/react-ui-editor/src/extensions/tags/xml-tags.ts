@@ -339,10 +339,8 @@ const createWidgetDecorationsField = (registry: XmlWidgetRegistry, notifier: Xml
           // Full rebuild from start.
           return buildDecorations(state, { from: 0, to: state.doc.length }, registry, notifier);
         } else {
-          // Append-only: rebuild decorations from after the last widget.
+          // Append-only: rebuild decorations from after the last widget and merge with existing decorations.
           const result = buildDecorations(state, { from, to: state.doc.length }, registry, notifier);
-
-          // Merge with existing decorations.
           return {
             from: result.from,
             decorations: decorations.update({ add: decorationSetToArray(result.decorations) }),
@@ -376,9 +374,7 @@ const buildDecorations = (
     return { from: range.from, decorations: Decoration.none };
   }
 
-  // TODO(burdon): Currently creating new decorations for each transaction?
-
-  let last = 0;
+  let last = range.from;
   tree.iterate({
     from: range.from,
     to: range.to,
@@ -404,7 +400,7 @@ const buildDecorations = (
                     : undefined;
 
                 if (widget) {
-                  last = nodeRange.from;
+                  last = nodeRange.to + 1;
                   builder.add(
                     nodeRange.from,
                     nodeRange.to,
