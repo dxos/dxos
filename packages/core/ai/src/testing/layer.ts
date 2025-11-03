@@ -13,6 +13,7 @@ import { type AiService } from '../AiService';
 import * as AiServiceRouter from '../AiServiceRouter';
 
 import { tapHttpErrors } from './tap';
+import { MemoizedAiService } from '../memoization';
 
 export type AiServiceLayer = Layer.Layer<AiService, ConfigError.ConfigError, never>;
 
@@ -68,5 +69,17 @@ export const AiServiceTestingPreset = (preset: 'direct' | 'edge-local' | 'edge-r
     case 'direct':
     default:
       return DirectAiServiceLayer;
+  }
+};
+
+/**
+ * AiService for testing.
+ * Refer to {@link MemoizedAiService} documentation for details on how memoization works.
+ */
+export const TestAiService = ({ disableMemoization = false }: { disableMemoization?: boolean } = {}) => {
+  if (disableMemoization) {
+    return AiServiceTestingPreset('direct');
+  } else {
+    return MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct')));
   }
 };

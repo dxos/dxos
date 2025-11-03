@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService, MemoizedAiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiServiceTestingPreset, TestAiService } from '@dxos/ai/testing';
 import { makeToolExecutionServiceFromFunctions, makeToolResolverFromFunctions } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -39,7 +39,7 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [entityExtraction] })),
   Layer.provideMerge(
     Layer.mergeAll(
-      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
+      TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },

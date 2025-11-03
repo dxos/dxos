@@ -31,6 +31,7 @@ import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
 import * as AssistantToolkit from './AssistantToolkit';
 import { Ref } from '@dxos/echo';
+import { TestAiService } from '@dxos/ai/testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -40,10 +41,10 @@ const TestLayer = Layer.mergeAll(
   makeToolExecutionServiceFromFunctions(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
   ComputeEventLogger.layerFromTracing,
 ).pipe(
-  Layer.provideMerge(FunctionInvocationService.layerTest({})),
+  Layer.provideMerge(FunctionInvocationService.layerTest()),
   Layer.provideMerge(
     Layer.mergeAll(
-      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
+      TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },

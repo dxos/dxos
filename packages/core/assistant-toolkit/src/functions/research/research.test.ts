@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiServiceTestingPreset,TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
@@ -54,9 +54,7 @@ const TestLayer = Layer.mergeAll(
   Layer.provideMerge(FunctionInvocationService.layerTest({ functions: [research, createDocument, updateDocument] })),
   Layer.provideMerge(
     Layer.mergeAll(
-      // TODO(burdon): Document how to create memoized file.
-      MemoizedAiService.layerTest().pipe(Layer.provide(AiServiceTestingPreset('direct'))),
-      // AiServiceTestingPreset('direct'),
+      TestAiService(),
       TestDatabaseLayer({
         spaceKey: 'fixed',
         indexing: { vector: true },
