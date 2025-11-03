@@ -9,13 +9,12 @@ import type * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
-import { type PluginContext } from '@dxos/app-framework';
 import { AiContextService, ArtifactId } from '@dxos/assistant';
 import { Ref } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
-const Toolkit$ = Toolkit.make(
+export const AssistantToolkit = Toolkit.make(
   Tool.make('add-to-context', {
     description: trim`
       Adds the object to the chat context.
@@ -31,28 +30,19 @@ const Toolkit$ = Toolkit.make(
   }),
 );
 
-/**
- * @deprecated Moved to plugin-assistant.
- */
-export namespace AssistantToolkit {
-  export const Toolkit = Toolkit$;
+export const tools = Record.keys(AssistantToolkit.tools);
 
-  export const tools = Record.keys(Toolkit$.tools);
-
-  export const createLayer = (
-    _context: PluginContext,
-  ): Layer.Layer<Tool.Handler<any>, never, AiContextService | DatabaseService> =>
-    Toolkit$.toLayer({
-      'add-to-context': Effect.fnUntraced(function* ({ id }) {
-        const { binder } = yield* AiContextService;
-        const { db } = yield* DatabaseService;
-        const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
-        yield* Effect.promise(() =>
-          binder.bind({
-            blueprints: [],
-            objects: [ref],
-          }),
-        );
-      }),
-    });
-}
+export const layer = () =>
+  AssistantToolkit.toLayer({
+    'add-to-context': Effect.fnUntraced(function* ({ id }) {
+      const { binder } = yield* AiContextService;
+      const { db } = yield* DatabaseService;
+      const ref = Ref.fromDXN(ArtifactId.toDXN(id, db.spaceId));
+      yield* Effect.promise(() =>
+        binder.bind({
+          blueprints: [],
+          objects: [ref],
+        }),
+      );
+    }),
+  });
