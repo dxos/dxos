@@ -32,6 +32,8 @@ import {
   createThemeExtensions,
   decorateMarkdown,
   extendedMarkdown,
+  navigateNextEffect,
+  navigatePreviousEffect,
   preview,
   scrollToBottomEffect,
   smoothScroll,
@@ -49,6 +51,8 @@ import { createStreamer } from './stream';
 
 export type MarkdownStreamController = {
   scrollToBottom: () => void;
+  navigateNext: () => void;
+  navigatePrevious: () => void;
   setContext: (context: any) => void;
   reset: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
@@ -101,7 +105,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
               ],
         ].filter(isNonNullable),
       };
-    }, [themeMode, registry]);
+    }, [debug, themeMode, registry]);
 
     // Streaming queue.
     const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
@@ -148,7 +152,17 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // Immediately scroll to bottom (and pin).
         scrollToBottom: () => {
           view.dispatch({
-            effects: scrollToBottomEffect.of(null),
+            effects: scrollToBottomEffect.of(),
+          });
+        },
+        navigatePrevious: () => {
+          view.dispatch({
+            effects: navigatePreviousEffect.of(),
+          });
+        },
+        navigateNext: () => {
+          view.dispatch({
+            effects: navigateNextEffect.of(),
           });
         },
         // Set the context for XML tags.

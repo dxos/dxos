@@ -18,10 +18,14 @@ export const delay = <CB extends Callback>(cb: CB, delay = 100): CB => {
     if (pending) {
       return;
     }
+
     pending = true;
     setTimeout(() => {
-      cb(...args);
-      pending = false;
+      try {
+        cb(...args);
+      } finally {
+        pending = false;
+      }
     }, delay);
   }) as CB;
 };

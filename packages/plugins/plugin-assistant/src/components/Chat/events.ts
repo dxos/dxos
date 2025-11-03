@@ -44,6 +44,12 @@ export type ChatEvent =
       type: 'scroll-to-bottom';
     }
   | {
+      type: 'nav-previous';
+    }
+  | {
+      type: 'nav-next';
+    }
+  | {
       type: 'thread-open';
     }
   | {
