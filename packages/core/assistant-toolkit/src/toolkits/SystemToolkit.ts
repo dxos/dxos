@@ -172,14 +172,16 @@ export const layer = (): Layer.Layer<Tool.Handler<any>, never, never> =>
     'schema-add': Effect.fnUntraced(function* ({ name, typename, jsonSchema }) {
       const { db } = yield* DatabaseService;
 
-      db.schemaRegistry.register([
-        {
-          typename,
-          version: '0.1.0',
-          jsonSchema,
-          name,
-        },
-      ]);
+      yield* Effect.promise(() =>
+        db.schemaRegistry.register([
+          {
+            typename,
+            version: '0.1.0',
+            jsonSchema,
+            name,
+          },
+        ]),
+      );
     }),
 
     'object-create': Effect.fnUntraced(function* ({ typename, data }) {

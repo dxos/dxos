@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import {
   type Filter,
@@ -18,7 +19,6 @@ import {
   type Relation,
   type Type,
 } from '@dxos/echo';
-import type { EchoSchema } from '@dxos/echo/internal';
 import type {
   EchoDatabase,
   ExtractSchemaQueryResult,
@@ -31,7 +31,6 @@ import type { SchemaRegistryPreparedQuery } from '@dxos/echo-db';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
-import type * as Types from 'effect/Types';
 
 export class DatabaseService extends Context.Tag('@dxos/functions/DatabaseService')<
   DatabaseService,

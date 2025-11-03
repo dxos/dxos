@@ -1,11 +1,14 @@
-import type { DatabaseService, QueueService } from '@dxos/functions';
-import * as Tool from '@effect/ai/Tool';
+//
+// Copyright 2025 DXOS.org
+//
+
+import type * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
-import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+import type * as Schema from 'effect/Schema';
+import type * as SchemaAST from 'effect/SchemaAST';
 
 /**
  * Unique identifier for generic toolkit instances.
@@ -74,6 +77,7 @@ export const make = <Tools extends Record<string, Tool.Any>, E, R>(
     layer: layer as any,
     handlers: toolkit.pipe(Effect.provide(layer)) as any,
     pipe() {
+      // eslint-disable-next-line prefer-rest-params
       return Pipeable.pipeArguments(this, arguments);
     },
   };

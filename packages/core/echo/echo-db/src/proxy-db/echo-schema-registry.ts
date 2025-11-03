@@ -4,10 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import * as Types from 'effect/Types';
+import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { Type } from '@dxos/echo';
 import {
   EchoSchema,
   type ObjectId,
@@ -29,15 +30,14 @@ import { Filter } from '../query';
 
 import { type EchoDatabase } from './database';
 import type {
+  ExtractSchemaQueryResult,
   RegisterSchemaInput,
   SchemaRegistry,
   SchemaRegistryPreparedQuery,
   SchemaRegistryQuery,
   SchemaSubscriptionCallback,
-  ExtractSchemaQueryResult,
 } from './schema-registry-api';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
-import { Type } from '@dxos/echo';
 
 const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
 

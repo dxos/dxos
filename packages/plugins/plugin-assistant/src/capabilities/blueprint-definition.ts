@@ -6,6 +6,7 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 import { templates } from '@dxos/assistant';
 import {
   Agent,
+  AssistantToolkit,
   Discord,
   DiscordBlueprint,
   EntityExtraction,
@@ -13,9 +14,8 @@ import {
   LinearBlueprint,
   Research,
   ResearchBlueprint,
-  WebSearchBlueprint,
-  AssistantToolkit,
   SystemToolkit,
+  WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';

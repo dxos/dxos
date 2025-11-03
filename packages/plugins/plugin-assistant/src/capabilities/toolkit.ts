@@ -3,7 +3,7 @@
 //
 
 import { Capabilities, type Capability, type PluginContext, contributes } from '@dxos/app-framework';
-import { WebSearchToolkit, AssistantToolkit, SystemToolkit } from '@dxos/assistant-toolkit';
+import { AssistantToolkit, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
 
 export default (context: PluginContext): Capability<any>[] => [
   contributes(Capabilities.Toolkit, AssistantToolkit.AssistantToolkit),

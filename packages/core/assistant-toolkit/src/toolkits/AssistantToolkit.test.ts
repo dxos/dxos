@@ -6,32 +6,32 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, MemoizedAiService, ConsolePrinter } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
+import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
+import { TestAiService } from '@dxos/ai/testing';
 import {
+  AiConversation,
+  type ContextBinding,
+  GenerationObserver,
   makeToolExecutionServiceFromFunctions,
   makeToolResolverFromFunctions,
-  GenerationObserver,
-  AiConversation,
-  ContextBinding,
 } from '@dxos/assistant';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { TestHelpers, acquireReleaseResource } from '@dxos/effect';
 import {
   ComputeEventLogger,
   CredentialsService,
   DatabaseService,
   FunctionInvocationService,
-  TracingService,
   QueueService,
+  TracingService,
 } from '@dxos/functions';
 import { TestDatabaseLayer } from '@dxos/functions/testing';
 import { ObjectId } from '@dxos/keys';
 import { DataType } from '@dxos/schema';
+
 import * as AssistantToolkit from './AssistantToolkit';
-import { Ref } from '@dxos/echo';
-import { TestAiService } from '@dxos/ai/testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -74,7 +74,7 @@ describe('AssistantToolkit', () => {
         const queue = yield* QueueService.createQueue<DataType.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation(queue));
         const observer = GenerationObserver.fromPrinter(new ConsolePrinter());
-        conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] });
+        yield* Effect.promise(() => conversation.context.bind({ blueprints: [Ref.make(db.add(blueprint))] }));
 
         const organization = yield* DatabaseService.add(
           Obj.make(DataType.Organization, {

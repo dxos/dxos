@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService, ConsolePrinter, MemoizedAiService } from '@dxos/ai';
-import { AiServiceTestingPreset,TestAiService } from '@dxos/ai/testing';
+import { TestAiService } from '@dxos/ai/testing';
 import {
   AiConversation,
   type ContextBinding,
