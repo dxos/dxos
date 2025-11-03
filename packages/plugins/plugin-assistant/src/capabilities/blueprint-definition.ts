@@ -6,6 +6,7 @@ import { Capabilities, type Capability, contributes } from '@dxos/app-framework'
 import { templates } from '@dxos/assistant';
 import {
   Agent,
+  AssistantToolkit,
   Discord,
   DiscordBlueprint,
   EntityExtraction,
@@ -13,13 +14,13 @@ import {
   LinearBlueprint,
   Research,
   ResearchBlueprint,
+  SystemToolkit,
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type FunctionDefinition } from '@dxos/functions';
 
 import { analysis, list, load } from '../functions';
-import { AssistantToolkit, SystemToolkit } from '../toolkits';
 
 // TODO(burdon): Document plugin structure (blueprint, functions, toolkit.)
 // TODO(burdon): Test framework for developing functions. Error handling.

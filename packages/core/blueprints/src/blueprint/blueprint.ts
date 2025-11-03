@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { type FunctionDefinition } from '@dxos/functions';
 
-import { Template } from '../template';
+import * as Template from '../template';
 
 /**
  * Blueprint schema defines the structure for AI assistant blueprints.
@@ -44,7 +44,7 @@ export const Blueprint = Schema.Struct({
    * Instructions that guide the AI assistant's behavior and responses.
    * These are system prompts or guidelines that the AI should follow.
    */
-  instructions: Template.annotations({
+  instructions: Template.Template.annotations({
     description: "Instructions that guide the AI assistant's behavior and responses",
   }),
 
@@ -73,8 +73,11 @@ export interface Blueprint extends Schema.Schema.Type<typeof Blueprint> {}
 /**
  * Create a new Blueprint.
  */
-export const make = ({ tools = [], ...props }: Pick<Blueprint, 'key' | 'name' | 'instructions'> & Partial<Blueprint>) =>
-  Obj.make(Blueprint, { tools, ...props });
+export const make = ({
+  tools = [],
+  instructions = Template.make({ source: '' }),
+  ...props
+}: Pick<Blueprint, 'key' | 'name'> & Partial<Blueprint>) => Obj.make(Blueprint, { tools, instructions, ...props });
 
 /**
  * Util to create tool definitions for a blueprint.

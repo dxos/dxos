@@ -5,6 +5,7 @@
 import type * as AiError from '@effect/ai/AiError';
 import type * as Tool from '@effect/ai/Tool';
 import type * as Toolkit from '@effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
@@ -36,7 +37,6 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
     log('toolCall', { toolCall: toolCall.name, input });
     const toolResult = yield* toolkit.handle(toolCall.name as any, input as any).pipe(
       Effect.map(
-        // TODO(dmaretskyi): Effect returns ({ result, encodedResult })
         ({ result }) =>
           ({
             _tag: 'toolResult',
@@ -47,7 +47,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
             providerExecuted: false,
           }) satisfies ContentBlock.ToolResult,
       ),
-      Effect.catchAll((error) =>
+      Effect.catchAllCause((cause) =>
         Effect.sync(
           () =>
             ({
@@ -55,7 +55,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
               _tag: 'toolResult',
               toolCallId: toolCall.toolCallId,
               name: toolCall.name,
-              error: formatError(error as Error),
+              error: formatError(Cause.prettyErrors(cause)[0]),
               providerExecuted: false,
             }) satisfies ContentBlock.ToolResult,
         ),
