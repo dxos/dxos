@@ -9,14 +9,11 @@ import type * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
 
-import { Capabilities, type PluginContext, createIntent } from '@dxos/app-framework';
+import { type PluginContext } from '@dxos/app-framework';
 import { ArtifactId } from '@dxos/assistant';
-import { DXN, Filter, Obj, Relation, SchemaNotFoundError, Tag, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { DatabaseService } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
-import { DataType } from '@dxos/schema';
 import { trim } from '@dxos/util';
-import { JsonSchemaType } from '../../../echo/echo/dist/types/src/internal';
 
 // TODO(burdon): Factor out (is there a way to remove plugin deps?)
 // TODO(burdon): Reconcile with functions (currently reuses plugin framework intents).
