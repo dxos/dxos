@@ -7,12 +7,10 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-// TODO(dmaretskyi): This did't work out. delete and use generic toolkit.
-
 /**
  * Unique identifier for generic toolkit instances.
  */
-export const TypeId = '~@dxos/assistant/PortableToolkit';
+export const TypeId = '~@dxos/assistant/GenericToolkit';
 
 /**
  * Type-level representation of the generic toolkit identifier.
@@ -24,29 +22,28 @@ export type TypeId = typeof TypeId;
  * and we want to bundle definition and handlers together.
  *
  * Usefull for plugin-based systems, where tools are dynamically added.
+ *
+ * @param TR requirements type to the tool invocation.
+ * @param E failure type to the handlers layer.
+ * @param R requirements type to the handlers layer.
  */
-
-/**
- * Toolkit definition with handlers bundled.
- */
-export interface PortableToolkit<in out Tools extends Record<string, Tool.Any>, E = never, R = never>
-  extends Pipeable.Pipeable {
+export interface GenericToolkit<TR = never, E = never, R = never> extends Pipeable.Pipeable {
   readonly [TypeId]: TypeId;
 
   /**
    * Toolkit definition.
    */
-  readonly toolkit: Toolkit.Toolkit<Tools>;
+  readonly toolkit: Toolkit.Toolkit<GenericTools<TR>>;
 
   /**
    * Handlers layer.
    */
-  readonly layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>;
+  readonly layer: Layer.Layer<unknown, E, R>;
 
   /**
    * Handlers effect.
    */
-  readonly handlers: Effect.Effect<Toolkit.WithHandler<Tools>, E, R>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<GenericTools<TR>>, E, R>;
 }
 
 /**
@@ -56,9 +53,13 @@ export interface PortableToolkit<in out Tools extends Record<string, Tool.Any>, 
  */
 export interface Any {
   readonly [TypeId]: TypeId;
-  readonly toolkit: Toolkit.Any;
-  readonly layer: Layer.Layer<any, any, any>;
+  readonly toolkit: Toolkit.Toolkit<GenericTools<any>>;
+  readonly layer: Layer.Layer<unknown, any, any>;
 }
+
+export type InvocationRequirements<T extends Any> = T extends GenericToolkit<infer TR, infer _E, infer _R> ? TR : never;
+export type Failure<T extends Any> = T extends GenericToolkit<infer _TR, infer E, infer _R> ? E : never;
+export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, infer _E, infer R> ? R : never;
 
 /**
  * Creates a portable toolkit from toolkit definition and handlers layer.
@@ -66,12 +67,12 @@ export interface Any {
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): PortableToolkit<Tools, E, R> => {
+): GenericToolkit<E, R> => {
   return {
     [TypeId]: TypeId,
-    toolkit,
-    layer,
-    handlers: toolkit.pipe(Effect.provide(layer)),
+    toolkit: toolkit as any,
+    layer: layer as any,
+    handlers: toolkit.pipe(Effect.provide(layer)) as any,
     pipe() {
       return Pipeable.pipeArguments(this, arguments);
     },
@@ -86,7 +87,11 @@ export const merge = <const Toolkits extends ReadonlyArray<Any>>(
    * The toolkits to merge together.
    */
   ...toolkits: Toolkits
-): PortableToolkit<Toolkit.MergedTools<{ [Index in keyof Toolkits]: Toolkits[Index]['toolkit'] }>> => {
+): GenericToolkit<
+  InvocationRequirements<Toolkits[number]>,
+  Failure<Toolkits[number]>,
+  Requirements<Toolkits[number]>
+> => {
   return make(
     Toolkit.merge(...toolkits.map((t) => t.toolkit)),
     Layer.mergeAll(...(toolkits.map((t) => t.layer) as any)),
@@ -108,15 +113,6 @@ export type GenericTools<R = never> = Record<
     R
   >
 >;
-
-/**
- * Converts a portable toolkit with specific tools to a toolkit with generic tools.
- */
-export const generalize = <Tools extends Record<string, Tool.Any>, E, R>(
-  toolkit: PortableToolkit<Tools, E, R>,
-): PortableToolkit<GenericTools<Tool.Requirements<Tools[keyof Tools]>>, E, R> => {
-  return toolkit as any;
-};
 
 export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
   readonly [Schema.TypeId]: any;
